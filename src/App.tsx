@@ -1,0 +1,1433 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  ArrowLeft,
+  CalendarDays,
+  Check,
+  Clipboard,
+  Copy,
+  Download,
+  LogOut,
+  MessageCircleCheck,
+  Search,
+  Shield,
+  Wallet,
+} from 'lucide-react'
+import heroCake1Img from './assets/hero-cake-1.webp'
+import heroCake2Img from './assets/hero-cake-2.webp'
+import heroCake3Img from './assets/hero-cake-3.webp'
+import paveCakeCardImg from './assets/pave-side.webp'
+import poundCakeCardImg from './assets/pound-side.webp'
+import {
+  CAKE_SIZE_OPTIONS,
+  CACAO_OPTIONS,
+  DEFAULT_CAKE_SIZE,
+  DEFAULT_PRODUCT_ID,
+  DEFAULT_SETTINGS,
+  MAX_RESERVATION_QUANTITY,
+  formatCakeSizeLabel,
+  formatCacaoLabel,
+  getProductById,
+  getReservationPrice,
+  getReservationUnitPrice,
+  PAYMENT_STATUSES,
+  PRODUCTS,
+  RESERVATION_STATUSES,
+} from './lib/constants'
+import { isAppwriteConfigured } from './lib/appwrite'
+import { marketConfig } from './lib/market'
+import {
+  createReservation,
+  getReservationByNumber,
+  getSettings,
+  isAdminLoggedIn,
+  listReservations,
+  loginAdmin,
+  loginAdminWithGoogle,
+  logoutAdmin,
+  updateReservation,
+} from './lib/repository'
+import type { CacaoPercent, CakeSize, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
+import {
+  addDaysInputValue,
+  buildSmsMessage,
+  formatCurrency,
+  isValidPhone,
+  maskPhone,
+  normalizePhone,
+  reservationsToCsv,
+  timeOptionsForDate,
+  todayInputValue,
+} from './lib/utils'
+
+type Page = 'home' | 'reserve' | 'complete' | 'lookup' | 'admin-login' | 'admin' | 'admin-reservations'
+
+const initialFilters: ReservationFilters = {
+  pickupDate: '',
+  status: '',
+  paymentStatus: '',
+  cacaoPercent: '',
+  search: '',
+}
+
+function useTodayInputValue() {
+  const [today, setToday] = useState(() => todayInputValue())
+
+  useEffect(() => {
+    const refreshToday = () => setToday(todayInputValue())
+    refreshToday()
+
+    const interval = window.setInterval(refreshToday, 60_000)
+    window.addEventListener('focus', refreshToday)
+    document.addEventListener('visibilitychange', refreshToday)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', refreshToday)
+      document.removeEventListener('visibilitychange', refreshToday)
+    }
+  }, [])
+
+  return today
+}
+
+function getPageFromPath(): Page {
+  const path = window.location.pathname
+  if (path === '/reserve') return 'reserve'
+  if (path === '/complete') return 'complete'
+  if (path === '/lookup') return 'lookup'
+  if (path === '/admin/login') return 'admin-login'
+  if (path === '/admin/reservations') return 'admin-reservations'
+  if (path === '/admin') return 'admin'
+  return 'home'
+}
+
+function pathForPage(page: Page) {
+  const paths: Record<Page, string> = {
+    home: '/',
+    reserve: '/reserve',
+    complete: '/complete',
+    lookup: '/lookup',
+    'admin-login': '/admin/login',
+    admin: '/admin',
+    'admin-reservations': '/admin/reservations',
+  }
+  return paths[page]
+}
+
+function DesktopBackground() {
+  return (
+    <div className="desktop-background-pattern" aria-hidden="true">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="verygood-pattern" width="240" height="240" patternUnits="userSpaceOnUse">
+            <text
+              x="60"
+              y="60"
+              transform="rotate(-30 60 60)"
+              fill="rgba(255, 250, 243, 0.15)"
+              fontFamily="'Work Sans', sans-serif"
+              fontSize="13px"
+              fontWeight="300"
+              letterSpacing="0.08em"
+              textAnchor="middle"
+            >
+              very good
+            </text>
+            <text
+              x="180"
+              y="180"
+              transform="rotate(-30 180 180)"
+              fill="rgba(255, 250, 243, 0.15)"
+              fontFamily="'Work Sans', sans-serif"
+              fontSize="13px"
+              fontWeight="300"
+              letterSpacing="0.08em"
+              textAnchor="middle"
+            >
+              very good
+            </text>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#verygood-pattern)" />
+      </svg>
+    </div>
+  )
+}
+
+function App() {
+  const [page, setPage] = useState<Page>(getPageFromPath)
+  const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
+  const [completedReservation, setCompletedReservation] = useState<Reservation | null>(null)
+  const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
+
+  useEffect(() => {
+    getSettings().then(setSettings)
+  }, [])
+
+  useEffect(() => {
+    const handlePop = () => setPage(getPageFromPath())
+    window.addEventListener('popstate', handlePop)
+    return () => window.removeEventListener('popstate', handlePop)
+  }, [])
+
+  const navigate = useCallback((nextPage: Page) => {
+    window.history.pushState(null, '', pathForPage(nextPage))
+    setPage(nextPage)
+    window.scrollTo({ top: 0 })
+  }, [])
+
+  const reserveProduct = useCallback(
+    (productId: ProductId) => {
+      setReservationProductId(productId)
+      navigate('reserve')
+    },
+    [navigate],
+  )
+
+  const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations'
+
+  return (
+    <>
+      {!isAdminPage && <DesktopBackground />}
+      <div className={`app-shell${isAdminPage ? ' admin-shell' : ''}`}>
+      {!isAppwriteConfigured && (
+        <div className="env-notice">Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.</div>
+      )}
+
+      {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} />}
+      {page === 'reserve' && (
+        <ReservePage
+          navigate={navigate}
+          settings={settings}
+          initialProductId={reservationProductId}
+          onComplete={setCompletedReservation}
+        />
+      )}
+      {page === 'complete' && (
+        <CompletePage navigate={navigate} reservation={completedReservation} settings={settings} />
+      )}
+      {page === 'lookup' && <LookupPage navigate={navigate} />}
+      {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
+      {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
+      {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
+    </div>
+    </>
+  )
+}
+
+function BankAccountBox({ settings, totalPrice }: { settings: StoreSettings; totalPrice?: number }) {
+  const bankName = settings.bankName
+  const bankAccount = settings.bankAccount
+  const accountHolder = settings.accountHolder
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(`${bankName} ${bankAccount}`)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="bank-account-card">
+      <div className="bank-account-header">
+        <span className="bank-label">{marketConfig.copy.paymentLabel}</span>
+      </div>
+      <div className="bank-account-body">
+        <div className="bank-info">
+          <strong className="bank-number">
+            {bankName} {bankAccount}
+          </strong>
+          <span className="bank-holder">
+            {marketConfig.copy.accountHolderLabel}: {accountHolder}
+          </span>
+          {totalPrice !== undefined && (
+            <span className="bank-total-price" style={{ marginTop: '4px', fontSize: '15px' }}>
+              {marketConfig.copy.paymentAmountLabel}:{' '}
+              <strong style={{ color: 'var(--primary)', fontSize: '16px' }}>{formatCurrency(totalPrice)}</strong>
+            </span>
+          )}
+        </div>
+        <button type="button" className="copy-button" onClick={handleCopy}>
+          <Copy size={16} />
+          {copied ? marketConfig.copy.copiedButton : marketConfig.copy.copyButton}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function SiteHeader({ navigate }: { navigate: (page: Page) => void }) {
+  return (
+    <header className="site-header">
+      <button className="brand-button" type="button" onClick={() => navigate('home')}>
+        Verygood Chocolate
+      </button>
+      <nav>
+        <button type="button" onClick={() => navigate('lookup')}>
+          {marketConfig.copy.lookupNav}
+        </button>
+        <button type="button" onClick={() => navigate('admin-login')}>
+          {marketConfig.copy.adminNav}
+        </button>
+      </nav>
+    </header>
+  )
+}
+
+function formatReservationStatus(status: string) {
+  if (marketConfig.market === 'KR') return status
+  const mapping: Record<string, string> = {
+    '예약신청': 'Requested',
+    '예약확정': 'Confirmed',
+    '픽업완료': 'Picked up',
+    '취소': 'Cancelled',
+  }
+  return mapping[status] || status
+}
+
+function formatPaymentStatus(status: string) {
+  if (marketConfig.market === 'KR') return status
+  const mapping: Record<string, string> = {
+    '입금대기': 'Pending payment',
+    '입금확인': 'Paid',
+    '현장결제': 'Pay on pickup',
+    '환불필요': 'Refund required',
+  }
+  return mapping[status] || status
+}
+
+function ProductDetailRows({ reservation }: { reservation: Reservation }) {
+  const product = getProductById(reservation.productId)
+
+  return (
+    <>
+      <div>
+        <dt>{marketConfig.market === 'KR' ? '제품' : 'Product'}</dt>
+        <dd>{product.name}</dd>
+      </div>
+      <div>
+        <dt>{marketConfig.market === 'KR' ? '수량' : 'Quantity'}</dt>
+        <dd>
+          {reservation.quantity}
+          {marketConfig.copy.quantityUnit}
+        </dd>
+      </div>
+      {product.usesSizeOptions && (
+        <div>
+          <dt>{marketConfig.market === 'KR' ? '사이즈' : 'Size'}</dt>
+          <dd>{formatCakeSizeLabel(reservation.cakeSize)}</dd>
+        </div>
+      )}
+      {product.usesCacaoOptions && (
+        <div>
+          <dt>{marketConfig.market === 'KR' ? '카카오 농도' : 'Cacao'}</dt>
+          <dd>{formatCacaoLabel(reservation.cacaoPercent)}</dd>
+        </div>
+      )}
+    </>
+  )
+}
+
+function reservationCacaoText(reservation: Reservation) {
+  const product = getProductById(reservation.productId)
+  return product.usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-'
+}
+
+function reservationCakeSizeText(reservation: Reservation) {
+  const product = getProductById(reservation.productId)
+  return product.usesSizeOptions ? formatCakeSizeLabel(reservation.cakeSize) : '-'
+}
+
+function HomePage({
+  navigate,
+  settings,
+  onReserveProduct,
+}: {
+  navigate: (page: Page) => void
+  settings: StoreSettings
+  onReserveProduct: (productId: ProductId) => void
+}) {
+  const products = Object.values(PRODUCTS)
+  const productCards: Record<ProductId, { image: string; imageAlt: string; features: string[] }> = {
+    'pave-cake': {
+      image: paveCakeCardImg,
+      imageAlt: getProductById('pave-cake').name,
+      features: marketConfig.productCardFeatures['pave-cake'],
+    },
+    'pound-cake': {
+      image: poundCakeCardImg,
+      imageAlt: getProductById('pound-cake').name,
+      features: marketConfig.productCardFeatures['pound-cake'],
+    },
+  }
+
+  return (
+    <>
+      <SiteHeader navigate={navigate} />
+      <main>
+        <section className="hero-section">
+          <span className="featured-seal" aria-hidden="true">
+            <span>LIMITED</span>
+            <b>VCC</b>
+          </span>
+          <h1 className="billboard-word hero-display-word">
+            <span>gâteau</span>
+            <span>au</span>
+            <span>chocolat</span>
+          </h1>
+          <div className="hero-copy">
+            <p className="hero-title">{marketConfig.copy.homeTitle}</p>
+            <p className="hero-description">{marketConfig.copy.homeDescription}</p>
+            <div className="hero-actions">
+              <button className="primary-button" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
+                {marketConfig.copy.reserveCta}
+              </button>
+              <span>{settings.dailyLimitText}</span>
+            </div>
+          </div>
+          <div className="hero-image-wrap" aria-label={marketConfig.copy.homeTitle}>
+            <div className="hero-cake-cluster" aria-hidden="true">
+              <img src={heroCake1Img} alt="" className="hero-cake hero-cake-one" />
+              <span className="hero-size-tag hero-size-tag-mini">mini</span>
+              <img src={heroCake2Img} alt="" className="hero-cake hero-cake-two" />
+              <span className="hero-size-tag hero-size-tag-first">1st</span>
+              <img src={heroCake3Img} alt="" className="hero-cake hero-cake-three" />
+              <span className="hero-size-tag hero-size-tag-pound">pound</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="content-section product-section">
+          <h2>{marketConfig.copy.productSectionTitle}</h2>
+          <div className="product-grid">
+            {products.map((product) => (
+              <article className="product-card" key={product.id}>
+                <div className="product-image-wrap">
+                  <img src={productCards[product.id].image} alt={productCards[product.id].imageAlt} />
+                </div>
+                <div>
+                  <strong>{product.name}</strong>
+                  <p>{product.description}</p>
+                </div>
+                <ul>
+                  {productCards[product.id].features.map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+                <dl>
+                  <div>
+                    <dt>{marketConfig.market === 'KR' ? '가격' : 'Price'}</dt>
+                    <dd>{formatCurrency(product.price)}</dd>
+                  </div>
+                  <div>
+                    <dt>{marketConfig.market === 'KR' ? '옵션' : 'Options'}</dt>
+                    <dd>{product.priceNote}</dd>
+                  </div>
+                </dl>
+                <button className="secondary-button full-width" type="button" onClick={() => onReserveProduct(product.id)}>
+                  {marketConfig.copy.reserveCta}
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="content-section policy-section" id="reservation-guide">
+          <h2>{marketConfig.copy.reservationGuideTitle}</h2>
+          <div className="policy-manual">
+            <article className="policy-step">
+              <div className="policy-step-figure">
+                <span>01</span>
+                <Clipboard size={28} strokeWidth={1.7} />
+              </div>
+              <div>
+                <strong>{marketConfig.guideSteps[0].title}</strong>
+                <p>{marketConfig.guideSteps[0].text}</p>
+              </div>
+            </article>
+            <article className="policy-step">
+              <div className="policy-step-figure">
+                <span>02</span>
+                <MessageCircleCheck size={28} strokeWidth={1.7} />
+              </div>
+              <div>
+                <strong>{marketConfig.guideSteps[1].title}</strong>
+                <p>{marketConfig.guideSteps[1].text}</p>
+              </div>
+            </article>
+            <article className="policy-step">
+              <div className="policy-step-figure">
+                <span>03</span>
+                <Wallet size={28} strokeWidth={1.7} />
+              </div>
+              <div>
+                <strong>{marketConfig.guideSteps[2].title}</strong>
+                <p>{marketConfig.guideSteps[2].text}</p>
+              </div>
+            </article>
+            <article className="policy-step">
+              <div className="policy-step-figure">
+                <span>04</span>
+                <CalendarDays size={28} strokeWidth={1.7} />
+              </div>
+              <div>
+                <strong>{marketConfig.guideSteps[3].title}</strong>
+                <p>
+                  {marketConfig.market === 'KR' ? '평일' : 'Weekdays'} {settings.weekdayOpen}-{settings.weekdayClose},{' '}
+                  {marketConfig.market === 'KR' ? '주말' : 'Weekends'} {settings.weekendOpen}-{settings.weekendClose}
+                </p>
+              </div>
+            </article>
+          </div>
+          <p className="policy-note">{settings.pickupNotice}</p>
+        </section>
+      </main>
+      <button className="sticky-cta" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
+        {marketConfig.copy.reserveCta}
+      </button>
+    </>
+  )
+}
+
+function ReservePage({
+  navigate,
+  settings,
+  initialProductId,
+  onComplete,
+}: {
+  navigate: (page: Page) => void
+  settings: StoreSettings
+  initialProductId: ProductId
+  onComplete: (reservation: Reservation) => void
+}) {
+  const [form, setForm] = useState({
+    productId: initialProductId,
+    cacaoPercent: '기본' as CacaoPercent,
+    cakeSize: DEFAULT_CAKE_SIZE as CakeSize,
+    pickupDate: todayInputValue(),
+    pickupTime: '',
+    quantity: 1,
+    customerName: '',
+    customerPhone: '',
+    requestNote: '',
+    privacy: false,
+  })
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const today = useTodayInputValue()
+  const pickupDate = form.pickupDate && form.pickupDate >= today ? form.pickupDate : today
+  const times = useMemo(() => timeOptionsForDate(pickupDate, settings), [pickupDate, settings])
+  const selectedPickupTime = times.includes(form.pickupTime) ? form.pickupTime : times[0] || ''
+
+  async function submitReservation(event: React.FormEvent) {
+    event.preventDefault()
+    setError('')
+    const phone = normalizePhone(form.customerPhone)
+
+    if (!form.customerName.trim() || form.customerName.trim().length < 2) {
+      setError(
+        marketConfig.market === 'KR'
+          ? '예약자명을 2자 이상 입력해 주세요.'
+          : 'Please enter your name (at least 2 characters).'
+      )
+      return
+    }
+    if (!isValidPhone(phone)) {
+      setError(`${marketConfig.market === 'KR' ? '연락처를 확인해 주세요.' : 'Please check the phone number.'} ${marketConfig.copy.phoneHelp}`)
+      return
+    }
+    if (!pickupDate || pickupDate < today) {
+      setError(
+        marketConfig.market === 'KR'
+          ? '픽업 날짜를 오늘 이후로 선택해 주세요.'
+          : 'Please select a pickup date from tomorrow onwards.'
+      )
+      return
+    }
+    if (!selectedPickupTime) {
+      setError(marketConfig.market === 'KR' ? '픽업 시간을 선택해 주세요.' : 'Please select a pickup time.')
+      return
+    }
+    if (form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY) {
+      setError(
+        marketConfig.market === 'KR'
+          ? `수량은 최대 ${MAX_RESERVATION_QUANTITY}개까지 선택할 수 있습니다.`
+          : `You can reserve up to ${MAX_RESERVATION_QUANTITY} cakes.`
+      )
+      return
+    }
+    if (!form.privacy) {
+      setError(marketConfig.market === 'KR' ? '개인정보 수집 및 이용에 동의해 주세요.' : 'Please agree to the privacy policy.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const reservation = await createReservation(
+        {
+          customerName: form.customerName,
+          customerPhone: phone,
+          productId: form.productId,
+          cakeSize: form.cakeSize,
+          quantity: form.quantity,
+          pickupDate,
+          pickupTime: selectedPickupTime,
+          cacaoPercent: form.cacaoPercent,
+          requestNote: form.requestNote,
+        }
+      )
+      onComplete(reservation)
+      navigate('complete')
+    } catch {
+      setError(
+        marketConfig.market === 'KR'
+          ? '예약 신청 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+          : 'An error occurred while submitting your reservation. Please try again.'
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const selectedProduct = getProductById(form.productId)
+  const unitPrice = getReservationUnitPrice(selectedProduct.id, form.cacaoPercent, form.cakeSize)
+  const currentPrice = getReservationPrice(selectedProduct.id, form.cacaoPercent, form.quantity, form.cakeSize)
+  const labels = {
+    back: marketConfig.market === 'KR' ? '돌아가기' : 'Back',
+    title: marketConfig.market === 'KR' ? '예약 신청' : 'Reservation request',
+    product: marketConfig.market === 'KR' ? '제품' : 'Product',
+    totalPrice: marketConfig.market === 'KR' ? '총 가격' : 'Total',
+    quantity: marketConfig.market === 'KR' ? '수량' : 'Quantity',
+    size: marketConfig.market === 'KR' ? '사이즈' : 'Size',
+    options: marketConfig.market === 'KR' ? '옵션' : 'Options',
+    production: marketConfig.market === 'KR' ? '제작' : 'Availability',
+    cakeSelect: marketConfig.market === 'KR' ? '케이크 선택' : 'Choose cake',
+    sizeSelect: marketConfig.market === 'KR' ? '사이즈 선택' : 'Choose size',
+    cacaoSelect: marketConfig.market === 'KR' ? '농도 선택' : 'Choose cacao',
+    orderQuantity: marketConfig.market === 'KR' ? '주문 수량' : 'Order quantity',
+    quantityHelp:
+      marketConfig.market === 'KR'
+        ? `1${marketConfig.copy.quantityUnit} 기준 ${formatCurrency(unitPrice)}, 최대 ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}까지 예약할 수 있습니다.`
+        : `${formatCurrency(unitPrice)} per cake, up to ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}.`,
+    pickupDate: marketConfig.market === 'KR' ? '픽업 날짜' : 'Pickup date',
+    pickupTime: marketConfig.market === 'KR' ? '픽업 시간' : 'Pickup time',
+    customerName: marketConfig.market === 'KR' ? '예약자명' : 'Name',
+    phone: marketConfig.market === 'KR' ? '연락처' : 'Phone',
+    requestNote: marketConfig.market === 'KR' ? '요청사항' : 'Request notes',
+  }
+
+  function selectProduct(productId: ProductId) {
+    const product = getProductById(productId)
+    setForm({
+      ...form,
+      productId,
+      cacaoPercent: product.usesCacaoOptions ? form.cacaoPercent : '기본',
+      cakeSize: product.usesSizeOptions ? form.cakeSize : DEFAULT_CAKE_SIZE,
+    })
+  }
+
+  return (
+    <>
+      <SiteHeader navigate={navigate} />
+      <main className="form-page">
+        <button className="text-button" type="button" onClick={() => navigate('home')}>
+          <ArrowLeft size={16} /> {labels.back}
+        </button>
+        <section className="reservation-layout">
+          <aside className="summary-panel">
+            <p className="summary-kicker">{marketConfig.copy.productSectionTitle}</p>
+            <h1>{labels.title}</h1>
+            <dl>
+              <div>
+                <dt>{labels.product}</dt>
+                <dd>{selectedProduct.name}</dd>
+              </div>
+              <div>
+                <dt>{labels.totalPrice}</dt>
+                <dd>{formatCurrency(currentPrice)}</dd>
+              </div>
+              <div>
+                <dt>{labels.quantity}</dt>
+                <dd>
+                  {form.quantity}
+                  {marketConfig.copy.quantityUnit}
+                </dd>
+              </div>
+              <div>
+                <dt>{labels.size}</dt>
+                <dd>{selectedProduct.usesSizeOptions ? formatCakeSizeLabel(form.cakeSize) : '-'}</dd>
+              </div>
+              <div>
+                <dt>{labels.options}</dt>
+                <dd>{selectedProduct.priceNote}</dd>
+              </div>
+              <div>
+                <dt>{labels.production}</dt>
+                <dd>{settings.dailyLimitText}</dd>
+              </div>
+            </dl>
+            <p>{settings.reservationNotice}</p>
+          </aside>
+
+          <form className="reservation-form" onSubmit={submitReservation}>
+            <fieldset>
+              <legend>{labels.cakeSelect}</legend>
+              <div className="choice-list">
+                {Object.values(PRODUCTS).map((product) => (
+                  <label className="choice-item" key={product.id}>
+                    <input
+                      type="radio"
+                      name="product"
+                      checked={form.productId === product.id}
+                      onChange={() => selectProduct(product.id)}
+                    />
+                    <span className="choice-copy">
+                      <strong>{product.name}</strong>
+                      <span>
+                        1{marketConfig.copy.quantityUnit} {formatCurrency(getReservationUnitPrice(product.id, '기본', DEFAULT_CAKE_SIZE))} ·{' '}
+                        {product.priceNote}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset disabled={!selectedProduct.usesSizeOptions}>
+              <legend>{labels.sizeSelect}</legend>
+              <div className="choice-list">
+                {CAKE_SIZE_OPTIONS.map((option) => (
+                  <label className="choice-item" key={option.value}>
+                    <input
+                      type="radio"
+                      name="cakeSize"
+                      checked={form.cakeSize === option.value}
+                      onChange={() => setForm({ ...form, cakeSize: option.value })}
+                    />
+                    <span className="choice-copy">
+                      <strong>
+                        {option.label} · {formatCurrency(option.price)}
+                      </strong>
+                      <span>{option.description}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="field-help">
+                {selectedProduct.usesSizeOptions
+                  ? marketConfig.market === 'KR'
+                    ? '선택한 사이즈 기준으로 예약 금액이 계산됩니다.'
+                    : 'The reservation total is calculated from the selected size.'
+                  : marketConfig.market === 'KR'
+                    ? '초코 파운드 케이크는 단일 사이즈입니다.'
+                    : 'The chocolate pound cake has one size.'}
+              </p>
+            </fieldset>
+
+            {selectedProduct.usesCacaoOptions && (
+              <fieldset>
+                <legend>{labels.cacaoSelect}</legend>
+                <div className="choice-list">
+                  {CACAO_OPTIONS.map((option) => (
+                    <label className="choice-item" key={option.value}>
+                      <input
+                        type="radio"
+                        name="cacao"
+                        checked={form.cacaoPercent === option.value}
+                        onChange={() => setForm({ ...form, cacaoPercent: option.value })}
+                      />
+                      <span className="choice-copy">
+                        <strong>
+                          {option.label} {option.extraPrice > 0 && `(+${formatCurrency(option.extraPrice)})`}
+                        </strong>
+                        <span>{option.title}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="field-help">
+                  {marketConfig.market === 'KR'
+                    ? '카카오 농도는 가나슈 풍미 기준이며 케이크 전체 당류 함량이 아닙니다.'
+                    : 'Cacao options describe the ganache profile, not the total sugar content of the cake.'}
+                </p>
+              </fieldset>
+            )}
+
+            <fieldset>
+              <legend>{labels.quantity}</legend>
+              <label>
+                {labels.orderQuantity}
+                <select
+                  value={form.quantity}
+                  onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
+                >
+                  {Array.from({ length: MAX_RESERVATION_QUANTITY }, (_, index) => index + 1).map((quantity) => (
+                    <option value={quantity} key={quantity}>
+                      {quantity}
+                      {marketConfig.copy.quantityUnit}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="field-help">{labels.quantityHelp}</p>
+            </fieldset>
+
+            <div className="field-row">
+              <label>
+                {labels.pickupDate}
+                <input
+                  type="date"
+                  min={today}
+                  value={pickupDate}
+                  onChange={(event) => {
+                    const nextDate = event.target.value
+                    setForm({
+                      ...form,
+                      pickupDate: nextDate,
+                      pickupTime: timeOptionsForDate(nextDate, settings)[0] || '',
+                    })
+                  }}
+                />
+              </label>
+              <label>
+                {labels.pickupTime}
+                <select
+                  value={selectedPickupTime}
+                  onChange={(event) => setForm({ ...form, pickupTime: event.target.value })}
+                >
+                  {times.map((time) => (
+                    <option value={time} key={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <p className="field-help">{settings.pickupNotice}</p>
+
+            <div className="field-row">
+              <label>
+                {labels.customerName}
+                <input
+                  value={form.customerName}
+                  onChange={(event) => setForm({ ...form, customerName: event.target.value })}
+                  placeholder={marketConfig.market === 'KR' ? '홍길동' : 'Jenny Smith'}
+                />
+              </label>
+              <label>
+                {labels.phone}
+                <input
+                  inputMode="tel"
+                  value={form.customerPhone}
+                  onChange={(event) => setForm({ ...form, customerPhone: event.target.value })}
+                  placeholder={marketConfig.copy.phonePlaceholder}
+                />
+              </label>
+            </div>
+
+            <label>
+              {labels.requestNote}
+              <textarea
+                value={form.requestNote}
+                onChange={(event) => setForm({ ...form, requestNote: event.target.value })}
+                placeholder={marketConfig.copy.requestPlaceholder}
+              />
+            </label>
+
+            <label className="agree-row">
+              <input
+                type="checkbox"
+                checked={form.privacy}
+                onChange={(event) => setForm({ ...form, privacy: event.target.checked })}
+              />
+              <span>
+                {marketConfig.copy.privacyNotice}
+              </span>
+            </label>
+
+            {error && <p className="error-text">{error}</p>}
+
+            <BankAccountBox settings={settings} totalPrice={currentPrice} />
+
+            <button className="primary-button full-width" type="submit" disabled={submitting}>
+              {submitting ? (marketConfig.market === 'KR' ? '신청 중' : 'Submitting') : marketConfig.copy.reserveCta}
+            </button>
+          </form>
+        </section>
+      </main>
+    </>
+  )
+}
+
+function CompletePage({
+  navigate,
+  reservation,
+  settings,
+}: {
+  navigate: (page: Page) => void
+  reservation: Reservation | null
+  settings: StoreSettings
+}) {
+  return (
+    <>
+      <SiteHeader navigate={navigate} />
+      <main className="narrow-page">
+        <section className="complete-panel">
+          <div className="check-icon">
+            <Check size={22} />
+          </div>
+          <h1>{marketConfig.copy.reservationCompleteTitle}</h1>
+          <p>{marketConfig.copy.reservationCompleteText}</p>
+
+          {reservation ? (
+            <dl className="detail-list">
+              <div>
+                <dt>{marketConfig.market === 'KR' ? '예약번호' : 'Reservation number'}</dt>
+                <dd>{reservation.reservationNumber}</dd>
+              </div>
+              <div>
+                <dt>{marketConfig.market === 'KR' ? '예약자명' : 'Name'}</dt>
+                <dd>{reservation.customerName}</dd>
+              </div>
+              <div>
+                <dt>{marketConfig.market === 'KR' ? '연락처' : 'Phone'}</dt>
+                <dd>{maskPhone(reservation.customerPhone)}</dd>
+              </div>
+              <ProductDetailRows reservation={reservation} />
+              <div>
+                <dt>{marketConfig.market === 'KR' ? '픽업' : 'Pickup'}</dt>
+                <dd>
+                  {reservation.pickupDate} {reservation.pickupTime}
+                </dd>
+              </div>
+              <div>
+                <dt>{marketConfig.market === 'KR' ? '가격' : 'Price'}</dt>
+                <dd>{formatCurrency(reservation.totalPrice)}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="notice-line">{marketConfig.copy.noReservationText}</p>
+          )}
+
+          <div className="complete-bank-section">
+            <BankAccountBox settings={settings} totalPrice={reservation?.totalPrice} />
+            <p>{marketConfig.copy.paymentConfirmText}</p>
+          </div>
+
+          <div className="button-row">
+            <button className="secondary-button" type="button" onClick={() => navigate('lookup')}>
+              {marketConfig.copy.lookupNav}
+            </button>
+            <button className="primary-button" type="button" onClick={() => navigate('home')}>
+              {marketConfig.market === 'KR' ? '처음으로' : 'Home'}
+            </button>
+          </div>
+        </section>
+      </main>
+    </>
+  )
+}
+
+function LookupPage({ navigate }: { navigate: (page: Page) => void }) {
+  const [reservationNumber, setReservationNumber] = useState('')
+  const [phone, setPhone] = useState('')
+  const [reservation, setReservation] = useState<Reservation | null>(null)
+  const [message, setMessage] = useState('')
+
+  async function lookup(event: React.FormEvent) {
+    event.preventDefault()
+    setMessage('')
+    const result = await getReservationByNumber(reservationNumber.trim(), phone.trim())
+    setReservation(result)
+    if (!result) setMessage(marketConfig.copy.notFoundText)
+  }
+
+  return (
+    <>
+      <SiteHeader navigate={navigate} />
+      <main className="narrow-page">
+        <form className="lookup-form" onSubmit={lookup}>
+          <h1>{marketConfig.copy.lookupTitle}</h1>
+          <label>
+            {marketConfig.market === 'KR' ? '예약번호' : 'Reservation number'}
+            <input value={reservationNumber} onChange={(event) => setReservationNumber(event.target.value)} />
+          </label>
+          <label>
+            {marketConfig.copy.lookupPhoneLabel}
+            <input inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} />
+          </label>
+          <button className="primary-button full-width" type="submit">
+            {marketConfig.market === 'KR' ? '조회하기' : 'Search'}
+          </button>
+          {message && <p className="error-text">{message}</p>}
+        </form>
+
+        {reservation && (
+          <section className="result-panel">
+            <dl className="detail-list">
+              <div>
+                <dt>{marketConfig.market === 'KR' ? '예약상태' : 'Reservation status'}</dt>
+                <dd>{formatReservationStatus(reservation.status)}</dd>
+              </div>
+              <div>
+                <dt>{marketConfig.market === 'KR' ? '입금상태' : 'Payment status'}</dt>
+                <dd>{formatPaymentStatus(reservation.paymentStatus)}</dd>
+              </div>
+              <ProductDetailRows reservation={reservation} />
+              <div>
+                <dt>{marketConfig.market === 'KR' ? '픽업' : 'Pickup'}</dt>
+                <dd>
+                  {reservation.pickupDate} {reservation.pickupTime}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        )}
+      </main>
+    </>
+  )
+}
+
+function AdminLoginPage({ navigate }: { navigate: (page: Page) => void }) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('oauth') === 'failed' ? 'Google 로그인에 실패했습니다.' : ''
+  })
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const oauth = params.get('oauth')
+
+    if (oauth === 'failed') {
+      window.history.replaceState(null, '', '/admin/login')
+      return
+    }
+
+    isAdminLoggedIn().then((loggedIn) => {
+      if (loggedIn) {
+        navigate('admin')
+        return
+      }
+
+      if (oauth === 'success') {
+        setError('허용된 관리자 Google 계정이 아닙니다.')
+        window.history.replaceState(null, '', '/admin/login')
+      }
+    })
+  }, [navigate])
+
+  async function submitLogin(event: React.FormEvent) {
+    event.preventDefault()
+    setError('')
+    try {
+      await loginAdmin(email, password)
+      navigate('admin')
+    } catch {
+      setError('로그인 정보를 확인해 주세요.')
+    }
+  }
+
+  return (
+    <>
+      <SiteHeader navigate={navigate} />
+      <main className="narrow-page">
+        <form className="lookup-form" onSubmit={submitLogin}>
+          <Shield size={22} />
+          <h1>관리자 로그인</h1>
+          <label>
+            이메일
+            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+          </label>
+          <label>
+            비밀번호
+            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+          </label>
+          {!isAppwriteConfigured && <p className="field-help">로컬 데모 모드에서는 아무 값으로 로그인됩니다.</p>}
+          {error && <p className="error-text">{error}</p>}
+          <button className="google-button full-width" type="button" onClick={loginAdminWithGoogle}>
+            Google로 로그인
+          </button>
+          <div className="login-divider">또는</div>
+          <button className="primary-button full-width" type="submit">
+            이메일로 로그인
+          </button>
+        </form>
+      </main>
+    </>
+  )
+}
+
+function AdminFrame({
+  navigate,
+  children,
+}: {
+  navigate: (page: Page) => void
+  children: React.ReactNode
+}) {
+  async function logout() {
+    await logoutAdmin()
+    navigate('admin-login')
+  }
+
+  return (
+    <div className="admin-layout">
+      <aside className="admin-sidebar">
+        <button className="brand-button" type="button" onClick={() => navigate('home')}>
+          Verygood
+        </button>
+        <button type="button" onClick={() => navigate('admin')}>
+          대시보드
+        </button>
+        <button type="button" onClick={() => navigate('admin-reservations')}>
+          예약 목록
+        </button>
+        <button type="button" onClick={logout}>
+          <LogOut size={16} /> 로그아웃
+        </button>
+      </aside>
+      <main className="admin-main">{children}</main>
+    </div>
+  )
+}
+
+function AdminDashboardPage({ navigate }: { navigate: (page: Page) => void }) {
+  const [authorized, setAuthorized] = useState(false)
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const today = useTodayInputValue()
+  const tomorrow = addDaysInputValue(1)
+
+  useEffect(() => {
+    isAdminLoggedIn().then((loggedIn) => {
+      if (!loggedIn) navigate('admin-login')
+      setAuthorized(loggedIn)
+    })
+  }, [navigate])
+
+  useEffect(() => {
+    if (authorized) listReservations().then(setReservations)
+  }, [authorized])
+
+  const stats = [
+    { label: '오늘 픽업', value: reservations.filter((item) => item.pickupDate === today).length },
+    { label: '내일 픽업', value: reservations.filter((item) => item.pickupDate === tomorrow).length },
+    { label: '신규 신청', value: reservations.filter((item) => item.status === '예약신청').length },
+    { label: '입금대기', value: reservations.filter((item) => item.paymentStatus === '입금대기').length },
+    { label: '예약확정', value: reservations.filter((item) => item.status === '예약확정').length },
+  ]
+
+  if (!authorized) return null
+
+  return (
+    <AdminFrame navigate={navigate}>
+      <div className="admin-header">
+        <h1>관리자 대시보드</h1>
+        <button className="primary-button" type="button" onClick={() => navigate('admin-reservations')}>
+          예약 목록 보기
+        </button>
+      </div>
+      <section className="stat-grid">
+        {stats.map((stat) => (
+          <article className="stat-card" key={stat.label}>
+            <span>{stat.label}</span>
+            <strong>{stat.value}</strong>
+          </article>
+        ))}
+      </section>
+    </AdminFrame>
+  )
+}
+
+function AdminReservationsPage({
+  navigate,
+}: {
+  navigate: (page: Page) => void
+}) {
+  const [authorized, setAuthorized] = useState(false)
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [filters, setFilters] = useState<ReservationFilters>(initialFilters)
+  const [selected, setSelected] = useState<Reservation | null>(null)
+  const [toast, setToast] = useState('')
+  const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
+
+  async function refresh(nextFilters = filters) {
+    setReservations(await listReservations(nextFilters))
+  }
+
+  useEffect(() => {
+    isAdminLoggedIn().then((loggedIn) => {
+      if (!loggedIn) navigate('admin-login')
+      setAuthorized(loggedIn)
+    })
+  }, [navigate])
+
+  useEffect(() => {
+    if (authorized) {
+      listReservations(initialFilters).then(setReservations)
+      getSettings().then(setSettings)
+    }
+  }, [authorized])
+
+  async function updateFilters(nextFilters: ReservationFilters) {
+    setFilters(nextFilters)
+    await refresh(nextFilters)
+  }
+
+  async function saveReservation(id: string, updates: Parameters<typeof updateReservation>[1]) {
+    const saved = await updateReservation(id, updates)
+    setReservations((current) => current.map((item) => (item.id === id ? saved : item)))
+    setSelected((current) => (current?.id === id ? saved : current))
+  }
+
+  async function copySms(reservation: Reservation) {
+    await navigator.clipboard.writeText(buildSmsMessage(reservation, settings))
+    setToast('문자 내용이 복사되었습니다.')
+    window.setTimeout(() => setToast(''), 2500)
+  }
+
+  function downloadCsv() {
+    const csv = `\uFEFF${reservationsToCsv(reservations)}`
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `verygood-cake-reservations-${todayInputValue()}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  if (!authorized) return null
+
+  return (
+    <AdminFrame navigate={navigate}>
+      {toast && <div className="toast">{toast}</div>}
+      <div className="admin-header">
+        <h1>예약 목록</h1>
+        <button className="primary-button" type="button" onClick={downloadCsv}>
+          <Download size={16} /> 엑셀 다운로드
+        </button>
+      </div>
+
+      <section className="filters">
+        <label>
+          <CalendarDays size={16} />
+          <input
+            type="date"
+            value={filters.pickupDate}
+            onChange={(event) => updateFilters({ ...filters, pickupDate: event.target.value })}
+          />
+        </label>
+        <select value={filters.status} onChange={(event) => updateFilters({ ...filters, status: event.target.value })}>
+          <option value="">예약상태 전체</option>
+          {RESERVATION_STATUSES.map((status) => (
+            <option value={status} key={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+        <select
+          value={filters.paymentStatus}
+          onChange={(event) => updateFilters({ ...filters, paymentStatus: event.target.value })}
+        >
+          <option value="">입금상태 전체</option>
+          {PAYMENT_STATUSES.map((status) => (
+            <option value={status} key={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+        <select
+          value={filters.cacaoPercent}
+          onChange={(event) => updateFilters({ ...filters, cacaoPercent: event.target.value })}
+        >
+          <option value="">카카오 전체</option>
+          {CACAO_OPTIONS.map((option) => (
+            <option value={option.value} key={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <label className="search-field">
+          <Search size={16} />
+          <input
+            placeholder="고객명, 연락처, 예약번호"
+            value={filters.search}
+            onChange={(event) => updateFilters({ ...filters, search: event.target.value })}
+          />
+        </label>
+      </section>
+
+      <section className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>신청일시</th>
+              <th>예약번호</th>
+              <th>예약자</th>
+              <th>연락처</th>
+              <th>제품</th>
+              <th>사이즈</th>
+              <th>카카오</th>
+              <th>수량</th>
+              <th>픽업일</th>
+              <th>픽업시간</th>
+              <th>요청사항</th>
+              <th>예약상태</th>
+              <th>입금상태</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reservations.map((reservation) => (
+              <tr key={reservation.id}>
+                <td>{reservation.createdAt.slice(0, 16).replace('T', ' ')}</td>
+                <td>{reservation.reservationNumber}</td>
+                <td>{reservation.customerName}</td>
+                <td>{reservation.customerPhone}</td>
+                <td>{getProductById(reservation.productId).name}</td>
+                <td>{reservationCakeSizeText(reservation)}</td>
+                <td>{reservationCacaoText(reservation)}</td>
+                <td>{reservation.quantity}개</td>
+                <td>{reservation.pickupDate}</td>
+                <td>{reservation.pickupTime}</td>
+                <td className="note-cell">{reservation.requestNote || '-'}</td>
+                <td>
+                  <select
+                    value={reservation.status}
+                    onChange={(event) =>
+                      saveReservation(reservation.id, { status: event.target.value as Reservation['status'] })
+                    }
+                  >
+                    {RESERVATION_STATUSES.map((status) => (
+                      <option value={status} key={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <select
+                    value={reservation.paymentStatus}
+                    onChange={(event) =>
+                      saveReservation(reservation.id, {
+                        paymentStatus: event.target.value as Reservation['paymentStatus'],
+                      })
+                    }
+                  >
+                    {PAYMENT_STATUSES.map((status) => (
+                      <option value={status} key={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td>
+                  <div className="table-actions">
+                    <button type="button" onClick={() => copySms(reservation)} title="문자 복사">
+                      <Clipboard size={16} />
+                    </button>
+                    <button type="button" onClick={() => setSelected(reservation)}>
+                      상세
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {reservations.length === 0 && (
+              <tr>
+                <td colSpan={14} className="empty-cell">
+                  표시할 예약이 없습니다.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </section>
+
+      {selected && (
+        <ReservationDrawer
+          reservation={selected}
+          onClose={() => setSelected(null)}
+          onSave={saveReservation}
+          onCopy={copySms}
+          settings={settings}
+        />
+      )}
+    </AdminFrame>
+  )
+}
+
+function ReservationDrawer({
+  reservation,
+  onClose,
+  onSave,
+  onCopy,
+  settings,
+}: {
+  reservation: Reservation
+  onClose: () => void
+  onSave: (id: string, updates: Parameters<typeof updateReservation>[1]) => Promise<void>
+  onCopy: (reservation: Reservation) => Promise<void>
+  settings: StoreSettings
+}) {
+  const [memo, setMemo] = useState(reservation.adminMemo)
+
+  return (
+    <div className="drawer-backdrop">
+      <aside className="drawer">
+        <div className="drawer-header">
+          <h2>{reservation.reservationNumber}</h2>
+          <button type="button" onClick={onClose}>
+            닫기
+          </button>
+        </div>
+        <dl className="detail-list">
+          <div>
+            <dt>예약자명</dt>
+            <dd>{reservation.customerName}</dd>
+          </div>
+          <div>
+            <dt>연락처</dt>
+            <dd>{reservation.customerPhone}</dd>
+          </div>
+          <ProductDetailRows reservation={reservation} />
+          <div>
+            <dt>픽업</dt>
+            <dd>
+              {reservation.pickupDate} {reservation.pickupTime}
+            </dd>
+          </div>
+          <div>
+            <dt>총 가격</dt>
+            <dd>{formatCurrency(reservation.totalPrice)}</dd>
+          </div>
+          <div>
+            <dt>요청사항</dt>
+            <dd>{reservation.requestNote || '-'}</dd>
+          </div>
+        </dl>
+
+        <label>
+          관리자 메모
+          <textarea value={memo} onChange={(event) => setMemo(event.target.value)} />
+        </label>
+
+        <div className="button-row">
+          <button className="secondary-button" type="button" onClick={() => onCopy(reservation)}>
+            <Clipboard size={16} /> 확정 문자 복사
+          </button>
+          <button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>
+            메모 저장
+          </button>
+        </div>
+        <div className="sms-preview">
+          <pre>{buildSmsMessage(reservation, settings)}</pre>
+        </div>
+      </aside>
+    </div>
+  )
+}
+
+export default App
