@@ -1507,59 +1507,63 @@ td select {
     padding: 18px 14px 20px;
   }
 
+  .hero-actions {
+    display: none;
+  }
+
   .hero-cake {
+    bottom: 100px;
     width: min(60vw, 235px);
   }
 
   .hero-cake-one {
     width: min(52vw, 205px);
-    transform: translateX(-94%) translateY(-42%) rotate(-2deg);
+    transform: translateX(-94%) rotate(-2deg);
   }
 
   .hero-cake-two {
     width: min(64vw, 250px);
-    transform: translateX(-53%) translateY(-42%) rotate(0deg);
+    transform: translateX(-53%) rotate(0deg);
   }
 
   .hero-cake-three {
     width: min(52vw, 205px);
-    transform: translateX(-8%) translateY(-42%) rotate(2deg);
+    transform: translateX(-8%) rotate(2deg);
   }
 
   .hero-size-tag {
-    min-width: 58px;
-    min-height: 30px;
-    padding: 6px 9px;
-    font-size: 10px;
-    letter-spacing: 0.04em;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--forest);
+    font-size: 11px;
+    line-height: 1.1;
+    letter-spacing: 0.03em;
   }
 
   .hero-size-tag::before,
   .hero-size-tag::after {
-    width: 11px;
-  }
-
-  .hero-size-tag::before {
-    left: -7px;
-  }
-
-  .hero-size-tag::after {
-    right: -7px;
+    display: none;
   }
 
   .hero-size-tag-mini {
-    left: 30%;
-    bottom: 33%;
+    left: 27%;
+    bottom: 92px;
+    transform: translateX(-50%);
   }
 
   .hero-size-tag-first {
-    left: 55%;
-    bottom: 33%;
+    left: 52%;
+    bottom: 92px;
+    transform: translateX(-50%);
   }
 
   .hero-size-tag-pound {
-    right: 15%;
-    bottom: 33%;
+    right: 20%;
+    bottom: 92px;
+    transform: translateX(50%);
   }
 }
 
@@ -1571,52 +1575,36 @@ td select {
 
   .hero-cake-one {
     width: min(51vw, 185px);
-    transform: translateX(-92%) translateY(-42%) rotate(-2deg);
+    transform: translateX(-92%) rotate(-2deg);
   }
 
   .hero-cake-two {
     width: min(63vw, 225px);
-    transform: translateX(-53%) translateY(-42%) rotate(0deg);
+    transform: translateX(-53%) rotate(0deg);
   }
 
   .hero-cake-three {
     width: min(51vw, 185px);
-    transform: translateX(-10%) translateY(-42%) rotate(2deg);
+    transform: translateX(-10%) rotate(2deg);
   }
 
   .hero-size-tag {
-    min-width: 50px;
-    min-height: 26px;
-    padding: 5px 7px;
-    font-size: 9px;
-  }
-
-  .hero-size-tag::before,
-  .hero-size-tag::after {
-    width: 9px;
-  }
-
-  .hero-size-tag::before {
-    left: -6px;
-  }
-
-  .hero-size-tag::after {
-    right: -6px;
+    font-size: 10px;
   }
 
   .hero-size-tag-mini {
     left: 27%;
-    bottom: 35%;
+    bottom: 92px;
   }
 
   .hero-size-tag-first {
-    left: 53%;
-    bottom: 35%;
+    left: 52%;
+    bottom: 92px;
   }
 
   .hero-size-tag-pound {
     right: 21%;
-    bottom: 35%;
+    bottom: 92px;
   }
 
   .button-row,
