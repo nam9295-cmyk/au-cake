@@ -1488,11 +1488,11 @@ td select {
   }
 
   .hero-display-word {
-    top: 38px;
-    width: min(116vw, 470px);
-    opacity: 0.28;
-    font-size: clamp(82px, 25vw, 112px);
-    line-height: 0.7;
+    top: 54px;
+    width: min(88vw, 330px);
+    opacity: 0.23;
+    font-size: clamp(48px, 15vw, 64px);
+    line-height: 0.78;
   }
 
   .featured-seal {
@@ -1506,6 +1506,7 @@ td select {
     width: min(100vw, 430px);
     height: clamp(500px, 126vw, 590px);
     margin: 0;
+    --hero-drag: 0px;
     touch-action: pan-y;
     transform: translateX(-50%);
   }
@@ -1530,24 +1531,32 @@ td select {
     inset: 0;
     display: block;
     opacity: 0.72;
-    transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 420ms ease;
+    transition:
+      transform 720ms cubic-bezier(0.16, 0.82, 0.24, 1),
+      opacity 560ms ease;
     will-change: transform, opacity;
   }
 
   .hero-cake-slide[data-position='center'] {
     z-index: 4;
     opacity: 1;
-    transform: translate3d(0, -18px, 86px) scale(1);
+    transform: translate3d(var(--hero-drag), -18px, 86px) scale(1);
   }
 
   .hero-cake-slide[data-position='left'] {
     z-index: 2;
-    transform: translate3d(-35%, 54px, -80px) scale(0.58) rotate(-8deg);
+    transform: translate3d(calc(-35% + var(--hero-drag)), 54px, -80px) scale(0.58) rotate(-8deg);
   }
 
   .hero-cake-slide[data-position='right'] {
     z-index: 1;
-    transform: translate3d(35%, 54px, -80px) scale(0.58) rotate(8deg);
+    transform: translate3d(calc(35% + var(--hero-drag)), 54px, -80px) scale(0.58) rotate(8deg);
+  }
+
+  .hero-image-wrap.is-dragging .hero-cake-slide {
+    transition:
+      transform 90ms linear,
+      opacity 120ms ease;
   }
 
   .hero-cake {
@@ -1556,7 +1565,7 @@ td select {
     width: min(92vw, 350px);
     max-height: none;
     transform: translateX(-50%) rotate(0deg);
-    transition: filter 420ms ease;
+    transition: filter 680ms ease;
   }
 
   .hero-cake-one,
@@ -1655,11 +1664,11 @@ td select {
   }
 
   .hero-cake-slide[data-position='left'] {
-    transform: translate3d(-36%, 52px, -80px) scale(0.55) rotate(-8deg);
+    transform: translate3d(calc(-36% + var(--hero-drag)), 52px, -80px) scale(0.55) rotate(-8deg);
   }
 
   .hero-cake-slide[data-position='right'] {
-    transform: translate3d(36%, 52px, -80px) scale(0.55) rotate(8deg);
+    transform: translate3d(calc(36% + var(--hero-drag)), 52px, -80px) scale(0.55) rotate(8deg);
   }
 
   .hero-size-tag {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type PointerEvent } from 'react'
 import {
   ArrowLeft,
   CalendarDays,
@@ -350,6 +350,7 @@ function HomePage({
   const products = Object.values(PRODUCTS)
   const [activeHeroCake, setActiveHeroCake] = useState(1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
+  const [heroDragX, setHeroDragX] = useState(0)
   const heroCakes = [
     { image: heroCake1Img, label: 'mini', className: 'hero-cake-one' },
     { image: heroCake2Img, label: '1st', className: 'hero-cake-two' },
@@ -382,16 +383,26 @@ function HomePage({
   function handleHeroPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (window.matchMedia('(max-width: 560px)').matches) {
       setSwipeStartX(event.clientX)
+      setHeroDragX(0)
     }
+  }
+
+  function handleHeroPointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (swipeStartX === null) return
+    const deltaX = event.clientX - swipeStartX
+    setHeroDragX(Math.max(-84, Math.min(84, deltaX)))
   }
 
   function handleHeroPointerUp(event: PointerEvent<HTMLDivElement>) {
     if (swipeStartX === null) return
     const deltaX = event.clientX - swipeStartX
     setSwipeStartX(null)
+    setHeroDragX(0)
     if (Math.abs(deltaX) < 34) return
     rotateHeroCake(deltaX < 0 ? 1 : -1)
   }
+
+  const heroDragStyle = { '--hero-drag': `${heroDragX}px` } as CSSProperties
 
   return (
     <>
@@ -418,11 +429,16 @@ function HomePage({
             </div>
           </div>
           <div
-            className="hero-image-wrap"
+            className={`hero-image-wrap${swipeStartX !== null ? ' is-dragging' : ''}`}
+            style={heroDragStyle}
             aria-label={marketConfig.copy.homeTitle}
             onPointerDown={handleHeroPointerDown}
+            onPointerMove={handleHeroPointerMove}
             onPointerUp={handleHeroPointerUp}
-            onPointerCancel={() => setSwipeStartX(null)}
+            onPointerCancel={() => {
+              setSwipeStartX(null)
+              setHeroDragX(0)
+            }}
           >
             <div className="hero-cake-cluster" aria-hidden="true">
               {heroCakes.map((cake, index) => {
