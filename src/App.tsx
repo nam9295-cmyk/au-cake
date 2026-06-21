@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type PointerEvent } from 'react'
 import {
   ArrowLeft,
   CalendarDays,
@@ -348,6 +348,13 @@ function HomePage({
   onReserveProduct: (productId: ProductId) => void
 }) {
   const products = Object.values(PRODUCTS)
+  const [activeHeroCake, setActiveHeroCake] = useState(1)
+  const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
+  const heroCakes = [
+    { image: heroCake1Img, label: 'mini', className: 'hero-cake-one' },
+    { image: heroCake2Img, label: '1st', className: 'hero-cake-two' },
+    { image: heroCake3Img, label: 'pound', className: 'hero-cake-three' },
+  ]
   const productCards: Record<ProductId, { image: string; imageAlt: string; features: string[] }> = {
     'pave-cake': {
       image: paveCakeCardImg,
@@ -359,6 +366,31 @@ function HomePage({
       imageAlt: getProductById('pound-cake').name,
       features: marketConfig.productCardFeatures['pound-cake'],
     },
+  }
+
+  const rotateHeroCake = useCallback((direction: 1 | -1) => {
+    setActiveHeroCake((current) => (current + direction + heroCakes.length) % heroCakes.length)
+  }, [heroCakes.length])
+
+  function heroCakePosition(index: number) {
+    const offset = (index - activeHeroCake + heroCakes.length) % heroCakes.length
+    if (offset === 0) return 'center'
+    if (offset === 1) return 'right'
+    return 'left'
+  }
+
+  function handleHeroPointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (window.matchMedia('(max-width: 560px)').matches) {
+      setSwipeStartX(event.clientX)
+    }
+  }
+
+  function handleHeroPointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (swipeStartX === null) return
+    const deltaX = event.clientX - swipeStartX
+    setSwipeStartX(null)
+    if (Math.abs(deltaX) < 34) return
+    rotateHeroCake(deltaX < 0 ? 1 : -1)
   }
 
   return (
@@ -385,14 +417,35 @@ function HomePage({
               <span>{settings.dailyLimitText}</span>
             </div>
           </div>
-          <div className="hero-image-wrap" aria-label={marketConfig.copy.homeTitle}>
+          <div
+            className="hero-image-wrap"
+            aria-label={marketConfig.copy.homeTitle}
+            onPointerDown={handleHeroPointerDown}
+            onPointerUp={handleHeroPointerUp}
+            onPointerCancel={() => setSwipeStartX(null)}
+          >
             <div className="hero-cake-cluster" aria-hidden="true">
-              <img src={heroCake1Img} alt="" className="hero-cake hero-cake-one" />
-              <span className="hero-size-tag hero-size-tag-mini">mini</span>
-              <img src={heroCake2Img} alt="" className="hero-cake hero-cake-two" />
-              <span className="hero-size-tag hero-size-tag-first">1st</span>
-              <img src={heroCake3Img} alt="" className="hero-cake hero-cake-three" />
-              <span className="hero-size-tag hero-size-tag-pound">pound</span>
+              {heroCakes.map((cake, index) => {
+                const position = heroCakePosition(index)
+                return (
+                  <div
+                    className="hero-cake-slide"
+                    data-position={position}
+                    key={cake.label}
+                    onClick={() => setActiveHeroCake(index)}
+                  >
+                    <img src={cake.image} alt="" className={`hero-cake ${cake.className}`} draggable="false" />
+                    <span className={`hero-size-tag hero-size-tag-${cake.label === '1st' ? 'first' : cake.label}`}>
+                      {cake.label}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="hero-carousel-dots" aria-hidden="true">
+              {heroCakes.map((cake, index) => (
+                <span className={index === activeHeroCake ? 'is-active' : ''} key={cake.label} />
+              ))}
             </div>
           </div>
         </section>
