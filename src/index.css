@@ -1453,6 +1453,14 @@ td select {
     align-items: flex-start;
   }
 
+  .hero-section {
+    width: 100vw;
+    margin-right: -20px;
+    margin-left: -20px;
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
   .site-header nav {
     gap: 6px;
   }
@@ -1487,34 +1495,35 @@ td select {
   .hero-image-wrap {
     top: 0;
     left: 50%;
-    width: min(148vw, 650px);
-    height: clamp(520px, 132vw, 620px);
+    width: min(100vw, 390px);
+    height: clamp(500px, 126vw, 580px);
     margin: 0;
     transform: translateX(-50%);
   }
 
   .hero-copy {
-    margin-top: clamp(430px, 104vw, 500px);
+    width: 100%;
+    margin-top: clamp(410px, 100vw, 480px);
     padding: 18px 14px 20px;
   }
 
   .hero-cake {
-    width: min(74vw, 300px);
+    width: min(60vw, 235px);
   }
 
   .hero-cake-one {
-    width: min(68vw, 280px);
-    transform: translateX(-110%) translateY(-42%) rotate(-2deg);
+    width: min(52vw, 205px);
+    transform: translateX(-94%) translateY(-42%) rotate(-2deg);
   }
 
   .hero-cake-two {
-    width: min(78vw, 320px);
-    transform: translateX(-55%) translateY(-42%) rotate(0deg);
+    width: min(64vw, 250px);
+    transform: translateX(-53%) translateY(-42%) rotate(0deg);
   }
 
   .hero-cake-three {
-    width: min(68vw, 280px);
-    transform: translateX(4%) translateY(-42%) rotate(2deg);
+    width: min(52vw, 205px);
+    transform: translateX(-8%) translateY(-42%) rotate(2deg);
   }
 
   .hero-size-tag {
@@ -1556,23 +1565,23 @@ td select {
 
 @media (max-width: 360px) {
   .hero-image-wrap {
-    width: min(142vw, 500px);
-    height: clamp(500px, 128vw, 560px);
+    width: min(100vw, 360px);
+    height: clamp(480px, 124vw, 540px);
   }
 
   .hero-cake-one {
-    width: min(64vw, 230px);
+    width: min(51vw, 185px);
     transform: translateX(-92%) translateY(-42%) rotate(-2deg);
   }
 
   .hero-cake-two {
-    width: min(75vw, 270px);
-    transform: translateX(-52%) translateY(-42%) rotate(0deg);
+    width: min(63vw, 225px);
+    transform: translateX(-53%) translateY(-42%) rotate(0deg);
   }
 
   .hero-cake-three {
-    width: min(64vw, 230px);
-    transform: translateX(-26%) translateY(-42%) rotate(2deg);
+    width: min(51vw, 185px);
+    transform: translateX(-10%) translateY(-42%) rotate(2deg);
   }
 
   .hero-size-tag {
