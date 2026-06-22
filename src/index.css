@@ -319,19 +319,19 @@ main {
 .hero-cake-one {
   z-index: 2;
   width: min(62vw, 300px);
-  transform: translateX(-110%) translateY(-18%) rotate(-2deg);
+  transform: translateX(-120%) translateY(-18%) rotate(-2deg);
 }
 
 .hero-cake-two {
   z-index: 3;
   width: min(70vw, 340px);
-  transform: translateX(-55%) translateY(-18%) rotate(0deg);
+  transform: translateX(-60%) translateY(-18%) rotate(0deg);
 }
 
 .hero-cake-three {
   z-index: 1;
   width: min(62vw, 300px);
-  transform: translateX(12%) translateY(-18%) rotate(2deg);
+  transform: translateX(4%) translateY(-18%) rotate(2deg);
 }
 
 .hero-size-tag {
@@ -375,7 +375,7 @@ main {
 }
 
 .hero-size-tag-mini {
-  left: 30%;
+  left: 22%;
   bottom: 23%;
 }
 
@@ -386,7 +386,7 @@ main {
 }
 
 .hero-size-tag-pound {
-  right: 12%;
+  right: 18%;
   bottom: 23%;
 }
 
@@ -1236,7 +1236,7 @@ td select {
 
   .hero-cake-one {
     width: min(43vw, 500px);
-    transform: translateX(-110%) translateY(-16%) rotate(-2deg);
+    transform: translateX(-115%) translateY(-16%) rotate(-2deg);
   }
 
   .hero-cake-two {
@@ -1336,7 +1336,7 @@ td select {
      - translateY: 양수면 아래로, 음수면 위로 이동 */
   .hero-cake-one {
     width: min(43vw, 650px);
-    transform: translateX(-110%) translateY(4%) rotate(-2deg);
+    transform: translateX(-115%) translateY(4%) rotate(-2deg);
   }
 
   /* HERO DESKTOP: 가운데 케이크
@@ -1365,7 +1365,7 @@ td select {
   }
 
   .hero-size-tag-mini {
-    left: 32%;
+    left: 26%;
     bottom: 10%;
   }
 
