@@ -9,9 +9,20 @@ import {
   getReservationPrice,
   normalizeCakeSize,
 } from './constants'
+import {
+  CLASS_TYPE_ID,
+  generateClassReservationNumber,
+  getClassBookingPrice,
+  getClassDepositAmount,
+} from './class-utils'
 import type {
   CakeSize,
   CacaoPercent,
+  ClassPaymentStatus,
+  ClassReservation,
+  ClassReservationFilters,
+  ClassReservationInput,
+  ClassReservationStatus,
   PaymentStatus,
   Reservation,
   ReservationFilters,
@@ -22,6 +33,7 @@ import type {
 import { generateReservationNumber } from './utils'
 
 const LOCAL_RESERVATIONS_KEY = `verygood-cake-reservations-${MARKET.toLowerCase()}`
+const LOCAL_CLASS_RESERVATIONS_KEY = `verygood-class-reservations-${MARKET.toLowerCase()}`
 const LOCAL_SETTINGS_KEY = `verygood-cake-settings-${MARKET.toLowerCase()}`
 const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 
@@ -32,6 +44,12 @@ type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeS
   productId?: string
   cakeSize?: CakeSize
   quantity?: number
+}
+
+type AppwriteClassReservationDocument = Omit<ClassReservation, 'id'> & {
+  $id: string
+  $createdAt?: string
+  $updatedAt?: string
 }
 
 function normalizeReservation(reservation: Reservation): Reservation {
@@ -105,6 +123,64 @@ function applyLocalFilters(reservations: Reservation[], filters?: ReservationFil
     return (
       reservation.customerName.toLowerCase().includes(search) ||
       reservation.customerPhone.includes(search) ||
+      reservation.reservationNumber.toLowerCase().includes(search)
+    )
+  })
+}
+
+function toClassReservation(document: AppwriteClassReservationDocument): ClassReservation {
+  return {
+    id: document.$id,
+    reservationNumber: document.reservationNumber,
+    classType: document.classType || CLASS_TYPE_ID,
+    classDate: document.classDate,
+    classTime: document.classTime,
+    bookingType: document.bookingType,
+    parentName: document.parentName,
+    parentPhone: document.parentPhone,
+    parentEmail: document.parentEmail,
+    childName: document.childName,
+    childAge: Number(document.childAge || 0),
+    schoolYear: document.schoolYear || '',
+    secondChildName: document.secondChildName || '',
+    secondChildAge: document.secondChildAge === null || document.secondChildAge === undefined ? null : Number(document.secondChildAge),
+    secondChildSchoolYear: document.secondChildSchoolYear || '',
+    allergyNote: document.allergyNote || '',
+    emergencyContact: document.emergencyContact || '',
+    pickupPerson: document.pickupPerson || '',
+    parentConsent: Boolean(document.parentConsent),
+    cancellationAgreement: Boolean(document.cancellationAgreement),
+    photoConsent: Boolean(document.photoConsent),
+    status: document.status,
+    paymentStatus: document.paymentStatus,
+    totalPrice: Number(document.totalPrice || 0),
+    depositAmount: Number(document.depositAmount || 0),
+    adminMemo: document.adminMemo || '',
+    createdAt: document.createdAt || document.$createdAt || '',
+    updatedAt: document.updatedAt || document.$updatedAt || '',
+  }
+}
+
+function readLocalClassReservations(): ClassReservation[] {
+  return JSON.parse(localStorage.getItem(LOCAL_CLASS_RESERVATIONS_KEY) || '[]') as ClassReservation[]
+}
+
+function writeLocalClassReservations(reservations: ClassReservation[]) {
+  localStorage.setItem(LOCAL_CLASS_RESERVATIONS_KEY, JSON.stringify(reservations))
+}
+
+function applyLocalClassFilters(reservations: ClassReservation[], filters?: ClassReservationFilters) {
+  if (!filters) return reservations
+  const search = filters.search.trim().toLowerCase()
+  return reservations.filter((reservation) => {
+    if (filters.classDate && reservation.classDate !== filters.classDate) return false
+    if (filters.status && reservation.status !== filters.status) return false
+    if (filters.paymentStatus && reservation.paymentStatus !== filters.paymentStatus) return false
+    if (!search) return true
+    return (
+      reservation.parentName.toLowerCase().includes(search) ||
+      reservation.childName.toLowerCase().includes(search) ||
+      reservation.parentPhone.includes(search) ||
       reservation.reservationNumber.toLowerCase().includes(search)
     )
   })
@@ -236,6 +312,100 @@ export async function updateReservation(
     nextUpdates,
   )
   return toReservation(document as unknown as AppwriteReservationDocument)
+}
+
+export async function createClassReservation(input: ClassReservationInput): Promise<ClassReservation> {
+  const now = new Date().toISOString()
+  const data = {
+    reservationNumber: generateClassReservationNumber(),
+    classType: CLASS_TYPE_ID,
+    classDate: input.classDate,
+    classTime: input.classTime,
+    bookingType: input.bookingType,
+    parentName: input.parentName.trim(),
+    parentPhone: input.parentPhone.trim(),
+    parentEmail: input.parentEmail.trim(),
+    childName: input.childName.trim(),
+    childAge: Number(input.childAge || 0),
+    schoolYear: input.schoolYear.trim(),
+    secondChildName: input.secondChildName.trim(),
+    secondChildAge: input.bookingType === '2-friends' && input.secondChildAge ? Number(input.secondChildAge) : null,
+    secondChildSchoolYear: input.secondChildSchoolYear.trim(),
+    allergyNote: input.allergyNote.trim(),
+    emergencyContact: input.emergencyContact.trim(),
+    pickupPerson: input.pickupPerson.trim(),
+    parentConsent: input.parentConsent,
+    cancellationAgreement: input.cancellationAgreement,
+    photoConsent: input.photoConsent,
+    status: 'Requested' as ClassReservationStatus,
+    paymentStatus: 'Pending deposit' as ClassPaymentStatus,
+    totalPrice: getClassBookingPrice(input.bookingType),
+    depositAmount: getClassDepositAmount(),
+    adminMemo: '',
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  if (!isAppwriteConfigured) {
+    const reservation: ClassReservation = { id: crypto.randomUUID(), ...data }
+    writeLocalClassReservations([reservation, ...readLocalClassReservations()])
+    return reservation
+  }
+
+  const document = await databases.createDocument(
+    appwriteConfig.classReservationsDatabaseId,
+    appwriteConfig.classReservationsCollectionId,
+    ID.unique(),
+    data,
+  )
+  return toClassReservation(document as unknown as AppwriteClassReservationDocument)
+}
+
+export async function listClassReservations(filters?: ClassReservationFilters): Promise<ClassReservation[]> {
+  if (!isAppwriteConfigured) {
+    return applyLocalClassFilters(readLocalClassReservations(), filters).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  }
+
+  const queries = [Query.orderDesc('createdAt'), Query.limit(200)]
+  if (filters?.classDate) queries.push(Query.equal('classDate', filters.classDate))
+  if (filters?.status) queries.push(Query.equal('status', filters.status))
+  if (filters?.paymentStatus) queries.push(Query.equal('paymentStatus', filters.paymentStatus))
+
+  const result = await databases.listDocuments(
+    appwriteConfig.classReservationsDatabaseId,
+    appwriteConfig.classReservationsCollectionId,
+    queries,
+  )
+  return applyLocalClassFilters(result.documents.map((doc) => toClassReservation(doc as unknown as AppwriteClassReservationDocument)), {
+    classDate: '',
+    status: '',
+    paymentStatus: '',
+    search: filters?.search || '',
+  })
+}
+
+export async function updateClassReservation(
+  id: string,
+  updates: Partial<Pick<ClassReservation, 'status' | 'paymentStatus' | 'adminMemo'>>,
+): Promise<ClassReservation> {
+  const nextUpdates = { ...updates, updatedAt: new Date().toISOString() }
+
+  if (!isAppwriteConfigured) {
+    const reservations = readLocalClassReservations()
+    const index = reservations.findIndex((reservation) => reservation.id === id)
+    if (index < 0) throw new Error('클래스 예약을 찾을 수 없습니다.')
+    reservations[index] = { ...reservations[index], ...nextUpdates }
+    writeLocalClassReservations(reservations)
+    return reservations[index]
+  }
+
+  const document = await databases.updateDocument(
+    appwriteConfig.classReservationsDatabaseId,
+    appwriteConfig.classReservationsCollectionId,
+    id,
+    nextUpdates,
+  )
+  return toClassReservation(document as unknown as AppwriteClassReservationDocument)
 }
 
 export async function loginAdmin(email: string, password: string) {

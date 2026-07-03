@@ -37,16 +37,30 @@ import { isAppwriteConfigured } from './lib/appwrite'
 import { marketConfig } from './lib/market'
 import {
   createReservation,
+  createClassReservation,
   getReservationByNumber,
   getSettings,
   isAdminLoggedIn,
   listReservations,
+  listClassReservations,
   loginAdmin,
   loginAdminWithGoogle,
   logoutAdmin,
   updateReservation,
+  updateClassReservation,
 } from './lib/repository'
-import type { CacaoPercent, CakeSize, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
+import type { CacaoPercent, CakeSize, ClassBookingType, ClassReservation, ClassReservationFilters, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
+import {
+  buildClassConfirmationMessage,
+  buildClassDepositMessage,
+  classReservationsToCsv,
+  CLASS_PAYMENT_STATUS_OPTIONS,
+  CLASS_SESSION_TIMES,
+  CLASS_STATUS_OPTIONS,
+  formatClassBookingType,
+  getClassBookingPrice,
+  getClassDepositAmount,
+} from './lib/class-utils'
 import {
   addDaysInputValue,
   buildSmsMessage,
@@ -59,13 +73,31 @@ import {
   todayInputValue,
 } from './lib/utils'
 
-type Page = 'home' | 'reserve' | 'complete' | 'lookup' | 'admin-login' | 'admin' | 'admin-reservations'
+type Page =
+  | 'home'
+  | 'reserve'
+  | 'complete'
+  | 'lookup'
+  | 'classes'
+  | 'class-reserve'
+  | 'class-complete'
+  | 'admin-login'
+  | 'admin'
+  | 'admin-reservations'
+  | 'admin-classes'
 
 const initialFilters: ReservationFilters = {
   pickupDate: '',
   status: '',
   paymentStatus: '',
   cacaoPercent: '',
+  search: '',
+}
+
+const initialClassFilters: ClassReservationFilters = {
+  classDate: '',
+  status: '',
+  paymentStatus: '',
   search: '',
 }
 
@@ -95,8 +127,12 @@ function getPageFromPath(): Page {
   if (path === '/reserve') return 'reserve'
   if (path === '/complete') return 'complete'
   if (path === '/lookup') return 'lookup'
+  if (path === '/classes') return 'classes'
+  if (path === '/class-reserve') return 'class-reserve'
+  if (path === '/class-complete') return 'class-complete'
   if (path === '/admin/login') return 'admin-login'
   if (path === '/admin/reservations') return 'admin-reservations'
+  if (path === '/admin/classes') return 'admin-classes'
   if (path === '/admin') return 'admin'
   return 'home'
 }
@@ -107,9 +143,13 @@ function pathForPage(page: Page) {
     reserve: '/reserve',
     complete: '/complete',
     lookup: '/lookup',
+    classes: '/classes',
+    'class-reserve': '/class-reserve',
+    'class-complete': '/class-complete',
     'admin-login': '/admin/login',
     admin: '/admin',
     'admin-reservations': '/admin/reservations',
+    'admin-classes': '/admin/classes',
   }
   return paths[page]
 }
@@ -158,6 +198,7 @@ function App() {
   const [page, setPage] = useState<Page>(getPageFromPath)
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
   const [completedReservation, setCompletedReservation] = useState<Reservation | null>(null)
+  const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
   const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
 
   useEffect(() => {
@@ -184,7 +225,7 @@ function App() {
     [navigate],
   )
 
-  const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations'
+  const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations' || page === 'admin-classes'
 
   return (
     <>
@@ -195,6 +236,9 @@ function App() {
       )}
 
       {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} />}
+      {page === 'classes' && <ClassesPage navigate={navigate} />}
+      {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} />}
+      {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} />}
       {page === 'reserve' && (
         <ReservePage
           navigate={navigate}
@@ -210,6 +254,7 @@ function App() {
       {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
       {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
       {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
+      {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}
     </div>
     </>
   )
@@ -263,6 +308,9 @@ function SiteHeader({ navigate }: { navigate: (page: Page) => void }) {
         Verygood Chocolate
       </button>
       <nav>
+        <button type="button" onClick={() => navigate('classes')}>
+          Classes
+        </button>
         <button type="button" onClick={() => navigate('lookup')}>
           {marketConfig.copy.lookupNav}
         </button>
@@ -554,6 +602,381 @@ function HomePage({
       <button className="sticky-cta" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
         {marketConfig.copy.reserveCta}
       </button>
+    </>
+  )
+}
+
+function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
+  const essentials = [
+    ['Best for Year 3-6', 'Primary school kids fit'],
+    ['90-minute private class', 'Careful step-by-step guidance'],
+    ['One 15cm cake per child', 'Complete custom decorating'],
+    ['Max 2 kids per session', 'Private small group focus'],
+  ]
+  const steps = [
+    ['Choose session', 'Select your preferred date and convenient time slot for the private class.'],
+    ['Design your cake', 'Choose colours, toppings, and simple decorating ideas with guidance.'],
+    ['Decorate & personalize', 'Add custom colours, toppings, chocolate pieces, and a simple message.'],
+    ['Box and take home', 'Pack your beautiful cake in a premium window box to take home safely.'],
+  ]
+
+  return (
+    <>
+      <SiteHeader navigate={navigate} />
+      <main className="kids-class-page">
+        <section className="kids-class-hero" aria-labelledby="kids-class-title">
+          <div className="kids-hero-copy reveal-up">
+            <h1 id="kids-class-title">Private Kids Cake Decorating Class</h1>
+            <p className="kids-location">Melrose Park, Sydney</p>
+            <p className="kids-hero-text">
+              Design your own 15cm chocolate cake, choose your colours and toppings, decorate it your way, and take it home beautifully boxed.
+            </p>
+            <div className="kids-hero-actions">
+              <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
+                Request a spot
+              </button>
+              <span>90 minutes · Max 2 kids · School holiday limited spots</span>
+            </div>
+          </div>
+
+          <div className="kids-photo-card reveal-up delay-one" aria-label="Kids cake class photo placeholder">
+            <div className="kids-photo-stage">
+              <span className="cake-plate" />
+              <span className="cake-body" />
+              <span className="cake-cream cream-one" />
+              <span className="cake-cream cream-two" />
+              <span className="cake-spark spark-one" />
+              <span className="cake-spark spark-two" />
+              <span className="cake-spark spark-three" />
+              <strong>[ Editorial Kids Cake Class Photo ]</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="kids-section reveal-up delay-two" aria-labelledby="class-essentials-title">
+          <h2 id="class-essentials-title">Class Essentials</h2>
+          <div className="kids-essentials-grid">
+            {essentials.map(([title, text]) => (
+              <article className="kids-mini-card" key={title}>
+                <strong>{title}</strong>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="kids-section reveal-up" aria-labelledby="how-it-works-title">
+          <h2 id="how-it-works-title">How it works</h2>
+          <div className="kids-step-grid">
+            {steps.map(([title, text]) => (
+              <article className="kids-step-card" key={title}>
+                <strong>{title}</strong>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="kids-bottom-grid reveal-up" aria-label="Pricing and safety information">
+          <article className="kids-price-card">
+            <h2>Launch Pricing</h2>
+            <strong>A$109 / child</strong>
+            <p className="kids-price-line">A$198 / two friends or siblings</p>
+            <p className="kids-price-line">A$50 deposit required to secure booking</p>
+            <p className="kids-small-note">
+              * Final confirmation is sent after availability and deposit are checked manually by Jenny.
+            </p>
+          </article>
+
+          <article className="kids-safety-card">
+            <h2>Safety & Allergy Policy</h2>
+            <p>
+              This is a short private cake decorating class, not childcare. Younger children may need a parent or guardian to stay nearby or join the session.
+            </p>
+            <ul>
+              <li>Allergy check must be declared before deposit confirmation</li>
+              <li>Parent/guardian consent required at reservation submission</li>
+              <li>Detailed address shared after deposit confirmation (Melrose Park, Sydney)</li>
+            </ul>
+          </article>
+        </section>
+
+        <section className="kids-final-cta reveal-up" aria-label="Request class booking">
+          <p>School holiday limited spots are handled manually so Jenny can confirm each child safely.</p>
+          <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
+            Request a spot
+          </button>
+        </section>
+      </main>
+    </>
+  )
+}
+
+function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => void; onComplete: (reservation: ClassReservation) => void }) {
+  const [form, setForm] = useState<{
+    classDate: string
+    classTime: string
+    bookingType: ClassBookingType
+    parentName: string
+    parentPhone: string
+    parentEmail: string
+    childName: string
+    childAge: number
+    schoolYear: string
+    secondChildName: string
+    secondChildAge: number
+    secondChildSchoolYear: string
+    allergyNote: string
+    emergencyContact: string
+    pickupPerson: string
+    parentConsent: boolean
+    cancellationAgreement: boolean
+    photoConsent: boolean
+  }>({
+    classDate: addDaysInputValue(4),
+    classTime: CLASS_SESSION_TIMES[0],
+    bookingType: '1-child',
+    parentName: '',
+    parentPhone: '',
+    parentEmail: '',
+    childName: '',
+    childAge: 9,
+    schoolYear: 'Year 4',
+    secondChildName: '',
+    secondChildAge: 9,
+    secondChildSchoolYear: '',
+    allergyNote: '',
+    emergencyContact: '',
+    pickupPerson: '',
+    parentConsent: false,
+    cancellationAgreement: false,
+    photoConsent: false,
+  })
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const today = useTodayInputValue()
+  const price = getClassBookingPrice(form.bookingType)
+
+  async function submitClassReservation(event: React.FormEvent) {
+    event.preventDefault()
+    setError('')
+    const phone = normalizePhone(form.parentPhone)
+    if (!form.parentName.trim() || !form.childName.trim()) return setError('Please enter parent and child name.')
+    if (!isValidPhone(phone)) return setError(`Please check the phone number. ${marketConfig.copy.phoneHelp}`)
+    if (!form.parentEmail.includes('@')) return setError('Please enter a valid email address.')
+    if (!form.classDate || form.classDate < today) return setError('Please choose a future class date.')
+    if (form.bookingType === '2-friends' && !form.secondChildName.trim()) return setError('Please enter the second child name.')
+    if (!form.emergencyContact.trim() || !form.pickupPerson.trim()) return setError('Emergency contact and pick-up person are required.')
+    if (!form.parentConsent || !form.cancellationAgreement) return setError('Parent consent and booking agreement are required.')
+    setSubmitting(true)
+    try {
+      const reservation = await createClassReservation({ ...form, parentPhone: phone })
+      onComplete(reservation)
+      navigate('class-complete')
+    } catch {
+      setError('An error occurred while submitting your class request. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <SiteHeader navigate={navigate} />
+      <main className="class-reserve-page">
+        <form className="class-reserve-form" onSubmit={submitClassReservation}>
+          <header className="class-reserve-title-block">
+            <button className="class-back-button" type="button" onClick={() => navigate('classes')}>
+              <ArrowLeft size={14} /> Back to classes
+            </button>
+            <h1>Request a Class Spot</h1>
+            <p>Please fill out the details below to request a session.</p>
+          </header>
+
+          <section className="class-form-section" aria-labelledby="session-type-title">
+            <h2 id="session-type-title">1. Select Session Type</h2>
+            <div className="class-booking-grid">
+              {(['1-child', '2-friends'] as const).map((type) => (
+                <label className="class-option-card" key={type}>
+                  <input
+                    type="radio"
+                    name="classBookingType"
+                    checked={form.bookingType === type}
+                    onChange={() => setForm({ ...form, bookingType: type })}
+                  />
+                  <span>{type === '1-child' ? '1 child' : '2 siblings / friends'}</span>
+                  <strong>{formatCurrency(getClassBookingPrice(type))}</strong>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <section className="class-form-section class-form-section-tight" aria-labelledby="session-detail-title">
+            <h2 id="session-detail-title">Preferred Session</h2>
+            <label className="class-field">
+              <span>Preferred Date</span>
+              <input
+                type="date"
+                min={today}
+                value={form.classDate}
+                onChange={(event) => setForm({ ...form, classDate: event.target.value })}
+              />
+            </label>
+            <fieldset className="class-time-fieldset">
+              <legend>Preferred Session Time</legend>
+              <div className="class-time-grid">
+                {CLASS_SESSION_TIMES.map((time) => (
+                  <label className="class-time-option" key={time}>
+                    <input
+                      type="radio"
+                      name="classTime"
+                      checked={form.classTime === time}
+                      onChange={() => setForm({ ...form, classTime: time })}
+                    />
+                    <span>{time}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </section>
+
+          <section className="class-form-section" aria-labelledby="guardian-detail-title">
+            <h2 id="guardian-detail-title">2. Parent / Guardian Details</h2>
+            <label className="class-field">
+              <span>Full Name</span>
+              <input value={form.parentName} onChange={(event) => setForm({ ...form, parentName: event.target.value })} placeholder="Parent or guardian name" />
+            </label>
+            <label className="class-field">
+              <span>Email Address</span>
+              <input type="email" value={form.parentEmail} onChange={(event) => setForm({ ...form, parentEmail: event.target.value })} placeholder="name@email.com" />
+            </label>
+            <label className="class-field">
+              <span>Mobile Number</span>
+              <input inputMode="tel" value={form.parentPhone} onChange={(event) => setForm({ ...form, parentPhone: event.target.value })} placeholder="0412 345 678" />
+            </label>
+          </section>
+
+          <section className="class-form-section" aria-labelledby="child-detail-title">
+            <h2 id="child-detail-title">3. Child Details</h2>
+            <label className="class-field">
+              <span>Child 1 Name & Age / School Year</span>
+              <input value={form.childName} onChange={(event) => setForm({ ...form, childName: event.target.value })} placeholder={`Leo, Age ${form.childAge} (${form.schoolYear || 'Year 4'})`} />
+            </label>
+            <div className="class-split-row">
+              <label className="class-field">
+                <span>Child 1 Age</span>
+                <input type="number" min="3" max="18" value={form.childAge} onChange={(event) => setForm({ ...form, childAge: Number(event.target.value) })} />
+              </label>
+              <label className="class-field">
+                <span>School Year</span>
+                <input value={form.schoolYear} onChange={(event) => setForm({ ...form, schoolYear: event.target.value })} placeholder="Year 4" />
+              </label>
+            </div>
+            {form.bookingType === '2-friends' && (
+              <>
+                <label className="class-field">
+                  <span>Child 2 Name & Age / School Year (Optional)</span>
+                  <input value={form.secondChildName} onChange={(event) => setForm({ ...form, secondChildName: event.target.value })} placeholder="Chloe, Age 7 (Year 2)" />
+                </label>
+                <div className="class-split-row">
+                  <label className="class-field">
+                    <span>Child 2 Age</span>
+                    <input type="number" min="3" max="18" value={form.secondChildAge} onChange={(event) => setForm({ ...form, secondChildAge: Number(event.target.value) })} />
+                  </label>
+                  <label className="class-field">
+                    <span>Child 2 School Year</span>
+                    <input value={form.secondChildSchoolYear} onChange={(event) => setForm({ ...form, secondChildSchoolYear: event.target.value })} placeholder="Year 2" />
+                  </label>
+                </div>
+              </>
+            )}
+          </section>
+
+          <section className="class-form-section" aria-labelledby="safety-title">
+            <h2 id="safety-title">4. Allergy & Safety Declarations</h2>
+            <label className="class-field">
+              <span>Allergy declarations & safety notes</span>
+              <textarea value={form.allergyNote} onChange={(event) => setForm({ ...form, allergyNote: event.target.value })} placeholder="Please write known allergies, dietary notes, or none." />
+            </label>
+            <div className="class-split-row">
+              <label className="class-field">
+                <span>Emergency Contact</span>
+                <input value={form.emergencyContact} onChange={(event) => setForm({ ...form, emergencyContact: event.target.value })} placeholder="Name and mobile" />
+              </label>
+              <label className="class-field">
+                <span>Pick-up Person</span>
+                <input value={form.pickupPerson} onChange={(event) => setForm({ ...form, pickupPerson: event.target.value })} placeholder="Who will pick up" />
+              </label>
+            </div>
+          </section>
+
+          <section className="class-form-section" aria-labelledby="consent-title">
+            <h2 id="consent-title">5. Consent & Confirmation</h2>
+            <label className="class-check-row">
+              <input type="checkbox" checked={form.parentConsent} onChange={(event) => setForm({ ...form, parentConsent: event.target.checked })} />
+              <span>I am the parent/guardian and consent to my child joining this class.</span>
+            </label>
+            <label className="class-check-row">
+              <input type="checkbox" checked={form.cancellationAgreement} onChange={(event) => setForm({ ...form, cancellationAgreement: event.target.checked })} />
+              <span>I understand bookings are confirmed after availability and deposit payment are checked.</span>
+            </label>
+            <fieldset className="class-photo-consent">
+              <legend>Photo Consent</legend>
+              <div className="class-photo-options">
+                <label>
+                  <input type="radio" name="photoConsent" checked={form.photoConsent} onChange={() => setForm({ ...form, photoConsent: true })} />
+                  <span>Yes, I consent to photos</span>
+                </label>
+                <label>
+                  <input type="radio" name="photoConsent" checked={!form.photoConsent} onChange={() => setForm({ ...form, photoConsent: false })} />
+                  <span>No, do not take photos</span>
+                </label>
+              </div>
+            </fieldset>
+          </section>
+
+          <aside className="class-reserve-summary" aria-label="Class request summary">
+            <dl>
+              <div><dt>Booking</dt><dd>{formatClassBookingType(form.bookingType)}</dd></div>
+              <div><dt>Total</dt><dd>{formatCurrency(price)}</dd></div>
+              <div><dt>Deposit</dt><dd>{formatCurrency(getClassDepositAmount())}</dd></div>
+            </dl>
+          </aside>
+
+          {error && <p className="error-text class-error-text">{error}</p>}
+          <button className="class-submit-button" type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit Class Request'}</button>
+          <p className="class-submit-note">Final confirmation is sent after checking. No deposit is charged now.</p>
+        </form>
+      </main>
+    </>
+  )
+}
+
+function ClassCompletePage({ navigate, reservation }: { navigate: (page: Page) => void; reservation: ClassReservation | null }) {
+  const reservationNumber = reservation?.reservationNumber || 'VG-2026-0702'
+
+  return (
+    <>
+      <SiteHeader navigate={navigate} />
+      <main className="class-complete-page">
+        <section className="class-complete-card" aria-labelledby="class-complete-title">
+          <div className="class-complete-icon" aria-hidden="true">
+            <Check size={30} strokeWidth={3} />
+          </div>
+          <h1 id="class-complete-title">Request Sent!</h1>
+
+          <div className="class-complete-message">
+            <strong>Your class request has been sent.</strong>
+            <p>Jenny will check availability and send deposit details shortly.</p>
+            <p>Your spot is confirmed once the deposit is received.</p>
+            <span>Reservation ID: {reservationNumber}</span>
+          </div>
+
+          <button className="class-complete-button" type="button" onClick={() => navigate('classes')}>
+            Back to Classes
+          </button>
+        </section>
+      </main>
     </>
   )
 }
@@ -1153,6 +1576,9 @@ function AdminFrame({
         <button type="button" onClick={() => navigate('admin-reservations')}>
           예약 목록
         </button>
+        <button type="button" onClick={() => navigate('admin-classes')}>
+          클래스 예약
+        </button>
         <button type="button" onClick={logout}>
           <LogOut size={16} /> 로그아웃
         </button>
@@ -1425,6 +1851,219 @@ function AdminReservationsPage({
         />
       )}
     </AdminFrame>
+  )
+}
+
+function AdminClassesPage({ navigate }: { navigate: (page: Page) => void }) {
+  const [authorized, setAuthorized] = useState(false)
+  const [reservations, setReservations] = useState<ClassReservation[]>([])
+  const [filters, setFilters] = useState<ClassReservationFilters>(initialClassFilters)
+  const [selected, setSelected] = useState<ClassReservation | null>(null)
+  const [toast, setToast] = useState('')
+
+  async function refresh(nextFilters = filters) {
+    setReservations(await listClassReservations(nextFilters))
+  }
+
+  useEffect(() => {
+    isAdminLoggedIn().then((loggedIn) => {
+      if (!loggedIn) navigate('admin-login')
+      setAuthorized(loggedIn)
+    })
+  }, [navigate])
+
+  useEffect(() => {
+    if (authorized) listClassReservations(initialClassFilters).then(setReservations)
+  }, [authorized])
+
+  async function updateFilters(nextFilters: ClassReservationFilters) {
+    setFilters(nextFilters)
+    await refresh(nextFilters)
+  }
+
+  async function saveReservation(id: string, updates: Parameters<typeof updateClassReservation>[1]) {
+    const saved = await updateClassReservation(id, updates)
+    setReservations((current) => current.map((item) => (item.id === id ? saved : item)))
+    setSelected((current) => (current?.id === id ? saved : current))
+  }
+
+  async function copyMessage(message: string, label = '클래스 메시지') {
+    await navigator.clipboard.writeText(message)
+    setToast(`${label}가 복사되었습니다.`)
+    window.setTimeout(() => setToast(''), 2500)
+  }
+
+  function downloadCsv() {
+    const csv = `\uFEFF${classReservationsToCsv(reservations)}`
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `verygood-au-class-reservations-${todayInputValue()}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const totalRequests = reservations.length
+  const pendingDeposit = reservations.filter(
+    (reservation) => reservation.paymentStatus === 'Pending deposit' || reservation.status === 'Requested',
+  ).length
+  const confirmedSpots = reservations.filter((reservation) => reservation.status === 'Confirmed').length
+  const firstReservation = reservations[0]
+  const depositTemplate = firstReservation
+    ? buildClassDepositMessage(firstReservation)
+    : `Hi [Parent name], thank you for your cake class request for [Child name].\n\nRequested session:\n[Class date] [Class time]\n\nWe'll check availability and send payment details shortly.\nYour spot is confirmed once the A$${getClassDepositAmount()} deposit is received.\n\nVerygood Chocolate AU`
+  const confirmationTemplate = firstReservation
+    ? buildClassConfirmationMessage(firstReservation)
+    : `Hi [Parent name], [Child name]'s cake class booking is confirmed.\n\nDate/time:\n[Class date] [Class time]\n\nLocation:\nMelrose Park, Sydney\nThe full address will be sent before the class.\n\nPlease note:\n- Please arrive 5 minutes early\n- Long hair should be tied back\n- Clothes may get chocolate/cream on them\n- Please let us know immediately if there are any allergies or dietary concerns\n\nWe're excited to see you soon.\n\nVerygood Chocolate AU`
+  const stats = [
+    { label: 'Total Requests', value: totalRequests, tone: 'neutral' },
+    { label: 'Pending Deposit', value: pendingDeposit, tone: 'warning' },
+    { label: 'Confirmed Spots', value: confirmedSpots, tone: 'success' },
+  ]
+
+  if (!authorized) return null
+
+  return (
+    <AdminFrame navigate={navigate}>
+      {toast && <div className="toast">{toast}</div>}
+      <section className="class-admin-page" aria-labelledby="class-admin-title">
+        <div className="class-admin-topline">
+          <strong>verygood chocolate</strong>
+          <span id="class-admin-title">Admin / Class Reservations</span>
+        </div>
+
+        <div className="class-admin-summary-row">
+          <div className="class-admin-stats" aria-label="Class reservation summary">
+            {stats.map((stat) => (
+              <article className={`class-admin-stat ${stat.tone}`} key={stat.label}>
+                <span>{stat.label}</span>
+                <strong>{stat.value}</strong>
+              </article>
+            ))}
+          </div>
+          <button className="class-admin-download" type="button" onClick={downloadCsv}>
+            <Download size={15} />
+            Download CSV
+          </button>
+        </div>
+
+        <section className="class-admin-filters" aria-label="Class reservation filters">
+          <label>
+            <span>Date</span>
+            <input type="date" value={filters.classDate} onChange={(event) => updateFilters({ ...filters, classDate: event.target.value })} />
+          </label>
+          <label>
+            <span>Status</span>
+            <select value={filters.status} onChange={(event) => updateFilters({ ...filters, status: event.target.value })}>
+              <option value="">All status</option>
+              {CLASS_STATUS_OPTIONS.map((status) => <option value={status} key={status}>{status}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Payment</span>
+            <select value={filters.paymentStatus} onChange={(event) => updateFilters({ ...filters, paymentStatus: event.target.value })}>
+              <option value="">All payments</option>
+              {CLASS_PAYMENT_STATUS_OPTIONS.map((status) => <option value={status} key={status}>{status}</option>)}
+            </select>
+          </label>
+          <label className="class-admin-search">
+            <span>Search</span>
+            <input placeholder="Parent, child, phone, reservation no." value={filters.search} onChange={(event) => updateFilters({ ...filters, search: event.target.value })} />
+          </label>
+        </section>
+
+        <section className="class-admin-table-card" aria-label="Class reservation table">
+          <div className="class-admin-table-scroll">
+            <table className="class-admin-table">
+              <thead>
+                <tr>
+                  <th>Created</th>
+                  <th>Session</th>
+                  <th>Parent Details</th>
+                  <th>Child (Age)</th>
+                  <th>Booking Type</th>
+                  <th>Allergies</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reservations.map((reservation) => {
+                  const hasAllergy = reservation.allergyNote.trim().length > 0
+                  return (
+                    <tr key={reservation.id}>
+                      <td>{reservation.createdAt.slice(0, 10)}</td>
+                      <td><strong>{reservation.classDate}</strong><span>{reservation.classTime}</span></td>
+                      <td><strong>{reservation.parentName}</strong><span>{reservation.parentPhone}</span><span>{reservation.parentEmail}</span></td>
+                      <td>
+                        <strong>{reservation.childName} ({reservation.childAge})</strong>
+                        <span>{reservation.schoolYear}</span>
+                        {reservation.secondChildName && <span>{reservation.secondChildName} ({reservation.secondChildAge})</span>}
+                      </td>
+                      <td><strong>{formatClassBookingType(reservation.bookingType)}</strong><span>{formatCurrency(reservation.totalPrice)}</span></td>
+                      <td className={hasAllergy ? 'class-allergy-cell warning' : 'class-allergy-cell'}>{hasAllergy ? reservation.allergyNote : 'None'}</td>
+                      <td>
+                        <select className={`class-status-select ${reservation.status.toLowerCase()}`} value={reservation.status} onChange={(event) => saveReservation(reservation.id, { status: event.target.value as ClassReservation['status'] })}>
+                          {CLASS_STATUS_OPTIONS.map((status) => <option value={status} key={status}>{status}</option>)}
+                        </select>
+                      </td>
+                      <td>
+                        <select className="class-payment-select" value={reservation.paymentStatus} onChange={(event) => saveReservation(reservation.id, { paymentStatus: event.target.value as ClassReservation['paymentStatus'] })}>
+                          {CLASS_PAYMENT_STATUS_OPTIONS.map((status) => <option value={status} key={status}>{status}</option>)}
+                        </select>
+                      </td>
+                      <td>
+                        <div className="class-admin-actions">
+                          <button type="button" onClick={() => copyMessage(buildClassDepositMessage(reservation), 'Deposit message')}>Copy Deposit</button>
+                          <button type="button" onClick={() => copyMessage(buildClassConfirmationMessage(reservation), 'Confirmation message')}>Copy Confirm</button>
+                          <button type="button" onClick={() => setSelected(reservation)}>Edit</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+                {reservations.length === 0 && <tr><td colSpan={9} className="empty-cell">No class reservations yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="class-copy-library" aria-labelledby="copy-library-title">
+          <h2 id="copy-library-title">Copy Templates Library</h2>
+          <div className="class-copy-grid">
+            <article className="class-copy-card">
+              <div className="class-copy-card-header">
+                <strong>1. Deposit Request (SMS/Email)</strong>
+                <button type="button" onClick={() => copyMessage(depositTemplate, 'Deposit template')}>Copy</button>
+              </div>
+              <pre>{depositTemplate}</pre>
+            </article>
+            <article className="class-copy-card">
+              <div className="class-copy-card-header">
+                <strong>2. Confirmation (SMS/Email)</strong>
+                <button type="button" onClick={() => copyMessage(confirmationTemplate, 'Confirmation template')}>Copy</button>
+              </div>
+              <pre>{confirmationTemplate}</pre>
+            </article>
+          </div>
+        </section>
+      </section>
+      {selected && <ClassReservationDrawer reservation={selected} onClose={() => setSelected(null)} onSave={saveReservation} onCopy={(message) => copyMessage(message, '클래스 메시지')} />}
+    </AdminFrame>
+  )
+}
+
+function ClassReservationDrawer({ reservation, onClose, onSave, onCopy }: { reservation: ClassReservation; onClose: () => void; onSave: (id: string, updates: Parameters<typeof updateClassReservation>[1]) => Promise<void>; onCopy: (message: string) => Promise<void> }) {
+  const [memo, setMemo] = useState(reservation.adminMemo)
+  return (
+    <div className="drawer-backdrop"><aside className="drawer"><div className="drawer-header"><h2>{reservation.reservationNumber}</h2><button type="button" onClick={onClose}>닫기</button></div>
+      <dl className="detail-list"><div><dt>부모</dt><dd>{reservation.parentName}<br />{reservation.parentPhone}<br />{reservation.parentEmail}</dd></div><div><dt>아이</dt><dd>{reservation.childName}, {reservation.childAge}, {reservation.schoolYear}</dd></div><div><dt>세션</dt><dd>{reservation.classDate} {reservation.classTime}</dd></div><div><dt>안전</dt><dd>{reservation.allergyNote || 'none'}<br />Emergency: {reservation.emergencyContact}<br />Pick-up: {reservation.pickupPerson}</dd></div><div><dt>동의</dt><dd>Parent {reservation.parentConsent ? 'yes' : 'no'} / Photo {reservation.photoConsent ? 'yes' : 'no'} / Cancellation {reservation.cancellationAgreement ? 'yes' : 'no'}</dd></div></dl>
+      <label>관리자 메모<textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
+      <div className="button-row"><button className="secondary-button" type="button" onClick={() => onCopy(buildClassDepositMessage(reservation))}>예약금 안내 복사</button><button className="secondary-button" type="button" onClick={() => onCopy(buildClassConfirmationMessage(reservation))}>확정 안내 복사</button><button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>메모 저장</button></div>
+      <div className="sms-preview"><pre>{buildClassConfirmationMessage(reservation)}</pre></div>
+    </aside></div>
   )
 }
 

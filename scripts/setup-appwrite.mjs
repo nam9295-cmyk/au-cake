@@ -14,10 +14,16 @@ loadDotEnvLocal()
 const endpoint = process.env.APPWRITE_ENDPOINT || process.env.VITE_APPWRITE_ENDPOINT
 const projectId = process.env.APPWRITE_PROJECT_ID || process.env.VITE_APPWRITE_PROJECT_ID
 const apiKey = process.env.APPWRITE_API_KEY
-const databaseId = process.env.APPWRITE_DATABASE_ID || process.env.VITE_APPWRITE_DATABASE_ID || 'verygood_cake'
+const databaseId = process.env.APPWRITE_CAKE_DATABASE_ID || process.env.VITE_APPWRITE_CAKE_DATABASE_ID || 'verygood_cake'
+const classDatabaseId =
+  process.env.APPWRITE_KIDS_DATABASE_ID || process.env.VITE_APPWRITE_KIDS_DATABASE_ID || databaseId
 const reservationsId =
-  process.env.APPWRITE_RESERVATIONS_TABLE_ID || process.env.VITE_APPWRITE_RESERVATIONS_TABLE_ID || 'reservations'
+  process.env.APPWRITE_CAKE_RESERVATIONS_TABLE_ID || process.env.VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID || 'reservations'
 const settingsId = process.env.APPWRITE_SETTINGS_TABLE_ID || process.env.VITE_APPWRITE_SETTINGS_TABLE_ID || 'settings'
+const classReservationsId =
+  process.env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
+  process.env.VITE_APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
+  'class_reservations'
 const market = String(process.env.VITE_MARKET || process.env.MARKET || 'KR').toUpperCase() === 'AU' ? 'AU' : 'KR'
 const adminUserIds = (process.env.APPWRITE_ADMIN_USER_IDS || '')
   .split(',')
@@ -131,12 +137,55 @@ const settingsAttributes = [
     })),
 ]
 
+const classReservationAttributes = [
+  { key: 'reservationNumber', type: 'string', size: 48, required: true },
+  { key: 'classType', type: 'string', size: 80, required: true },
+  { key: 'classDate', type: 'string', size: 20, required: true },
+  { key: 'classTime', type: 'string', size: 20, required: true },
+  { key: 'bookingType', type: 'enum', required: true, elements: ['1-child', '2-friends'] },
+  { key: 'parentName', type: 'string', size: 80, required: true },
+  { key: 'parentPhone', type: 'string', size: 40, required: true },
+  { key: 'parentEmail', type: 'string', size: 120, required: true },
+  { key: 'childName', type: 'string', size: 80, required: true },
+  { key: 'childAge', type: 'integer', required: true, min: 3, max: 18 },
+  { key: 'schoolYear', type: 'string', size: 40, required: true },
+  { key: 'secondChildName', type: 'string', size: 80, required: false },
+  { key: 'secondChildAge', type: 'integer', required: false, min: 3, max: 18 },
+  { key: 'secondChildSchoolYear', type: 'string', size: 40, required: false },
+  { key: 'allergyNote', type: 'string', size: 1000, required: false },
+  { key: 'emergencyContact', type: 'string', size: 120, required: true },
+  { key: 'pickupPerson', type: 'string', size: 80, required: true },
+  { key: 'parentConsent', type: 'boolean', required: true },
+  { key: 'cancellationAgreement', type: 'boolean', required: true },
+  { key: 'photoConsent', type: 'boolean', required: true },
+  { key: 'status', type: 'enum', required: true, elements: ['Requested', 'Confirmed', 'Completed', 'Cancelled'] },
+  {
+    key: 'paymentStatus',
+    type: 'enum',
+    required: true,
+    elements: ['Pending deposit', 'Deposit paid', 'Fully paid', 'Refund required'],
+  },
+  { key: 'totalPrice', type: 'integer', required: true, min: 0 },
+  { key: 'depositAmount', type: 'integer', required: true, min: 0 },
+  { key: 'adminMemo', type: 'string', size: 1000, required: false },
+  { key: 'createdAt', type: 'string', size: 40, required: true },
+  { key: 'updatedAt', type: 'string', size: 40, required: false },
+]
+
 const reservationIndexes = [
   { key: 'reservationNumber_idx', attributes: ['reservationNumber'] },
   { key: 'pickupDate_idx', attributes: ['pickupDate'] },
   { key: 'status_idx', attributes: ['status'] },
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'cacaoPercent_idx', attributes: ['cacaoPercent'] },
+  { key: 'createdAt_idx', attributes: ['createdAt'] },
+]
+
+const classReservationIndexes = [
+  { key: 'reservationNumber_idx', attributes: ['reservationNumber'] },
+  { key: 'classDate_idx', attributes: ['classDate'] },
+  { key: 'status_idx', attributes: ['status'] },
+  { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
 ]
 
@@ -169,35 +218,35 @@ function isConflict(error) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-async function ensureDatabase() {
+async function ensureDatabase(targetDatabaseId = databaseId, name = `Verygood Cake Reservation ${market}`) {
   try {
-    await databases.get({ databaseId })
-    console.log(`exists  database ${databaseId}`)
+    await databases.get({ databaseId: targetDatabaseId })
+    console.log(`exists  database ${targetDatabaseId}`)
   } catch (error) {
     if (!isMissing(error)) throw error
     await databases.create({
-      databaseId,
-      name: `Verygood Cake Reservation ${market}`,
+      databaseId: targetDatabaseId,
+      name,
     })
-    console.log(`created database ${databaseId}`)
+    console.log(`created database ${targetDatabaseId}`)
   }
 
   await databases.update({
-    databaseId,
-    name: `Verygood Cake Reservation ${market}`,
+    databaseId: targetDatabaseId,
+    name,
     enabled: true,
   })
-  console.log(`updated database ${databaseId}`)
+  console.log(`updated database ${targetDatabaseId}`)
 }
 
-async function ensureCollection(collectionId, name, permissions) {
+async function ensureCollection(targetDatabaseId, collectionId, name, permissions) {
   try {
-    await databases.getCollection({ databaseId, collectionId })
+    await databases.getCollection({ databaseId: targetDatabaseId, collectionId })
     console.log(`exists  collection ${collectionId}`)
   } catch (error) {
     if (!isMissing(error)) throw error
     await databases.createCollection({
-      databaseId,
+      databaseId: targetDatabaseId,
       collectionId,
       name,
       permissions,
@@ -208,7 +257,7 @@ async function ensureCollection(collectionId, name, permissions) {
   }
 
   await databases.updateCollection({
-    databaseId,
+    databaseId: targetDatabaseId,
     collectionId,
     name,
     permissions,
@@ -219,10 +268,10 @@ async function ensureCollection(collectionId, name, permissions) {
   console.log(`updated collection ${collectionId} permissions`)
 }
 
-async function ensureAttribute(collectionId, attribute) {
+async function ensureAttribute(targetDatabaseId, collectionId, attribute) {
   try {
     await databases.getAttribute({
-      databaseId,
+      databaseId: targetDatabaseId,
       collectionId,
       key: attribute.key,
     })
@@ -235,7 +284,7 @@ async function ensureAttribute(collectionId, attribute) {
   try {
     if (attribute.type === 'string') {
       await databases.createStringAttribute({
-        databaseId,
+        databaseId: targetDatabaseId,
         collectionId,
         key: attribute.key,
         size: attribute.size,
@@ -243,7 +292,7 @@ async function ensureAttribute(collectionId, attribute) {
       })
     } else if (attribute.type === 'enum') {
       await databases.createEnumAttribute({
-        databaseId,
+        databaseId: targetDatabaseId,
         collectionId,
         key: attribute.key,
         elements: attribute.elements,
@@ -252,16 +301,23 @@ async function ensureAttribute(collectionId, attribute) {
       })
     } else if (attribute.type === 'integer') {
       await databases.createIntegerAttribute({
-        databaseId,
+        databaseId: targetDatabaseId,
         collectionId,
         key: attribute.key,
         required: attribute.required,
         min: attribute.min,
         ...(attribute.max ? { max: attribute.max } : {}),
       })
+    } else if (attribute.type === 'boolean') {
+      await databases.createBooleanAttribute({
+        databaseId: targetDatabaseId,
+        collectionId,
+        key: attribute.key,
+        required: attribute.required,
+      })
     }
     console.log(`created attribute ${collectionId}.${attribute.key}`)
-    await waitForAttribute(collectionId, attribute.key)
+    await waitForAttribute(targetDatabaseId, collectionId, attribute.key)
   } catch (error) {
     if (isConflict(error)) {
       console.log(`exists  attribute ${collectionId}.${attribute.key}`)
@@ -271,9 +327,9 @@ async function ensureAttribute(collectionId, attribute) {
   }
 }
 
-async function waitForAttribute(collectionId, key) {
+async function waitForAttribute(targetDatabaseId, collectionId, key) {
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    const attribute = await databases.getAttribute({ databaseId, collectionId, key })
+    const attribute = await databases.getAttribute({ databaseId: targetDatabaseId, collectionId, key })
     if (attribute.status === 'available') return
     if (attribute.status === 'failed') throw new Error(`attribute ${collectionId}.${key} creation failed`)
     await sleep(1000)
@@ -281,16 +337,16 @@ async function waitForAttribute(collectionId, key) {
   throw new Error(`attribute ${collectionId}.${key} was not available in time`)
 }
 
-async function ensureAttributesReady(collectionId, attributes) {
+async function ensureAttributesReady(targetDatabaseId, collectionId, attributes) {
   for (const attribute of attributes) {
-    await waitForAttribute(collectionId, attribute.key)
+    await waitForAttribute(targetDatabaseId, collectionId, attribute.key)
   }
 }
 
-async function ensureIndex(collectionId, index) {
+async function ensureIndex(targetDatabaseId, collectionId, index) {
   try {
     await databases.getIndex({
-      databaseId,
+      databaseId: targetDatabaseId,
       collectionId,
       key: index.key,
     })
@@ -302,7 +358,7 @@ async function ensureIndex(collectionId, index) {
 
   try {
     await databases.createIndex({
-      databaseId,
+      databaseId: targetDatabaseId,
       collectionId,
       key: index.key,
       type: 'key',
@@ -318,9 +374,9 @@ async function ensureIndex(collectionId, index) {
   }
 }
 
-async function seedSettings() {
+async function seedSettings(targetDatabaseId = databaseId) {
   const current = await databases.listDocuments({
-    databaseId,
+    databaseId: targetDatabaseId,
     collectionId: settingsId,
   })
 
@@ -330,7 +386,7 @@ async function seedSettings() {
   }
 
   await databases.createDocument({
-    databaseId,
+    databaseId: targetDatabaseId,
     collectionId: settingsId,
     documentId: ID.unique(),
     data: defaultSettings,
@@ -338,25 +394,39 @@ async function seedSettings() {
   console.log('created settings seed')
 }
 
-await ensureDatabase()
-await ensureCollection(reservationsId, 'reservations', reservationPermissions)
-await ensureCollection(settingsId, 'settings', settingsPermissions)
+await ensureDatabase(databaseId, `Verygood Cake Reservation ${market}`)
+if (classDatabaseId !== databaseId) {
+  await ensureDatabase(classDatabaseId, 'Verygood Kids Classes')
+}
+
+await ensureCollection(databaseId, reservationsId, 'reservations', reservationPermissions)
+await ensureCollection(databaseId, settingsId, 'settings', settingsPermissions)
+await ensureCollection(classDatabaseId, classReservationsId, 'class_reservations', reservationPermissions)
 
 for (const attribute of reservationAttributes) {
-  await ensureAttribute(reservationsId, attribute)
+  await ensureAttribute(databaseId, reservationsId, attribute)
 }
 
 for (const attribute of settingsAttributes) {
-  await ensureAttribute(settingsId, attribute)
+  await ensureAttribute(databaseId, settingsId, attribute)
 }
 
-await ensureAttributesReady(reservationsId, reservationAttributes)
-await ensureAttributesReady(settingsId, settingsAttributes)
+for (const attribute of classReservationAttributes) {
+  await ensureAttribute(classDatabaseId, classReservationsId, attribute)
+}
+
+await ensureAttributesReady(databaseId, reservationsId, reservationAttributes)
+await ensureAttributesReady(databaseId, settingsId, settingsAttributes)
+await ensureAttributesReady(classDatabaseId, classReservationsId, classReservationAttributes)
 
 for (const index of reservationIndexes) {
-  await ensureIndex(reservationsId, index)
+  await ensureIndex(databaseId, reservationsId, index)
 }
 
-await seedSettings()
+for (const index of classReservationIndexes) {
+  await ensureIndex(classDatabaseId, classReservationsId, index)
+}
+
+await seedSettings(databaseId)
 
 console.log('Appwrite setup complete')

@@ -63,3 +63,69 @@ export type ReservationFilters = {
   cacaoPercent: string
   search: string
 }
+
+export type ClassBookingType = '1-child' | '2-friends'
+
+export type ClassReservationStatus = 'Requested' | 'Confirmed' | 'Completed' | 'Cancelled'
+
+export type ClassPaymentStatus = 'Pending deposit' | 'Deposit paid' | 'Fully paid' | 'Refund required'
+
+export type ClassReservation = {
+  id: string
+  reservationNumber: string
+  classType: 'school-holiday-private-cake-class'
+  classDate: string
+  classTime: string
+  bookingType: ClassBookingType
+  parentName: string
+  parentPhone: string
+  parentEmail: string
+  childName: string
+  childAge: number
+  schoolYear: string
+  secondChildName: string
+  secondChildAge: number | null
+  secondChildSchoolYear: string
+  allergyNote: string
+  emergencyContact: string
+  pickupPerson: string
+  parentConsent: boolean
+  cancellationAgreement: boolean
+  photoConsent: boolean
+  status: ClassReservationStatus
+  paymentStatus: ClassPaymentStatus
+  totalPrice: number
+  depositAmount: number
+  adminMemo: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type ClassReservationInput = Pick<
+  ClassReservation,
+  | 'classDate'
+  | 'classTime'
+  | 'bookingType'
+  | 'parentName'
+  | 'parentPhone'
+  | 'parentEmail'
+  | 'childName'
+  | 'childAge'
+  | 'schoolYear'
+  | 'secondChildName'
+  | 'secondChildAge'
+  | 'secondChildSchoolYear'
+  | 'allergyNote'
+  | 'emergencyContact'
+  | 'pickupPerson'
+  | 'parentConsent'
+  | 'cancellationAgreement'
+  | 'photoConsent'
+>
+
+export type ClassReservationFilters = {
+  classDate: string
+  status: string
+  paymentStatus: string
+  search: string
+}
