@@ -96,10 +96,10 @@ test('AU mobile numbers reject incomplete or non-mobile numbers', () => {
   }
 })
 
-test('AU cake confirmation message uses product name only and hides placeholder contact', () => {
+test('AU cake confirmation message matches Jenny request copy', () => {
   const message = buildSmsMessage({
     id: 'test-id',
-    reservationNumber: 'VG-C-AU-TEST',
+    reservationNumber: 'VG-C-AU-20260704-204051216',
     customerName: 'Jenny',
     customerPhone: '0412345678',
     productId: 'pave-cake',
@@ -133,9 +133,22 @@ test('AU cake confirmation message uses product name only and hides placeholder 
     storePhone: '+61 mobile number TBC',
   })
 
-  assert.match(message, /Product: Pave Chocolate Cake/)
+  assert.equal(message, `[Verygood Chocolate SYD]
+
+Thank you for your order Jenny
+
+Booking number: VG-C-AU-20260704-204051216
+Product: Pave Chocolate Cake
+Size: 6 inch / 15cm
+Chocolate: Dark chocolate
+Pick-up date: 2026-07-04
+Pick-up time: 10:00
+Quantity: 1ea
+
+We will check availability and send you a confirmation.
+
+Thank you:)`)
   assert.doesNotMatch(message, /Product: Gâteau au Chocolat Pave Chocolate Cake/)
-  assert.match(message, /Pick-up address: Street pick-up near 1 Bundil Blvd, Melrose Park/)
-  assert.doesNotMatch(message, /Sydney pickup address TBC/)
+  assert.doesNotMatch(message, /Pick-up address:/)
   assert.doesNotMatch(message, /Contact: .*TBC/)
 })

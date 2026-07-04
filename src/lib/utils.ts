@@ -112,6 +112,23 @@ export function isValidPhone(phone: string) {
 export function buildSmsMessage(reservation: Reservation, settings: StoreSettings = marketConfig.defaultSettings) {
   const product = getProductById(reservation.productId)
   const labels = marketConfig.smsLabels
+
+  if (marketConfig.market === 'AU') {
+    return `${labels.title}
+
+Thank you for your order ${reservation.customerName}
+
+${labels.reservationNumber}: ${reservation.reservationNumber}
+${labels.productName}: ${product.name}
+${product.usesSizeOptions ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${labels.pickupTime}: ${reservation.pickupTime}
+${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
+
+${marketConfig.copy.reservationCompleteText}
+
+${labels.thanks}`
+  }
+
   const contactLine = /TBC/i.test(settings.storePhone) ? '' : `${labels.contact}: ${settings.storePhone}\n`
   return `${labels.title}
 

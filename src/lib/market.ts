@@ -332,7 +332,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       requestPlaceholder: 'Leave pick-up notes, a different payer name, or any other request.',
       privacyNotice: 'I agree to the collection and use of my details for booking confirmation and operator notifications.',
       reservationCompleteTitle: 'Your cake request has been sent.',
-      reservationCompleteText: 'We will check availability and send booking details by message.',
+      reservationCompleteText: 'We will check availability and send you a confirmation.',
       paymentConfirmText: 'Your order is confirmed after payment is received.',
       noReservationText: 'There is no booking to show here. Please use booking lookup.',
       lookupTitle: 'Find booking',
@@ -352,7 +352,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     ],
     csvHeaders: ['Created at', 'Booking number', 'Customer name', 'Mobile', 'Product', 'Size', 'Cacao', 'Chocolate', 'Finish', 'Quantity', 'Pick-up date', 'Pick-up time', 'Request note', 'Booking status', 'Payment status', 'Total price', 'Admin memo'],
     smsLabels: {
-      title: '[Verygood Chocolate cake order]',
+      title: '[Verygood Chocolate SYD]',
       greeting: 'Hello, this is Verygood Chocolate.',
       body: 'Here are the details of your cake request.',
       reservationNumber: 'Booking number',
@@ -365,7 +365,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       customerName: 'Customer name',
       address: 'Pick-up address',
       contact: 'Contact',
-      thanks: 'Thank you.',
+      thanks: 'Thank you:)',
     },
   },
 }
