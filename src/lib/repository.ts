@@ -93,7 +93,12 @@ function normalizeSettings(settings?: Partial<StoreSettings> | null): StoreSetti
     if (merged.pickupNotice === 'For pick-up outside listed hours, leave a note and we will confirm what is possible.') {
       merged.pickupNotice = DEFAULT_SETTINGS.pickupNotice
     }
-    if (merged.storeAddress === 'Sydney pick-up address TBC') merged.storeAddress = DEFAULT_SETTINGS.storeAddress
+    if (merged.storeAddress === 'Sydney pick-up address TBC' || merged.storeAddress === 'Sydney pickup address TBC') {
+      merged.storeAddress = DEFAULT_SETTINGS.storeAddress
+    }
+    if (merged.storePhone === '+61 phone number TBC' || merged.storePhone === '+61 mobile number TBC') {
+      merged.storePhone = DEFAULT_SETTINGS.storePhone
+    }
   }
 
   return merged

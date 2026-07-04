@@ -1,4 +1,4 @@
-import { formatCakeSizeLabel, formatCacaoLabel, formatChocolateTypeLabel, formatPoundAddonLabel, getProductById, PRODUCT_NAME, usesReservationChocolateType } from './constants.js'
+import { formatCakeSizeLabel, formatCacaoLabel, formatChocolateTypeLabel, formatPoundAddonLabel, getProductById, usesReservationChocolateType } from './constants.js'
 import { marketConfig } from './market.js'
 import type { Reservation, StoreSettings } from './types.js'
 
@@ -112,13 +112,14 @@ export function isValidPhone(phone: string) {
 export function buildSmsMessage(reservation: Reservation, settings: StoreSettings = marketConfig.defaultSettings) {
   const product = getProductById(reservation.productId)
   const labels = marketConfig.smsLabels
+  const contactLine = /TBC/i.test(settings.storePhone) ? '' : `${labels.contact}: ${settings.storePhone}\n`
   return `${labels.title}
 
 ${labels.greeting}
 ${labels.body}
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
-${labels.productName}: ${PRODUCT_NAME} ${product.name}
+${labels.productName}: ${product.name}
 ${product.usesSizeOptions ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
@@ -127,8 +128,7 @@ ${labels.customerName}: ${reservation.customerName}
 ${marketConfig.copy.reservationCompleteText}
 
 ${labels.address}: ${settings.storeAddress}
-${labels.contact}: ${settings.storePhone}
-
+${contactLine}
 ${labels.thanks}
 ${marketConfig.copy.smsFooter}`
 }

@@ -13,7 +13,7 @@ import {
   normalizeReservationChocolateType,
   usesReservationChocolateType,
 } from '../src/lib/constants.js'
-import { formatCurrency, isValidPhone, normalizePhone } from '../src/lib/utils.js'
+import { formatCurrency, buildSmsMessage, isValidPhone, normalizePhone } from '../src/lib/utils.js'
 
 test('AU cake size labels show inch and centimetre together with 17cm removed', () => {
   assert.deepEqual(
@@ -94,4 +94,48 @@ test('AU mobile numbers reject incomplete or non-mobile numbers', () => {
   for (const input of ['0412 345 67', '0212 345 678', '+61 2 1234 5678']) {
     assert.equal(isValidPhone(normalizePhone(input)), false, input)
   }
+})
+
+test('AU cake confirmation message uses product name only and hides placeholder contact', () => {
+  const message = buildSmsMessage({
+    id: 'test-id',
+    reservationNumber: 'VG-C-AU-TEST',
+    customerName: 'Jenny',
+    customerPhone: '0412345678',
+    productId: 'pave-cake',
+    cakeSize: '15cm',
+    chocolateType: 'dark',
+    poundAddon: 'none',
+    quantity: 1,
+    pickupDate: '2026-07-04',
+    pickupTime: '10:00',
+    cacaoPercent: '기본',
+    requestNote: '',
+    status: '예약신청',
+    paymentStatus: '입금대기',
+    totalPrice: 75,
+    adminMemo: '',
+    createdAt: '2026-07-04T00:00:00.000Z',
+    updatedAt: '2026-07-04T00:00:00.000Z',
+  }, {
+    price: 45,
+    bankName: 'BSB 012263',
+    bankAccount: 'Account 324999682',
+    accountHolder: 'Verygood Chocolate',
+    weekdayOpen: '10:00',
+    weekdayClose: '17:00',
+    weekendOpen: '10:00',
+    weekendClose: '16:00',
+    dailyLimitText: 'Small-batch cakes, limited daily availability',
+    reservationNotice: 'We will confirm availability after your request. Payment details and final confirmation will follow by message.',
+    pickupNotice: 'Street pick-up near 1 Bundil Blvd, Melrose Park. There is a small playground and seating nearby. Parking can be limited, so Jenny will bring the cake down to you.',
+    storeAddress: 'Street pick-up near 1 Bundil Blvd, Melrose Park. Small playground/seating nearby; Jenny will bring the cake down to you.',
+    storePhone: '+61 mobile number TBC',
+  })
+
+  assert.match(message, /Product: Pave Chocolate Cake/)
+  assert.doesNotMatch(message, /Product: Gâteau au Chocolat Pave Chocolate Cake/)
+  assert.match(message, /Pick-up address: Street pick-up near 1 Bundil Blvd, Melrose Park/)
+  assert.doesNotMatch(message, /Sydney pickup address TBC/)
+  assert.doesNotMatch(message, /Contact: .*TBC/)
 })
