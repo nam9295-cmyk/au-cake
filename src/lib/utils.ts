@@ -88,11 +88,24 @@ export function maskPhone(phone: string) {
 }
 
 export function normalizePhone(phone: string) {
-  if (marketConfig.market === 'AU') return phone.replace(/[^\d+ -]/g, '').trim()
+  if (marketConfig.market === 'AU') {
+    const trimmed = phone.trim()
+    const digits = trimmed.replace(/\D/g, '')
+
+    if (digits.length === 9 && digits.startsWith('4')) return `0${digits}`
+    if (digits.length === 11 && digits.startsWith('61')) return `0${digits.slice(2)}`
+
+    return digits
+  }
   return phone.replace(/[^\d-]/g, '')
 }
 
 export function isValidPhone(phone: string) {
+  if (marketConfig.market === 'AU') {
+    const digits = phone.replace(/\D/g, '')
+    return /^04\d{8}$/.test(digits)
+  }
+
   return marketConfig.phoneRegex.test(phone.trim())
 }
 

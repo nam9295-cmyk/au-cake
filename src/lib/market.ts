@@ -262,7 +262,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     currency: 'AUD',
     timezone: 'Australia/Sydney',
     currencyOptions: { currencyDisplay: 'code' },
-    phoneRegex: /^(?:\+?61|0)[2-478](?:[ -]?\d){8}$/,
+    phoneRegex: /^(?:04\d{8}|(?:\+?61|61)\s?4\d{8})$/,
     reservationCodePrefix: 'VG-C-AU',
     products: {
       'pave-cake': {
@@ -327,8 +327,8 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       copyButton: 'Copy',
       copiedButton: 'Copied',
       quantityUnit: 'ea',
-      phoneHelp: 'Example: 0412 345 678 or +61 412 345 678',
-      phonePlaceholder: '0412 345 678',
+      phoneHelp: 'Example: 0412345678, 0412 345 678, or +61 412 345 678',
+      phonePlaceholder: '0412345678',
       requestPlaceholder: 'Leave pick-up notes, a different payer name, or any other request.',
       privacyNotice: 'I agree to the collection and use of my details for booking confirmation and operator notifications.',
       reservationCompleteTitle: 'Your cake request has been sent.',

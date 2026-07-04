@@ -13,7 +13,7 @@ import {
   normalizeReservationChocolateType,
   usesReservationChocolateType,
 } from '../src/lib/constants.js'
-import { formatCurrency } from '../src/lib/utils.js'
+import { formatCurrency, isValidPhone, normalizePhone } from '../src/lib/utils.js'
 
 test('AU cake size labels show inch and centimetre together with 17cm removed', () => {
   assert.deepEqual(
@@ -70,4 +70,28 @@ test('pave cake pricing uses size and chocolate type choices without pound finis
 
 test('AU currency display uses AUD code instead of dollar symbol', () => {
   assert.equal(formatCurrency(55), 'AUD 55.00')
+})
+
+test('AU mobile numbers accept common local and international formats', () => {
+  const validInputs = [
+    '0412 345 678',
+    '0412345678',
+    '04 1234 5678',
+    '+61 412 345 678',
+    '+61412345678',
+    '61 412 345 678',
+    '412 345 678',
+  ]
+
+  for (const input of validInputs) {
+    const phone = normalizePhone(input)
+    assert.equal(phone, '0412345678')
+    assert.equal(isValidPhone(phone), true, input)
+  }
+})
+
+test('AU mobile numbers reject incomplete or non-mobile numbers', () => {
+  for (const input of ['0412 345 67', '0212 345 678', '+61 2 1234 5678']) {
+    assert.equal(isValidPhone(normalizePhone(input)), false, input)
+  }
 })
