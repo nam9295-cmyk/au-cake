@@ -626,7 +626,7 @@ function HomePage({
               </div>
             </article>
           </div>
-          <p className="policy-note">{settings.pickupNotice}</p>
+          {settings.pickupNotice.trim() && <p className="policy-note">{settings.pickupNotice}</p>}
         </section>
       </main>
       <button className="sticky-cta" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
@@ -1440,7 +1440,7 @@ function ReservePage({
               </label>
             </div>
 
-            <p className="field-help">{settings.pickupNotice}</p>
+            {settings.pickupNotice.trim() && <p className="field-help">{settings.pickupNotice}</p>}
 
             <div className="field-row">
               <label>

@@ -137,7 +137,7 @@ const AU_SETTINGS: StoreSettings = {
   weekendClose: '16:00',
   dailyLimitText: 'Small-batch cakes, limited daily availability',
   reservationNotice: 'We will confirm availability after your request. Payment details and final confirmation will follow by message.',
-  pickupNotice: 'Street pick-up near 1 Bundil Blvd, Melrose Park. There is a small playground and seating nearby. Parking can be limited, so Jenny will bring the cake down to you.',
+  pickupNotice: '',
   storeAddress: 'Street pick-up near 1 Bundil Blvd, Melrose Park. Small playground/seating nearby; Jenny will bring the cake down to you.',
   storePhone: '+61 mobile number TBC',
 }
