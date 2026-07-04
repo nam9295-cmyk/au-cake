@@ -1,6 +1,10 @@
 export type CacaoPercent = '기본' | '70' | '80.5' | '100'
 
-export type CakeSize = 'mini' | 'size-1'
+export type CakeSize = 'mini' | 'size-1' | '15cm' | '17cm' | '19cm' | '22cm'
+
+export type ChocolateType = 'dark' | 'milk'
+
+export type PoundAddon = 'none' | 'extra-chocolate' | 'vanilla-cream'
 
 export type ProductId = 'pave-cake' | 'pound-cake'
 
@@ -15,6 +19,8 @@ export type Reservation = {
   customerPhone: string
   productId: ProductId
   cakeSize: CakeSize
+  chocolateType: ChocolateType
+  poundAddon: PoundAddon
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -33,6 +39,8 @@ export type ReservationInput = {
   customerPhone: string
   productId: ProductId
   cakeSize: CakeSize
+  chocolateType: ChocolateType
+  poundAddon: PoundAddon
   quantity: number
   pickupDate: string
   pickupTime: string

@@ -57,7 +57,7 @@ test('deposit and confirmation messages include session, child, parent, deposit 
   assert.match(deposit, /Jenny Parent/)
   assert.match(deposit, /Mina/)
   assert.match(deposit, /2026-07-10 10:00-11:30/)
-  assert.match(deposit, /A\$50 deposit/)
+  assert.match(deposit, /AUD 50\.00 deposit/)
 
   const confirmation = buildClassConfirmationMessage(sampleReservation)
   assert.match(confirmation, /booking is confirmed/)
@@ -68,7 +68,7 @@ test('deposit and confirmation messages include session, child, parent, deposit 
 
 test('class CSV exports parent child safety consent payment and admin fields', () => {
   const csv = classReservationsToCsv([sampleReservation])
-  assert.match(csv, /Reservation number,Created at,Class date,Class time,Booking type/)
+  assert.match(csv, /Booking number,Created at,Class date,Class time,Booking type/)
   assert.match(csv, /Jenny Parent/)
   assert.match(csv, /Nut allergy check needed/)
   assert.match(csv, /Pending deposit/)

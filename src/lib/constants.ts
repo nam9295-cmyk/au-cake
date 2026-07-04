@@ -1,13 +1,22 @@
-import { marketConfig, PAYMENT_STATUSES, RESERVATION_STATUSES } from './market'
-import type { CacaoPercent, CakeSize, ProductId } from './types'
+import { marketConfig, PAYMENT_STATUSES, RESERVATION_STATUSES } from './market.js'
+import type { CacaoPercent, CakeSize, ChocolateType, PoundAddon, ProductId } from './types.js'
 
 export const PRODUCT_NAME = marketConfig.copy.productName
 
 export const DEFAULT_PRODUCT_ID: ProductId = 'pave-cake'
-export const DEFAULT_CAKE_SIZE: CakeSize = 'mini'
+export const DEFAULT_CAKE_SIZE: CakeSize = '15cm'
+export const DEFAULT_CHOCOLATE_TYPE: ChocolateType = 'dark'
+export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
 export const MAX_RESERVATION_QUANTITY = 5
 
 export const PRODUCTS = marketConfig.products
+
+export type ReservationPriceOptions = {
+  cacaoPercent?: CacaoPercent
+  cakeSize?: CakeSize
+  chocolateType?: ChocolateType
+  poundAddon?: PoundAddon
+}
 
 export function getProductById(productId?: string) {
   return PRODUCTS[(productId as ProductId) || DEFAULT_PRODUCT_ID] || PRODUCTS[DEFAULT_PRODUCT_ID]
@@ -18,6 +27,8 @@ export function formatCacaoLabel(cacaoPercent: CacaoPercent) {
 }
 
 export const CAKE_SIZE_OPTIONS = marketConfig.cakeSizeOptions
+export const CHOCOLATE_TYPE_OPTIONS = marketConfig.chocolateTypeOptions
+export const POUND_ADDON_OPTIONS = marketConfig.poundAddonOptions
 
 export function getCakeSizeOption(cakeSize?: CakeSize) {
   return CAKE_SIZE_OPTIONS.find((item) => item.value === cakeSize) || CAKE_SIZE_OPTIONS[0]
@@ -33,24 +44,95 @@ export function normalizeCakeSize(productId: ProductId, cakeSize?: CakeSize) {
   return getCakeSizeOption(cakeSize).value
 }
 
+export function getChocolateTypeOption(chocolateType?: ChocolateType) {
+  return CHOCOLATE_TYPE_OPTIONS.find((item) => item.value === chocolateType) || CHOCOLATE_TYPE_OPTIONS[0]
+}
+
+export function formatChocolateTypeLabel(chocolateType?: ChocolateType) {
+  return getChocolateTypeOption(chocolateType).label
+}
+
+export function normalizeChocolateType(productId: ProductId, chocolateType?: ChocolateType) {
+  const product = getProductById(productId)
+  if (!product.usesChocolateTypeOptions) return DEFAULT_CHOCOLATE_TYPE
+  return getChocolateTypeOption(chocolateType).value
+}
+
+export function usesReservationChocolateType(productId: ProductId, poundAddon?: PoundAddon) {
+  const product = getProductById(productId)
+  return product.usesChocolateTypeOptions || (product.id === 'pound-cake' && poundAddon === 'extra-chocolate')
+}
+
+export function normalizeReservationChocolateType(
+  productId: ProductId,
+  chocolateType?: ChocolateType,
+  poundAddon?: PoundAddon,
+) {
+  if (!usesReservationChocolateType(productId, poundAddon)) return DEFAULT_CHOCOLATE_TYPE
+  return getChocolateTypeOption(chocolateType).value
+}
+
+export function getPoundAddonOption(poundAddon?: PoundAddon) {
+  return POUND_ADDON_OPTIONS.find((item) => item.value === poundAddon) || POUND_ADDON_OPTIONS[0]
+}
+
+export function formatPoundAddonLabel(poundAddon?: PoundAddon) {
+  return getPoundAddonOption(poundAddon).label
+}
+
+export function normalizePoundAddon(productId: ProductId, poundAddon?: PoundAddon) {
+  const product = getProductById(productId)
+  if (!product.usesPoundAddonOptions) return DEFAULT_POUND_ADDON
+  return getPoundAddonOption(poundAddon).value
+}
+
+function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoPercent, cakeSize?: CakeSize): Required<ReservationPriceOptions> {
+  if (typeof optionsOrCacao === 'string') {
+    return {
+      cacaoPercent: optionsOrCacao,
+      cakeSize: cakeSize || DEFAULT_CAKE_SIZE,
+      chocolateType: DEFAULT_CHOCOLATE_TYPE,
+      poundAddon: DEFAULT_POUND_ADDON,
+    }
+  }
+  return {
+    cacaoPercent: optionsOrCacao?.cacaoPercent || '기본',
+    cakeSize: optionsOrCacao?.cakeSize || DEFAULT_CAKE_SIZE,
+    chocolateType: optionsOrCacao?.chocolateType || DEFAULT_CHOCOLATE_TYPE,
+    poundAddon: optionsOrCacao?.poundAddon || DEFAULT_POUND_ADDON,
+  }
+}
+
 export function getReservationUnitPrice(
   productId: ProductId,
-  cacaoPercent: CacaoPercent,
-  cakeSize: CakeSize = DEFAULT_CAKE_SIZE,
+  optionsOrCacao?: ReservationPriceOptions | CacaoPercent,
+  legacyCakeSize?: CakeSize,
 ) {
   const product = getProductById(productId)
-  const option = CACAO_OPTIONS.find((item) => item.value === cacaoPercent)
-  const sizePrice = product.usesSizeOptions ? getCakeSizeOption(cakeSize).price : product.price
-  return sizePrice + (product.usesCacaoOptions ? option?.extraPrice || 0 : 0)
+  const options = normalizePriceOptions(optionsOrCacao, legacyCakeSize)
+  const cakeSize = normalizeCakeSize(product.id, options.cakeSize)
+  const chocolateType = normalizeChocolateType(product.id, options.chocolateType)
+  const poundAddon = normalizePoundAddon(product.id, options.poundAddon)
+  const sizePrice = product.usesSizeOptions ? product.sizePrices[cakeSize] || getCakeSizeOption(cakeSize).price : product.price
+  const cacaoOption = CACAO_OPTIONS.find((item) => item.value === options.cacaoPercent)
+  const chocolateOption = getChocolateTypeOption(chocolateType)
+  const addonOption = getPoundAddonOption(poundAddon)
+
+  return (
+    sizePrice +
+    (product.usesCacaoOptions ? cacaoOption?.extraPrice || 0 : 0) +
+    (product.usesChocolateTypeOptions ? chocolateOption.extraPrice : 0) +
+    (product.usesPoundAddonOptions ? addonOption.extraPrice : 0)
+  )
 }
 
 export function getReservationPrice(
   productId: ProductId,
-  cacaoPercent: CacaoPercent,
+  optionsOrCacao?: ReservationPriceOptions | CacaoPercent,
   quantity = 1,
-  cakeSize: CakeSize = DEFAULT_CAKE_SIZE,
+  legacyCakeSize?: CakeSize,
 ) {
-  return getReservationUnitPrice(productId, cacaoPercent, cakeSize) * quantity
+  return getReservationUnitPrice(productId, optionsOrCacao, legacyCakeSize) * quantity
 }
 
 export const DEFAULT_SETTINGS = marketConfig.defaultSettings

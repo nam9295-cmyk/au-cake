@@ -1,4 +1,4 @@
-import type { CacaoPercent, CakeSize, PaymentStatus, ProductId, ReservationStatus, StoreSettings } from './types'
+import type { CacaoPercent, CakeSize, ChocolateType, PaymentStatus, PoundAddon, ProductId, ReservationStatus, StoreSettings } from './types.js'
 
 export type Market = 'KR' | 'AU'
 
@@ -10,6 +10,9 @@ type ProductConfig = {
   priceNote: string
   usesCacaoOptions: boolean
   usesSizeOptions: boolean
+  usesChocolateTypeOptions: boolean
+  usesPoundAddonOptions: boolean
+  sizePrices: Partial<Record<CakeSize, number>>
 }
 
 type CakeSizeConfig = {
@@ -23,6 +26,20 @@ type CacaoConfig = {
   value: CacaoPercent
   label: string
   title: string
+  description: string
+  extraPrice: number
+}
+
+type ChocolateTypeConfig = {
+  value: ChocolateType
+  label: string
+  description: string
+  extraPrice: number
+}
+
+type PoundAddonConfig = {
+  value: PoundAddon
+  label: string
   description: string
   extraPrice: number
 }
@@ -68,6 +85,8 @@ type MarketConfig = {
   products: Record<ProductId, ProductConfig>
   cakeSizeOptions: CakeSizeConfig[]
   cacaoOptions: CacaoConfig[]
+  chocolateTypeOptions: ChocolateTypeConfig[]
+  poundAddonOptions: PoundAddonConfig[]
   defaultSettings: StoreSettings
   copy: MarketCopy
   productCardFeatures: Record<ProductId, string[]>
@@ -108,19 +127,19 @@ const KR_SETTINGS: StoreSettings = {
 }
 
 const AU_SETTINGS: StoreSettings = {
-  price: 58,
-  bankName: 'Payment details TBC',
-  bankAccount: 'Confirm with Jenny',
+  price: 45,
+  bankName: 'BSB 012263',
+  bankAccount: 'Account 324999682',
   accountHolder: 'Verygood Chocolate',
   weekdayOpen: '10:00',
   weekdayClose: '17:00',
   weekendOpen: '10:00',
   weekendClose: '16:00',
   dailyLimitText: 'Small-batch cakes, limited daily availability',
-  reservationNotice: 'We will confirm availability after your request. Payment details and final confirmation follow by message.',
-  pickupNotice: 'For pickup outside listed hours, leave a note and we will confirm what is possible.',
-  storeAddress: 'Sydney pickup address TBC',
-  storePhone: '+61 phone number TBC',
+  reservationNotice: 'We will confirm availability after your request. Payment details and final confirmation will follow by message.',
+  pickupNotice: 'Street pick-up near 1 Bundil Blvd, Melrose Park. There is a small playground and seating nearby. Parking can be limited, so Jenny will bring the cake down to you.',
+  storeAddress: 'Street pick-up near 1 Bundil Blvd, Melrose Park. Small playground/seating nearby; Jenny will bring the cake down to you.',
+  storePhone: '+61 mobile number TBC',
 }
 
 export const MARKET_CONFIG: Record<Market, MarketConfig> = {
@@ -139,28 +158,45 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         description: '초코 시트 사이에 파베초콜릿 가나슈를 4단으로 샌드한 원형 케이크입니다. 크림층 없이 초콜릿의 밀도와 부드러운 가나슈 질감이 또렷하게 느껴집니다.',
         price: 38000,
         priceNote: '농도, 사이즈 선택 가능',
-        usesCacaoOptions: true,
+        usesCacaoOptions: false,
         usesSizeOptions: true,
+        usesChocolateTypeOptions: true,
+        usesPoundAddonOptions: false,
+        sizePrices: { '15cm': 65000, '17cm': 78000, '19cm': 92000, '22cm': 115000 },
       },
       'pound-cake': {
         id: 'pound-cake',
         name: '초코 파운드 케이크',
         description: '식빵틀에 구워 묵직하게 완성한 갸또 쇼콜라 위에 다크초콜릿을 듬뿍 부었습니다. 촉촉한 초코 반죽과 진한 초콜릿 코팅이 바로 느껴지는 오리지널 초코케이크입니다.',
         price: 29500,
-        priceNote: '케이크 포장 포함',
+        priceNote: '마감 옵션 선택 가능',
         usesCacaoOptions: false,
         usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: true,
+        sizePrices: {},
       },
     },
     cakeSizeOptions: [
-      { value: 'mini', label: '미니케이크', description: '작게 즐기기 좋은 기본 사이즈', price: 38000 },
-      { value: 'size-1', label: '1호사이즈', description: '나눠 먹기 좋은 1호 사이즈', price: 46000 },
+      { value: '15cm', label: '6 inch / 15cm', description: '작게 즐기기 좋은 기본 사이즈', price: 45000 },
+      { value: '17cm', label: '6.7 inch / 17cm', description: '조금 더 여유 있는 사이즈', price: 55000 },
+      { value: '19cm', label: '7.5 inch / 19cm', description: '나눠 먹기 좋은 사이즈', price: 65000 },
+      { value: '22cm', label: '8.7 inch / 22cm', description: '여러 명이 나누기 좋은 큰 사이즈', price: 80000 },
     ],
     cacaoOptions: [
       { value: '기본', label: '기본 옵션', title: '부드러운 기본 밸런스', description: '아이와 함께 드시거나 처음 주문하시는 분께 추천합니다.', extraPrice: 0 },
       { value: '70', label: '70%', title: '덜 달고 진한 풍미', description: '커피와 함께 먹기 좋은 어른의 초콜릿 맛입니다.', extraPrice: 5000 },
       { value: '80.5', label: '80.5%', title: '깊고 쌉싸름한 여운', description: '조금 더 깊은 카카오의 맛을 느끼고 싶은 분께 추천합니다.', extraPrice: 8000 },
       { value: '100', label: '100% Cacao', title: '완전한 카카오 본연의 맛', description: '단맛 없이 카카오 본연의 쌉싸름한 향을 즐기는 분께 추천합니다.', extraPrice: 10000 },
+    ],
+    chocolateTypeOptions: [
+      { value: 'dark', label: 'Dark chocolate', description: 'Deep and balanced chocolate profile', extraPrice: 0 },
+      { value: 'milk', label: 'Milk chocolate', description: 'Softer and creamier chocolate profile', extraPrice: 0 },
+    ],
+    poundAddonOptions: [
+      { value: 'none', label: 'Basic pound cake', description: 'Classic pound cake finish', extraPrice: 0 },
+      { value: 'extra-chocolate', label: 'Extra chocolate', description: 'Add extra chocolate finish', extraPrice: 5000 },
+      { value: 'vanilla-cream', label: 'Vanilla cream', description: 'Add vanilla cream finish', extraPrice: 5000 },
     ],
     defaultSettings: KR_SETTINGS,
     copy: {
@@ -202,7 +238,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       { title: '입금 확정', text: '입금 확인 후 예약이 최종 확정됩니다. 온라인 결제는 제공하지 않습니다.' },
       { title: '픽업', text: '운영시간에 맞춰 매장에서 픽업합니다.' },
     ],
-    csvHeaders: ['신청일시', '예약번호', '예약자명', '연락처', '제품명', '사이즈', '카카오 농도', '수량', '픽업일', '픽업시간', '요청사항', '예약상태', '입금상태', '총 가격', '관리자 메모'],
+    csvHeaders: ['신청일시', '예약번호', '예약자명', '연락처', '제품명', '사이즈', '카카오 농도', '초콜릿', '마감', '수량', '픽업일', '픽업시간', '요청사항', '예약상태', '입금상태', '총 가격', '관리자 메모'],
     smsLabels: {
       title: '[베리굿초콜릿 케이크 예약 안내]',
       greeting: '안녕하세요. 베리굿초콜릿입니다.',
@@ -225,7 +261,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     locale: 'en-AU',
     currency: 'AUD',
     timezone: 'Australia/Sydney',
-    currencyOptions: {},
+    currencyOptions: { currencyDisplay: 'code' },
     phoneRegex: /^(?:\+?61|0)[2-478](?:[ -]?\d){8}$/,
     reservationCodePrefix: 'VG-C-AU',
     products: {
@@ -233,24 +269,31 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         id: 'pave-cake',
         name: 'Pave Chocolate Cake',
         description: 'A round chocolate cake layered with soft pave ganache and chocolate sponge. Dense, smooth and made for serious chocolate flavour.',
-        price: 58,
-        priceNote: 'Size and cacao options available',
-        usesCacaoOptions: true,
+        price: 75,
+        priceNote: 'Size and dark/milk chocolate options available',
+        usesCacaoOptions: false,
         usesSizeOptions: true,
+        usesChocolateTypeOptions: true,
+        usesPoundAddonOptions: false,
+        sizePrices: { '15cm': 75, '19cm': 95, '22cm': 115 },
       },
       'pound-cake': {
         id: 'pound-cake',
         name: 'Chocolate Pound Cake',
         description: 'A rich rectangular gateau chocolat finished with dark chocolate. Simple, compact and easy to share or gift.',
         price: 45,
-        priceNote: 'Gift packaging included',
+        priceNote: 'Choose one finish option',
         usesCacaoOptions: false,
         usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: true,
+        sizePrices: {},
       },
     },
     cakeSizeOptions: [
-      { value: 'mini', label: 'Mini cake', description: 'A smaller cake for a simple treat or small gift', price: 58 },
-      { value: 'size-1', label: 'No. 1 size', description: 'A larger cake for sharing', price: 72 },
+      { value: '15cm', label: '6 inch / 15cm', description: 'A compact cake for a small gathering or gift', price: 75 },
+      { value: '19cm', label: '7.5 inch / 19cm', description: 'A larger celebration size', price: 95 },
+      { value: '22cm', label: '8.7 inch / 22cm', description: 'A generous party size', price: 115 },
     ],
     cacaoOptions: [
       { value: '기본', label: 'Classic', title: 'Smooth classic balance', description: 'Recommended for first orders or a gentler chocolate profile.', extraPrice: 0 },
@@ -258,17 +301,26 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       { value: '80.5', label: '80.5%', title: 'Deep cacao finish', description: 'For a bolder and more lingering chocolate flavour.', extraPrice: 9 },
       { value: '100', label: '100% Cacao', title: 'Pure cacao intensity', description: 'A bitter, unsweetened cacao-forward option.', extraPrice: 12 },
     ],
+    chocolateTypeOptions: [
+      { value: 'dark', label: 'Dark chocolate', description: 'Deep and balanced chocolate profile', extraPrice: 0 },
+      { value: 'milk', label: 'Milk chocolate', description: 'Softer and creamier chocolate profile', extraPrice: 0 },
+    ],
+    poundAddonOptions: [
+      { value: 'none', label: 'Basic pound cake', description: 'Classic pound cake finish', extraPrice: 0 },
+      { value: 'extra-chocolate', label: 'Extra chocolate', description: 'Add extra chocolate finish', extraPrice: 5 },
+      { value: 'vanilla-cream', label: 'Vanilla cream', description: 'Add vanilla cream finish', extraPrice: 10 },
+    ],
     defaultSettings: AU_SETTINGS,
     copy: {
       brandName: 'Verygood Chocolate',
       productName: 'Gâteau au Chocolat',
-      homeTitle: 'Sydney Chocolate Cake Reservations',
-      homeDescription: 'Small-batch chocolate cakes with Verygood Chocolate depth, available by reservation for Sydney pickup.',
-      reserveCta: 'Reserve a cake',
-      lookupNav: 'Find reservation',
+      homeTitle: 'Sydney Chocolate Cake Orders',
+      homeDescription: 'Small-batch chocolate cakes with Verygood Chocolate depth, available by pre-order for Sydney pick-up.',
+      reserveCta: 'Request a cake',
+      lookupNav: 'Find booking',
       adminNav: 'Admin',
       productSectionTitle: 'Choose a cake',
-      reservationGuideTitle: 'Reservation guide',
+      reservationGuideTitle: 'How to order',
       paymentLabel: 'Payment details',
       paymentAmountLabel: 'Amount due',
       accountHolderLabel: 'Account name',
@@ -277,48 +329,53 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       quantityUnit: 'ea',
       phoneHelp: 'Example: 0412 345 678 or +61 412 345 678',
       phonePlaceholder: '0412 345 678',
-      requestPlaceholder: 'Leave pickup notes, a different payer name, or any other request.',
-      privacyNotice: 'I agree to collection and use of my details for reservation confirmation and operator notifications.',
-      reservationCompleteTitle: 'Your reservation request has been sent.',
-      reservationCompleteText: 'We will check availability and send confirmation details by message.',
-      paymentConfirmText: 'Your reservation is final after payment confirmation.',
-      noReservationText: 'There is no reservation to show here. Please use reservation lookup.',
-      lookupTitle: 'Find reservation',
-      lookupPhoneLabel: 'Phone number or last 4 digits',
-      notFoundText: 'We could not find that reservation.',
+      requestPlaceholder: 'Leave pick-up notes, a different payer name, or any other request.',
+      privacyNotice: 'I agree to the collection and use of my details for booking confirmation and operator notifications.',
+      reservationCompleteTitle: 'Your cake request has been sent.',
+      reservationCompleteText: 'We will check availability and send booking details by message.',
+      paymentConfirmText: 'Your order is confirmed after payment is received.',
+      noReservationText: 'There is no booking to show here. Please use booking lookup.',
+      lookupTitle: 'Find booking',
+      lookupPhoneLabel: 'Mobile number or last 4 digits',
+      notFoundText: 'We could not find that booking.',
       smsFooter: 'Verygood Chocolate',
     },
     productCardFeatures: {
-      'pave-cake': ['Layered chocolate sponge and pave ganache', 'Mini and No. 1 sizes', 'Cacao and size options'],
-      'pound-cake': ['Rectangular gateau chocolat', 'Dark chocolate finish', 'Gift packaging included'],
+      'pave-cake': ['Layered chocolate sponge and pave ganache', '6 inch, 7.5 inch, or 8.7 inch sizes', 'Dark or milk chocolate'],
+      'pound-cake': ['Rectangular gateau chocolat', 'Fixed pound cake size', 'Basic, extra chocolate, or vanilla cream finish'],
     },
     guideSteps: [
-      { title: 'Request', text: 'Choose your cake and preferred pickup time.' },
+      { title: 'Request', text: 'Choose your cake and preferred pick-up time.' },
       { title: 'Confirmation', text: 'We check availability and send payment details by message.' },
       { title: 'Payment', text: 'Your order is confirmed after payment. Online checkout is not available yet.' },
-      { title: 'Pickup', text: 'Collect your cake during the confirmed pickup window.' },
+      { title: 'Pick-up', text: 'Collect your cake during the confirmed pick-up window.' },
     ],
-    csvHeaders: ['Created at', 'Reservation number', 'Customer name', 'Phone', 'Product', 'Size', 'Cacao', 'Quantity', 'Pickup date', 'Pickup time', 'Request note', 'Reservation status', 'Payment status', 'Total price', 'Admin memo'],
+    csvHeaders: ['Created at', 'Booking number', 'Customer name', 'Mobile', 'Product', 'Size', 'Cacao', 'Chocolate', 'Finish', 'Quantity', 'Pick-up date', 'Pick-up time', 'Request note', 'Booking status', 'Payment status', 'Total price', 'Admin memo'],
     smsLabels: {
-      title: '[Verygood Chocolate cake reservation]',
+      title: '[Verygood Chocolate cake order]',
       greeting: 'Hello, this is Verygood Chocolate.',
-      body: 'Here are the details of your cake reservation request.',
-      reservationNumber: 'Reservation number',
+      body: 'Here are the details of your cake request.',
+      reservationNumber: 'Booking number',
       productName: 'Product',
       size: 'Size',
       cacao: 'Cacao option',
-      pickupDate: 'Pickup date',
-      pickupTime: 'Pickup time',
+      pickupDate: 'Pick-up date',
+      pickupTime: 'Pick-up time',
       quantity: 'Quantity',
       customerName: 'Customer name',
-      address: 'Pickup address',
+      address: 'Pick-up address',
       contact: 'Contact',
       thanks: 'Thank you.',
     },
   },
 }
 
-const envMarket = String(import.meta.env.VITE_MARKET || '').toUpperCase()
+const nodeEnv = (globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }).process?.env
+const envMarket = String(
+  (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_MARKET ||
+    nodeEnv?.VITE_MARKET ||
+    '',
+).toUpperCase()
 
 export const MARKET: Market = envMarket === 'AU' ? 'AU' : 'KR'
 

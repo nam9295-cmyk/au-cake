@@ -102,6 +102,8 @@ const reservationAttributes = [
   { key: 'customerPhone', type: 'string', size: 40, required: true },
   { key: 'productId', type: 'string', size: 40, required: false },
   { key: 'cakeSize', type: 'string', size: 20, required: false },
+  { key: 'chocolateType', type: 'string', size: 20, required: false },
+  { key: 'poundAddon', type: 'string', size: 40, required: false },
   { key: 'quantity', type: 'integer', required: false, min: 1, max: 5 },
   { key: 'pickupDate', type: 'string', size: 20, required: true },
   { key: 'pickupTime', type: 'string', size: 10, required: true },

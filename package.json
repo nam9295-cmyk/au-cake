@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test:class": "TMP_DIR=/tmp/au-cake-test-$(date +%s); npx tsc tests/class-utils.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && node --test $TMP_DIR/tests/class-utils.test.js",
+    "test:cake": "TMP_DIR=/tmp/au-cake-options-test-$(date +%s); VITE_MARKET=AU npx tsc tests/cake-options.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && VITE_MARKET=AU node --test $TMP_DIR/tests/cake-options.test.js",
     "preview": "vite preview",
     "setup:appwrite": "node scripts/setup-appwrite.mjs",
     "deploy:reservation-notification": "node scripts/deploy-reservation-notification.mjs"

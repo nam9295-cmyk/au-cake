@@ -1,8 +1,10 @@
-import { formatCakeSizeLabel, formatCacaoLabel, getProductById, PRODUCT_NAME } from './constants'
-import { marketConfig } from './market'
-import type { Reservation, StoreSettings } from './types'
+import { formatCakeSizeLabel, formatCacaoLabel, formatChocolateTypeLabel, formatPoundAddonLabel, getProductById, PRODUCT_NAME, usesReservationChocolateType } from './constants.js'
+import { marketConfig } from './market.js'
+import type { Reservation, StoreSettings } from './types.js'
 
 export function formatCurrency(value: number) {
+  if (marketConfig.market === 'AU') return `AUD ${value.toFixed(2)}`
+
   return new Intl.NumberFormat(marketConfig.locale, {
     style: 'currency',
     currency: marketConfig.currency,
@@ -104,7 +106,7 @@ ${labels.body}
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${PRODUCT_NAME} ${product.name}
-${product.usesSizeOptions ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${product.usesSizeOptions ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 ${labels.customerName}: ${reservation.customerName}
@@ -128,6 +130,8 @@ export function reservationsToCsv(reservations: Reservation[]) {
     getProductById(reservation.productId).name,
     getProductById(reservation.productId).usesSizeOptions ? formatCakeSizeLabel(reservation.cakeSize) : '-',
     getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
+    usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
+    getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',
     String(reservation.quantity),
     reservation.pickupDate,
     reservation.pickupTime,

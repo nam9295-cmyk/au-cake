@@ -2,12 +2,16 @@ import { ID, OAuthProvider, Query } from 'appwrite'
 import { account, appwriteConfig, databases, isAppwriteConfigured } from './appwrite'
 import { MARKET } from './market'
 import {
+  DEFAULT_CHOCOLATE_TYPE,
+  DEFAULT_POUND_ADDON,
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
   getProductById,
   getReservationPrice,
   normalizeCakeSize,
+  normalizeReservationChocolateType,
+  normalizePoundAddon,
 } from './constants'
 import {
   CLASS_TYPE_ID,
@@ -18,12 +22,14 @@ import {
 import type {
   CakeSize,
   CacaoPercent,
+  ChocolateType,
   ClassPaymentStatus,
   ClassReservation,
   ClassReservationFilters,
   ClassReservationInput,
   ClassReservationStatus,
   PaymentStatus,
+  PoundAddon,
   Reservation,
   ReservationFilters,
   ReservationInput,
@@ -37,12 +43,14 @@ const LOCAL_CLASS_RESERVATIONS_KEY = `verygood-class-reservations-${MARKET.toLow
 const LOCAL_SETTINGS_KEY = `verygood-cake-settings-${MARKET.toLowerCase()}`
 const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'quantity'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'quantity'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
   productId?: string
   cakeSize?: CakeSize
+  chocolateType?: ChocolateType
+  poundAddon?: PoundAddon
   quantity?: number
 }
 
@@ -57,6 +65,12 @@ function normalizeReservation(reservation: Reservation): Reservation {
     ...reservation,
     productId: getProductById(reservation.productId).id,
     cakeSize: normalizeCakeSize(getProductById(reservation.productId).id, reservation.cakeSize),
+    poundAddon: normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
+    chocolateType: normalizeReservationChocolateType(
+      getProductById(reservation.productId).id,
+      reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
+      normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
+    ),
     quantity: normalizeQuantity(reservation.quantity),
   }
 }
@@ -68,10 +82,21 @@ function normalizeQuantity(quantity?: number) {
 }
 
 function normalizeSettings(settings?: Partial<StoreSettings> | null): StoreSettings {
-  return {
+  const merged = {
     ...DEFAULT_SETTINGS,
     ...(settings || {}),
   }
+
+  if (MARKET === 'AU') {
+    if (merged.bankName === 'Payment details TBC') merged.bankName = DEFAULT_SETTINGS.bankName
+    if (merged.bankAccount === 'Confirm with Jenny') merged.bankAccount = DEFAULT_SETTINGS.bankAccount
+    if (merged.pickupNotice === 'For pick-up outside listed hours, leave a note and we will confirm what is possible.') {
+      merged.pickupNotice = DEFAULT_SETTINGS.pickupNotice
+    }
+    if (merged.storeAddress === 'Sydney pick-up address TBC') merged.storeAddress = DEFAULT_SETTINGS.storeAddress
+  }
+
+  return merged
 }
 
 function toReservation(document: AppwriteReservationDocument): Reservation {
@@ -82,6 +107,12 @@ function toReservation(document: AppwriteReservationDocument): Reservation {
     customerPhone: document.customerPhone,
     productId: getProductById(document.productId).id,
     cakeSize: normalizeCakeSize(getProductById(document.productId).id, document.cakeSize),
+    poundAddon: normalizePoundAddon(getProductById(document.productId).id, document.poundAddon || DEFAULT_POUND_ADDON),
+    chocolateType: normalizeReservationChocolateType(
+      getProductById(document.productId).id,
+      document.chocolateType || DEFAULT_CHOCOLATE_TYPE,
+      normalizePoundAddon(getProductById(document.productId).id, document.poundAddon || DEFAULT_POUND_ADDON),
+    ),
     quantity: normalizeQuantity(document.quantity),
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
@@ -207,6 +238,8 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   const product = getProductById(input.productId || DEFAULT_PRODUCT_ID)
   const cacaoPercent = product.usesCacaoOptions ? input.cacaoPercent : '기본'
   const cakeSize = normalizeCakeSize(product.id, input.cakeSize)
+  const poundAddon = normalizePoundAddon(product.id, input.poundAddon)
+  const chocolateType = normalizeReservationChocolateType(product.id, input.chocolateType, poundAddon)
   const quantity = normalizeQuantity(input.quantity)
   const data = {
     reservationNumber,
@@ -214,6 +247,8 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     customerPhone: input.customerPhone.trim(),
     productId: product.id,
     cakeSize,
+    chocolateType,
+    poundAddon,
     quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -221,7 +256,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     requestNote: input.requestNote.trim(),
     status: '예약신청' as ReservationStatus,
     paymentStatus: '입금대기' as PaymentStatus,
-    totalPrice: getReservationPrice(product.id, cacaoPercent, quantity, cakeSize),
+    totalPrice: getReservationPrice(product.id, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity),
     adminMemo: '',
     createdAt: now,
     updatedAt: now,

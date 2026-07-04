@@ -17,6 +17,10 @@ const CLASS_BOOKING_PRICES: Record<ClassBookingType, number> = {
   '2-friends': 198,
 }
 
+function formatAud(value: number) {
+  return `AUD ${value.toFixed(2)}`
+}
+
 export function getClassBookingPrice(bookingType: ClassBookingType) {
   return CLASS_BOOKING_PRICES[bookingType]
 }
@@ -66,7 +70,7 @@ Requested session:
 ${reservation.classDate} ${reservation.classTime}
 
 We'll check availability and send payment details shortly.
-Your spot is confirmed once the A$${reservation.depositAmount} deposit is received.
+Your spot is confirmed once the ${formatAud(reservation.depositAmount)} deposit has been received.
 
 Verygood Chocolate AU`
 }
@@ -98,13 +102,13 @@ export function formatClassBookingType(bookingType: ClassBookingType) {
 
 export function classReservationsToCsv(reservations: ClassReservation[]) {
   const headers = [
-    'Reservation number',
+    'Booking number',
     'Created at',
     'Class date',
     'Class time',
     'Booking type',
     'Parent name',
-    'Parent phone',
+    'Parent mobile',
     'Parent email',
     'Child name',
     'Child age',

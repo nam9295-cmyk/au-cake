@@ -351,6 +351,7 @@ main {
   letter-spacing: 0.08em;
   text-align: center;
   text-transform: lowercase;
+  white-space: nowrap;
   box-shadow: 0 10px 20px rgba(3, 85, 66, 0.1);
 }
 
@@ -382,6 +383,7 @@ main {
 .hero-size-tag-first {
   left: 55%;
   bottom: 23%;
+  min-width: 104px;
   transform: translateX(-50%);
 }
 
@@ -773,6 +775,47 @@ dd {
   color: var(--muted);
 }
 
+.summary-product-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+}
+
+.summary-product-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.change-cake-button {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 18px;
+  border: 1px solid var(--forest);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--forest);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.change-cake-button:hover,
+.change-cake-button:focus-visible {
+  background: var(--butter-yellow);
+}
+
+.change-cake-button:active {
+  transform: translateY(1px);
+}
+
 .reservation-form,
 .lookup-form {
   display: grid;
@@ -847,6 +890,112 @@ legend {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.35;
+}
+
+.cake-selector-fieldset {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.product-choice-list {
+  display: grid;
+  gap: 10px;
+}
+
+.product-choice-card {
+  position: relative;
+  min-height: 88px;
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--canvas);
+  cursor: pointer;
+  opacity: 0.72;
+  transition: opacity 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.product-choice-card:hover,
+.product-choice-card:focus-within {
+  opacity: 1;
+  border-color: var(--forest);
+}
+
+.product-choice-card:active {
+  transform: translateY(1px);
+}
+
+.product-choice-card.is-selected {
+  opacity: 1;
+  border-color: var(--forest);
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(3, 85, 66, 0.08);
+}
+
+.product-choice-card input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.product-choice-thumb {
+  flex: 0 0 66px;
+  width: 66px;
+  height: 66px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.product-choice-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.product-choice-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.product-choice-topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.product-choice-copy strong {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.product-choice-copy > span:last-child {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.selected-cake-badge {
+  width: fit-content;
+  padding: 3px 7px;
+  border: 1px solid var(--forest);
+  border-radius: 999px;
+  color: var(--forest);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 label {

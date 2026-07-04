@@ -20,18 +20,25 @@ import poundCakeCardImg from './assets/pound-side.webp'
 import {
   CAKE_SIZE_OPTIONS,
   CACAO_OPTIONS,
+  CHOCOLATE_TYPE_OPTIONS,
   DEFAULT_CAKE_SIZE,
+  DEFAULT_CHOCOLATE_TYPE,
+  DEFAULT_POUND_ADDON,
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
   formatCakeSizeLabel,
   formatCacaoLabel,
+  formatChocolateTypeLabel,
+  formatPoundAddonLabel,
   getProductById,
   getReservationPrice,
   getReservationUnitPrice,
   PAYMENT_STATUSES,
+  POUND_ADDON_OPTIONS,
   PRODUCTS,
   RESERVATION_STATUSES,
+  usesReservationChocolateType,
 } from './lib/constants'
 import { isAppwriteConfigured } from './lib/appwrite'
 import { marketConfig } from './lib/market'
@@ -49,7 +56,7 @@ import {
   updateReservation,
   updateClassReservation,
 } from './lib/repository'
-import type { CacaoPercent, CakeSize, ClassBookingType, ClassReservation, ClassReservationFilters, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
+import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
   buildClassDepositMessage,
@@ -338,7 +345,7 @@ function formatPaymentStatus(status: string) {
   const mapping: Record<string, string> = {
     '입금대기': 'Pending payment',
     '입금확인': 'Paid',
-    '현장결제': 'Pay on pickup',
+    '현장결제': 'Pay on pick-up',
     '환불필요': 'Refund required',
   }
   return mapping[status] || status
@@ -346,6 +353,7 @@ function formatPaymentStatus(status: string) {
 
 function ProductDetailRows({ reservation }: { reservation: Reservation }) {
   const product = getProductById(reservation.productId)
+  const showChocolate = usesReservationChocolateType(product.id, reservation.poundAddon)
 
   return (
     <>
@@ -372,6 +380,18 @@ function ProductDetailRows({ reservation }: { reservation: Reservation }) {
           <dd>{formatCacaoLabel(reservation.cacaoPercent)}</dd>
         </div>
       )}
+      {showChocolate && (
+        <div>
+          <dt>{marketConfig.market === 'KR' ? '초콜릿' : 'Chocolate'}</dt>
+          <dd>{formatChocolateTypeLabel(reservation.chocolateType)}</dd>
+        </div>
+      )}
+      {product.usesPoundAddonOptions && (
+        <div>
+          <dt>{marketConfig.market === 'KR' ? '마감' : 'Finish'}</dt>
+          <dd>{formatPoundAddonLabel(reservation.poundAddon)}</dd>
+        </div>
+      )}
     </>
   )
 }
@@ -384,6 +404,16 @@ function reservationCacaoText(reservation: Reservation) {
 function reservationCakeSizeText(reservation: Reservation) {
   const product = getProductById(reservation.productId)
   return product.usesSizeOptions ? formatCakeSizeLabel(reservation.cakeSize) : '-'
+}
+
+function reservationChocolateText(reservation: Reservation) {
+  const product = getProductById(reservation.productId)
+  return usesReservationChocolateType(product.id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-'
+}
+
+function reservationFinishText(reservation: Reservation) {
+  const product = getProductById(reservation.productId)
+  return product.usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-'
 }
 
 function HomePage({
@@ -400,9 +430,9 @@ function HomePage({
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
   const heroCakes = [
-    { image: heroCake1Img, label: 'mini', className: 'hero-cake-one' },
-    { image: heroCake2Img, label: '1st', className: 'hero-cake-two' },
-    { image: heroCake3Img, label: 'pound', className: 'hero-cake-three' },
+    { image: heroCake1Img, label: '6inch', tagKey: 'mini', className: 'hero-cake-one' },
+    { image: heroCake2Img, label: '7.5/8.7inch', tagKey: 'first', className: 'hero-cake-two' },
+    { image: heroCake3Img, label: 'pound', tagKey: 'pound', className: 'hero-cake-three' },
   ]
   const productCards: Record<ProductId, { image: string; imageAlt: string; features: string[] }> = {
     'pave-cake': {
@@ -499,7 +529,7 @@ function HomePage({
                     onClick={() => setActiveHeroCake(index)}
                   >
                     <img src={cake.image} alt="" className={`hero-cake ${cake.className}`} draggable="false" />
-                    <span className={`hero-size-tag hero-size-tag-${cake.label === '1st' ? 'first' : cake.label}`}>
+                    <span className={`hero-size-tag hero-size-tag-${cake.tagKey}`}>
                       {cake.label}
                     </span>
                   </div>
@@ -608,15 +638,15 @@ function HomePage({
 
 function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
   const essentials = [
-    ['Best for Year 3-6', 'Primary school kids fit'],
+    ['Best for Years 3-6', 'Suited to primary school children'],
     ['90-minute private class', 'Careful step-by-step guidance'],
     ['One 15cm cake per child', 'Complete custom decorating'],
     ['Max 2 kids per session', 'Private small group focus'],
   ]
   const steps = [
-    ['Choose session', 'Select your preferred date and convenient time slot for the private class.'],
+    ['Choose a session', 'Select your preferred date and time for the private class.'],
     ['Design your cake', 'Choose colours, toppings, and simple decorating ideas with guidance.'],
-    ['Decorate & personalize', 'Add custom colours, toppings, chocolate pieces, and a simple message.'],
+    ['Decorate & personalise', 'Add custom colours, toppings, chocolate pieces, and a simple message.'],
     ['Box and take home', 'Pack your beautiful cake in a premium window box to take home safely.'],
   ]
 
@@ -635,7 +665,7 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
               <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
                 Request a spot
               </button>
-              <span>90 minutes · Max 2 kids · School holiday limited spots</span>
+              <span>90 minutes · Max 2 kids · Limited school holiday spots</span>
             </div>
           </div>
 
@@ -680,9 +710,9 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
         <section className="kids-bottom-grid reveal-up" aria-label="Pricing and safety information">
           <article className="kids-price-card">
             <h2>Launch Pricing</h2>
-            <strong>A$109 / child</strong>
-            <p className="kids-price-line">A$198 / two friends or siblings</p>
-            <p className="kids-price-line">A$50 deposit required to secure booking</p>
+            <strong>{formatCurrency(109)} / child</strong>
+            <p className="kids-price-line">{formatCurrency(198)} / two friends or siblings</p>
+            <p className="kids-price-line">{formatCurrency(50)} deposit required to secure booking</p>
             <p className="kids-small-note">
               * Final confirmation is sent after availability and deposit are checked manually by Jenny.
             </p>
@@ -694,15 +724,15 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
               This is a short private cake decorating class, not childcare. Younger children may need a parent or guardian to stay nearby or join the session.
             </p>
             <ul>
-              <li>Allergy check must be declared before deposit confirmation</li>
-              <li>Parent/guardian consent required at reservation submission</li>
+              <li>All allergies and dietary requirements must be declared before deposit confirmation</li>
+              <li>Parent/guardian consent is required when submitting a booking request</li>
               <li>Detailed address shared after deposit confirmation (Melrose Park, Sydney)</li>
             </ul>
           </article>
         </section>
 
         <section className="kids-final-cta reveal-up" aria-label="Request class booking">
-          <p>School holiday limited spots are handled manually so Jenny can confirm each child safely.</p>
+          <p>Limited school holiday spots are handled manually so Jenny can confirm each child safely.</p>
           <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
             Request a spot
           </button>
@@ -762,7 +792,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     setError('')
     const phone = normalizePhone(form.parentPhone)
     if (!form.parentName.trim() || !form.childName.trim()) return setError('Please enter parent and child name.')
-    if (!isValidPhone(phone)) return setError(`Please check the phone number. ${marketConfig.copy.phoneHelp}`)
+    if (!isValidPhone(phone)) return setError(`Please check the mobile number. ${marketConfig.copy.phoneHelp}`)
     if (!form.parentEmail.includes('@')) return setError('Please enter a valid email address.')
     if (!form.classDate || form.classDate < today) return setError('Please choose a future class date.')
     if (form.bookingType === '2-friends' && !form.secondChildName.trim()) return setError('Please enter the second child name.')
@@ -918,7 +948,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
             </label>
             <label className="class-check-row">
               <input type="checkbox" checked={form.cancellationAgreement} onChange={(event) => setForm({ ...form, cancellationAgreement: event.target.checked })} />
-              <span>I understand bookings are confirmed after availability and deposit payment are checked.</span>
+              <span>I understand bookings are confirmed after availability is checked and the deposit is paid.</span>
             </label>
             <fieldset className="class-photo-consent">
               <legend>Photo Consent</legend>
@@ -945,7 +975,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
 
           {error && <p className="error-text class-error-text">{error}</p>}
           <button className="class-submit-button" type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit Class Request'}</button>
-          <p className="class-submit-note">Final confirmation is sent after checking. No deposit is charged now.</p>
+          <p className="class-submit-note">Final confirmation is sent after availability is checked. No deposit is charged now.</p>
         </form>
       </main>
     </>
@@ -968,8 +998,8 @@ function ClassCompletePage({ navigate, reservation }: { navigate: (page: Page) =
           <div className="class-complete-message">
             <strong>Your class request has been sent.</strong>
             <p>Jenny will check availability and send deposit details shortly.</p>
-            <p>Your spot is confirmed once the deposit is received.</p>
-            <span>Reservation ID: {reservationNumber}</span>
+            <p>Your spot is confirmed once the deposit has been received.</p>
+            <span>Booking ID: {reservationNumber}</span>
           </div>
 
           <button className="class-complete-button" type="button" onClick={() => navigate('classes')}>
@@ -996,6 +1026,8 @@ function ReservePage({
     productId: initialProductId,
     cacaoPercent: '기본' as CacaoPercent,
     cakeSize: DEFAULT_CAKE_SIZE as CakeSize,
+    chocolateType: DEFAULT_CHOCOLATE_TYPE as ChocolateType,
+    poundAddon: DEFAULT_POUND_ADDON as PoundAddon,
     pickupDate: todayInputValue(),
     pickupTime: '',
     quantity: 1,
@@ -1004,6 +1036,7 @@ function ReservePage({
     requestNote: '',
     privacy: false,
   })
+  const [showCakeSelector, setShowCakeSelector] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const today = useTodayInputValue()
@@ -1025,26 +1058,26 @@ function ReservePage({
       return
     }
     if (!isValidPhone(phone)) {
-      setError(`${marketConfig.market === 'KR' ? '연락처를 확인해 주세요.' : 'Please check the phone number.'} ${marketConfig.copy.phoneHelp}`)
+      setError(`${marketConfig.market === 'KR' ? '연락처를 확인해 주세요.' : 'Please check the mobile number.'} ${marketConfig.copy.phoneHelp}`)
       return
     }
     if (!pickupDate || pickupDate < today) {
       setError(
         marketConfig.market === 'KR'
           ? '픽업 날짜를 오늘 이후로 선택해 주세요.'
-          : 'Please select a pickup date from tomorrow onwards.'
+          : 'Please select a pick-up date from today onwards.'
       )
       return
     }
     if (!selectedPickupTime) {
-      setError(marketConfig.market === 'KR' ? '픽업 시간을 선택해 주세요.' : 'Please select a pickup time.')
+      setError(marketConfig.market === 'KR' ? '픽업 시간을 선택해 주세요.' : 'Please select a pick-up time.')
       return
     }
     if (form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY) {
       setError(
         marketConfig.market === 'KR'
           ? `수량은 최대 ${MAX_RESERVATION_QUANTITY}개까지 선택할 수 있습니다.`
-          : `You can reserve up to ${MAX_RESERVATION_QUANTITY} cakes.`
+          : `You can request up to ${MAX_RESERVATION_QUANTITY} cakes.`
       )
       return
     }
@@ -1061,6 +1094,8 @@ function ReservePage({
           customerPhone: phone,
           productId: form.productId,
           cakeSize: form.cakeSize,
+          chocolateType: form.chocolateType,
+          poundAddon: form.poundAddon,
           quantity: form.quantity,
           pickupDate,
           pickupTime: selectedPickupTime,
@@ -1074,7 +1109,7 @@ function ReservePage({
       setError(
         marketConfig.market === 'KR'
           ? '예약 신청 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'
-          : 'An error occurred while submitting your reservation. Please try again.'
+          : 'An error occurred while submitting your cake request. Please try again.'
       )
     } finally {
       setSubmitting(false)
@@ -1082,11 +1117,19 @@ function ReservePage({
   }
 
   const selectedProduct = getProductById(form.productId)
-  const unitPrice = getReservationUnitPrice(selectedProduct.id, form.cacaoPercent, form.cakeSize)
-  const currentPrice = getReservationPrice(selectedProduct.id, form.cacaoPercent, form.quantity, form.cakeSize)
+  const selectedProductImage = selectedProduct.id === 'pound-cake' ? poundCakeCardImg : paveCakeCardImg
+  const priceOptions = {
+    cacaoPercent: form.cacaoPercent,
+    cakeSize: form.cakeSize,
+    chocolateType: form.chocolateType,
+    poundAddon: form.poundAddon,
+  }
+  const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
+  const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
+  const showChocolateTypeOptions = usesReservationChocolateType(selectedProduct.id, form.poundAddon)
   const labels = {
     back: marketConfig.market === 'KR' ? '돌아가기' : 'Back',
-    title: marketConfig.market === 'KR' ? '예약 신청' : 'Reservation request',
+    title: marketConfig.market === 'KR' ? '예약 신청' : 'Cake request',
     product: marketConfig.market === 'KR' ? '제품' : 'Product',
     totalPrice: marketConfig.market === 'KR' ? '총 가격' : 'Total',
     quantity: marketConfig.market === 'KR' ? '수량' : 'Quantity',
@@ -1094,27 +1137,42 @@ function ReservePage({
     options: marketConfig.market === 'KR' ? '옵션' : 'Options',
     production: marketConfig.market === 'KR' ? '제작' : 'Availability',
     cakeSelect: marketConfig.market === 'KR' ? '케이크 선택' : 'Choose cake',
+    changeCake: marketConfig.market === 'KR' ? '케이크 변경' : 'Change cake',
+    selectedCake: marketConfig.market === 'KR' ? '선택한 케이크' : 'Selected cake',
     sizeSelect: marketConfig.market === 'KR' ? '사이즈 선택' : 'Choose size',
     cacaoSelect: marketConfig.market === 'KR' ? '농도 선택' : 'Choose cacao',
+    chocolateSelect: marketConfig.market === 'KR' ? '초콜릿 선택' : 'Choose chocolate',
+    finishSelect: marketConfig.market === 'KR' ? '마감 옵션' : 'Choose finish',
     orderQuantity: marketConfig.market === 'KR' ? '주문 수량' : 'Order quantity',
     quantityHelp:
       marketConfig.market === 'KR'
         ? `1${marketConfig.copy.quantityUnit} 기준 ${formatCurrency(unitPrice)}, 최대 ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}까지 예약할 수 있습니다.`
         : `${formatCurrency(unitPrice)} per cake, up to ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}.`,
-    pickupDate: marketConfig.market === 'KR' ? '픽업 날짜' : 'Pickup date',
-    pickupTime: marketConfig.market === 'KR' ? '픽업 시간' : 'Pickup time',
+    pickupDate: marketConfig.market === 'KR' ? '픽업 날짜' : 'Pick-up date',
+    pickupTime: marketConfig.market === 'KR' ? '픽업 시간' : 'Pick-up time',
     customerName: marketConfig.market === 'KR' ? '예약자명' : 'Name',
-    phone: marketConfig.market === 'KR' ? '연락처' : 'Phone',
+    phone: marketConfig.market === 'KR' ? '연락처' : 'Mobile',
     requestNote: marketConfig.market === 'KR' ? '요청사항' : 'Request notes',
   }
 
   function selectProduct(productId: ProductId) {
     const product = getProductById(productId)
+    setShowCakeSelector(false)
     setForm({
       ...form,
       productId,
       cacaoPercent: product.usesCacaoOptions ? form.cacaoPercent : '기본',
       cakeSize: product.usesSizeOptions ? form.cakeSize : DEFAULT_CAKE_SIZE,
+      chocolateType: usesReservationChocolateType(product.id, form.poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
+      poundAddon: product.usesPoundAddonOptions ? form.poundAddon : DEFAULT_POUND_ADDON,
+    })
+  }
+
+  function selectPoundAddon(poundAddon: PoundAddon) {
+    setForm({
+      ...form,
+      poundAddon,
+      chocolateType: usesReservationChocolateType(form.productId, poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
     })
   }
 
@@ -1127,6 +1185,9 @@ function ReservePage({
         </button>
         <section className="reservation-layout">
           <aside className="summary-panel">
+            <div className="summary-product-photo">
+              <img src={selectedProductImage} alt={selectedProduct.name} />
+            </div>
             <p className="summary-kicker">{marketConfig.copy.productSectionTitle}</p>
             <h1>{labels.title}</h1>
             <dl>
@@ -1145,10 +1206,24 @@ function ReservePage({
                   {marketConfig.copy.quantityUnit}
                 </dd>
               </div>
-              <div>
-                <dt>{labels.size}</dt>
-                <dd>{selectedProduct.usesSizeOptions ? formatCakeSizeLabel(form.cakeSize) : '-'}</dd>
-              </div>
+              {selectedProduct.usesSizeOptions && (
+                <div>
+                  <dt>{labels.size}</dt>
+                  <dd>{formatCakeSizeLabel(form.cakeSize)}</dd>
+                </div>
+              )}
+              {showChocolateTypeOptions && (
+                <div>
+                  <dt>{marketConfig.market === 'KR' ? '초콜릿' : 'Chocolate'}</dt>
+                  <dd>{formatChocolateTypeLabel(form.chocolateType)}</dd>
+                </div>
+              )}
+              {selectedProduct.usesPoundAddonOptions && (
+                <div>
+                  <dt>{marketConfig.market === 'KR' ? '마감' : 'Finish'}</dt>
+                  <dd>{formatPoundAddonLabel(form.poundAddon)}</dd>
+                </div>
+              )}
               <div>
                 <dt>{labels.options}</dt>
                 <dd>{selectedProduct.priceNote}</dd>
@@ -1158,34 +1233,54 @@ function ReservePage({
                 <dd>{settings.dailyLimitText}</dd>
               </div>
             </dl>
+            <button className="change-cake-button" type="button" onClick={() => setShowCakeSelector(true)}>
+              {labels.changeCake}
+            </button>
             <p>{settings.reservationNotice}</p>
           </aside>
 
           <form className="reservation-form" onSubmit={submitReservation}>
-            <fieldset>
-              <legend>{labels.cakeSelect}</legend>
-              <div className="choice-list">
-                {Object.values(PRODUCTS).map((product) => (
-                  <label className="choice-item" key={product.id}>
-                    <input
-                      type="radio"
-                      name="product"
-                      checked={form.productId === product.id}
-                      onChange={() => selectProduct(product.id)}
-                    />
-                    <span className="choice-copy">
-                      <strong>{product.name}</strong>
-                      <span>
-                        1{marketConfig.copy.quantityUnit} {formatCurrency(getReservationUnitPrice(product.id, '기본', DEFAULT_CAKE_SIZE))} ·{' '}
-                        {product.priceNote}
-                      </span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            {showCakeSelector && (
+              <fieldset className="cake-selector-fieldset">
+                <legend>{labels.cakeSelect}</legend>
+                <div className="product-choice-list">
+                  {Object.values(PRODUCTS).map((product) => {
+                    const isSelected = form.productId === product.id
+                    const productImage = product.id === 'pound-cake' ? poundCakeCardImg : paveCakeCardImg
+                    return (
+                      <label
+                        className={`product-choice-card${isSelected ? ' is-selected' : ''}`}
+                        key={product.id}
+                        onClick={() => selectProduct(product.id)}
+                      >
+                        <input
+                          type="radio"
+                          name="product"
+                          checked={isSelected}
+                          onChange={() => selectProduct(product.id)}
+                        />
+                        <span className="product-choice-thumb" aria-hidden="true">
+                          <img src={productImage} alt="" />
+                        </span>
+                        <span className="product-choice-copy">
+                          <span className="product-choice-topline">
+                            <strong>{product.name}</strong>
+                            {isSelected && <span className="selected-cake-badge">{labels.selectedCake}</span>}
+                          </span>
+                          <span>
+                            1{marketConfig.copy.quantityUnit} {formatCurrency(getReservationUnitPrice(product.id, { cakeSize: DEFAULT_CAKE_SIZE, chocolateType: DEFAULT_CHOCOLATE_TYPE, poundAddon: DEFAULT_POUND_ADDON }))} ·{' '}
+                            {product.priceNote}
+                          </span>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </fieldset>
+            )}
 
-            <fieldset disabled={!selectedProduct.usesSizeOptions}>
+            {selectedProduct.usesSizeOptions && (
+              <fieldset>
               <legend>{labels.sizeSelect}</legend>
               <div className="choice-list">
                 {CAKE_SIZE_OPTIONS.map((option) => (
@@ -1198,7 +1293,7 @@ function ReservePage({
                     />
                     <span className="choice-copy">
                       <strong>
-                        {option.label} · {formatCurrency(option.price)}
+                        {option.label} · {formatCurrency(selectedProduct.sizePrices[option.value] || option.price)}
                       </strong>
                       <span>{option.description}</span>
                     </span>
@@ -1206,15 +1301,12 @@ function ReservePage({
                 ))}
               </div>
               <p className="field-help">
-                {selectedProduct.usesSizeOptions
-                  ? marketConfig.market === 'KR'
-                    ? '선택한 사이즈 기준으로 예약 금액이 계산됩니다.'
-                    : 'The reservation total is calculated from the selected size.'
-                  : marketConfig.market === 'KR'
-                    ? '초코 파운드 케이크는 단일 사이즈입니다.'
-                    : 'The chocolate pound cake has one size.'}
+                {marketConfig.market === 'KR'
+                  ? '선택한 사이즈 기준으로 예약 금액이 계산됩니다.'
+                  : 'The total is calculated from the selected size.'}
               </p>
-            </fieldset>
+              </fieldset>
+            )}
 
             {selectedProduct.usesCacaoOptions && (
               <fieldset>
@@ -1244,6 +1336,58 @@ function ReservePage({
                 </p>
               </fieldset>
             )}
+
+            {showChocolateTypeOptions && (
+              <fieldset>
+                <legend>{labels.chocolateSelect}</legend>
+                <div className="choice-list">
+                  {CHOCOLATE_TYPE_OPTIONS.map((option) => (
+                    <label className="choice-item" key={option.value}>
+                      <input
+                        type="radio"
+                        name="chocolateType"
+                        checked={form.chocolateType === option.value}
+                        onChange={() => setForm({ ...form, chocolateType: option.value })}
+                      />
+                      <span className="choice-copy">
+                        <strong>{option.label}</strong>
+                        <span>{option.description}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
+            {selectedProduct.usesPoundAddonOptions && (
+              <fieldset>
+                <legend>{labels.finishSelect}</legend>
+                <div className="choice-list">
+                  {POUND_ADDON_OPTIONS.map((option) => (
+                    <label className="choice-item" key={option.value}>
+                      <input
+                        type="radio"
+                        name="poundAddon"
+                        checked={form.poundAddon === option.value}
+                        onChange={() => selectPoundAddon(option.value)}
+                      />
+                      <span className="choice-copy">
+                        <strong>
+                          {option.label} {option.extraPrice > 0 && `(+${formatCurrency(option.extraPrice)})`}
+                        </strong>
+                        <span>{option.description}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="field-help">
+                  {marketConfig.market === 'KR'
+                    ? '파운드 케이크는 기본, 초콜릿 추가, 바닐라 생크림 추가 중 하나만 선택할 수 있습니다.'
+                    : 'Choose one finish only: basic, extra chocolate, or vanilla cream.'}
+                </p>
+              </fieldset>
+            )}
+
 
             <fieldset>
               <legend>{labels.quantity}</legend>
@@ -1375,7 +1519,7 @@ function CompletePage({
           {reservation ? (
             <dl className="detail-list">
               <div>
-                <dt>{marketConfig.market === 'KR' ? '예약번호' : 'Reservation number'}</dt>
+                <dt>{marketConfig.market === 'KR' ? '예약번호' : 'Booking number'}</dt>
                 <dd>{reservation.reservationNumber}</dd>
               </div>
               <div>
@@ -1388,7 +1532,7 @@ function CompletePage({
               </div>
               <ProductDetailRows reservation={reservation} />
               <div>
-                <dt>{marketConfig.market === 'KR' ? '픽업' : 'Pickup'}</dt>
+                <dt>{marketConfig.market === 'KR' ? '픽업' : 'Pick-up'}</dt>
                 <dd>
                   {reservation.pickupDate} {reservation.pickupTime}
                 </dd>
@@ -1442,7 +1586,7 @@ function LookupPage({ navigate }: { navigate: (page: Page) => void }) {
         <form className="lookup-form" onSubmit={lookup}>
           <h1>{marketConfig.copy.lookupTitle}</h1>
           <label>
-            {marketConfig.market === 'KR' ? '예약번호' : 'Reservation number'}
+            {marketConfig.market === 'KR' ? '예약번호' : 'Booking number'}
             <input value={reservationNumber} onChange={(event) => setReservationNumber(event.target.value)} />
           </label>
           <label>
@@ -1459,7 +1603,7 @@ function LookupPage({ navigate }: { navigate: (page: Page) => void }) {
           <section className="result-panel">
             <dl className="detail-list">
               <div>
-                <dt>{marketConfig.market === 'KR' ? '예약상태' : 'Reservation status'}</dt>
+                <dt>{marketConfig.market === 'KR' ? '예약상태' : 'Booking status'}</dt>
                 <dd>{formatReservationStatus(reservation.status)}</dd>
               </div>
               <div>
@@ -1468,7 +1612,7 @@ function LookupPage({ navigate }: { navigate: (page: Page) => void }) {
               </div>
               <ProductDetailRows reservation={reservation} />
               <div>
-                <dt>{marketConfig.market === 'KR' ? '픽업' : 'Pickup'}</dt>
+                <dt>{marketConfig.market === 'KR' ? '픽업' : 'Pick-up'}</dt>
                 <dd>
                   {reservation.pickupDate} {reservation.pickupTime}
                 </dd>
@@ -1765,6 +1909,8 @@ function AdminReservationsPage({
               <th>제품</th>
               <th>사이즈</th>
               <th>카카오</th>
+              <th>초콜릿</th>
+              <th>마감</th>
               <th>수량</th>
               <th>픽업일</th>
               <th>픽업시간</th>
@@ -1784,6 +1930,8 @@ function AdminReservationsPage({
                 <td>{getProductById(reservation.productId).name}</td>
                 <td>{reservationCakeSizeText(reservation)}</td>
                 <td>{reservationCacaoText(reservation)}</td>
+                <td>{reservationChocolateText(reservation)}</td>
+                <td>{reservationFinishText(reservation)}</td>
                 <td>{reservation.quantity}개</td>
                 <td>{reservation.pickupDate}</td>
                 <td>{reservation.pickupTime}</td>
@@ -1832,7 +1980,7 @@ function AdminReservationsPage({
             ))}
             {reservations.length === 0 && (
               <tr>
-                <td colSpan={14} className="empty-cell">
+                <td colSpan={16} className="empty-cell">
                   표시할 예약이 없습니다.
                 </td>
               </tr>
