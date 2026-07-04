@@ -14,14 +14,23 @@ loadDotEnvLocal()
 const endpoint = process.env.APPWRITE_ENDPOINT || process.env.VITE_APPWRITE_ENDPOINT
 const projectId = process.env.APPWRITE_PROJECT_ID || process.env.VITE_APPWRITE_PROJECT_ID
 const apiKey = process.env.APPWRITE_API_KEY
-const databaseId = process.env.APPWRITE_DATABASE_ID || process.env.VITE_APPWRITE_DATABASE_ID || 'verygood_cake'
+const databaseId =
+  process.env.APPWRITE_CAKE_DATABASE_ID ||
+  process.env.APPWRITE_DATABASE_ID ||
+  process.env.VITE_APPWRITE_CAKE_DATABASE_ID ||
+  process.env.VITE_APPWRITE_DATABASE_ID ||
+  'verygood_cake'
 const reservationsId =
-  process.env.APPWRITE_RESERVATIONS_TABLE_ID || process.env.VITE_APPWRITE_RESERVATIONS_TABLE_ID || 'reservations'
+  process.env.APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
+  process.env.APPWRITE_RESERVATIONS_TABLE_ID ||
+  process.env.VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
+  process.env.VITE_APPWRITE_RESERVATIONS_TABLE_ID ||
+  'reservations'
 
 const functionId = process.env.APPWRITE_RESERVATION_NOTIFY_FUNCTION_ID || 'reservation-notification'
 const functionRuntimes = process.env.APPWRITE_RESERVATION_NOTIFY_RUNTIME
   ? [process.env.APPWRITE_RESERVATION_NOTIFY_RUNTIME]
-  : [Runtime.Node200, Runtime.Node190, Runtime.Node180, Runtime.Node160]
+  : [Runtime.Node160]
 const reservationCreateEvents = process.env.APPWRITE_RESERVATION_CREATE_EVENT
   ? [process.env.APPWRITE_RESERVATION_CREATE_EVENT]
   : [
@@ -30,6 +39,7 @@ const reservationCreateEvents = process.env.APPWRITE_RESERVATION_CREATE_EVENT
     ]
 
 const requiredRuntimeVariables = {
+  MARKET: process.env.MARKET || process.env.VITE_MARKET || 'AU',
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
   RESEND_TO_EMAILS: process.env.RESEND_TO_EMAILS,
