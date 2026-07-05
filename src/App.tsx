@@ -1856,12 +1856,13 @@ function AdminDashboardPage({ navigate }: { navigate: (page: Page) => void }) {
     if (authorized) listReservations().then(setReservations)
   }, [authorized])
 
+  const activeReservations = reservations.filter((item) => item.status !== '취소')
   const stats = [
-    { label: '오늘 픽업', value: reservations.filter((item) => item.pickupDate === today).length },
-    { label: '내일 픽업', value: reservations.filter((item) => item.pickupDate === tomorrow).length },
-    { label: '신규 신청', value: reservations.filter((item) => item.status === '예약신청').length },
-    { label: '입금대기', value: reservations.filter((item) => item.paymentStatus === '입금대기').length },
-    { label: '예약확정', value: reservations.filter((item) => item.status === '예약확정').length },
+    { label: '오늘 픽업', value: activeReservations.filter((item) => item.pickupDate === today).length },
+    { label: '내일 픽업', value: activeReservations.filter((item) => item.pickupDate === tomorrow).length },
+    { label: '신규 신청', value: activeReservations.filter((item) => item.status === '예약신청').length },
+    { label: '입금대기', value: activeReservations.filter((item) => item.paymentStatus === '입금대기').length },
+    { label: '예약확정', value: activeReservations.filter((item) => item.status === '예약확정').length },
   ]
 
   if (!authorized) return null
