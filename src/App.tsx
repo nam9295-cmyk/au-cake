@@ -619,10 +619,17 @@ function HomePage({
               </div>
               <div>
                 <strong>{marketConfig.guideSteps[3].title}</strong>
-                <p>
-                  {marketConfig.market === 'KR' ? '평일' : 'Weekdays'} {settings.weekdayOpen}-{settings.weekdayClose},{' '}
-                  {marketConfig.market === 'KR' ? '주말' : 'Weekends'} {settings.weekendOpen}-{settings.weekendClose}
-                </p>
+                {marketConfig.market === 'AU' ? (
+                  <p>
+                    Pick-up time 10:00-20:00 everyday
+                    <br />
+                    Thursday off
+                  </p>
+                ) : (
+                  <p>
+                    평일 {settings.weekdayOpen}-{settings.weekdayClose}, 주말 {settings.weekendOpen}-{settings.weekendClose}
+                  </p>
+                )}
               </div>
             </article>
           </div>
@@ -1337,28 +1344,6 @@ function ReservePage({
               </fieldset>
             )}
 
-            {showChocolateTypeOptions && (
-              <fieldset>
-                <legend>{labels.chocolateSelect}</legend>
-                <div className="choice-list">
-                  {CHOCOLATE_TYPE_OPTIONS.map((option) => (
-                    <label className="choice-item" key={option.value}>
-                      <input
-                        type="radio"
-                        name="chocolateType"
-                        checked={form.chocolateType === option.value}
-                        onChange={() => setForm({ ...form, chocolateType: option.value })}
-                      />
-                      <span className="choice-copy">
-                        <strong>{option.label}</strong>
-                        <span>{option.description}</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            )}
-
             {selectedProduct.usesPoundAddonOptions && (
               <fieldset>
                 <legend>{labels.finishSelect}</legend>
@@ -1388,6 +1373,27 @@ function ReservePage({
               </fieldset>
             )}
 
+            {showChocolateTypeOptions && (
+              <fieldset>
+                <legend>{labels.chocolateSelect}</legend>
+                <div className="choice-list">
+                  {CHOCOLATE_TYPE_OPTIONS.map((option) => (
+                    <label className="choice-item" key={option.value}>
+                      <input
+                        type="radio"
+                        name="chocolateType"
+                        checked={form.chocolateType === option.value}
+                        onChange={() => setForm({ ...form, chocolateType: option.value })}
+                      />
+                      <span className="choice-copy">
+                        <strong>{option.label}</strong>
+                        <span>{option.description}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
 
             <fieldset>
               <legend>{labels.quantity}</legend>

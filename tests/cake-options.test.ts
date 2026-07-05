@@ -4,6 +4,7 @@ import {
   DEFAULT_CAKE_SIZE,
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
+  DEFAULT_SETTINGS,
   CAKE_SIZE_OPTIONS,
   formatCakeSizeLabel,
   formatChocolateTypeLabel,
@@ -13,7 +14,7 @@ import {
   normalizeReservationChocolateType,
   usesReservationChocolateType,
 } from '../src/lib/constants.js'
-import { formatCurrency, buildSmsMessage, isValidPhone, normalizePhone } from '../src/lib/utils.js'
+import { formatCurrency, buildSmsMessage, isValidPhone, normalizePhone, timeOptionsForDate } from '../src/lib/utils.js'
 
 test('AU cake size labels show inch and centimetre together with 17cm removed', () => {
   assert.deepEqual(
@@ -70,6 +71,16 @@ test('pave cake pricing uses size and chocolate type choices without pound finis
 
 test('AU currency display uses AUD code instead of dollar symbol', () => {
   assert.equal(formatCurrency(55), 'AUD 55.00')
+})
+
+test('AU pick-up time options run until 20:00 every day', () => {
+  const weekdayTimes = timeOptionsForDate('2026-07-06', DEFAULT_SETTINGS)
+  const weekendTimes = timeOptionsForDate('2026-07-05', DEFAULT_SETTINGS)
+
+  assert.equal(weekdayTimes.at(-1), '20:00')
+  assert.equal(weekendTimes.at(-1), '20:00')
+  assert.ok(weekdayTimes.includes('19:30'))
+  assert.ok(weekendTimes.includes('19:30'))
 })
 
 test('AU mobile numbers accept common local and international formats', () => {

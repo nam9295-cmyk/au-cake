@@ -102,6 +102,8 @@ function normalizeSettings(settings?: Partial<StoreSettings> | null): StoreSetti
     if (merged.storePhone === '+61 phone number TBC' || merged.storePhone === '+61 mobile number TBC') {
       merged.storePhone = DEFAULT_SETTINGS.storePhone
     }
+    if (merged.weekdayClose === '17:00') merged.weekdayClose = DEFAULT_SETTINGS.weekdayClose
+    if (merged.weekendClose === '16:00') merged.weekendClose = DEFAULT_SETTINGS.weekendClose
   }
 
   return merged
