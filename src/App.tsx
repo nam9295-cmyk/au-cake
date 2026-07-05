@@ -1870,9 +1870,14 @@ function AdminDashboardPage({ navigate }: { navigate: (page: Page) => void }) {
     <AdminFrame navigate={navigate}>
       <div className="admin-header">
         <h1>관리자 대시보드</h1>
-        <button className="primary-button" type="button" onClick={() => navigate('admin-reservations')}>
-          예약 목록 보기
-        </button>
+        <div className="button-row">
+          <button className="primary-button" type="button" onClick={() => navigate('admin-reservations')}>
+            케이크 예약 보기
+          </button>
+          <button className="secondary-button" type="button" onClick={() => navigate('admin-classes')}>
+            키즈 클래스 예약 보기
+          </button>
+        </div>
       </div>
       <section className="stat-grid">
         {stats.map((stat) => (
