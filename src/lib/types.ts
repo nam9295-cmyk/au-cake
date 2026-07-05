@@ -29,6 +29,7 @@ export type Reservation = {
   status: ReservationStatus
   paymentStatus: PaymentStatus
   totalPrice: number
+  totalPriceCents?: number
   adminMemo: string
   createdAt: string
   updatedAt: string

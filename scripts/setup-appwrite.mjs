@@ -125,6 +125,7 @@ const reservationAttributes = [
     elements: ['입금대기', '입금확인', '현장결제', '환불필요'],
   },
   { key: 'totalPrice', type: 'integer', required: true, min: 0 },
+  { key: 'totalPriceCents', type: 'integer', required: false, min: 0 },
 ]
 
 const settingsAttributes = [

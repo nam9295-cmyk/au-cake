@@ -31,7 +31,7 @@ import {
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
   PROMO_CODE,
-  PROMO_DISCOUNT_RATE,
+  applyPromoDiscount,
   formatCakeSizeLabel,
   formatCacaoLabel,
   formatChocolateTypeLabel,
@@ -1149,7 +1149,7 @@ function ReservePage({
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
   const isPromoApplied = form.promoCode.trim().toLowerCase() === PROMO_CODE.toLowerCase()
-  const discountedPrice = isPromoApplied ? Math.max(0, Math.round(currentPrice * (1 - PROMO_DISCOUNT_RATE))) : currentPrice
+  const discountedPrice = applyPromoDiscount(currentPrice, form.promoCode)
   const promoDiscountAmount = Math.max(0, currentPrice - discountedPrice)
   const showChocolateTypeOptions = usesReservationChocolateType(selectedProduct.id, form.poundAddon)
   const labels = {

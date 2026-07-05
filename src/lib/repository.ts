@@ -8,8 +8,11 @@ import {
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
   PROMO_CODE,
-  PROMO_DISCOUNT_RATE,
+  applyPromoDiscount,
+  fromCurrencyCents,
   getProductById,
+  isValidPromoCode,
+  toCurrencyCents,
   getReservationPrice,
   normalizeCakeSize,
   normalizeReservationChocolateType,
@@ -44,7 +47,7 @@ const LOCAL_CLASS_RESERVATIONS_KEY = `verygood-class-reservations-${MARKET.toLow
 const LOCAL_SETTINGS_KEY = `verygood-cake-settings-${MARKET.toLowerCase()}`
 const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'quantity'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'quantity' | 'totalPriceCents'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
@@ -53,6 +56,7 @@ type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeS
   chocolateType?: ChocolateType
   poundAddon?: PoundAddon
   quantity?: number
+  totalPriceCents?: number
 }
 
 type AppwriteClassReservationDocument = Omit<ClassReservation, 'id'> & {
@@ -73,6 +77,10 @@ function normalizeReservation(reservation: Reservation): Reservation {
       normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
     ),
     quantity: normalizeQuantity(reservation.quantity),
+    totalPrice: reservation.totalPriceCents === undefined || reservation.totalPriceCents === null
+      ? reservation.totalPrice
+      : fromCurrencyCents(reservation.totalPriceCents),
+    totalPriceCents: reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice),
   }
 }
 
@@ -82,21 +90,10 @@ function normalizeQuantity(quantity?: number) {
   return Math.min(MAX_RESERVATION_QUANTITY, Math.max(1, Math.floor(value)))
 }
 
-function isValidPromoCode(code?: string) {
-  return code?.trim().toLowerCase() === PROMO_CODE.toLowerCase()
-}
-
-function applyPromoDiscount(total: number, code?: string) {
-  if (!isValidPromoCode(code)) return total
-  // Appwrite currently stores cake reservation totalPrice as an integer AUD/KRW value.
-  // Round the discounted payment amount to the nearest whole currency unit to keep submissions reliable.
-  return Math.max(0, Math.round(total * (1 - PROMO_DISCOUNT_RATE)))
-}
-
 function buildPromoRequestNote(requestNote: string, originalTotal: number, discountedTotal: number, code?: string) {
   const trimmedNote = requestNote.trim()
   if (!isValidPromoCode(code)) return trimmedNote
-  const promoLine = `[Promo ${PROMO_CODE}] 10% discount applied: ${originalTotal} -> ${discountedTotal}`
+  const promoLine = `[Promo ${PROMO_CODE}] 10% discount applied: ${originalTotal.toFixed(2)} -> ${discountedTotal.toFixed(2)}`
   return [promoLine, trimmedNote].filter(Boolean).join('\n')
 }
 
@@ -149,7 +146,10 @@ function toReservation(document: AppwriteReservationDocument): Reservation {
     requestNote: document.requestNote || '',
     status: document.status,
     paymentStatus: document.paymentStatus,
-    totalPrice: document.totalPrice,
+    totalPrice: document.totalPriceCents === undefined || document.totalPriceCents === null
+      ? Number(document.totalPrice || 0)
+      : fromCurrencyCents(document.totalPriceCents),
+    totalPriceCents: document.totalPriceCents ?? toCurrencyCents(Number(document.totalPrice || 0)),
     adminMemo: document.adminMemo || '',
     createdAt: document.createdAt || document.$createdAt || '',
     updatedAt: document.updatedAt || document.$updatedAt || '',
@@ -272,6 +272,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   const quantity = normalizeQuantity(input.quantity)
   const originalTotalPrice = getReservationPrice(product.id, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
   const totalPrice = applyPromoDiscount(originalTotalPrice, input.promoCode)
+  const totalPriceCents = toCurrencyCents(totalPrice)
   const data = {
     reservationNumber,
     customerName: input.customerName.trim(),
@@ -288,6 +289,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     status: '예약신청' as ReservationStatus,
     paymentStatus: '입금대기' as PaymentStatus,
     totalPrice,
+    totalPriceCents,
     adminMemo: '',
     createdAt: now,
     updatedAt: now,
@@ -303,7 +305,13 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     appwriteConfig.databaseId,
     appwriteConfig.reservationsCollectionId,
     ID.unique(),
-    data,
+    {
+      ...data,
+      // Keep the legacy Appwrite integer field for older admin/export code,
+      // while totalPriceCents stores the exact AUD cent amount.
+      totalPrice: Math.round(totalPrice),
+      totalPriceCents,
+    },
   )
   return toReservation(document as unknown as AppwriteReservationDocument)
 }

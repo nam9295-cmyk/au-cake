@@ -192,6 +192,13 @@ function getQuantity(reservation) {
   return Math.min(5, Math.max(1, Math.floor(quantity)))
 }
 
+function getReservationTotal(reservation) {
+  if (reservation?.totalPriceCents !== undefined && reservation?.totalPriceCents !== null) {
+    return Number(reservation.totalPriceCents || 0) / 100
+  }
+  return Number(reservation?.totalPrice || 0)
+}
+
 function formatCurrency(value, config) {
   if (config.currency === 'AUD') return `AUD ${Number(value || 0).toFixed(2)}`
   return new Intl.NumberFormat(config.locale, {
@@ -269,7 +276,7 @@ function buildCakeRows(reservation, config) {
     [config.labels.mobile, reservation.customerPhone],
     [config.labels.pickupDate, reservation.pickupDate],
     [config.labels.pickupTime, reservation.pickupTime],
-    [config.labels.total, formatCurrency(reservation.totalPrice, config)],
+    [config.labels.total, formatCurrency(getReservationTotal(reservation), config)],
     [config.labels.note, reservation.requestNote || config.labels.none],
     [config.labels.createdAt, formatCreatedAt(reservation.createdAt || reservation.$createdAt, config)],
   ]
@@ -297,7 +304,7 @@ function buildClassRows(reservation, config) {
     [config.labels.photoConsent, getBooleanText(reservation.photoConsent, config)],
     [config.labels.status, reservation.status],
     [config.labels.paymentStatus, reservation.paymentStatus],
-    [config.labels.total, formatCurrency(reservation.totalPrice, config)],
+    [config.labels.total, formatCurrency(getReservationTotal(reservation), config)],
     [config.labels.deposit, formatCurrency(reservation.depositAmount, config)],
     [config.labels.createdAt, formatCreatedAt(reservation.createdAt || reservation.$createdAt, config)],
   ]

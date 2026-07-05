@@ -11,6 +11,26 @@ export const MAX_RESERVATION_QUANTITY = 5
 export const PROMO_CODE = 'verygoodSYD'
 export const PROMO_DISCOUNT_RATE = 0.1
 
+export function toCurrencyCents(value: number) {
+  return Math.round(Number(value || 0) * 100)
+}
+
+export function fromCurrencyCents(cents?: number | null) {
+  const value = Number(cents || 0)
+  if (!Number.isFinite(value)) return 0
+  return value / 100
+}
+
+export function isValidPromoCode(code?: string) {
+  return code?.trim().toLowerCase() === PROMO_CODE.toLowerCase()
+}
+
+export function applyPromoDiscount(total: number, code?: string) {
+  if (!isValidPromoCode(code)) return total
+  const discountedCents = Math.round(toCurrencyCents(total) * (1 - PROMO_DISCOUNT_RATE))
+  return fromCurrencyCents(Math.max(0, discountedCents))
+}
+
 export const PRODUCTS = marketConfig.products
 
 export type ReservationPriceOptions = {

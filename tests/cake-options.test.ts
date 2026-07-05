@@ -6,6 +6,7 @@ import {
   DEFAULT_POUND_ADDON,
   DEFAULT_SETTINGS,
   CAKE_SIZE_OPTIONS,
+  applyPromoDiscount,
   formatCakeSizeLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
@@ -71,6 +72,12 @@ test('pave cake pricing uses size and chocolate type choices without pound finis
 
 test('AU currency display uses AUD code instead of dollar symbol', () => {
   assert.equal(formatCurrency(55), 'AUD 55.00')
+})
+
+test('AU promo discount keeps cents instead of rounding to whole dollars', () => {
+  assert.equal(applyPromoDiscount(75, 'VERYGOODsyd'), 67.5)
+  assert.equal(formatCurrency(applyPromoDiscount(75, 'verygoodSYD')), 'AUD 67.50')
+  assert.equal(formatCurrency(75 - applyPromoDiscount(75, 'verygoodSYD')), 'AUD 7.50')
 })
 
 test('AU pick-up time options run until 20:00 every day', () => {
