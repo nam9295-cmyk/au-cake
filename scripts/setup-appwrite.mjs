@@ -271,13 +271,33 @@ async function ensureCollection(targetDatabaseId, collectionId, name, permission
   console.log(`updated collection ${collectionId} permissions`)
 }
 
+function sameEnumElements(currentElements = [], nextElements = []) {
+  if (currentElements.length !== nextElements.length) return false
+  return nextElements.every((element) => currentElements.includes(element))
+}
+
 async function ensureAttribute(targetDatabaseId, collectionId, attribute) {
   try {
-    await databases.getAttribute({
+    const current = await databases.getAttribute({
       databaseId: targetDatabaseId,
       collectionId,
       key: attribute.key,
     })
+
+    if (attribute.type === 'enum' && !sameEnumElements(current.elements || [], attribute.elements || [])) {
+      await databases.updateEnumAttribute({
+        databaseId: targetDatabaseId,
+        collectionId,
+        key: attribute.key,
+        elements: attribute.elements,
+        required: attribute.required,
+        xdefault: attribute.xdefault || null,
+      })
+      console.log(`updated attribute ${collectionId}.${attribute.key} enum values`)
+      await waitForAttribute(targetDatabaseId, collectionId, attribute.key)
+      return
+    }
+
     console.log(`exists  attribute ${collectionId}.${attribute.key}`)
     return
   } catch (error) {
