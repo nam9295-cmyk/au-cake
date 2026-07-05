@@ -165,6 +165,42 @@ function pathForPage(page: Page) {
   return paths[page]
 }
 
+
+const PICKUP_LOCATION_NAME = 'Pulse - Melrose Park'
+const PICKUP_LOCATION_ADDRESS = '1 Bundil Blvd, Melrose Park NSW 2114'
+const PICKUP_MAP_URL = 'https://www.google.com/maps/place/Pulse+-+Melrose+Park/@-33.8091415,151.0642826,17z/data=!3m1!4b1!4m6!3m5!1s0x6b12a5a1148ce8e5:0x33e80579f801d234!8m2!3d-33.809146!4d151.0668575!16s%2Fg%2F11kq00n62q?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D'
+const PICKUP_MAP_EMBED_URL = 'https://www.google.com/maps?q=Pulse%20-%20Melrose%20Park%2C%201%20Bundil%20Blvd%2C%20Melrose%20Park%20NSW%202114&output=embed'
+
+function PickupLocationCard() {
+  return (
+    <section className="content-section pickup-location-section" aria-labelledby="pickup-location-title">
+      <div className="pickup-location-copy">
+        <p className="summary-kicker">Pick-up location</p>
+        <h2 id="pickup-location-title">Find us on Google Maps</h2>
+        <p>
+          Pick-up is at <strong>{PICKUP_LOCATION_NAME}</strong>. Jenny will confirm the exact handoff details with your booking confirmation.
+        </p>
+        <address>
+          {PICKUP_LOCATION_NAME}<br />
+          {PICKUP_LOCATION_ADDRESS}
+        </address>
+        <a className="secondary-button pickup-map-link" href={PICKUP_MAP_URL} target="_blank" rel="noreferrer">
+          Open in Google Maps
+        </a>
+      </div>
+      <div className="pickup-map-frame" aria-label="Google Map showing Pulse - Melrose Park">
+        <iframe
+          title="Pulse - Melrose Park Google Map"
+          src={PICKUP_MAP_EMBED_URL}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          allowFullScreen
+        />
+      </div>
+    </section>
+  )
+}
+
 function DesktopBackground() {
   return (
     <div className="desktop-background-pattern" aria-hidden="true">
@@ -639,6 +675,8 @@ function HomePage({
           </div>
           {settings.pickupNotice.trim() && <p className="policy-note">{settings.pickupNotice}</p>}
         </section>
+
+        {marketConfig.market === 'AU' && <PickupLocationCard />}
       </main>
       <button className="sticky-cta" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
         {marketConfig.copy.reserveCta}

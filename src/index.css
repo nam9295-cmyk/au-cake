@@ -710,6 +710,57 @@ dd {
   margin-top: 16px;
 }
 
+.pickup-location-section {
+  display: grid;
+  gap: 22px;
+}
+
+.pickup-location-copy {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.pickup-location-copy h2 {
+  margin-bottom: 0;
+}
+
+.pickup-location-copy p {
+  max-width: 620px;
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.pickup-location-copy address {
+  padding: 16px;
+  border: 1px solid var(--border);
+  color: var(--forest);
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.pickup-map-link {
+  width: fit-content;
+  text-decoration: none;
+}
+
+.pickup-map-frame {
+  min-height: 320px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.pickup-map-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border: 0;
+}
+
 .sticky-cta {
   position: fixed;
   left: 16px;
@@ -3673,5 +3724,17 @@ td select {
 
   .kids-final-cta {
     display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .pickup-location-section {
+    grid-template-columns: minmax(0, 0.78fr) minmax(420px, 1fr);
+    align-items: stretch;
+  }
+
+  .pickup-map-frame,
+  .pickup-map-frame iframe {
+    min-height: 420px;
   }
 }
