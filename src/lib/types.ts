@@ -46,6 +46,7 @@ export type ReservationInput = {
   pickupTime: string
   cacaoPercent: CacaoPercent
   requestNote: string
+  promoCode?: string
 }
 
 export type StoreSettings = {
@@ -72,11 +73,11 @@ export type ReservationFilters = {
   search: string
 }
 
-export type ClassBookingType = '1-child' | '2-friends'
+export type ClassBookingType = 'year-1-2' | '1-child' | '2-friends'
 
 export type ClassReservationStatus = 'Requested' | 'Confirmed' | 'Completed' | 'Cancelled'
 
-export type ClassPaymentStatus = 'Pending deposit' | 'Deposit paid' | 'Fully paid' | 'Refund required'
+export type ClassPaymentStatus = 'Payment pending' | 'Pending deposit' | 'Deposit paid' | 'Fully paid' | 'Refund required'
 
 export type ClassReservation = {
   id: string

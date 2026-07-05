@@ -7,6 +7,8 @@ import {
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
+  PROMO_CODE,
+  PROMO_DISCOUNT_RATE,
   getProductById,
   getReservationPrice,
   normalizeCakeSize,
@@ -17,7 +19,6 @@ import {
   CLASS_TYPE_ID,
   generateClassReservationNumber,
   getClassBookingPrice,
-  getClassDepositAmount,
 } from './class-utils'
 import type {
   CakeSize,
@@ -79,6 +80,24 @@ function normalizeQuantity(quantity?: number) {
   const value = Number(quantity || 1)
   if (!Number.isFinite(value)) return 1
   return Math.min(MAX_RESERVATION_QUANTITY, Math.max(1, Math.floor(value)))
+}
+
+function isValidPromoCode(code?: string) {
+  return code?.trim().toLowerCase() === PROMO_CODE.toLowerCase()
+}
+
+function applyPromoDiscount(total: number, code?: string) {
+  if (!isValidPromoCode(code)) return total
+  // Appwrite currently stores cake reservation totalPrice as an integer AUD/KRW value.
+  // Round the discounted payment amount to the nearest whole currency unit to keep submissions reliable.
+  return Math.max(0, Math.round(total * (1 - PROMO_DISCOUNT_RATE)))
+}
+
+function buildPromoRequestNote(requestNote: string, originalTotal: number, discountedTotal: number, code?: string) {
+  const trimmedNote = requestNote.trim()
+  if (!isValidPromoCode(code)) return trimmedNote
+  const promoLine = `[Promo ${PROMO_CODE}] 10% discount applied: ${originalTotal} -> ${discountedTotal}`
+  return [promoLine, trimmedNote].filter(Boolean).join('\n')
 }
 
 function normalizeSettings(settings?: Partial<StoreSettings> | null): StoreSettings {
@@ -251,6 +270,8 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   const poundAddon = normalizePoundAddon(product.id, input.poundAddon)
   const chocolateType = normalizeReservationChocolateType(product.id, input.chocolateType, poundAddon)
   const quantity = normalizeQuantity(input.quantity)
+  const originalTotalPrice = getReservationPrice(product.id, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
+  const totalPrice = applyPromoDiscount(originalTotalPrice, input.promoCode)
   const data = {
     reservationNumber,
     customerName: input.customerName.trim(),
@@ -263,10 +284,10 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
     cacaoPercent,
-    requestNote: input.requestNote.trim(),
+    requestNote: buildPromoRequestNote(input.requestNote, originalTotalPrice, totalPrice, input.promoCode),
     status: '예약신청' as ReservationStatus,
     paymentStatus: '입금대기' as PaymentStatus,
-    totalPrice: getReservationPrice(product.id, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity),
+    totalPrice,
     adminMemo: '',
     createdAt: now,
     updatedAt: now,
@@ -373,9 +394,9 @@ export async function createClassReservation(input: ClassReservationInput): Prom
     childName: input.childName.trim(),
     childAge: Number(input.childAge || 0),
     schoolYear: input.schoolYear.trim(),
-    secondChildName: input.secondChildName.trim(),
+    secondChildName: input.bookingType === '2-friends' ? input.secondChildName.trim() : '',
     secondChildAge: input.bookingType === '2-friends' && input.secondChildAge ? Number(input.secondChildAge) : null,
-    secondChildSchoolYear: input.secondChildSchoolYear.trim(),
+    secondChildSchoolYear: input.bookingType === '2-friends' ? input.secondChildSchoolYear.trim() : '',
     allergyNote: input.allergyNote.trim(),
     emergencyContact: input.emergencyContact.trim(),
     pickupPerson: input.pickupPerson.trim(),
@@ -383,9 +404,9 @@ export async function createClassReservation(input: ClassReservationInput): Prom
     cancellationAgreement: input.cancellationAgreement,
     photoConsent: input.photoConsent,
     status: 'Requested' as ClassReservationStatus,
-    paymentStatus: 'Pending deposit' as ClassPaymentStatus,
+    paymentStatus: 'Payment pending' as ClassPaymentStatus,
     totalPrice: getClassBookingPrice(input.bookingType),
-    depositAmount: getClassDepositAmount(),
+    depositAmount: 0,
     adminMemo: '',
     createdAt: now,
     updatedAt: now,

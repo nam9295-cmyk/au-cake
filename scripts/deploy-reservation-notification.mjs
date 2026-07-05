@@ -26,17 +26,33 @@ const reservationsId =
   process.env.VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
   process.env.VITE_APPWRITE_RESERVATIONS_TABLE_ID ||
   'reservations'
+const classDatabaseId =
+  process.env.APPWRITE_KIDS_DATABASE_ID ||
+  process.env.VITE_APPWRITE_KIDS_DATABASE_ID ||
+  databaseId
+const classReservationsId =
+  process.env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
+  process.env.VITE_APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
+  'class_reservations'
 
 const functionId = process.env.APPWRITE_RESERVATION_NOTIFY_FUNCTION_ID || 'reservation-notification'
 const functionRuntimes = process.env.APPWRITE_RESERVATION_NOTIFY_RUNTIME
   ? [process.env.APPWRITE_RESERVATION_NOTIFY_RUNTIME]
   : [Runtime.Node160]
-const reservationCreateEvents = process.env.APPWRITE_RESERVATION_CREATE_EVENT
-  ? [process.env.APPWRITE_RESERVATION_CREATE_EVENT]
-  : [
-      `tablesdb.${databaseId}.tables.${reservationsId}.rows.*.create`,
-      `databases.${databaseId}.collections.${reservationsId}.documents.*.create`,
-    ]
+const reservationCreateEventGroups = process.env.APPWRITE_RESERVATION_CREATE_EVENTS
+  ? [process.env.APPWRITE_RESERVATION_CREATE_EVENTS.split(',').map((event) => event.trim()).filter(Boolean)]
+  : process.env.APPWRITE_RESERVATION_CREATE_EVENT
+    ? [[process.env.APPWRITE_RESERVATION_CREATE_EVENT]]
+    : [
+        [
+          `tablesdb.${databaseId}.tables.${reservationsId}.rows.*.create`,
+          `tablesdb.${classDatabaseId}.tables.${classReservationsId}.rows.*.create`,
+        ],
+        [
+          `databases.${databaseId}.collections.${reservationsId}.documents.*.create`,
+          `databases.${classDatabaseId}.collections.${classReservationsId}.documents.*.create`,
+        ],
+      ]
 
 const requiredRuntimeVariables = {
   MARKET: process.env.MARKET || process.env.VITE_MARKET || 'AU',
@@ -108,18 +124,18 @@ async function ensureFunction() {
 
   let lastError
   for (const runtime of functionRuntimes) {
-    for (const event of reservationCreateEvents) {
-      const config = { ...baseConfig, runtime, events: [event] }
+    for (const events of reservationCreateEventGroups) {
+      const config = { ...baseConfig, runtime, events }
       try {
         await functions.get({ functionId })
         await functions.update({ functionId, ...config })
-        console.log(`updated function ${functionId} with runtime ${runtime} and event ${event}`)
+        console.log(`updated function ${functionId} with runtime ${runtime} and events ${events.join(', ')}`)
         return
       } catch (error) {
         if (isMissing(error)) {
           try {
             await functions.create({ functionId, ...config })
-            console.log(`created function ${functionId} with runtime ${runtime} and event ${event}`)
+            console.log(`created function ${functionId} with runtime ${runtime} and events ${events.join(', ')}`)
             return
           } catch (createError) {
             lastError = createError

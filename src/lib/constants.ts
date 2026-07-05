@@ -8,6 +8,8 @@ export const DEFAULT_CAKE_SIZE: CakeSize = '15cm'
 export const DEFAULT_CHOCOLATE_TYPE: ChocolateType = 'dark'
 export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
 export const MAX_RESERVATION_QUANTITY = 5
+export const PROMO_CODE = 'verygoodSYD'
+export const PROMO_DISCOUNT_RATE = 0.1
 
 export const PRODUCTS = marketConfig.products
 

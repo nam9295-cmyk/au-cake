@@ -166,6 +166,20 @@ p {
   color: var(--billboard-blue);
 }
 
+.site-header nav .kids-nav-button {
+  border-color: #3c2f2f;
+  background: #f6c945;
+  color: #3c2f2f;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(184, 132, 0, 0.22);
+}
+
+.site-header nav .kids-nav-button:hover {
+  border-color: #3c2f2f;
+  background: #ffd95a;
+  color: #3c2f2f;
+}
+
 main {
   width: min(100%, var(--page-max));
   margin: 0 auto;
@@ -998,6 +1012,34 @@ legend {
   text-transform: uppercase;
 }
 
+.promo-price-summary {
+  display: inline-grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.original-price {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  text-decoration: line-through;
+}
+
+.promo-code-field input {
+  text-transform: none;
+}
+
+.promo-message {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.promo-message.is-applied {
+  color: var(--forest);
+  font-weight: 700;
+}
+
 label {
   display: grid;
   gap: 8px;
@@ -1069,7 +1111,7 @@ textarea {
   gap: 6px;
   border: 0;
   background: transparent;
-  color: #2d5a27;
+  color: #b88400;
   padding: 0;
   font-size: 12px;
   font-weight: 600;
@@ -1099,7 +1141,7 @@ textarea {
 
 .class-form-section h2 {
   margin: 0;
-  color: #2d5a27;
+  color: #b88400;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.25;
@@ -1113,6 +1155,11 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 15px;
+}
+
+.class-booking-grid,
+.class-time-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .class-option-card,
@@ -1166,14 +1213,14 @@ textarea {
 
 .class-option-card:has(input:checked),
 .class-time-option:has(input:checked) {
-  border-color: #2d5a27;
+  border-color: #b88400;
   border-width: 2px;
 }
 
 .class-option-card:has(input:checked) span,
 .class-option-card:has(input:checked) strong,
 .class-time-option:has(input:checked) span {
-  color: #2d5a27;
+  color: #b88400;
   font-weight: 700;
 }
 
@@ -1233,7 +1280,7 @@ textarea {
   height: 18px;
   margin: 0;
   border-radius: 4px;
-  accent-color: #2d5a27;
+  accent-color: #f6c945;
 }
 
 .class-photo-options label {
@@ -1250,7 +1297,7 @@ textarea {
   width: 16px;
   height: 16px;
   margin: 0;
-  accent-color: #2d5a27;
+  accent-color: #f6c945;
 }
 
 .class-reserve-summary {
@@ -1282,8 +1329,8 @@ textarea {
   width: 100%;
   border: 0;
   border-radius: 999px;
-  background: #2d5a27;
-  color: #ffffff;
+  background: #f6c945;
+  color: #3c2f2f;
   font-size: 14px;
   font-weight: 600;
 }
@@ -1325,13 +1372,13 @@ textarea {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #2d5a27;
-  color: #ffffff;
+  background: #f6c945;
+  color: #3c2f2f;
 }
 
 .class-complete-card h1 {
   margin: 0 0 20px;
-  color: #2d5a27;
+  color: #b88400;
   font-size: 20px;
   font-weight: 600;
   line-height: 1.2;
@@ -1347,7 +1394,7 @@ textarea {
   display: grid;
   align-content: center;
   gap: 10px;
-  background: #d4edda;
+  background: #fff4c7;
   color: #3c2f2f;
 }
 
@@ -1712,7 +1759,7 @@ td select {
 }
 
 .class-admin-topline span {
-  color: #2d5a27;
+  color: #b88400;
 }
 
 .class-admin-summary-row {
@@ -1759,20 +1806,20 @@ td select {
 }
 
 .class-admin-stat.success strong {
-  color: #2d5a27;
+  color: #b88400;
 }
 
 .class-admin-download {
   min-height: 40px;
   padding: 0 24px;
-  border: 1.5px solid #2d5a27;
+  border: 1.5px solid #b88400;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   background: #ffffff;
-  color: #2d5a27;
+  color: #b88400;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
@@ -1894,8 +1941,8 @@ td select {
 .class-status-select.confirmed,
 .class-payment-select:has(option[value='Deposit paid']:checked),
 .class-payment-select:has(option[value='Fully paid']:checked) {
-  background: #d4edda;
-  color: #2d5a27;
+  background: #fff4c7;
+  color: #b88400;
 }
 
 .class-status-select.cancelled,
@@ -1917,7 +1964,7 @@ td select {
   border: 1px solid #d2c9c0;
   border-radius: 999px;
   background: #ffffff;
-  color: #2d5a27;
+  color: #b88400;
   font-size: 11px;
   font-weight: 500;
 }
@@ -1962,7 +2009,7 @@ td select {
 }
 
 .class-copy-card-header strong {
-  color: #2d5a27;
+  color: #b88400;
   font-size: 11px;
   font-weight: 700;
   line-height: 1.25;
@@ -1971,10 +2018,10 @@ td select {
 .class-copy-card-header button {
   min-height: 26px;
   padding: 0 10px;
-  border: 1px solid #2d5a27;
+  border: 1px solid #b88400;
   border-radius: 999px;
   background: #ffffff;
-  color: #2d5a27;
+  color: #b88400;
   font-size: 11px;
   font-weight: 600;
 }
@@ -1996,7 +2043,7 @@ td select {
   .class-admin-actions button:hover,
   .class-copy-card-header button:hover {
     transform: translateY(-1px);
-    border-color: #2d5a27;
+    border-color: #b88400;
   }
 }
 
@@ -2506,11 +2553,13 @@ td select {
 
 .kids-class-page {
   --kids-brown: #3c2f2f;
-  --kids-green: #2d5a27;
+  --kids-yellow: #f6c945;
+  --kids-yellow-soft: #fff4c7;
+  --kids-yellow-deep: #b88400;
   --kids-border: #d2c9c0;
-  --kids-cream: #faf8f5;
-  --kids-photo: #ebe6df;
-  --kids-safe: #d4edda;
+  --kids-cream: #fffaf0;
+  --kids-photo: #f4e2a0;
+  --kids-safe: #fff4c7;
   max-width: 1200px;
   padding: 0 60px 80px;
   color: var(--kids-brown);
@@ -2544,7 +2593,7 @@ td select {
 
 .kids-location {
   margin-bottom: 24px;
-  color: var(--kids-green);
+  color: var(--kids-yellow-deep);
   font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
@@ -2575,14 +2624,14 @@ td select {
   min-width: 220px;
   min-height: 48px;
   padding: 12px 24px;
-  border: 1px solid var(--kids-green);
+  border: 1px solid var(--kids-brown);
   border-radius: 999px;
-  background: var(--kids-green);
-  color: #fff;
+  background: var(--kids-yellow);
+  color: var(--kids-brown);
   font-size: 15px;
   font-weight: 600;
   line-height: 1;
-  box-shadow: 0 16px 34px rgba(45, 90, 39, 0.16);
+  box-shadow: 0 16px 34px rgba(184, 132, 0, 0.22);
   transition:
     transform 180ms ease,
     box-shadow 180ms ease,
@@ -2590,9 +2639,9 @@ td select {
 }
 
 .kids-primary-button:hover {
-  background: #244b20;
+  background: #ffd95a;
   transform: translateY(-2px);
-  box-shadow: 0 20px 42px rgba(45, 90, 39, 0.22);
+  box-shadow: 0 20px 42px rgba(184, 132, 0, 0.28);
 }
 
 .kids-primary-button:active {
@@ -2602,37 +2651,27 @@ td select {
 .kids-photo-card {
   position: relative;
   min-height: 320px;
-  border-radius: 8px;
+  border-radius: 18px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.55), transparent 18%),
-    linear-gradient(135deg, #f4eee6 0%, var(--kids-photo) 55%, #dfd4c8 100%);
-  box-shadow: inset 0 0 0 1px rgba(60, 47, 47, 0.06);
+  background: var(--kids-yellow-soft);
+  box-shadow: 0 24px 60px rgba(60, 47, 47, 0.16), inset 0 0 0 1px rgba(60, 47, 47, 0.06);
 }
 
-.kids-photo-card::before,
+.kids-photo-card img {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
 .kids-photo-card::after {
   content: '';
   position: absolute;
-  border-radius: 999px;
-  background: rgba(45, 90, 39, 0.11);
-  filter: blur(2px);
-  animation: kidsFloat 8s ease-in-out infinite;
-}
-
-.kids-photo-card::before {
-  width: 120px;
-  height: 120px;
-  right: 36px;
-  top: 32px;
-}
-
-.kids-photo-card::after {
-  width: 80px;
-  height: 80px;
-  left: 42px;
-  bottom: 34px;
-  animation-delay: -3s;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 58%, rgba(60, 47, 47, 0.16));
+  pointer-events: none;
 }
 
 .kids-photo-stage {
@@ -2706,7 +2745,7 @@ td select {
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: var(--kids-green);
+  background: var(--kids-yellow);
   opacity: 0.78;
   animation: sparklePulse 2.8s ease-in-out infinite;
 }
@@ -2775,7 +2814,7 @@ td select {
 
 .kids-mini-card:hover,
 .kids-step-card:hover {
-  border-color: rgba(45, 90, 39, 0.55);
+  border-color: rgba(184, 132, 0, 0.7);
   transform: translateY(-4px);
 }
 
@@ -2805,6 +2844,68 @@ td select {
   line-height: 1.35;
 }
 
+.kids-gallery-section {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 20px;
+  padding-top: 44px;
+}
+
+.kids-gallery-card {
+  position: relative;
+  min-height: 270px;
+  margin: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--kids-yellow-soft);
+  box-shadow: 0 18px 48px rgba(60, 47, 47, 0.12);
+}
+
+.kids-gallery-card img {
+  width: 100%;
+  height: 100%;
+  min-height: 270px;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 220ms ease;
+}
+
+.kids-gallery-card:hover img {
+  transform: scale(1.035);
+}
+
+.kids-gallery-card figcaption {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 14px;
+  background: rgba(255, 250, 240, 0.88);
+  backdrop-filter: blur(8px);
+  color: var(--kids-brown);
+  box-shadow: 0 12px 28px rgba(60, 47, 47, 0.12);
+}
+
+.kids-gallery-card figcaption strong,
+.kids-gallery-card figcaption span {
+  display: block;
+}
+
+.kids-gallery-card figcaption strong {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.kids-gallery-card figcaption span {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 .kids-bottom-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2826,7 +2927,7 @@ td select {
 .kids-price-card > strong {
   display: block;
   margin-bottom: 16px;
-  color: var(--kids-green);
+  color: var(--kids-yellow-deep);
   font-size: 24px;
   font-weight: 700;
   line-height: 1.15;
@@ -2866,7 +2967,7 @@ td select {
 .kids-safety-card li {
   position: relative;
   padding-left: 18px;
-  color: var(--kids-green);
+  color: var(--kids-yellow-deep);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.5;
@@ -3135,7 +3236,7 @@ td select {
     min-height: auto;
     padding: 0;
     border: 0;
-    color: #2d5a27;
+    color: #b88400;
     font-size: 0;
     font-weight: 500;
   }
@@ -3235,6 +3336,7 @@ td select {
   .class-booking-grid,
   .class-time-grid,
   .class-photo-options {
+    grid-template-columns: 1fr;
     gap: 15px;
   }
 
@@ -3278,21 +3380,19 @@ td select {
     width: 100%;
     min-height: 220px;
     margin-bottom: 37px;
-    border-radius: 6px;
+    border-radius: 12px;
   }
 
-  .kids-photo-card::before {
-    width: 92px;
-    height: 92px;
-    right: 22px;
-    top: 22px;
+  .kids-photo-card img {
+    min-height: 220px;
   }
 
   .kids-photo-card::after {
-    width: 64px;
-    height: 64px;
-    left: 28px;
-    bottom: 24px;
+    inset: 0;
+    width: auto;
+    height: auto;
+    left: 0;
+    bottom: 0;
   }
 
   .kids-photo-stage strong {
@@ -3469,6 +3569,37 @@ td select {
 
   .kids-step-card p {
     display: none;
+  }
+
+  .kids-gallery-section {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-top: 24px;
+  }
+
+  .kids-gallery-card,
+  .kids-gallery-card img {
+    min-height: 190px;
+  }
+
+  .kids-gallery-card {
+    border-radius: 12px;
+  }
+
+  .kids-gallery-card figcaption {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .kids-gallery-card figcaption strong {
+    font-size: 12px;
+  }
+
+  .kids-gallery-card figcaption span {
+    font-size: 10px;
   }
 
   .kids-bottom-grid {

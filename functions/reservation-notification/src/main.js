@@ -29,6 +29,14 @@ const MARKET_CONFIG = {
       'vanilla-cream': 'Vanilla cream',
     },
     quantityUnit: '개',
+    classSubjectPrefix: '[베리굿초콜릿] 새 키즈 클래스 예약',
+    classHeading: '새 키즈 클래스 예약',
+    bookingTypeLabels: {
+      'year-1-2': 'Year 1-2 child',
+      '1-child': '1 child private class',
+      '2-friends': '2 friends private class',
+    },
+    yesNoLabels: { true: '예', false: '아니오' },
     labels: {
       bookingNumber: '예약번호',
       product: '제품명',
@@ -44,6 +52,26 @@ const MARKET_CONFIG = {
       note: '요청사항',
       createdAt: '신청일시',
       none: '없음',
+      className: '클래스',
+      classDate: '클래스 날짜',
+      classTime: '클래스 시간',
+      bookingType: '예약 타입',
+      parentName: '보호자명',
+      parentPhone: '보호자 연락처',
+      parentEmail: '보호자 이메일',
+      childName: '아이 이름',
+      childAge: '아이 나이',
+      schoolYear: '학년',
+      secondChild: '두 번째 아이',
+      allergyNote: '알러지/주의사항',
+      emergencyContact: '비상 연락처',
+      pickupPerson: '픽업 보호자',
+      parentConsent: '보호자 동의',
+      cancellationAgreement: '취소 규정 동의',
+      photoConsent: '사진 동의',
+      status: '상태',
+      paymentStatus: '결제 상태',
+      deposit: '예약금',
     },
   },
   AU: {
@@ -74,6 +102,14 @@ const MARKET_CONFIG = {
       'vanilla-cream': 'Vanilla cream',
     },
     quantityUnit: 'ea',
+    classSubjectPrefix: '[Verygood Chocolate AU] New kids class request',
+    classHeading: 'New kids class request',
+    bookingTypeLabels: {
+      'year-1-2': 'Year 1-2 child',
+      '1-child': '1 child private class',
+      '2-friends': '2 friends private class',
+    },
+    yesNoLabels: { true: 'Yes', false: 'No' },
     labels: {
       bookingNumber: 'Booking number',
       product: 'Product',
@@ -89,6 +125,26 @@ const MARKET_CONFIG = {
       note: 'Request note',
       createdAt: 'Submitted at',
       none: 'None',
+      className: 'Class',
+      classDate: 'Class date',
+      classTime: 'Class time',
+      bookingType: 'Booking type',
+      parentName: 'Parent name',
+      parentPhone: 'Parent phone',
+      parentEmail: 'Parent email',
+      childName: 'Child name',
+      childAge: 'Child age',
+      schoolYear: 'School year',
+      secondChild: 'Second child',
+      allergyNote: 'Allergy / notes',
+      emergencyContact: 'Emergency contact',
+      pickupPerson: 'Pick-up person',
+      parentConsent: 'Parent consent',
+      cancellationAgreement: 'Cancellation agreement',
+      photoConsent: 'Photo consent',
+      status: 'Status',
+      paymentStatus: 'Payment status',
+      deposit: 'Deposit',
     },
   },
 }
@@ -180,7 +236,27 @@ function parseBody(bodyRaw) {
   }
 }
 
-function buildRows(reservation, config) {
+function isClassReservation(reservation) {
+  return Boolean(reservation?.classType || reservation?.bookingType || reservation?.parentName || reservation?.childName)
+}
+
+function getBookingTypeText(reservation, config) {
+  return config.bookingTypeLabels[reservation.bookingType] || reservation.bookingType || '-'
+}
+
+function getBooleanText(value, config) {
+  return config.yesNoLabels[String(Boolean(value))] || String(Boolean(value))
+}
+
+function getSecondChildText(reservation, config) {
+  if (reservation.bookingType !== '2-friends') return config.labels.none
+  const parts = [reservation.secondChildName, reservation.secondChildAge ? `${reservation.secondChildAge}` : '', reservation.secondChildSchoolYear]
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
+  return parts.length > 0 ? parts.join(' / ') : config.labels.none
+}
+
+function buildCakeRows(reservation, config) {
   const quantity = getQuantity(reservation)
   return [
     [config.labels.bookingNumber, reservation.reservationNumber],
@@ -199,9 +275,50 @@ function buildRows(reservation, config) {
   ]
 }
 
+function buildClassRows(reservation, config) {
+  return [
+    [config.labels.bookingNumber, reservation.reservationNumber],
+    [config.labels.className, 'School holiday private cake class'],
+    [config.labels.classDate, reservation.classDate],
+    [config.labels.classTime, reservation.classTime],
+    [config.labels.bookingType, getBookingTypeText(reservation, config)],
+    [config.labels.parentName, reservation.parentName],
+    [config.labels.parentPhone, reservation.parentPhone],
+    [config.labels.parentEmail, reservation.parentEmail],
+    [config.labels.childName, reservation.childName],
+    [config.labels.childAge, reservation.childAge],
+    [config.labels.schoolYear, reservation.schoolYear],
+    [config.labels.secondChild, getSecondChildText(reservation, config)],
+    [config.labels.allergyNote, reservation.allergyNote || config.labels.none],
+    [config.labels.emergencyContact, reservation.emergencyContact],
+    [config.labels.pickupPerson, reservation.pickupPerson],
+    [config.labels.parentConsent, getBooleanText(reservation.parentConsent, config)],
+    [config.labels.cancellationAgreement, getBooleanText(reservation.cancellationAgreement, config)],
+    [config.labels.photoConsent, getBooleanText(reservation.photoConsent, config)],
+    [config.labels.status, reservation.status],
+    [config.labels.paymentStatus, reservation.paymentStatus],
+    [config.labels.total, formatCurrency(reservation.totalPrice, config)],
+    [config.labels.deposit, formatCurrency(reservation.depositAmount, config)],
+    [config.labels.createdAt, formatCreatedAt(reservation.createdAt || reservation.$createdAt, config)],
+  ]
+}
+
+function buildRows(reservation, config) {
+  return isClassReservation(reservation) ? buildClassRows(reservation, config) : buildCakeRows(reservation, config)
+}
+
+function getSubject(reservation, config) {
+  const prefix = isClassReservation(reservation) ? config.classSubjectPrefix : config.subjectPrefix
+  return `${prefix} ${reservation.reservationNumber}`
+}
+
+function getHeading(reservation, config) {
+  return isClassReservation(reservation) ? config.classHeading : config.heading
+}
+
 function buildText(reservation, config) {
   return [
-    config.subjectPrefix,
+    getSubject(reservation, config),
     '',
     ...buildRows(reservation, config).map(([label, value]) => `${label}: ${value}`),
   ].join('\n')
@@ -212,7 +329,7 @@ function buildHtml(reservation, config) {
 
   return `
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55;">
-      <h2 style="margin: 0 0 16px;">${escapeHtml(config.heading)}</h2>
+      <h2 style="margin: 0 0 16px;">${escapeHtml(getHeading(reservation, config))}</h2>
       <table style="border-collapse: collapse; width: 100%; max-width: 640px;">
         <tbody>
           ${rows
@@ -277,7 +394,7 @@ async function sendResendEmail({ reservation, to, from, apiKey, config }) {
     {
       from,
       to,
-      subject: `${config.subjectPrefix} ${reservation.reservationNumber}`,
+      subject: getSubject(reservation, config),
       text: buildText(reservation, config),
       html: buildHtml(reservation, config),
     },

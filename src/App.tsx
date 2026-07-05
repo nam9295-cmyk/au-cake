@@ -17,6 +17,9 @@ import heroCake2Img from './assets/hero-cake-2.webp'
 import heroCake3Img from './assets/hero-cake-3.webp'
 import paveCakeCardImg from './assets/pave-side.webp'
 import poundCakeCardImg from './assets/pound-side.webp'
+import kidsClassHeroImg from './assets/kids-class-hero.webp'
+import kidsClassProcessImg from './assets/kids-class-process.webp'
+import kidsClassFinishedImg from './assets/kids-class-finished.webp'
 import {
   CAKE_SIZE_OPTIONS,
   CACAO_OPTIONS,
@@ -27,6 +30,8 @@ import {
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
+  PROMO_CODE,
+  PROMO_DISCOUNT_RATE,
   formatCakeSizeLabel,
   formatCacaoLabel,
   formatChocolateTypeLabel,
@@ -59,14 +64,13 @@ import {
 import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
-  buildClassDepositMessage,
+  buildClassPaymentMessage,
   classReservationsToCsv,
   CLASS_PAYMENT_STATUS_OPTIONS,
   CLASS_SESSION_TIMES,
   CLASS_STATUS_OPTIONS,
   formatClassBookingType,
   getClassBookingPrice,
-  getClassDepositAmount,
 } from './lib/class-utils'
 import {
   addDaysInputValue,
@@ -315,8 +319,8 @@ function SiteHeader({ navigate }: { navigate: (page: Page) => void }) {
         Verygood Chocolate
       </button>
       <nav>
-        <button type="button" onClick={() => navigate('classes')}>
-          Classes
+        <button className="kids-nav-button" type="button" onClick={() => navigate('classes')}>
+          Kids Class
         </button>
         <button type="button" onClick={() => navigate('lookup')}>
           {marketConfig.copy.lookupNav}
@@ -645,16 +649,16 @@ function HomePage({
 
 function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
   const essentials = [
-    ['Best for Years 3-6', 'Suited to primary school children'],
-    ['90-minute private class', 'Careful step-by-step guidance'],
-    ['One 15cm cake per child', 'Complete custom decorating'],
+    ['Year 1-6 courses', 'Age-aware private sessions for primary school children'],
+    ['Professional-style course', 'Real studio guidance from planning to finishing'],
+    ['One 15cm cake per child', 'Plan, build, and finish a real chocolate cake'],
     ['Max 2 kids per session', 'Private small group focus'],
   ]
   const steps = [
-    ['Choose a session', 'Select your preferred date and time for the private class.'],
-    ['Design your cake', 'Choose colours, toppings, and simple decorating ideas with guidance.'],
-    ['Decorate & personalise', 'Add custom colours, toppings, chocolate pieces, and a simple message.'],
-    ['Box and take home', 'Pack your beautiful cake in a premium window box to take home safely.'],
+    ['Choose a course', 'Select the age group, date, and studio session time.'],
+    ['Imagine your cake', 'Sketch the cake from your imagination and plan the shape, colour, and finish.'],
+    ['Bring it to life', 'Build your chocolate cake with professional guidance from Jenny.'],
+    ['Box and take home', 'Pack your finished cake beautifully and take it home safely.'],
   ]
 
   return (
@@ -663,30 +667,21 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
       <main className="kids-class-page">
         <section className="kids-class-hero" aria-labelledby="kids-class-title">
           <div className="kids-hero-copy reveal-up">
-            <h1 id="kids-class-title">Private Kids Cake Decorating Class</h1>
+            <h1 id="kids-class-title">Kids Professional Cake Course</h1>
             <p className="kids-location">Melrose Park, Sydney</p>
             <p className="kids-hero-text">
-              Design your own 15cm chocolate cake, choose your colours and toppings, decorate it your way, and take it home beautifully boxed.
+              A private chocolate cake course where kids imagine their dream cake, learn real studio techniques, and bring it to life with Jenny's guidance.
             </p>
             <div className="kids-hero-actions">
               <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
                 Request a spot
               </button>
-              <span>90 minutes · Max 2 kids · Limited school holiday spots</span>
+              <span>Professional-style course · Max 2 kids · Limited school holiday spots</span>
             </div>
           </div>
 
-          <div className="kids-photo-card reveal-up delay-one" aria-label="Kids cake class photo placeholder">
-            <div className="kids-photo-stage">
-              <span className="cake-plate" />
-              <span className="cake-body" />
-              <span className="cake-cream cream-one" />
-              <span className="cake-cream cream-two" />
-              <span className="cake-spark spark-one" />
-              <span className="cake-spark spark-two" />
-              <span className="cake-spark spark-three" />
-              <strong>[ Editorial Kids Cake Class Photo ]</strong>
-            </div>
+          <div className="kids-photo-card reveal-up delay-one">
+            <img src={kidsClassHeroImg} alt="Kids professional cake course hero" />
           </div>
         </section>
 
@@ -714,14 +709,31 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
           </div>
         </section>
 
+        <section className="kids-gallery-section reveal-up" aria-label="Kids class photos">
+          <figure className="kids-gallery-card kids-gallery-process">
+            <img src={kidsClassProcessImg} alt="Kids class cake making process" />
+            <figcaption>
+              <strong>Studio process</strong>
+              <span>Plan, layer, cream, and finish with guided hands-on steps.</span>
+            </figcaption>
+          </figure>
+          <figure className="kids-gallery-card kids-gallery-finished">
+            <img src={kidsClassFinishedImg} alt="Finished kids cake class chocolate cake" />
+            <figcaption>
+              <strong>Finished cake</strong>
+              <span>A real chocolate cake boxed beautifully to take home.</span>
+            </figcaption>
+          </figure>
+        </section>
+
         <section className="kids-bottom-grid reveal-up" aria-label="Pricing and safety information">
           <article className="kids-price-card">
             <h2>Launch Pricing</h2>
-            <strong>{formatCurrency(109)} / child</strong>
-            <p className="kids-price-line">{formatCurrency(198)} / two friends or siblings</p>
-            <p className="kids-price-line">{formatCurrency(50)} deposit required to secure booking</p>
+            <strong>{formatCurrency(99)} / Year 1-2</strong>
+            <p className="kids-price-line">{formatCurrency(109)} / Year 3-6</p>
+            <p className="kids-price-line">{formatCurrency(198)} / two kids, siblings, or friends</p>
             <p className="kids-small-note">
-              * Final confirmation is sent after availability and deposit are checked manually by Jenny.
+              * Booking is completed after availability and full payment are confirmed by Jenny.
             </p>
           </article>
 
@@ -731,15 +743,15 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
               This is a short private cake decorating class, not childcare. Younger children may need a parent or guardian to stay nearby or join the session.
             </p>
             <ul>
-              <li>All allergies and dietary requirements must be declared before deposit confirmation</li>
+              <li>All allergies and dietary requirements must be declared before booking confirmation</li>
               <li>Parent/guardian consent is required when submitting a booking request</li>
-              <li>Detailed address shared after deposit confirmation (Melrose Park, Sydney)</li>
+              <li>Detailed address shared after payment confirmation (Melrose Park, Sydney)</li>
             </ul>
           </article>
         </section>
 
         <section className="kids-final-cta reveal-up" aria-label="Request class booking">
-          <p>Limited school holiday spots are handled manually so Jenny can confirm each child safely.</p>
+          <p>Limited school holiday spots are handled manually so Jenny can confirm each course safely.</p>
           <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
             Request a spot
           </button>
@@ -772,13 +784,13 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
   }>({
     classDate: addDaysInputValue(4),
     classTime: CLASS_SESSION_TIMES[0],
-    bookingType: '1-child',
+    bookingType: 'year-1-2',
     parentName: '',
     parentPhone: '',
     parentEmail: '',
     childName: '',
-    childAge: 9,
-    schoolYear: 'Year 4',
+    childAge: 7,
+    schoolYear: 'Year 1',
     secondChildName: '',
     secondChildAge: 9,
     secondChildSchoolYear: '',
@@ -799,10 +811,11 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     setError('')
     const phone = normalizePhone(form.parentPhone)
     if (!form.parentName.trim() || !form.childName.trim()) return setError('Please enter parent and child name.')
+    if (!form.schoolYear.trim()) return setError('Please enter Child 1 school year.')
     if (!isValidPhone(phone)) return setError(`Please check the mobile number. ${marketConfig.copy.phoneHelp}`)
     if (!form.parentEmail.includes('@')) return setError('Please enter a valid email address.')
     if (!form.classDate || form.classDate < today) return setError('Please choose a future class date.')
-    if (form.bookingType === '2-friends' && !form.secondChildName.trim()) return setError('Please enter the second child name.')
+    if (form.bookingType === '2-friends' && (!form.secondChildName.trim() || !form.secondChildSchoolYear.trim())) return setError('Please enter Child 2 name and school year.')
     if (!form.emergencyContact.trim() || !form.pickupPerson.trim()) return setError('Emergency contact and pick-up person are required.')
     if (!form.parentConsent || !form.cancellationAgreement) return setError('Parent consent and booking agreement are required.')
     setSubmitting(true)
@@ -826,14 +839,14 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
             <button className="class-back-button" type="button" onClick={() => navigate('classes')}>
               <ArrowLeft size={14} /> Back to classes
             </button>
-            <h1>Request a Class Spot</h1>
-            <p>Please fill out the details below to request a session.</p>
+            <h1>Request a Kids Course</h1>
+            <p>Please fill out the details below. Jenny will confirm availability and send full payment details.</p>
           </header>
 
           <section className="class-form-section" aria-labelledby="session-type-title">
             <h2 id="session-type-title">1. Select Session Type</h2>
             <div className="class-booking-grid">
-              {(['1-child', '2-friends'] as const).map((type) => (
+              {(['year-1-2', '1-child', '2-friends'] as const).map((type) => (
                 <label className="class-option-card" key={type}>
                   <input
                     type="radio"
@@ -841,7 +854,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                     checked={form.bookingType === type}
                     onChange={() => setForm({ ...form, bookingType: type })}
                   />
-                  <span>{type === '1-child' ? '1 child' : '2 siblings / friends'}</span>
+                  <span>{formatClassBookingType(type)}</span>
                   <strong>{formatCurrency(getClassBookingPrice(type))}</strong>
                 </label>
               ))}
@@ -896,8 +909,8 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           <section className="class-form-section" aria-labelledby="child-detail-title">
             <h2 id="child-detail-title">3. Child Details</h2>
             <label className="class-field">
-              <span>Child 1 Name & Age / School Year</span>
-              <input value={form.childName} onChange={(event) => setForm({ ...form, childName: event.target.value })} placeholder={`Leo, Age ${form.childAge} (${form.schoolYear || 'Year 4'})`} />
+              <span>Child 1 Name</span>
+              <input value={form.childName} onChange={(event) => setForm({ ...form, childName: event.target.value })} placeholder="Leo" />
             </label>
             <div className="class-split-row">
               <label className="class-field">
@@ -905,15 +918,15 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                 <input type="number" min="3" max="18" value={form.childAge} onChange={(event) => setForm({ ...form, childAge: Number(event.target.value) })} />
               </label>
               <label className="class-field">
-                <span>School Year</span>
+                <span>Child 1 School Year</span>
                 <input value={form.schoolYear} onChange={(event) => setForm({ ...form, schoolYear: event.target.value })} placeholder="Year 4" />
               </label>
             </div>
             {form.bookingType === '2-friends' && (
               <>
                 <label className="class-field">
-                  <span>Child 2 Name & Age / School Year (Optional)</span>
-                  <input value={form.secondChildName} onChange={(event) => setForm({ ...form, secondChildName: event.target.value })} placeholder="Chloe, Age 7 (Year 2)" />
+                  <span>Child 2 Name</span>
+                  <input value={form.secondChildName} onChange={(event) => setForm({ ...form, secondChildName: event.target.value })} placeholder="Chloe" />
                 </label>
                 <div className="class-split-row">
                   <label className="class-field">
@@ -955,7 +968,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
             </label>
             <label className="class-check-row">
               <input type="checkbox" checked={form.cancellationAgreement} onChange={(event) => setForm({ ...form, cancellationAgreement: event.target.checked })} />
-              <span>I understand bookings are confirmed after availability is checked and the deposit is paid.</span>
+              <span>I understand my booking is completed only after availability is confirmed and full payment is received.</span>
             </label>
             <fieldset className="class-photo-consent">
               <legend>Photo Consent</legend>
@@ -976,13 +989,13 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
             <dl>
               <div><dt>Booking</dt><dd>{formatClassBookingType(form.bookingType)}</dd></div>
               <div><dt>Total</dt><dd>{formatCurrency(price)}</dd></div>
-              <div><dt>Deposit</dt><dd>{formatCurrency(getClassDepositAmount())}</dd></div>
+              <div><dt>Payment</dt><dd>Full payment required</dd></div>
             </dl>
           </aside>
 
           {error && <p className="error-text class-error-text">{error}</p>}
-          <button className="class-submit-button" type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit Class Request'}</button>
-          <p className="class-submit-note">Final confirmation is sent after availability is checked. No deposit is charged now.</p>
+          <button className="class-submit-button" type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Request booking'}</button>
+          <p className="class-submit-note">Jenny will confirm availability and send full payment details. Your booking is complete after payment is received.</p>
         </form>
       </main>
     </>
@@ -1000,12 +1013,12 @@ function ClassCompletePage({ navigate, reservation }: { navigate: (page: Page) =
           <div className="class-complete-icon" aria-hidden="true">
             <Check size={30} strokeWidth={3} />
           </div>
-          <h1 id="class-complete-title">Request Sent!</h1>
+          <h1 id="class-complete-title">Booking Request Sent!</h1>
 
           <div className="class-complete-message">
-            <strong>Your class request has been sent.</strong>
-            <p>Jenny will check availability and send deposit details shortly.</p>
-            <p>Your spot is confirmed once the deposit has been received.</p>
+            <strong>Your kids course request has been sent.</strong>
+            <p>Jenny will check availability and send full payment details shortly.</p>
+            <p>Your booking is complete once full payment has been received.</p>
             <span>Booking ID: {reservationNumber}</span>
           </div>
 
@@ -1041,6 +1054,7 @@ function ReservePage({
     customerName: '',
     customerPhone: '',
     requestNote: '',
+    promoCode: '',
     privacy: false,
   })
   const [showCakeSelector, setShowCakeSelector] = useState(false)
@@ -1108,6 +1122,7 @@ function ReservePage({
           pickupTime: selectedPickupTime,
           cacaoPercent: form.cacaoPercent,
           requestNote: form.requestNote,
+          promoCode: form.promoCode,
         }
       )
       onComplete(reservation)
@@ -1133,6 +1148,9 @@ function ReservePage({
   }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
+  const isPromoApplied = form.promoCode.trim().toLowerCase() === PROMO_CODE.toLowerCase()
+  const discountedPrice = isPromoApplied ? Math.max(0, Math.round(currentPrice * (1 - PROMO_DISCOUNT_RATE))) : currentPrice
+  const promoDiscountAmount = Math.max(0, currentPrice - discountedPrice)
   const showChocolateTypeOptions = usesReservationChocolateType(selectedProduct.id, form.poundAddon)
   const labels = {
     back: marketConfig.market === 'KR' ? '돌아가기' : 'Back',
@@ -1160,6 +1178,10 @@ function ReservePage({
     customerName: marketConfig.market === 'KR' ? '예약자명' : 'Name',
     phone: marketConfig.market === 'KR' ? '연락처' : 'Mobile',
     requestNote: marketConfig.market === 'KR' ? '요청사항' : 'Request notes',
+    promoCode: marketConfig.market === 'KR' ? '프로모 코드' : 'Promo code',
+    promoPlaceholder: marketConfig.market === 'KR' ? '프로모 코드가 있으면 입력' : 'Enter promo code',
+    promoApplied: marketConfig.market === 'KR' ? '프로모 코드 적용됨: 10% 할인' : 'Promo applied: 10% off',
+    promoHint: marketConfig.market === 'KR' ? '대소문자 구분 없이 적용됩니다.' : 'Not case-sensitive.',
   }
 
   function selectProduct(productId: ProductId) {
@@ -1204,7 +1226,16 @@ function ReservePage({
               </div>
               <div>
                 <dt>{labels.totalPrice}</dt>
-                <dd>{formatCurrency(currentPrice)}</dd>
+                <dd>
+                  {isPromoApplied ? (
+                    <span className="promo-price-summary">
+                      <span className="original-price">{formatCurrency(currentPrice)}</span>
+                      <strong>{formatCurrency(discountedPrice)}</strong>
+                    </span>
+                  ) : (
+                    formatCurrency(currentPrice)
+                  )}
+                </dd>
               </div>
               <div>
                 <dt>{labels.quantity}</dt>
@@ -1477,6 +1508,21 @@ function ReservePage({
               />
             </label>
 
+            <label className="promo-code-field">
+              {labels.promoCode}
+              <input
+                value={form.promoCode}
+                onChange={(event) => setForm({ ...form, promoCode: event.target.value })}
+                placeholder={labels.promoPlaceholder}
+                autoCapitalize="none"
+              />
+              <span className={isPromoApplied ? 'promo-message is-applied' : 'promo-message'}>
+                {isPromoApplied
+                  ? `${labels.promoApplied} (-${formatCurrency(promoDiscountAmount)})`
+                  : labels.promoHint}
+              </span>
+            </label>
+
             <label className="agree-row">
               <input
                 type="checkbox"
@@ -1490,7 +1536,7 @@ function ReservePage({
 
             {error && <p className="error-text">{error}</p>}
 
-            <BankAccountBox settings={settings} totalPrice={currentPrice} />
+            <BankAccountBox settings={settings} totalPrice={discountedPrice} />
 
             <button className="primary-button full-width" type="submit" disabled={submitting}>
               {submitting ? (marketConfig.market === 'KR' ? '신청 중' : 'Submitting') : marketConfig.copy.reserveCta}
@@ -2059,20 +2105,20 @@ function AdminClassesPage({ navigate }: { navigate: (page: Page) => void }) {
   }
 
   const totalRequests = reservations.length
-  const pendingDeposit = reservations.filter(
-    (reservation) => reservation.paymentStatus === 'Pending deposit' || reservation.status === 'Requested',
+  const pendingPayment = reservations.filter(
+    (reservation) => reservation.paymentStatus === 'Payment pending' || reservation.status === 'Requested',
   ).length
   const confirmedSpots = reservations.filter((reservation) => reservation.status === 'Confirmed').length
   const firstReservation = reservations[0]
-  const depositTemplate = firstReservation
-    ? buildClassDepositMessage(firstReservation)
-    : `Hi [Parent name], thank you for your cake class request for [Child name].\n\nRequested session:\n[Class date] [Class time]\n\nWe'll check availability and send payment details shortly.\nYour spot is confirmed once the A$${getClassDepositAmount()} deposit is received.\n\nVerygood Chocolate AU`
+  const paymentTemplate = firstReservation
+    ? buildClassPaymentMessage(firstReservation)
+    : `Hi [Parent name], thank you for your cake class booking request for [Child name].\n\nRequested session:\n[Class date] [Class time]\n\nWe'll check availability and send full payment details shortly.\nYour booking is complete once full payment has been received.\n\nVerygood Chocolate AU`
   const confirmationTemplate = firstReservation
     ? buildClassConfirmationMessage(firstReservation)
     : `Hi [Parent name], [Child name]'s cake class booking is confirmed.\n\nDate/time:\n[Class date] [Class time]\n\nLocation:\nMelrose Park, Sydney\nThe full address will be sent before the class.\n\nPlease note:\n- Please arrive 5 minutes early\n- Long hair should be tied back\n- Clothes may get chocolate/cream on them\n- Please let us know immediately if there are any allergies or dietary concerns\n\nWe're excited to see you soon.\n\nVerygood Chocolate AU`
   const stats = [
     { label: 'Total Requests', value: totalRequests, tone: 'neutral' },
-    { label: 'Pending Deposit', value: pendingDeposit, tone: 'warning' },
+    { label: 'Pending Payment', value: pendingPayment, tone: 'warning' },
     { label: 'Confirmed Spots', value: confirmedSpots, tone: 'success' },
   ]
 
@@ -2170,7 +2216,7 @@ function AdminClassesPage({ navigate }: { navigate: (page: Page) => void }) {
                       </td>
                       <td>
                         <div className="class-admin-actions">
-                          <button type="button" onClick={() => copyMessage(buildClassDepositMessage(reservation), 'Deposit message')}>Copy Deposit</button>
+                          <button type="button" onClick={() => copyMessage(buildClassPaymentMessage(reservation), 'Payment message')}>Copy Payment</button>
                           <button type="button" onClick={() => copyMessage(buildClassConfirmationMessage(reservation), 'Confirmation message')}>Copy Confirm</button>
                           <button type="button" onClick={() => setSelected(reservation)}>Edit</button>
                         </div>
@@ -2189,10 +2235,10 @@ function AdminClassesPage({ navigate }: { navigate: (page: Page) => void }) {
           <div className="class-copy-grid">
             <article className="class-copy-card">
               <div className="class-copy-card-header">
-                <strong>1. Deposit Request (SMS/Email)</strong>
-                <button type="button" onClick={() => copyMessage(depositTemplate, 'Deposit template')}>Copy</button>
+                <strong>1. Payment Request (SMS/Email)</strong>
+                <button type="button" onClick={() => copyMessage(paymentTemplate, 'Payment template')}>Copy</button>
               </div>
-              <pre>{depositTemplate}</pre>
+              <pre>{paymentTemplate}</pre>
             </article>
             <article className="class-copy-card">
               <div className="class-copy-card-header">
@@ -2215,7 +2261,7 @@ function ClassReservationDrawer({ reservation, onClose, onSave, onCopy }: { rese
     <div className="drawer-backdrop"><aside className="drawer"><div className="drawer-header"><h2>{reservation.reservationNumber}</h2><button type="button" onClick={onClose}>닫기</button></div>
       <dl className="detail-list"><div><dt>부모</dt><dd>{reservation.parentName}<br />{reservation.parentPhone}<br />{reservation.parentEmail}</dd></div><div><dt>아이</dt><dd>{reservation.childName}, {reservation.childAge}, {reservation.schoolYear}</dd></div><div><dt>세션</dt><dd>{reservation.classDate} {reservation.classTime}</dd></div><div><dt>안전</dt><dd>{reservation.allergyNote || 'none'}<br />Emergency: {reservation.emergencyContact}<br />Pick-up: {reservation.pickupPerson}</dd></div><div><dt>동의</dt><dd>Parent {reservation.parentConsent ? 'yes' : 'no'} / Photo {reservation.photoConsent ? 'yes' : 'no'} / Cancellation {reservation.cancellationAgreement ? 'yes' : 'no'}</dd></div></dl>
       <label>관리자 메모<textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
-      <div className="button-row"><button className="secondary-button" type="button" onClick={() => onCopy(buildClassDepositMessage(reservation))}>예약금 안내 복사</button><button className="secondary-button" type="button" onClick={() => onCopy(buildClassConfirmationMessage(reservation))}>확정 안내 복사</button><button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>메모 저장</button></div>
+      <div className="button-row"><button className="secondary-button" type="button" onClick={() => onCopy(buildClassPaymentMessage(reservation))}>결제 안내 복사</button><button className="secondary-button" type="button" onClick={() => onCopy(buildClassConfirmationMessage(reservation))}>확정 안내 복사</button><button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>메모 저장</button></div>
       <div className="sms-preview"><pre>{buildClassConfirmationMessage(reservation)}</pre></div>
     </aside></div>
   )

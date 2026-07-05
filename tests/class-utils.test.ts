@@ -1,8 +1,9 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import {
+  CLASS_SESSION_TIMES,
   buildClassConfirmationMessage,
-  buildClassDepositMessage,
+  buildClassPaymentMessage,
   classReservationsToCsv,
   generateClassReservationNumber,
   getClassBookingPrice,
@@ -15,8 +16,8 @@ const sampleReservation: ClassReservation = {
   reservationNumber: 'VG-KC-AU-20260702-101500123',
   classType: 'school-holiday-private-cake-class',
   classDate: '2026-07-10',
-  classTime: '10:00-11:30',
-  bookingType: '2-friends',
+  classTime: '10:00',
+  bookingType: 'year-1-2',
   parentName: 'Jenny Parent',
   parentPhone: '0412 345 678',
   parentEmail: 'jenny@example.com',
@@ -33,18 +34,20 @@ const sampleReservation: ClassReservation = {
   cancellationAgreement: true,
   photoConsent: false,
   status: 'Requested',
-  paymentStatus: 'Pending deposit',
-  totalPrice: 198,
-  depositAmount: 50,
+  paymentStatus: 'Fully paid',
+  totalPrice: 99,
+  depositAmount: 0,
   adminMemo: 'Bring apron',
   createdAt: '2026-07-02T01:00:00.000Z',
   updatedAt: '2026-07-02T01:00:00.000Z',
 }
 
-test('class booking prices match AU launch pricing', () => {
+test('class booking prices and session times match Jenny feedback', () => {
+  assert.deepEqual([...CLASS_SESSION_TIMES], ['10:00', '13:00', '16:00'])
+  assert.equal(getClassBookingPrice('year-1-2'), 99)
   assert.equal(getClassBookingPrice('1-child'), 109)
   assert.equal(getClassBookingPrice('2-friends'), 198)
-  assert.equal(getClassDepositAmount(), 50)
+  assert.equal(getClassDepositAmount(), 0)
 })
 
 test('class reservation number uses kids class AU prefix and date', () => {
@@ -52,12 +55,13 @@ test('class reservation number uses kids class AU prefix and date', () => {
   assert.match(number, /^VG-KC-AU-20260702-\d{9}$/)
 })
 
-test('deposit and confirmation messages include session, child, parent, deposit and safety details', () => {
-  const deposit = buildClassDepositMessage(sampleReservation)
-  assert.match(deposit, /Jenny Parent/)
-  assert.match(deposit, /Mina/)
-  assert.match(deposit, /2026-07-10 10:00-11:30/)
-  assert.match(deposit, /AUD 50\.00 deposit/)
+test('payment and confirmation messages include session, child, parent, full payment and safety details', () => {
+  const payment = buildClassPaymentMessage(sampleReservation)
+  assert.match(payment, /Jenny Parent/)
+  assert.match(payment, /Mina/)
+  assert.match(payment, /2026-07-10 10:00/)
+  assert.match(payment, /full payment/i)
+  assert.doesNotMatch(payment, /deposit/i)
 
   const confirmation = buildClassConfirmationMessage(sampleReservation)
   assert.match(confirmation, /booking is confirmed/)
@@ -71,6 +75,6 @@ test('class CSV exports parent child safety consent payment and admin fields', (
   assert.match(csv, /Booking number,Created at,Class date,Class time,Booking type/)
   assert.match(csv, /Jenny Parent/)
   assert.match(csv, /Nut allergy check needed/)
-  assert.match(csv, /Pending deposit/)
+  assert.match(csv, /Fully paid/)
   assert.match(csv, /Bring apron/)
 })

@@ -1,24 +1,22 @@
 import type { ClassBookingType, ClassReservation } from './types.js'
 
 export const CLASS_TYPE_ID = 'school-holiday-private-cake-class' as const
-export const CLASS_SESSION_TIMES = ['10:00-11:30', '13:00-14:30'] as const
-export const CLASS_DEPOSIT_AMOUNT = 50
+export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00'] as const
+export const CLASS_DEPOSIT_AMOUNT = 0
 
 export const CLASS_STATUS_OPTIONS = ['Requested', 'Confirmed', 'Completed', 'Cancelled'] as const
 export const CLASS_PAYMENT_STATUS_OPTIONS = [
-  'Pending deposit',
-  'Deposit paid',
+  'Payment pending',
   'Fully paid',
   'Refund required',
+  'Pending deposit',
+  'Deposit paid',
 ] as const
 
 const CLASS_BOOKING_PRICES: Record<ClassBookingType, number> = {
+  'year-1-2': 99,
   '1-child': 109,
   '2-friends': 198,
-}
-
-function formatAud(value: number) {
-  return `AUD ${value.toFixed(2)}`
 }
 
 export function getClassBookingPrice(bookingType: ClassBookingType) {
@@ -63,17 +61,19 @@ export function generateClassReservationNumber(date = new Date()) {
   return `VG-KC-AU-${ymd}-${time}${suffix}`
 }
 
-export function buildClassDepositMessage(reservation: ClassReservation) {
-  return `Hi ${reservation.parentName}, thank you for your cake class request for ${reservation.childName}.
+export function buildClassPaymentMessage(reservation: ClassReservation) {
+  return `Hi ${reservation.parentName}, thank you for your cake class booking request for ${reservation.childName}.
 
 Requested session:
 ${reservation.classDate} ${reservation.classTime}
 
-We'll check availability and send payment details shortly.
-Your spot is confirmed once the ${formatAud(reservation.depositAmount)} deposit has been received.
+We'll check availability and send full payment details shortly.
+Your booking is complete once full payment has been received.
 
 Verygood Chocolate AU`
 }
+
+export const buildClassDepositMessage = buildClassPaymentMessage
 
 export function buildClassConfirmationMessage(reservation: ClassReservation) {
   return `Hi ${reservation.parentName}, ${reservation.childName}'s cake class booking is confirmed.
@@ -97,7 +97,9 @@ Verygood Chocolate AU`
 }
 
 export function formatClassBookingType(bookingType: ClassBookingType) {
-  return bookingType === '2-friends' ? '2 friends / siblings' : '1 child'
+  if (bookingType === 'year-1-2') return 'Year 1-2'
+  if (bookingType === '2-friends') return '2 kids / siblings / friends'
+  return 'Year 3-6'
 }
 
 export function classReservationsToCsv(reservations: ClassReservation[]) {
