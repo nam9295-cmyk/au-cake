@@ -170,6 +170,19 @@ const PICKUP_LOCATION_NAME = 'Pulse - Melrose Park'
 const PICKUP_LOCATION_ADDRESS = '1 Bundil Blvd, Melrose Park NSW 2114'
 const PICKUP_MAP_URL = 'https://www.google.com/maps/place/Pulse+-+Melrose+Park/@-33.8091415,151.0642826,17z/data=!3m1!4b1!4m6!3m5!1s0x6b12a5a1148ce8e5:0x33e80579f801d234!8m2!3d-33.809146!4d151.0668575!16s%2Fg%2F11kq00n62q?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D'
 const PICKUP_MAP_EMBED_URL = 'https://www.google.com/maps?q=Pulse%20-%20Melrose%20Park%2C%201%20Bundil%20Blvd%2C%20Melrose%20Park%20NSW%202114&output=embed'
+const ORDER_NOTICE_TEXT = 'Now taking orders · Pick-up from 9 July'
+
+function AnnouncementTicker() {
+  return (
+    <div className="announcement-ticker" aria-label={ORDER_NOTICE_TEXT}>
+      <div className="announcement-ticker-track" aria-hidden="true">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <span key={index}>{ORDER_NOTICE_TEXT}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function PickupLocationCard() {
   return (
@@ -281,6 +294,7 @@ function App() {
       {!isAppwriteConfigured && (
         <div className="env-notice">Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.</div>
       )}
+      {!isAdminPage && <AnnouncementTicker />}
 
       {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} />}
       {page === 'classes' && <ClassesPage navigate={navigate} />}
@@ -543,6 +557,7 @@ function HomePage({
               <button className="primary-button" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
                 {marketConfig.copy.reserveCta}
               </button>
+              <small className="hero-pickup-note">First pick-up available from 9 July</small>
               <span>{settings.dailyLimitText}</span>
             </div>
           </div>
