@@ -170,8 +170,7 @@ const PICKUP_LOCATION_NAME = 'Pulse - Melrose Park'
 const PICKUP_LOCATION_ADDRESS = '1 Bundil Blvd, Melrose Park NSW 2114'
 const PICKUP_MAP_URL = 'https://www.google.com/maps/place/Pulse+-+Melrose+Park/@-33.8091415,151.0642826,17z/data=!3m1!4b1!4m6!3m5!1s0x6b12a5a1148ce8e5:0x33e80579f801d234!8m2!3d-33.809146!4d151.0668575!16s%2Fg%2F11kq00n62q?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D'
 const PICKUP_MAP_EMBED_URL = 'https://www.google.com/maps?q=Pulse%20-%20Melrose%20Park%2C%201%20Bundil%20Blvd%2C%20Melrose%20Park%20NSW%202114&output=embed'
-const FIRST_PICKUP_DATE = '2026-07-09'
-const ORDER_NOTICE_TEXT = 'Now taking orders · Pick-up from 9 July'
+const ORDER_NOTICE_TEXT = 'Pick-up available from today'
 
 function AnnouncementTicker() {
   return (
@@ -558,7 +557,7 @@ function HomePage({
               <button className="primary-button" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
                 {marketConfig.copy.reserveCta}
               </button>
-              <small className="hero-pickup-note">First pick-up available from 9 July</small>
+              <small className="hero-pickup-note">Pick-up available from today</small>
               <span>{settings.dailyLimitText}</span>
             </div>
           </div>
@@ -1102,7 +1101,7 @@ function ReservePage({
     cakeSize: DEFAULT_CAKE_SIZE as CakeSize,
     chocolateType: DEFAULT_CHOCOLATE_TYPE as ChocolateType,
     poundAddon: DEFAULT_POUND_ADDON as PoundAddon,
-    pickupDate: FIRST_PICKUP_DATE,
+    pickupDate: todayInputValue(),
     pickupTime: '',
     quantity: 1,
     customerName: '',
@@ -1115,7 +1114,7 @@ function ReservePage({
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const today = useTodayInputValue()
-  const minPickupDate = today > FIRST_PICKUP_DATE ? today : FIRST_PICKUP_DATE
+  const minPickupDate = today
   const pickupDate = form.pickupDate && form.pickupDate >= minPickupDate ? form.pickupDate : minPickupDate
   const times = useMemo(() => timeOptionsForDate(pickupDate, settings), [pickupDate, settings])
   const selectedPickupTime = times.includes(form.pickupTime) ? form.pickupTime : times[0] || ''
@@ -1140,8 +1139,8 @@ function ReservePage({
     if (!pickupDate || pickupDate < minPickupDate) {
       setError(
         marketConfig.market === 'KR'
-          ? '픽업 날짜는 7월 9일부터 선택할 수 있습니다.'
-          : 'Please select a pick-up date from 9 July onwards.'
+          ? '픽업 날짜는 오늘부터 선택할 수 있습니다.'
+          : 'Please select a pick-up date from today onwards.'
       )
       return
     }
