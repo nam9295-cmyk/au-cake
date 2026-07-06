@@ -130,7 +130,7 @@ const AU_SETTINGS: StoreSettings = {
   price: 45,
   bankName: 'BSB 012263',
   bankAccount: 'Account 324999682',
-  accountHolder: 'Verygood Chocolate',
+  accountHolder: 'verygood',
   weekdayOpen: '10:00',
   weekdayClose: '20:00',
   weekendOpen: '10:00',
