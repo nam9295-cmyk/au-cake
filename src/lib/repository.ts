@@ -106,7 +106,9 @@ function normalizeSettings(settings?: Partial<StoreSettings> | null): StoreSetti
   if (MARKET === 'AU') {
     if (merged.bankName === 'Payment details TBC') merged.bankName = DEFAULT_SETTINGS.bankName
     if (merged.bankAccount === 'Confirm with Jenny') merged.bankAccount = DEFAULT_SETTINGS.bankAccount
-    if (merged.accountHolder === 'Verygood Chocolate') merged.accountHolder = DEFAULT_SETTINGS.accountHolder
+    if (merged.accountHolder === 'Verygood Chocolate' || merged.accountHolder === 'verygood') {
+      merged.accountHolder = DEFAULT_SETTINGS.accountHolder
+    }
     if (
       merged.pickupNotice === 'For pick-up outside listed hours, leave a note and we will confirm what is possible.' ||
       merged.pickupNotice === 'Street pick-up near 1 Bundil Blvd, Melrose Park. There is a small playground and seating nearby. Parking can be limited, so Jenny will bring the cake down to you.'
