@@ -176,6 +176,18 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         usesPoundAddonOptions: true,
         sizePrices: {},
       },
+      'cupcake-dozen': {
+        id: 'cupcake-dozen',
+        name: '초코 컵케이크 1다스',
+        description: '초콜릿 베이스 컵케이크를 12개 한 세트로 준비하는 파티용 컵케이크입니다.',
+        price: 55000,
+        priceNote: '1다스 기준, 마감 옵션 선택 가능',
+        usesCacaoOptions: false,
+        usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: true,
+        sizePrices: {},
+      },
     },
     cakeSizeOptions: [
       { value: '15cm', label: '6 inch / 15cm', description: '작게 즐기기 좋은 기본 사이즈', price: 45000 },
@@ -194,7 +206,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       { value: 'milk', label: 'Milk chocolate', description: 'Softer and creamier chocolate profile', extraPrice: 0 },
     ],
     poundAddonOptions: [
-      { value: 'none', label: 'Basic pound cake', description: 'Classic pound cake finish', extraPrice: 0 },
+      { value: 'none', label: '기본 마감', description: '기본 마감 옵션', extraPrice: 0 },
       { value: 'extra-chocolate', label: 'Extra chocolate', description: 'Add extra chocolate finish', extraPrice: 5000 },
       { value: 'vanilla-cream', label: 'Vanilla cream', description: 'Add vanilla cream finish', extraPrice: 5000 },
     ],
@@ -231,6 +243,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     productCardFeatures: {
       'pave-cake': ['4단 초코 시트와 파베 가나슈', '미니케이크, 1호사이즈', '농도, 사이즈 선택 가능'],
       'pound-cake': ['식빵틀에 구운 직사각형 케이크', '상단에 다크초콜릿 코팅', '케이크 포장 포함 29,500원'],
+      'cupcake-dozen': ['12개 1다스 구성', '파티와 선물용 컵케이크', '마감 옵션 선택 가능'],
     },
     guideSteps: [
       { title: '예약 신청', text: '원하는 케이크와 픽업 시간을 선택해 신청합니다.' },
@@ -289,6 +302,18 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         usesPoundAddonOptions: true,
         sizePrices: {},
       },
+      'cupcake-dozen': {
+        id: 'cupcake-dozen',
+        name: 'Chocolate Cupcakes (1 dozen)',
+        description: 'A dozen small-batch chocolate cupcakes for sharing, parties and easy gifting.',
+        price: 55,
+        priceNote: '1 dozen, choose one finish option',
+        usesCacaoOptions: false,
+        usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: true,
+        sizePrices: {},
+      },
     },
     cakeSizeOptions: [
       { value: '15cm', label: '6 inch / 15cm', description: 'A compact cake for a small gathering or gift', price: 75 },
@@ -306,9 +331,9 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       { value: 'milk', label: 'Milk chocolate', description: 'Softer and creamier chocolate profile', extraPrice: 0 },
     ],
     poundAddonOptions: [
-      { value: 'none', label: 'Basic pound cake', description: 'Classic pound cake finish', extraPrice: 0 },
-      { value: 'extra-chocolate', label: 'Extra chocolate', description: 'Add extra chocolate finish', extraPrice: 5 },
-      { value: 'vanilla-cream', label: 'Vanilla cream', description: 'Add vanilla cream finish', extraPrice: 10 },
+      { value: 'none', label: 'Basic finish', description: 'Classic finish', extraPrice: 0 },
+      { value: 'extra-chocolate', label: 'Extra chocolate', description: 'Add extra chocolate finish', extraPrice: 7 },
+      { value: 'vanilla-cream', label: 'Vanilla cream', description: 'Add vanilla cream finish', extraPrice: 5 },
     ],
     defaultSettings: AU_SETTINGS,
     copy: {
@@ -343,6 +368,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     productCardFeatures: {
       'pave-cake': ['Layered chocolate sponge and pave ganache', '6 inch, 7.5 inch, or 8.7 inch sizes', 'Dark or milk chocolate'],
       'pound-cake': ['Rectangular gateau chocolat', 'Fixed pound cake size', 'Basic, extra chocolate, or vanilla cream finish'],
+      'cupcake-dozen': ['12 cupcakes in one dozen', 'Small-batch chocolate cupcakes', 'Basic, extra chocolate, or vanilla cream finish'],
     },
     guideSteps: [
       { title: 'Request', text: 'Choose your cake and preferred pick-up time.' },

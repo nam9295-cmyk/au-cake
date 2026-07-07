@@ -657,6 +657,15 @@ main {
   margin-right: 0;
 }
 
+.product-card>button.secondary-button {
+  height: 44px;
+  min-height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
+  align-self: end;
+  white-space: nowrap;
+}
+
 .product-card strong {
   display: block;
   margin-bottom: 8px;
@@ -2313,8 +2322,8 @@ td select {
      - translateX: 숫자가 덜 음수(-110% -> -100%)일수록 가운데로 더 붙음
      - translateY: 양수면 아래로, 음수면 위로 이동 */
   .hero-cake-one {
-    width: min(43vw, 650px);
-    transform: translateX(-115%) translateY(4%) rotate(-2deg);
+    width: min(39vw, 590px);
+    transform: translateX(-123%) translateY(-4%) rotate(-2deg);
   }
 
   /* HERO DESKTOP: 가운데 케이크
@@ -2386,6 +2395,31 @@ td select {
     flex-direction: row;
     align-items: center;
     gap: 18px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 34px;
+  }
+
+  .product-card:nth-child(3) {
+    gap: 13px;
+  }
+
+  .product-card:nth-child(3) strong {
+    margin-bottom: 6px;
+    font-size: 20px;
+    line-height: 1.08;
+  }
+
+  .product-card:nth-child(3) p,
+  .product-card:nth-child(3) ul {
+    font-size: 13px;
+    line-height: 1.42;
+  }
+
+  .product-card:nth-child(3) ul {
+    gap: 5px;
   }
 
   .reservation-layout {

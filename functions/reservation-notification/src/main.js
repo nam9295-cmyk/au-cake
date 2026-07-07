@@ -10,6 +10,7 @@ const MARKET_CONFIG = {
     productLabels: {
       'pave-cake': '생초콜릿 파베 케이크',
       'pound-cake': '초코 파운드 케이크',
+      'cupcake-dozen': '초코 컵케이크 1다스',
     },
     sizeLabels: {
       mini: '미니케이크',
@@ -83,6 +84,7 @@ const MARKET_CONFIG = {
     productLabels: {
       'pave-cake': 'Pave Chocolate Cake',
       'pound-cake': 'Chocolate Pound Cake',
+      'cupcake-dozen': 'Chocolate Cupcakes (1 dozen)',
     },
     sizeLabels: {
       mini: 'Mini cake',
@@ -172,17 +174,18 @@ function getProductName(reservation, config) {
 }
 
 function getCakeSizeText(reservation, config) {
-  if (reservation.productId === 'pound-cake') return '-'
+  if (reservation.productId === 'pound-cake' || reservation.productId === 'cupcake-dozen') return '-'
   return config.sizeLabels[reservation.cakeSize] || reservation.cakeSize || '-'
 }
 
 function getChocolateText(reservation, config) {
-  if (reservation.productId !== 'pave-cake') return '-'
+  const showsChocolate = reservation.productId === 'pave-cake' || (['pound-cake', 'cupcake-dozen'].includes(reservation.productId) && reservation.poundAddon === 'extra-chocolate')
+  if (!showsChocolate) return '-'
   return config.chocolateLabels[reservation.chocolateType] || reservation.chocolateType || '-'
 }
 
 function getPoundAddonText(reservation, config) {
-  if (reservation.productId !== 'pound-cake') return '-'
+  if (!['pound-cake', 'cupcake-dozen'].includes(reservation.productId)) return '-'
   return config.poundAddonLabels[reservation.poundAddon] || reservation.poundAddon || '-'
 }
 

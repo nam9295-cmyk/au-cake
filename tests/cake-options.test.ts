@@ -36,7 +36,7 @@ test('pound cake only exposes one finish choice group', () => {
   assert.equal(poundCake.usesSizeOptions, false)
   assert.equal(poundCake.usesChocolateTypeOptions, false)
   assert.equal(poundCake.usesPoundAddonOptions, true)
-  assert.equal(formatPoundAddonLabel('none'), 'Basic pound cake')
+  assert.equal(formatPoundAddonLabel('none'), 'Basic finish')
   assert.equal(formatPoundAddonLabel('extra-chocolate'), 'Extra chocolate')
   assert.equal(formatPoundAddonLabel('vanilla-cream'), 'Vanilla cream')
 })
@@ -44,8 +44,8 @@ test('pound cake only exposes one finish choice group', () => {
 test('pound cake pricing ignores size and chocolate, and uses confirmed finish prices', () => {
   assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none' }), 45)
   assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'none' }), 45)
-  assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'extra-chocolate' }), 50)
-  assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 55)
+  assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'extra-chocolate' }), 52)
+  assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 50)
 })
 
 test('pound cake only asks dark or milk chocolate when extra chocolate is selected', () => {
@@ -54,6 +54,21 @@ test('pound cake only asks dark or milk chocolate when extra chocolate is select
   assert.equal(usesReservationChocolateType('pound-cake', 'extra-chocolate'), true)
   assert.equal(normalizeReservationChocolateType('pound-cake', 'milk', 'extra-chocolate'), 'milk')
   assert.equal(normalizeReservationChocolateType('pound-cake', 'milk', 'vanilla-cream'), 'dark')
+})
+
+test('cupcakes are sold by the dozen and use pound cake finish options', () => {
+  const cupcakes = getProductById('cupcake-dozen')
+
+  assert.equal(cupcakes.name, 'Chocolate Cupcakes (1 dozen)')
+  assert.equal(cupcakes.price, 55)
+  assert.equal(cupcakes.usesSizeOptions, false)
+  assert.equal(cupcakes.usesChocolateTypeOptions, false)
+  assert.equal(cupcakes.usesPoundAddonOptions, true)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'none' }), 55)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'extra-chocolate', chocolateType: 'milk' }), 62)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'vanilla-cream' }), 60)
+  assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), true)
+  assert.equal(normalizeReservationChocolateType('cupcake-dozen', 'milk', 'vanilla-cream'), 'dark')
 })
 
 test('pave cake pricing uses size and chocolate type choices without pound finish', () => {

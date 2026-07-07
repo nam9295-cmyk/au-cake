@@ -82,7 +82,7 @@ export function normalizeChocolateType(productId: ProductId, chocolateType?: Cho
 
 export function usesReservationChocolateType(productId: ProductId, poundAddon?: PoundAddon) {
   const product = getProductById(productId)
-  return product.usesChocolateTypeOptions || (product.id === 'pound-cake' && poundAddon === 'extra-chocolate')
+  return product.usesChocolateTypeOptions || (product.usesPoundAddonOptions && poundAddon === 'extra-chocolate')
 }
 
 export function normalizeReservationChocolateType(

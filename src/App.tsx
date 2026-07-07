@@ -12,11 +12,12 @@ import {
   Shield,
   Wallet,
 } from 'lucide-react'
-import heroCake1Img from './assets/hero-cake-1.webp'
 import heroCake2Img from './assets/hero-cake-2.webp'
 import heroCake3Img from './assets/hero-cake-3.webp'
 import paveCakeCardImg from './assets/pave-side.webp'
 import poundCakeCardImg from './assets/pound-side.webp'
+import cupcakeHeroImg from './assets/cupcake-hero.webp'
+import cupcakeCardImg from './assets/cupcake-side.webp'
 import kidsClassHeroImg from './assets/kids-class-hero.webp'
 import kidsClassProcessImg from './assets/kids-class-process.webp'
 import kidsClassFinishedImg from './assets/kids-class-finished.webp'
@@ -484,8 +485,8 @@ function HomePage({
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
   const heroCakes = [
-    { image: heroCake1Img, label: '6inch', tagKey: 'mini', className: 'hero-cake-one' },
-    { image: heroCake2Img, label: '7.5/8.7inch', tagKey: 'first', className: 'hero-cake-two' },
+    { image: cupcakeHeroImg, label: 'cupcake', tagKey: 'mini', className: 'hero-cake-one' },
+    { image: heroCake2Img, label: '6/7.5/8.7inch', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'pound', tagKey: 'pound', className: 'hero-cake-three' },
   ]
   const productCards: Record<ProductId, { image: string; imageAlt: string; features: string[] }> = {
@@ -498,6 +499,11 @@ function HomePage({
       image: poundCakeCardImg,
       imageAlt: getProductById('pound-cake').name,
       features: marketConfig.productCardFeatures['pound-cake'],
+    },
+    'cupcake-dozen': {
+      image: cupcakeCardImg,
+      imageAlt: getProductById('cupcake-dozen').name,
+      features: marketConfig.productCardFeatures['cupcake-dozen'],
     },
   }
 
@@ -1193,7 +1199,11 @@ function ReservePage({
   }
 
   const selectedProduct = getProductById(form.productId)
-  const selectedProductImage = selectedProduct.id === 'pound-cake' ? poundCakeCardImg : paveCakeCardImg
+  const selectedProductImage = selectedProduct.id === 'pound-cake'
+    ? poundCakeCardImg
+    : selectedProduct.id === 'cupcake-dozen'
+      ? cupcakeCardImg
+      : paveCakeCardImg
   const priceOptions = {
     cacaoPercent: form.cacaoPercent,
     cakeSize: form.cakeSize,
@@ -1226,7 +1236,7 @@ function ReservePage({
     quantityHelp:
       marketConfig.market === 'KR'
         ? `1${marketConfig.copy.quantityUnit} 기준 ${formatCurrency(unitPrice)}, 최대 ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}까지 예약할 수 있습니다.`
-        : `${formatCurrency(unitPrice)} per cake, up to ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}.`,
+        : `${formatCurrency(unitPrice)} per ${selectedProduct.id === 'cupcake-dozen' ? 'dozen' : 'cake'}, up to ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}.`,
     pickupDate: marketConfig.market === 'KR' ? '픽업 날짜' : 'Pick-up date',
     pickupTime: marketConfig.market === 'KR' ? '픽업 시간' : 'Pick-up time',
     customerName: marketConfig.market === 'KR' ? '예약자명' : 'Name',
@@ -1338,7 +1348,11 @@ function ReservePage({
                 <div className="product-choice-list">
                   {Object.values(PRODUCTS).map((product) => {
                     const isSelected = form.productId === product.id
-                    const productImage = product.id === 'pound-cake' ? poundCakeCardImg : paveCakeCardImg
+                    const productImage = product.id === 'pound-cake'
+                      ? poundCakeCardImg
+                      : product.id === 'cupcake-dozen'
+                        ? cupcakeCardImg
+                        : paveCakeCardImg
                     return (
                       <label
                         className={`product-choice-card${isSelected ? ' is-selected' : ''}`}
