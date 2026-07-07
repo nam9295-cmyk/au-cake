@@ -61,6 +61,9 @@ test('payment and confirmation messages include session, child, parent, full pay
   assert.match(payment, /Mina/)
   assert.match(payment, /2026-07-10 10:00/)
   assert.match(payment, /full payment/i)
+  assert.match(payment, /BSB 012263 Account 324999682/)
+  assert.match(payment, /Account name: JEONGMIN CHEON/)
+  assert.match(payment, /Amount due: AUD 99\.00/)
   assert.doesNotMatch(payment, /deposit/i)
 
   const confirmation = buildClassConfirmationMessage(sampleReservation)

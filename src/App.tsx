@@ -78,8 +78,10 @@ import {
 import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
+  buildClassPaymentDetails,
   buildClassPaymentMessage,
   classReservationsToCsv,
+  CLASS_PAYMENT_SETTINGS,
   CLASS_PAYMENT_STATUS_OPTIONS,
   CLASS_SESSION_TIMES,
   CLASS_STATUS_OPTIONS,
@@ -1113,6 +1115,8 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
               <div><dt>Total</dt><dd>{formatCurrency(price)}</dd></div>
               <div><dt>Payment</dt><dd>Full payment required</dd></div>
             </dl>
+            <BankAccountBox settings={CLASS_PAYMENT_SETTINGS} totalPrice={price} language="en" />
+            <p className="class-submit-note">Use this account after Jenny confirms the session is available.</p>
           </aside>
 
           {error && <p className="error-text class-error-text">{error}</p>}
@@ -1139,10 +1143,12 @@ function ClassCompletePage({ navigate, reservation }: { navigate: (page: Page) =
 
           <div className="class-complete-message">
             <strong>Your kids course request has been sent.</strong>
-            <p>Jenny will check availability and send full payment details shortly.</p>
+            <p>Jenny will check availability and confirm the session shortly.</p>
             <p>Your booking is complete once full payment has been received.</p>
             <span>Booking ID: {reservationNumber}</span>
           </div>
+
+          <BankAccountBox settings={CLASS_PAYMENT_SETTINGS} totalPrice={reservation?.totalPrice} language="en" />
 
           <button className="class-complete-button" type="button" onClick={() => navigate('classes')}>
             Back to Classes
@@ -2250,7 +2256,7 @@ function AdminClassesPage({ navigate }: { navigate: (page: Page) => void }) {
   const firstReservation = reservations[0]
   const paymentTemplate = firstReservation
     ? buildClassPaymentMessage(firstReservation)
-    : `Hi [Parent name], thank you for your cake class booking request for [Child name].\n\nRequested session:\n[Class date] [Class time]\n\nWe'll check availability and send full payment details shortly.\nYour booking is complete once full payment has been received.\n\nVerygood Chocolate AU`
+    : `Hi [Parent name], thank you for your cake class booking request for [Child name].\n\nRequested session:\n[Class date] [Class time]\n\nWe'll check availability and confirm the session shortly.\nPlease use the payment details below after Jenny confirms availability:\n\n${buildClassPaymentDetails()}\n\nYour booking is complete once full payment has been received.\n\nVerygood Chocolate AU`
   const confirmationTemplate = firstReservation
     ? buildClassConfirmationMessage(firstReservation)
     : `Hi [Parent name], [Child name]'s cake class booking is confirmed.\n\nDate/time:\n[Class date] [Class time]\n\nLocation:\nMelrose Park, Sydney\nThe full address will be sent before the class.\n\nPlease note:\n- Please arrive 5 minutes early\n- Long hair should be tied back\n- Clothes may get chocolate/cream on them\n- Please let us know immediately if there are any allergies or dietary concerns\n\nWe're excited to see you soon.\n\nVerygood Chocolate AU`

@@ -1,8 +1,10 @@
 import type { ClassBookingType, ClassReservation } from './types.js'
+import { MARKET_CONFIG } from './market.js'
 
 export const CLASS_TYPE_ID = 'school-holiday-private-cake-class' as const
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00'] as const
 export const CLASS_DEPOSIT_AMOUNT = 0
+export const CLASS_PAYMENT_SETTINGS = MARKET_CONFIG.AU.defaultSettings
 
 export const CLASS_STATUS_OPTIONS = ['Requested', 'Confirmed', 'Completed', 'Cancelled'] as const
 export const CLASS_PAYMENT_STATUS_OPTIONS = [
@@ -25,6 +27,16 @@ export function getClassBookingPrice(bookingType: ClassBookingType) {
 
 export function getClassDepositAmount() {
   return CLASS_DEPOSIT_AMOUNT
+}
+
+function formatClassCurrency(value: number) {
+  return `AUD ${value.toFixed(2)}`
+}
+
+export function buildClassPaymentDetails(totalPrice?: number) {
+  const amountLine = totalPrice === undefined ? '' : `\nAmount due: ${formatClassCurrency(totalPrice)}`
+  return `${CLASS_PAYMENT_SETTINGS.bankName} ${CLASS_PAYMENT_SETTINGS.bankAccount}
+Account name: ${CLASS_PAYMENT_SETTINGS.accountHolder}${amountLine}`
 }
 
 function dateInputValue(date = new Date()) {
@@ -67,7 +79,11 @@ export function buildClassPaymentMessage(reservation: ClassReservation) {
 Requested session:
 ${reservation.classDate} ${reservation.classTime}
 
-We'll check availability and send full payment details shortly.
+We'll check availability and confirm the session shortly.
+Please use the payment details below after Jenny confirms availability:
+
+${buildClassPaymentDetails(reservation.totalPrice)}
+
 Your booking is complete once full payment has been received.
 
 Verygood Chocolate AU`
