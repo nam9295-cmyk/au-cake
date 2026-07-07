@@ -49,6 +49,19 @@ import {
 import { isAppwriteConfigured } from './lib/appwrite'
 import { marketConfig } from './lib/market'
 import {
+  cakeCopy,
+  formatChocolateTypeText,
+  formatPoundAddonText,
+  getCakeSizeText,
+  getChocolateTypeText,
+  getPoundAddonText,
+  getProductFeatures,
+  getProductText,
+  readStoredLanguage,
+  storeLanguage,
+  type Language,
+} from './lib/i18n'
+import {
   createReservation,
   createClassReservation,
   getReservationByNumber,
@@ -171,35 +184,33 @@ const PICKUP_LOCATION_NAME = 'Pulse - Melrose Park'
 const PICKUP_LOCATION_ADDRESS = '1 Bundil Blvd, Melrose Park NSW 2114'
 const PICKUP_MAP_URL = 'https://www.google.com/maps/place/Pulse+-+Melrose+Park/@-33.8091415,151.0642826,17z/data=!3m1!4b1!4m6!3m5!1s0x6b12a5a1148ce8e5:0x33e80579f801d234!8m2!3d-33.809146!4d151.0668575!16s%2Fg%2F11kq00n62q?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D'
 const PICKUP_MAP_EMBED_URL = 'https://www.google.com/maps?q=Pulse%20-%20Melrose%20Park%2C%201%20Bundil%20Blvd%2C%20Melrose%20Park%20NSW%202114&output=embed'
-const ORDER_NOTICE_TEXT = 'Pick-up available from today'
-
-function AnnouncementTicker() {
+function AnnouncementTicker({ language }: { language: Language }) {
+  const copy = cakeCopy(language)
   return (
-    <div className="announcement-ticker" aria-label={ORDER_NOTICE_TEXT}>
+    <div className="announcement-ticker" aria-label={copy.announcement}>
       <div className="announcement-ticker-track" aria-hidden="true">
         {Array.from({ length: 6 }).map((_, index) => (
-          <span key={index}>{ORDER_NOTICE_TEXT}</span>
+          <span key={index}>{copy.announcement}</span>
         ))}
       </div>
     </div>
   )
 }
 
-function PickupLocationCard() {
+function PickupLocationCard({ language }: { language: Language }) {
+  const copy = cakeCopy(language)
   return (
     <section className="content-section pickup-location-section" aria-labelledby="pickup-location-title">
       <div className="pickup-location-copy">
-        <p className="summary-kicker">Pick-up location</p>
-        <h2 id="pickup-location-title">Find us on Google Maps</h2>
-        <p>
-          Pick-up is at <strong>{PICKUP_LOCATION_NAME}</strong>. Jenny will confirm the exact handoff details with your booking confirmation.
-        </p>
+        <p className="summary-kicker">{copy.pickupLocationKicker}</p>
+        <h2 id="pickup-location-title">{copy.pickupLocationTitle}</h2>
+        <p>{copy.pickupLocationText}</p>
         <address>
           {PICKUP_LOCATION_NAME}<br />
           {PICKUP_LOCATION_ADDRESS}
         </address>
         <a className="secondary-button pickup-map-link" href={PICKUP_MAP_URL} target="_blank" rel="noreferrer">
-          Open in Google Maps
+          {copy.openMap}
         </a>
       </div>
       <div className="pickup-map-frame" aria-label="Google Map showing Pulse - Melrose Park">
@@ -261,6 +272,12 @@ function App() {
   const [completedReservation, setCompletedReservation] = useState<Reservation | null>(null)
   const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
   const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
+  const [language, setLanguageState] = useState<Language>(readStoredLanguage)
+
+  const setLanguage = useCallback((nextLanguage: Language) => {
+    setLanguageState(nextLanguage)
+    storeLanguage(nextLanguage)
+  }, [])
 
   useEffect(() => {
     getSettings().then(setSettings)
@@ -295,9 +312,9 @@ function App() {
       {!isAppwriteConfigured && (
         <div className="env-notice">Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.</div>
       )}
-      {!isAdminPage && <AnnouncementTicker />}
+      {!isAdminPage && <AnnouncementTicker language={language} />}
 
-      {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} />}
+      {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} language={language} setLanguage={setLanguage} />}
       {page === 'classes' && <ClassesPage navigate={navigate} />}
       {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} />}
       {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} />}
@@ -307,12 +324,14 @@ function App() {
           settings={settings}
           initialProductId={reservationProductId}
           onComplete={setCompletedReservation}
+          language={language}
+          setLanguage={setLanguage}
         />
       )}
       {page === 'complete' && (
-        <CompletePage navigate={navigate} reservation={completedReservation} settings={settings} />
+        <CompletePage navigate={navigate} reservation={completedReservation} settings={settings} language={language} setLanguage={setLanguage} />
       )}
-      {page === 'lookup' && <LookupPage navigate={navigate} />}
+      {page === 'lookup' && <LookupPage navigate={navigate} language={language} setLanguage={setLanguage} />}
       {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
       {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
       {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
@@ -322,7 +341,8 @@ function App() {
   )
 }
 
-function BankAccountBox({ settings, totalPrice }: { settings: StoreSettings; totalPrice?: number }) {
+function BankAccountBox({ settings, totalPrice, language = 'en' }: { settings: StoreSettings; totalPrice?: number; language?: Language }) {
+  const copy = cakeCopy(language)
   const bankName = settings.bankName
   const bankAccount = settings.bankAccount
   const accountHolder = settings.accountHolder
@@ -337,7 +357,7 @@ function BankAccountBox({ settings, totalPrice }: { settings: StoreSettings; tot
   return (
     <div className="bank-account-card">
       <div className="bank-account-header">
-        <span className="bank-label">{marketConfig.copy.paymentLabel}</span>
+        <span className="bank-label">{copy.paymentLabel}</span>
       </div>
       <div className="bank-account-body">
         <div className="bank-info">
@@ -345,42 +365,75 @@ function BankAccountBox({ settings, totalPrice }: { settings: StoreSettings; tot
             {bankName} {bankAccount}
           </strong>
           <span className="bank-holder">
-            {marketConfig.copy.accountHolderLabel}: {accountHolder}
+            {copy.accountHolderLabel}: {accountHolder}
           </span>
           {totalPrice !== undefined && (
             <span className="bank-total-price" style={{ marginTop: '4px', fontSize: '15px' }}>
-              {marketConfig.copy.paymentAmountLabel}:{' '}
+              {copy.paymentAmountLabel}:{' '}
               <strong style={{ color: 'var(--primary)', fontSize: '16px' }}>{formatCurrency(totalPrice)}</strong>
             </span>
           )}
         </div>
         <button type="button" className="copy-button" onClick={handleCopy}>
           <Copy size={16} />
-          {copied ? marketConfig.copy.copiedButton : marketConfig.copy.copyButton}
+          {copied ? copy.copiedButton : copy.copyButton}
         </button>
       </div>
     </div>
   )
 }
 
-function SiteHeader({ navigate }: { navigate: (page: Page) => void }) {
+function SiteHeader({
+  navigate,
+  language,
+  setLanguage,
+}: {
+  navigate: (page: Page) => void
+  language?: Language
+  setLanguage?: (language: Language) => void
+}) {
+  const copy = cakeCopy(language || 'en')
   return (
-    <header className="site-header">
-      <button className="brand-button" type="button" onClick={() => navigate('home')}>
-        Verygood Chocolate
-      </button>
-      <nav>
-        <button className="kids-nav-button" type="button" onClick={() => navigate('classes')}>
-          Kids Class
+    <>
+      <header className="site-header">
+        <button className="brand-button" type="button" onClick={() => navigate('home')}>
+          Verygood Chocolate
         </button>
-        <button type="button" onClick={() => navigate('lookup')}>
-          {marketConfig.copy.lookupNav}
-        </button>
-        <button type="button" onClick={() => navigate('admin-login')}>
-          {marketConfig.copy.adminNav}
-        </button>
-      </nav>
-    </header>
+        <nav>
+          <button className="kids-nav-button" type="button" onClick={() => navigate('classes')}>
+            {copy.kidsNav}
+          </button>
+          <button type="button" onClick={() => navigate('lookup')}>
+            {copy.lookupNav}
+          </button>
+          <button type="button" onClick={() => navigate('admin-login')}>
+            {copy.adminNav}
+          </button>
+        </nav>
+      </header>
+      {language && setLanguage && (
+        <div className="language-strip" aria-label={copy.languageLabel}>
+          <span>{copy.languageHelp}</span>
+          <div className="language-toggle" role="group" aria-label={copy.languageLabel}>
+            <button
+              type="button"
+              className={language === 'en' ? 'is-active' : ''}
+              onClick={() => setLanguage('en')}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={language === 'ko' ? 'is-active' : ''}
+              onClick={() => setLanguage('ko')}
+            >
+              <span className="language-label-full">한국어</span>
+              <span className="language-label-short">KO</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -406,26 +459,28 @@ function formatPaymentStatus(status: string) {
   return mapping[status] || status
 }
 
-function ProductDetailRows({ reservation }: { reservation: Reservation }) {
+function ProductDetailRows({ reservation, language = 'ko' }: { reservation: Reservation; language?: Language }) {
   const product = getProductById(reservation.productId)
+  const productText = getProductText(product.id, language)
+  const copy = cakeCopy(language)
   const showChocolate = usesReservationChocolateType(product.id, reservation.poundAddon)
 
   return (
     <>
       <div>
-        <dt>{marketConfig.market === 'KR' ? '제품' : 'Product'}</dt>
-        <dd>{product.name}</dd>
+        <dt>{copy.product}</dt>
+        <dd>{productText.name}</dd>
       </div>
       <div>
-        <dt>{marketConfig.market === 'KR' ? '수량' : 'Quantity'}</dt>
+        <dt>{copy.quantity}</dt>
         <dd>
           {reservation.quantity}
-          {marketConfig.copy.quantityUnit}
+          {copy.quantityUnit}
         </dd>
       </div>
       {product.usesSizeOptions && (
         <div>
-          <dt>{marketConfig.market === 'KR' ? '사이즈' : 'Size'}</dt>
+          <dt>{copy.size}</dt>
           <dd>{formatCakeSizeLabel(reservation.cakeSize)}</dd>
         </div>
       )}
@@ -437,14 +492,14 @@ function ProductDetailRows({ reservation }: { reservation: Reservation }) {
       )}
       {showChocolate && (
         <div>
-          <dt>{marketConfig.market === 'KR' ? '초콜릿' : 'Chocolate'}</dt>
-          <dd>{formatChocolateTypeLabel(reservation.chocolateType)}</dd>
+          <dt>{copy.chocolate}</dt>
+          <dd>{formatChocolateTypeText(reservation.chocolateType, language)}</dd>
         </div>
       )}
       {product.usesPoundAddonOptions && (
         <div>
-          <dt>{marketConfig.market === 'KR' ? '마감' : 'Finish'}</dt>
-          <dd>{formatPoundAddonLabel(reservation.poundAddon)}</dd>
+          <dt>{copy.finish}</dt>
+          <dd>{formatPoundAddonText(reservation.poundAddon, language)}</dd>
         </div>
       )}
     </>
@@ -475,11 +530,16 @@ function HomePage({
   navigate,
   settings,
   onReserveProduct,
+  language,
+  setLanguage,
 }: {
   navigate: (page: Page) => void
   settings: StoreSettings
   onReserveProduct: (productId: ProductId) => void
+  language: Language
+  setLanguage: (language: Language) => void
 }) {
+  const copy = cakeCopy(language)
   const products = Object.values(PRODUCTS)
   const [activeHeroCake, setActiveHeroCake] = useState(1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
@@ -492,18 +552,18 @@ function HomePage({
   const productCards: Record<ProductId, { image: string; imageAlt: string; features: string[] }> = {
     'pave-cake': {
       image: paveCakeCardImg,
-      imageAlt: getProductById('pave-cake').name,
-      features: marketConfig.productCardFeatures['pave-cake'],
+      imageAlt: getProductText('pave-cake', language).name,
+      features: getProductFeatures('pave-cake', language),
     },
     'pound-cake': {
       image: poundCakeCardImg,
-      imageAlt: getProductById('pound-cake').name,
-      features: marketConfig.productCardFeatures['pound-cake'],
+      imageAlt: getProductText('pound-cake', language).name,
+      features: getProductFeatures('pound-cake', language),
     },
     'cupcake-dozen': {
       image: cupcakeCardImg,
-      imageAlt: getProductById('cupcake-dozen').name,
-      features: marketConfig.productCardFeatures['cupcake-dozen'],
+      imageAlt: getProductText('cupcake-dozen', language).name,
+      features: getProductFeatures('cupcake-dozen', language),
     },
   }
 
@@ -544,7 +604,7 @@ function HomePage({
 
   return (
     <>
-      <SiteHeader navigate={navigate} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
       <main>
         <section className="hero-section">
           <span className="featured-seal" aria-hidden="true">
@@ -557,20 +617,20 @@ function HomePage({
             <span>chocolat</span>
           </h1>
           <div className="hero-copy">
-            <p className="hero-title">{marketConfig.copy.homeTitle}</p>
-            <p className="hero-description">{marketConfig.copy.homeDescription}</p>
+            <p className="hero-title">{copy.homeTitle}</p>
+            <p className="hero-description">{copy.homeDescription}</p>
             <div className="hero-actions">
               <button className="primary-button" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
-                {marketConfig.copy.reserveCta}
+                {copy.reserveCta}
               </button>
-              <small className="hero-pickup-note">Pick-up available from today</small>
-              <span>{settings.dailyLimitText}</span>
+              <small className="hero-pickup-note">{copy.announcement}</small>
+              <span>{language === 'ko' ? copy.dailyLimitText : settings.dailyLimitText}</span>
             </div>
           </div>
           <div
             className={`hero-image-wrap${swipeStartX !== null ? ' is-dragging' : ''}`}
             style={heroDragStyle}
-            aria-label={marketConfig.copy.homeTitle}
+            aria-label={copy.homeTitle}
             onPointerDown={handleHeroPointerDown}
             onPointerMove={handleHeroPointerMove}
             onPointerUp={handleHeroPointerUp}
@@ -606,16 +666,18 @@ function HomePage({
         </section>
 
         <section className="content-section product-section">
-          <h2>{marketConfig.copy.productSectionTitle}</h2>
+          <h2>{copy.productSectionTitle}</h2>
           <div className="product-grid">
-            {products.map((product) => (
+            {products.map((product) => {
+              const productText = getProductText(product.id, language)
+              return (
               <article className="product-card" key={product.id}>
                 <div className="product-image-wrap">
                   <img src={productCards[product.id].image} alt={productCards[product.id].imageAlt} />
                 </div>
                 <div>
-                  <strong>{product.name}</strong>
-                  <p>{product.description}</p>
+                  <strong>{productText.name}</strong>
+                  <p>{productText.description}</p>
                 </div>
                 <ul>
                   {productCards[product.id].features.map((feature) => (
@@ -624,24 +686,25 @@ function HomePage({
                 </ul>
                 <dl>
                   <div>
-                    <dt>{marketConfig.market === 'KR' ? '가격' : 'Price'}</dt>
+                    <dt>{copy.price}</dt>
                     <dd>{formatCurrency(product.price)}</dd>
                   </div>
                   <div>
-                    <dt>{marketConfig.market === 'KR' ? '옵션' : 'Options'}</dt>
-                    <dd>{product.priceNote}</dd>
+                    <dt>{copy.options}</dt>
+                    <dd>{productText.priceNote}</dd>
                   </div>
                 </dl>
                 <button className="secondary-button full-width" type="button" onClick={() => onReserveProduct(product.id)}>
-                  {marketConfig.copy.reserveCta}
+                  {copy.reserveCta}
                 </button>
               </article>
-            ))}
+              )
+            })}
           </div>
         </section>
 
         <section className="content-section policy-section" id="reservation-guide">
-          <h2>{marketConfig.copy.reservationGuideTitle}</h2>
+          <h2>{copy.reservationGuideTitle}</h2>
           <div className="policy-manual">
             <article className="policy-step">
               <div className="policy-step-figure">
@@ -649,8 +712,8 @@ function HomePage({
                 <Clipboard size={28} strokeWidth={1.7} />
               </div>
               <div>
-                <strong>{marketConfig.guideSteps[0].title}</strong>
-                <p>{marketConfig.guideSteps[0].text}</p>
+                <strong>{copy.guideSteps[0].title}</strong>
+                <p>{copy.guideSteps[0].text}</p>
               </div>
             </article>
             <article className="policy-step">
@@ -659,8 +722,8 @@ function HomePage({
                 <MessageCircleCheck size={28} strokeWidth={1.7} />
               </div>
               <div>
-                <strong>{marketConfig.guideSteps[1].title}</strong>
-                <p>{marketConfig.guideSteps[1].text}</p>
+                <strong>{copy.guideSteps[1].title}</strong>
+                <p>{copy.guideSteps[1].text}</p>
               </div>
             </article>
             <article className="policy-step">
@@ -669,8 +732,8 @@ function HomePage({
                 <Wallet size={28} strokeWidth={1.7} />
               </div>
               <div>
-                <strong>{marketConfig.guideSteps[2].title}</strong>
-                <p>{marketConfig.guideSteps[2].text}</p>
+                <strong>{copy.guideSteps[2].title}</strong>
+                <p>{copy.guideSteps[2].text}</p>
               </div>
             </article>
             <article className="policy-step">
@@ -679,12 +742,12 @@ function HomePage({
                 <CalendarDays size={28} strokeWidth={1.7} />
               </div>
               <div>
-                <strong>{marketConfig.guideSteps[3].title}</strong>
+                <strong>{copy.guideSteps[3].title}</strong>
                 {marketConfig.market === 'AU' ? (
                   <p>
-                    Pick-up time 10:00-20:00 everyday
+                    {copy.pickupHours[0]}
                     <br />
-                    Thursday off
+                    {copy.pickupHours[1]}
                   </p>
                 ) : (
                   <p>
@@ -697,10 +760,10 @@ function HomePage({
           {settings.pickupNotice.trim() && <p className="policy-note">{settings.pickupNotice}</p>}
         </section>
 
-        {marketConfig.market === 'AU' && <PickupLocationCard />}
+        {marketConfig.market === 'AU' && <PickupLocationCard language={language} />}
       </main>
       <button className="sticky-cta" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
-        {marketConfig.copy.reserveCta}
+        {copy.reserveCta}
       </button>
     </>
   )
@@ -1095,12 +1158,17 @@ function ReservePage({
   settings,
   initialProductId,
   onComplete,
+  language,
+  setLanguage,
 }: {
   navigate: (page: Page) => void
   settings: StoreSettings
   initialProductId: ProductId
   onComplete: (reservation: Reservation) => void
+  language: Language
+  setLanguage: (language: Language) => void
 }) {
+  const copy = cakeCopy(language)
   const [form, setForm] = useState({
     productId: initialProductId,
     cacaoPercent: '기본' as CacaoPercent,
@@ -1131,39 +1199,27 @@ function ReservePage({
     const phone = normalizePhone(form.customerPhone)
 
     if (!form.customerName.trim() || form.customerName.trim().length < 2) {
-      setError(
-        marketConfig.market === 'KR'
-          ? '예약자명을 2자 이상 입력해 주세요.'
-          : 'Please enter your name (at least 2 characters).'
-      )
+      setError(copy.errors.name)
       return
     }
     if (!isValidPhone(phone)) {
-      setError(`${marketConfig.market === 'KR' ? '연락처를 확인해 주세요.' : 'Please check the mobile number.'} ${marketConfig.copy.phoneHelp}`)
+      setError(`${copy.errors.phone} ${copy.phoneHelp}`)
       return
     }
     if (!pickupDate || pickupDate < minPickupDate) {
-      setError(
-        marketConfig.market === 'KR'
-          ? '픽업 날짜는 오늘부터 선택할 수 있습니다.'
-          : 'Please select a pick-up date from today onwards.'
-      )
+      setError(copy.errors.pickupDate)
       return
     }
     if (!selectedPickupTime) {
-      setError(marketConfig.market === 'KR' ? '픽업 시간을 선택해 주세요.' : 'Please select a pick-up time.')
+      setError(copy.errors.pickupTime)
       return
     }
     if (form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY) {
-      setError(
-        marketConfig.market === 'KR'
-          ? `수량은 최대 ${MAX_RESERVATION_QUANTITY}개까지 선택할 수 있습니다.`
-          : `You can request up to ${MAX_RESERVATION_QUANTITY} cakes.`
-      )
+      setError(copy.errors.quantity(MAX_RESERVATION_QUANTITY))
       return
     }
     if (!form.privacy) {
-      setError(marketConfig.market === 'KR' ? '개인정보 수집 및 이용에 동의해 주세요.' : 'Please agree to the privacy policy.')
+      setError(copy.errors.privacy)
       return
     }
 
@@ -1188,17 +1244,14 @@ function ReservePage({
       onComplete(reservation)
       navigate('complete')
     } catch {
-      setError(
-        marketConfig.market === 'KR'
-          ? '예약 신청 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'
-          : 'An error occurred while submitting your cake request. Please try again.'
-      )
+      setError(copy.errors.submit)
     } finally {
       setSubmitting(false)
     }
   }
 
   const selectedProduct = getProductById(form.productId)
+  const selectedProductText = getProductText(selectedProduct.id, language)
   const selectedProductImage = selectedProduct.id === 'pound-cake'
     ? poundCakeCardImg
     : selectedProduct.id === 'cupcake-dozen'
@@ -1217,35 +1270,35 @@ function ReservePage({
   const promoDiscountAmount = Math.max(0, currentPrice - discountedPrice)
   const showChocolateTypeOptions = usesReservationChocolateType(selectedProduct.id, form.poundAddon)
   const labels = {
-    back: marketConfig.market === 'KR' ? '돌아가기' : 'Back',
-    title: marketConfig.market === 'KR' ? '예약 신청' : 'Cake request',
-    product: marketConfig.market === 'KR' ? '제품' : 'Product',
-    totalPrice: marketConfig.market === 'KR' ? '총 가격' : 'Total',
-    quantity: marketConfig.market === 'KR' ? '수량' : 'Quantity',
-    size: marketConfig.market === 'KR' ? '사이즈' : 'Size',
-    options: marketConfig.market === 'KR' ? '옵션' : 'Options',
-    production: marketConfig.market === 'KR' ? '제작' : 'Availability',
-    cakeSelect: marketConfig.market === 'KR' ? '케이크 선택' : 'Choose cake',
-    changeCake: marketConfig.market === 'KR' ? '케이크 변경' : 'Change cake',
-    selectedCake: marketConfig.market === 'KR' ? '선택한 케이크' : 'Selected cake',
-    sizeSelect: marketConfig.market === 'KR' ? '사이즈 선택' : 'Choose size',
-    cacaoSelect: marketConfig.market === 'KR' ? '농도 선택' : 'Choose cacao',
-    chocolateSelect: marketConfig.market === 'KR' ? '초콜릿 선택' : 'Choose chocolate',
-    finishSelect: marketConfig.market === 'KR' ? '마감 옵션' : 'Choose finish',
-    orderQuantity: marketConfig.market === 'KR' ? '주문 수량' : 'Order quantity',
+    back: copy.back,
+    title: copy.title,
+    product: copy.product,
+    totalPrice: copy.totalPrice,
+    quantity: copy.quantity,
+    size: copy.size,
+    options: copy.options,
+    production: copy.production,
+    cakeSelect: copy.cakeSelect,
+    changeCake: copy.changeCake,
+    selectedCake: copy.selectedCake,
+    sizeSelect: copy.sizeSelect,
+    cacaoSelect: copy.cacaoSelect,
+    chocolateSelect: copy.chocolateSelect,
+    finishSelect: copy.finishSelect,
+    orderQuantity: copy.orderQuantity,
     quantityHelp:
-      marketConfig.market === 'KR'
-        ? `1${marketConfig.copy.quantityUnit} 기준 ${formatCurrency(unitPrice)}, 최대 ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}까지 예약할 수 있습니다.`
-        : `${formatCurrency(unitPrice)} per ${selectedProduct.id === 'cupcake-dozen' ? 'dozen' : 'cake'}, up to ${MAX_RESERVATION_QUANTITY}${marketConfig.copy.quantityUnit}.`,
-    pickupDate: marketConfig.market === 'KR' ? '픽업 날짜' : 'Pick-up date',
-    pickupTime: marketConfig.market === 'KR' ? '픽업 시간' : 'Pick-up time',
-    customerName: marketConfig.market === 'KR' ? '예약자명' : 'Name',
-    phone: marketConfig.market === 'KR' ? '연락처' : 'Mobile',
-    requestNote: marketConfig.market === 'KR' ? '요청사항' : 'Request notes',
-    promoCode: marketConfig.market === 'KR' ? '프로모 코드' : 'Promo code',
-    promoPlaceholder: marketConfig.market === 'KR' ? '프로모 코드가 있으면 입력' : 'Enter promo code',
-    promoApplied: marketConfig.market === 'KR' ? '프로모 코드 적용됨: 10% 할인' : 'Promo applied: 10% off',
-    promoHint: marketConfig.market === 'KR' ? '대소문자 구분 없이 적용됩니다.' : 'Not case-sensitive.',
+      selectedProduct.id === 'cupcake-dozen'
+        ? copy.quantityHelpCupcake(formatCurrency(unitPrice), MAX_RESERVATION_QUANTITY, copy.quantityUnit)
+        : copy.quantityHelp(formatCurrency(unitPrice), MAX_RESERVATION_QUANTITY, copy.quantityUnit),
+    pickupDate: copy.pickupDate,
+    pickupTime: copy.pickupTime,
+    customerName: copy.customerName,
+    phone: copy.phone,
+    requestNote: copy.requestNote,
+    promoCode: copy.promoCode,
+    promoPlaceholder: copy.promoPlaceholder,
+    promoApplied: copy.promoApplied,
+    promoHint: copy.promoHint,
   }
 
   function selectProduct(productId: ProductId) {
@@ -1271,7 +1324,7 @@ function ReservePage({
 
   return (
     <>
-      <SiteHeader navigate={navigate} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
       <main className="form-page">
         <button className="text-button" type="button" onClick={() => navigate('home')}>
           <ArrowLeft size={16} /> {labels.back}
@@ -1279,14 +1332,14 @@ function ReservePage({
         <section className="reservation-layout">
           <aside className="summary-panel">
             <div className="summary-product-photo">
-              <img src={selectedProductImage} alt={selectedProduct.name} />
+              <img src={selectedProductImage} alt={selectedProductText.name} />
             </div>
-            <p className="summary-kicker">{marketConfig.copy.productSectionTitle}</p>
+            <p className="summary-kicker">{copy.productSectionTitle}</p>
             <h1>{labels.title}</h1>
             <dl>
               <div>
                 <dt>{labels.product}</dt>
-                <dd>{selectedProduct.name}</dd>
+                <dd>{selectedProductText.name}</dd>
               </div>
               <div>
                 <dt>{labels.totalPrice}</dt>
@@ -1305,7 +1358,7 @@ function ReservePage({
                 <dt>{labels.quantity}</dt>
                 <dd>
                   {form.quantity}
-                  {marketConfig.copy.quantityUnit}
+                  {copy.quantityUnit}
                 </dd>
               </div>
               {selectedProduct.usesSizeOptions && (
@@ -1316,29 +1369,29 @@ function ReservePage({
               )}
               {showChocolateTypeOptions && (
                 <div>
-                  <dt>{marketConfig.market === 'KR' ? '초콜릿' : 'Chocolate'}</dt>
-                  <dd>{formatChocolateTypeLabel(form.chocolateType)}</dd>
+                  <dt>{copy.chocolate}</dt>
+                  <dd>{formatChocolateTypeText(form.chocolateType, language)}</dd>
                 </div>
               )}
               {selectedProduct.usesPoundAddonOptions && (
                 <div>
-                  <dt>{marketConfig.market === 'KR' ? '마감' : 'Finish'}</dt>
-                  <dd>{formatPoundAddonLabel(form.poundAddon)}</dd>
+                  <dt>{copy.finish}</dt>
+                  <dd>{formatPoundAddonText(form.poundAddon, language)}</dd>
                 </div>
               )}
               <div>
                 <dt>{labels.options}</dt>
-                <dd>{selectedProduct.priceNote}</dd>
+                <dd>{selectedProductText.priceNote}</dd>
               </div>
               <div>
                 <dt>{labels.production}</dt>
-                <dd>{settings.dailyLimitText}</dd>
+                <dd>{language === 'ko' ? copy.dailyLimitText : settings.dailyLimitText}</dd>
               </div>
             </dl>
             <button className="change-cake-button" type="button" onClick={() => setShowCakeSelector(true)}>
               {labels.changeCake}
             </button>
-            <p>{settings.reservationNotice}</p>
+            <p>{language === 'ko' ? copy.reservationCompleteText : settings.reservationNotice}</p>
           </aside>
 
           <form className="reservation-form" onSubmit={submitReservation}>
@@ -1370,12 +1423,12 @@ function ReservePage({
                         </span>
                         <span className="product-choice-copy">
                           <span className="product-choice-topline">
-                            <strong>{product.name}</strong>
+                            <strong>{getProductText(product.id, language).name}</strong>
                             {isSelected && <span className="selected-cake-badge">{labels.selectedCake}</span>}
                           </span>
                           <span>
-                            1{marketConfig.copy.quantityUnit} {formatCurrency(getReservationUnitPrice(product.id, { cakeSize: DEFAULT_CAKE_SIZE, chocolateType: DEFAULT_CHOCOLATE_TYPE, poundAddon: DEFAULT_POUND_ADDON }))} ·{' '}
-                            {product.priceNote}
+                            1{copy.quantityUnit} {formatCurrency(getReservationUnitPrice(product.id, { cakeSize: DEFAULT_CAKE_SIZE, chocolateType: DEFAULT_CHOCOLATE_TYPE, poundAddon: DEFAULT_POUND_ADDON }))} ·{' '}
+                            {getProductText(product.id, language).priceNote}
                           </span>
                         </span>
                       </label>
@@ -1389,28 +1442,27 @@ function ReservePage({
               <fieldset>
               <legend>{labels.sizeSelect}</legend>
               <div className="choice-list">
-                {CAKE_SIZE_OPTIONS.map((option) => (
-                  <label className="choice-item" key={option.value}>
-                    <input
-                      type="radio"
-                      name="cakeSize"
-                      checked={form.cakeSize === option.value}
-                      onChange={() => setForm({ ...form, cakeSize: option.value })}
-                    />
-                    <span className="choice-copy">
-                      <strong>
-                        {option.label} · {formatCurrency(selectedProduct.sizePrices[option.value] || option.price)}
-                      </strong>
-                      <span>{option.description}</span>
-                    </span>
-                  </label>
-                ))}
+                {CAKE_SIZE_OPTIONS.map((option) => {
+                  const optionText = getCakeSizeText(option, language)
+                  return (
+                    <label className="choice-item" key={option.value}>
+                      <input
+                        type="radio"
+                        name="cakeSize"
+                        checked={form.cakeSize === option.value}
+                        onChange={() => setForm({ ...form, cakeSize: option.value })}
+                      />
+                      <span className="choice-copy">
+                        <strong>
+                          {optionText.label} · {formatCurrency(selectedProduct.sizePrices[option.value] || option.price)}
+                        </strong>
+                        <span>{optionText.description}</span>
+                      </span>
+                    </label>
+                  )
+                })}
               </div>
-              <p className="field-help">
-                {marketConfig.market === 'KR'
-                  ? '선택한 사이즈 기준으로 예약 금액이 계산됩니다.'
-                  : 'The total is calculated from the selected size.'}
-              </p>
+              <p className="field-help">{copy.sizeHelp}</p>
               </fieldset>
             )}
 
@@ -1435,11 +1487,7 @@ function ReservePage({
                     </label>
                   ))}
                 </div>
-                <p className="field-help">
-                  {marketConfig.market === 'KR'
-                    ? '카카오 농도는 가나슈 풍미 기준이며 케이크 전체 당류 함량이 아닙니다.'
-                    : 'Cacao options describe the ganache profile, not the total sugar content of the cake.'}
-                </p>
+                <p className="field-help">{copy.cacaoHelp}</p>
               </fieldset>
             )}
 
@@ -1447,28 +1495,27 @@ function ReservePage({
               <fieldset>
                 <legend>{labels.finishSelect}</legend>
                 <div className="choice-list">
-                  {POUND_ADDON_OPTIONS.map((option) => (
-                    <label className="choice-item" key={option.value}>
-                      <input
-                        type="radio"
-                        name="poundAddon"
-                        checked={form.poundAddon === option.value}
-                        onChange={() => selectPoundAddon(option.value)}
-                      />
-                      <span className="choice-copy">
-                        <strong>
-                          {option.label} {option.extraPrice > 0 && `(+${formatCurrency(option.extraPrice)})`}
-                        </strong>
-                        <span>{option.description}</span>
-                      </span>
-                    </label>
-                  ))}
+                  {POUND_ADDON_OPTIONS.map((option) => {
+                    const optionText = getPoundAddonText(option, language)
+                    return (
+                      <label className="choice-item" key={option.value}>
+                        <input
+                          type="radio"
+                          name="poundAddon"
+                          checked={form.poundAddon === option.value}
+                          onChange={() => selectPoundAddon(option.value)}
+                        />
+                        <span className="choice-copy">
+                          <strong>
+                            {optionText.label} {option.extraPrice > 0 && `(+${formatCurrency(option.extraPrice)})`}
+                          </strong>
+                          <span>{optionText.description}</span>
+                        </span>
+                      </label>
+                    )
+                  })}
                 </div>
-                <p className="field-help">
-                  {marketConfig.market === 'KR'
-                    ? '파운드 케이크는 기본, 초콜릿 추가, 바닐라 생크림 추가 중 하나만 선택할 수 있습니다.'
-                    : 'Choose one finish only: basic, extra chocolate, or vanilla cream.'}
-                </p>
+                <p className="field-help">{copy.finishHelp}</p>
               </fieldset>
             )}
 
@@ -1476,20 +1523,23 @@ function ReservePage({
               <fieldset>
                 <legend>{labels.chocolateSelect}</legend>
                 <div className="choice-list">
-                  {CHOCOLATE_TYPE_OPTIONS.map((option) => (
-                    <label className="choice-item" key={option.value}>
-                      <input
-                        type="radio"
-                        name="chocolateType"
-                        checked={form.chocolateType === option.value}
-                        onChange={() => setForm({ ...form, chocolateType: option.value })}
-                      />
-                      <span className="choice-copy">
-                        <strong>{option.label}</strong>
-                        <span>{option.description}</span>
-                      </span>
-                    </label>
-                  ))}
+                  {CHOCOLATE_TYPE_OPTIONS.map((option) => {
+                    const optionText = getChocolateTypeText(option, language)
+                    return (
+                      <label className="choice-item" key={option.value}>
+                        <input
+                          type="radio"
+                          name="chocolateType"
+                          checked={form.chocolateType === option.value}
+                          onChange={() => setForm({ ...form, chocolateType: option.value })}
+                        />
+                        <span className="choice-copy">
+                          <strong>{optionText.label}</strong>
+                          <span>{optionText.description}</span>
+                        </span>
+                      </label>
+                    )
+                  })}
                 </div>
               </fieldset>
             )}
@@ -1505,7 +1555,7 @@ function ReservePage({
                   {Array.from({ length: MAX_RESERVATION_QUANTITY }, (_, index) => index + 1).map((quantity) => (
                     <option value={quantity} key={quantity}>
                       {quantity}
-                      {marketConfig.copy.quantityUnit}
+                      {copy.quantityUnit}
                     </option>
                   ))}
                 </select>
@@ -1553,7 +1603,7 @@ function ReservePage({
                 <input
                   value={form.customerName}
                   onChange={(event) => setForm({ ...form, customerName: event.target.value })}
-                  placeholder={marketConfig.market === 'KR' ? '홍길동' : 'Jenny Smith'}
+                  placeholder={copy.namePlaceholder}
                 />
               </label>
               <label>
@@ -1562,7 +1612,7 @@ function ReservePage({
                   inputMode="tel"
                   value={form.customerPhone}
                   onChange={(event) => setForm({ ...form, customerPhone: event.target.value })}
-                  placeholder={marketConfig.copy.phonePlaceholder}
+                  placeholder={copy.phonePlaceholder}
                 />
               </label>
             </div>
@@ -1572,7 +1622,7 @@ function ReservePage({
               <textarea
                 value={form.requestNote}
                 onChange={(event) => setForm({ ...form, requestNote: event.target.value })}
-                placeholder={marketConfig.copy.requestPlaceholder}
+                placeholder={copy.requestPlaceholder}
               />
             </label>
 
@@ -1598,16 +1648,16 @@ function ReservePage({
                 onChange={(event) => setForm({ ...form, privacy: event.target.checked })}
               />
               <span>
-                {marketConfig.copy.privacyNotice}
+                {copy.privacyNotice}
               </span>
             </label>
 
             {error && <p className="error-text">{error}</p>}
 
-            <BankAccountBox settings={settings} totalPrice={discountedPrice} />
+            <BankAccountBox settings={settings} totalPrice={discountedPrice} language={language} />
 
             <button className="primary-button full-width" type="submit" disabled={submitting}>
-              {submitting ? (marketConfig.market === 'KR' ? '신청 중' : 'Submitting') : marketConfig.copy.reserveCta}
+              {submitting ? copy.submitting : copy.reserveCta}
             </button>
           </form>
         </section>
@@ -1620,63 +1670,68 @@ function CompletePage({
   navigate,
   reservation,
   settings,
+  language,
+  setLanguage,
 }: {
   navigate: (page: Page) => void
   reservation: Reservation | null
   settings: StoreSettings
+  language: Language
+  setLanguage: (language: Language) => void
 }) {
+  const copy = cakeCopy(language)
   return (
     <>
-      <SiteHeader navigate={navigate} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
       <main className="narrow-page">
         <section className="complete-panel">
           <div className="check-icon">
             <Check size={22} />
           </div>
-          <h1>{marketConfig.copy.reservationCompleteTitle}</h1>
-          <p>{marketConfig.copy.reservationCompleteText}</p>
+          <h1>{copy.reservationCompleteTitle}</h1>
+          <p>{copy.reservationCompleteText}</p>
 
           {reservation ? (
             <dl className="detail-list">
               <div>
-                <dt>{marketConfig.market === 'KR' ? '예약번호' : 'Booking number'}</dt>
+                <dt>{copy.bookingNumber}</dt>
                 <dd>{reservation.reservationNumber}</dd>
               </div>
               <div>
-                <dt>{marketConfig.market === 'KR' ? '예약자명' : 'Name'}</dt>
+                <dt>{copy.customerName}</dt>
                 <dd>{reservation.customerName}</dd>
               </div>
               <div>
-                <dt>{marketConfig.market === 'KR' ? '연락처' : 'Phone'}</dt>
+                <dt>{copy.mobile}</dt>
                 <dd>{maskPhone(reservation.customerPhone)}</dd>
               </div>
-              <ProductDetailRows reservation={reservation} />
+              <ProductDetailRows reservation={reservation} language={language} />
               <div>
-                <dt>{marketConfig.market === 'KR' ? '픽업' : 'Pick-up'}</dt>
+                <dt>{copy.pickUp}</dt>
                 <dd>
                   {reservation.pickupDate} {reservation.pickupTime}
                 </dd>
               </div>
               <div>
-                <dt>{marketConfig.market === 'KR' ? '가격' : 'Price'}</dt>
+                <dt>{copy.price}</dt>
                 <dd>{formatCurrency(reservation.totalPrice)}</dd>
               </div>
             </dl>
           ) : (
-            <p className="notice-line">{marketConfig.copy.noReservationText}</p>
+            <p className="notice-line">{copy.noReservationText}</p>
           )}
 
           <div className="complete-bank-section">
-            <BankAccountBox settings={settings} totalPrice={reservation?.totalPrice} />
-            <p>{marketConfig.copy.paymentConfirmText}</p>
+            <BankAccountBox settings={settings} totalPrice={reservation?.totalPrice} language={language} />
+            <p>{copy.paymentConfirmText}</p>
           </div>
 
           <div className="button-row">
             <button className="secondary-button" type="button" onClick={() => navigate('lookup')}>
-              {marketConfig.copy.lookupNav}
+              {copy.lookupNav}
             </button>
             <button className="primary-button" type="button" onClick={() => navigate('home')}>
-              {marketConfig.market === 'KR' ? '처음으로' : 'Home'}
+              {copy.home}
             </button>
           </div>
         </section>
@@ -1685,7 +1740,16 @@ function CompletePage({
   )
 }
 
-function LookupPage({ navigate }: { navigate: (page: Page) => void }) {
+function LookupPage({
+  navigate,
+  language,
+  setLanguage,
+}: {
+  navigate: (page: Page) => void
+  language: Language
+  setLanguage: (language: Language) => void
+}) {
+  const copy = cakeCopy(language)
   const [reservationNumber, setReservationNumber] = useState('')
   const [phone, setPhone] = useState('')
   const [reservation, setReservation] = useState<Reservation | null>(null)
@@ -1696,25 +1760,25 @@ function LookupPage({ navigate }: { navigate: (page: Page) => void }) {
     setMessage('')
     const result = await getReservationByNumber(reservationNumber.trim(), phone.trim())
     setReservation(result)
-    if (!result) setMessage(marketConfig.copy.notFoundText)
+    if (!result) setMessage(copy.notFoundText)
   }
 
   return (
     <>
-      <SiteHeader navigate={navigate} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
       <main className="narrow-page">
         <form className="lookup-form" onSubmit={lookup}>
-          <h1>{marketConfig.copy.lookupTitle}</h1>
+          <h1>{copy.lookupTitle}</h1>
           <label>
-            {marketConfig.market === 'KR' ? '예약번호' : 'Booking number'}
+            {copy.bookingNumber}
             <input value={reservationNumber} onChange={(event) => setReservationNumber(event.target.value)} />
           </label>
           <label>
-            {marketConfig.copy.lookupPhoneLabel}
+            {copy.lookupPhoneLabel}
             <input inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} />
           </label>
           <button className="primary-button full-width" type="submit">
-            {marketConfig.market === 'KR' ? '조회하기' : 'Search'}
+            {copy.search}
           </button>
           {message && <p className="error-text">{message}</p>}
         </form>
@@ -1723,16 +1787,16 @@ function LookupPage({ navigate }: { navigate: (page: Page) => void }) {
           <section className="result-panel">
             <dl className="detail-list">
               <div>
-                <dt>{marketConfig.market === 'KR' ? '예약상태' : 'Booking status'}</dt>
+                <dt>{copy.bookingStatus}</dt>
                 <dd>{formatReservationStatus(reservation.status)}</dd>
               </div>
               <div>
-                <dt>{marketConfig.market === 'KR' ? '입금상태' : 'Payment status'}</dt>
+                <dt>{copy.paymentStatus}</dt>
                 <dd>{formatPaymentStatus(reservation.paymentStatus)}</dd>
               </div>
-              <ProductDetailRows reservation={reservation} />
+              <ProductDetailRows reservation={reservation} language={language} />
               <div>
-                <dt>{marketConfig.market === 'KR' ? '픽업' : 'Pick-up'}</dt>
+                <dt>{copy.pickUp}</dt>
                 <dd>
                   {reservation.pickupDate} {reservation.pickupTime}
                 </dd>
