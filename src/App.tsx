@@ -99,7 +99,6 @@ import {
   formatClassBookingType,
   getAvailableClassSessionTimes,
   getClassBookingPrice,
-  getClassSlotAvailability,
   isClassDateBooked,
   type ClassBookedSlot,
 } from './lib/class-utils'
@@ -162,18 +161,6 @@ function useTodayInputValue() {
   }, [])
 
   return today
-}
-
-function addInputDateDays(dateValue: string, days: number) {
-  const [year, month, day] = dateValue.split('-').map(Number)
-  const date = new Date(Date.UTC(year, month - 1, day + days))
-  return date.toISOString().slice(0, 10)
-}
-
-function formatClassAvailabilityDate(classDate: string) {
-  const [year, month, day] = classDate.split('-').map(Number)
-  const date = new Date(Date.UTC(year, month - 1, day))
-  return new Intl.DateTimeFormat('en-AU', { month: 'short', day: 'numeric', weekday: 'short' }).format(date)
 }
 
 function getPageFromPath(): Page {
@@ -961,12 +948,6 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
   const price = getClassBookingPrice(form.bookingType)
   const availableSessionTimes = getAvailableClassSessionTimes(form.classDate, bookedClassSlots)
   const selectedDateBooked = isClassDateBooked(form.classDate, bookedClassSlots)
-  const availabilityPreview = useMemo(() => {
-    return Array.from({ length: 21 }, (_, index) => {
-      const classDate = addInputDateDays(today, index)
-      return getClassSlotAvailability(classDate, bookedClassSlots)
-    })
-  }, [bookedClassSlots, today])
 
   useEffect(() => {
     listClassBookedSlots()
@@ -1075,27 +1056,8 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                 )}
               </div>
               {availabilityLoaded && availabilityError && <p className="class-availability-note unavailable">Availability could not be loaded. Jenny will double-check this session before confirming.</p>}
-              {availabilityLoaded && !availabilityError && !selectedDateBooked && <p className="class-availability-note">This date is currently available.</p>}
+              {availabilityLoaded && !availabilityError && !selectedDateBooked && <p className="class-availability-note">Available: {availableSessionTimes.join(' / ')}</p>}
             </fieldset>
-            <div className="class-availability-calendar" aria-label="Upcoming available class times">
-              <div className="class-availability-calendar-header">
-                <strong>Available times</strong>
-                <span>Next 3 weeks · tap a date to choose it</span>
-              </div>
-              <div className="class-availability-calendar-grid">
-                {availabilityPreview.map((day) => (
-                  <button
-                    className={`class-availability-day${day.classDate === form.classDate ? ' selected' : ''}${day.isFullyBooked ? ' closed' : ''}`}
-                    key={day.classDate}
-                    type="button"
-                    onClick={() => setForm({ ...form, classDate: day.classDate, classTime: day.availableTimes[0] || CLASS_SESSION_TIMES[0] })}
-                  >
-                    <span>{formatClassAvailabilityDate(day.classDate)}</span>
-                    <strong>{day.isFullyBooked ? 'Fully booked' : day.availableTimes.join(' / ')}</strong>
-                  </button>
-                ))}
-              </div>
-            </div>
           </section>
 
           <section className="class-form-section" aria-labelledby="guardian-detail-title">
