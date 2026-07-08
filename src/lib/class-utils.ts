@@ -73,43 +73,57 @@ export function generateClassReservationNumber(date = new Date()) {
   return `VG-KC-AU-${ymd}-${time}${suffix}`
 }
 
+function formatClassChildNames(reservation: ClassReservation) {
+  const secondChildName = reservation.secondChildName.trim()
+  return secondChildName ? `${reservation.childName} and ${secondChildName}` : reservation.childName
+}
+
+function buildClassSafetyNotes() {
+  return `Please note:
+- Please arrive 5 minutes early
+- Long hair should be tied back
+- Clothes may get chocolate/cream on them
+- Please let us know immediately if there are any allergies or dietary concerns
+- If your child has a favourite figure, doll, LEGO, or small toy, please bring it along. It can help them create their own special cake.`
+}
+
 export function buildClassPaymentMessage(reservation: ClassReservation) {
-  return `Hi ${reservation.parentName}, thank you for your cake class booking request for ${reservation.childName}.
+  return `Hi ${reservation.parentName}, thank you for your booking for ${formatClassChildNames(reservation)}
 
 Requested session:
 ${reservation.classDate} ${reservation.classTime}
 
-The session is currently available. When you have a moment, please make the payment using the details below:
+The session is currently available.
 
+Please use the payment details below:
 ${buildClassPaymentDetails(reservation.totalPrice)}
 
-Once we confirm the payment, we will send you a booking confirmation message.
+Once your payment is confirmed, we will send you a final confirmation message!
 
-Thank you,
-Verygood Chocolate AU`
+${buildClassSafetyNotes()}
+
+Location:
+1 Bundil Blvd, Melrose Park, Sydney
+
+We're excited to see you soon.
+Thank you:)`
 }
 
 export const buildClassDepositMessage = buildClassPaymentMessage
 
 export function buildClassConfirmationMessage(reservation: ClassReservation) {
-  return `Hi ${reservation.parentName}, ${reservation.childName}'s cake class booking is confirmed.
+  return `Hi ${reservation.parentName}, ${formatClassChildNames(reservation)}'s cake class booking is confirmed.
 
 Date/time:
 ${reservation.classDate} ${reservation.classTime}
 
-Location:
-Melrose Park, Sydney
-The full address will be sent before the class.
+${buildClassSafetyNotes()}
 
-Please note:
-- Please arrive 5 minutes early
-- Long hair should be tied back
-- Clothes may get chocolate/cream on them
-- Please let us know immediately if there are any allergies or dietary concerns
+Location:
+1 Bundil Blvd, Melrose Park, Sydney
 
 We're excited to see you soon.
-
-Verygood Chocolate AU`
+Thank you:)`
 }
 
 export function formatClassBookingType(bookingType: ClassBookingType) {
