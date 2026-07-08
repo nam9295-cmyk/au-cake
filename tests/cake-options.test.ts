@@ -178,8 +178,6 @@ Pick-up date: 2026-07-04
 Pick-up time: 10:00
 Quantity: 1ea
 
-We will check availability and send you a confirmation.
-
 Thank you:)`)
   assert.doesNotMatch(message, /Product: Gâteau au Chocolat Pave Chocolate Cake/)
   assert.doesNotMatch(message, /Pick-up address:/)

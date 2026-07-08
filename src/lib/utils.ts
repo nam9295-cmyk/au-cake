@@ -124,8 +124,6 @@ ${product.usesSizeOptions ? `${labels.size}: ${formatCakeSizeLabel(reservation.c
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 
-${marketConfig.copy.reservationCompleteText}
-
 ${labels.thanks}`
   }
 
