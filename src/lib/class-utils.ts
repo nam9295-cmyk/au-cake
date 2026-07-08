@@ -79,13 +79,13 @@ export function buildClassPaymentMessage(reservation: ClassReservation) {
 Requested session:
 ${reservation.classDate} ${reservation.classTime}
 
-We'll check availability and confirm the session shortly.
-Please use the payment details below after Jenny confirms availability:
+The session is currently available. When you have a moment, please make the payment using the details below:
 
 ${buildClassPaymentDetails(reservation.totalPrice)}
 
-Your booking is complete once full payment has been received.
+Once we confirm the payment, we will send you a booking confirmation message.
 
+Thank you,
 Verygood Chocolate AU`
 }
 

@@ -55,12 +55,14 @@ test('class reservation number uses kids class AU prefix and date', () => {
   assert.match(number, /^VG-KC-AU-20260702-\d{9}$/)
 })
 
-test('payment and confirmation messages include session, child, parent, full payment and safety details', () => {
+test('payment and confirmation messages include session, child, parent, soft payment wording and safety details', () => {
   const payment = buildClassPaymentMessage(sampleReservation)
   assert.match(payment, /Jenny Parent/)
   assert.match(payment, /Mina/)
   assert.match(payment, /2026-07-10 10:00/)
-  assert.match(payment, /full payment/i)
+  assert.match(payment, /payment/i)
+  assert.match(payment, /When you have a moment, please make the payment/i)
+  assert.match(payment, /Once we confirm the payment, we will send you a booking confirmation message\./)
   assert.match(payment, /BSB 012263 Account 324999682/)
   assert.match(payment, /Account name: JEONGMIN CHEON/)
   assert.match(payment, /Amount due: AUD 99\.00/)
