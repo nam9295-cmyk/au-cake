@@ -6,8 +6,10 @@ import {
   buildClassPaymentMessage,
   classReservationsToCsv,
   generateClassReservationNumber,
+  getAvailableClassSessionTimes,
   getClassBookingPrice,
   getClassDepositAmount,
+  isClassDateBooked,
 } from '../src/lib/class-utils.js'
 import type { ClassReservation } from '../src/lib/types.js'
 
@@ -78,6 +80,18 @@ test('payment and confirmation messages include session, child, parent, soft pay
   assert.match(confirmation, /allergies or dietary concerns/)
   assert.match(confirmation, /favourite figure, doll, LEGO, or small toy/)
   assert.match(confirmation, /Thank you:\)/)
+})
+
+test('class availability closes the whole requested date for active bookings', () => {
+  const activeReservations: ClassReservation[] = [
+    sampleReservation,
+    { ...sampleReservation, id: 'cancelled-1', classDate: '2026-07-11', status: 'Cancelled' },
+  ]
+
+  assert.equal(isClassDateBooked('2026-07-10', activeReservations), true)
+  assert.equal(isClassDateBooked('2026-07-11', activeReservations), false)
+  assert.deepEqual(getAvailableClassSessionTimes('2026-07-10', activeReservations), [])
+  assert.deepEqual(getAvailableClassSessionTimes('2026-07-11', activeReservations), [...CLASS_SESSION_TIMES])
 })
 
 test('class CSV exports parent child safety consent payment and admin fields', () => {

@@ -20,6 +20,10 @@ export const appwriteConfig = {
     import.meta.env.VITE_APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
     import.meta.env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
     'class_reservations',
+  classBookedDatesCollectionId:
+    import.meta.env.VITE_APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
+    import.meta.env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
+    'class_booked_dates',
   adminEmails: (import.meta.env.VITE_ADMIN_EMAILS || 'nam9295@gmail.com')
     .split(',')
     .map((email: string) => email.trim().toLowerCase())

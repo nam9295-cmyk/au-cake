@@ -6,6 +6,7 @@ import {
   Databases,
   ID,
   Permission,
+  Query,
   Role,
 } from 'node-appwrite'
 
@@ -24,6 +25,10 @@ const classReservationsId =
   process.env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
   process.env.VITE_APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
   'class_reservations'
+const classBookedDatesId =
+  process.env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
+  process.env.VITE_APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
+  'class_booked_dates'
 const market = String(process.env.VITE_MARKET || process.env.MARKET || 'KR').toUpperCase() === 'AU' ? 'AU' : 'KR'
 const adminUserIds = (process.env.APPWRITE_ADMIN_USER_IDS || '')
   .split(',')
@@ -57,6 +62,13 @@ const reservationPermissions = [
 const settingsPermissions = [
   Permission.read(Role.any()),
   ...adminWriteRoles.map((role) => Permission.create(role)),
+  ...adminWriteRoles.map((role) => Permission.update(role)),
+  ...adminWriteRoles.map((role) => Permission.delete(role)),
+]
+
+const publicBookedDatePermissions = [
+  Permission.read(Role.any()),
+  Permission.create(Role.any()),
   ...adminWriteRoles.map((role) => Permission.update(role)),
   ...adminWriteRoles.map((role) => Permission.delete(role)),
 ]
@@ -175,6 +187,11 @@ const classReservationAttributes = [
   { key: 'updatedAt', type: 'string', size: 40, required: false },
 ]
 
+const classBookedDateAttributes = [
+  { key: 'classDate', type: 'string', size: 20, required: true },
+  { key: 'createdAt', type: 'string', size: 40, required: true },
+]
+
 const reservationIndexes = [
   { key: 'reservationNumber_idx', attributes: ['reservationNumber'] },
   { key: 'pickupDate_idx', attributes: ['pickupDate'] },
@@ -190,6 +207,10 @@ const classReservationIndexes = [
   { key: 'status_idx', attributes: ['status'] },
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
+]
+
+const classBookedDateIndexes = [
+  { key: 'classDate_unique', attributes: ['classDate'], type: 'unique' },
 ]
 
 function loadDotEnvLocal() {
@@ -384,7 +405,7 @@ async function ensureIndex(targetDatabaseId, collectionId, index) {
       databaseId: targetDatabaseId,
       collectionId,
       key: index.key,
-      type: 'key',
+      type: index.type || 'key',
       attributes: index.attributes,
     })
     console.log(`created index ${collectionId}.${index.key}`)
@@ -417,6 +438,37 @@ async function seedSettings(targetDatabaseId = databaseId) {
   console.log('created settings seed')
 }
 
+async function syncClassBookedDates() {
+  const current = await databases.listDocuments({
+    databaseId: classDatabaseId,
+    collectionId: classReservationsId,
+    queries: [Query.limit(200)],
+  })
+  const classDates = Array.from(new Set(
+    current.documents
+      .filter((reservation) => reservation.classDate && reservation.status !== 'Cancelled')
+      .map((reservation) => reservation.classDate),
+  ))
+
+  for (const classDate of classDates) {
+    try {
+      await databases.createDocument({
+        databaseId: classDatabaseId,
+        collectionId: classBookedDatesId,
+        documentId: ID.unique(),
+        data: { classDate, createdAt: new Date().toISOString() },
+      })
+      console.log(`created booked date ${classDate}`)
+    } catch (error) {
+      if (isConflict(error)) {
+        console.log(`exists  booked date ${classDate}`)
+        continue
+      }
+      throw error
+    }
+  }
+}
+
 await ensureDatabase(databaseId, `Verygood Cake Reservation ${market}`)
 if (classDatabaseId !== databaseId) {
   await ensureDatabase(classDatabaseId, 'Verygood Kids Classes')
@@ -425,6 +477,7 @@ if (classDatabaseId !== databaseId) {
 await ensureCollection(databaseId, reservationsId, 'reservations', reservationPermissions)
 await ensureCollection(databaseId, settingsId, 'settings', settingsPermissions)
 await ensureCollection(classDatabaseId, classReservationsId, 'class_reservations', reservationPermissions)
+await ensureCollection(classDatabaseId, classBookedDatesId, 'class_booked_dates', publicBookedDatePermissions)
 
 for (const attribute of reservationAttributes) {
   await ensureAttribute(databaseId, reservationsId, attribute)
@@ -438,9 +491,14 @@ for (const attribute of classReservationAttributes) {
   await ensureAttribute(classDatabaseId, classReservationsId, attribute)
 }
 
+for (const attribute of classBookedDateAttributes) {
+  await ensureAttribute(classDatabaseId, classBookedDatesId, attribute)
+}
+
 await ensureAttributesReady(databaseId, reservationsId, reservationAttributes)
 await ensureAttributesReady(databaseId, settingsId, settingsAttributes)
 await ensureAttributesReady(classDatabaseId, classReservationsId, classReservationAttributes)
+await ensureAttributesReady(classDatabaseId, classBookedDatesId, classBookedDateAttributes)
 
 for (const index of reservationIndexes) {
   await ensureIndex(databaseId, reservationsId, index)
@@ -450,6 +508,11 @@ for (const index of classReservationIndexes) {
   await ensureIndex(classDatabaseId, classReservationsId, index)
 }
 
+for (const index of classBookedDateIndexes) {
+  await ensureIndex(classDatabaseId, classBookedDatesId, index)
+}
+
 await seedSettings(databaseId)
+await syncClassBookedDates()
 
 console.log('Appwrite setup complete')

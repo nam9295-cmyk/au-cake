@@ -68,6 +68,7 @@ import {
   getSettings,
   isAdminLoggedIn,
   listReservations,
+  listClassBookedDates,
   listClassReservations,
   loginAdmin,
   loginAdminWithGoogle,
@@ -96,7 +97,9 @@ import {
   CLASS_SESSION_TIMES,
   CLASS_STATUS_OPTIONS,
   formatClassBookingType,
+  getAvailableClassSessionTimes,
   getClassBookingPrice,
+  isClassDateBooked,
 } from './lib/class-utils'
 import {
   addDaysInputValue,
@@ -937,8 +940,19 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [bookedClassDates, setBookedClassDates] = useState<string[]>([])
+  const [availabilityLoaded, setAvailabilityLoaded] = useState(false)
   const today = useTodayInputValue()
   const price = getClassBookingPrice(form.bookingType)
+  const availableSessionTimes = getAvailableClassSessionTimes(form.classDate, bookedClassDates)
+  const selectedDateBooked = isClassDateBooked(form.classDate, bookedClassDates)
+
+  useEffect(() => {
+    listClassBookedDates()
+      .then((classDates) => setBookedClassDates(classDates))
+      .catch(() => setBookedClassDates([]))
+      .finally(() => setAvailabilityLoaded(true))
+  }, [])
 
   async function submitClassReservation(event: React.FormEvent) {
     event.preventDefault()
@@ -949,6 +963,8 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     if (!isValidPhone(phone)) return setError(`Please check the mobile number. ${marketConfig.copy.phoneHelp}`)
     if (!form.parentEmail.includes('@')) return setError('Please enter a valid email address.')
     if (!form.classDate || form.classDate < today) return setError('Please choose a future class date.')
+    if (selectedDateBooked) return setError('This date is already booked. Please choose another date.')
+    if (!availableSessionTimes.includes(form.classTime as (typeof CLASS_SESSION_TIMES)[number])) return setError('Please choose an available class time.')
     if (form.bookingType === '2-friends' && (!form.secondChildName.trim() || !form.secondChildSchoolYear.trim())) return setError('Please enter Child 2 name and school year.')
     if (!form.emergencyContact.trim() || !form.pickupPerson.trim()) return setError('Emergency contact and pick-up person are required.')
     if (!form.parentConsent || !form.cancellationAgreement) return setError('Parent consent and booking agreement are required.')
@@ -957,8 +973,12 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
       const reservation = await createClassReservation({ ...form, parentPhone: phone })
       onComplete(reservation)
       navigate('class-complete')
-    } catch {
-      setError('An error occurred while submitting your class request. Please try again.')
+    } catch (submitError) {
+      if (submitError instanceof Error && submitError.message === 'CLASS_DATE_UNAVAILABLE') {
+        setError('This date is already booked. Please choose another date.')
+      } else {
+        setError('An error occurred while submitting your class request. Please try again.')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -1003,13 +1023,13 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                 type="date"
                 min={today}
                 value={form.classDate}
-                onChange={(event) => setForm({ ...form, classDate: event.target.value })}
+                onChange={(event) => setForm({ ...form, classDate: event.target.value, classTime: CLASS_SESSION_TIMES[0] })}
               />
             </label>
             <fieldset className="class-time-fieldset">
               <legend>Preferred Session Time</legend>
               <div className="class-time-grid">
-                {CLASS_SESSION_TIMES.map((time) => (
+                {availableSessionTimes.length > 0 ? availableSessionTimes.map((time) => (
                   <label className="class-time-option" key={time}>
                     <input
                       type="radio"
@@ -1019,8 +1039,11 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                     />
                     <span>{time}</span>
                   </label>
-                ))}
+                )) : (
+                  <p className="class-availability-note unavailable">This date is already booked. Please choose another date.</p>
+                )}
               </div>
+              {availabilityLoaded && !selectedDateBooked && <p className="class-availability-note">This date is currently available.</p>}
             </fieldset>
           </section>
 
@@ -1130,7 +1153,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           </aside>
 
           {error && <p className="error-text class-error-text">{error}</p>}
-          <button className="class-submit-button" type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Request booking'}</button>
+          <button className="class-submit-button" type="submit" disabled={submitting || selectedDateBooked}>{submitting ? 'Submitting...' : selectedDateBooked ? 'Date unavailable' : 'Request booking'}</button>
           <p className="class-submit-note">Jenny will confirm availability and send full payment details. Your booking is complete after payment is received.</p>
         </form>
       </main>

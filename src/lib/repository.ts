@@ -1,4 +1,4 @@
-import { ID, OAuthProvider, Query } from 'appwrite'
+import { AppwriteException, ID, OAuthProvider, Query } from 'appwrite'
 import { account, appwriteConfig, databases, isAppwriteConfigured } from './appwrite'
 import { MARKET } from './market'
 import {
@@ -44,6 +44,7 @@ import { generateReservationNumber } from './utils'
 
 const LOCAL_RESERVATIONS_KEY = `verygood-cake-reservations-${MARKET.toLowerCase()}`
 const LOCAL_CLASS_RESERVATIONS_KEY = `verygood-class-reservations-${MARKET.toLowerCase()}`
+const LOCAL_CLASS_BOOKED_DATES_KEY = `verygood-class-booked-dates-${MARKET.toLowerCase()}`
 const LOCAL_SETTINGS_KEY = `verygood-cake-settings-${MARKET.toLowerCase()}`
 const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 
@@ -63,6 +64,13 @@ type AppwriteClassReservationDocument = Omit<ClassReservation, 'id'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
+}
+
+type AppwriteClassBookedDateDocument = {
+  $id: string
+  $createdAt?: string
+  classDate: string
+  createdAt?: string
 }
 
 function normalizeReservation(reservation: Reservation): Reservation {
@@ -230,6 +238,63 @@ function readLocalClassReservations(): ClassReservation[] {
 
 function writeLocalClassReservations(reservations: ClassReservation[]) {
   localStorage.setItem(LOCAL_CLASS_RESERVATIONS_KEY, JSON.stringify(reservations))
+}
+
+function readLocalClassBookedDates(): string[] {
+  const storedDates = JSON.parse(localStorage.getItem(LOCAL_CLASS_BOOKED_DATES_KEY) || '[]') as string[]
+  const activeReservationDates = readLocalClassReservations()
+    .filter((reservation) => reservation.status !== 'Cancelled')
+    .map((reservation) => reservation.classDate)
+  return Array.from(new Set([...storedDates, ...activeReservationDates])).sort()
+}
+
+function writeLocalClassBookedDates(classDates: string[]) {
+  localStorage.setItem(LOCAL_CLASS_BOOKED_DATES_KEY, JSON.stringify(Array.from(new Set(classDates)).sort()))
+}
+
+function isDuplicateAppwriteError(error: unknown) {
+  return error instanceof AppwriteException && (error.code === 409 || /unique|duplicate|already exists/i.test(error.message))
+}
+
+async function createClassBookedDate(classDate: string) {
+  if (!isAppwriteConfigured) {
+    const bookedDates = readLocalClassBookedDates()
+    if (bookedDates.includes(classDate)) throw new Error('CLASS_DATE_UNAVAILABLE')
+    writeLocalClassBookedDates([...bookedDates, classDate])
+    return
+  }
+
+  try {
+    await databases.createDocument(
+      appwriteConfig.classReservationsDatabaseId,
+      appwriteConfig.classBookedDatesCollectionId,
+      ID.unique(),
+      { classDate, createdAt: new Date().toISOString() },
+    )
+  } catch (error) {
+    if (isDuplicateAppwriteError(error)) throw new Error('CLASS_DATE_UNAVAILABLE', { cause: error })
+    throw error
+  }
+}
+
+async function deleteClassBookedDate(classDate: string) {
+  if (!isAppwriteConfigured) {
+    writeLocalClassBookedDates(readLocalClassBookedDates().filter((date) => date !== classDate))
+    return
+  }
+
+  const result = await databases.listDocuments(
+    appwriteConfig.classReservationsDatabaseId,
+    appwriteConfig.classBookedDatesCollectionId,
+    [Query.equal('classDate', classDate), Query.limit(1)],
+  )
+  const document = result.documents[0] as unknown as AppwriteClassBookedDateDocument | undefined
+  if (!document) return
+  await databases.deleteDocument(
+    appwriteConfig.classReservationsDatabaseId,
+    appwriteConfig.classBookedDatesCollectionId,
+    document.$id,
+  )
 }
 
 function applyLocalClassFilters(reservations: ClassReservation[], filters?: ClassReservationFilters) {
@@ -405,6 +470,19 @@ export async function updateReservation(
   return toReservation(document as unknown as AppwriteReservationDocument)
 }
 
+export async function listClassBookedDates(): Promise<string[]> {
+  if (!isAppwriteConfigured) return readLocalClassBookedDates()
+
+  const result = await databases.listDocuments(
+    appwriteConfig.classReservationsDatabaseId,
+    appwriteConfig.classBookedDatesCollectionId,
+    [Query.orderAsc('classDate'), Query.limit(200)],
+  )
+  return result.documents
+    .map((doc) => (doc as unknown as AppwriteClassBookedDateDocument).classDate)
+    .filter(Boolean)
+}
+
 export async function createClassReservation(input: ClassReservationInput): Promise<ClassReservation> {
   const now = new Date().toISOString()
   const data = {
@@ -438,11 +516,13 @@ export async function createClassReservation(input: ClassReservationInput): Prom
   }
 
   if (!isAppwriteConfigured) {
+    await createClassBookedDate(data.classDate)
     const reservation: ClassReservation = { id: crypto.randomUUID(), ...data }
     writeLocalClassReservations([reservation, ...readLocalClassReservations()])
     return reservation
   }
 
+  await createClassBookedDate(data.classDate)
   const document = await databases.createDocument(
     appwriteConfig.classReservationsDatabaseId,
     appwriteConfig.classReservationsCollectionId,
@@ -485,17 +565,25 @@ export async function updateClassReservation(
     const reservations = readLocalClassReservations()
     const index = reservations.findIndex((reservation) => reservation.id === id)
     if (index < 0) throw new Error('클래스 예약을 찾을 수 없습니다.')
+    const previousClassDate = reservations[index].classDate
     reservations[index] = { ...reservations[index], ...nextUpdates }
     writeLocalClassReservations(reservations)
+    if (updates.status === 'Cancelled') await deleteClassBookedDate(previousClassDate)
     return reservations[index]
   }
 
+  const current = (await databases.getDocument(
+    appwriteConfig.classReservationsDatabaseId,
+    appwriteConfig.classReservationsCollectionId,
+    id,
+  )) as unknown as AppwriteClassReservationDocument
   const document = await databases.updateDocument(
     appwriteConfig.classReservationsDatabaseId,
     appwriteConfig.classReservationsCollectionId,
     id,
     nextUpdates,
   )
+  if (updates.status === 'Cancelled') await deleteClassBookedDate(current.classDate)
   return toClassReservation(document as unknown as AppwriteClassReservationDocument)
 }
 

@@ -29,6 +29,24 @@ export function getClassDepositAmount() {
   return CLASS_DEPOSIT_AMOUNT
 }
 
+function getBookedDateEntryDate(entry: ClassReservation | string) {
+  return typeof entry === 'string' ? entry : entry.classDate
+}
+
+function isBookedDateEntryActive(entry: ClassReservation | string) {
+  return typeof entry === 'string' || entry.status !== 'Cancelled'
+}
+
+export function isClassDateBooked(classDate: string, reservations: Array<ClassReservation | string>) {
+  if (!classDate) return false
+  return reservations.some((reservation) => getBookedDateEntryDate(reservation) === classDate && isBookedDateEntryActive(reservation))
+}
+
+export function getAvailableClassSessionTimes(classDate: string, reservations: Array<ClassReservation | string>) {
+  if (isClassDateBooked(classDate, reservations)) return []
+  return [...CLASS_SESSION_TIMES]
+}
+
 function formatClassCurrency(value: number) {
   return `AUD ${value.toFixed(2)}`
 }
