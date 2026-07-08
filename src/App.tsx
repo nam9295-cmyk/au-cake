@@ -84,6 +84,7 @@ import {
   shiftCalendarMonth,
   type AdminCalendarEvent,
 } from './lib/admin-calendar'
+import { buildAdminReservationUpdate } from './lib/admin-reservation-edit'
 import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
@@ -2115,6 +2116,7 @@ function AdminDashboardPage({ navigate }: { navigate: (page: Page) => void }) {
       />
       {selected && (
         <ReservationDrawer
+          key={selected.id}
           reservation={selected}
           onClose={() => setSelected(null)}
           onSave={saveReservation}
@@ -2346,6 +2348,7 @@ function AdminReservationsPage({
 
       {selected && (
         <ReservationDrawer
+          key={selected.id}
           reservation={selected}
           onClose={() => setSelected(null)}
           onSave={saveReservation}
@@ -2583,7 +2586,39 @@ function ReservationDrawer({
   onCopy: (reservation: Reservation) => Promise<void>
   settings: StoreSettings
 }) {
+  const [productId, setProductId] = useState<ProductId>(reservation.productId)
+  const [cakeSize, setCakeSize] = useState<CakeSize>(reservation.cakeSize)
+  const [chocolateType, setChocolateType] = useState<ChocolateType>(reservation.chocolateType)
+  const [poundAddon, setPoundAddon] = useState<PoundAddon>(reservation.poundAddon)
+  const [quantity, setQuantity] = useState(reservation.quantity)
+  const [pickupDate, setPickupDate] = useState(reservation.pickupDate)
+  const [pickupTime, setPickupTime] = useState(reservation.pickupTime)
+  const [cacaoPercent, setCacaoPercent] = useState<CacaoPercent>(reservation.cacaoPercent)
+  const [status, setStatus] = useState(reservation.status)
+  const [paymentStatus, setPaymentStatus] = useState(reservation.paymentStatus)
   const [memo, setMemo] = useState(reservation.adminMemo)
+
+  const draftUpdate = buildAdminReservationUpdate(reservation, {
+    productId,
+    cakeSize,
+    chocolateType,
+    poundAddon,
+    quantity,
+    pickupDate,
+    pickupTime,
+    cacaoPercent,
+    status,
+    paymentStatus,
+    adminMemo: memo,
+  })
+  const draftReservation: Reservation = { ...reservation, ...draftUpdate }
+  const selectedProduct = getProductById(draftUpdate.productId)
+  const timeOptions = timeOptionsForDate(pickupDate, settings)
+  const displayedTimeOptions = timeOptions.includes(pickupTime) ? timeOptions : [pickupTime, ...timeOptions].filter(Boolean)
+
+  async function saveAll() {
+    await onSave(reservation.id, draftUpdate)
+  }
 
   return (
     <div className="drawer-backdrop">
@@ -2603,22 +2638,87 @@ function ReservationDrawer({
             <dt>연락처</dt>
             <dd>{reservation.customerPhone}</dd>
           </div>
-          <ProductDetailRows reservation={reservation} />
-          <div>
-            <dt>픽업</dt>
-            <dd>
-              {reservation.pickupDate} {reservation.pickupTime}
-            </dd>
-          </div>
-          <div>
-            <dt>총 가격</dt>
-            <dd>{formatCurrency(reservation.totalPrice)}</dd>
-          </div>
           <div>
             <dt>요청사항</dt>
             <dd>{reservation.requestNote || '-'}</dd>
           </div>
         </dl>
+
+        <section className="admin-edit-card" aria-label="예약 수정">
+          <h3>예약 내용 수정</h3>
+          <div className="admin-edit-grid">
+            <label>
+              제품
+              <select value={productId} onChange={(event) => setProductId(event.target.value as ProductId)}>
+                {Object.values(PRODUCTS).map((product) => (
+                  <option value={product.id} key={product.id}>{product.name}</option>
+                ))}
+              </select>
+            </label>
+            {selectedProduct.usesSizeOptions && (
+              <label>
+                사이즈
+                <select value={cakeSize} onChange={(event) => setCakeSize(event.target.value as CakeSize)}>
+                  {CAKE_SIZE_OPTIONS.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
+                </select>
+              </label>
+            )}
+            {selectedProduct.usesPoundAddonOptions && (
+              <label>
+                옵션
+                <select value={poundAddon} onChange={(event) => setPoundAddon(event.target.value as PoundAddon)}>
+                  {POUND_ADDON_OPTIONS.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
+                </select>
+              </label>
+            )}
+            {usesReservationChocolateType(draftUpdate.productId, draftUpdate.poundAddon) && (
+              <label>
+                초콜릿
+                <select value={chocolateType} onChange={(event) => setChocolateType(event.target.value as ChocolateType)}>
+                  {CHOCOLATE_TYPE_OPTIONS.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
+                </select>
+              </label>
+            )}
+            {selectedProduct.usesCacaoOptions && (
+              <label>
+                카카오
+                <select value={cacaoPercent} onChange={(event) => setCacaoPercent(event.target.value as CacaoPercent)}>
+                  {CACAO_OPTIONS.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
+                </select>
+              </label>
+            )}
+            <label>
+              수량
+              <input type="number" min="1" max={MAX_RESERVATION_QUANTITY} value={quantity} onChange={(event) => setQuantity(Number(event.target.value || 1))} />
+            </label>
+            <label>
+              픽업 날짜
+              <input type="date" value={pickupDate} onChange={(event) => setPickupDate(event.target.value)} />
+            </label>
+            <label>
+              픽업 시간
+              <select value={pickupTime} onChange={(event) => setPickupTime(event.target.value)}>
+                {displayedTimeOptions.map((time) => <option value={time} key={time}>{time}</option>)}
+              </select>
+            </label>
+            <label>
+              예약상태
+              <select value={status} onChange={(event) => setStatus(event.target.value as Reservation['status'])}>
+                {RESERVATION_STATUSES.map((option) => <option value={option} key={option}>{option}</option>)}
+              </select>
+            </label>
+            <label>
+              입금상태
+              <select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value as Reservation['paymentStatus'])}>
+                {PAYMENT_STATUSES.map((option) => <option value={option} key={option}>{option}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="admin-edit-price-row">
+            <span>수정 후 금액</span>
+            <strong>{formatCurrency(draftUpdate.totalPrice)}</strong>
+          </div>
+        </section>
 
         <label>
           관리자 메모
@@ -2626,15 +2726,15 @@ function ReservationDrawer({
         </label>
 
         <div className="button-row">
-          <button className="secondary-button" type="button" onClick={() => onCopy(reservation)}>
+          <button className="secondary-button" type="button" onClick={() => onCopy(draftReservation)}>
             <Clipboard size={16} /> 확정 문자 복사
           </button>
-          <button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>
-            메모 저장
+          <button className="primary-button" type="button" onClick={saveAll}>
+            예약 수정 저장
           </button>
         </div>
         <div className="sms-preview">
-          <pre>{buildSmsMessage(reservation, settings)}</pre>
+          <pre>{buildSmsMessage(draftReservation, settings)}</pre>
         </div>
       </aside>
     </div>

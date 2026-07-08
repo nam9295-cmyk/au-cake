@@ -2339,6 +2339,65 @@ td select {
   font-weight: 500;
 }
 
+.admin-edit-card {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #d2c9c0;
+  border-radius: 12px;
+  background: #faf8f5;
+}
+
+.admin-edit-card h3 {
+  margin: 0 0 12px;
+  color: #3c2f2f;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.admin-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-edit-grid label {
+  display: grid;
+  gap: 5px;
+  color: #3c2f2f;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-edit-grid input,
+.admin-edit-grid select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #d2c9c0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #3c2f2f;
+  font-size: 12px;
+}
+
+.admin-edit-price-row {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5ddd4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #3c2f2f;
+  font-size: 12px;
+}
+
+.admin-edit-price-row strong {
+  color: #b88400;
+  font-size: 18px;
+}
+
 .class-copy-library {
   margin-top: 30px;
   padding: 20px;

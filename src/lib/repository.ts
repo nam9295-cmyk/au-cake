@@ -369,7 +369,21 @@ export async function getReservationByNumber(reservationNumber: string, phone: s
 
 export async function updateReservation(
   id: string,
-  updates: Partial<Pick<Reservation, 'status' | 'paymentStatus' | 'adminMemo'>>,
+  updates: Partial<Pick<Reservation,
+    | 'status'
+    | 'paymentStatus'
+    | 'adminMemo'
+    | 'productId'
+    | 'cakeSize'
+    | 'chocolateType'
+    | 'poundAddon'
+    | 'quantity'
+    | 'pickupDate'
+    | 'pickupTime'
+    | 'cacaoPercent'
+    | 'totalPrice'
+    | 'totalPriceCents'
+  >>,
 ): Promise<Reservation> {
   const nextUpdates = { ...updates, updatedAt: new Date().toISOString() }
 
