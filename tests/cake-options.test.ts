@@ -12,6 +12,7 @@ import {
   formatPoundAddonLabel,
   getProductById,
   getReservationUnitPrice,
+  normalizePoundAddon,
   normalizeReservationChocolateType,
   usesReservationChocolateType,
 } from '../src/lib/constants.js'
@@ -38,7 +39,9 @@ test('pound cake only exposes one finish choice group', () => {
   assert.equal(poundCake.usesPoundAddonOptions, true)
   assert.equal(formatPoundAddonLabel('none'), 'Basic finish')
   assert.equal(formatPoundAddonLabel('extra-chocolate'), 'Extra chocolate')
+  assert.equal(formatPoundAddonLabel('Extra chocolate'), 'Extra chocolate')
   assert.equal(formatPoundAddonLabel('vanilla-cream'), 'Vanilla cream')
+  assert.equal(normalizePoundAddon('pound-cake', 'Extra chocolate'), 'extra-chocolate')
 })
 
 test('pound cake pricing ignores size and chocolate, and uses confirmed finish prices', () => {
@@ -182,4 +185,32 @@ Thank you:)`)
   assert.doesNotMatch(message, /Product: Gâteau au Chocolat Pave Chocolate Cake/)
   assert.doesNotMatch(message, /Pick-up address:/)
   assert.doesNotMatch(message, /Contact: .*TBC/)
+})
+
+test('AU pound cake extra chocolate SMS includes selected chocolate type', () => {
+  const message = buildSmsMessage({
+    id: 'test-pound-id',
+    reservationNumber: 'VG-C-AU-20260704-204051217',
+    customerName: 'Jenny',
+    customerPhone: '0412345678',
+    productId: 'pound-cake',
+    cakeSize: '15cm',
+    chocolateType: 'dark',
+    poundAddon: 'extra-chocolate',
+    quantity: 1,
+    pickupDate: '2026-07-04',
+    pickupTime: '10:00',
+    cacaoPercent: '기본',
+    requestNote: '',
+    status: '예약신청',
+    paymentStatus: '입금대기',
+    totalPrice: 52,
+    adminMemo: '',
+    createdAt: '2026-07-04T00:00:00.000Z',
+    updatedAt: '2026-07-04T00:00:00.000Z',
+  })
+
+  assert.match(message, /Product: Chocolate Pound Cake/)
+  assert.match(message, /Finish: Extra chocolate/)
+  assert.match(message, /Chocolate: Dark chocolate/)
 })

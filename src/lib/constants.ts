@@ -94,15 +94,29 @@ export function normalizeReservationChocolateType(
   return getChocolateTypeOption(chocolateType).value
 }
 
-export function getPoundAddonOption(poundAddon?: PoundAddon) {
-  return POUND_ADDON_OPTIONS.find((item) => item.value === poundAddon) || POUND_ADDON_OPTIONS[0]
+function normalizeOptionKey(value?: string) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, '-')
 }
 
-export function formatPoundAddonLabel(poundAddon?: PoundAddon) {
+export function getPoundAddonOption(poundAddon?: PoundAddon | string) {
+  const normalized = normalizeOptionKey(poundAddon)
+  return (
+    POUND_ADDON_OPTIONS.find((item) => {
+      const valueKey = normalizeOptionKey(item.value)
+      const labelKey = normalizeOptionKey(item.label)
+      return valueKey === normalized || labelKey === normalized
+    }) || POUND_ADDON_OPTIONS[0]
+  )
+}
+
+export function formatPoundAddonLabel(poundAddon?: PoundAddon | string) {
   return getPoundAddonOption(poundAddon).label
 }
 
-export function normalizePoundAddon(productId: ProductId, poundAddon?: PoundAddon) {
+export function normalizePoundAddon(productId: ProductId, poundAddon?: PoundAddon | string) {
   const product = getProductById(productId)
   if (!product.usesPoundAddonOptions) return DEFAULT_POUND_ADDON
   return getPoundAddonOption(poundAddon).value

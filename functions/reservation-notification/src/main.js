@@ -178,15 +178,28 @@ function getCakeSizeText(reservation, config) {
   return config.sizeLabels[reservation.cakeSize] || reservation.cakeSize || '-'
 }
 
+function normalizeOptionKey(value = '') {
+  return String(value).trim().toLowerCase().replace(/[_\s]+/g, '-')
+}
+
+function normalizePoundAddonValue(value) {
+  const normalized = normalizeOptionKey(value)
+  if (normalized === 'extra-chocolate') return 'extra-chocolate'
+  if (normalized === 'vanilla-cream') return 'vanilla-cream'
+  return 'none'
+}
+
 function getChocolateText(reservation, config) {
-  const showsChocolate = reservation.productId === 'pave-cake' || (['pound-cake', 'cupcake-dozen'].includes(reservation.productId) && reservation.poundAddon === 'extra-chocolate')
+  const poundAddon = normalizePoundAddonValue(reservation.poundAddon)
+  const showsChocolate = reservation.productId === 'pave-cake' || (['pound-cake', 'cupcake-dozen'].includes(reservation.productId) && poundAddon === 'extra-chocolate')
   if (!showsChocolate) return '-'
   return config.chocolateLabels[reservation.chocolateType] || reservation.chocolateType || '-'
 }
 
 function getPoundAddonText(reservation, config) {
   if (!['pound-cake', 'cupcake-dozen'].includes(reservation.productId)) return '-'
-  return config.poundAddonLabels[reservation.poundAddon] || reservation.poundAddon || '-'
+  const poundAddon = normalizePoundAddonValue(reservation.poundAddon)
+  return config.poundAddonLabels[poundAddon] || config.poundAddonLabels[reservation.poundAddon] || reservation.poundAddon || '-'
 }
 
 function getQuantity(reservation) {
