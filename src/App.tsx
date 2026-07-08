@@ -68,7 +68,7 @@ import {
   getSettings,
   isAdminLoggedIn,
   listReservations,
-  listClassBookedDates,
+  listClassBookedSlots,
   listClassReservations,
   loginAdmin,
   loginAdminWithGoogle,
@@ -99,7 +99,9 @@ import {
   formatClassBookingType,
   getAvailableClassSessionTimes,
   getClassBookingPrice,
+  getClassSlotAvailability,
   isClassDateBooked,
+  type ClassBookedSlot,
 } from './lib/class-utils'
 import {
   addDaysInputValue,
@@ -160,6 +162,18 @@ function useTodayInputValue() {
   }, [])
 
   return today
+}
+
+function addInputDateDays(dateValue: string, days: number) {
+  const [year, month, day] = dateValue.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day + days))
+  return date.toISOString().slice(0, 10)
+}
+
+function formatClassAvailabilityDate(classDate: string) {
+  const [year, month, day] = classDate.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return new Intl.DateTimeFormat('en-AU', { month: 'short', day: 'numeric', weekday: 'short' }).format(date)
 }
 
 function getPageFromPath(): Page {
@@ -940,17 +954,30 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [bookedClassDates, setBookedClassDates] = useState<string[]>([])
+  const [bookedClassSlots, setBookedClassSlots] = useState<ClassBookedSlot[]>([])
   const [availabilityLoaded, setAvailabilityLoaded] = useState(false)
+  const [availabilityError, setAvailabilityError] = useState(false)
   const today = useTodayInputValue()
   const price = getClassBookingPrice(form.bookingType)
-  const availableSessionTimes = getAvailableClassSessionTimes(form.classDate, bookedClassDates)
-  const selectedDateBooked = isClassDateBooked(form.classDate, bookedClassDates)
+  const availableSessionTimes = getAvailableClassSessionTimes(form.classDate, bookedClassSlots)
+  const selectedDateBooked = isClassDateBooked(form.classDate, bookedClassSlots)
+  const availabilityPreview = useMemo(() => {
+    return Array.from({ length: 21 }, (_, index) => {
+      const classDate = addInputDateDays(today, index)
+      return getClassSlotAvailability(classDate, bookedClassSlots)
+    })
+  }, [bookedClassSlots, today])
 
   useEffect(() => {
-    listClassBookedDates()
-      .then((classDates) => setBookedClassDates(classDates))
-      .catch(() => setBookedClassDates([]))
+    listClassBookedSlots()
+      .then((classSlots) => {
+        setBookedClassSlots(classSlots)
+        setAvailabilityError(false)
+      })
+      .catch(() => {
+        setBookedClassSlots([])
+        setAvailabilityError(true)
+      })
       .finally(() => setAvailabilityLoaded(true))
   }, [])
 
@@ -974,8 +1001,8 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
       onComplete(reservation)
       navigate('class-complete')
     } catch (submitError) {
-      if (submitError instanceof Error && submitError.message === 'CLASS_DATE_UNAVAILABLE') {
-        setError('This date is already booked. Please choose another date.')
+      if (submitError instanceof Error && (submitError.message === 'CLASS_SESSION_UNAVAILABLE' || submitError.message === 'CLASS_DATE_UNAVAILABLE')) {
+        setError('This session time is already booked. Please choose another time or date.')
       } else {
         setError('An error occurred while submitting your class request. Please try again.')
       }
@@ -1023,7 +1050,11 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                 type="date"
                 min={today}
                 value={form.classDate}
-                onChange={(event) => setForm({ ...form, classDate: event.target.value, classTime: CLASS_SESSION_TIMES[0] })}
+                onChange={(event) => {
+                  const nextDate = event.target.value
+                  const nextAvailableTimes = getAvailableClassSessionTimes(nextDate, bookedClassSlots)
+                  setForm({ ...form, classDate: nextDate, classTime: nextAvailableTimes[0] || CLASS_SESSION_TIMES[0] })
+                }}
               />
             </label>
             <fieldset className="class-time-fieldset">
@@ -1043,8 +1074,28 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                   <p className="class-availability-note unavailable">This date is already booked. Please choose another date.</p>
                 )}
               </div>
-              {availabilityLoaded && !selectedDateBooked && <p className="class-availability-note">This date is currently available.</p>}
+              {availabilityLoaded && availabilityError && <p className="class-availability-note unavailable">Availability could not be loaded. Jenny will double-check this session before confirming.</p>}
+              {availabilityLoaded && !availabilityError && !selectedDateBooked && <p className="class-availability-note">This date is currently available.</p>}
             </fieldset>
+            <div className="class-availability-calendar" aria-label="Upcoming available class times">
+              <div className="class-availability-calendar-header">
+                <strong>Available times</strong>
+                <span>Next 3 weeks · tap a date to choose it</span>
+              </div>
+              <div className="class-availability-calendar-grid">
+                {availabilityPreview.map((day) => (
+                  <button
+                    className={`class-availability-day${day.classDate === form.classDate ? ' selected' : ''}${day.isFullyBooked ? ' closed' : ''}`}
+                    key={day.classDate}
+                    type="button"
+                    onClick={() => setForm({ ...form, classDate: day.classDate, classTime: day.availableTimes[0] || CLASS_SESSION_TIMES[0] })}
+                  >
+                    <span>{formatClassAvailabilityDate(day.classDate)}</span>
+                    <strong>{day.isFullyBooked ? 'Fully booked' : day.availableTimes.join(' / ')}</strong>
+                  </button>
+                ))}
+              </div>
+            </div>
           </section>
 
           <section className="class-form-section" aria-labelledby="guardian-detail-title">

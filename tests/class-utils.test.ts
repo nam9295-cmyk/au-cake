@@ -9,7 +9,9 @@ import {
   getAvailableClassSessionTimes,
   getClassBookingPrice,
   getClassDepositAmount,
+  getClassSlotAvailability,
   isClassDateBooked,
+  isClassSessionTimeBooked,
 } from '../src/lib/class-utils.js'
 import type { ClassReservation } from '../src/lib/types.js'
 
@@ -82,16 +84,27 @@ test('payment and confirmation messages include session, child, parent, soft pay
   assert.match(confirmation, /Thank you:\)/)
 })
 
-test('class availability closes the whole requested date for active bookings', () => {
+test('class availability closes only the requested time slot for active bookings', () => {
   const activeReservations: ClassReservation[] = [
     sampleReservation,
-    { ...sampleReservation, id: 'cancelled-1', classDate: '2026-07-11', status: 'Cancelled' },
+    { ...sampleReservation, id: 'cancelled-1', classDate: '2026-07-11', classTime: '10:00', status: 'Cancelled' },
+    { ...sampleReservation, id: 'active-2', classDate: '2026-07-12', classTime: '13:00', status: 'Confirmed' },
+    { ...sampleReservation, id: 'active-3', classDate: '2026-07-12', classTime: '16:00', status: 'Requested' },
   ]
 
-  assert.equal(isClassDateBooked('2026-07-10', activeReservations), true)
+  assert.equal(isClassSessionTimeBooked('2026-07-10', '10:00', activeReservations), true)
+  assert.equal(isClassSessionTimeBooked('2026-07-10', '13:00', activeReservations), false)
+  assert.equal(isClassDateBooked('2026-07-10', activeReservations), false)
   assert.equal(isClassDateBooked('2026-07-11', activeReservations), false)
-  assert.deepEqual(getAvailableClassSessionTimes('2026-07-10', activeReservations), [])
+  assert.deepEqual(getAvailableClassSessionTimes('2026-07-10', activeReservations), ['13:00', '16:00'])
   assert.deepEqual(getAvailableClassSessionTimes('2026-07-11', activeReservations), [...CLASS_SESSION_TIMES])
+  assert.deepEqual(getAvailableClassSessionTimes('2026-07-12', activeReservations), ['10:00'])
+  assert.deepEqual(getClassSlotAvailability('2026-07-12', activeReservations), {
+    classDate: '2026-07-12',
+    availableTimes: ['10:00'],
+    bookedTimes: ['13:00', '16:00'],
+    isFullyBooked: false,
+  })
 })
 
 test('class CSV exports parent child safety consent payment and admin fields', () => {

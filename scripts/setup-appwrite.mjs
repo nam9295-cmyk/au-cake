@@ -189,6 +189,7 @@ const classReservationAttributes = [
 
 const classBookedDateAttributes = [
   { key: 'classDate', type: 'string', size: 20, required: true },
+  { key: 'classTime', type: 'string', size: 20, required: false },
   { key: 'createdAt', type: 'string', size: 40, required: true },
 ]
 
@@ -210,7 +211,8 @@ const classReservationIndexes = [
 ]
 
 const classBookedDateIndexes = [
-  { key: 'classDate_unique', attributes: ['classDate'], type: 'unique' },
+  { key: 'classSlot_unique', attributes: ['classDate', 'classTime'], type: 'unique' },
+  { key: 'classDate_idx', attributes: ['classDate'] },
 ]
 
 function loadDotEnvLocal() {
@@ -387,6 +389,26 @@ async function ensureAttributesReady(targetDatabaseId, collectionId, attributes)
   }
 }
 
+async function deleteIndexIfExists(targetDatabaseId, collectionId, key) {
+  try {
+    await databases.getIndex({
+      databaseId: targetDatabaseId,
+      collectionId,
+      key,
+    })
+  } catch (error) {
+    if (isMissing(error)) return
+    throw error
+  }
+
+  await databases.deleteIndex({
+    databaseId: targetDatabaseId,
+    collectionId,
+    key,
+  })
+  console.log(`deleted obsolete index ${collectionId}.${key}`)
+}
+
 async function ensureIndex(targetDatabaseId, collectionId, index) {
   try {
     await databases.getIndex({
@@ -444,24 +466,51 @@ async function syncClassBookedDates() {
     collectionId: classReservationsId,
     queries: [Query.limit(200)],
   })
-  const classDates = Array.from(new Set(
+  const classSlots = Array.from(new Map(
     current.documents
-      .filter((reservation) => reservation.classDate && reservation.status !== 'Cancelled')
-      .map((reservation) => reservation.classDate),
-  ))
+      .filter((reservation) => reservation.classDate && reservation.classTime && reservation.status !== 'Cancelled')
+      .map((reservation) => [`${reservation.classDate} ${reservation.classTime}`, {
+        classDate: reservation.classDate,
+        classTime: reservation.classTime,
+      }]),
+  ).values())
 
-  for (const classDate of classDates) {
+  const bookedSlotDocs = await databases.listDocuments({
+    databaseId: classDatabaseId,
+    collectionId: classBookedDatesId,
+    queries: [Query.limit(200)],
+  })
+  const existingSlotKeys = new Set()
+  for (const document of bookedSlotDocs.documents) {
+    if (document.classDate && document.classTime) {
+      existingSlotKeys.add(`${document.classDate} ${document.classTime}`)
+      continue
+    }
+    await databases.deleteDocument({
+      databaseId: classDatabaseId,
+      collectionId: classBookedDatesId,
+      documentId: document.$id,
+    })
+    console.log(`deleted stale date-only block ${document.classDate || document.$id}`)
+  }
+
+  for (const classSlot of classSlots) {
+    const slotKey = `${classSlot.classDate} ${classSlot.classTime}`
+    if (existingSlotKeys.has(slotKey)) {
+      console.log(`exists  booked slot ${slotKey}`)
+      continue
+    }
     try {
       await databases.createDocument({
         databaseId: classDatabaseId,
         collectionId: classBookedDatesId,
         documentId: ID.unique(),
-        data: { classDate, createdAt: new Date().toISOString() },
+        data: { ...classSlot, createdAt: new Date().toISOString() },
       })
-      console.log(`created booked date ${classDate}`)
+      console.log(`created booked slot ${classSlot.classDate} ${classSlot.classTime}`)
     } catch (error) {
       if (isConflict(error)) {
-        console.log(`exists  booked date ${classDate}`)
+        console.log(`exists  booked slot ${classSlot.classDate} ${classSlot.classTime}`)
         continue
       }
       throw error
@@ -507,6 +556,8 @@ for (const index of reservationIndexes) {
 for (const index of classReservationIndexes) {
   await ensureIndex(classDatabaseId, classReservationsId, index)
 }
+
+await deleteIndexIfExists(classDatabaseId, classBookedDatesId, 'classDate_unique')
 
 for (const index of classBookedDateIndexes) {
   await ensureIndex(classDatabaseId, classBookedDatesId, index)

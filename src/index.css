@@ -1362,6 +1362,82 @@ textarea {
   color: #b5471d;
 }
 
+
+.class-availability-calendar {
+  margin-top: 4px;
+  padding: 12px;
+  border: 1px solid #d2c9c0;
+  border-radius: 10px;
+  background: #fffaf0;
+}
+
+.class-availability-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: #3c2f2f;
+}
+
+.class-availability-calendar-header strong {
+  color: #b88400;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.class-availability-calendar-header span {
+  color: #6f5c4b;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.class-availability-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.class-availability-day {
+  min-height: 58px;
+  padding: 9px 8px;
+  border: 1px solid #e0d5c8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #3c2f2f;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+}
+
+.class-availability-day span {
+  color: #6f5c4b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.class-availability-day strong {
+  color: #3c2f2f;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.class-availability-day.selected {
+  border-color: #b88400;
+  border-width: 2px;
+  background: #fff4c7;
+}
+
+.class-availability-day.closed {
+  border-color: #ead7cf;
+  background: #fff3ed;
+}
+
+.class-availability-day.closed strong {
+  color: #b5471d;
+}
+
 .class-option-card,
 .class-time-option,
 .class-field input,

@@ -29,22 +29,50 @@ export function getClassDepositAmount() {
   return CLASS_DEPOSIT_AMOUNT
 }
 
-function getBookedDateEntryDate(entry: ClassReservation | string) {
+export type ClassBookedSlot = Pick<ClassReservation, 'classDate' | 'classTime'> | string
+
+function getBookedSlotDate(entry: ClassBookedSlot) {
   return typeof entry === 'string' ? entry : entry.classDate
 }
 
-function isBookedDateEntryActive(entry: ClassReservation | string) {
-  return typeof entry === 'string' || entry.status !== 'Cancelled'
+function getBookedSlotTime(entry: ClassBookedSlot) {
+  return typeof entry === 'string' ? '' : entry.classTime
 }
 
-export function isClassDateBooked(classDate: string, reservations: Array<ClassReservation | string>) {
+function isBookedSlotEntryActive(entry: ClassBookedSlot) {
+  return typeof entry === 'string' || !('status' in entry) || entry.status !== 'Cancelled'
+}
+
+export function isClassSessionTimeBooked(classDate: string, classTime: string, reservations: ClassBookedSlot[]) {
+  if (!classDate || !classTime) return false
+  return reservations.some((reservation) => {
+    if (getBookedSlotDate(reservation) !== classDate || !isBookedSlotEntryActive(reservation)) return false
+    const bookedTime = getBookedSlotTime(reservation)
+    // Legacy public availability rows only had classDate. Treat those as whole-day blocks
+    // until the Appwrite booked-slot migration has rewritten them with classTime.
+    return !bookedTime || bookedTime === classTime
+  })
+}
+
+export function isClassDateBooked(classDate: string, reservations: ClassBookedSlot[]) {
   if (!classDate) return false
-  return reservations.some((reservation) => getBookedDateEntryDate(reservation) === classDate && isBookedDateEntryActive(reservation))
+  return CLASS_SESSION_TIMES.every((time) => isClassSessionTimeBooked(classDate, time, reservations))
 }
 
-export function getAvailableClassSessionTimes(classDate: string, reservations: Array<ClassReservation | string>) {
-  if (isClassDateBooked(classDate, reservations)) return []
-  return [...CLASS_SESSION_TIMES]
+export function getAvailableClassSessionTimes(classDate: string, reservations: ClassBookedSlot[]) {
+  if (!classDate) return [...CLASS_SESSION_TIMES]
+  return CLASS_SESSION_TIMES.filter((time) => !isClassSessionTimeBooked(classDate, time, reservations))
+}
+
+export function getClassSlotAvailability(classDate: string, reservations: ClassBookedSlot[]) {
+  const availableTimes = getAvailableClassSessionTimes(classDate, reservations)
+  const bookedTimes = CLASS_SESSION_TIMES.filter((time) => !availableTimes.includes(time))
+  return {
+    classDate,
+    availableTimes,
+    bookedTimes,
+    isFullyBooked: availableTimes.length === 0,
+  }
 }
 
 function formatClassCurrency(value: number) {

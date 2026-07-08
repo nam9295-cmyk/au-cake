@@ -22,6 +22,7 @@ import {
   CLASS_TYPE_ID,
   generateClassReservationNumber,
   getClassBookingPrice,
+  type ClassBookedSlot,
 } from './class-utils'
 import type {
   CakeSize,
@@ -66,10 +67,11 @@ type AppwriteClassReservationDocument = Omit<ClassReservation, 'id'> & {
   $updatedAt?: string
 }
 
-type AppwriteClassBookedDateDocument = {
+type AppwriteClassBookedSlotDocument = {
   $id: string
   $createdAt?: string
   classDate: string
+  classTime?: string
   createdAt?: string
 }
 
@@ -240,27 +242,48 @@ function writeLocalClassReservations(reservations: ClassReservation[]) {
   localStorage.setItem(LOCAL_CLASS_RESERVATIONS_KEY, JSON.stringify(reservations))
 }
 
-function readLocalClassBookedDates(): string[] {
-  const storedDates = JSON.parse(localStorage.getItem(LOCAL_CLASS_BOOKED_DATES_KEY) || '[]') as string[]
-  const activeReservationDates = readLocalClassReservations()
+function readLocalClassBookedSlots(): ClassBookedSlot[] {
+  const storedSlots = JSON.parse(localStorage.getItem(LOCAL_CLASS_BOOKED_DATES_KEY) || '[]') as Array<ClassBookedSlot | { classDate?: string; classTime?: string }>
+  const normalizedStoredSlots = storedSlots
+    .map((slot) => (typeof slot === 'string' ? slot : slot.classDate ? { classDate: slot.classDate, classTime: slot.classTime || '' } : null))
+    .filter(Boolean) as ClassBookedSlot[]
+  const activeReservationSlots = readLocalClassReservations()
     .filter((reservation) => reservation.status !== 'Cancelled')
-    .map((reservation) => reservation.classDate)
-  return Array.from(new Set([...storedDates, ...activeReservationDates])).sort()
+    .map((reservation) => ({ classDate: reservation.classDate, classTime: reservation.classTime }))
+  const uniqueSlots = new Map<string, ClassBookedSlot>()
+  for (const slot of [...normalizedStoredSlots, ...activeReservationSlots]) {
+    const key = typeof slot === 'string' ? slot : `${slot.classDate} ${slot.classTime}`
+    uniqueSlots.set(key, slot)
+  }
+  return Array.from(uniqueSlots.values()).sort((a, b) => {
+    const aKey = typeof a === 'string' ? a : `${a.classDate} ${a.classTime}`
+    const bKey = typeof b === 'string' ? b : `${b.classDate} ${b.classTime}`
+    return aKey.localeCompare(bKey)
+  })
 }
 
-function writeLocalClassBookedDates(classDates: string[]) {
-  localStorage.setItem(LOCAL_CLASS_BOOKED_DATES_KEY, JSON.stringify(Array.from(new Set(classDates)).sort()))
+function writeLocalClassBookedSlots(classSlots: ClassBookedSlot[]) {
+  const uniqueSlots = new Map<string, ClassBookedSlot>()
+  for (const slot of classSlots) {
+    const key = typeof slot === 'string' ? slot : `${slot.classDate} ${slot.classTime}`
+    uniqueSlots.set(key, slot)
+  }
+  localStorage.setItem(LOCAL_CLASS_BOOKED_DATES_KEY, JSON.stringify(Array.from(uniqueSlots.values())))
 }
 
 function isDuplicateAppwriteError(error: unknown) {
   return error instanceof AppwriteException && (error.code === 409 || /unique|duplicate|already exists/i.test(error.message))
 }
 
-async function createClassBookedDate(classDate: string) {
+async function createClassBookedSlot(classDate: string, classTime: string) {
   if (!isAppwriteConfigured) {
-    const bookedDates = readLocalClassBookedDates()
-    if (bookedDates.includes(classDate)) throw new Error('CLASS_DATE_UNAVAILABLE')
-    writeLocalClassBookedDates([...bookedDates, classDate])
+    const bookedSlots = readLocalClassBookedSlots()
+    const alreadyBooked = bookedSlots.some((slot) => {
+      if (typeof slot === 'string') return slot === classDate
+      return slot.classDate === classDate && slot.classTime === classTime
+    })
+    if (alreadyBooked) throw new Error('CLASS_SESSION_UNAVAILABLE')
+    writeLocalClassBookedSlots([...bookedSlots, { classDate, classTime }])
     return
   }
 
@@ -269,26 +292,29 @@ async function createClassBookedDate(classDate: string) {
       appwriteConfig.classReservationsDatabaseId,
       appwriteConfig.classBookedDatesCollectionId,
       ID.unique(),
-      { classDate, createdAt: new Date().toISOString() },
+      { classDate, classTime, createdAt: new Date().toISOString() },
     )
   } catch (error) {
-    if (isDuplicateAppwriteError(error)) throw new Error('CLASS_DATE_UNAVAILABLE', { cause: error })
+    if (isDuplicateAppwriteError(error)) throw new Error('CLASS_SESSION_UNAVAILABLE', { cause: error })
     throw error
   }
 }
 
-async function deleteClassBookedDate(classDate: string) {
+async function deleteClassBookedSlot(classDate: string, classTime: string) {
   if (!isAppwriteConfigured) {
-    writeLocalClassBookedDates(readLocalClassBookedDates().filter((date) => date !== classDate))
+    writeLocalClassBookedSlots(readLocalClassBookedSlots().filter((slot) => {
+      if (typeof slot === 'string') return slot !== classDate
+      return !(slot.classDate === classDate && slot.classTime === classTime)
+    }))
     return
   }
 
   const result = await databases.listDocuments(
     appwriteConfig.classReservationsDatabaseId,
     appwriteConfig.classBookedDatesCollectionId,
-    [Query.equal('classDate', classDate), Query.limit(1)],
+    [Query.equal('classDate', classDate), Query.equal('classTime', classTime), Query.limit(1)],
   )
-  const document = result.documents[0] as unknown as AppwriteClassBookedDateDocument | undefined
+  const document = result.documents[0] as unknown as AppwriteClassBookedSlotDocument | undefined
   if (!document) return
   await databases.deleteDocument(
     appwriteConfig.classReservationsDatabaseId,
@@ -470,8 +496,8 @@ export async function updateReservation(
   return toReservation(document as unknown as AppwriteReservationDocument)
 }
 
-export async function listClassBookedDates(): Promise<string[]> {
-  if (!isAppwriteConfigured) return readLocalClassBookedDates()
+export async function listClassBookedSlots(): Promise<ClassBookedSlot[]> {
+  if (!isAppwriteConfigured) return readLocalClassBookedSlots()
 
   const result = await databases.listDocuments(
     appwriteConfig.classReservationsDatabaseId,
@@ -479,8 +505,12 @@ export async function listClassBookedDates(): Promise<string[]> {
     [Query.orderAsc('classDate'), Query.limit(200)],
   )
   return result.documents
-    .map((doc) => (doc as unknown as AppwriteClassBookedDateDocument).classDate)
-    .filter(Boolean)
+    .map((doc) => {
+      const slot = doc as unknown as AppwriteClassBookedSlotDocument
+      if (!slot.classDate) return null
+      return { classDate: slot.classDate, classTime: slot.classTime || '' }
+    })
+    .filter(Boolean) as ClassBookedSlot[]
 }
 
 export async function createClassReservation(input: ClassReservationInput): Promise<ClassReservation> {
@@ -516,13 +546,13 @@ export async function createClassReservation(input: ClassReservationInput): Prom
   }
 
   if (!isAppwriteConfigured) {
-    await createClassBookedDate(data.classDate)
+    await createClassBookedSlot(data.classDate, data.classTime)
     const reservation: ClassReservation = { id: crypto.randomUUID(), ...data }
     writeLocalClassReservations([reservation, ...readLocalClassReservations()])
     return reservation
   }
 
-  await createClassBookedDate(data.classDate)
+  await createClassBookedSlot(data.classDate, data.classTime)
   const document = await databases.createDocument(
     appwriteConfig.classReservationsDatabaseId,
     appwriteConfig.classReservationsCollectionId,
@@ -566,9 +596,10 @@ export async function updateClassReservation(
     const index = reservations.findIndex((reservation) => reservation.id === id)
     if (index < 0) throw new Error('클래스 예약을 찾을 수 없습니다.')
     const previousClassDate = reservations[index].classDate
+    const previousClassTime = reservations[index].classTime
     reservations[index] = { ...reservations[index], ...nextUpdates }
     writeLocalClassReservations(reservations)
-    if (updates.status === 'Cancelled') await deleteClassBookedDate(previousClassDate)
+    if (updates.status === 'Cancelled') await deleteClassBookedSlot(previousClassDate, previousClassTime)
     return reservations[index]
   }
 
@@ -583,7 +614,7 @@ export async function updateClassReservation(
     id,
     nextUpdates,
   )
-  if (updates.status === 'Cancelled') await deleteClassBookedDate(current.classDate)
+  if (updates.status === 'Cancelled') await deleteClassBookedSlot(current.classDate, current.classTime)
   return toClassReservation(document as unknown as AppwriteClassReservationDocument)
 }
 
