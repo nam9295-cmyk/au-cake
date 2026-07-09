@@ -3,6 +3,7 @@ import { MARKET_CONFIG } from './market.js'
 
 export const CLASS_TYPE_ID = 'school-holiday-private-cake-class' as const
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00'] as const
+export const CLASS_SESSION_DURATION_MINUTES = 120
 export const CLASS_DEPOSIT_AMOUNT = 0
 export const CLASS_PAYMENT_SETTINGS = MARKET_CONFIG.AU.defaultSettings
 
@@ -30,6 +31,11 @@ export function getClassDepositAmount() {
 }
 
 export type ClassBookedSlot = Pick<ClassReservation, 'classDate' | 'classTime'> | string
+
+export type CakePickupOpening = {
+  pickupDate: string
+  pickupTime: string
+}
 
 function getBookedSlotDate(entry: ClassBookedSlot) {
   return typeof entry === 'string' ? entry : entry.classDate
@@ -73,6 +79,108 @@ export function getClassSlotAvailability(classDate: string, reservations: ClassB
     bookedTimes,
     isFullyBooked: availableTimes.length === 0,
   }
+}
+
+type ActiveClassSlot = {
+  classTime: string | null
+}
+
+function isValidClassDate(value: unknown): value is string {
+  if (typeof value !== 'string') return false
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return false
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const date = new Date(0)
+  date.setUTCHours(0, 0, 0, 0)
+  date.setUTCFullYear(year, month - 1, day)
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+}
+
+function classTimeToMinutes(value: unknown) {
+  if (typeof value !== 'string') return null
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value)
+  return match ? Number(match[1]) * 60 + Number(match[2]) : null
+}
+
+function isKnownClassSessionTime(value: string): value is (typeof CLASS_SESSION_TIMES)[number] {
+  return CLASS_SESSION_TIMES.some((classTime) => classTime === value)
+}
+
+function activeClassSlotForDate(entry: unknown, classDate: string): ActiveClassSlot | null {
+  if (typeof entry === 'string') {
+    return entry === classDate && isValidClassDate(entry) ? { classTime: null } : null
+  }
+  if (!entry || typeof entry !== 'object') return null
+
+  const slot = entry as Record<string, unknown>
+  if (slot.status === 'Cancelled' || slot.classDate !== classDate || !isValidClassDate(slot.classDate)) return null
+  if (slot.classTime === undefined || slot.classTime === null) return { classTime: null }
+  if (typeof slot.classTime !== 'string') return null
+  if (!slot.classTime.trim()) return { classTime: null }
+  if (classTimeToMinutes(slot.classTime) === null) return null
+  return { classTime: slot.classTime }
+}
+
+function hasExactCakePickupOpening(
+  pickupDate: string,
+  pickupTime: string,
+  pickupOpenings: readonly CakePickupOpening[],
+) {
+  if (!Array.isArray(pickupOpenings)) return false
+  return pickupOpenings.some((opening: unknown) => {
+    if (!opening || typeof opening !== 'object') return false
+    const candidate = opening as Record<string, unknown>
+    return candidate.pickupDate === pickupDate && candidate.pickupTime === pickupTime
+  })
+}
+
+export function isCakePickupBlockedByClass(
+  pickupDate: string,
+  pickupTime: string,
+  bookedSlots: readonly ClassBookedSlot[],
+  pickupOpenings: readonly CakePickupOpening[] = [],
+) {
+  if (!isValidClassDate(pickupDate)) return false
+  const pickupMinutes = classTimeToMinutes(pickupTime)
+  if (pickupMinutes === null) return false
+  if (hasExactCakePickupOpening(pickupDate, pickupTime, pickupOpenings)) return false
+
+  const entries = Array.isArray(bookedSlots) ? bookedSlots : []
+  const activeSlots = entries
+    .map((entry) => activeClassSlotForDate(entry, pickupDate))
+    .filter((slot): slot is ActiveClassSlot => slot !== null)
+
+  if (activeSlots.some((slot) => slot.classTime === null)) return true
+
+  const bookedSessionTimes = new Set(
+    activeSlots
+      .map((slot) => slot.classTime)
+      .filter((classTime): classTime is string => classTime !== null && isKnownClassSessionTime(classTime)),
+  )
+  if (CLASS_SESSION_TIMES.every((classTime) => bookedSessionTimes.has(classTime))) return true
+
+  return activeSlots.some((slot) => {
+    if (slot.classTime === null || !isKnownClassSessionTime(slot.classTime)) return false
+    const classStartMinutes = classTimeToMinutes(slot.classTime)
+    return classStartMinutes !== null
+      && pickupMinutes >= classStartMinutes
+      && pickupMinutes <= classStartMinutes + CLASS_SESSION_DURATION_MINUTES
+  })
+}
+
+export function filterCakePickupTimesForClass(
+  pickupDate: string,
+  pickupTimes: readonly string[],
+  bookedSlots: readonly ClassBookedSlot[],
+  pickupOpenings: readonly CakePickupOpening[] = [],
+) {
+  const times = Array.isArray(pickupTimes) ? pickupTimes : []
+  return times.filter(
+    (pickupTime) => !isCakePickupBlockedByClass(pickupDate, pickupTime, bookedSlots, pickupOpenings),
+  )
 }
 
 function formatClassCurrency(value: number) {

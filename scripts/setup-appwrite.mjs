@@ -20,6 +20,10 @@ const classDatabaseId =
   process.env.APPWRITE_KIDS_DATABASE_ID || process.env.VITE_APPWRITE_KIDS_DATABASE_ID || databaseId
 const reservationsId =
   process.env.APPWRITE_CAKE_RESERVATIONS_TABLE_ID || process.env.VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID || 'reservations'
+const cakePickupOpeningsId =
+  process.env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID ||
+  process.env.VITE_APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID ||
+  'cake_pickup_openings'
 const settingsId = process.env.APPWRITE_SETTINGS_TABLE_ID || process.env.VITE_APPWRITE_SETTINGS_TABLE_ID || 'settings'
 const classReservationsId =
   process.env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
@@ -46,10 +50,12 @@ const databases = new Databases(client)
 
 const adminReadRoles = adminUserIds.length > 0 ? adminUserIds.map((id) => Role.user(id)) : [Role.users()]
 const adminWriteRoles = adminUserIds.length > 0 ? adminUserIds.map((id) => Role.user(id)) : [Role.users()]
+const cakePickupOpeningWriteRoles = adminUserIds.map((id) => Role.user(id))
 
 if (adminUserIds.length === 0) {
   console.warn('WARNING: APPWRITE_ADMIN_USER_IDS is empty. Authenticated users will receive broad reservation read/update/delete permissions.')
-  console.warn('Set APPWRITE_ADMIN_USER_IDS in production before running this script.')
+  console.warn('Cake pickup openings will remain public-read-only; writes are API-key-only.')
+  console.warn('Set APPWRITE_ADMIN_USER_IDS in production to grant named administrators collection write permissions.')
 }
 
 const reservationPermissions = [
@@ -64,6 +70,13 @@ const settingsPermissions = [
   ...adminWriteRoles.map((role) => Permission.create(role)),
   ...adminWriteRoles.map((role) => Permission.update(role)),
   ...adminWriteRoles.map((role) => Permission.delete(role)),
+]
+
+const cakePickupOpeningPermissions = [
+  Permission.read(Role.any()),
+  ...cakePickupOpeningWriteRoles.map((role) => Permission.create(role)),
+  ...cakePickupOpeningWriteRoles.map((role) => Permission.update(role)),
+  ...cakePickupOpeningWriteRoles.map((role) => Permission.delete(role)),
 ]
 
 const publicBookedDatePermissions = [
@@ -152,6 +165,12 @@ const settingsAttributes = [
     })),
 ]
 
+const cakePickupOpeningAttributes = [
+  { key: 'pickupDate', type: 'string', size: 20, required: true },
+  { key: 'pickupTime', type: 'string', size: 10, required: true },
+  { key: 'createdAt', type: 'string', size: 40, required: true },
+]
+
 const classReservationAttributes = [
   { key: 'reservationNumber', type: 'string', size: 48, required: true },
   { key: 'classType', type: 'string', size: 80, required: true },
@@ -200,6 +219,11 @@ const reservationIndexes = [
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'cacaoPercent_idx', attributes: ['cacaoPercent'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
+]
+
+const cakePickupOpeningIndexes = [
+  { key: 'pickupSlot_unique', attributes: ['pickupDate', 'pickupTime'], type: 'unique' },
+  { key: 'pickupDate_idx', attributes: ['pickupDate'] },
 ]
 
 const classReservationIndexes = [
@@ -409,19 +433,76 @@ async function deleteIndexIfExists(targetDatabaseId, collectionId, key) {
   console.log(`deleted obsolete index ${collectionId}.${key}`)
 }
 
+function sameOrderedValues(currentValues = [], expectedValues = []) {
+  return currentValues.length === expectedValues.length &&
+    expectedValues.every((value, index) => currentValues[index] === value)
+}
+
+function validateIndexDefinition(collectionId, expectedIndex, currentIndex) {
+  const expectedType = expectedIndex.type || 'key'
+  const currentAttributes = Array.isArray(currentIndex.attributes) ? currentIndex.attributes : []
+  if (currentIndex.type === expectedType && sameOrderedValues(currentAttributes, expectedIndex.attributes)) return
+
+  throw new Error(
+    `index ${collectionId}.${expectedIndex.key} definition mismatch: ` +
+    `expected type=${expectedType}, attributes=[${expectedIndex.attributes.join(', ')}]; ` +
+    `found type=${currentIndex.type || 'unknown'}, attributes=[${currentAttributes.join(', ')}]. ` +
+    'Resolve the drift manually; setup will not delete or recreate the index.',
+  )
+}
+
+async function waitForIndex(targetDatabaseId, collectionId, index, initialIndex) {
+  let lastStatus = 'missing'
+
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    let current = attempt === 0 ? initialIndex : undefined
+    if (!current) {
+      try {
+        current = await databases.getIndex({
+          databaseId: targetDatabaseId,
+          collectionId,
+          key: index.key,
+        })
+      } catch (error) {
+        if (!isMissing(error)) throw error
+      }
+    }
+
+    if (current) {
+      validateIndexDefinition(collectionId, index, current)
+      lastStatus = current.status || 'unknown'
+      if (current.status === 'available') return
+      if (current.status === 'failed' || current.status === 'stuck') {
+        const details = current.error ? `: ${current.error}` : ''
+        throw new Error(`index ${collectionId}.${index.key} is ${current.status}${details}`)
+      }
+    } else {
+      lastStatus = 'missing'
+    }
+
+    if (attempt < 29) await sleep(1000)
+  }
+
+  throw new Error(
+    `index ${collectionId}.${index.key} was not available in time (last status: ${lastStatus})`,
+  )
+}
+
 async function ensureIndex(targetDatabaseId, collectionId, index) {
   try {
-    await databases.getIndex({
+    const current = await databases.getIndex({
       databaseId: targetDatabaseId,
       collectionId,
       key: index.key,
     })
+    await waitForIndex(targetDatabaseId, collectionId, index, current)
     console.log(`exists  index ${collectionId}.${index.key}`)
     return
   } catch (error) {
     if (!isMissing(error)) throw error
   }
 
+  let created = false
   try {
     await databases.createIndex({
       databaseId: targetDatabaseId,
@@ -430,14 +511,13 @@ async function ensureIndex(targetDatabaseId, collectionId, index) {
       type: index.type || 'key',
       attributes: index.attributes,
     })
-    console.log(`created index ${collectionId}.${index.key}`)
+    created = true
   } catch (error) {
-    if (isConflict(error)) {
-      console.log(`exists  index ${collectionId}.${index.key}`)
-      return
-    }
-    throw error
+    if (!isConflict(error)) throw error
   }
+
+  await waitForIndex(targetDatabaseId, collectionId, index)
+  console.log(`${created ? 'created' : 'exists '} index ${collectionId}.${index.key}`)
 }
 
 async function seedSettings(targetDatabaseId = databaseId) {
@@ -524,12 +604,17 @@ if (classDatabaseId !== databaseId) {
 }
 
 await ensureCollection(databaseId, reservationsId, 'reservations', reservationPermissions)
+await ensureCollection(databaseId, cakePickupOpeningsId, 'cake_pickup_openings', cakePickupOpeningPermissions)
 await ensureCollection(databaseId, settingsId, 'settings', settingsPermissions)
 await ensureCollection(classDatabaseId, classReservationsId, 'class_reservations', reservationPermissions)
 await ensureCollection(classDatabaseId, classBookedDatesId, 'class_booked_dates', publicBookedDatePermissions)
 
 for (const attribute of reservationAttributes) {
   await ensureAttribute(databaseId, reservationsId, attribute)
+}
+
+for (const attribute of cakePickupOpeningAttributes) {
+  await ensureAttribute(databaseId, cakePickupOpeningsId, attribute)
 }
 
 for (const attribute of settingsAttributes) {
@@ -545,12 +630,17 @@ for (const attribute of classBookedDateAttributes) {
 }
 
 await ensureAttributesReady(databaseId, reservationsId, reservationAttributes)
+await ensureAttributesReady(databaseId, cakePickupOpeningsId, cakePickupOpeningAttributes)
 await ensureAttributesReady(databaseId, settingsId, settingsAttributes)
 await ensureAttributesReady(classDatabaseId, classReservationsId, classReservationAttributes)
 await ensureAttributesReady(classDatabaseId, classBookedDatesId, classBookedDateAttributes)
 
 for (const index of reservationIndexes) {
   await ensureIndex(databaseId, reservationsId, index)
+}
+
+for (const index of cakePickupOpeningIndexes) {
+  await ensureIndex(databaseId, cakePickupOpeningsId, index)
 }
 
 for (const index of classReservationIndexes) {

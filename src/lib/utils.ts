@@ -43,10 +43,17 @@ export function todayInputValue() {
   return dateInputValue(new Date())
 }
 
+export function addDaysToInputValue(dateValue: string, days: number) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue)
+  if (!match) return dateValue
+
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+  date.setUTCDate(date.getUTCDate() + days)
+  return date.toISOString().slice(0, 10)
+}
+
 export function addDaysInputValue(days: number) {
-  const date = new Date()
-  date.setDate(date.getDate() + days)
-  return dateInputValue(date)
+  return addDaysToInputValue(todayInputValue(), days)
 }
 
 export function generateReservationNumber(date = new Date()) {
@@ -79,6 +86,85 @@ export function timeOptionsForDate(dateValue: string, settings: StoreSettings) {
   }
 
   return result
+}
+
+export const PICKUP_LEAD_TIME_MINUTES = 120
+export const PICKUP_TIME_TOO_SOON_ERROR = 'PICKUP_TIME_TOO_SOON'
+
+function zonedDateTimeParts(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: marketConfig.timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+
+  const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value)
+  return {
+    year: value('year'),
+    month: value('month'),
+    day: value('day'),
+    hour: value('hour'),
+    minute: value('minute'),
+  }
+}
+
+function zonedPickupTimestamp(dateValue: string, timeValue: string) {
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue)
+  const timeMatch = /^(\d{2}):(\d{2})$/.exec(timeValue)
+  if (!dateMatch || !timeMatch) return null
+
+  const target = {
+    year: Number(dateMatch[1]),
+    month: Number(dateMatch[2]),
+    day: Number(dateMatch[3]),
+    hour: Number(timeMatch[1]),
+    minute: Number(timeMatch[2]),
+  }
+  if (target.month < 1 || target.month > 12 || target.day < 1 || target.day > 31 || target.hour > 23 || target.minute > 59) {
+    return null
+  }
+
+  const targetAsUtc = Date.UTC(target.year, target.month - 1, target.day, target.hour, target.minute)
+  const normalizedTarget = new Date(targetAsUtc)
+  if (
+    normalizedTarget.getUTCFullYear() !== target.year ||
+    normalizedTarget.getUTCMonth() !== target.month - 1 ||
+    normalizedTarget.getUTCDate() !== target.day
+  ) {
+    return null
+  }
+
+  let timestamp = targetAsUtc
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const represented = zonedDateTimeParts(new Date(timestamp))
+    const representedAsUtc = Date.UTC(
+      represented.year,
+      represented.month - 1,
+      represented.day,
+      represented.hour,
+      represented.minute,
+    )
+    const adjustment = targetAsUtc - representedAsUtc
+    timestamp += adjustment
+    if (adjustment === 0) break
+  }
+
+  const resolved = zonedDateTimeParts(new Date(timestamp))
+  return Object.entries(target).every(([key, value]) => resolved[key as keyof typeof resolved] === value) ? timestamp : null
+}
+
+export function isPickupTimeAllowed(dateValue: string, timeValue: string, now = new Date()) {
+  const pickupTimestamp = zonedPickupTimestamp(dateValue, timeValue)
+  if (pickupTimestamp === null) return false
+  return pickupTimestamp - now.getTime() >= PICKUP_LEAD_TIME_MINUTES * 60_000
+}
+
+export function customerTimeOptionsForDate(dateValue: string, settings: StoreSettings, now = new Date()) {
+  return timeOptionsForDate(dateValue, settings).filter((time) => isPickupTimeAllowed(dateValue, time, now))
 }
 
 export function maskPhone(phone: string) {

@@ -22,6 +22,8 @@ import {
   CLASS_TYPE_ID,
   generateClassReservationNumber,
   getClassBookingPrice,
+  isCakePickupBlockedByClass,
+  type CakePickupOpening,
   type ClassBookedSlot,
 } from './class-utils'
 import type {
@@ -41,13 +43,16 @@ import type {
   ReservationStatus,
   StoreSettings,
 } from './types'
-import { generateReservationNumber } from './utils'
+import { generateReservationNumber, isPickupTimeAllowed, PICKUP_TIME_TOO_SOON_ERROR } from './utils'
 
 const LOCAL_RESERVATIONS_KEY = `verygood-cake-reservations-${MARKET.toLowerCase()}`
 const LOCAL_CLASS_RESERVATIONS_KEY = `verygood-class-reservations-${MARKET.toLowerCase()}`
 const LOCAL_CLASS_BOOKED_DATES_KEY = `verygood-class-booked-dates-${MARKET.toLowerCase()}`
+const LOCAL_CAKE_PICKUP_OPENINGS_KEY = `verygood-cake-pickup-openings-${MARKET.toLowerCase()}`
 const LOCAL_SETTINGS_KEY = `verygood-cake-settings-${MARKET.toLowerCase()}`
 const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
+
+export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 
 type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'quantity' | 'totalPriceCents'> & {
   $id: string
@@ -73,6 +78,13 @@ type AppwriteClassBookedSlotDocument = {
   classDate: string
   classTime?: string
   createdAt?: string
+}
+
+type AppwriteCakePickupOpeningDocument = {
+  $id: string
+  $createdAt?: string
+  pickupDate: string
+  pickupTime: string
 }
 
 function normalizeReservation(reservation: Reservation): Reservation {
@@ -271,8 +283,32 @@ function writeLocalClassBookedSlots(classSlots: ClassBookedSlot[]) {
   localStorage.setItem(LOCAL_CLASS_BOOKED_DATES_KEY, JSON.stringify(Array.from(uniqueSlots.values())))
 }
 
+function readLocalCakePickupOpenings(): CakePickupOpening[] {
+  const serializedOpenings = localStorage.getItem(LOCAL_CAKE_PICKUP_OPENINGS_KEY) || '[]'
+  let storedOpenings: unknown
+  try {
+    storedOpenings = JSON.parse(serializedOpenings)
+  } catch {
+    return []
+  }
+  if (!Array.isArray(storedOpenings)) return []
+
+  return storedOpenings
+    .map((opening): CakePickupOpening | null => {
+      if (!opening || typeof opening !== 'object') return null
+      const row = opening as Record<string, unknown>
+      if (typeof row.pickupDate !== 'string' || typeof row.pickupTime !== 'string') return null
+      return { pickupDate: row.pickupDate, pickupTime: row.pickupTime }
+    })
+    .filter((opening): opening is CakePickupOpening => opening !== null)
+}
+
 function isDuplicateAppwriteError(error: unknown) {
   return error instanceof AppwriteException && (error.code === 409 || /unique|duplicate|already exists/i.test(error.message))
+}
+
+function isMissingCakePickupOpeningsCollectionError(error: unknown) {
+  return error instanceof AppwriteException && error.code === 404 && error.type === 'collection_not_found'
 }
 
 async function createClassBookedSlot(classDate: string, classTime: string) {
@@ -356,6 +392,18 @@ export async function getSettings(): Promise<StoreSettings> {
 }
 
 export async function createReservation(input: ReservationInput): Promise<Reservation> {
+  if (!isPickupTimeAllowed(input.pickupDate, input.pickupTime)) {
+    throw new Error(PICKUP_TIME_TOO_SOON_ERROR)
+  }
+
+  const [classBookedSlots, cakePickupOpenings] = await Promise.all([
+    listClassBookedSlots(input.pickupDate),
+    listCakePickupOpenings(input.pickupDate),
+  ])
+  if (isCakePickupBlockedByClass(input.pickupDate, input.pickupTime, classBookedSlots, cakePickupOpenings)) {
+    throw new Error(PICKUP_TIME_CLASS_CONFLICT_ERROR)
+  }
+
   const now = new Date().toISOString()
   const reservationNumber = generateReservationNumber()
   const product = getProductById(input.productId || DEFAULT_PRODUCT_ID)
@@ -496,13 +544,45 @@ export async function updateReservation(
   return toReservation(document as unknown as AppwriteReservationDocument)
 }
 
-export async function listClassBookedSlots(): Promise<ClassBookedSlot[]> {
-  if (!isAppwriteConfigured) return readLocalClassBookedSlots()
+export async function listCakePickupOpenings(pickupDate: string): Promise<CakePickupOpening[]> {
+  if (!isAppwriteConfigured) {
+    return readLocalCakePickupOpenings().filter((opening) => opening.pickupDate === pickupDate)
+  }
+
+  try {
+    const result = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.cakePickupOpeningsCollectionId,
+      [Query.equal('pickupDate', pickupDate), Query.limit(200)],
+    )
+    return result.documents
+      .map((doc) => {
+        const opening = doc as unknown as AppwriteCakePickupOpeningDocument
+        if (typeof opening.pickupDate !== 'string' || typeof opening.pickupTime !== 'string') return null
+        return { pickupDate: opening.pickupDate, pickupTime: opening.pickupTime }
+      })
+      .filter((opening): opening is CakePickupOpening => opening !== null)
+  } catch (error) {
+    if (isMissingCakePickupOpeningsCollectionError(error)) return []
+    throw error
+  }
+}
+
+export async function listClassBookedSlots(classDate?: string): Promise<ClassBookedSlot[]> {
+  if (!isAppwriteConfigured) {
+    const bookedSlots = readLocalClassBookedSlots()
+    if (classDate === undefined) return bookedSlots
+    return bookedSlots.filter((slot) => (typeof slot === 'string' ? slot === classDate : slot.classDate === classDate))
+  }
+
+  const queries = classDate === undefined
+    ? [Query.orderAsc('classDate'), Query.limit(200)]
+    : [Query.equal('classDate', classDate), Query.limit(200)]
 
   const result = await databases.listDocuments(
     appwriteConfig.classReservationsDatabaseId,
     appwriteConfig.classBookedDatesCollectionId,
-    [Query.orderAsc('classDate'), Query.limit(200)],
+    queries,
   )
   return result.documents
     .map((doc) => {

@@ -16,7 +16,23 @@ import {
   normalizeReservationChocolateType,
   usesReservationChocolateType,
 } from '../src/lib/constants.js'
-import { formatCurrency, buildSmsMessage, isValidPhone, normalizePhone, timeOptionsForDate } from '../src/lib/utils.js'
+import {
+  PICKUP_LEAD_TIME_MINUTES,
+  addDaysToInputValue,
+  buildSmsMessage,
+  customerTimeOptionsForDate,
+  dateInputValue,
+  formatCurrency,
+  isPickupTimeAllowed,
+  isValidPhone,
+  normalizePhone,
+  timeOptionsForDate,
+} from '../src/lib/utils.js'
+import {
+  CLASS_SESSION_DURATION_MINUTES,
+  filterCakePickupTimesForClass,
+  isCakePickupBlockedByClass,
+} from '../src/lib/class-utils.js'
 
 test('AU cake size labels show inch and centimetre together with 17cm removed', () => {
   assert.deepEqual(
@@ -106,6 +122,175 @@ test('AU pick-up time options run until 20:00 every day', () => {
   assert.equal(weekendTimes.at(-1), '20:00')
   assert.ok(weekdayTimes.includes('19:30'))
   assert.ok(weekendTimes.includes('19:30'))
+})
+
+test('10:00 class blocks every half-hour pick-up boundary through 12:00 inclusive', () => {
+  const bookedSlots = [{ classDate: '2026-07-10', classTime: '10:00' }]
+
+  assert.equal(CLASS_SESSION_DURATION_MINUTES, 120)
+  for (const pickupTime of ['10:00', '10:30', '11:00', '11:30', '12:00']) {
+    assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
+  }
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '09:30', bookedSlots), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '12:30', bookedSlots), false)
+})
+
+test('13:00 and 16:00 classes block their inclusive two-hour pick-up windows', () => {
+  const bookedSlots = [
+    { classDate: '2026-07-10', classTime: '13:00' },
+    { classDate: '2026-07-10', classTime: '16:00' },
+  ]
+
+  for (const pickupTime of ['13:00', '13:30', '14:00', '14:30', '15:00']) {
+    assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
+  }
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '15:30', bookedSlots), false)
+  for (const pickupTime of ['16:00', '16:30', '17:00', '17:30', '18:00']) {
+    assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
+  }
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '18:30', bookedSlots), false)
+})
+
+test('booking all known class sessions blocks the whole cake pick-up day', () => {
+  const bookedSlots = [
+    { classDate: '2026-07-10', classTime: '10:00' },
+    { classDate: '2026-07-10', classTime: '13:00' },
+    { classDate: '2026-07-10', classTime: '16:00' },
+  ]
+
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '08:30', bookedSlots), true)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '19:30', bookedSlots), true)
+})
+
+test('legacy date strings and blank class times each block the whole pick-up day', () => {
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '19:30', ['2026-07-10']), true)
+  assert.equal(
+    isCakePickupBlockedByClass('2026-07-10', '08:30', [{ classDate: '2026-07-10', classTime: '' }]),
+    true,
+  )
+})
+
+test('an exact cake opening overrides only its matching class-blocked date and time', () => {
+  const bookedSlots = [{ classDate: '2026-07-10', classTime: '10:00' }]
+  const pickupOpenings = [
+    { pickupDate: '2026-07-10', pickupTime: '10:30' },
+    { pickupDate: '2026-07-11', pickupTime: '11:00' },
+  ]
+
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '10:30', bookedSlots, pickupOpenings), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '10:00', bookedSlots, pickupOpenings), true)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '11:00', bookedSlots, pickupOpenings), true)
+})
+
+test('an exact cake opening overrides a full-day class block for only that time', () => {
+  const bookedSlots = [
+    { classDate: '2026-07-10', classTime: '10:00' },
+    { classDate: '2026-07-10', classTime: '13:00' },
+    { classDate: '2026-07-10', classTime: '16:00' },
+  ]
+  const pickupOpenings = [{ pickupDate: '2026-07-10', pickupTime: '19:30' }]
+
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '19:30', bookedSlots, pickupOpenings), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '19:00', bookedSlots, pickupOpenings), true)
+})
+
+test('class bookings on a different date do not block cake pick-up', () => {
+  const bookedSlots = [
+    { classDate: '2026-07-10', classTime: '10:00' },
+    { classDate: '2026-07-10', classTime: '13:00' },
+    { classDate: '2026-07-10', classTime: '16:00' },
+  ]
+
+  assert.equal(isCakePickupBlockedByClass('2026-07-11', '10:00', bookedSlots), false)
+})
+
+test('malformed class and pick-up values are ignored safely', () => {
+  const malformedBookedSlots = [
+    'not-a-date',
+    { classDate: '2026-07-10', classTime: '25:00' },
+    { classDate: '2026-02-30', classTime: '10:00' },
+  ]
+
+  assert.equal(isCakePickupBlockedByClass('not-a-date', '10:00', ['not-a-date']), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', 'not-a-time', [{ classDate: '2026-07-10', classTime: '10:00' }]), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '10:00', malformedBookedSlots), false)
+})
+
+test('class filtering returns only unblocked supplied times without mutating inputs', () => {
+  const pickupTimes = ['09:30', '10:00', '10:30', '12:00', '12:30', '15:30', '16:00', '18:00', '18:30']
+  const bookedSlots = [
+    { classDate: '2026-07-10', classTime: '10:00' },
+    { classDate: '2026-07-10', classTime: '16:00' },
+  ]
+  const pickupOpenings = [{ pickupDate: '2026-07-10', pickupTime: '10:30' }]
+  const originalPickupTimes = [...pickupTimes]
+  const originalBookedSlots = bookedSlots.map((slot) => ({ ...slot }))
+  const originalPickupOpenings = pickupOpenings.map((opening) => ({ ...opening }))
+
+  assert.deepEqual(
+    filterCakePickupTimesForClass('2026-07-10', pickupTimes, bookedSlots, pickupOpenings),
+    ['09:30', '10:30', '12:30', '15:30', '18:30'],
+  )
+  assert.deepEqual(pickupTimes, originalPickupTimes)
+  assert.deepEqual(bookedSlots, originalBookedSlots)
+  assert.deepEqual(pickupOpenings, originalPickupOpenings)
+})
+
+test('cake openings do not add times already removed by the two-hour lead-time filter', () => {
+  const now = new Date('2026-07-09T23:00:00.000Z')
+  const leadTimeFilteredTimes = customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, now)
+  const filteredTimes = filterCakePickupTimesForClass(
+    '2026-07-10',
+    leadTimeFilteredTimes,
+    [{ classDate: '2026-07-10', classTime: '10:00' }],
+    [{ pickupDate: '2026-07-10', pickupTime: '10:00' }],
+  )
+
+  assert.equal(leadTimeFilteredTimes.includes('10:00'), false)
+  assert.equal(filteredTimes.includes('10:00'), false)
+  assert.equal(filteredTimes[0], '12:30')
+})
+
+test('Sydney date input stays independent of the browser timezone near midnight', () => {
+  assert.equal(dateInputValue(new Date('2026-07-09T14:30:00.000Z')), '2026-07-10')
+  assert.equal(dateInputValue(new Date('2026-07-10T13:30:00.000Z')), '2026-07-10')
+})
+
+test('date input calendar addition is independent of browser timezone and DST length', () => {
+  assert.equal(addDaysToInputValue('2026-07-10', 1), '2026-07-11')
+  assert.equal(addDaysToInputValue('2026-12-31', 1), '2027-01-01')
+  assert.equal(addDaysToInputValue('2028-02-28', 1), '2028-02-29')
+})
+
+test('AU customer pick-up times require two full hours of preparation', () => {
+  const atNineSydney = new Date('2026-07-09T23:00:00.000Z')
+  const oneSecondAfterNineSydney = new Date('2026-07-09T23:00:01.000Z')
+  const atNineTenSydney = new Date('2026-07-09T23:10:00.000Z')
+
+  assert.equal(PICKUP_LEAD_TIME_MINUTES, 120)
+  assert.equal(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, atNineSydney)[0], '11:00')
+  assert.equal(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, oneSecondAfterNineSydney)[0], '11:30')
+  assert.equal(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, atNineTenSydney)[0], '11:30')
+  assert.equal(isPickupTimeAllowed('2026-07-10', '10:59', atNineSydney), false)
+  assert.equal(isPickupTimeAllowed('2026-07-10', '11:00', atNineSydney), true)
+})
+
+test('AU customer pick-up lead time uses elapsed time across Sydney daylight saving changes', () => {
+  const beforeSpringForward = new Date('2026-10-03T15:30:00.000Z')
+  const beforeAutumnFallback = new Date('2026-04-04T15:30:00.000Z')
+
+  assert.equal(isPickupTimeAllowed('2026-10-04', '03:30', beforeSpringForward), false)
+  assert.equal(isPickupTimeAllowed('2026-04-05', '03:30', beforeAutumnFallback), true)
+})
+
+test('AU customer pick-up times keep full hours for future dates and close today when too late', () => {
+  const atNineTenSydney = new Date('2026-07-09T23:10:00.000Z')
+  const atSevenSydney = new Date('2026-07-10T09:00:00.000Z')
+
+  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, atNineTenSydney)[0], '10:00')
+  assert.deepEqual(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, atSevenSydney), [])
+  assert.equal(isPickupTimeAllowed('2026-07-09', '20:00', atNineTenSydney), false)
+  assert.equal(isPickupTimeAllowed('2026-07-11', '10:00', atNineTenSydney), true)
 })
 
 test('AU mobile numbers accept common local and international formats', () => {

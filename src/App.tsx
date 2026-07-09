@@ -62,11 +62,13 @@ import {
   type Language,
 } from './lib/i18n'
 import {
+  PICKUP_TIME_CLASS_CONFLICT_ERROR,
   createReservation,
   createClassReservation,
   getReservationByNumber,
   getSettings,
   isAdminLoggedIn,
+  listCakePickupOpenings,
   listReservations,
   listClassBookedSlots,
   listClassReservations,
@@ -96,16 +98,24 @@ import {
   CLASS_PAYMENT_STATUS_OPTIONS,
   CLASS_SESSION_TIMES,
   CLASS_STATUS_OPTIONS,
+  filterCakePickupTimesForClass,
   formatClassBookingType,
   getAvailableClassSessionTimes,
   getClassBookingPrice,
+  isCakePickupBlockedByClass,
   isClassDateBooked,
+  type CakePickupOpening,
   type ClassBookedSlot,
 } from './lib/class-utils'
 import {
   addDaysInputValue,
+  addDaysToInputValue,
   buildSmsMessage,
+  customerTimeOptionsForDate,
+  dateInputValue,
   formatCurrency,
+  isPickupTimeAllowed,
+  PICKUP_TIME_TOO_SOON_ERROR,
   isValidPhone,
   maskPhone,
   normalizePhone,
@@ -161,6 +171,25 @@ function useTodayInputValue() {
   }, [])
 
   return today
+}
+
+function useCurrentTime() {
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const refreshNow = () => setNow(new Date())
+    const interval = window.setInterval(refreshNow, 60_000)
+    window.addEventListener('focus', refreshNow)
+    document.addEventListener('visibilitychange', refreshNow)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', refreshNow)
+      document.removeEventListener('visibilitychange', refreshNow)
+    }
+  }, [])
+
+  return now
 }
 
 function getPageFromPath(): Page {
@@ -1239,11 +1268,90 @@ function ReservePage({
   const [showCakeSelector, setShowCakeSelector] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const today = useTodayInputValue()
-  const minPickupDate = today
+  const [pickupAvailability, setPickupAvailability] = useState<{
+    dataDate: string
+    loading: boolean
+    error: boolean
+    bookedSlots: ClassBookedSlot[]
+    pickupOpenings: CakePickupOpening[]
+  }>({
+    dataDate: '',
+    loading: true,
+    error: false,
+    bookedSlots: [],
+    pickupOpenings: [],
+  })
+  const [pickupAvailabilityRefetchKey, setPickupAvailabilityRefetchKey] = useState(0)
+  const now = useCurrentTime()
+  const today = dateInputValue(now)
+  const todayTimes = useMemo(() => customerTimeOptionsForDate(today, settings, now), [today, settings, now])
+  const minPickupDate = todayTimes.length > 0 ? today : addDaysToInputValue(today, 1)
   const pickupDate = form.pickupDate && form.pickupDate >= minPickupDate ? form.pickupDate : minPickupDate
-  const times = useMemo(() => timeOptionsForDate(pickupDate, settings), [pickupDate, settings])
+  const baseTimes = useMemo(() => customerTimeOptionsForDate(pickupDate, settings, now), [pickupDate, settings, now])
+  const pickupAvailabilityIsCurrent = pickupAvailability.dataDate === pickupDate
+  const pickupAvailabilityLoading = pickupAvailability.loading || !pickupAvailabilityIsCurrent
+  const pickupAvailabilityError = pickupAvailabilityIsCurrent && pickupAvailability.error
+  const times = useMemo(() => {
+    if (pickupAvailabilityLoading || pickupAvailabilityError) return []
+    return filterCakePickupTimesForClass(
+      pickupDate,
+      baseTimes,
+      pickupAvailability.bookedSlots,
+      pickupAvailability.pickupOpenings,
+    )
+  }, [
+    baseTimes,
+    pickupAvailability.bookedSlots,
+    pickupAvailability.pickupOpenings,
+    pickupAvailabilityError,
+    pickupAvailabilityLoading,
+    pickupDate,
+  ])
   const selectedPickupTime = times.includes(form.pickupTime) ? form.pickupTime : times[0] || ''
+
+  const refetchPickupAvailability = useCallback(() => {
+    setPickupAvailability({
+      dataDate: '',
+      loading: true,
+      error: false,
+      bookedSlots: [],
+      pickupOpenings: [],
+    })
+    setPickupAvailabilityRefetchKey((key) => key + 1)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    Promise.all([
+      listClassBookedSlots(pickupDate),
+      listCakePickupOpenings(pickupDate),
+    ])
+      .then(([bookedSlots, pickupOpenings]) => {
+        if (cancelled) return
+        setPickupAvailability({
+          dataDate: pickupDate,
+          loading: false,
+          error: false,
+          bookedSlots,
+          pickupOpenings,
+        })
+      })
+      .catch(() => {
+        if (cancelled) return
+        setPickupAvailability({
+          dataDate: pickupDate,
+          loading: false,
+          error: true,
+          bookedSlots: [],
+          pickupOpenings: [],
+        })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [pickupAvailabilityRefetchKey, pickupDate])
 
   async function submitReservation(event: React.FormEvent) {
     event.preventDefault()
@@ -1262,8 +1370,25 @@ function ReservePage({
       setError(copy.errors.pickupDate)
       return
     }
+    if (pickupAvailabilityLoading || pickupAvailabilityError) {
+      setError(copy.pickupAvailabilityError)
+      return
+    }
     if (!selectedPickupTime) {
       setError(copy.errors.pickupTime)
+      return
+    }
+    if (!isPickupTimeAllowed(pickupDate, selectedPickupTime)) {
+      setError(copy.errors.pickupLeadTime)
+      return
+    }
+    if (isCakePickupBlockedByClass(
+      pickupDate,
+      selectedPickupTime,
+      pickupAvailability.bookedSlots,
+      pickupAvailability.pickupOpenings,
+    )) {
+      setError(copy.errors.pickupTimeUnavailable)
       return
     }
     if (form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY) {
@@ -1295,8 +1420,15 @@ function ReservePage({
       )
       onComplete(reservation)
       navigate('complete')
-    } catch {
-      setError(copy.errors.submit)
+    } catch (submitError) {
+      if (submitError instanceof Error && submitError.message === PICKUP_TIME_CLASS_CONFLICT_ERROR) {
+        setError(copy.errors.pickupTimeUnavailable)
+        refetchPickupAvailability()
+      } else if (submitError instanceof Error && submitError.message === PICKUP_TIME_TOO_SOON_ERROR) {
+        setError(copy.errors.pickupLeadTime)
+      } else {
+        setError(copy.errors.submit)
+      }
     } finally {
       setSubmitting(false)
     }
@@ -1627,7 +1759,7 @@ function ReservePage({
                     setForm({
                       ...form,
                       pickupDate: nextDate,
-                      pickupTime: timeOptionsForDate(nextDate, settings)[0] || '',
+                      pickupTime: '',
                     })
                   }}
                 />
@@ -1637,16 +1769,42 @@ function ReservePage({
                 <select
                   value={selectedPickupTime}
                   onChange={(event) => setForm({ ...form, pickupTime: event.target.value })}
+                  disabled={pickupAvailabilityLoading || pickupAvailabilityError || times.length === 0}
                 >
-                  {times.map((time) => (
-                    <option value={time} key={time}>
-                      {time}
+                  {times.length === 0 ? (
+                    <option value="" disabled>
+                      {pickupAvailabilityLoading
+                        ? copy.pickupAvailabilityChecking
+                        : pickupAvailabilityError
+                          ? copy.pickupAvailabilityError
+                          : copy.pickupAvailabilityNone}
                     </option>
-                  ))}
+                  ) : (
+                    times.map((time) => (
+                      <option value={time} key={time}>
+                        {time}
+                      </option>
+                    ))
+                  )}
                 </select>
               </label>
             </div>
 
+            <div aria-live="polite">
+              {pickupAvailabilityLoading ? (
+                <p className="field-help">{copy.pickupAvailabilityChecking}</p>
+              ) : pickupAvailabilityError ? (
+                <>
+                  <p className="error-text">{copy.pickupAvailabilityError}</p>
+                  <button className="text-button" type="button" onClick={refetchPickupAvailability}>
+                    {copy.pickupAvailabilityRetry}
+                  </button>
+                </>
+              ) : times.length === 0 ? (
+                <p className="field-help">{copy.pickupAvailabilityNone}</p>
+              ) : null}
+            </div>
+            <p className="field-help">{copy.pickupLeadTimeHelp}</p>
             {settings.pickupNotice.trim() && <p className="field-help">{settings.pickupNotice}</p>}
 
             <div className="field-row">
@@ -1708,7 +1866,11 @@ function ReservePage({
 
             <BankAccountBox settings={settings} totalPrice={discountedPrice} language={language} />
 
-            <button className="primary-button full-width" type="submit" disabled={submitting}>
+            <button
+              className="primary-button full-width"
+              type="submit"
+              disabled={submitting || pickupAvailabilityLoading || pickupAvailabilityError || !selectedPickupTime}
+            >
               {submitting ? copy.submitting : copy.reserveCta}
             </button>
           </form>

@@ -1,7 +1,22 @@
 import { Account, Client, Databases } from 'appwrite'
 
+const configuredEndpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || import.meta.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || ''
+
+function browserAppwriteEndpoint() {
+  if (!configuredEndpoint || !import.meta.env.DEV || typeof window === 'undefined' || window.location.hostname === 'localhost') {
+    return configuredEndpoint
+  }
+
+  try {
+    const pathname = new URL(configuredEndpoint).pathname.replace(/\/$/, '')
+    return `${window.location.origin}/appwrite${pathname}`
+  } catch {
+    return configuredEndpoint
+  }
+}
+
 export const appwriteConfig = {
-  endpoint: import.meta.env.VITE_APPWRITE_ENDPOINT || import.meta.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || '',
+  endpoint: browserAppwriteEndpoint(),
   projectId: import.meta.env.VITE_APPWRITE_PROJECT_ID || import.meta.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '',
   databaseId: import.meta.env.VITE_APPWRITE_CAKE_DATABASE_ID || import.meta.env.APPWRITE_CAKE_DATABASE_ID || '',
   classReservationsDatabaseId:
@@ -14,6 +29,10 @@ export const appwriteConfig = {
     import.meta.env.VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
     import.meta.env.APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
     'reservations',
+  cakePickupOpeningsCollectionId:
+    import.meta.env.VITE_APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID ||
+    import.meta.env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID ||
+    'cake_pickup_openings',
   settingsCollectionId:
     import.meta.env.VITE_APPWRITE_SETTINGS_TABLE_ID || import.meta.env.APPWRITE_SETTINGS_TABLE_ID || 'settings',
   classReservationsCollectionId:
