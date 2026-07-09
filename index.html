@@ -30,25 +30,110 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      window.chatwootSettings = {
-        position: "right",
-        type: "expanded_bubble",
-        launcherTitle: "Message us"
-      };
-      (function(d,t) {
-        var BASE_URL="https://chat.verygood-chocolate.com";
-        var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-        g.src=BASE_URL+"/packs/js/sdk.js";
-        g.async = true;
-        s.parentNode.insertBefore(g,s);
-        g.onload=function(){
-          window.chatwootSDK.run({
-            websiteToken: 'JPyEBcQEq4FvcZFL5NxeiXyC',
-            baseUrl: BASE_URL
-          })
+    <style>
+      #vg-chat-launcher {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 2147483000;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        border: 2px solid #f7e7b7;
+        border-radius: 999px;
+        background: #005241;
+        color: #fff8e6;
+        box-shadow: 0 18px 38px rgba(0, 82, 65, 0.25);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        padding: 13px 18px;
+      }
+      #vg-chat-launcher::before {
+        content: "";
+        width: 13px;
+        height: 13px;
+        border-radius: 999px;
+        background: #fff8e6;
+      }
+      #vg-chat-launcher[disabled] {
+        cursor: wait;
+        opacity: 0.78;
+      }
+      @media (max-width: 640px) {
+        #vg-chat-launcher {
+          right: 16px;
+          bottom: 16px;
+          width: 58px;
+          height: 58px;
+          justify-content: center;
+          padding: 0;
+          font-size: 0;
         }
-      })(document,"script");
+        #vg-chat-launcher::before {
+          width: 18px;
+          height: 18px;
+        }
+      }
+    </style>
+    <button id="vg-chat-launcher" type="button">Message us</button>
+    <script>
+      (function() {
+        var BASE_URL = "https://chat.verygood-chocolate.com";
+        var WEBSITE_TOKEN = "JPyEBcQEq4FvcZFL5NxeiXyC";
+        var launcher = document.getElementById("vg-chat-launcher");
+        var hasLoadedSdk = false;
+
+        window.chatwootSettings = {
+          hideMessageBubble: true,
+          position: "right",
+          type: "standard"
+        };
+
+        function openChat() {
+          if (window.$chatwoot && window.$chatwoot.hasLoaded) {
+            window.$chatwoot.toggle("open");
+            launcher.style.display = "none";
+            return;
+          }
+
+          launcher.disabled = true;
+          launcher.textContent = "Opening...";
+
+          if (!hasLoadedSdk) {
+            hasLoadedSdk = true;
+            var script = document.createElement("script");
+            script.src = BASE_URL + "/packs/js/sdk.js";
+            script.async = true;
+            script.onload = function() {
+              window.chatwootSDK.run({
+                websiteToken: WEBSITE_TOKEN,
+                baseUrl: BASE_URL
+              });
+            };
+            script.onerror = function() {
+              launcher.disabled = false;
+              launcher.textContent = "Message us";
+            };
+            document.body.appendChild(script);
+          }
+        }
+
+        window.addEventListener("chatwoot:ready", function() {
+          launcher.disabled = false;
+          launcher.textContent = "Message us";
+          if (window.$chatwoot) {
+            window.$chatwoot.toggle("open");
+            launcher.style.display = "none";
+          }
+        });
+        window.addEventListener("chatwoot:closed", function() {
+          launcher.style.display = "inline-flex";
+        });
+        launcher.addEventListener("click", openChat);
+      })();
     </script>
   </body>
 </html>
