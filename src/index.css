@@ -907,6 +907,20 @@ dd {
   text-transform: uppercase;
 }
 
+@media (min-width: 768px) and (max-width: 1099px) {
+  .sticky-cta {
+    right: 186px;
+  }
+}
+
+@media (max-width: 767px) {
+  .sticky-cta {
+    left: calc(16px + env(safe-area-inset-left));
+    right: calc(80px + env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
 .form-page,
 .narrow-page {
   max-width: 1160px;
@@ -3595,8 +3609,8 @@ td select {
 
   .language-strip {
     position: fixed;
-    right: 14px;
-    bottom: calc(72px + env(safe-area-inset-bottom));
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(80px + env(safe-area-inset-bottom));
     z-index: 30;
     width: auto;
     margin: 0;

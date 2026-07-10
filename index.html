@@ -51,39 +51,73 @@
         letter-spacing: 0.02em;
         padding: 13px 18px;
       }
-      #vg-chat-launcher::before {
-        content: "";
-        width: 13px;
-        height: 13px;
+      .vg-chat-icon {
+        position: relative;
+        flex: 0 0 auto;
+        width: 20px;
+        height: 16px;
+        border: 2px solid currentColor;
         border-radius: 999px;
-        background: #fff8e6;
+      }
+      .vg-chat-icon::before {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 3px;
+        width: 6px;
+        height: 6px;
+        border-bottom: 2px solid currentColor;
+        border-left: 2px solid currentColor;
+        background: #005241;
+        transform: skewY(-35deg);
+      }
+      .vg-chat-icon::after {
+        content: "•••";
+        position: absolute;
+        top: -2px;
+        left: 3px;
+        font-size: 8px;
+        letter-spacing: 1px;
+        line-height: 16px;
       }
       #vg-chat-launcher[disabled] {
         cursor: wait;
         opacity: 0.78;
       }
-      @media (max-width: 640px) {
+      @media (max-width: 767px) {
         #vg-chat-launcher {
-          right: 14px;
-          bottom: 14px;
-          gap: 8px;
-          padding: 11px 14px;
-          font-size: 13px;
-          line-height: 1;
+          right: calc(16px + env(safe-area-inset-right));
+          bottom: calc(16px + env(safe-area-inset-bottom));
+          width: 52px;
+          min-width: 52px;
+          height: 52px;
+          padding: 0;
+          justify-content: center;
+          gap: 0;
           box-shadow: 0 12px 28px rgba(0, 82, 65, 0.22);
         }
-        #vg-chat-launcher::before {
+        #vg-chat-launcher .vg-chat-label {
           display: none;
         }
       }
     </style>
-    <button id="vg-chat-launcher" type="button">Message us</button>
+    <button id="vg-chat-launcher" type="button" aria-label="Message us" title="Message us">
+      <span class="vg-chat-icon" aria-hidden="true"></span>
+      <span class="vg-chat-label">Message us</span>
+    </button>
     <script>
       (function() {
         var BASE_URL = "https://chat.verygood-chocolate.com";
         var WEBSITE_TOKEN = "JPyEBcQEq4FvcZFL5NxeiXyC";
         var launcher = document.getElementById("vg-chat-launcher");
+        var launcherLabel = launcher.querySelector(".vg-chat-label");
         var hasLoadedSdk = false;
+
+        function setLauncherLabel(label) {
+          launcherLabel.textContent = label;
+          launcher.setAttribute("aria-label", label);
+          launcher.setAttribute("title", label);
+        }
 
         window.chatwootSettings = {
           hideMessageBubble: true,
@@ -101,7 +135,7 @@
           }
 
           launcher.disabled = true;
-          launcher.textContent = "Opening...";
+          setLauncherLabel("Opening chat");
 
           if (!hasLoadedSdk) {
             hasLoadedSdk = true;
@@ -116,7 +150,7 @@
             };
             script.onerror = function() {
               launcher.disabled = false;
-              launcher.textContent = "Message us";
+              setLauncherLabel("Message us");
             };
             document.body.appendChild(script);
           }
@@ -124,7 +158,7 @@
 
         window.addEventListener("chatwoot:ready", function() {
           launcher.disabled = false;
-          launcher.textContent = "Message us";
+          setLauncherLabel("Message us");
           if (window.$chatwoot) {
             window.$chatwoot.toggle("open");
             launcher.style.display = "none";
