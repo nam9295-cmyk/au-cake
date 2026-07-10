@@ -39,7 +39,7 @@ VITE_MARKET=AU npm run build
 - `KR`: `ko-KR`, `KRW`, 한국 전화번호 검증, 기존 한국어 상품/문구
 - `AU`: `en-AU`, `AUD`, Australia/Sydney 기준 날짜, 호주 전화번호 검증, 영어 상품/문구
 
-AU 가격과 기본 운영 문구는 [src/lib/market.ts](/home/john/workspace/cake/src/lib/market.ts)에 모아 두었습니다. 실제 AU 가격이 확정되면 `MARKET_CONFIG.AU.products`, `cakeSizeOptions`, `cacaoOptions`, `defaultSettings`만 수정하면 됩니다.
+AU 가격과 기본 운영 문구는 `src/lib/market.ts`에 모아 두었습니다. 실제 AU 가격이 확정되면 `MARKET_CONFIG.AU.products`, `cakeSizeOptions`, `cacaoOptions`, `defaultSettings`만 수정하면 됩니다.
 
 ## Appwrite 설정
 
@@ -60,7 +60,7 @@ npm run setup:appwrite
 
 관리자 화면은 Appwrite Auth 계정으로 로그인합니다. Appwrite 콘솔에서 운영자 이메일 계정을 먼저 생성하세요.
 
-운영에서는 `APPWRITE_ADMIN_USER_IDS`를 반드시 지정한 뒤 `npm run setup:appwrite`를 실행하세요. 이 값이 비어 있으면 setup script는 모든 로그인 사용자(`Role.users()`)에게 예약 read/update/delete 권한을 부여하므로 개인정보 접근 범위가 넓어집니다.
+`APPWRITE_ADMIN_USER_IDS`를 반드시 지정한 뒤 `npm run setup:appwrite`를 실행하세요. 이 값이 비어 있으면 개인정보 권한이 넓어지는 설정을 만들지 않고 setup script가 중단됩니다.
 
 ### AU/KR Appwrite 분리
 
@@ -106,13 +106,12 @@ npm run deploy:reservation-notification
 
 이 명령에 사용하는 `APPWRITE_API_KEY`에는 최소 `functions.read`, `functions.write` 스코프가 필요합니다. 배포 후 실행 로그까지 CLI에서 확인하려면 `execution.read`도 추가하세요.
 
-기본 함수 ID는 `reservation-notification`입니다. 런타임은 Appwrite가 지원하는 Node 런타임을 순서대로 시도하며, 현재 운영 배포는 `node-20.0`입니다. 기본 이벤트는 `tablesdb.{APPWRITE_DATABASE_ID}.tables.{APPWRITE_RESERVATIONS_TABLE_ID}.rows.*.create`와 기존 `databases.{APPWRITE_DATABASE_ID}.collections.{APPWRITE_RESERVATIONS_TABLE_ID}.documents.*.create`를 순서대로 시도하며, 필요하면 `APPWRITE_RESERVATION_CREATE_EVENT`로 직접 지정할 수 있습니다.
+기본 함수 ID는 `reservation-notification`이며 현재 운영 Appwrite 인스턴스와 호환되는 기본 런타임은 `node-16.0`입니다. 기본 이벤트는 `tablesdb.{APPWRITE_DATABASE_ID}.tables.{APPWRITE_RESERVATIONS_TABLE_ID}.rows.*.create`와 기존 `databases.{APPWRITE_DATABASE_ID}.collections.{APPWRITE_RESERVATIONS_TABLE_ID}.documents.*.create`를 순서대로 시도하며, 필요하면 `APPWRITE_RESERVATION_CREATE_EVENT`로 직접 지정할 수 있습니다.
 
 메일 발송 실패는 예약 데이터를 삭제하거나 되돌리지 않습니다. 실패 내용은 Appwrite Function 로그에 남습니다.
 
-## 권한
+## 예약 API와 권한
 
-- `reservations`: 고객은 생성만 가능, 로그인 사용자는 목록 조회/수정 가능
-- `settings`: 고객 읽기 가능, 로그인 사용자는 생성/수정 가능
+신규 설치는 우선 `VITE_RESERVATION_API_MODE=off`, `APPWRITE_RESERVATION_WRITE_MODE=direct`로 기존 저장 흐름을 유지합니다. 서버 검증 Function을 배포하고 조회/저장을 단계별로 확인한 뒤에만 공개 DB 생성 권한을 닫습니다.
 
-엄격한 공개 예약 조회는 서버 API 또는 Appwrite Function을 통해 예약번호와 연락처를 검증하는 방식으로 확장하는 것이 좋습니다.
+전체 배포·검증·롤백 순서는 [예약 API 무중단 전환 체크리스트](docs/RESERVATION_API_ROLLOUT.md)를 따르세요. `scripts/set-reservation-write-mode.mjs`는 `--apply`가 없으면 항상 dry-run이며, Function 배포 명령은 컬렉션 권한을 변경하지 않습니다.

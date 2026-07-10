@@ -23,6 +23,7 @@ import {
   customerTimeOptionsForDate,
   dateInputValue,
   formatCurrency,
+  generateRequestId,
   isPickupTimeAllowed,
   isValidPhone,
   normalizePhone,
@@ -33,6 +34,10 @@ import {
   filterCakePickupTimesForClass,
   isCakePickupBlockedByClass,
 } from '../src/lib/class-utils.js'
+
+test('client request IDs are valid UUIDs for idempotent reservation retries', () => {
+  assert.match(generateRequestId(), /^[a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i)
+})
 
 test('AU cake size labels show inch and centimetre together with 17cm removed', () => {
   assert.deepEqual(

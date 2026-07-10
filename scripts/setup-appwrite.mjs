@@ -34,6 +34,7 @@ const classBookedDatesId =
   process.env.VITE_APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
   'class_booked_dates'
 const market = String(process.env.VITE_MARKET || process.env.MARKET || 'KR').toUpperCase() === 'AU' ? 'AU' : 'KR'
+const reservationWriteMode = process.env.APPWRITE_RESERVATION_WRITE_MODE === 'function' ? 'function' : 'direct'
 const adminUserIds = (process.env.APPWRITE_ADMIN_USER_IDS || '')
   .split(',')
   .map((id) => id.trim())
@@ -53,13 +54,14 @@ const adminWriteRoles = adminUserIds.length > 0 ? adminUserIds.map((id) => Role.
 const cakePickupOpeningWriteRoles = adminUserIds.map((id) => Role.user(id))
 
 if (adminUserIds.length === 0) {
-  console.warn('WARNING: APPWRITE_ADMIN_USER_IDS is empty. Authenticated users will receive broad reservation read/update/delete permissions.')
-  console.warn('Cake pickup openings will remain public-read-only; writes are API-key-only.')
-  console.warn('Set APPWRITE_ADMIN_USER_IDS in production to grant named administrators collection write permissions.')
+  console.error('APPWRITE_ADMIN_USER_IDS is required. Setup will not grant broad access to every authenticated user.')
+  process.exit(1)
 }
 
 const reservationPermissions = [
-  Permission.create(Role.any()),
+  ...(reservationWriteMode === 'direct'
+    ? [Permission.create(Role.any())]
+    : adminWriteRoles.map((role) => Permission.create(role))),
   ...adminReadRoles.map((role) => Permission.read(role)),
   ...adminWriteRoles.map((role) => Permission.update(role)),
   ...adminWriteRoles.map((role) => Permission.delete(role)),
@@ -81,10 +83,17 @@ const cakePickupOpeningPermissions = [
 
 const publicBookedDatePermissions = [
   Permission.read(Role.any()),
-  Permission.create(Role.any()),
+  ...(reservationWriteMode === 'direct'
+    ? [Permission.create(Role.any())]
+    : adminWriteRoles.map((role) => Permission.create(role))),
   ...adminWriteRoles.map((role) => Permission.update(role)),
   ...adminWriteRoles.map((role) => Permission.delete(role)),
 ]
+
+console.log(`reservation write mode: ${reservationWriteMode}`)
+if (reservationWriteMode === 'function') {
+  console.warn('Public reservation writes will stay closed. Confirm VITE_RESERVATION_API_MODE=all is deployed before running setup.')
+}
 
 const defaultSettingsByMarket = {
   KR: {

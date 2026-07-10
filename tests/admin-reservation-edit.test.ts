@@ -71,3 +71,37 @@ test('admin reservation edits normalise irrelevant options for selected product'
   assert.equal(update.totalPrice, 50)
   assert.equal(update.totalPriceCents, 5000)
 })
+
+test('admin edits preserve an audited promo discount and recalculate the discounted cents', () => {
+  const promoReservation: Reservation = {
+    ...baseReservation,
+    requestNote: '[Promo verygoodSYD] 10% discount applied: 75.00 -> 67.50\nBirthday cake',
+    totalPrice: 67.5,
+    totalPriceCents: 6750,
+  }
+
+  const unchanged = buildAdminReservationUpdate(promoReservation, {})
+  assert.equal(unchanged.totalPrice, 67.5)
+  assert.equal(unchanged.totalPriceCents, 6750)
+
+  const changed = buildAdminReservationUpdate(promoReservation, { cakeSize: '19cm', quantity: 2 })
+  assert.equal(changed.totalPrice, 171)
+  assert.equal(changed.totalPriceCents, 17100)
+})
+
+test('ordinary request text mentioning a promo does not change admin pricing', () => {
+  const reservation = { ...baseReservation, requestNote: 'Can I use Promo verygoodSYD later?' }
+  const update = buildAdminReservationUpdate(reservation, {})
+  assert.equal(update.totalPrice, 75)
+  assert.equal(update.totalPriceCents, 7500)
+})
+
+test('a forged promo-looking request note without the matching stored discount is ignored', () => {
+  const reservation = {
+    ...baseReservation,
+    requestNote: '[Promo verygoodSYD] 10% discount applied: 75.00 -> 67.50',
+  }
+  const update = buildAdminReservationUpdate(reservation, {})
+  assert.equal(update.totalPrice, 75)
+  assert.equal(update.totalPriceCents, 7500)
+})

@@ -1,4 +1,5 @@
 import type { ClassBookingType, ClassReservation } from './types.js'
+import { escapeCsvCell } from './csv.js'
 import { MARKET_CONFIG } from './market.js'
 
 export const CLASS_TYPE_ID = 'school-holiday-private-cake-class' as const
@@ -341,6 +342,5 @@ export function classReservationsToCsv(reservations: ClassReservation[]) {
     String(reservation.depositAmount),
     reservation.adminMemo,
   ])
-  const escape = (value: string) => `"${value.replaceAll('"', '""')}"`
-  return [headers.join(','), ...rows.map((row) => row.map(escape).join(','))].join('\n')
+  return [headers.join(','), ...rows.map((row) => row.map(escapeCsvCell).join(','))].join('\n')
 }

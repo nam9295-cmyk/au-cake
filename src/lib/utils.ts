@@ -1,6 +1,7 @@
 import { formatCakeSizeLabel, formatCacaoLabel, formatChocolateTypeLabel, formatPoundAddonLabel, getProductById, usesReservationChocolateType } from './constants.js'
 import { marketConfig } from './market.js'
 import type { Reservation, StoreSettings } from './types.js'
+import { escapeCsvCell } from './csv.js'
 
 export function formatCurrency(value: number) {
   if (marketConfig.market === 'AU') return `AUD ${value.toFixed(2)}`
@@ -63,6 +64,15 @@ export function generateReservationNumber(date = new Date()) {
   // Existing reservations used the legacy VG-C-YYYYMMDD prefix. Lookup remains exact-match,
   // so historical numbers are still valid; new reservations include the market code.
   return `${marketConfig.reservationCodePrefix}-${ymd}-${time}${suffix}`
+}
+
+export function generateRequestId() {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
 export function isWeekend(dateValue: string) {
@@ -255,6 +265,5 @@ export function reservationsToCsv(reservations: Reservation[]) {
     String(reservation.totalPrice),
     reservation.adminMemo,
   ])
-  const escape = (value: string) => `"${value.replaceAll('"', '""')}"`
-  return [headers, ...rows].map((row) => row.map(escape).join(',')).join('\n')
+  return [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\n')
 }

@@ -48,7 +48,25 @@ export type ReservationInput = {
   cacaoPercent: CacaoPercent
   requestNote: string
   promoCode?: string
+  privacyConsent: boolean
+  requestId?: string
+  website?: string
 }
+
+export type PublicReservation = Pick<
+  Reservation,
+  | 'reservationNumber'
+  | 'productId'
+  | 'cakeSize'
+  | 'chocolateType'
+  | 'poundAddon'
+  | 'quantity'
+  | 'pickupDate'
+  | 'pickupTime'
+  | 'cacaoPercent'
+  | 'status'
+  | 'paymentStatus'
+>
 
 export type StoreSettings = {
   price: number
@@ -131,7 +149,11 @@ export type ClassReservationInput = Pick<
   | 'parentConsent'
   | 'cancellationAgreement'
   | 'photoConsent'
->
+> & {
+  privacyConsent: boolean
+  requestId?: string
+  website?: string
+}
 
 export type ClassReservationFilters = {
   classDate: string

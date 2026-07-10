@@ -3,6 +3,8 @@ import {
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
   MAX_RESERVATION_QUANTITY,
+  PROMO_CODE,
+  applyPromoDiscount,
   getReservationPrice,
   normalizeCakeSize,
   normalizePoundAddon,
@@ -56,6 +58,26 @@ function normalizeQuantity(quantity: number) {
   return Math.min(MAX_RESERVATION_QUANTITY, Math.max(1, Math.floor(value)))
 }
 
+function reservationHasPromo(reservation: Reservation) {
+  const escapedCode = PROMO_CODE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const hasAuditNote = new RegExp(`^\\[Promo ${escapedCode}\\] 10% discount applied: \\d+(?:\\.\\d{2})? -> \\d+(?:\\.\\d{2})?(?:\\n|$)`, 'i')
+    .test(reservation.requestNote || '')
+  if (!hasAuditNote) return false
+
+  const originalTotal = getReservationPrice(
+    reservation.productId,
+    {
+      cacaoPercent: reservation.cacaoPercent,
+      cakeSize: reservation.cakeSize,
+      chocolateType: reservation.chocolateType,
+      poundAddon: reservation.poundAddon,
+    },
+    normalizeQuantity(reservation.quantity),
+  )
+  const storedCents = reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice)
+  return storedCents === toCurrencyCents(applyPromoDiscount(originalTotal, PROMO_CODE))
+}
+
 export function buildAdminReservationUpdate(
   reservation: Reservation,
   edits: AdminReservationEditInput,
@@ -70,7 +92,10 @@ export function buildAdminReservationUpdate(
   )
   const quantity = normalizeQuantity(edits.quantity ?? reservation.quantity)
   const cacaoPercent = (edits.cacaoPercent || reservation.cacaoPercent || '기본') as CacaoPercent
-  const totalPrice = getReservationPrice(productId, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
+  const originalTotalPrice = getReservationPrice(productId, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
+  const totalPrice = reservationHasPromo(reservation)
+    ? applyPromoDiscount(originalTotalPrice, PROMO_CODE)
+    : originalTotalPrice
 
   return {
     productId,

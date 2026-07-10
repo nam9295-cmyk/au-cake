@@ -1,4 +1,4 @@
-import { Account, Client, Databases } from 'appwrite'
+import { Account, Client, Databases, Functions } from 'appwrite'
 
 const configuredEndpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || import.meta.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || ''
 
@@ -43,10 +43,17 @@ export const appwriteConfig = {
     import.meta.env.VITE_APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
     import.meta.env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
     'class_booked_dates',
+  reservationApiFunctionId: import.meta.env.VITE_RESERVATION_API_FUNCTION_ID || 'reservation-api',
+  reservationApiMode: normalizeReservationApiMode(import.meta.env.VITE_RESERVATION_API_MODE),
   adminEmails: (import.meta.env.VITE_ADMIN_EMAILS || 'nam9295@gmail.com')
     .split(',')
     .map((email: string) => email.trim().toLowerCase())
     .filter(Boolean),
+}
+
+function normalizeReservationApiMode(value?: string): 'off' | 'lookup' | 'all' {
+  if (value === 'lookup' || value === 'all') return value
+  return 'off'
 }
 
 export const isAppwriteConfigured = Boolean(
@@ -61,3 +68,4 @@ if (isAppwriteConfigured) {
 
 export const account = new Account(client)
 export const databases = new Databases(client)
+export const functions = new Functions(client)

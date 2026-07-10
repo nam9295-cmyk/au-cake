@@ -226,11 +226,13 @@ function formatCurrency(value, config) {
 
 function formatCreatedAt(value, config) {
   if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
   return new Intl.DateTimeFormat(config.locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: config.timezone,
-  }).format(new Date(value))
+  }).format(date)
 }
 
 function escapeHtml(value) {
@@ -332,7 +334,11 @@ function buildRows(reservation, config) {
 
 function getSubject(reservation, config) {
   const prefix = isClassReservation(reservation) ? config.classSubjectPrefix : config.subjectPrefix
-  return `${prefix} ${reservation.reservationNumber}`
+  const safeReservationNumber = Array.from(String(reservation.reservationNumber || ''))
+    .filter((character) => character.charCodeAt(0) >= 0x20 && character.charCodeAt(0) !== 0x7f)
+    .join('')
+    .slice(0, 80)
+  return `${prefix} ${safeReservationNumber}`
 }
 
 function getHeading(reservation, config) {
@@ -388,6 +394,10 @@ async function postJson(url, payload, headers) {
         let responseBody = ''
         response.setEncoding('utf8')
         response.on('data', (chunk) => {
+          if (responseBody.length + chunk.length > 65_536) {
+            request.destroy(new Error('Resend API response was too large.'))
+            return
+          }
           responseBody += chunk
         })
         response.on('end', () => {
@@ -405,6 +415,7 @@ async function postJson(url, payload, headers) {
       },
     )
 
+    request.setTimeout(10_000, () => request.destroy(new Error('Resend API request timed out.')))
     request.on('error', reject)
     request.write(body)
     request.end()

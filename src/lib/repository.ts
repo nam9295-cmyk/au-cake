@@ -1,5 +1,5 @@
-import { AppwriteException, ID, OAuthProvider, Query } from 'appwrite'
-import { account, appwriteConfig, databases, isAppwriteConfigured } from './appwrite'
+import { AppwriteException, ExecutionMethod, ID, OAuthProvider, Query, type Models } from 'appwrite'
+import { account, appwriteConfig, databases, functions, isAppwriteConfigured } from './appwrite'
 import { MARKET } from './market'
 import {
   DEFAULT_CHOCOLATE_TYPE,
@@ -37,13 +37,14 @@ import type {
   ClassReservationStatus,
   PaymentStatus,
   PoundAddon,
+  PublicReservation,
   Reservation,
   ReservationFilters,
   ReservationInput,
   ReservationStatus,
   StoreSettings,
 } from './types'
-import { generateReservationNumber, isPickupTimeAllowed, PICKUP_TIME_TOO_SOON_ERROR } from './utils'
+import { generateReservationNumber, isPickupTimeAllowed, isValidPhone, normalizePhone, PICKUP_TIME_TOO_SOON_ERROR, todayInputValue } from './utils'
 
 const LOCAL_RESERVATIONS_KEY = `verygood-cake-reservations-${MARKET.toLowerCase()}`
 const LOCAL_CLASS_RESERVATIONS_KEY = `verygood-class-reservations-${MARKET.toLowerCase()}`
@@ -87,6 +88,59 @@ type AppwriteCakePickupOpeningDocument = {
   pickupTime: string
 }
 
+type ReservationApiResponse<T> = {
+  ok: boolean
+  result?: T
+  code?: string
+}
+
+function shouldUseReservationApi(scope: 'lookup' | 'all') {
+  if (!isAppwriteConfigured) return false
+  if (scope === 'all') return appwriteConfig.reservationApiMode === 'all'
+  return appwriteConfig.reservationApiMode === 'lookup' || appwriteConfig.reservationApiMode === 'all'
+}
+
+async function executeReservationApi<T>(action: string, data?: unknown): Promise<T> {
+  const execution = await functions.createExecution({
+    functionId: appwriteConfig.reservationApiFunctionId,
+    body: JSON.stringify({ action, data }),
+    async: false,
+    xpath: '/',
+    method: ExecutionMethod.POST,
+  })
+
+  let response: ReservationApiResponse<T>
+  try {
+    response = JSON.parse(execution.responseBody || '{}') as ReservationApiResponse<T>
+  } catch {
+    throw new Error('RESERVATION_API_INVALID_RESPONSE')
+  }
+  if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300 || response.ok !== true) {
+    throw new Error(response.code || 'RESERVATION_API_UNAVAILABLE')
+  }
+  return response.result as T
+}
+
+async function listAllDocuments(databaseId: string, collectionId: string, queries: string[]) {
+  const documents: Models.Document[] = []
+  let cursor = ''
+
+  for (let page = 0; page < 50; page += 1) {
+    const result = await databases.listDocuments({
+      databaseId,
+      collectionId,
+      queries: [...queries, Query.limit(100), ...(cursor ? [Query.cursorAfter(cursor)] : [])],
+      total: false,
+    })
+    documents.push(...result.documents)
+    if (result.documents.length < 100) return documents
+    cursor = result.documents.at(-1)?.$id || ''
+    if (!cursor) return documents
+  }
+
+  throw new Error('APPWRITE_RESULT_LIMIT_EXCEEDED')
+}
+
 function normalizeReservation(reservation: Reservation): Reservation {
   return {
     ...reservation,
@@ -104,6 +158,34 @@ function normalizeReservation(reservation: Reservation): Reservation {
       : fromCurrencyCents(reservation.totalPriceCents),
     totalPriceCents: reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice),
   }
+}
+
+function toPublicReservation(reservation: PublicReservation): PublicReservation {
+  const product = getProductById(reservation.productId)
+  const poundAddon = normalizePoundAddon(product.id, reservation.poundAddon || DEFAULT_POUND_ADDON)
+  return {
+    reservationNumber: reservation.reservationNumber,
+    productId: product.id,
+    cakeSize: normalizeCakeSize(product.id, reservation.cakeSize),
+    chocolateType: normalizeReservationChocolateType(
+      product.id,
+      reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
+      poundAddon,
+    ),
+    poundAddon,
+    quantity: normalizeQuantity(reservation.quantity),
+    pickupDate: reservation.pickupDate,
+    pickupTime: reservation.pickupTime,
+    cacaoPercent: reservation.cacaoPercent || '기본',
+    status: reservation.status,
+    paymentStatus: reservation.paymentStatus,
+  }
+}
+
+function matchesReservationPhone(storedPhone: string, suppliedPhone: string) {
+  const suppliedDigits = normalizePhone(suppliedPhone)
+  const storedDigits = normalizePhone(storedPhone)
+  return isValidPhone(suppliedDigits) && storedDigits === suppliedDigits
 }
 
 function normalizeQuantity(quantity?: number) {
@@ -336,6 +418,15 @@ async function createClassBookedSlot(classDate: string, classTime: string) {
   }
 }
 
+async function findClassBookedSlotDocument(classDate: string, classTime: string) {
+  const result = await databases.listDocuments(
+    appwriteConfig.classReservationsDatabaseId,
+    appwriteConfig.classBookedDatesCollectionId,
+    [Query.equal('classDate', classDate), Query.equal('classTime', classTime), Query.limit(1)],
+  )
+  return result.documents[0] as unknown as AppwriteClassBookedSlotDocument | undefined
+}
+
 async function deleteClassBookedSlot(classDate: string, classTime: string) {
   if (!isAppwriteConfigured) {
     writeLocalClassBookedSlots(readLocalClassBookedSlots().filter((slot) => {
@@ -345,12 +436,7 @@ async function deleteClassBookedSlot(classDate: string, classTime: string) {
     return
   }
 
-  const result = await databases.listDocuments(
-    appwriteConfig.classReservationsDatabaseId,
-    appwriteConfig.classBookedDatesCollectionId,
-    [Query.equal('classDate', classDate), Query.equal('classTime', classTime), Query.limit(1)],
-  )
-  const document = result.documents[0] as unknown as AppwriteClassBookedSlotDocument | undefined
+  const document = await findClassBookedSlotDocument(classDate, classTime)
   if (!document) return
   await databases.deleteDocument(
     appwriteConfig.classReservationsDatabaseId,
@@ -402,6 +488,11 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   ])
   if (isCakePickupBlockedByClass(input.pickupDate, input.pickupTime, classBookedSlots, cakePickupOpenings)) {
     throw new Error(PICKUP_TIME_CLASS_CONFLICT_ERROR)
+  }
+
+  if (shouldUseReservationApi('all')) {
+    const reservation = await executeReservationApi<Reservation>('create-cake', input)
+    return normalizeReservation(reservation)
   }
 
   const now = new Date().toISOString()
@@ -463,18 +554,18 @@ export async function listReservations(filters?: ReservationFilters): Promise<Re
     return applyLocalFilters(readLocalReservations(), filters).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   }
 
-  const queries = [Query.orderDesc('createdAt'), Query.limit(200)]
+  const queries = [Query.orderDesc('createdAt')]
   if (filters?.pickupDate) queries.push(Query.equal('pickupDate', filters.pickupDate))
   if (filters?.status) queries.push(Query.equal('status', filters.status))
   if (filters?.paymentStatus) queries.push(Query.equal('paymentStatus', filters.paymentStatus))
   if (filters?.cacaoPercent) queries.push(Query.equal('cacaoPercent', filters.cacaoPercent as CacaoPercent))
 
-  const result = await databases.listDocuments(
+  const documents = await listAllDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.reservationsCollectionId,
     queries,
   )
-  return applyLocalFilters(result.documents.map((doc) => toReservation(doc as unknown as AppwriteReservationDocument)), {
+  return applyLocalFilters(documents.map((doc) => toReservation(doc as unknown as AppwriteReservationDocument)), {
     pickupDate: '',
     status: '',
     paymentStatus: '',
@@ -483,15 +574,20 @@ export async function listReservations(filters?: ReservationFilters): Promise<Re
   })
 }
 
-export async function getReservationByNumber(reservationNumber: string, phone: string): Promise<Reservation | null> {
-  const phoneDigits = phone.replace(/\D/g, '')
+export async function getReservationByNumber(reservationNumber: string, phone: string): Promise<PublicReservation | null> {
+  if (shouldUseReservationApi('lookup')) {
+    const reservation = await executeReservationApi<PublicReservation | null>('lookup-cake', {
+      reservationNumber,
+      phone,
+    })
+    return reservation ? toPublicReservation(reservation) : null
+  }
 
   if (!isAppwriteConfigured) {
     const reservation = readLocalReservations().find((item) => {
-      const itemDigits = item.customerPhone.replace(/\D/g, '')
-      return item.reservationNumber === reservationNumber && (itemDigits === phoneDigits || itemDigits.endsWith(phoneDigits))
+      return item.reservationNumber === reservationNumber && matchesReservationPhone(item.customerPhone, phone)
     })
-    return reservation || null
+    return reservation ? toPublicReservation(reservation) : null
   }
 
   const result = await databases.listDocuments(appwriteConfig.databaseId, appwriteConfig.reservationsCollectionId, [
@@ -502,8 +598,7 @@ export async function getReservationByNumber(reservationNumber: string, phone: s
     ? toReservation(result.documents[0] as unknown as AppwriteReservationDocument)
     : null
   if (!reservation) return null
-  const reservationPhone = reservation.customerPhone.replace(/\D/g, '')
-  return reservationPhone === phoneDigits || reservationPhone.endsWith(phoneDigits) ? reservation : null
+  return matchesReservationPhone(reservation.customerPhone, phone) ? toPublicReservation(reservation) : null
 }
 
 export async function updateReservation(
@@ -576,15 +671,15 @@ export async function listClassBookedSlots(classDate?: string): Promise<ClassBoo
   }
 
   const queries = classDate === undefined
-    ? [Query.orderAsc('classDate'), Query.limit(200)]
-    : [Query.equal('classDate', classDate), Query.limit(200)]
+    ? [Query.greaterThanEqual('classDate', todayInputValue()), Query.orderAsc('classDate')]
+    : [Query.equal('classDate', classDate)]
 
-  const result = await databases.listDocuments(
+  const documents = await listAllDocuments(
     appwriteConfig.classReservationsDatabaseId,
     appwriteConfig.classBookedDatesCollectionId,
     queries,
   )
-  return result.documents
+  return documents
     .map((doc) => {
       const slot = doc as unknown as AppwriteClassBookedSlotDocument
       if (!slot.classDate) return null
@@ -594,6 +689,10 @@ export async function listClassBookedSlots(classDate?: string): Promise<ClassBoo
 }
 
 export async function createClassReservation(input: ClassReservationInput): Promise<ClassReservation> {
+  if (shouldUseReservationApi('all')) {
+    return executeReservationApi<ClassReservation>('create-class', input)
+  }
+
   const now = new Date().toISOString()
   const data = {
     reservationNumber: generateClassReservationNumber(),
@@ -647,17 +746,17 @@ export async function listClassReservations(filters?: ClassReservationFilters): 
     return applyLocalClassFilters(readLocalClassReservations(), filters).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   }
 
-  const queries = [Query.orderDesc('createdAt'), Query.limit(200)]
+  const queries = [Query.orderDesc('createdAt')]
   if (filters?.classDate) queries.push(Query.equal('classDate', filters.classDate))
   if (filters?.status) queries.push(Query.equal('status', filters.status))
   if (filters?.paymentStatus) queries.push(Query.equal('paymentStatus', filters.paymentStatus))
 
-  const result = await databases.listDocuments(
+  const documents = await listAllDocuments(
     appwriteConfig.classReservationsDatabaseId,
     appwriteConfig.classReservationsCollectionId,
     queries,
   )
-  return applyLocalClassFilters(result.documents.map((doc) => toClassReservation(doc as unknown as AppwriteClassReservationDocument)), {
+  return applyLocalClassFilters(documents.map((doc) => toClassReservation(doc as unknown as AppwriteClassReservationDocument)), {
     classDate: '',
     status: '',
     paymentStatus: '',
@@ -675,11 +774,16 @@ export async function updateClassReservation(
     const reservations = readLocalClassReservations()
     const index = reservations.findIndex((reservation) => reservation.id === id)
     if (index < 0) throw new Error('클래스 예약을 찾을 수 없습니다.')
-    const previousClassDate = reservations[index].classDate
-    const previousClassTime = reservations[index].classTime
+    const previous = reservations[index]
+    const nextStatus = updates.status ?? previous.status
+    if (previous.status === 'Cancelled' && nextStatus !== 'Cancelled') {
+      await createClassBookedSlot(previous.classDate, previous.classTime)
+    }
     reservations[index] = { ...reservations[index], ...nextUpdates }
     writeLocalClassReservations(reservations)
-    if (updates.status === 'Cancelled') await deleteClassBookedSlot(previousClassDate, previousClassTime)
+    if (previous.status !== 'Cancelled' && nextStatus === 'Cancelled') {
+      await deleteClassBookedSlot(previous.classDate, previous.classTime)
+    }
     return reservations[index]
   }
 
@@ -688,14 +792,66 @@ export async function updateClassReservation(
     appwriteConfig.classReservationsCollectionId,
     id,
   )) as unknown as AppwriteClassReservationDocument
-  const document = await databases.updateDocument(
+  const nextStatus = updates.status ?? current.status
+  const isCancelling = current.status !== 'Cancelled' && nextStatus === 'Cancelled'
+  const isReactivating = current.status === 'Cancelled' && nextStatus !== 'Cancelled'
+
+  if (!isCancelling && !isReactivating) {
+    const document = await databases.updateDocument(
+      appwriteConfig.classReservationsDatabaseId,
+      appwriteConfig.classReservationsCollectionId,
+      id,
+      nextUpdates,
+    )
+    return toClassReservation(document as unknown as AppwriteClassReservationDocument)
+  }
+
+  const slotDocument = isCancelling
+    ? await findClassBookedSlotDocument(current.classDate, current.classTime)
+    : undefined
+  const transaction = await databases.createTransaction()
+  try {
+    if (isReactivating) {
+      await databases.createDocument({
+        databaseId: appwriteConfig.classReservationsDatabaseId,
+        collectionId: appwriteConfig.classBookedDatesCollectionId,
+        documentId: ID.unique(),
+        data: { classDate: current.classDate, classTime: current.classTime, createdAt: new Date().toISOString() },
+        transactionId: transaction.$id,
+      })
+    }
+    await databases.updateDocument({
+      databaseId: appwriteConfig.classReservationsDatabaseId,
+      collectionId: appwriteConfig.classReservationsCollectionId,
+      documentId: id,
+      data: nextUpdates,
+      transactionId: transaction.$id,
+    })
+    if (isCancelling && slotDocument) {
+      await databases.deleteDocument({
+        databaseId: appwriteConfig.classReservationsDatabaseId,
+        collectionId: appwriteConfig.classBookedDatesCollectionId,
+        documentId: slotDocument.$id,
+        transactionId: transaction.$id,
+      })
+    }
+    await databases.updateTransaction({ transactionId: transaction.$id, commit: true })
+  } catch (error) {
+    try {
+      await databases.updateTransaction({ transactionId: transaction.$id, rollback: true })
+    } catch {
+      // Appwrite may already have rolled back a failed transaction.
+    }
+    if (isDuplicateAppwriteError(error)) throw new Error('CLASS_SESSION_UNAVAILABLE', { cause: error })
+    throw error
+  }
+
+  const saved = await databases.getDocument(
     appwriteConfig.classReservationsDatabaseId,
     appwriteConfig.classReservationsCollectionId,
     id,
-    nextUpdates,
   )
-  if (updates.status === 'Cancelled') await deleteClassBookedSlot(current.classDate, current.classTime)
-  return toClassReservation(document as unknown as AppwriteClassReservationDocument)
+  return toClassReservation(saved as unknown as AppwriteClassReservationDocument)
 }
 
 export async function loginAdmin(email: string, password: string) {

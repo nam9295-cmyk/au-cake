@@ -88,7 +88,7 @@ import {
   type AdminCalendarEvent,
 } from './lib/admin-calendar'
 import { buildAdminReservationUpdate } from './lib/admin-reservation-edit'
-import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, Reservation, ReservationFilters, StoreSettings } from './lib/types'
+import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
   buildClassPaymentDetails,
@@ -114,6 +114,7 @@ import {
   customerTimeOptionsForDate,
   dateInputValue,
   formatCurrency,
+  generateRequestId,
   isPickupTimeAllowed,
   PICKUP_TIME_TOO_SOON_ERROR,
   isValidPhone,
@@ -504,7 +505,10 @@ function formatPaymentStatus(status: string) {
   return mapping[status] || status
 }
 
-function ProductDetailRows({ reservation, language = 'ko' }: { reservation: Reservation; language?: Language }) {
+function ProductDetailRows({ reservation, language = 'ko' }: {
+  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon'>
+  language?: Language
+}) {
   const product = getProductById(reservation.productId)
   const productText = getProductText(product.id, language)
   const copy = cakeCopy(language)
@@ -929,6 +933,7 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
 }
 
 function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => void; onComplete: (reservation: ClassReservation) => void }) {
+  const [requestId] = useState(generateRequestId)
   const [form, setForm] = useState<{
     classDate: string
     classTime: string
@@ -948,6 +953,8 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     parentConsent: boolean
     cancellationAgreement: boolean
     photoConsent: boolean
+    privacyConsent: boolean
+    website: string
   }>({
     classDate: addDaysInputValue(4),
     classTime: CLASS_SESSION_TIMES[0],
@@ -967,6 +974,8 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     parentConsent: false,
     cancellationAgreement: false,
     photoConsent: false,
+    privacyConsent: false,
+    website: '',
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -1004,10 +1013,10 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     if (!availableSessionTimes.includes(form.classTime as (typeof CLASS_SESSION_TIMES)[number])) return setError('Please choose an available class time.')
     if (form.bookingType === '2-friends' && (!form.secondChildName.trim() || !form.secondChildSchoolYear.trim())) return setError('Please enter Child 2 name and school year.')
     if (!form.emergencyContact.trim() || !form.pickupPerson.trim()) return setError('Emergency contact and pick-up person are required.')
-    if (!form.parentConsent || !form.cancellationAgreement) return setError('Parent consent and booking agreement are required.')
+    if (!form.parentConsent || !form.cancellationAgreement || !form.privacyConsent) return setError('Parent, privacy, and booking agreements are required.')
     setSubmitting(true)
     try {
-      const reservation = await createClassReservation({ ...form, parentPhone: phone })
+      const reservation = await createClassReservation({ ...form, parentPhone: phone, requestId })
       onComplete(reservation)
       navigate('class-complete')
     } catch (submitError) {
@@ -1026,6 +1035,10 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
       <SiteHeader navigate={navigate} />
       <main className="class-reserve-page">
         <form className="class-reserve-form" onSubmit={submitClassReservation}>
+          <label className="website-field" aria-hidden="true">
+            Leave this field blank
+            <input name="website" value={form.website} onChange={(event) => setForm({ ...form, website: event.target.value })} tabIndex={-1} autoComplete="off" />
+          </label>
           <header className="class-reserve-title-block">
             <button className="class-back-button" type="button" onClick={() => navigate('classes')}>
               <ArrowLeft size={14} /> Back to classes
@@ -1169,6 +1182,10 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
               <input type="checkbox" checked={form.cancellationAgreement} onChange={(event) => setForm({ ...form, cancellationAgreement: event.target.checked })} />
               <span>I understand my booking is completed only after availability is confirmed and full payment is received.</span>
             </label>
+            <label className="class-check-row">
+              <input type="checkbox" checked={form.privacyConsent} onChange={(event) => setForm({ ...form, privacyConsent: event.target.checked })} />
+              <span>I agree that booking, contact, allergy and emergency details may be stored in Appwrite for class administration and sent through Resend for operator email notifications.</span>
+            </label>
             <fieldset className="class-photo-consent">
               <legend>Photo Consent</legend>
               <div className="class-photo-options">
@@ -1249,6 +1266,7 @@ function ReservePage({
   language: Language
   setLanguage: (language: Language) => void
 }) {
+  const [requestId] = useState(generateRequestId)
   const copy = cakeCopy(language)
   const [form, setForm] = useState({
     productId: initialProductId,
@@ -1264,6 +1282,7 @@ function ReservePage({
     requestNote: '',
     promoCode: '',
     privacy: false,
+    website: '',
   })
   const [showCakeSelector, setShowCakeSelector] = useState(false)
   const [error, setError] = useState('')
@@ -1416,6 +1435,9 @@ function ReservePage({
           cacaoPercent: form.cacaoPercent,
           requestNote: form.requestNote,
           promoCode: form.promoCode,
+          privacyConsent: form.privacy,
+          requestId,
+          website: form.website,
         }
       )
       onComplete(reservation)
@@ -1578,7 +1600,11 @@ function ReservePage({
             <p>{language === 'ko' ? copy.reservationCompleteText : settings.reservationNotice}</p>
           </aside>
 
-          <form className="reservation-form" onSubmit={submitReservation}>
+        <form className="reservation-form" onSubmit={submitReservation}>
+          <label className="website-field" aria-hidden="true">
+            Leave this field blank
+            <input name="website" value={form.website} onChange={(event) => setForm({ ...form, website: event.target.value })} tabIndex={-1} autoComplete="off" />
+          </label>
             {showCakeSelector && (
               <fieldset className="cake-selector-fieldset">
                 <legend>{labels.cakeSelect}</legend>
@@ -1966,15 +1992,29 @@ function LookupPage({
   const copy = cakeCopy(language)
   const [reservationNumber, setReservationNumber] = useState('')
   const [phone, setPhone] = useState('')
-  const [reservation, setReservation] = useState<Reservation | null>(null)
+  const [reservation, setReservation] = useState<PublicReservation | null>(null)
   const [message, setMessage] = useState('')
+  const [searching, setSearching] = useState(false)
 
   async function lookup(event: React.FormEvent) {
     event.preventDefault()
     setMessage('')
-    const result = await getReservationByNumber(reservationNumber.trim(), phone.trim())
-    setReservation(result)
-    if (!result) setMessage(copy.notFoundText)
+    setReservation(null)
+    const normalizedPhone = normalizePhone(phone)
+    if (!isValidPhone(normalizedPhone)) {
+      setMessage(copy.errors.phone)
+      return
+    }
+    setSearching(true)
+    try {
+      const result = await getReservationByNumber(reservationNumber.trim(), normalizedPhone)
+      setReservation(result)
+      if (!result) setMessage(copy.notFoundText)
+    } catch {
+      setMessage(copy.errors.submit)
+    } finally {
+      setSearching(false)
+    }
   }
 
   return (
@@ -1989,10 +2029,17 @@ function LookupPage({
           </label>
           <label>
             {copy.lookupPhoneLabel}
-            <input inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} />
+            <input
+              inputMode="tel"
+              autoComplete="tel"
+              required
+              placeholder={copy.phonePlaceholder}
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+            />
           </label>
-          <button className="primary-button full-width" type="submit">
-            {copy.search}
+          <button className="primary-button full-width" type="submit" disabled={searching}>
+            {searching ? copy.submitting : copy.search}
           </button>
           {message && <p className="error-text">{message}</p>}
         </form>
