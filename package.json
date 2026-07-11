@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",
     "lint": "eslint .",
     "test": "npm run test:cake && npm run test:class && npm run test:admin-calendar && npm run test:admin-reservation && npm run test:csv-security && npm run test:reservation-api",
     "test:class": "TMP_DIR=/tmp/au-cake-test-$(date +%s); npx tsc tests/class-utils.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && node --test $TMP_DIR/tests/class-utils.test.js",

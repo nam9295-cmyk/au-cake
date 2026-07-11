@@ -88,6 +88,7 @@ import {
   type AdminCalendarEvent,
 } from './lib/admin-calendar'
 import { buildAdminReservationUpdate } from './lib/admin-reservation-edit'
+import { applySeo } from './lib/seo'
 import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
@@ -251,10 +252,11 @@ function PickupLocationCard({ language }: { language: Language }) {
         <p className="summary-kicker">{copy.pickupLocationKicker}</p>
         <h2 id="pickup-location-title">{copy.pickupLocationTitle}</h2>
         <p>{copy.pickupLocationText}</p>
-        <address>
-          {PICKUP_LOCATION_NAME}<br />
-          {PICKUP_LOCATION_ADDRESS}
-        </address>
+        <p className="pickup-location-point">
+          {language === 'ko' ? `사전 약속 픽업 장소: ${PICKUP_LOCATION_NAME} 인근` : `Pre-arranged meeting point near ${PICKUP_LOCATION_NAME}`}<br />
+          {PICKUP_LOCATION_ADDRESS}<br />
+          <small>{language === 'ko' ? '매장 또는 방문 판매 장소가 아닙니다' : 'Not a storefront or walk-in shop'}</small>
+        </p>
         <a className="secondary-button pickup-map-link" href={PICKUP_MAP_URL} target="_blank" rel="noreferrer">
           {copy.openMap}
         </a>
@@ -334,6 +336,10 @@ function App() {
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
   }, [])
+
+  useEffect(() => {
+    applySeo(window.location.pathname)
+  }, [page])
 
   const navigate = useCallback((nextPage: Page) => {
     window.history.pushState(null, '', pathForPage(nextPage))
@@ -442,19 +448,19 @@ function SiteHeader({
   return (
     <>
       <header className="site-header">
-        <button className="brand-button" type="button" onClick={() => navigate('home')}>
+        <a className="brand-button" href="/" onClick={(event) => { event.preventDefault(); navigate('home') }}>
           Verygood Chocolate
-        </button>
+        </a>
         <nav>
-          <button className="kids-nav-button" type="button" onClick={() => navigate('classes')}>
+          <a className="kids-nav-button" href="/classes" onClick={(event) => { event.preventDefault(); navigate('classes') }}>
             {copy.kidsNav}
-          </button>
-          <button type="button" onClick={() => navigate('lookup')}>
+          </a>
+          <a href="/lookup" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('lookup') }}>
             {copy.lookupNav}
-          </button>
-          <button type="button" onClick={() => navigate('admin-login')}>
+          </a>
+          <a href="/admin/login" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('admin-login') }}>
             {copy.adminNav}
-          </button>
+          </a>
         </nav>
       </header>
       {language && setLanguage && (
@@ -660,13 +666,13 @@ function HomePage({
             <span>LIMITED</span>
             <b>VCC</b>
           </span>
-          <h1 className="billboard-word hero-display-word">
+          <div className="billboard-word hero-display-word" aria-hidden="true">
             <span>gâteau</span>
             <span>au</span>
             <span>chocolat</span>
-          </h1>
+          </div>
           <div className="hero-copy">
-            <p className="hero-title">{copy.homeTitle}</p>
+            <h1 className="hero-title">{copy.homeTitle}</h1>
             <p className="hero-description">{copy.homeDescription}</p>
             <div className="hero-actions">
               <button className="primary-button" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
@@ -807,6 +813,49 @@ function HomePage({
             </article>
           </div>
           {settings.pickupNotice.trim() && <p className="policy-note">{settings.pickupNotice}</p>}
+        </section>
+
+        <section className="content-section cake-information-section" aria-labelledby="sydney-cake-info-title">
+          <p className="summary-kicker">{language === 'ko' ? '시드니에서 직접 제작' : 'Made in Sydney'}</p>
+          <h2 id="sydney-cake-info-title">
+            {language === 'ko' ? '예약 주문으로 준비하는 소량 제작 초콜릿 케이크' : 'Small-batch chocolate cakes for pre-order'}
+          </h2>
+          <div className="cake-information-grid">
+            <article>
+              <h3>{language === 'ko' ? '초콜릿이 중심인 레시피' : 'Chocolate-first recipes'}</h3>
+              <p>{language === 'ko' ? '파베 가나슈 케이크, 진한 갸또 쇼콜라, 초콜릿 컵케이크 1다스 중 선택할 수 있어요. 확정된 주문에 맞춰 소량으로 준비합니다.' : 'Choose from layered pave ganache cake, rich gâteau au chocolat, or a dozen chocolate cupcakes. Each option is made in a small batch for a confirmed order.'}</p>
+            </article>
+            <article>
+              <h3>{language === 'ko' ? '원하는 옵션 선택' : 'Choose your finish'}</h3>
+              <p>{language === 'ko' ? '케이크에 따라 사이즈, 다크 또는 밀크 초콜릿, 초콜릿 추가, 바닐라 크림 마감을 선택할 수 있어요.' : 'Available options vary by cake and include multiple sizes, dark or milk chocolate, extra chocolate, and vanilla cream finishes.'}</p>
+            </article>
+            <article>
+              <h3>{language === 'ko' ? 'Melrose Park 사전 약속 픽업' : 'Pre-arranged Melrose Park pick-up'}</h3>
+              <p>{language === 'ko' ? '방문 매장 없이 운영하는 홈베이킹 서비스입니다. 신청 후 Jenny가 가능 여부, 결제 정보, 정확한 Melrose Park 전달 장소를 안내해 드려요.' : 'This is a home-baking service without a walk-in shop. Jenny confirms availability, payment details, and the exact Melrose Park handoff point after your request.'}</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="content-section cake-faq-section" aria-labelledby="cake-faq-title">
+          <h2 id="cake-faq-title">{language === 'ko' ? '시드니 케이크 주문 FAQ' : 'Sydney cake order FAQ'}</h2>
+          <div className="cake-faq-list">
+            <details>
+              <summary>{language === 'ko' ? '케이크는 어디서 픽업하나요?' : 'Where do I pick up my cake?'}</summary>
+              <p>{language === 'ko' ? 'Sydney Melrose Park에서 사전 약속 픽업으로 진행됩니다. 방문 매장은 없으며 주문 확정 후 Jenny가 정확한 전달 방법을 안내해 드려요.' : 'Pick-up is arranged in Melrose Park, Sydney. There is no walk-in shop, so Jenny sends the exact meeting details after confirming your order.'}</p>
+            </details>
+            <details>
+              <summary>{language === 'ko' ? '신청서를 보내면 바로 주문이 확정되나요?' : 'Is submitting the form a confirmed order?'}</summary>
+              <p>{language === 'ko' ? '아니요. Jenny가 먼저 가능 여부를 확인하고 결제 정보를 보내드립니다. 입금이 확인되면 주문이 최종 확정됩니다.' : 'No. Jenny first checks availability and sends payment details. Your order is confirmed after payment is received.'}</p>
+            </details>
+            <details>
+              <summary>{language === 'ko' ? '어떤 초콜릿 케이크를 주문할 수 있나요?' : 'Which chocolate cakes can I order?'}</summary>
+              <p>{language === 'ko' ? '파베 초콜릿 케이크, 직사각형 갸또 쇼콜라, 초콜릿 컵케이크 1다스를 신청할 수 있습니다. 옵션과 가격은 위 상품 목록에서 확인해 주세요.' : 'You can request a layered pave chocolate cake, a rectangular gâteau au chocolat, or chocolate cupcakes by the dozen. Options and prices are shown above.'}</p>
+            </details>
+            <details>
+              <summary>{language === 'ko' ? '시드니 배송이나 방문 구매가 가능한가요?' : 'Do you offer Sydney delivery or walk-in sales?'}</summary>
+              <p>{language === 'ko' ? '현재는 제공하지 않습니다. Melrose Park 사전 약속 픽업 주문만 받고 있습니다.' : 'Not currently. Orders are made for pre-arranged pick-up in Melrose Park only.'}</p>
+            </details>
+          </div>
         </section>
 
         {marketConfig.market === 'AU' && <PickupLocationCard language={language} />}

@@ -126,7 +126,7 @@ export function cakeCopy(language: Language) {
       options: '옵션',
       pickupLocationKicker: '픽업 장소',
       pickupLocationTitle: 'Google Maps에서 확인하기',
-      pickupLocationText: '픽업은 Pulse - Melrose Park 근처에서 진행됩니다. 정확한 전달 방법은 Jenny가 주문 확정 후 안내드려요.',
+      pickupLocationText: '매장 방문 판매 없이 Melrose Park에서 사전 약속 픽업으로 진행됩니다. 정확한 전달 장소와 방법은 Jenny가 주문 확정 후 안내드려요.',
       openMap: 'Google Maps 열기',
       guideSteps: [
         { title: '주문 신청', text: '원하는 케이크와 픽업 시간을 선택해 주세요.' },
@@ -231,7 +231,7 @@ export function cakeCopy(language: Language) {
     options: 'Options',
     pickupLocationKicker: 'Pick-up location',
     pickupLocationTitle: 'Find us on Google Maps',
-    pickupLocationText: 'Pick-up is at Pulse - Melrose Park. Jenny will confirm the exact handoff details with your booking confirmation.',
+    pickupLocationText: 'This is a pre-arranged Melrose Park meeting point, not a walk-in shop. Jenny confirms the exact handoff details with your booking confirmation.',
     openMap: 'Open in Google Maps',
     guideSteps: marketConfig.guideSteps,
     pickupHours: ['Pick-up time 10:00-20:00 every day'],

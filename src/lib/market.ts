@@ -339,8 +339,8 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     copy: {
       brandName: 'Verygood Chocolate',
       productName: 'Gâteau au Chocolat',
-      homeTitle: 'Sydney Chocolate Cake Orders',
-      homeDescription: 'Small-batch chocolate cakes with Verygood Chocolate depth, available by pre-order for Sydney pick-up.',
+      homeTitle: 'Sydney Made-to-Order Chocolate Cakes',
+      homeDescription: 'Small-batch chocolate cakes with Verygood Chocolate depth, available by pre-order for a confirmed Melrose Park pick-up.',
       reserveCta: 'Request a cake',
       lookupNav: 'Find booking',
       adminNav: 'Admin',
