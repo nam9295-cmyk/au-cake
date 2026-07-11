@@ -89,6 +89,13 @@ import {
 } from './lib/admin-calendar'
 import { buildAdminReservationUpdate } from './lib/admin-reservation-edit'
 import { applySeo } from './lib/seo'
+import {
+  getAnalyticsConsent,
+  initializeAnalytics,
+  setAnalyticsConsent,
+  trackEvent,
+  trackPageView,
+} from './lib/analytics'
 import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
@@ -257,7 +264,13 @@ function PickupLocationCard({ language }: { language: Language }) {
           {PICKUP_LOCATION_ADDRESS}<br />
           <small>{language === 'ko' ? '매장 또는 방문 판매 장소가 아닙니다' : 'Not a storefront or walk-in shop'}</small>
         </p>
-        <a className="secondary-button pickup-map-link" href={PICKUP_MAP_URL} target="_blank" rel="noreferrer">
+        <a
+          className="secondary-button pickup-map-link"
+          href={PICKUP_MAP_URL}
+          target="_blank"
+          rel="noreferrer"
+          onClick={() => trackEvent('pickup_map_click', { location: 'melrose_park' })}
+        >
           {copy.openMap}
         </a>
       </div>
@@ -271,6 +284,42 @@ function PickupLocationCard({ language }: { language: Language }) {
         />
       </div>
     </section>
+  )
+}
+
+function AnalyticsConsentBanner({ language }: { language: Language }) {
+  const [choice, setChoice] = useState<boolean | null>(getAnalyticsConsent)
+
+  if (choice !== null) return null
+
+  function choose(granted: boolean) {
+    setAnalyticsConsent(granted)
+    setChoice(granted)
+    if (granted) {
+      initializeAnalytics()
+      trackPageView(window.location.pathname)
+    }
+  }
+
+  return (
+    <aside className="analytics-consent" aria-label={language === 'ko' ? '분석 쿠키 설정' : 'Analytics preferences'}>
+      <div>
+        <strong>{language === 'ko' ? '사이트 이용 분석' : 'Help us improve the website'}</strong>
+        <p>
+          {language === 'ko'
+            ? '동의하면 Google Analytics로 페이지 방문과 예약 완료 여부만 측정합니다. 이름, 전화번호, 이메일은 전송하지 않습니다.'
+            : 'With your permission, Google Analytics measures page visits and booking completions. We do not send names, phone numbers, or email addresses.'}
+        </p>
+      </div>
+      <div className="analytics-consent-actions">
+        <button type="button" className="secondary-button" onClick={() => choose(false)}>
+          {language === 'ko' ? '필수 기능만' : 'Essential only'}
+        </button>
+        <button type="button" className="primary-button" onClick={() => choose(true)}>
+          {language === 'ko' ? '분석 허용' : 'Allow analytics'}
+        </button>
+      </div>
+    </aside>
   )
 }
 
@@ -339,9 +388,12 @@ function App() {
 
   useEffect(() => {
     applySeo(window.location.pathname)
+    if (!window.location.pathname.startsWith('/admin')) trackPageView(window.location.pathname)
   }, [page])
 
   const navigate = useCallback((nextPage: Page) => {
+    if (nextPage === 'reserve') trackEvent('booking_start', { booking_type: 'cake' })
+    if (nextPage === 'class-reserve') trackEvent('booking_start', { booking_type: 'kids_class' })
     window.history.pushState(null, '', pathForPage(nextPage))
     setPage(nextPage)
     window.scrollTo({ top: 0 })
@@ -388,6 +440,7 @@ function App() {
       {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
       {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
       {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}
+      {!isAdminPage && <AnalyticsConsentBanner language={language} />}
     </div>
     </>
   )
@@ -1066,6 +1119,11 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     setSubmitting(true)
     try {
       const reservation = await createClassReservation({ ...form, parentPhone: phone, requestId })
+      trackEvent('class_booking_request', {
+        booking_type: form.bookingType,
+        value: price,
+        currency: 'AUD',
+      })
       onComplete(reservation)
       navigate('class-complete')
     } catch (submitError) {
@@ -1489,6 +1547,12 @@ function ReservePage({
           website: form.website,
         }
       )
+      trackEvent('cake_booking_request', {
+        product_id: form.productId,
+        quantity: form.quantity,
+        value: reservation.totalPrice,
+        currency: 'AUD',
+      })
       onComplete(reservation)
       navigate('complete')
     } catch (submitError) {

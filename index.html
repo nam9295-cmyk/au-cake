@@ -131,6 +131,9 @@
         };
 
         function openChat() {
+          if (window.gtag) {
+            window.gtag("event", "chat_open", { method: "website_chat" });
+          }
           if (window.$chatwoot && window.$chatwoot.hasLoaded) {
             window.$chatwoot.toggle("open");
             launcher.style.display = "none";
