@@ -10,6 +10,13 @@ import {
   normalizeAustralianMobile,
   publicCakeReservation,
 } from './business.js'
+import {
+  createCalendarToken,
+  sanitizeCakeCalendarEvent,
+  sanitizeClassCalendarEvent,
+  secureTextEqual,
+  verifyCalendarToken,
+} from './calendar-access.js'
 
 const config = {
   cakeDatabaseId: process.env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au',
@@ -296,6 +303,54 @@ export async function lookupCake(databases, input) {
   return match ? publicCakeReservation(match) : null
 }
 
+function calendarConfig(env) {
+  const pin = env.CALENDAR_VIEW_PIN
+  const secret = env.CALENDAR_TOKEN_SECRET
+  if (typeof pin !== 'string' || !/^\d{6}$/.test(pin) || typeof secret !== 'string' || secret.length < 32) {
+    throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+  }
+  return { pin, secret }
+}
+
+export function calendarLogin(input, env = process.env, now = new Date()) {
+  const { pin, secret } = calendarConfig(env)
+  const suppliedPin = typeof input?.pin === 'string' ? input.pin.trim() : ''
+  if (!secureTextEqual(suppliedPin, pin)) throw new ReservationApiError('CALENDAR_UNAUTHORIZED', 401)
+  return { token: createCalendarToken(secret, now), expiresInDays: 30 }
+}
+
+export async function listCalendarEvents(databases, input, env = process.env, now = new Date()) {
+  const { secret } = calendarConfig(env)
+  if (!verifyCalendarToken(input?.token, secret, now)) throw new ReservationApiError('CALENDAR_UNAUTHORIZED', 401)
+  const month = typeof input?.month === 'string' ? input.month : ''
+  const match = /^(\d{4})-(\d{2})$/.exec(month)
+  if (!match || Number(match[2]) < 1 || Number(match[2]) > 12) throw new ReservationApiError('INVALID_CALENDAR_MONTH')
+  const year = Number(match[1])
+  const monthNumber = Number(match[2])
+  const startDate = `${month}-01`
+  const endDate = new Date(Date.UTC(year, monthNumber, 0)).toISOString().slice(0, 10)
+
+  const [cakeResult, classResult] = await Promise.all([
+    databases.listDocuments({
+      databaseId: config.cakeDatabaseId,
+      collectionId: config.cakeReservationsId,
+      queries: [Query.greaterThanEqual('pickupDate', startDate), Query.lessThanEqual('pickupDate', endDate), Query.limit(200)],
+      total: false,
+    }),
+    databases.listDocuments({
+      databaseId: config.kidsDatabaseId,
+      collectionId: config.classReservationsId,
+      queries: [Query.greaterThanEqual('classDate', startDate), Query.lessThanEqual('classDate', endDate), Query.limit(200)],
+      total: false,
+    }),
+  ])
+  const events = [
+    ...cakeResult.documents.map(sanitizeCakeCalendarEvent),
+    ...classResult.documents.map(sanitizeClassCalendarEvent),
+  ].sort((left, right) => `${left.date} ${left.time} ${left.kind}`.localeCompare(`${right.date} ${right.time} ${right.kind}`))
+  return { month, events }
+}
+
 async function health(databases) {
   await databases.listDocuments({
     databaseId: config.cakeDatabaseId,
@@ -318,6 +373,8 @@ export default async ({ req, res, log, error }) => {
     else if (action === 'create-cake') result = await createCake(databases, body.data)
     else if (action === 'create-class') result = await createClass(databases, body.data)
     else if (action === 'lookup-cake') result = await lookupCake(databases, body.data || {})
+    else if (action === 'calendar-login') result = calendarLogin(body.data || {})
+    else if (action === 'calendar-events') result = await listCalendarEvents(databases, body.data || {})
     else throw new ReservationApiError('UNKNOWN_ACTION', 404)
 
     log(`reservation-api completed: ${action}`)

@@ -1,0 +1,76 @@
+import { test } from 'node:test'
+import * as assert from 'node:assert/strict'
+import {
+  createCalendarToken,
+  verifyCalendarToken,
+  sanitizeCakeCalendarEvent,
+  sanitizeClassCalendarEvent,
+} from '../functions/reservation-api/src/calendar-access.js'
+
+const secret = 'a-test-secret-that-is-long-enough-for-hmac'
+
+test('calendar tokens are signed, expire, and reject tampering', () => {
+  const now = new Date('2026-07-12T00:00:00.000Z')
+  const token = createCalendarToken(secret, now)
+
+  assert.equal(verifyCalendarToken(token, secret, new Date('2026-08-10T23:59:59.000Z')), true)
+  assert.equal(verifyCalendarToken(token, secret, new Date('2026-08-11T00:00:01.000Z')), false)
+  assert.equal(verifyCalendarToken(`${token}x`, secret, now), false)
+  assert.equal(verifyCalendarToken(token, 'different-secret', now), false)
+})
+
+test('calendar cake events expose schedule details without customer PII or internal notes', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'cake-private-id',
+    pickupDate: '2026-07-25',
+    pickupTime: '10:00',
+    productId: 'pave-cake',
+    quantity: 2,
+    customerName: 'Private Customer',
+    customerPhone: '0412345678',
+    requestNote: 'Private request',
+    adminMemo: 'Private admin memo',
+    status: '예약확정',
+    paymentStatus: '입금확인',
+  })
+
+  assert.deepEqual(event, {
+    id: 'cake:cake-private-id',
+    kind: 'cake',
+    date: '2026-07-25',
+    time: '10:00',
+    label: 'Pave cake ×2',
+    status: 'Confirmed',
+    isCancelled: false,
+  })
+  assert.equal(JSON.stringify(event).includes('Private'), false)
+  assert.equal(JSON.stringify(event).includes('0412345678'), false)
+})
+
+test('calendar class events expose only class schedule and status', () => {
+  const event = sanitizeClassCalendarEvent({
+    $id: 'class-private-id',
+    classDate: '2026-07-25',
+    classTime: '11:00',
+    parentName: 'Private Parent',
+    childName: 'Private Child',
+    parentPhone: '0412345678',
+    parentEmail: 'private@example.com',
+    allergyNote: 'Private allergy',
+    adminMemo: 'Private memo',
+    status: 'Requested',
+    paymentStatus: 'Payment pending',
+  })
+
+  assert.deepEqual(event, {
+    id: 'class:class-private-id',
+    kind: 'class',
+    date: '2026-07-25',
+    time: '11:00',
+    label: 'Kids class',
+    status: 'Requested',
+    isCancelled: false,
+  })
+  assert.equal(JSON.stringify(event).includes('Private'), false)
+  assert.equal(JSON.stringify(event).includes('example.com'), false)
+})

@@ -9,7 +9,7 @@ import {
   matchesLookupPhone,
   publicCakeReservation,
 } from '../functions/reservation-api/src/business.js'
-import { createCake, lookupCake } from '../functions/reservation-api/src/main.js'
+import { calendarLogin, listCalendarEvents, createCake, lookupCake } from '../functions/reservation-api/src/main.js'
 
 const now = new Date('2026-07-10T00:00:00.000Z')
 
@@ -173,6 +173,51 @@ test('public lookup response excludes customer PII, notes and prices', () => {
   assert.equal('requestNote' in response, false)
   assert.equal('adminMemo' in response, false)
   assert.equal('totalPrice' in response, false)
+})
+
+test('calendar login rejects a wrong PIN and returns a signed token for the configured PIN', () => {
+  const env = {
+    CALENDAR_VIEW_PIN: '260717',
+    CALENDAR_TOKEN_SECRET: 'a-calendar-test-secret-that-is-long-enough',
+  }
+  assertApiError('CALENDAR_UNAUTHORIZED', () => calendarLogin({ pin: '000000' }, env, now))
+  const result = calendarLogin({ pin: '260717' }, env, now)
+  assert.equal(typeof result.token, 'string')
+  assert.ok(result.token.length > 40)
+})
+
+test('calendar API returns only sanitised events for the requested month', async () => {
+  const env = {
+    CALENDAR_VIEW_PIN: '260717',
+    CALENDAR_TOKEN_SECRET: 'a-calendar-test-secret-that-is-long-enough',
+  }
+  const { token } = calendarLogin({ pin: '260717' }, env, now)
+  const calls = []
+  const databases = {
+    async listDocuments(request) {
+      calls.push(request)
+      if (request.collectionId === 'reservations') {
+        return { documents: [{
+          $id: 'cake-1', pickupDate: '2026-07-25', pickupTime: '10:00', productId: 'pave-cake', quantity: 1,
+          customerName: 'Private', customerPhone: '0412345678', status: '예약확정', adminMemo: 'Private',
+        }] }
+      }
+      return { documents: [{
+        $id: 'class-1', classDate: '2026-07-25', classTime: '11:00', parentName: 'Private', childName: 'Private',
+        status: 'Requested', allergyNote: 'Private',
+      }] }
+    },
+  }
+
+  const result = await listCalendarEvents(databases, { token, month: '2026-07' }, env, now)
+  assert.equal(calls.length, 2)
+  assert.equal(result.month, '2026-07')
+  assert.deepEqual(result.events.map((event) => [event.kind, event.date, event.time]), [
+    ['cake', '2026-07-25', '10:00'],
+    ['class', '2026-07-25', '11:00'],
+  ])
+  assert.equal(JSON.stringify(result).includes('Private'), false)
+  assert.equal(JSON.stringify(result).includes('0412345678'), false)
 })
 
 test('cake creation returns the original document when the same request ID is retried', async () => {

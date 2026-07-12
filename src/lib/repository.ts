@@ -94,6 +94,21 @@ type ReservationApiResponse<T> = {
   code?: string
 }
 
+export type ReadOnlyCalendarEvent = {
+  id: string
+  kind: 'cake' | 'class'
+  date: string
+  time: string
+  label: string
+  status: string
+  isCancelled: boolean
+}
+
+export type ReadOnlyCalendarResult = {
+  month: string
+  events: ReadOnlyCalendarEvent[]
+}
+
 function shouldUseReservationApi(scope: 'lookup' | 'all') {
   if (!isAppwriteConfigured) return false
   if (scope === 'all') return appwriteConfig.reservationApiMode === 'all'
@@ -119,6 +134,16 @@ async function executeReservationApi<T>(action: string, data?: unknown): Promise
     throw new Error(response.code || 'RESERVATION_API_UNAVAILABLE')
   }
   return response.result as T
+}
+
+export async function loginReadOnlyCalendar(pin: string) {
+  if (!isAppwriteConfigured) throw new Error('CALENDAR_UNAVAILABLE')
+  return executeReservationApi<{ token: string; expiresInDays: number }>('calendar-login', { pin })
+}
+
+export async function getReadOnlyCalendarEvents(token: string, month: string) {
+  if (!isAppwriteConfigured) throw new Error('CALENDAR_UNAVAILABLE')
+  return executeReservationApi<ReadOnlyCalendarResult>('calendar-events', { token, month })
 }
 
 async function listAllDocuments(databaseId: string, collectionId: string, queries: string[]) {

@@ -132,6 +132,11 @@ const privateSeo: Record<string, SeoConfig> = {
     description: 'Your kids cake class request has been received.',
     noindex: true,
   },
+  '/calendar': {
+    title: 'Private Schedule | Verygood Chocolate',
+    description: 'Private read-only booking schedule.',
+    noindex: true,
+  },
 }
 
 function setMeta(selector: string, attribute: string, value: string) {

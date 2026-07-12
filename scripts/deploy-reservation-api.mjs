@@ -58,10 +58,17 @@ const runtimeVariables = {
     process.env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID ||
     process.env.VITE_APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID ||
     'cake_pickup_openings',
+  CALENDAR_VIEW_PIN: process.env.CALENDAR_VIEW_PIN,
+  CALENDAR_TOKEN_SECRET: process.env.CALENDAR_TOKEN_SECRET,
 }
+const secretVariableKeys = new Set(['CALENDAR_VIEW_PIN', 'CALENDAR_TOKEN_SECRET'])
 
 if (!endpoint || !projectId || !apiKey) {
   console.error('APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY 환경변수가 필요합니다.')
+  process.exit(1)
+}
+if (!/^\d{6}$/.test(runtimeVariables.CALENDAR_VIEW_PIN || '') || (runtimeVariables.CALENDAR_TOKEN_SECRET || '').length < 32) {
+  console.error('CALENDAR_VIEW_PIN(6자리)과 CALENDAR_TOKEN_SECRET(32자 이상)가 필요합니다.')
   process.exit(1)
 }
 
@@ -179,11 +186,11 @@ async function ensureVariables() {
         variableId: existing.$id,
         key,
         value,
-        secret: false,
+        secret: secretVariableKeys.has(key),
       })
       console.log(`updated variable ${key}`)
     } else {
-      await functions.createVariable({ functionId, key, value, secret: false })
+      await functions.createVariable({ functionId, key, value, secret: secretVariableKeys.has(key) })
       console.log(`created variable ${key}`)
     }
   }

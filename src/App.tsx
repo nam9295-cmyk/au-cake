@@ -21,6 +21,7 @@ import cupcakeCardImg from './assets/cupcake-side.webp'
 import kidsClassHeroImg from './assets/kids-class-hero.webp'
 import kidsClassProcessImg from './assets/kids-class-process.webp'
 import kidsClassFinishedImg from './assets/kids-class-finished.webp'
+import ReadOnlyCalendarPage from './ReadOnlyCalendarPage'
 import {
   CAKE_SIZE_OPTIONS,
   CACAO_OPTIONS,
@@ -145,6 +146,7 @@ type Page =
   | 'admin'
   | 'admin-reservations'
   | 'admin-classes'
+  | 'calendar'
 
 const initialFilters: ReservationFilters = {
   pickupDate: '',
@@ -203,6 +205,7 @@ function useCurrentTime() {
 
 function getPageFromPath(): Page {
   const path = window.location.pathname
+  if (path === '/calendar') return 'calendar'
   if (path === '/reserve') return 'reserve'
   if (path === '/complete') return 'complete'
   if (path === '/lookup') return 'lookup'
@@ -229,6 +232,7 @@ function pathForPage(page: Page) {
     admin: '/admin',
     'admin-reservations': '/admin/reservations',
     'admin-classes': '/admin/classes',
+    calendar: '/calendar',
   }
   return paths[page]
 }
@@ -388,7 +392,7 @@ function App() {
 
   useEffect(() => {
     applySeo(window.location.pathname)
-    if (!window.location.pathname.startsWith('/admin')) trackPageView(window.location.pathname)
+    if (!window.location.pathname.startsWith('/admin') && window.location.pathname !== '/calendar') trackPageView(window.location.pathname)
   }, [page])
 
   const navigate = useCallback((nextPage: Page) => {
@@ -408,15 +412,16 @@ function App() {
   )
 
   const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations' || page === 'admin-classes'
+  const isPrivatePage = isAdminPage || page === 'calendar'
 
   return (
     <>
-      {!isAdminPage && <DesktopBackground />}
-      <div className={`app-shell${isAdminPage ? ' admin-shell' : ''}`}>
+      {!isPrivatePage && <DesktopBackground />}
+      <div className={`app-shell${isPrivatePage ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && (
         <div className="env-notice">Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.</div>
       )}
-      {!isAdminPage && <AnnouncementTicker language={language} />}
+      {!isPrivatePage && <AnnouncementTicker language={language} />}
 
       {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} language={language} setLanguage={setLanguage} />}
       {page === 'classes' && <ClassesPage navigate={navigate} />}
@@ -440,7 +445,8 @@ function App() {
       {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
       {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
       {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}
-      {!isAdminPage && <AnalyticsConsentBanner language={language} />}
+      {page === 'calendar' && <ReadOnlyCalendarPage />}
+      {!isPrivatePage && <AnalyticsConsentBanner language={language} />}
     </div>
     </>
   )
