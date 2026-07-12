@@ -48,6 +48,21 @@ test('calendar cake events expose schedule details without customer PII or inter
   assert.equal(JSON.stringify(event).includes('0412345678'), false)
 })
 
+test('calendar cheesecake events show the selected variant without irrelevant finish text', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'cheesecake-id',
+    pickupDate: '2026-08-01',
+    pickupTime: '12:00',
+    productId: 'pave-choco-basque-cheesecake',
+    cakeSize: '15cm',
+    poundAddon: 'none',
+    quantity: 1,
+    status: '예약신청',
+  })
+
+  assert.equal(event.label, 'Pave Chocolate Basque Cheesecake · 6 inch / 15cm ×1')
+})
+
 test('calendar class events expose only class schedule and status', () => {
   const event = sanitizeClassCalendarEvent({
     $id: 'class-private-id',

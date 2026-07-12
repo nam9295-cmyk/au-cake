@@ -37,14 +37,26 @@ const koProducts: Record<ProductId, ProductText> = {
   'cupcake-dozen': {
     name: '초코 컵케이크 1다스',
     description: '나눠 먹기 편한 초콜릿 컵케이크 12개 세트예요. 파티, 모임, 아이들 선물용으로 준비하기 좋습니다.',
-    priceNote: '12개 한 세트, 마감 옵션 선택 가능',
+    priceNote: '파운드케이크에서 10달러 추가, 마감 옵션 선택 가능',
+  },
+  'choco-basque-cheesecake': {
+    name: '초코 바스크 치즈케이크',
+    description: '진한 초콜릿과 크림치즈를 높은 온도에서 구운 15cm 바스크 치즈케이크예요.',
+    priceNote: '6 inch / 15cm 고정 사이즈',
+  },
+  'pave-choco-basque-cheesecake': {
+    name: '파베초코 바스크 치즈케이크',
+    description: '초코 바스크 치즈케이크 위에 꾸덕한 파베 초콜릿을 더한 15cm 케이크예요.',
+    priceNote: '6 inch / 15cm 고정 사이즈',
   },
 }
 
 const koProductFeatures: Record<ProductId, string[]> = {
   'pave-cake': ['초콜릿 시트와 파베 가나슈', '6 / 7.5 / 8.7 inch 사이즈', '다크 또는 밀크 선택'],
   'pound-cake': ['직사각형 갸또 쇼콜라', '고정 사이즈', '기본, 초콜릿 추가, 바닐라 크림 마감'],
-  'cupcake-dozen': ['12개 1다스 구성', '작게 나눠 먹기 좋은 컵케이크', '기본, 초콜릿 추가, 바닐라 크림 마감'],
+  'cupcake-dozen': ['12개 1다스 구성', '파운드케이크에서 10달러 추가', '기본, 초콜릿 추가, 바닐라 크림 마감'],
+  'choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '진한 초코 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
+  'pave-choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '파베 초콜릿 마감', '더 진한 치즈케이크 옵션'],
 }
 
 export function getProductText(productId: ProductId, language: Language): ProductText {

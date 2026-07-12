@@ -27,6 +27,18 @@ const PRODUCTS = {
     usesSize: false,
     usesFinish: true,
   },
+  'choco-basque-cheesecake': {
+    basePrice: 55,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
+  'pave-choco-basque-cheesecake': {
+    basePrice: 65,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
 }
 
 const FINISH_PRICES = {

@@ -15,6 +15,8 @@ import {
   normalizePoundAddon,
   normalizeReservationChocolateType,
   usesReservationChocolateType,
+  PRODUCT_GROUPS,
+  getProductGroupByProductId,
 } from '../src/lib/constants.js'
 import {
   addDaysToInputValue,
@@ -33,6 +35,40 @@ import {
   filterCakePickupTimesForClass,
   isCakePickupBlockedByClass,
 } from '../src/lib/class-utils.js'
+
+test('AU catalogue groups pound cake with cupcakes and replaces the cupcake card with cheesecake', () => {
+  assert.deepEqual(
+    PRODUCT_GROUPS.map((group) => ({ id: group.id, productIds: group.productIds })),
+    [
+      { id: 'pave', productIds: ['pave-cake'] },
+      { id: 'pound-cupcake', productIds: ['pound-cake', 'cupcake-dozen'] },
+      { id: 'cheesecake', productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'] },
+    ],
+  )
+  assert.equal(getProductGroupByProductId('cupcake-dozen').id, 'pound-cupcake')
+  assert.equal(getProductGroupByProductId('pave-choco-basque-cheesecake').id, 'cheesecake')
+})
+
+test('AU cheesecake variants are fixed 6 inch cakes priced at AUD 55 and AUD 65', () => {
+  const chocoBasque = getProductById('choco-basque-cheesecake')
+  const paveBasque = getProductById('pave-choco-basque-cheesecake')
+
+  assert.equal(chocoBasque.name, 'Chocolate Basque Cheesecake')
+  assert.equal(chocoBasque.price, 55)
+  assert.equal(paveBasque.name, 'Pave Chocolate Basque Cheesecake')
+  assert.equal(paveBasque.price, 65)
+  assert.equal(chocoBasque.usesSizeOptions, false)
+  assert.equal(chocoBasque.usesPoundAddonOptions, false)
+  assert.equal(getReservationUnitPrice('choco-basque-cheesecake'), 55)
+  assert.equal(getReservationUnitPrice('pave-choco-basque-cheesecake'), 65)
+})
+
+test('cupcakes stay AUD 10 above pound cake and keep the existing finish prices', () => {
+  assert.equal(getReservationUnitPrice('pound-cake', { poundAddon: 'none' }), 45)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'none' }), 55)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'extra-chocolate' }), 62)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'vanilla-cream' }), 60)
+})
 
 test('client request IDs are valid UUIDs for idempotent reservation retries', () => {
   assert.match(generateRequestId(), /^[a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i)
@@ -370,6 +406,34 @@ Thank you:)`)
   assert.doesNotMatch(message, /Product: Gâteau au Chocolat Pave Chocolate Cake/)
   assert.doesNotMatch(message, /Pick-up address:/)
   assert.doesNotMatch(message, /Contact: .*TBC/)
+})
+
+test('AU cheesecake confirmation includes the selected variant and fixed 6 inch size', () => {
+  const message = buildSmsMessage({
+    id: 'test-cheesecake-id',
+    reservationNumber: 'VG-C-AU-20260704-CHEESE',
+    customerName: 'Jenny',
+    customerPhone: '0412345678',
+    productId: 'pave-choco-basque-cheesecake',
+    cakeSize: '15cm',
+    chocolateType: 'dark',
+    poundAddon: 'none',
+    quantity: 1,
+    pickupDate: '2026-07-04',
+    pickupTime: '12:00',
+    cacaoPercent: '기본',
+    requestNote: '',
+    status: '예약신청',
+    paymentStatus: '입금대기',
+    totalPrice: 65,
+    adminMemo: '',
+    createdAt: '2026-07-04T00:00:00.000Z',
+    updatedAt: '2026-07-04T00:00:00.000Z',
+  })
+
+  assert.match(message, /Pave Chocolate Basque Cheesecake/)
+  assert.match(message, /Size: 6 inch \/ 15cm/)
+  assert.equal(message.includes('Finish:'), false)
 })
 
 test('AU pound cake extra chocolate SMS includes selected chocolate type', () => {

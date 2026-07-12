@@ -226,7 +226,7 @@ Thank you for your order ${reservation.customerName}
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${product.usesSizeOptions ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${(product.usesSizeOptions || product.id === 'choco-basque-cheesecake' || product.id === 'pave-choco-basque-cheesecake') ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 
@@ -241,7 +241,7 @@ ${labels.body}
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${product.usesSizeOptions ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${(product.usesSizeOptions || product.id === 'choco-basque-cheesecake' || product.id === 'pave-choco-basque-cheesecake') ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 ${labels.customerName}: ${reservation.customerName}
@@ -262,7 +262,7 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.customerName,
     reservation.customerPhone,
     getProductById(reservation.productId).name,
-    getProductById(reservation.productId).usesSizeOptions ? formatCakeSizeLabel(reservation.cakeSize) : '-',
+    (getProductById(reservation.productId).usesSizeOptions || reservation.productId === 'choco-basque-cheesecake' || reservation.productId === 'pave-choco-basque-cheesecake') ? formatCakeSizeLabel(reservation.cakeSize) : '-',
     getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
     usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
     getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',

@@ -16,8 +16,9 @@ import heroCake2Img from './assets/hero-cake-2.webp'
 import heroCake3Img from './assets/hero-cake-3.webp'
 import paveCakeCardImg from './assets/pave-side.webp'
 import poundCakeCardImg from './assets/pound-side.webp'
-import cupcakeHeroImg from './assets/cupcake-hero.webp'
 import cupcakeCardImg from './assets/cupcake-side.webp'
+import basqueCheesecakeHeroImg from './assets/basquecheesecake.webp'
+import basqueCheesecakeCardImg from './assets/basquecheesecake-side.webp'
 import kidsClassHeroImg from './assets/kids-class-hero.webp'
 import kidsClassProcessImg from './assets/kids-class-process.webp'
 import kidsClassFinishedImg from './assets/kids-class-finished.webp'
@@ -43,6 +44,7 @@ import {
   getReservationUnitPrice,
   PAYMENT_STATUSES,
   POUND_ADDON_OPTIONS,
+  PRODUCT_GROUPS,
   PRODUCTS,
   RESERVATION_STATUSES,
   usesReservationChocolateType,
@@ -592,7 +594,7 @@ function ProductDetailRows({ reservation, language = 'ko' }: {
           {copy.quantityUnit}
         </dd>
       </div>
-      {product.usesSizeOptions && (
+      {(product.usesSizeOptions || isCheesecakeProduct(product.id)) && (
         <div>
           <dt>{copy.size}</dt>
           <dd>{formatCakeSizeLabel(reservation.cakeSize)}</dd>
@@ -625,9 +627,13 @@ function reservationCacaoText(reservation: Reservation) {
   return product.usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-'
 }
 
+function isCheesecakeProduct(productId: ProductId) {
+  return productId === 'choco-basque-cheesecake' || productId === 'pave-choco-basque-cheesecake'
+}
+
 function reservationCakeSizeText(reservation: Reservation) {
   const product = getProductById(reservation.productId)
-  return product.usesSizeOptions ? formatCakeSizeLabel(reservation.cakeSize) : '-'
+  return product.usesSizeOptions || isCheesecakeProduct(product.id) ? formatCakeSizeLabel(reservation.cakeSize) : '-'
 }
 
 function reservationChocolateText(reservation: Reservation) {
@@ -654,32 +660,54 @@ function HomePage({
   setLanguage: (language: Language) => void
 }) {
   const copy = cakeCopy(language)
-  const products = Object.values(PRODUCTS)
   const [activeHeroCake, setActiveHeroCake] = useState(1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
   const heroCakes = [
-    { image: cupcakeHeroImg, label: 'cupcake', tagKey: 'mini', className: 'hero-cake-one' },
+    { image: basqueCheesecakeHeroImg, label: 'cheesecake', tagKey: 'mini', className: 'hero-cake-one' },
     { image: heroCake2Img, label: '6/7.5/8.7inch', tagKey: 'first', className: 'hero-cake-two' },
-    { image: heroCake3Img, label: 'pound', tagKey: 'pound', className: 'hero-cake-three' },
+    { image: heroCake3Img, label: 'pound / cupcake', tagKey: 'pound', className: 'hero-cake-three' },
   ]
-  const productCards: Record<ProductId, { image: string; imageAlt: string; features: string[] }> = {
-    'pave-cake': {
+  const catalogCards = [
+    {
+      id: 'pave',
+      productId: 'pave-cake' as ProductId,
       image: paveCakeCardImg,
-      imageAlt: getProductText('pave-cake', language).name,
+      name: getProductText('pave-cake', language).name,
+      description: getProductText('pave-cake', language).description,
       features: getProductFeatures('pave-cake', language),
+      priceLabel: formatCurrency(PRODUCTS['pave-cake'].price),
+      optionLabel: getProductText('pave-cake', language).priceNote,
     },
-    'pound-cake': {
+    {
+      id: 'pound-cupcake',
+      productId: 'pound-cake' as ProductId,
       image: poundCakeCardImg,
-      imageAlt: getProductText('pound-cake', language).name,
-      features: getProductFeatures('pound-cake', language),
+      name: language === 'ko' ? '초코 파운드케이크 & 컵케이크' : 'Chocolate Pound Cake & Cupcakes',
+      description: language === 'ko'
+        ? '파운드케이크를 기본으로 선택하고 10달러를 추가하면 컵케이크 1다스로 변경할 수 있어요.'
+        : 'Choose the pound cake, or make it a dozen cupcakes for AUD 10 more.',
+      features: language === 'ko'
+        ? ['파운드케이크 AUD 45', '컵케이크 1다스 +AUD 10', '기존 마감 옵션 선택 가능']
+        : ['Pound cake AUD 45', 'Cupcakes · 1 dozen +AUD 10', 'Keep your choice of finish'],
+      priceLabel: `${language === 'ko' ? 'AUD 45부터' : 'From AUD 45'}`,
+      optionLabel: language === 'ko' ? '파운드 / 컵케이크와 마감 선택' : 'Choose pound or cupcakes, then a finish',
     },
-    'cupcake-dozen': {
-      image: cupcakeCardImg,
-      imageAlt: getProductText('cupcake-dozen', language).name,
-      features: getProductFeatures('cupcake-dozen', language),
+    {
+      id: 'cheesecake',
+      productId: 'choco-basque-cheesecake' as ProductId,
+      image: basqueCheesecakeCardImg,
+      name: language === 'ko' ? '초코 바스크 치즈케이크' : 'Chocolate Basque Cheesecake',
+      description: language === 'ko'
+        ? '기본 초코 바스크와 파베초코를 올린 두 가지 15cm 치즈케이크 중 선택할 수 있어요.'
+        : 'Choose our classic chocolate Basque or the richer pave chocolate finish. Both are 6 inch cakes.',
+      features: language === 'ko'
+        ? ['6 inch / 15cm 고정 사이즈', '초코 바스크 AUD 55', '파베초코 바스크 AUD 65']
+        : ['6 inch / 15cm fixed size', 'Chocolate Basque AUD 55', 'Pave Chocolate Basque AUD 65'],
+      priceLabel: `${language === 'ko' ? 'AUD 55부터' : 'From AUD 55'}`,
+      optionLabel: language === 'ko' ? '두 가지 치즈케이크 선택' : 'Two cheesecake options',
     },
-  }
+  ]
 
   const rotateHeroCake = useCallback((direction: 1 | -1) => {
     setActiveHeroCake((current) => (current + direction + heroCakes.length) % heroCakes.length)
@@ -782,38 +810,35 @@ function HomePage({
         <section className="content-section product-section">
           <h2>{copy.productSectionTitle}</h2>
           <div className="product-grid">
-            {products.map((product) => {
-              const productText = getProductText(product.id, language)
-              return (
-              <article className="product-card" key={product.id}>
+            {catalogCards.map((card) => (
+              <article className="product-card" key={card.id}>
                 <div className="product-image-wrap">
-                  <img src={productCards[product.id].image} alt={productCards[product.id].imageAlt} />
+                  <img src={card.image} alt={card.name} />
                 </div>
                 <div>
-                  <strong>{productText.name}</strong>
-                  <p>{productText.description}</p>
+                  <strong>{card.name}</strong>
+                  <p>{card.description}</p>
                 </div>
                 <ul>
-                  {productCards[product.id].features.map((feature) => (
+                  {card.features.map((feature) => (
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
                 <dl>
                   <div>
                     <dt>{copy.price}</dt>
-                    <dd>{formatCurrency(product.price)}</dd>
+                    <dd>{card.priceLabel}</dd>
                   </div>
                   <div>
                     <dt>{copy.options}</dt>
-                    <dd>{productText.priceNote}</dd>
+                    <dd>{card.optionLabel}</dd>
                   </div>
                 </dl>
-                <button className="secondary-button full-width" type="button" onClick={() => onReserveProduct(product.id)}>
+                <button className="secondary-button full-width" type="button" onClick={() => onReserveProduct(card.productId)}>
                   {copy.reserveCta}
                 </button>
               </article>
-              )
-            })}
+            ))}
           </div>
         </section>
 
@@ -882,7 +907,7 @@ function HomePage({
           <div className="cake-information-grid">
             <article>
               <h3>{language === 'ko' ? '초콜릿이 중심인 레시피' : 'Chocolate-first recipes'}</h3>
-              <p>{language === 'ko' ? '파베 가나슈 케이크, 진한 갸또 쇼콜라, 초콜릿 컵케이크 1다스 중 선택할 수 있어요. 확정된 주문에 맞춰 소량으로 준비합니다.' : 'Choose from layered pave ganache cake, rich gâteau au chocolat, or a dozen chocolate cupcakes. Each option is made in a small batch for a confirmed order.'}</p>
+              <p>{language === 'ko' ? '파베 초콜릿 케이크, 파운드케이크와 컵케이크, 두 가지 초코 바스크 치즈케이크 중 선택할 수 있어요. 확정된 주문에 맞춰 소량으로 준비합니다.' : 'Choose from pave chocolate cake, pound cake or cupcakes, and two chocolate Basque cheesecake finishes. Each order is made in a small batch.'}</p>
             </article>
             <article>
               <h3>{language === 'ko' ? '원하는 옵션 선택' : 'Choose your finish'}</h3>
@@ -908,7 +933,7 @@ function HomePage({
             </details>
             <details>
               <summary>{language === 'ko' ? '어떤 초콜릿 케이크를 주문할 수 있나요?' : 'Which chocolate cakes can I order?'}</summary>
-              <p>{language === 'ko' ? '파베 초콜릿 케이크, 직사각형 갸또 쇼콜라, 초콜릿 컵케이크 1다스를 신청할 수 있습니다. 옵션과 가격은 위 상품 목록에서 확인해 주세요.' : 'You can request a layered pave chocolate cake, a rectangular gâteau au chocolat, or chocolate cupcakes by the dozen. Options and prices are shown above.'}</p>
+              <p>{language === 'ko' ? '파베 초콜릿 케이크, 파운드케이크 또는 컵케이크 1다스, 초코 바스크와 파베초코 바스크 치즈케이크를 신청할 수 있습니다.' : 'You can request pave chocolate cake, pound cake or a dozen cupcakes, and chocolate Basque cheesecake with either a classic or pave chocolate finish.'}</p>
             </details>
             <details>
               <summary>{language === 'ko' ? '시드니 배송이나 방문 구매가 가능한가요?' : 'Do you offer Sydney delivery or walk-in sales?'}</summary>
@@ -1581,7 +1606,9 @@ function ReservePage({
     ? poundCakeCardImg
     : selectedProduct.id === 'cupcake-dozen'
       ? cupcakeCardImg
-      : paveCakeCardImg
+      : selectedProduct.id === 'choco-basque-cheesecake' || selectedProduct.id === 'pave-choco-basque-cheesecake'
+        ? basqueCheesecakeCardImg
+        : paveCakeCardImg
   const priceOptions = {
     cacaoPercent: form.cacaoPercent,
     cakeSize: form.cakeSize,
@@ -1594,6 +1621,7 @@ function ReservePage({
   const discountedPrice = applyPromoDiscount(currentPrice, form.promoCode)
   const promoDiscountAmount = Math.max(0, currentPrice - discountedPrice)
   const showChocolateTypeOptions = usesReservationChocolateType(selectedProduct.id, form.poundAddon)
+  const selectedProductGroup = PRODUCT_GROUPS.find((group) => group.productIds.includes(selectedProduct.id)) || PRODUCT_GROUPS[0]
   const labels = {
     back: copy.back,
     title: copy.title,
@@ -1686,7 +1714,7 @@ function ReservePage({
                   {copy.quantityUnit}
                 </dd>
               </div>
-              {selectedProduct.usesSizeOptions && (
+              {(selectedProduct.usesSizeOptions || isCheesecakeProduct(selectedProduct.id)) && (
                 <div>
                   <dt>{labels.size}</dt>
                   <dd>{formatCakeSizeLabel(form.cakeSize)}</dd>
@@ -1728,37 +1756,66 @@ function ReservePage({
               <fieldset className="cake-selector-fieldset">
                 <legend>{labels.cakeSelect}</legend>
                 <div className="product-choice-list">
-                  {Object.values(PRODUCTS).map((product) => {
-                    const isSelected = form.productId === product.id
-                    const productImage = product.id === 'pound-cake'
-                      ? poundCakeCardImg
-                      : product.id === 'cupcake-dozen'
-                        ? cupcakeCardImg
-                        : paveCakeCardImg
+                  {PRODUCT_GROUPS.map((group) => {
+                    const isSelected = group.id === selectedProductGroup.id
+                    const groupName = group.id === 'pave'
+                      ? getProductText('pave-cake', language).name
+                      : group.id === 'pound-cupcake'
+                        ? language === 'ko' ? '초코 파운드케이크 & 컵케이크' : 'Chocolate Pound Cake & Cupcakes'
+                        : language === 'ko' ? '초코 바스크 치즈케이크' : 'Chocolate Basque Cheesecake'
+                    const groupImage = group.id === 'pave' ? paveCakeCardImg : group.id === 'pound-cupcake' ? poundCakeCardImg : basqueCheesecakeCardImg
+                    const groupPrice = group.id === 'pave' ? formatCurrency(75) : group.id === 'pound-cupcake' ? 'From AUD 45' : 'From AUD 55'
                     return (
                       <label
                         className={`product-choice-card${isSelected ? ' is-selected' : ''}`}
-                        key={product.id}
-                        onClick={() => selectProduct(product.id)}
+                        key={group.id}
+                        onClick={() => selectProduct(group.defaultProductId)}
                       >
                         <input
                           type="radio"
-                          name="product"
+                          name="productGroup"
                           checked={isSelected}
-                          onChange={() => selectProduct(product.id)}
+                          onChange={() => selectProduct(group.defaultProductId)}
                         />
                         <span className="product-choice-thumb" aria-hidden="true">
-                          <img src={productImage} alt="" />
+                          <img src={groupImage} alt="" />
                         </span>
                         <span className="product-choice-copy">
                           <span className="product-choice-topline">
-                            <strong>{getProductText(product.id, language).name}</strong>
+                            <strong>{groupName}</strong>
                             {isSelected && <span className="selected-cake-badge">{labels.selectedCake}</span>}
                           </span>
-                          <span>
-                            1{copy.quantityUnit} {formatCurrency(getReservationUnitPrice(product.id, { cakeSize: DEFAULT_CAKE_SIZE, chocolateType: DEFAULT_CHOCOLATE_TYPE, poundAddon: DEFAULT_POUND_ADDON }))} ·{' '}
-                            {getProductText(product.id, language).priceNote}
-                          </span>
+                          <span>{groupPrice}</span>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </fieldset>
+            )}
+
+            {selectedProductGroup.productIds.length > 1 && (
+              <fieldset>
+                <legend>{language === 'ko' ? '종류 선택' : 'Choose type'}</legend>
+                <div className="choice-list">
+                  {selectedProductGroup.productIds.map((productId) => {
+                    const optionProduct = getProductById(productId)
+                    const optionText = getProductText(productId, language)
+                    const extraFromBase = optionProduct.price - getProductById(selectedProductGroup.defaultProductId).price
+                    return (
+                      <label className="choice-item" key={productId}>
+                        <input
+                          type="radio"
+                          name="productType"
+                          checked={form.productId === productId}
+                          onChange={() => selectProduct(productId)}
+                        />
+                        <span className="choice-copy">
+                          <strong>
+                            {optionText.name} · {formatCurrency(optionProduct.price)}
+                            {extraFromBase > 0 && ` (+${formatCurrency(extraFromBase)})`}
+                          </strong>
+                          <span>{optionText.priceNote}</span>
                         </span>
                       </label>
                     )

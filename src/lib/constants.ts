@@ -33,6 +33,27 @@ export function applyPromoDiscount(total: number, code?: string) {
 
 export const PRODUCTS = marketConfig.products
 
+export type ProductGroupId = 'pave' | 'pound-cupcake' | 'cheesecake'
+export type ProductGroup = {
+  id: ProductGroupId
+  defaultProductId: ProductId
+  productIds: ProductId[]
+}
+
+export const PRODUCT_GROUPS: ProductGroup[] = [
+  { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
+  { id: 'pound-cupcake', defaultProductId: 'pound-cake', productIds: ['pound-cake', 'cupcake-dozen'] },
+  {
+    id: 'cheesecake',
+    defaultProductId: 'choco-basque-cheesecake',
+    productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'],
+  },
+]
+
+export function getProductGroupByProductId(productId: ProductId) {
+  return PRODUCT_GROUPS.find((group) => group.productIds.includes(productId)) || PRODUCT_GROUPS[0]
+}
+
 export type ReservationPriceOptions = {
   cacaoPercent?: CacaoPercent
   cakeSize?: CakeSize

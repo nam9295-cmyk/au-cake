@@ -46,6 +46,8 @@ function cakeLabel(document) {
     'pave-cake': 'Pave cake',
     'pound-cake': 'Pound cake',
     'cupcake-dozen': 'Cupcakes',
+    'choco-basque-cheesecake': 'Chocolate Basque Cheesecake',
+    'pave-choco-basque-cheesecake': 'Pave Chocolate Basque Cheesecake',
   }
   const finishLabels = {
     'extra-chocolate': 'Extra chocolate',
@@ -57,6 +59,8 @@ function cakeLabel(document) {
   if (document.productId === 'pave-cake') {
     if (document.cakeSize) options.push(document.cakeSize)
     if (chocolateLabels[document.chocolateType]) options.push(chocolateLabels[document.chocolateType])
+  } else if (document.productId === 'choco-basque-cheesecake' || document.productId === 'pave-choco-basque-cheesecake') {
+    options.push('6 inch / 15cm')
   } else if (finishLabels[document.poundAddon]) {
     options.push(finishLabels[document.poundAddon])
   } else {

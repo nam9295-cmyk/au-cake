@@ -11,6 +11,8 @@ const MARKET_CONFIG = {
       'pave-cake': '생초콜릿 파베 케이크',
       'pound-cake': '초코 파운드 케이크',
       'cupcake-dozen': '초코 컵케이크 1다스',
+      'choco-basque-cheesecake': '초코 바스크 치즈케이크',
+      'pave-choco-basque-cheesecake': '파베초코 바스크 치즈케이크',
     },
     sizeLabels: {
       mini: '미니케이크',
@@ -85,6 +87,8 @@ const MARKET_CONFIG = {
       'pave-cake': 'Pave Chocolate Cake',
       'pound-cake': 'Chocolate Pound Cake',
       'cupcake-dozen': 'Chocolate Cupcakes (1 dozen)',
+      'choco-basque-cheesecake': 'Chocolate Basque Cheesecake',
+      'pave-choco-basque-cheesecake': 'Pave Chocolate Basque Cheesecake',
     },
     sizeLabels: {
       mini: 'Mini cake',
@@ -174,7 +178,8 @@ function getProductName(reservation, config) {
 }
 
 function getCakeSizeText(reservation, config) {
-  if (reservation.productId === 'pound-cake' || reservation.productId === 'cupcake-dozen') return '-'
+  if (['pound-cake', 'cupcake-dozen'].includes(reservation.productId)) return '-'
+  if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'].includes(reservation.productId)) return '6 inch / 15cm'
   return config.sizeLabels[reservation.cakeSize] || reservation.cakeSize || '-'
 }
 

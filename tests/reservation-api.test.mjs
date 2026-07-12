@@ -55,6 +55,27 @@ function assertApiError(code, callback) {
   assert.throws(callback, (error) => error instanceof ReservationApiError && error.code === code)
 }
 
+test('cake API prices cheesecake variants and keeps cupcake finish pricing', () => {
+  const chocoBasque = buildCakeReservation(
+    { ...cakeInput, productId: 'choco-basque-cheesecake', cakeSize: '22cm', poundAddon: 'extra-chocolate' },
+    { now, reservationNumber: 'VG-C-AU-CHEESE-55' },
+  )
+  const paveBasque = buildCakeReservation(
+    { ...cakeInput, productId: 'pave-choco-basque-cheesecake' },
+    { now, reservationNumber: 'VG-C-AU-CHEESE-65' },
+  )
+  const cupcakes = buildCakeReservation(
+    { ...cakeInput, productId: 'cupcake-dozen', poundAddon: 'extra-chocolate' },
+    { now, reservationNumber: 'VG-C-AU-CUPCAKE' },
+  )
+
+  assert.equal(chocoBasque.totalPrice, 55)
+  assert.equal(chocoBasque.cakeSize, '15cm')
+  assert.equal(chocoBasque.poundAddon, 'none')
+  assert.equal(paveBasque.totalPrice, 65)
+  assert.equal(cupcakes.totalPrice, 62)
+})
+
 test('cake API derives protected fields and cents on the server', () => {
   const reservation = buildCakeReservation(
     {

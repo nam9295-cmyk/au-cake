@@ -6,7 +6,12 @@ export type ChocolateType = 'dark' | 'milk'
 
 export type PoundAddon = 'none' | 'extra-chocolate' | 'vanilla-cream'
 
-export type ProductId = 'pave-cake' | 'pound-cake' | 'cupcake-dozen'
+export type ProductId =
+  | 'pave-cake'
+  | 'pound-cake'
+  | 'cupcake-dozen'
+  | 'choco-basque-cheesecake'
+  | 'pave-choco-basque-cheesecake'
 
 export type ReservationStatus = '예약신청' | '예약확정' | '픽업완료' | '취소'
 
