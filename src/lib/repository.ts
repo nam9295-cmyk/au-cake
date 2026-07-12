@@ -37,6 +37,7 @@ import type {
   ClassReservationStatus,
   PaymentStatus,
   PoundAddon,
+  ProductId,
   PublicReservation,
   Reservation,
   ReservationFilters,
@@ -219,9 +220,9 @@ function normalizeQuantity(quantity?: number) {
   return Math.min(MAX_RESERVATION_QUANTITY, Math.max(1, Math.floor(value)))
 }
 
-function buildPromoRequestNote(requestNote: string, originalTotal: number, discountedTotal: number, code?: string) {
+function buildPromoRequestNote(requestNote: string, productId: ProductId, originalTotal: number, discountedTotal: number, code?: string) {
   const trimmedNote = requestNote.trim()
-  if (!isValidPromoCode(code)) return trimmedNote
+  if (!isValidPromoCode(productId, code)) return trimmedNote
   const promoLine = `[Promo ${PROMO_CODE}] 10% discount applied: ${originalTotal.toFixed(2)} -> ${discountedTotal.toFixed(2)}`
   return [promoLine, trimmedNote].filter(Boolean).join('\n')
 }
@@ -529,7 +530,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   const chocolateType = normalizeReservationChocolateType(product.id, input.chocolateType, poundAddon)
   const quantity = normalizeQuantity(input.quantity)
   const originalTotalPrice = getReservationPrice(product.id, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
-  const totalPrice = applyPromoDiscount(originalTotalPrice, input.promoCode)
+  const totalPrice = applyPromoDiscount(originalTotalPrice, product.id, input.promoCode)
   const totalPriceCents = toCurrencyCents(totalPrice)
   const data = {
     reservationNumber,
@@ -543,7 +544,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
     cacaoPercent,
-    requestNote: buildPromoRequestNote(input.requestNote, originalTotalPrice, totalPrice, input.promoCode),
+    requestNote: buildPromoRequestNote(input.requestNote, product.id, originalTotalPrice, totalPrice, input.promoCode),
     status: '예약신청' as ReservationStatus,
     paymentStatus: '입금대기' as PaymentStatus,
     totalPrice,

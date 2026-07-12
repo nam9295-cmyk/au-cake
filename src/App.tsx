@@ -1617,8 +1617,8 @@ function ReservePage({
   }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
-  const isPromoApplied = form.promoCode.trim().toLowerCase() === PROMO_CODE.toLowerCase()
-  const discountedPrice = applyPromoDiscount(currentPrice, form.promoCode)
+  const isPromoApplied = form.promoCode.trim().toLowerCase() === PROMO_CODE && isCheesecakeProduct(selectedProduct.id)
+  const discountedPrice = applyPromoDiscount(currentPrice, selectedProduct.id, form.promoCode)
   const promoDiscountAmount = Math.max(0, currentPrice - discountedPrice)
   const showChocolateTypeOptions = usesReservationChocolateType(selectedProduct.id, form.poundAddon)
   const selectedProductGroup = PRODUCT_GROUPS.find((group) => group.productIds.includes(selectedProduct.id)) || PRODUCT_GROUPS[0]
@@ -2038,20 +2038,22 @@ function ReservePage({
               />
             </label>
 
-            <label className="promo-code-field">
-              {labels.promoCode}
-              <input
-                value={form.promoCode}
-                onChange={(event) => setForm({ ...form, promoCode: event.target.value })}
-                placeholder={labels.promoPlaceholder}
-                autoCapitalize="none"
-              />
-              <span className={isPromoApplied ? 'promo-message is-applied' : 'promo-message'}>
-                {isPromoApplied
-                  ? `${labels.promoApplied} (-${formatCurrency(promoDiscountAmount)})`
-                  : labels.promoHint}
-              </span>
-            </label>
+            {isCheesecakeProduct(selectedProduct.id) && (
+              <label className="promo-code-field">
+                {labels.promoCode}
+                <input
+                  value={form.promoCode}
+                  onChange={(event) => setForm({ ...form, promoCode: event.target.value })}
+                  placeholder={labels.promoPlaceholder}
+                  autoCapitalize="none"
+                />
+                <span className={isPromoApplied ? 'promo-message is-applied' : 'promo-message'}>
+                  {isPromoApplied
+                    ? `${labels.promoApplied} (-${formatCurrency(promoDiscountAmount)})`
+                    : labels.promoHint}
+                </span>
+              </label>
+            )}
 
             <label className="agree-row">
               <input

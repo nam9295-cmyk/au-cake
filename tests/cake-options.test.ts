@@ -148,10 +148,13 @@ test('AU currency display uses AUD code instead of dollar symbol', () => {
   assert.equal(formatCurrency(55), 'AUD 55.00')
 })
 
-test('AU promo discount keeps cents instead of rounding to whole dollars', () => {
-  assert.equal(applyPromoDiscount(75, 'VERYGOODsyd'), 67.5)
-  assert.equal(formatCurrency(applyPromoDiscount(75, 'verygoodSYD')), 'AUD 67.50')
-  assert.equal(formatCurrency(75 - applyPromoDiscount(75, 'verygoodSYD')), 'AUD 7.50')
+test('Chocolate promo is case-insensitive and only discounts cheesecake', () => {
+  assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'CHOCOLATE'), 49.5)
+  assert.equal(applyPromoDiscount(65, 'pave-choco-basque-cheesecake', 'chocolate'), 58.5)
+  assert.equal(formatCurrency(applyPromoDiscount(55, 'choco-basque-cheesecake', 'ChOcOlAtE')), 'AUD 49.50')
+  assert.equal(applyPromoDiscount(75, 'pave-cake', 'chocolate'), 75)
+  assert.equal(applyPromoDiscount(45, 'pound-cake', 'chocolate'), 45)
+  assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'verygoodSYD'), 55)
 })
 
 test('AU pick-up time options run until 20:00 every day', () => {

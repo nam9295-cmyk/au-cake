@@ -8,8 +8,9 @@ export const DEFAULT_CAKE_SIZE: CakeSize = '15cm'
 export const DEFAULT_CHOCOLATE_TYPE: ChocolateType = 'dark'
 export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
 export const MAX_RESERVATION_QUANTITY = 5
-export const PROMO_CODE = 'verygoodSYD'
+export const PROMO_CODE = 'chocolate'
 export const PROMO_DISCOUNT_RATE = 0.1
+const PROMO_PRODUCT_IDS: ProductId[] = ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake']
 
 export function toCurrencyCents(value: number) {
   return Math.round(Number(value || 0) * 100)
@@ -21,12 +22,16 @@ export function fromCurrencyCents(cents?: number | null) {
   return value / 100
 }
 
-export function isValidPromoCode(code?: string) {
-  return code?.trim().toLowerCase() === PROMO_CODE.toLowerCase()
+export function isPromoEligibleProduct(productId: ProductId) {
+  return PROMO_PRODUCT_IDS.includes(productId)
 }
 
-export function applyPromoDiscount(total: number, code?: string) {
-  if (!isValidPromoCode(code)) return total
+export function isValidPromoCode(productId: ProductId, code?: string) {
+  return isPromoEligibleProduct(productId) && code?.trim().toLowerCase() === PROMO_CODE
+}
+
+export function applyPromoDiscount(total: number, productId: ProductId, code?: string) {
+  if (!isValidPromoCode(productId, code)) return total
   const discountedCents = Math.round(toCurrencyCents(total) * (1 - PROMO_DISCOUNT_RATE))
   return fromCurrencyCents(Math.max(0, discountedCents))
 }

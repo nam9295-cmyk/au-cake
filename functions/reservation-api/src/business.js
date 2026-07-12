@@ -1,7 +1,8 @@
 const MARKET_TIMEZONE = 'Australia/Sydney'
 
-export const PROMO_CODE = 'verygoodSYD'
+export const PROMO_CODE = 'chocolate'
 export const PROMO_DISCOUNT_RATE = 0.1
+const PROMO_PRODUCT_IDS = new Set(['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'])
 export const MAX_RESERVATION_QUANTITY = 5
 export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
@@ -234,7 +235,9 @@ function calculateCakeTotal(productId, product, cakeSize, poundAddon, quantity, 
   const unitPrice = (product.usesSize ? product.sizePrices[cakeSize] : product.basePrice)
     + (product.usesFinish ? FINISH_PRICES[poundAddon] : 0)
   const originalTotal = unitPrice * quantity
-  const promoApplied = typeof promoCode === 'string' && promoCode.trim().toLowerCase() === PROMO_CODE.toLowerCase()
+  const promoApplied = PROMO_PRODUCT_IDS.has(productId)
+    && typeof promoCode === 'string'
+    && promoCode.trim().toLowerCase() === PROMO_CODE
   const discountedCents = promoApplied
     ? Math.round(originalTotal * 100 * (1 - PROMO_DISCOUNT_RATE))
     : Math.round(originalTotal * 100)

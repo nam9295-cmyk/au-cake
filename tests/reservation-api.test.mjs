@@ -100,14 +100,32 @@ test('cake API derives protected fields and cents on the server', () => {
   assert.equal(reservation.cacaoPercent, '기본')
 })
 
-test('cake API applies the AU promo price exactly and records an audit note', () => {
-  const reservation = buildCakeReservation(
-    { ...cakeInput, productId: 'pound-cake', poundAddon: 'extra-chocolate', quantity: 3, promoCode: ' VERYGOODsyd ' },
-    { now, reservationNumber: 'VG-C-AU-PROMO' },
+test('cake API applies Chocolate promo only to cheesecake and records an audit note', () => {
+  const chocoBasque = buildCakeReservation(
+    { ...cakeInput, productId: 'choco-basque-cheesecake', promoCode: ' ChOcOlAtE ' },
+    { now, reservationNumber: 'VG-C-AU-PROMO-55' },
   )
-  assert.equal(reservation.totalPrice, 140.4)
-  assert.equal(reservation.totalPriceCents, 14040)
-  assert.match(reservation.requestNote, /^\[Promo verygoodSYD\] 10% discount applied: 156\.00 -> 140\.40/)
+  const paveBasque = buildCakeReservation(
+    { ...cakeInput, productId: 'pave-choco-basque-cheesecake', promoCode: 'CHOCOLATE' },
+    { now, reservationNumber: 'VG-C-AU-PROMO-65' },
+  )
+  const pound = buildCakeReservation(
+    { ...cakeInput, productId: 'pound-cake', promoCode: 'chocolate' },
+    { now, reservationNumber: 'VG-C-AU-PROMO-POUND' },
+  )
+  const retiredCode = buildCakeReservation(
+    { ...cakeInput, productId: 'choco-basque-cheesecake', promoCode: 'verygoodSYD' },
+    { now, reservationNumber: 'VG-C-AU-OLD-PROMO' },
+  )
+
+  assert.equal(chocoBasque.totalPrice, 49.5)
+  assert.equal(chocoBasque.totalPriceCents, 4950)
+  assert.match(chocoBasque.requestNote, /^\[Promo chocolate\] 10% discount applied: 55\.00 -> 49\.50/)
+  assert.equal(paveBasque.totalPrice, 58.5)
+  assert.equal(pound.totalPrice, 45)
+  assert.equal(pound.requestNote, 'Happy birthday')
+  assert.equal(retiredCode.totalPrice, 55)
+  assert.equal(retiredCode.requestNote, 'Happy birthday')
 })
 
 test('cake API rejects invalid consent, quantity, mobile and pickup time', () => {
