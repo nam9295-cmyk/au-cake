@@ -113,6 +113,10 @@
         var BASE_URL = "https://chat.verygood-chocolate.com";
         var WEBSITE_TOKEN = "JPyEBcQEq4FvcZFL5NxeiXyC";
         var launcher = document.getElementById("vg-chat-launcher");
+        if (window.location.pathname === "/calendar" || window.location.pathname === "/calendar.html") {
+          launcher.remove();
+          return;
+        }
         var launcherLabel = launcher.querySelector(".vg-chat-label");
         var hasLoadedSdk = false;
 
