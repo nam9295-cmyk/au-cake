@@ -41,15 +41,29 @@ export function verifyCalendarToken(token, secret, now = new Date()) {
   }
 }
 
-function cakeLabel(productId, quantity) {
+function cakeLabel(document) {
   const labels = {
     'pave-cake': 'Pave cake',
     'pound-cake': 'Pound cake',
     'cupcake-dozen': 'Cupcakes',
   }
-  const label = labels[productId] || 'Cake'
-  const count = Math.max(1, Number(quantity) || 1)
-  return `${label} ×${count}`
+  const finishLabels = {
+    'extra-chocolate': 'Extra chocolate',
+    'vanilla-cream': 'Vanilla cream',
+  }
+  const chocolateLabels = { dark: 'Dark chocolate', milk: 'Milk chocolate' }
+  const label = labels[document.productId] || 'Cake'
+  const options = []
+  if (document.productId === 'pave-cake') {
+    if (document.cakeSize) options.push(document.cakeSize)
+    if (chocolateLabels[document.chocolateType]) options.push(chocolateLabels[document.chocolateType])
+  } else if (finishLabels[document.poundAddon]) {
+    options.push(finishLabels[document.poundAddon])
+  } else {
+    options.push('Basic finish')
+  }
+  const count = Math.max(1, Number(document.quantity) || 1)
+  return `${label}${options.length ? ` · ${options.join(' · ')}` : ''} ×${count}`
 }
 
 function cakeStatus(status) {
@@ -68,7 +82,7 @@ export function sanitizeCakeCalendarEvent(document) {
     kind: 'cake',
     date: document.pickupDate,
     time: document.pickupTime,
-    label: cakeLabel(document.productId, document.quantity),
+    label: cakeLabel(document),
     status: cakeStatus(document.status),
     isCancelled: document.status === '취소',
   }

@@ -174,10 +174,14 @@ export default function ReadOnlyCalendarPage() {
                 onClick={() => setSelectedDate(day.date)}
                 aria-label={`${day.date}, ${dayEvents.length} bookings`}
               >
-                <span>{day.dayNumber}</span>
-                <span className="readonly-calendar-dots">
-                  {dayEvents.some((event) => event.kind === 'cake' && !event.isCancelled) && <i className="cake" />}
-                  {dayEvents.some((event) => event.kind === 'class' && !event.isCancelled) && <i className="class" />}
+                <span className="readonly-calendar-day-number">{day.dayNumber}</span>
+                <span className="readonly-calendar-cell-summary">
+                  {dayEvents.some((event) => event.kind === 'cake' && !event.isCancelled) && (
+                    <i className="cake">Cake {dayEvents.filter((event) => event.kind === 'cake' && !event.isCancelled).length}</i>
+                  )}
+                  {dayEvents.some((event) => event.kind === 'class' && !event.isCancelled) && (
+                    <i className="class">Class {dayEvents.filter((event) => event.kind === 'class' && !event.isCancelled).length}</i>
+                  )}
                 </span>
               </button>
             )

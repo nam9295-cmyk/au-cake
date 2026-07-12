@@ -4586,11 +4586,14 @@ td select {
 
 .readonly-calendar-grid > button {
   position: relative;
-  display: grid;
+  display: flex;
   min-width: 0;
-  aspect-ratio: 1;
-  padding: 5px 2px 3px;
-  place-items: center;
+  min-height: 56px;
+  padding: 6px 1px 4px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
   border: 0;
   background: transparent;
   color: #1f2925;
@@ -4613,20 +4616,41 @@ td select {
   color: #fff;
 }
 
-.readonly-calendar-dots {
-  display: flex;
-  min-height: 5px;
-  gap: 3px;
+.readonly-calendar-day-number {
+  position: relative;
+  z-index: 1;
+  line-height: 1;
 }
 
-.readonly-calendar-dots i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
+.readonly-calendar-cell-summary {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 100%;
+  gap: 2px;
 }
 
-.readonly-calendar-dots .cake { background: #d9822b; }
-.readonly-calendar-dots .class { background: #2b7bb9; }
+.readonly-calendar-cell-summary i {
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  padding: 2px 0;
+  color: #fff;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.readonly-calendar-cell-summary .cake { background: #c96e21; }
+.readonly-calendar-cell-summary .class { background: #2b7bb9; }
+
+.readonly-calendar-grid > button.is-selected .readonly-calendar-cell-summary i {
+  outline: 1px solid rgba(255, 255, 255, 0.65);
+}
 
 .readonly-calendar-agenda {
   margin-top: 14px;

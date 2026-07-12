@@ -24,7 +24,8 @@ test('calendar cake events expose schedule details without customer PII or inter
     $id: 'cake-private-id',
     pickupDate: '2026-07-25',
     pickupTime: '10:00',
-    productId: 'pave-cake',
+    productId: 'pound-cake',
+    poundAddon: 'extra-chocolate',
     quantity: 2,
     customerName: 'Private Customer',
     customerPhone: '0412345678',
@@ -39,7 +40,7 @@ test('calendar cake events expose schedule details without customer PII or inter
     kind: 'cake',
     date: '2026-07-25',
     time: '10:00',
-    label: 'Pave cake ×2',
+    label: 'Pound cake · Extra chocolate ×2',
     status: 'Confirmed',
     isCancelled: false,
   })
