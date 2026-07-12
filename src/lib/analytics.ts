@@ -3,10 +3,14 @@ const CONSENT_KEY = 'vg-analytics-consent'
 
 type AnalyticsValue = string | number | boolean
 type AnalyticsParams = Record<string, AnalyticsValue>
-type Gtag = (command: 'js' | 'config' | 'event', target: Date | string, params?: AnalyticsParams) => void
+type Gtag = {
+  (command: 'js', target: Date): void
+  (command: 'config' | 'event', target: string, params?: AnalyticsParams): void
+  (command: 'consent', target: 'default' | 'update', params: AnalyticsParams): void
+}
 
 type AnalyticsWindow = Window & {
-  dataLayer?: unknown[][]
+  dataLayer?: unknown[]
   gtag?: Gtag
 }
 
@@ -30,8 +34,10 @@ export function initializeAnalytics() {
 
   const analytics = analyticsWindow()
   analytics.dataLayer ||= []
-  analytics.gtag ||= function gtag(...args: unknown[]) {
-    analytics.dataLayer?.push(args)
+  analytics.gtag ||= function gtag() {
+    // gtag.js expects the native Arguments object used by Google's standard snippet.
+    // eslint-disable-next-line prefer-rest-params
+    analytics.dataLayer?.push(arguments)
   } as Gtag
 
   if (!document.querySelector(`script[data-vg-ga="${MEASUREMENT_ID}"]`)) {
@@ -40,6 +46,18 @@ export function initializeAnalytics() {
     script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(MEASUREMENT_ID)}`
     script.dataset.vgGa = MEASUREMENT_ID
     document.head.appendChild(script)
+    analytics.gtag('consent', 'default', {
+      ad_storage: 'denied',
+      analytics_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    })
+    analytics.gtag('consent', 'update', {
+      ad_storage: 'denied',
+      analytics_storage: 'granted',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    })
     analytics.gtag('js', new Date())
     analytics.gtag('config', MEASUREMENT_ID, {
       send_page_view: false,
