@@ -3,7 +3,7 @@ const MARKET_TIMEZONE = 'Australia/Sydney'
 export const PROMO_CODE = 'verygoodSYD'
 export const PROMO_DISCOUNT_RATE = 0.1
 export const MAX_RESERVATION_QUANTITY = 5
-export const PICKUP_LEAD_TIME_MINUTES = 120
+export const PICKUP_LEAD_TIME_MINUTES = 24 * 60
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const CLASS_SESSION_DURATION_MINUTES = 120
 

@@ -97,6 +97,10 @@ test('cake API rejects invalid consent, quantity, mobile and pickup time', () =>
   assertApiError('INVALID_REQUEST', () => buildCakeReservation({ ...cakeInput, website: 'spam.example' }, { now }))
   assertApiError('INVALID_PICKUP_TIME', () => buildCakeReservation({ ...cakeInput, pickupTime: '10:15' }, { now }))
   assertApiError('PICKUP_TIME_TOO_SOON', () => buildCakeReservation({ ...cakeInput, pickupDate: '2026-07-10' }, { now }))
+  assertApiError('PICKUP_TIME_TOO_SOON', () => buildCakeReservation(
+    { ...cakeInput, pickupDate: '2026-07-11', pickupTime: '10:00' },
+    { now: new Date('2026-07-10T00:30:00.000Z') },
+  ))
 })
 
 test('class API derives price and protected fields and validates the second child', () => {
@@ -192,8 +196,9 @@ test('cake creation returns the original document when the same request ID is re
     },
   }
 
-  const first = await createCake(databases, { ...cakeInput, requestId })
-  const retry = await createCake(databases, { ...cakeInput, requestId })
+  const futureCakeInput = { ...cakeInput, pickupDate: '2099-07-11' }
+  const first = await createCake(databases, { ...futureCakeInput, requestId })
+  const retry = await createCake(databases, { ...futureCakeInput, requestId })
   assert.equal(creates, 1)
   assert.equal(retry.id, first.id)
   assert.equal(retry.reservationNumber, first.reservationNumber)

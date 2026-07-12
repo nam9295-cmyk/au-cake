@@ -98,7 +98,7 @@ export function timeOptionsForDate(dateValue: string, settings: StoreSettings) {
   return result
 }
 
-export const PICKUP_LEAD_TIME_MINUTES = 120
+export const PICKUP_LEAD_TIME_MINUTES = 24 * 60
 export const PICKUP_TIME_TOO_SOON_ERROR = 'PICKUP_TIME_TOO_SOON'
 
 function zonedDateTimeParts(date: Date) {
