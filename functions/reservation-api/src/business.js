@@ -3,7 +3,8 @@ const MARKET_TIMEZONE = 'Australia/Sydney'
 export const PROMO_CODE = 'verygoodSYD'
 export const PROMO_DISCOUNT_RATE = 0.1
 export const MAX_RESERVATION_QUANTITY = 5
-export const PICKUP_LEAD_TIME_MINUTES = 24 * 60
+export const PICKUP_CUTOFF_HOUR = 20
+export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const CLASS_SESSION_DURATION_MINUTES = 120
 
@@ -124,6 +125,12 @@ export function sydneyDateValue(date = new Date()) {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+function addDaysToDateValue(dateValue, days) {
+  const [year, month, day] = dateValue.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day + days))
+  return date.toISOString().slice(0, 10)
+}
+
 function sydneyTimeCode(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-AU', {
     timeZone: MARKET_TIMEZONE,
@@ -180,10 +187,17 @@ function validatePickupDateTime(dateValue, timeValue, now) {
   if ((minute !== 0 && minute !== 30) || totalMinutes < 10 * 60 || totalMinutes > 20 * 60) {
     fail('INVALID_PICKUP_TIME')
   }
-  const pickupTimestamp = zonedTimestamp(dateValue, timeValue)
-  if (pickupTimestamp === null || pickupTimestamp - now.getTime() < PICKUP_LEAD_TIME_MINUTES * 60_000) {
-    fail('PICKUP_TIME_TOO_SOON')
-  }
+  if (zonedTimestamp(dateValue, timeValue) === null) fail('INVALID_PICKUP_DATE')
+
+  const today = sydneyDateValue(now)
+  const tomorrow = addDaysToDateValue(today, 1)
+  const currentSydneyHour = zonedDateParts(now).hour
+  const isTooSoon = dateValue <= today || (
+    dateValue === tomorrow &&
+    currentSydneyHour >= PICKUP_CUTOFF_HOUR &&
+    totalMinutes < LATE_ORDER_NEXT_DAY_START_MINUTES
+  )
+  if (isTooSoon) fail('PICKUP_TIME_TOO_SOON')
 }
 
 function normalizeCakeOptions(input) {

@@ -17,7 +17,6 @@ import {
   usesReservationChocolateType,
 } from '../src/lib/constants.js'
 import {
-  PICKUP_LEAD_TIME_MINUTES,
   addDaysToInputValue,
   buildSmsMessage,
   customerTimeOptionsForDate,
@@ -241,7 +240,7 @@ test('class filtering returns only unblocked supplied times without mutating inp
   assert.deepEqual(pickupOpenings, originalPickupOpenings)
 })
 
-test('cake openings do not add times already removed by the 24-hour lead-time filter', () => {
+test('cake openings do not add times already removed by the pickup cutoff filter', () => {
   const now = new Date('2026-07-09T23:00:00.000Z')
   const leadTimeFilteredTimes = customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, now)
   const filteredTimes = filterCakePickupTimesForClass(
@@ -267,36 +266,31 @@ test('date input calendar addition is independent of browser timezone and DST le
   assert.equal(addDaysToInputValue('2028-02-28', 1), '2028-02-29')
 })
 
-test('AU customer pick-up times require 24 full hours of preparation', () => {
-  const atTenSydney = new Date('2026-07-10T00:00:00.000Z')
-  const oneSecondAfterTenSydney = new Date('2026-07-10T00:00:01.000Z')
+test('orders before 20:00 Sydney can pick up from opening time the next day', () => {
+  const atOneSecondBeforeEight = new Date('2026-07-10T09:59:59.000Z')
 
-  assert.equal(PICKUP_LEAD_TIME_MINUTES, 1440)
-  assert.deepEqual(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, atTenSydney), [])
-  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, atTenSydney)[0], '10:00')
-  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, oneSecondAfterTenSydney)[0], '10:30')
-  assert.equal(isPickupTimeAllowed('2026-07-11', '09:59', atTenSydney), false)
-  assert.equal(isPickupTimeAllowed('2026-07-11', '10:00', atTenSydney), true)
+  assert.deepEqual(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, atOneSecondBeforeEight), [])
+  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, atOneSecondBeforeEight)[0], '10:00')
+  assert.equal(isPickupTimeAllowed('2026-07-11', '10:00', atOneSecondBeforeEight), true)
 })
 
-test('AU customer pick-up lead time uses elapsed time across Sydney daylight saving changes', () => {
-  const beforeSpringForward = new Date('2026-10-03T15:30:00.000Z')
-  const beforeAutumnFallback = new Date('2026-04-04T15:30:00.000Z')
+test('orders from 20:00 Sydney can pick up only from noon the next day', () => {
+  const atEight = new Date('2026-07-10T10:00:00.000Z')
+  const beforeMidnight = new Date('2026-07-10T13:59:59.000Z')
 
-  assert.equal(isPickupTimeAllowed('2026-10-05', '02:00', beforeSpringForward), false)
-  assert.equal(isPickupTimeAllowed('2026-10-05', '02:30', beforeSpringForward), true)
-  assert.equal(isPickupTimeAllowed('2026-04-06', '01:00', beforeAutumnFallback), false)
-  assert.equal(isPickupTimeAllowed('2026-04-06', '01:30', beforeAutumnFallback), true)
+  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, atEight)[0], '12:00')
+  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, beforeMidnight)[0], '12:00')
+  assert.equal(isPickupTimeAllowed('2026-07-11', '11:30', atEight), false)
+  assert.equal(isPickupTimeAllowed('2026-07-11', '12:00', atEight), true)
 })
 
-test('AU customer pick-up times keep full hours for future dates and close today when too late', () => {
-  const atNineTenSydney = new Date('2026-07-09T23:10:00.000Z')
+test('same-day pickup stays closed and later dates keep all store hours', () => {
   const atSevenSydney = new Date('2026-07-10T09:00:00.000Z')
+  const atNineTenSydney = new Date('2026-07-09T23:10:00.000Z')
 
-  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, atNineTenSydney)[0], '10:00')
   assert.deepEqual(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, atSevenSydney), [])
-  assert.equal(isPickupTimeAllowed('2026-07-09', '20:00', atNineTenSydney), false)
-  assert.equal(isPickupTimeAllowed('2026-07-11', '10:00', atNineTenSydney), true)
+  assert.equal(isPickupTimeAllowed('2026-07-10', '20:00', atNineTenSydney), false)
+  assert.equal(customerTimeOptionsForDate('2026-07-12', DEFAULT_SETTINGS, atSevenSydney)[0], '10:00')
 })
 
 test('AU mobile numbers accept common local and international formats', () => {

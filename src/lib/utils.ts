@@ -98,7 +98,8 @@ export function timeOptionsForDate(dateValue: string, settings: StoreSettings) {
   return result
 }
 
-export const PICKUP_LEAD_TIME_MINUTES = 24 * 60
+export const PICKUP_CUTOFF_HOUR = 20
+export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 export const PICKUP_TIME_TOO_SOON_ERROR = 'PICKUP_TIME_TOO_SOON'
 
 function zonedDateTimeParts(date: Date) {
@@ -168,9 +169,18 @@ function zonedPickupTimestamp(dateValue: string, timeValue: string) {
 }
 
 export function isPickupTimeAllowed(dateValue: string, timeValue: string, now = new Date()) {
-  const pickupTimestamp = zonedPickupTimestamp(dateValue, timeValue)
-  if (pickupTimestamp === null) return false
-  return pickupTimestamp - now.getTime() >= PICKUP_LEAD_TIME_MINUTES * 60_000
+  if (zonedPickupTimestamp(dateValue, timeValue) === null) return false
+
+  const today = dateInputValue(now)
+  const tomorrow = addDaysToInputValue(today, 1)
+  if (dateValue <= today) return false
+  if (dateValue > tomorrow) return true
+
+  const currentSydneyHour = zonedDateTimeParts(now).hour
+  if (currentSydneyHour < PICKUP_CUTOFF_HOUR) return true
+
+  const [pickupHour, pickupMinute] = timeValue.split(':').map(Number)
+  return pickupHour * 60 + pickupMinute >= LATE_ORDER_NEXT_DAY_START_MINUTES
 }
 
 export function customerTimeOptionsForDate(dateValue: string, settings: StoreSettings, now = new Date()) {

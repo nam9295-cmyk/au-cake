@@ -97,9 +97,23 @@ test('cake API rejects invalid consent, quantity, mobile and pickup time', () =>
   assertApiError('INVALID_REQUEST', () => buildCakeReservation({ ...cakeInput, website: 'spam.example' }, { now }))
   assertApiError('INVALID_PICKUP_TIME', () => buildCakeReservation({ ...cakeInput, pickupTime: '10:15' }, { now }))
   assertApiError('PICKUP_TIME_TOO_SOON', () => buildCakeReservation({ ...cakeInput, pickupDate: '2026-07-10' }, { now }))
-  assertApiError('PICKUP_TIME_TOO_SOON', () => buildCakeReservation(
+})
+
+test('cake API applies the Sydney 20:00 next-day pickup cutoff', () => {
+  const beforeEight = new Date('2026-07-10T09:59:59.000Z')
+  const atEight = new Date('2026-07-10T10:00:00.000Z')
+
+  assert.doesNotThrow(() => buildCakeReservation(
     { ...cakeInput, pickupDate: '2026-07-11', pickupTime: '10:00' },
-    { now: new Date('2026-07-10T00:30:00.000Z') },
+    { now: beforeEight },
+  ))
+  assertApiError('PICKUP_TIME_TOO_SOON', () => buildCakeReservation(
+    { ...cakeInput, pickupDate: '2026-07-11', pickupTime: '11:30' },
+    { now: atEight },
+  ))
+  assert.doesNotThrow(() => buildCakeReservation(
+    { ...cakeInput, pickupDate: '2026-07-11', pickupTime: '12:00' },
+    { now: atEight },
   ))
 })
 
