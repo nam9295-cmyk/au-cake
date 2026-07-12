@@ -68,6 +68,11 @@ const pages = {
     description: 'Your kids cake class request has been received.',
     robots: 'noindex, nofollow',
   },
+  '/calendar': {
+    title: 'Private Schedule | Verygood Chocolate',
+    description: 'Private read-only booking schedule.',
+    robots: 'noindex, nofollow',
+  },
   '/admin': {
     title: 'Admin | Verygood Chocolate',
     description: 'Verygood Chocolate administration.',
