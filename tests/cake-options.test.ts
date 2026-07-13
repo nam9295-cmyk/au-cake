@@ -178,13 +178,26 @@ test('AU currency display uses AUD code instead of dollar symbol', () => {
   assert.equal(formatCurrency(55), 'AUD 55.00')
 })
 
-test('Chocolate promo is case-insensitive and only discounts cheesecake', () => {
-  assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'CHOCOLATE'), 49.5)
-  assert.equal(applyPromoDiscount(65, 'pave-choco-basque-cheesecake', 'chocolate'), 58.5)
-  assert.equal(formatCurrency(applyPromoDiscount(55, 'choco-basque-cheesecake', 'ChOcOlAtE')), 'AUD 49.50')
-  assert.equal(applyPromoDiscount(75, 'pave-cake', 'chocolate'), 75)
-  assert.equal(applyPromoDiscount(45, 'pound-cake', 'chocolate'), 45)
-  assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'verygoodSYD'), 55)
+test('Chocolate promo is case-insensitive, cheesecake-only, and valid through 15 July Sydney', () => {
+  const validAt = new Date('2026-07-15T13:59:59.000Z')
+  const expiredAt = new Date('2026-07-15T14:00:00.000Z')
+
+  assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'CHOCOLATE', validAt), 49.5)
+  assert.equal(applyPromoDiscount(65, 'pave-choco-basque-cheesecake', 'chocolate', validAt), 58.5)
+  assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'ChOcOlAtE', expiredAt), 55)
+  assert.equal(applyPromoDiscount(75, 'pave-cake', 'chocolate', validAt), 75)
+  assert.equal(applyPromoDiscount(45, 'fresh-lemon-cupcakes-8', 'chocolate', validAt), 45)
+  assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'verygoodSYD', validAt), 55)
+})
+
+test('Lemoni promo is case-insensitive, lemon-only, and valid through 16 July Sydney', () => {
+  const validAt = new Date('2026-07-16T13:59:59.000Z')
+  const expiredAt = new Date('2026-07-16T14:00:00.000Z')
+
+  assert.equal(applyPromoDiscount(24, 'fresh-lemon-cupcakes-4', 'LEMONI', validAt), 21.6)
+  assert.equal(applyPromoDiscount(45, 'fresh-lemon-cupcakes-8', 'lemoni', validAt), 40.5)
+  assert.equal(applyPromoDiscount(65, 'fresh-lemon-cupcakes-12', 'LeMoNi', expiredAt), 65)
+  assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'lemoni', validAt), 55)
 })
 
 test('AU pick-up time options run until 20:00 every day', () => {

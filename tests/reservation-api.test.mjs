@@ -155,6 +155,47 @@ test('cake API applies Chocolate promo only to cheesecake and records an audit n
   assert.equal(retiredCode.requestNote, 'Happy birthday')
 })
 
+test('cake API applies Lemoni promo only to Fresh Lemon Cupcakes and records an audit note', () => {
+  const lemon = buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-8', quantity: 1, promoCode: ' LeMoNi ' },
+    { now, reservationNumber: 'VG-C-AU-PROMO-LEMONI' },
+  )
+  const cheesecake = buildCakeReservation(
+    { ...cakeInput, productId: 'choco-basque-cheesecake', promoCode: 'lemoni' },
+    { now, reservationNumber: 'VG-C-AU-LEMONI-CHEESE' },
+  )
+
+  assert.equal(lemon.totalPrice, 40.5)
+  assert.equal(lemon.totalPriceCents, 4050)
+  assert.match(lemon.requestNote, /^\[Promo lemoni\] 10% discount applied: 45\.00 -> 40\.50/)
+  assert.equal(cheesecake.totalPrice, 55)
+  assert.equal(cheesecake.requestNote, 'Happy birthday')
+})
+
+test('cake API expires Chocolate after 15 July and Lemoni after 16 July in Sydney', () => {
+  const chocolateValid = buildCakeReservation(
+    { ...cakeInput, productId: 'choco-basque-cheesecake', pickupDate: '2026-07-17', promoCode: 'chocolate' },
+    { now: new Date('2026-07-15T13:59:59.000Z'), reservationNumber: 'VG-C-AU-CHOCOLATE-VALID' },
+  )
+  const chocolateExpired = buildCakeReservation(
+    { ...cakeInput, productId: 'choco-basque-cheesecake', pickupDate: '2026-07-17', promoCode: 'chocolate' },
+    { now: new Date('2026-07-15T14:00:00.000Z'), reservationNumber: 'VG-C-AU-CHOCOLATE-EXPIRED' },
+  )
+  const lemoniValid = buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-8', quantity: 1, pickupDate: '2026-07-18', promoCode: 'lemoni' },
+    { now: new Date('2026-07-16T13:59:59.000Z'), reservationNumber: 'VG-C-AU-LEMONI-VALID' },
+  )
+  const lemoniExpired = buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-8', quantity: 1, pickupDate: '2026-07-18', promoCode: 'lemoni' },
+    { now: new Date('2026-07-16T14:00:00.000Z'), reservationNumber: 'VG-C-AU-LEMONI-EXPIRED' },
+  )
+
+  assert.equal(chocolateValid.totalPrice, 49.5)
+  assert.equal(chocolateExpired.totalPrice, 55)
+  assert.equal(lemoniValid.totalPrice, 40.5)
+  assert.equal(lemoniExpired.totalPrice, 45)
+})
+
 test('cake API rejects invalid consent, quantity, mobile and pickup time', () => {
   assertApiError('CONSENT_REQUIRED', () => buildCakeReservation({ ...cakeInput, privacyConsent: false }, { now }))
   assertApiError('INVALID_QUANTITY', () => buildCakeReservation({ ...cakeInput, quantity: 6 }, { now }))

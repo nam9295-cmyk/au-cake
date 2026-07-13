@@ -38,9 +38,10 @@ import {
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
-  PROMO_CODE,
   applyPromoDiscount,
   formatCakeSizeLabel,
+  getValidPromoCode,
+  isPromoEligibleProduct,
   formatCacaoLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
@@ -1707,9 +1708,13 @@ function ReservePage({
   }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
-  const isPromoApplied = form.promoCode.trim().toLowerCase() === PROMO_CODE && isCheesecakeProduct(selectedProduct.id)
+  const appliedPromoCode = getValidPromoCode(selectedProduct.id, form.promoCode)
+  const isPromoApplied = appliedPromoCode !== null
   const discountedPrice = applyPromoDiscount(currentPrice, selectedProduct.id, form.promoCode)
   const promoDiscountAmount = Math.max(0, currentPrice - discountedPrice)
+  const promoHint = isFreshLemonCupcakeProduct(selectedProduct.id)
+    ? language === 'ko' ? '대소문자 구분 없음 · 7월 16일까지 유효' : 'Not case-sensitive · Valid through 16 July'
+    : language === 'ko' ? '대소문자 구분 없음 · 7월 15일까지 유효' : 'Not case-sensitive · Valid through 15 July'
   const showChocolateTypeOptions = usesReservationChocolateType(selectedProduct.id, form.poundAddon)
   const selectedProductGroup = PRODUCT_GROUPS.find((group) => group.productIds.includes(selectedProduct.id)) || PRODUCT_GROUPS[0]
   const labels = {
@@ -2158,7 +2163,7 @@ function ReservePage({
               />
             </label>
 
-            {isCheesecakeProduct(selectedProduct.id) && (
+            {isPromoEligibleProduct(selectedProduct.id) && (
               <label className="promo-code-field">
                 {labels.promoCode}
                 <input
@@ -2170,7 +2175,7 @@ function ReservePage({
                 <span className={isPromoApplied ? 'promo-message is-applied' : 'promo-message'}>
                   {isPromoApplied
                     ? `${labels.promoApplied} (-${formatCurrency(promoDiscountAmount)})`
-                    : labels.promoHint}
+                    : promoHint}
                 </span>
               </label>
             )}

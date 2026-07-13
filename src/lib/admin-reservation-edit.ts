@@ -3,8 +3,8 @@ import {
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
   MAX_RESERVATION_QUANTITY,
+  LEMON_PROMO_CODE,
   PROMO_CODE,
-  applyPromoDiscount,
   getReservationPrice,
   isFreshLemonCupcakeProduct,
   normalizeCakeSize,
@@ -59,15 +59,34 @@ function normalizeQuantity(quantity: number) {
   return Math.min(MAX_RESERVATION_QUANTITY, Math.max(1, Math.floor(value)))
 }
 
-function reservationPromoKind(reservation: Reservation): 'current' | 'legacy' | null {
+type ReservationPromoKind = typeof PROMO_CODE | typeof LEMON_PROMO_CODE | 'legacy'
+
+function discountedByTenPercent(total: number) {
+  return Math.round(toCurrencyCents(total) * 0.9) / 100
+}
+
+function promoAppliesToProduct(kind: ReservationPromoKind, productId: ProductId) {
+  if (kind === PROMO_CODE) {
+    return productId === 'choco-basque-cheesecake' || productId === 'pave-choco-basque-cheesecake'
+  }
+  if (kind === LEMON_PROMO_CODE) return isFreshLemonCupcakeProduct(productId)
+  return true
+}
+
+function reservationPromoKind(reservation: Reservation): ReservationPromoKind | null {
   const auditMatch = /^\[Promo ([^\]]+)\] 10% discount applied: \d+(?:\.\d{2})? -> \d+(?:\.\d{2})?(?:\n|$)/i
     .exec(reservation.requestNote || '')
   if (!auditMatch) return null
 
   const code = auditMatch[1].trim().toLowerCase()
-  const isCurrent = code === PROMO_CODE
-  const isLegacy = code === 'verygoodsyd'
-  if (!isCurrent && !isLegacy) return null
+  const kind: ReservationPromoKind | null = code === PROMO_CODE
+    ? PROMO_CODE
+    : code === LEMON_PROMO_CODE
+      ? LEMON_PROMO_CODE
+      : code === 'verygoodsyd'
+        ? 'legacy'
+        : null
+  if (!kind || !promoAppliesToProduct(kind, reservation.productId)) return null
 
   const originalTotal = getReservationPrice(
     reservation.productId,
@@ -80,10 +99,8 @@ function reservationPromoKind(reservation: Reservation): 'current' | 'legacy' | 
     normalizeQuantity(reservation.quantity),
   )
   const storedCents = reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice)
-  const expectedTotal = isCurrent
-    ? applyPromoDiscount(originalTotal, reservation.productId, PROMO_CODE)
-    : Math.round(toCurrencyCents(originalTotal) * 0.9) / 100
-  return storedCents === toCurrencyCents(expectedTotal) ? (isCurrent ? 'current' : 'legacy') : null
+  const expectedTotal = discountedByTenPercent(originalTotal)
+  return storedCents === toCurrencyCents(expectedTotal) ? kind : null
 }
 
 export function buildAdminReservationUpdate(
@@ -104,11 +121,9 @@ export function buildAdminReservationUpdate(
   const cacaoPercent = (edits.cacaoPercent || reservation.cacaoPercent || '기본') as CacaoPercent
   const originalTotalPrice = getReservationPrice(productId, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
   const promoKind = reservationPromoKind(reservation)
-  const totalPrice = promoKind === 'current'
-    ? applyPromoDiscount(originalTotalPrice, productId, PROMO_CODE)
-    : promoKind === 'legacy'
-      ? Math.round(toCurrencyCents(originalTotalPrice) * 0.9) / 100
-      : originalTotalPrice
+  const totalPrice = promoKind && promoAppliesToProduct(promoKind, productId)
+    ? discountedByTenPercent(originalTotalPrice)
+    : originalTotalPrice
 
   return {
     productId,

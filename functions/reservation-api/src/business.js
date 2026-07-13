@@ -1,14 +1,21 @@
 const MARKET_TIMEZONE = 'Australia/Sydney'
 
 export const PROMO_CODE = 'chocolate'
+export const LEMON_PROMO_CODE = 'lemoni'
 export const PROMO_DISCOUNT_RATE = 0.1
-const PROMO_PRODUCT_IDS = new Set(['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'])
+export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
+export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
+const CHEESECAKE_PROMO_PRODUCT_IDS = new Set(['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'])
 const FRESH_LEMON_CUPCAKE_PRODUCT_IDS = new Set([
   'fresh-lemon-cupcakes-4',
   'fresh-lemon-cupcakes-6',
   'fresh-lemon-cupcakes-8',
   'fresh-lemon-cupcakes-12',
 ])
+const PROMOTIONS = [
+  { code: PROMO_CODE, expiresOn: CHOCOLATE_PROMO_EXPIRES_ON, productIds: CHEESECAKE_PROMO_PRODUCT_IDS },
+  { code: LEMON_PROMO_CODE, expiresOn: LEMONI_PROMO_EXPIRES_ON, productIds: FRESH_LEMON_CUPCAKE_PRODUCT_IDS },
+]
 export const MAX_RESERVATION_QUANTITY = 5
 export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
@@ -241,13 +248,20 @@ function normalizeCakeOptions(input) {
   return { product, cakeSize, poundAddon, chocolateType }
 }
 
-function calculateCakeTotal(productId, product, cakeSize, poundAddon, quantity, promoCode) {
+function getValidPromoCode(productId, promoCode, now) {
+  if (typeof promoCode !== 'string') return null
+  const normalizedCode = promoCode.trim().toLowerCase()
+  const promo = PROMOTIONS.find((candidate) => candidate.code === normalizedCode && candidate.productIds.has(productId))
+  if (!promo || sydneyDateValue(now) > promo.expiresOn) return null
+  return promo.code
+}
+
+function calculateCakeTotal(productId, product, cakeSize, poundAddon, quantity, promoCode, now) {
   const unitPrice = (product.usesSize ? product.sizePrices[cakeSize] : product.basePrice)
     + (product.usesFinish ? FINISH_PRICES[poundAddon] : 0)
   const originalTotal = unitPrice * quantity
-  const promoApplied = PROMO_PRODUCT_IDS.has(productId)
-    && typeof promoCode === 'string'
-    && promoCode.trim().toLowerCase() === PROMO_CODE
+  const appliedPromoCode = getValidPromoCode(productId, promoCode, now)
+  const promoApplied = appliedPromoCode !== null
   const discountedCents = promoApplied
     ? Math.round(originalTotal * 100 * (1 - PROMO_DISCOUNT_RATE))
     : Math.round(originalTotal * 100)
@@ -256,13 +270,14 @@ function calculateCakeTotal(productId, product, cakeSize, poundAddon, quantity, 
     totalPrice: discountedCents / 100,
     totalPriceCents: discountedCents,
     promoApplied,
+    appliedPromoCode,
     productId,
   }
 }
 
 function buildPromoNote(note, pricing) {
   if (!pricing.promoApplied) return note
-  const promoLine = `[Promo ${PROMO_CODE}] 10% discount applied: ${pricing.originalTotal.toFixed(2)} -> ${pricing.totalPrice.toFixed(2)}`
+  const promoLine = `[Promo ${pricing.appliedPromoCode}] 10% discount applied: ${pricing.originalTotal.toFixed(2)} -> ${pricing.totalPrice.toFixed(2)}`
   const result = [promoLine, note].filter(Boolean).join('\n')
   if (result.length > 1000) fail('REQUEST_NOTE_TOO_LONG')
   return result
@@ -291,7 +306,7 @@ export function buildCakeReservation(input, { now = new Date(), reservationNumbe
 
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
   const { product, cakeSize, poundAddon, chocolateType } = normalizeCakeOptions(input)
-  const pricing = calculateCakeTotal(input.productId, product, cakeSize, poundAddon, quantity, input.promoCode)
+  const pricing = calculateCakeTotal(input.productId, product, cakeSize, poundAddon, quantity, input.promoCode, now)
   const createdAt = now.toISOString()
 
   return {

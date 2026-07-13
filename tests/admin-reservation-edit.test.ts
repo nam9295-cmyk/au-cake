@@ -107,6 +107,25 @@ test('admin edits preserve an audited promo discount and recalculate the discoun
   assert.equal(changed.totalPriceCents, 17100)
 })
 
+test('admin edits preserve a Lemoni discount across Fresh Lemon pack changes', () => {
+  const lemonPromoReservation: Reservation = {
+    ...baseReservation,
+    productId: 'fresh-lemon-cupcakes-8',
+    quantity: 1,
+    requestNote: '[Promo lemoni] 10% discount applied: 45.00 -> 40.50',
+    totalPrice: 40.5,
+    totalPriceCents: 4050,
+  }
+
+  const unchanged = buildAdminReservationUpdate(lemonPromoReservation, {})
+  assert.equal(unchanged.totalPrice, 40.5)
+  assert.equal(unchanged.totalPriceCents, 4050)
+
+  const changed = buildAdminReservationUpdate(lemonPromoReservation, { productId: 'fresh-lemon-cupcakes-12' })
+  assert.equal(changed.totalPrice, 58.5)
+  assert.equal(changed.totalPriceCents, 5850)
+})
+
 test('ordinary request text mentioning a promo does not change admin pricing', () => {
   const reservation = { ...baseReservation, requestNote: 'Can I use Promo verygoodSYD later?' }
   const update = buildAdminReservationUpdate(reservation, {})

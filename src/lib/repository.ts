@@ -7,11 +7,10 @@ import {
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
-  PROMO_CODE,
   applyPromoDiscount,
   fromCurrencyCents,
   getProductById,
-  isValidPromoCode,
+  getValidPromoCode,
   toCurrencyCents,
   getReservationPrice,
   normalizeCakeSize,
@@ -222,8 +221,9 @@ function normalizeQuantity(quantity?: number) {
 
 function buildPromoRequestNote(requestNote: string, productId: ProductId, originalTotal: number, discountedTotal: number, code?: string) {
   const trimmedNote = requestNote.trim()
-  if (!isValidPromoCode(productId, code)) return trimmedNote
-  const promoLine = `[Promo ${PROMO_CODE}] 10% discount applied: ${originalTotal.toFixed(2)} -> ${discountedTotal.toFixed(2)}`
+  const appliedPromoCode = getValidPromoCode(productId, code)
+  if (!appliedPromoCode) return trimmedNote
+  const promoLine = `[Promo ${appliedPromoCode}] 10% discount applied: ${originalTotal.toFixed(2)} -> ${discountedTotal.toFixed(2)}`
   return [promoLine, trimmedNote].filter(Boolean).join('\n')
 }
 

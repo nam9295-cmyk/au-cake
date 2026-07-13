@@ -9,8 +9,34 @@ export const DEFAULT_CHOCOLATE_TYPE: ChocolateType = 'dark'
 export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
 export const MAX_RESERVATION_QUANTITY = 5
 export const PROMO_CODE = 'chocolate'
+export const LEMON_PROMO_CODE = 'lemoni'
 export const PROMO_DISCOUNT_RATE = 0.1
-const PROMO_PRODUCT_IDS: ProductId[] = ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake']
+export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
+export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
+
+const CHEESECAKE_PROMO_PRODUCT_IDS: ProductId[] = ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake']
+const LEMON_PROMO_PRODUCT_IDS: ProductId[] = [
+  'fresh-lemon-cupcakes-4',
+  'fresh-lemon-cupcakes-6',
+  'fresh-lemon-cupcakes-8',
+  'fresh-lemon-cupcakes-12',
+]
+
+const PROMOTIONS = [
+  { code: PROMO_CODE, expiresOn: CHOCOLATE_PROMO_EXPIRES_ON, productIds: CHEESECAKE_PROMO_PRODUCT_IDS },
+  { code: LEMON_PROMO_CODE, expiresOn: LEMONI_PROMO_EXPIRES_ON, productIds: LEMON_PROMO_PRODUCT_IDS },
+]
+
+function sydneyDateValue(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Australia/Sydney',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
 
 export function toCurrencyCents(value: number) {
   return Math.round(Number(value || 0) * 100)
@@ -23,15 +49,23 @@ export function fromCurrencyCents(cents?: number | null) {
 }
 
 export function isPromoEligibleProduct(productId: ProductId) {
-  return PROMO_PRODUCT_IDS.includes(productId)
+  return PROMOTIONS.some((promo) => promo.productIds.includes(productId))
 }
 
-export function isValidPromoCode(productId: ProductId, code?: string) {
-  return isPromoEligibleProduct(productId) && code?.trim().toLowerCase() === PROMO_CODE
+export function getValidPromoCode(productId: ProductId, code?: string, now = new Date()) {
+  const normalizedCode = code?.trim().toLowerCase()
+  if (!normalizedCode) return null
+  const promo = PROMOTIONS.find((candidate) => candidate.code === normalizedCode && candidate.productIds.includes(productId))
+  if (!promo || sydneyDateValue(now) > promo.expiresOn) return null
+  return promo.code
 }
 
-export function applyPromoDiscount(total: number, productId: ProductId, code?: string) {
-  if (!isValidPromoCode(productId, code)) return total
+export function isValidPromoCode(productId: ProductId, code?: string, now = new Date()) {
+  return getValidPromoCode(productId, code, now) !== null
+}
+
+export function applyPromoDiscount(total: number, productId: ProductId, code?: string, now = new Date()) {
+  if (!isValidPromoCode(productId, code, now)) return total
   const discountedCents = Math.round(toCurrencyCents(total) * (1 - PROMO_DISCOUNT_RATE))
   return fromCurrencyCents(Math.max(0, discountedCents))
 }
