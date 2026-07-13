@@ -21,6 +21,7 @@ import poundCakeCardImg from './assets/pound-side.webp'
 import cupcakeCardImg from './assets/cupcake-side.webp'
 import basqueCheesecakeHeroImg from './assets/basquecheesecake.webp'
 import basqueCheesecakeCardImg from './assets/basquecheesecake-side.webp'
+import glutenFreeStampImg from './assets/glutenfree.webp'
 import freshLemonCupcakesHeroImg from './assets/lemoncake.webp'
 import freshLemonCupcakesCardImg from './assets/lemoncake-side.webp'
 import kidsClassHeroImg from './assets/kids-class-hero.webp'
@@ -727,8 +728,8 @@ function HomePage({
         ? '기본 초코 바스크와 파베초코를 올린 두 가지 15cm 치즈케이크 중 선택할 수 있어요.'
         : 'Choose our classic chocolate Basque or the richer pave chocolate finish. Both are 6 inch cakes.',
       features: language === 'ko'
-        ? ['6 inch / 15cm 고정 사이즈', '초코 바스크 AUD 55', '파베초코 바스크 AUD 65']
-        : ['6 inch / 15cm fixed size', 'Chocolate Basque AUD 55', 'Pave Chocolate Basque AUD 65'],
+        ? ['글루텐 프리', '6 inch / 15cm 고정 사이즈', '초코 바스크 AUD 55', '파베초코 바스크 AUD 65']
+        : ['Gluten-free', '6 inch / 15cm fixed size', 'Chocolate Basque AUD 55', 'Pave Chocolate Basque AUD 65'],
       priceLabel: `${language === 'ko' ? 'AUD 55부터' : 'From AUD 55'}`,
       optionLabel: language === 'ko' ? '두 가지 치즈케이크 선택' : 'Two cheesecake options',
     },
@@ -894,6 +895,13 @@ function HomePage({
               <article className="product-card" key={card.id}>
                 <div className="product-image-wrap">
                   <img src={card.image} alt={card.name} />
+                  {card.id === 'cheesecake' && (
+                    <img
+                      className="gluten-free-stamp"
+                      src={glutenFreeStampImg}
+                      alt={language === 'ko' ? '글루텐 프리' : 'Gluten-free'}
+                    />
+                  )}
                 </div>
                 <div>
                   <strong>{card.name}</strong>

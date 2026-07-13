@@ -720,6 +720,33 @@ main {
   will-change: transform;
 }
 
+.product-image-wrap .gluten-free-stamp {
+  position: absolute;
+  top: 46%;
+  left: clamp(-56px, -4.2vw, -18px);
+  right: auto;
+  z-index: 3;
+  width: clamp(78px, 7vw, 96px);
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(2px 3px 2px rgba(0, 0, 0, 0.12));
+  opacity: 0.94;
+  transform: translateY(-50%) rotate(-9deg);
+  transform-origin: center;
+  transition: transform 220ms ease, opacity 220ms ease;
+  will-change: transform;
+}
+
+.product-card:hover .product-image-wrap .gluten-free-stamp,
+.product-card:focus-within .product-image-wrap .gluten-free-stamp {
+  filter: drop-shadow(2px 3px 2px rgba(0, 0, 0, 0.12));
+  opacity: 1;
+  transform: translateY(-50%) rotate(-6deg) scale(1.05);
+}
+
 .product-card:nth-child(2) .product-image-wrap img {
   transform-origin: 40% 72%;
 }
@@ -755,7 +782,17 @@ main {
   padding-top: 0;
   padding-bottom: 0;
   align-self: end;
+  border: 3px solid var(--forest);
+  border-radius: 54px;
+  background: var(--canvas);
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+.product-card>button.secondary-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.18);
 }
 
 .product-card strong {
