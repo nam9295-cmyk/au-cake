@@ -69,20 +69,20 @@ npm run setup:appwrite
 ```bash
 # KR 예시
 VITE_MARKET=KR
-VITE_APPWRITE_DATABASE_ID=verygood_cake_kr
-VITE_APPWRITE_RESERVATIONS_TABLE_ID=reservations
+VITE_APPWRITE_CAKE_DATABASE_ID=verygood_cake_kr
+VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID=reservations
 VITE_APPWRITE_SETTINGS_TABLE_ID=settings
-APPWRITE_DATABASE_ID=verygood_cake_kr
-APPWRITE_RESERVATIONS_TABLE_ID=reservations
+APPWRITE_CAKE_DATABASE_ID=verygood_cake_kr
+APPWRITE_CAKE_RESERVATIONS_TABLE_ID=reservations
 APPWRITE_SETTINGS_TABLE_ID=settings
 
 # AU 예시
 VITE_MARKET=AU
-VITE_APPWRITE_DATABASE_ID=verygood_cake_au
-VITE_APPWRITE_RESERVATIONS_TABLE_ID=reservations
+VITE_APPWRITE_CAKE_DATABASE_ID=verygood_cake_au
+VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID=reservations
 VITE_APPWRITE_SETTINGS_TABLE_ID=settings
-APPWRITE_DATABASE_ID=verygood_cake_au
-APPWRITE_RESERVATIONS_TABLE_ID=reservations
+APPWRITE_CAKE_DATABASE_ID=verygood_cake_au
+APPWRITE_CAKE_RESERVATIONS_TABLE_ID=reservations
 APPWRITE_SETTINGS_TABLE_ID=settings
 ```
 
@@ -94,8 +94,8 @@ APPWRITE_SETTINGS_TABLE_ID=settings
 
 ```bash
 RESEND_API_KEY=
-RESEND_FROM_EMAIL="베리굿초콜릿 예약 <reservation@verygood-chocolate.com>"
-RESEND_TO_EMAILS="verygout_@naver.com,jennycheon1025@gmail.com"
+RESEND_FROM_EMAIL="Reservation <reservation@example.com>"
+RESEND_TO_EMAILS="owner@example.com"
 ```
 
 Function 리소스와 배포는 아래 명령으로 생성/업데이트합니다.
@@ -106,7 +106,7 @@ npm run deploy:reservation-notification
 
 이 명령에 사용하는 `APPWRITE_API_KEY`에는 최소 `functions.read`, `functions.write` 스코프가 필요합니다. 배포 후 실행 로그까지 CLI에서 확인하려면 `execution.read`도 추가하세요.
 
-기본 함수 ID는 `reservation-notification`이며 현재 운영 Appwrite 인스턴스와 호환되는 기본 런타임은 `node-16.0`입니다. 기본 이벤트는 `tablesdb.{APPWRITE_DATABASE_ID}.tables.{APPWRITE_RESERVATIONS_TABLE_ID}.rows.*.create`와 기존 `databases.{APPWRITE_DATABASE_ID}.collections.{APPWRITE_RESERVATIONS_TABLE_ID}.documents.*.create`를 순서대로 시도하며, 필요하면 `APPWRITE_RESERVATION_CREATE_EVENT`로 직접 지정할 수 있습니다.
+기본 함수 ID는 `reservation-notification`이며 현재 운영 Appwrite 인스턴스와 호환되는 기본 런타임은 `node-16.0`입니다. 기본 이벤트는 `tablesdb.{APPWRITE_CAKE_DATABASE_ID}.tables.{APPWRITE_CAKE_RESERVATIONS_TABLE_ID}.rows.*.create`와 기존 `databases.{APPWRITE_CAKE_DATABASE_ID}.collections.{APPWRITE_CAKE_RESERVATIONS_TABLE_ID}.documents.*.create`를 순서대로 시도하며, 필요하면 `APPWRITE_RESERVATION_CREATE_EVENT`로 직접 지정할 수 있습니다.
 
 메일 발송 실패는 예약 데이터를 삭제하거나 되돌리지 않습니다. 실패 내용은 Appwrite Function 로그에 남습니다.
 
