@@ -12,6 +12,7 @@ const baseReservation: Reservation = {
   cakeSize: '15cm',
   chocolateType: 'dark',
   poundAddon: 'none',
+  chocolateIcingCount: 0,
   quantity: 1,
   pickupDate: '2026-07-20',
   pickupTime: '10:00',
@@ -44,6 +45,7 @@ test('admin reservation edits recalculate price when product, options, quantity 
     cakeSize: '15cm',
     chocolateType: 'milk',
     poundAddon: 'extra-chocolate',
+    chocolateIcingCount: 0,
     quantity: 2,
     pickupDate: '2026-07-22',
     pickupTime: '13:30',
@@ -78,6 +80,7 @@ test('admin Fresh Lemon Cupcake edits keep one selected pack and ignore irreleva
     cakeSize: '22cm',
     chocolateType: 'milk',
     poundAddon: 'extra-chocolate',
+    chocolateIcingCount: 8,
     quantity: 3,
   })
 
@@ -86,8 +89,24 @@ test('admin Fresh Lemon Cupcake edits keep one selected pack and ignore irreleva
   assert.equal(update.cakeSize, '15cm')
   assert.equal(update.chocolateType, 'dark')
   assert.equal(update.poundAddon, 'none')
-  assert.equal(update.totalPrice, 65)
-  assert.equal(update.totalPriceCents, 6500)
+  assert.equal(update.chocolateIcingCount, 8)
+  assert.equal(update.totalPrice, 69)
+  assert.equal(update.totalPriceCents, 6900)
+})
+
+test('admin Lemon Cake edits clamp chocolate icing count to the selected pack size', () => {
+  const twelvePack: Reservation = {
+    ...baseReservation,
+    productId: 'fresh-lemon-cupcakes-12',
+    chocolateIcingCount: 8,
+    totalPrice: 69,
+    totalPriceCents: 6900,
+  }
+  const update = buildAdminReservationUpdate(twelvePack, { productId: 'fresh-lemon-cupcakes-4' })
+
+  assert.equal(update.chocolateIcingCount, 4)
+  assert.equal(update.totalPrice, 26)
+  assert.equal(update.totalPriceCents, 2600)
 })
 
 test('admin edits preserve an audited promo discount and recalculate the discounted cents', () => {

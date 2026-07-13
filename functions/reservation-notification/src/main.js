@@ -13,10 +13,10 @@ const MARKET_CONFIG = {
       'cupcake-dozen': '초코 컵케이크 1다스',
       'choco-basque-cheesecake': '초코 바스크 치즈케이크',
       'pave-choco-basque-cheesecake': '파베초코 바스크 치즈케이크',
-      'fresh-lemon-cupcakes-4': '프레시 레몬 컵케이크 · 4개',
-      'fresh-lemon-cupcakes-6': '프레시 레몬 컵케이크 · 6개',
-      'fresh-lemon-cupcakes-8': '프레시 레몬 컵케이크 · 8개',
-      'fresh-lemon-cupcakes-12': '프레시 레몬 컵케이크 · 12개',
+      'fresh-lemon-cupcakes-4': '레몬 케이크 · 4개',
+      'fresh-lemon-cupcakes-6': '레몬 케이크 · 6개',
+      'fresh-lemon-cupcakes-8': '레몬 케이크 · 8개',
+      'fresh-lemon-cupcakes-12': '레몬 케이크 · 12개',
     },
     sizeLabels: {
       mini: '미니케이크',
@@ -50,6 +50,7 @@ const MARKET_CONFIG = {
       size: '사이즈',
       chocolate: '초콜릿',
       finish: '마감',
+      icingMix: '아이싱 구성',
       quantity: '수량',
       customer: '예약자명',
       mobile: '연락처',
@@ -130,6 +131,7 @@ const MARKET_CONFIG = {
       size: 'Size',
       chocolate: 'Chocolate',
       finish: 'Finish',
+      icingMix: 'Icing mix',
       quantity: 'Quantity',
       customer: 'Customer name',
       mobile: 'Mobile',
@@ -213,6 +215,17 @@ function getPoundAddonText(reservation, config) {
   if (!['pound-cake', 'cupcake-dozen'].includes(reservation.productId)) return '-'
   const poundAddon = normalizePoundAddonValue(reservation.poundAddon)
   return config.poundAddonLabels[poundAddon] || config.poundAddonLabels[reservation.poundAddon] || reservation.poundAddon || '-'
+}
+
+function getIcingMixText(reservation, config) {
+  if (!String(reservation.productId || '').startsWith('fresh-lemon-cupcakes-')) return config.labels.none
+  const packSize = Number(String(reservation.productId).split('-').at(-1))
+  const rawCount = Number(reservation.chocolateIcingCount || 0)
+  const chocolateCount = Number.isInteger(rawCount) ? Math.min(packSize, Math.max(0, rawCount)) : 0
+  const lemonCount = packSize - chocolateCount
+  return config.currency === 'AUD'
+    ? `Lemon ${lemonCount} / Chocolate ${chocolateCount}`
+    : `레몬 ${lemonCount}개 / 초코 ${chocolateCount}개`
 }
 
 function getQuantity(reservation) {
@@ -302,6 +315,7 @@ function buildCakeRows(reservation, config) {
     [config.labels.size, getCakeSizeText(reservation, config)],
     [config.labels.chocolate, getChocolateText(reservation, config)],
     [config.labels.finish, getPoundAddonText(reservation, config)],
+    [config.labels.icingMix, getIcingMixText(reservation, config)],
     [config.labels.quantity, `${quantity}${config.quantityUnit}`],
     [config.labels.customer, reservation.customerName],
     [config.labels.mobile, reservation.customerPhone],

@@ -305,7 +305,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       { title: '입금 확정', text: '입금 확인 후 예약이 최종 확정됩니다. 온라인 결제는 제공하지 않습니다.' },
       { title: '픽업', text: '운영시간에 맞춰 매장에서 픽업합니다.' },
     ],
-    csvHeaders: ['신청일시', '예약번호', '예약자명', '연락처', '제품명', '사이즈', '카카오 농도', '초콜릿', '마감', '수량', '픽업일', '픽업시간', '요청사항', '예약상태', '입금상태', '총 가격', '관리자 메모'],
+    csvHeaders: ['신청일시', '예약번호', '예약자명', '연락처', '제품명', '사이즈', '카카오 농도', '초콜릿', '마감', '아이싱 구성', '수량', '픽업일', '픽업시간', '요청사항', '예약상태', '입금상태', '총 가격', '관리자 메모'],
     smsLabels: {
       title: '[베리굿초콜릿 케이크 예약 안내]',
       greeting: '안녕하세요. 베리굿초콜릿입니다.',
@@ -484,7 +484,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       { title: 'Payment', text: 'Your order is confirmed after payment. Online checkout is not available yet.' },
       { title: 'Pick-up', text: 'Collect your cake during the confirmed pick-up window.' },
     ],
-    csvHeaders: ['Created at', 'Booking number', 'Customer name', 'Mobile', 'Product', 'Size', 'Cacao', 'Chocolate', 'Finish', 'Quantity', 'Pick-up date', 'Pick-up time', 'Request note', 'Booking status', 'Payment status', 'Total price', 'Admin memo'],
+    csvHeaders: ['Created at', 'Booking number', 'Customer name', 'Mobile', 'Product', 'Size', 'Cacao', 'Chocolate', 'Finish', 'Icing mix', 'Quantity', 'Pick-up date', 'Pick-up time', 'Request note', 'Booking status', 'Payment status', 'Total price', 'Admin memo'],
     smsLabels: {
       title: '[Verygood Chocolate SYD]',
       greeting: 'Hello, this is Verygood Chocolate.',

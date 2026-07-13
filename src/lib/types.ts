@@ -30,6 +30,7 @@ export type Reservation = {
   cakeSize: CakeSize
   chocolateType: ChocolateType
   poundAddon: PoundAddon
+  chocolateIcingCount?: number
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -51,6 +52,7 @@ export type ReservationInput = {
   cakeSize: CakeSize
   chocolateType: ChocolateType
   poundAddon: PoundAddon
+  chocolateIcingCount: number
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -69,6 +71,7 @@ export type PublicReservation = Pick<
   | 'cakeSize'
   | 'chocolateType'
   | 'poundAddon'
+  | 'chocolateIcingCount'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'

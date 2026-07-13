@@ -1,4 +1,4 @@
-import { formatCakeSizeLabel, formatCacaoLabel, formatChocolateTypeLabel, formatPoundAddonLabel, getProductById, usesReservationChocolateType } from './constants.js'
+import { formatCakeSizeLabel, formatCacaoLabel, formatChocolateTypeLabel, formatPoundAddonLabel, getLemonIcingCount, getProductById, isFreshLemonCupcakeProduct, normalizeChocolateIcingCount, usesReservationChocolateType } from './constants.js'
 import { marketConfig } from './market.js'
 import type { Reservation, StoreSettings } from './types.js'
 import { escapeCsvCell } from './csv.js'
@@ -215,6 +215,14 @@ export function isValidPhone(phone: string) {
   return marketConfig.phoneRegex.test(phone.trim())
 }
 
+function formatLemonIcingMix(reservation: Reservation, korean = false) {
+  const lemonCount = getLemonIcingCount(reservation.productId, reservation.chocolateIcingCount)
+  const chocolateCount = normalizeChocolateIcingCount(reservation.productId, reservation.chocolateIcingCount)
+  return korean
+    ? `아이싱: 레몬 ${lemonCount}개 / 초코 ${chocolateCount}개\n`
+    : `Icing mix: Lemon ${lemonCount} / Chocolate ${chocolateCount}\n`
+}
+
 export function buildSmsMessage(reservation: Reservation, settings: StoreSettings = marketConfig.defaultSettings) {
   const product = getProductById(reservation.productId)
   const labels = marketConfig.smsLabels
@@ -226,7 +234,7 @@ Thank you for your order ${reservation.customerName}
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${(product.usesSizeOptions || product.id === 'choco-basque-cheesecake' || product.id === 'pave-choco-basque-cheesecake') ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${(product.usesSizeOptions || product.id === 'choco-basque-cheesecake' || product.id === 'pave-choco-basque-cheesecake') ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 
@@ -241,7 +249,7 @@ ${labels.body}
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${(product.usesSizeOptions || product.id === 'choco-basque-cheesecake' || product.id === 'pave-choco-basque-cheesecake') ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${(product.usesSizeOptions || product.id === 'choco-basque-cheesecake' || product.id === 'pave-choco-basque-cheesecake') ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 ${labels.customerName}: ${reservation.customerName}
@@ -266,6 +274,9 @@ export function reservationsToCsv(reservations: Reservation[]) {
     getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
     usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
     getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',
+    isFreshLemonCupcakeProduct(reservation.productId)
+      ? `Lemon ${getLemonIcingCount(reservation.productId, reservation.chocolateIcingCount)} / Chocolate ${normalizeChocolateIcingCount(reservation.productId, reservation.chocolateIcingCount)}`
+      : '-',
     String(reservation.quantity),
     reservation.pickupDate,
     reservation.pickupTime,

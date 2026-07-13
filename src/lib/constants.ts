@@ -13,6 +13,7 @@ export const LEMON_PROMO_CODE = 'lemoni'
 export const PROMO_DISCOUNT_RATE = 0.1
 export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
 export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
+export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
 
 const CHEESECAKE_PROMO_PRODUCT_IDS: ProductId[] = ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake']
 const LEMON_PROMO_PRODUCT_IDS: ProductId[] = [
@@ -104,6 +105,25 @@ export function getFreshLemonCupcakePackSize(productId: ProductId) {
   return [4, 6, 8, 12].includes(packSize) ? packSize : null
 }
 
+export function normalizeChocolateIcingCount(productId: ProductId, value?: number | null) {
+  const packSize = getFreshLemonCupcakePackSize(productId)
+  if (!packSize) return 0
+  const count = Number(value || 0)
+  if (!Number.isFinite(count)) return 0
+  return Math.min(packSize, Math.max(0, Math.floor(count)))
+}
+
+export function getLemonIcingCount(productId: ProductId, chocolateIcingCount?: number | null) {
+  const packSize = getFreshLemonCupcakePackSize(productId)
+  if (!packSize) return 0
+  return packSize - normalizeChocolateIcingCount(productId, chocolateIcingCount)
+}
+
+export function getChocolateIcingSurcharge(productId: ProductId, chocolateIcingCount?: number | null) {
+  const count = normalizeChocolateIcingCount(productId, chocolateIcingCount)
+  return fromCurrencyCents(count * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS)
+}
+
 export function getProductGroupByProductId(productId: ProductId) {
   return PRODUCT_GROUPS.find((group) => group.productIds.includes(productId)) || PRODUCT_GROUPS[0]
 }
@@ -113,6 +133,7 @@ export type ReservationPriceOptions = {
   cakeSize?: CakeSize
   chocolateType?: ChocolateType
   poundAddon?: PoundAddon
+  chocolateIcingCount?: number
 }
 
 export function getProductById(productId?: string) {
@@ -204,6 +225,7 @@ function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoP
       cakeSize: cakeSize || DEFAULT_CAKE_SIZE,
       chocolateType: DEFAULT_CHOCOLATE_TYPE,
       poundAddon: DEFAULT_POUND_ADDON,
+      chocolateIcingCount: 0,
     }
   }
   return {
@@ -211,6 +233,7 @@ function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoP
     cakeSize: optionsOrCacao?.cakeSize || DEFAULT_CAKE_SIZE,
     chocolateType: optionsOrCacao?.chocolateType || DEFAULT_CHOCOLATE_TYPE,
     poundAddon: optionsOrCacao?.poundAddon || DEFAULT_POUND_ADDON,
+    chocolateIcingCount: optionsOrCacao?.chocolateIcingCount || 0,
   }
 }
 
@@ -233,7 +256,8 @@ export function getReservationUnitPrice(
     sizePrice +
     (product.usesCacaoOptions ? cacaoOption?.extraPrice || 0 : 0) +
     (product.usesChocolateTypeOptions ? chocolateOption.extraPrice : 0) +
-    (product.usesPoundAddonOptions ? addonOption.extraPrice : 0)
+    (product.usesPoundAddonOptions ? addonOption.extraPrice : 0) +
+    getChocolateIcingSurcharge(product.id, options.chocolateIcingCount)
   )
 }
 

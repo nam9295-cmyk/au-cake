@@ -63,18 +63,32 @@ test('calendar cheesecake events show the selected variant without irrelevant fi
   assert.equal(event.label, "Pave Chocolatier's Basque Cheesecake · 6 inch / 15cm ×1")
 })
 
-test('calendar Fresh Lemon Cupcake events show the selected pack without finish text', () => {
+test('calendar Lemon Cake events show the selected pack and icing mix', () => {
   const event = sanitizeCakeCalendarEvent({
     $id: 'lemon-cupcakes-id',
     pickupDate: '2026-08-02',
     pickupTime: '13:00',
     productId: 'fresh-lemon-cupcakes-8',
+    chocolateIcingCount: 3,
     poundAddon: 'none',
     quantity: 1,
     status: '예약신청',
   })
 
-  assert.equal(event.label, 'Lemon Cake · 8 pieces ×1')
+  assert.equal(event.label, 'Lemon Cake · 8 pieces · Icing: Lemon 5 / Chocolate 3 ×1')
+})
+
+test('calendar treats legacy Lemon Cake reservations without icing count as all lemon', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'legacy-lemon-id',
+    pickupDate: '2026-08-02',
+    pickupTime: '13:00',
+    productId: 'fresh-lemon-cupcakes-4',
+    quantity: 1,
+    status: '예약신청',
+  })
+
+  assert.equal(event.label, 'Lemon Cake · 4 pieces · Icing: Lemon 4 / Chocolate 0 ×1')
 })
 
 test('calendar class events expose only class schedule and status', () => {

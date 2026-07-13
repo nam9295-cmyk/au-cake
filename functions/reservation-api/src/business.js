@@ -3,6 +3,7 @@ const MARKET_TIMEZONE = 'Australia/Sydney'
 export const PROMO_CODE = 'chocolate'
 export const LEMON_PROMO_CODE = 'lemoni'
 export const PROMO_DISCOUNT_RATE = 0.1
+export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
 export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
 export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
 const CHEESECAKE_PROMO_PRODUCT_IDS = new Set(['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'])
@@ -230,6 +231,14 @@ function validatePickupDateTime(dateValue, timeValue, now) {
   if (isTooSoon) fail('PICKUP_TIME_TOO_SOON')
 }
 
+function normalizeChocolateIcingCount(productId, value) {
+  if (!FRESH_LEMON_CUPCAKE_PRODUCT_IDS.has(productId)) return 0
+  const packSize = Number(productId.split('-').at(-1))
+  const count = value === undefined || value === null || value === '' ? 0 : Number(value)
+  if (!Number.isInteger(count) || count < 0 || count > packSize) fail('INVALID_ICING_COUNT')
+  return count
+}
+
 function normalizeCakeOptions(input) {
   if (!Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
   const product = PRODUCTS[input.productId]
@@ -244,8 +253,9 @@ function normalizeCakeOptions(input) {
   const chocolateType = showsChocolate && (input.chocolateType === 'dark' || input.chocolateType === 'milk')
     ? input.chocolateType
     : 'dark'
+  const chocolateIcingCount = normalizeChocolateIcingCount(input.productId, input.chocolateIcingCount)
 
-  return { product, cakeSize, poundAddon, chocolateType }
+  return { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount }
 }
 
 function getValidPromoCode(productId, promoCode, now) {
@@ -256,15 +266,17 @@ function getValidPromoCode(productId, promoCode, now) {
   return promo.code
 }
 
-function calculateCakeTotal(productId, product, cakeSize, poundAddon, quantity, promoCode, now) {
-  const unitPrice = (product.usesSize ? product.sizePrices[cakeSize] : product.basePrice)
-    + (product.usesFinish ? FINISH_PRICES[poundAddon] : 0)
-  const originalTotal = unitPrice * quantity
+function calculateCakeTotal(productId, product, cakeSize, poundAddon, chocolateIcingCount, quantity, promoCode, now) {
+  const unitPriceCents = Math.round((product.usesSize ? product.sizePrices[cakeSize] : product.basePrice) * 100)
+    + Math.round((product.usesFinish ? FINISH_PRICES[poundAddon] : 0) * 100)
+    + chocolateIcingCount * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS
+  const originalTotalCents = unitPriceCents * quantity
+  const originalTotal = originalTotalCents / 100
   const appliedPromoCode = getValidPromoCode(productId, promoCode, now)
   const promoApplied = appliedPromoCode !== null
   const discountedCents = promoApplied
-    ? Math.round(originalTotal * 100 * (1 - PROMO_DISCOUNT_RATE))
-    : Math.round(originalTotal * 100)
+    ? Math.round(originalTotalCents * (1 - PROMO_DISCOUNT_RATE))
+    : originalTotalCents
   return {
     originalTotal,
     totalPrice: discountedCents / 100,
@@ -305,8 +317,17 @@ export function buildCakeReservation(input, { now = new Date(), reservationNumbe
   validatePickupDateTime(input.pickupDate, input.pickupTime, now)
 
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
-  const { product, cakeSize, poundAddon, chocolateType } = normalizeCakeOptions(input)
-  const pricing = calculateCakeTotal(input.productId, product, cakeSize, poundAddon, quantity, input.promoCode, now)
+  const { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount } = normalizeCakeOptions(input)
+  const pricing = calculateCakeTotal(
+    input.productId,
+    product,
+    cakeSize,
+    poundAddon,
+    chocolateIcingCount,
+    quantity,
+    input.promoCode,
+    now,
+  )
   const createdAt = now.toISOString()
 
   return {
@@ -317,6 +338,7 @@ export function buildCakeReservation(input, { now = new Date(), reservationNumbe
     cakeSize,
     chocolateType,
     poundAddon,
+    chocolateIcingCount,
     quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -420,6 +442,7 @@ export function publicCakeReservation(document) {
     cakeSize: document.cakeSize || '15cm',
     chocolateType: document.chocolateType || 'dark',
     poundAddon: document.poundAddon || 'none',
+    chocolateIcingCount: Number(document.chocolateIcingCount || 0),
     quantity: Number(document.quantity || 1),
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,

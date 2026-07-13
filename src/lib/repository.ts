@@ -14,6 +14,7 @@ import {
   toCurrencyCents,
   getReservationPrice,
   normalizeCakeSize,
+  normalizeChocolateIcingCount,
   normalizeReservationChocolateType,
   normalizePoundAddon,
 } from './constants'
@@ -55,7 +56,7 @@ const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 
 export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'quantity' | 'totalPriceCents'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'quantity' | 'totalPriceCents'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
@@ -63,6 +64,7 @@ type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeS
   cakeSize?: CakeSize
   chocolateType?: ChocolateType
   poundAddon?: PoundAddon
+  chocolateIcingCount?: number
   quantity?: number
   totalPriceCents?: number
 }
@@ -177,6 +179,10 @@ function normalizeReservation(reservation: Reservation): Reservation {
       reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
       normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
     ),
+    chocolateIcingCount: normalizeChocolateIcingCount(
+      getProductById(reservation.productId).id,
+      reservation.chocolateIcingCount,
+    ),
     quantity: normalizeQuantity(reservation.quantity),
     totalPrice: reservation.totalPriceCents === undefined || reservation.totalPriceCents === null
       ? reservation.totalPrice
@@ -198,6 +204,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
       poundAddon,
     ),
     poundAddon,
+    chocolateIcingCount: normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount),
     quantity: normalizeQuantity(reservation.quantity),
     pickupDate: reservation.pickupDate,
     pickupTime: reservation.pickupTime,
@@ -271,6 +278,10 @@ function toReservation(document: AppwriteReservationDocument): Reservation {
       getProductById(document.productId).id,
       document.chocolateType || DEFAULT_CHOCOLATE_TYPE,
       normalizePoundAddon(getProductById(document.productId).id, document.poundAddon || DEFAULT_POUND_ADDON),
+    ),
+    chocolateIcingCount: normalizeChocolateIcingCount(
+      getProductById(document.productId).id,
+      document.chocolateIcingCount,
     ),
     quantity: normalizeQuantity(document.quantity),
     pickupDate: document.pickupDate,
@@ -528,8 +539,13 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   const cakeSize = normalizeCakeSize(product.id, input.cakeSize)
   const poundAddon = normalizePoundAddon(product.id, input.poundAddon)
   const chocolateType = normalizeReservationChocolateType(product.id, input.chocolateType, poundAddon)
+  const chocolateIcingCount = normalizeChocolateIcingCount(product.id, input.chocolateIcingCount)
   const quantity = normalizeQuantity(input.quantity)
-  const originalTotalPrice = getReservationPrice(product.id, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
+  const originalTotalPrice = getReservationPrice(
+    product.id,
+    { cacaoPercent, cakeSize, chocolateType, poundAddon, chocolateIcingCount },
+    quantity,
+  )
   const totalPrice = applyPromoDiscount(originalTotalPrice, product.id, input.promoCode)
   const totalPriceCents = toCurrencyCents(totalPrice)
   const data = {
@@ -540,6 +556,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     cakeSize,
     chocolateType,
     poundAddon,
+    chocolateIcingCount,
     quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -637,6 +654,7 @@ export async function updateReservation(
     | 'cakeSize'
     | 'chocolateType'
     | 'poundAddon'
+    | 'chocolateIcingCount'
     | 'quantity'
     | 'pickupDate'
     | 'pickupTime'

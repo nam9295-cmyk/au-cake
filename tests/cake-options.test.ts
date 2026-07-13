@@ -10,6 +10,9 @@ import {
   formatCakeSizeLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
+  getFreshLemonCupcakePackSize,
+  getLemonIcingCount,
+  getChocolateIcingSurcharge,
   getProductById,
   getReservationUnitPrice,
   normalizePoundAddon,
@@ -77,6 +80,23 @@ test('Lemon Cake variants use fixed pack prices and the six pack is the default'
 
   assert.equal(getProductById('fresh-lemon-cupcakes-6').priceNote.includes('Most Popular'), true)
   assert.equal(getProductById('fresh-lemon-cupcakes-12').priceNote.includes('Best Value'), true)
+})
+
+test('Lemon Cake chocolate icing count derives mix and adds AUD 0.50 per changed piece', () => {
+  assert.equal(getFreshLemonCupcakePackSize('fresh-lemon-cupcakes-4'), 4)
+  assert.equal(getLemonIcingCount('fresh-lemon-cupcakes-4', 3), 1)
+  assert.equal(getChocolateIcingSurcharge('fresh-lemon-cupcakes-4', 3), 1.5)
+  assert.equal(getReservationUnitPrice('fresh-lemon-cupcakes-4', { chocolateIcingCount: 3 }), 25.5)
+  assert.equal(getLemonIcingCount('fresh-lemon-cupcakes-12', 8), 4)
+  assert.equal(getChocolateIcingSurcharge('fresh-lemon-cupcakes-12', 8), 4)
+  assert.equal(getReservationUnitPrice('fresh-lemon-cupcakes-12', { chocolateIcingCount: 8 }), 69)
+  assert.equal(getChocolateIcingSurcharge('pave-cake', 8), 0)
+})
+
+test('Lemoni discounts the Lemon Cake subtotal after chocolate icing surcharge', () => {
+  const subtotal = getReservationUnitPrice('fresh-lemon-cupcakes-4', { chocolateIcingCount: 3 })
+  assert.equal(subtotal, 25.5)
+  assert.equal(applyPromoDiscount(subtotal, 'fresh-lemon-cupcakes-4', 'lemoni', new Date('2026-07-13T00:00:00Z')), 22.95)
 })
 
 test('AU cheesecake variants are fixed 6 inch cakes priced at AUD 55 and AUD 65', () => {

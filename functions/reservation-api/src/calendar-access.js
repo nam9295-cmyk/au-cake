@@ -66,7 +66,12 @@ function cakeLabel(document) {
   } else if (document.productId === 'choco-basque-cheesecake' || document.productId === 'pave-choco-basque-cheesecake') {
     options.push('6 inch / 15cm')
   } else if (document.productId?.startsWith('fresh-lemon-cupcakes-')) {
-    // Pack size is included in the product label; there are no configurable finishes.
+    const packSize = Number(document.productId.split('-').at(-1))
+    const rawChocolateCount = Number(document.chocolateIcingCount || 0)
+    const chocolateCount = Number.isInteger(rawChocolateCount)
+      ? Math.min(packSize, Math.max(0, rawChocolateCount))
+      : 0
+    options.push(`Icing: Lemon ${packSize - chocolateCount} / Chocolate ${chocolateCount}`)
   } else if (finishLabels[document.poundAddon]) {
     options.push(finishLabels[document.poundAddon])
   } else {

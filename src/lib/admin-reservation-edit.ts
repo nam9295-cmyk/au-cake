@@ -8,6 +8,7 @@ import {
   getReservationPrice,
   isFreshLemonCupcakeProduct,
   normalizeCakeSize,
+  normalizeChocolateIcingCount,
   normalizePoundAddon,
   normalizeReservationChocolateType,
   toCurrencyCents,
@@ -28,6 +29,7 @@ export type AdminReservationEditInput = Partial<Pick<Reservation,
   | 'cakeSize'
   | 'chocolateType'
   | 'poundAddon'
+  | 'chocolateIcingCount'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'
@@ -42,6 +44,7 @@ export type AdminReservationUpdate = Pick<Reservation,
   | 'cakeSize'
   | 'chocolateType'
   | 'poundAddon'
+  | 'chocolateIcingCount'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'
@@ -95,6 +98,7 @@ function reservationPromoKind(reservation: Reservation): ReservationPromoKind | 
       cakeSize: reservation.cakeSize,
       chocolateType: reservation.chocolateType,
       poundAddon: reservation.poundAddon,
+      chocolateIcingCount: reservation.chocolateIcingCount || 0,
     },
     normalizeQuantity(reservation.quantity),
   )
@@ -118,8 +122,16 @@ export function buildAdminReservationUpdate(
   const quantity = isFreshLemonCupcakeProduct(productId)
     ? 1
     : normalizeQuantity(edits.quantity ?? reservation.quantity)
+  const chocolateIcingCount = normalizeChocolateIcingCount(
+    productId,
+    edits.chocolateIcingCount ?? reservation.chocolateIcingCount ?? 0,
+  )
   const cacaoPercent = (edits.cacaoPercent || reservation.cacaoPercent || '기본') as CacaoPercent
-  const originalTotalPrice = getReservationPrice(productId, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
+  const originalTotalPrice = getReservationPrice(
+    productId,
+    { cacaoPercent, cakeSize, chocolateType, poundAddon, chocolateIcingCount },
+    quantity,
+  )
   const promoKind = reservationPromoKind(reservation)
   const totalPrice = promoKind && promoAppliesToProduct(promoKind, productId)
     ? discountedByTenPercent(originalTotalPrice)
@@ -130,6 +142,7 @@ export function buildAdminReservationUpdate(
     cakeSize,
     chocolateType,
     poundAddon,
+    chocolateIcingCount,
     quantity,
     pickupDate: edits.pickupDate || reservation.pickupDate,
     pickupTime: edits.pickupTime || reservation.pickupTime,

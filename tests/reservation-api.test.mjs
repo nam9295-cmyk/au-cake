@@ -127,6 +127,45 @@ test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and enforces on
   ))
 })
 
+test('cake API prices Lemon Cake chocolate icing per piece before promo', () => {
+  const fourPack = buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-4', quantity: 1, chocolateIcingCount: 3 },
+    { now, reservationNumber: 'VG-C-AU-LEMON-4-3' },
+  )
+  const twelvePack = buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-12', quantity: 1, chocolateIcingCount: 8 },
+    { now, reservationNumber: 'VG-C-AU-LEMON-12-8' },
+  )
+  const promoted = buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-4', quantity: 1, chocolateIcingCount: 3, promoCode: 'lemoni' },
+    { now, reservationNumber: 'VG-C-AU-LEMON-4-3-PROMO' },
+  )
+
+  assert.equal(fourPack.chocolateIcingCount, 3)
+  assert.equal(fourPack.totalPrice, 25.5)
+  assert.equal(fourPack.totalPriceCents, 2550)
+  assert.equal(twelvePack.chocolateIcingCount, 8)
+  assert.equal(twelvePack.totalPrice, 69)
+  assert.equal(promoted.totalPrice, 22.95)
+  assert.equal(promoted.totalPriceCents, 2295)
+})
+
+test('cake API validates Lemon Cake chocolate icing count and clears it for other products', () => {
+  for (const chocolateIcingCount of [-1, 1.5, 5]) {
+    assertApiError('INVALID_ICING_COUNT', () => buildCakeReservation(
+      { ...cakeInput, productId: 'fresh-lemon-cupcakes-4', quantity: 1, chocolateIcingCount },
+      { now, reservationNumber: `VG-C-AU-INVALID-ICING-${chocolateIcingCount}` },
+    ))
+  }
+
+  const pave = buildCakeReservation(
+    { ...cakeInput, productId: 'pave-cake', chocolateIcingCount: 4 },
+    { now, reservationNumber: 'VG-C-AU-PAVE-NO-ICING-MIX' },
+  )
+  assert.equal(pave.chocolateIcingCount, 0)
+  assert.equal(pave.totalPrice, 75)
+})
+
 test('cake API applies Chocolate promo only to cheesecake and records an audit note', () => {
   const chocoBasque = buildCakeReservation(
     { ...cakeInput, productId: 'choco-basque-cheesecake', promoCode: ' ChOcOlAtE ' },

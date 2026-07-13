@@ -45,11 +45,14 @@ import {
   formatCacaoLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
+  getChocolateIcingSurcharge,
+  getLemonIcingCount,
   getProductById,
   getFreshLemonCupcakePackSize,
   isFreshLemonCupcakeProduct,
   getReservationPrice,
   getReservationUnitPrice,
+  normalizeChocolateIcingCount,
   PAYMENT_STATUSES,
   POUND_ADDON_OPTIONS,
   PRODUCT_GROUPS,
@@ -581,7 +584,7 @@ function formatPaymentStatus(status: string) {
 }
 
 function ProductDetailRows({ reservation, language = 'ko' }: {
-  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon'>
+  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount'>
   language?: Language
 }) {
   const product = getProductById(reservation.productId)
@@ -596,10 +599,18 @@ function ProductDetailRows({ reservation, language = 'ko' }: {
         <dd>{productText.name}</dd>
       </div>
       {isFreshLemonCupcakeProduct(product.id) ? (
-        <div>
-          <dt>{language === 'ko' ? '구성' : 'Pack size'}</dt>
-          <dd>{getFreshLemonCupcakePackSize(product.id)} {language === 'ko' ? '개' : 'pieces'}</dd>
-        </div>
+        <>
+          <div>
+            <dt>{language === 'ko' ? '구성' : 'Pack size'}</dt>
+            <dd>{getFreshLemonCupcakePackSize(product.id)} {language === 'ko' ? '개' : 'pieces'}</dd>
+          </div>
+          <div>
+            <dt>{language === 'ko' ? '아이싱' : 'Icing mix'}</dt>
+            <dd>{language === 'ko'
+              ? `레몬 ${getLemonIcingCount(product.id, reservation.chocolateIcingCount)}개 / 초코 ${normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount)}개`
+              : `Lemon ${getLemonIcingCount(product.id, reservation.chocolateIcingCount)} / Chocolate ${normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount)}`}</dd>
+          </div>
+        </>
       ) : (
         <div>
           <dt>{copy.quantity}</dt>
@@ -1501,6 +1512,7 @@ function ReservePage({
     cakeSize: DEFAULT_CAKE_SIZE as CakeSize,
     chocolateType: DEFAULT_CHOCOLATE_TYPE as ChocolateType,
     poundAddon: DEFAULT_POUND_ADDON as PoundAddon,
+    chocolateIcingCount: 0,
     pickupDate: todayInputValue(),
     pickupTime: '',
     quantity: 1,
@@ -1656,6 +1668,7 @@ function ReservePage({
           cakeSize: form.cakeSize,
           chocolateType: form.chocolateType,
           poundAddon: form.poundAddon,
+          chocolateIcingCount: form.chocolateIcingCount,
           quantity: form.quantity,
           pickupDate,
           pickupTime: selectedPickupTime,
@@ -1705,6 +1718,7 @@ function ReservePage({
     cakeSize: form.cakeSize,
     chocolateType: form.chocolateType,
     poundAddon: form.poundAddon,
+    chocolateIcingCount: form.chocolateIcingCount,
   }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
@@ -1712,6 +1726,10 @@ function ReservePage({
   const isPromoApplied = appliedPromoCode !== null
   const discountedPrice = applyPromoDiscount(currentPrice, selectedProduct.id, form.promoCode)
   const promoDiscountAmount = Math.max(0, currentPrice - discountedPrice)
+  const lemonPackSize = getFreshLemonCupcakePackSize(selectedProduct.id) || 0
+  const chocolateIcingCount = normalizeChocolateIcingCount(selectedProduct.id, form.chocolateIcingCount)
+  const lemonIcingCount = getLemonIcingCount(selectedProduct.id, chocolateIcingCount)
+  const chocolateIcingSurcharge = getChocolateIcingSurcharge(selectedProduct.id, chocolateIcingCount)
   const promoHint = isFreshLemonCupcakeProduct(selectedProduct.id)
     ? language === 'ko' ? '대소문자 구분 없음 · 7월 16일까지 유효' : 'Not case-sensitive · Valid through 16 July'
     : language === 'ko' ? '대소문자 구분 없음 · 7월 15일까지 유효' : 'Not case-sensitive · Valid through 15 July'
@@ -1759,7 +1777,15 @@ function ReservePage({
       cakeSize: product.usesSizeOptions ? form.cakeSize : DEFAULT_CAKE_SIZE,
       chocolateType: usesReservationChocolateType(product.id, form.poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
       poundAddon: product.usesPoundAddonOptions ? form.poundAddon : DEFAULT_POUND_ADDON,
+      chocolateIcingCount: normalizeChocolateIcingCount(productId, form.chocolateIcingCount),
       quantity: isFreshLemonCupcakeProduct(productId) ? 1 : form.quantity,
+    })
+  }
+
+  function selectChocolateIcingCount(value: number) {
+    setForm({
+      ...form,
+      chocolateIcingCount: normalizeChocolateIcingCount(form.productId, value),
     })
   }
 
@@ -1806,7 +1832,15 @@ function ReservePage({
               {isFreshLemonCupcakeProduct(selectedProduct.id) && (
                 <div>
                   <dt>{language === 'ko' ? '구성' : 'Pack size'}</dt>
-                  <dd>{getFreshLemonCupcakePackSize(selectedProduct.id)} {language === 'ko' ? '개' : 'cupcakes'}</dd>
+                  <dd>{getFreshLemonCupcakePackSize(selectedProduct.id)} {language === 'ko' ? '개' : 'pieces'}</dd>
+                </div>
+              )}
+              {isFreshLemonCupcakeProduct(selectedProduct.id) && (
+                <div>
+                  <dt>{language === 'ko' ? '아이싱' : 'Icing mix'}</dt>
+                  <dd>{language === 'ko'
+                    ? `레몬 ${lemonIcingCount}개 / 초코 ${chocolateIcingCount}개`
+                    : `Lemon ${lemonIcingCount} / Chocolate ${chocolateIcingCount}`}</dd>
                 </div>
               )}
               {!isFreshLemonCupcakeProduct(selectedProduct.id) && (
@@ -1943,6 +1977,50 @@ function ReservePage({
                       </label>
                     )
                   })}
+                </div>
+              </fieldset>
+            )}
+
+            {isFreshLemonCupcakeProduct(selectedProduct.id) && (
+              <fieldset className="icing-mix-fieldset">
+                <legend>{language === 'ko' ? '아이싱 구성 선택' : 'Choose icing mix'}</legend>
+                <p className="field-help">
+                  {language === 'ko'
+                    ? '레몬 아이싱이 기본이며, 초코 아이싱 변경은 개당 AUD 0.50이 추가돼요.'
+                    : 'Lemon icing is included. Chocolate icing is +AUD 0.50 per piece.'}
+                </p>
+                <div className="icing-mix-summary" aria-live="polite">
+                  <div><span>{language === 'ko' ? '레몬 아이싱' : 'Lemon icing'}</span><strong>{lemonIcingCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
+                  <div><span>{language === 'ko' ? '초코 아이싱' : 'Chocolate icing'}</span><strong>{chocolateIcingCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
+                </div>
+                <div className="icing-count-stepper">
+                  <button
+                    type="button"
+                    aria-label={language === 'ko' ? '초코 아이싱 한 개 줄이기' : 'Remove one chocolate icing'}
+                    disabled={chocolateIcingCount === 0}
+                    onClick={() => selectChocolateIcingCount(chocolateIcingCount - 1)}
+                  >−</button>
+                  <output>
+                    <strong>{language === 'ko' ? `초코 ${chocolateIcingCount}개` : `${chocolateIcingCount} chocolate`}</strong>
+                    <span>+{formatCurrency(chocolateIcingSurcharge)}</span>
+                  </output>
+                  <button
+                    type="button"
+                    aria-label={language === 'ko' ? '초코 아이싱 한 개 늘리기' : 'Add one chocolate icing'}
+                    disabled={chocolateIcingCount === lemonPackSize}
+                    onClick={() => selectChocolateIcingCount(chocolateIcingCount + 1)}
+                  >+</button>
+                </div>
+                <div className="icing-quick-choices">
+                  <button type="button" className={chocolateIcingCount === 0 ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(0)}>
+                    {language === 'ko' ? '전부 레몬' : 'All lemon'}
+                  </button>
+                  <button type="button" className={chocolateIcingCount === lemonPackSize / 2 ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(lemonPackSize / 2)}>
+                    {language === 'ko' ? '반반' : 'Half & half'}
+                  </button>
+                  <button type="button" className={chocolateIcingCount === lemonPackSize ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(lemonPackSize)}>
+                    {language === 'ko' ? '전부 초코' : 'All chocolate'}
+                  </button>
                 </div>
               </fieldset>
             )}
@@ -3138,6 +3216,7 @@ function ReservationDrawer({
   const [cakeSize, setCakeSize] = useState<CakeSize>(reservation.cakeSize)
   const [chocolateType, setChocolateType] = useState<ChocolateType>(reservation.chocolateType)
   const [poundAddon, setPoundAddon] = useState<PoundAddon>(reservation.poundAddon)
+  const [chocolateIcingCount, setChocolateIcingCount] = useState(reservation.chocolateIcingCount || 0)
   const [quantity, setQuantity] = useState(reservation.quantity)
   const [pickupDate, setPickupDate] = useState(reservation.pickupDate)
   const [pickupTime, setPickupTime] = useState(reservation.pickupTime)
@@ -3151,6 +3230,7 @@ function ReservationDrawer({
     cakeSize,
     chocolateType,
     poundAddon,
+    chocolateIcingCount,
     quantity,
     pickupDate,
     pickupTime,
@@ -3235,10 +3315,24 @@ function ReservationDrawer({
                 </select>
               </label>
             )}
-            <label>
-              수량
-              <input type="number" min="1" max={MAX_RESERVATION_QUANTITY} value={quantity} onChange={(event) => setQuantity(Number(event.target.value || 1))} />
-            </label>
+            {isFreshLemonCupcakeProduct(draftUpdate.productId) && (
+              <label>
+                초코 아이싱 개수
+                <input
+                  type="number"
+                  min="0"
+                  max={getFreshLemonCupcakePackSize(draftUpdate.productId) || 0}
+                  value={draftUpdate.chocolateIcingCount}
+                  onChange={(event) => setChocolateIcingCount(Number(event.target.value || 0))}
+                />
+              </label>
+            )}
+            {!isFreshLemonCupcakeProduct(draftUpdate.productId) && (
+              <label>
+                수량
+                <input type="number" min="1" max={MAX_RESERVATION_QUANTITY} value={quantity} onChange={(event) => setQuantity(Number(event.target.value || 1))} />
+              </label>
+            )}
             <label>
               픽업 날짜
               <input type="date" value={pickupDate} onChange={(event) => setPickupDate(event.target.value)} />
