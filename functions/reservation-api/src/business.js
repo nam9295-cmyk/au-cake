@@ -3,6 +3,12 @@ const MARKET_TIMEZONE = 'Australia/Sydney'
 export const PROMO_CODE = 'chocolate'
 export const PROMO_DISCOUNT_RATE = 0.1
 const PROMO_PRODUCT_IDS = new Set(['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'])
+const FRESH_LEMON_CUPCAKE_PRODUCT_IDS = new Set([
+  'fresh-lemon-cupcakes-4',
+  'fresh-lemon-cupcakes-6',
+  'fresh-lemon-cupcakes-8',
+  'fresh-lemon-cupcakes-12',
+])
 export const MAX_RESERVATION_QUANTITY = 5
 export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
@@ -40,6 +46,10 @@ const PRODUCTS = {
     usesSize: false,
     usesFinish: false,
   },
+  'fresh-lemon-cupcakes-4': { basePrice: 24, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-6': { basePrice: 36, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-8': { basePrice: 45, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-12': { basePrice: 65, sizePrices: {}, usesSize: false, usesFinish: false },
 }
 
 const FINISH_PRICES = {
@@ -276,6 +286,7 @@ export function buildCakeReservation(input, { now = new Date(), reservationNumbe
   const customerPhone = validateAustralianMobile(input.customerPhone)
   const quantity = Number(input.quantity)
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
+  if (FRESH_LEMON_CUPCAKE_PRODUCT_IDS.has(input.productId) && quantity !== 1) fail('INVALID_QUANTITY')
   validatePickupDateTime(input.pickupDate, input.pickupTime, now)
 
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })

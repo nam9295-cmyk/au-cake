@@ -38,7 +38,7 @@ export function applyPromoDiscount(total: number, productId: ProductId, code?: s
 
 export const PRODUCTS = marketConfig.products
 
-export type ProductGroupId = 'pave' | 'pound-cupcake' | 'cheesecake'
+export type ProductGroupId = 'pave' | 'pound-cupcake' | 'cheesecake' | 'fresh-lemon-cupcakes'
 export type ProductGroup = {
   id: ProductGroupId
   defaultProductId: ProductId
@@ -53,7 +53,22 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
     defaultProductId: 'choco-basque-cheesecake',
     productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'],
   },
+  ...(marketConfig.market === 'AU' ? [{
+    id: 'fresh-lemon-cupcakes' as const,
+    defaultProductId: 'fresh-lemon-cupcakes-6' as const,
+    productIds: ['fresh-lemon-cupcakes-4', 'fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12'] as ProductId[],
+  }] : []),
 ]
+
+export function isFreshLemonCupcakeProduct(productId: ProductId) {
+  return productId.startsWith('fresh-lemon-cupcakes-')
+}
+
+export function getFreshLemonCupcakePackSize(productId: ProductId) {
+  if (!isFreshLemonCupcakeProduct(productId)) return null
+  const packSize = Number(productId.split('-').at(-1))
+  return [4, 6, 8, 12].includes(packSize) ? packSize : null
+}
 
 export function getProductGroupByProductId(productId: ProductId) {
   return PRODUCT_GROUPS.find((group) => group.productIds.includes(productId)) || PRODUCT_GROUPS[0]

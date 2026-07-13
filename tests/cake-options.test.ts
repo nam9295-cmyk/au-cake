@@ -18,6 +18,7 @@ import {
   PRODUCT_GROUPS,
   getProductGroupByProductId,
 } from '../src/lib/constants.js'
+import type { ProductId } from '../src/lib/types.js'
 import {
   addDaysToInputValue,
   buildSmsMessage,
@@ -36,17 +37,46 @@ import {
   isCakePickupBlockedByClass,
 } from '../src/lib/class-utils.js'
 
-test('AU catalogue groups pound cake with cupcakes and replaces the cupcake card with cheesecake', () => {
+test('AU catalogue exposes Fresh Lemon Cupcakes as a fourth grouped product family', () => {
   assert.deepEqual(
-    PRODUCT_GROUPS.map((group) => ({ id: group.id, productIds: group.productIds })),
+    PRODUCT_GROUPS.map((group) => ({ id: group.id, defaultProductId: group.defaultProductId, productIds: group.productIds })),
     [
-      { id: 'pave', productIds: ['pave-cake'] },
-      { id: 'pound-cupcake', productIds: ['pound-cake', 'cupcake-dozen'] },
-      { id: 'cheesecake', productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'] },
+      { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
+      { id: 'pound-cupcake', defaultProductId: 'pound-cake', productIds: ['pound-cake', 'cupcake-dozen'] },
+      { id: 'cheesecake', defaultProductId: 'choco-basque-cheesecake', productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'] },
+      {
+        id: 'fresh-lemon-cupcakes',
+        defaultProductId: 'fresh-lemon-cupcakes-6',
+        productIds: ['fresh-lemon-cupcakes-4', 'fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12'],
+      },
     ],
   )
   assert.equal(getProductGroupByProductId('cupcake-dozen').id, 'pound-cupcake')
   assert.equal(getProductGroupByProductId('pave-choco-basque-cheesecake').id, 'cheesecake')
+  assert.equal(getProductGroupByProductId('fresh-lemon-cupcakes-8' as ProductId).id, 'fresh-lemon-cupcakes')
+})
+
+test('Fresh Lemon Cupcakes use fixed pack prices and the six pack is the default', () => {
+  const variants = [
+    ['fresh-lemon-cupcakes-4', 24],
+    ['fresh-lemon-cupcakes-6', 36],
+    ['fresh-lemon-cupcakes-8', 45],
+    ['fresh-lemon-cupcakes-12', 65],
+  ] as const
+
+  for (const [productId, price] of variants) {
+    const product = getProductById(productId)
+    assert.equal(product.name.includes('Fresh Lemon Cupcakes'), true)
+    assert.equal(product.price, price)
+    assert.equal(product.usesSizeOptions, false)
+    assert.equal(product.usesChocolateTypeOptions, false)
+    assert.equal(product.usesPoundAddonOptions, false)
+    assert.equal(getReservationUnitPrice(productId as ProductId), price)
+    assert.equal(applyPromoDiscount(price, productId as ProductId, 'chocolate'), price)
+  }
+
+  assert.equal(getProductById('fresh-lemon-cupcakes-6').priceNote.includes('Most Popular'), true)
+  assert.equal(getProductById('fresh-lemon-cupcakes-12').priceNote.includes('Best Value'), true)
 })
 
 test('AU cheesecake variants are fixed 6 inch cakes priced at AUD 55 and AUD 65', () => {

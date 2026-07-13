@@ -100,6 +100,33 @@ test('cake API derives protected fields and cents on the server', () => {
   assert.equal(reservation.cacaoPercent, '기본')
 })
 
+test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and enforces one pack per reservation', () => {
+  const prices = {
+    'fresh-lemon-cupcakes-4': 24,
+    'fresh-lemon-cupcakes-6': 36,
+    'fresh-lemon-cupcakes-8': 45,
+    'fresh-lemon-cupcakes-12': 65,
+  }
+
+  for (const [productId, expectedPrice] of Object.entries(prices)) {
+    const reservation = buildCakeReservation(
+      { ...cakeInput, productId, quantity: 1, cakeSize: '22cm', poundAddon: 'extra-chocolate', promoCode: 'CHOCOLATE' },
+      { now, reservationNumber: `VG-C-AU-${productId}` },
+    )
+    assert.equal(reservation.totalPrice, expectedPrice)
+    assert.equal(reservation.totalPriceCents, expectedPrice * 100)
+    assert.equal(reservation.quantity, 1)
+    assert.equal(reservation.cakeSize, '15cm')
+    assert.equal(reservation.poundAddon, 'none')
+    assert.equal(reservation.requestNote.includes('[Promo'), false)
+  }
+
+  assertApiError('INVALID_QUANTITY', () => buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 2 },
+    { now, reservationNumber: 'VG-C-AU-LEMON-TWO-PACKS' },
+  ))
+})
+
 test('cake API applies Chocolate promo only to cheesecake and records an audit note', () => {
   const chocoBasque = buildCakeReservation(
     { ...cakeInput, productId: 'choco-basque-cheesecake', promoCode: ' ChOcOlAtE ' },

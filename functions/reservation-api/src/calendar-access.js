@@ -48,6 +48,10 @@ function cakeLabel(document) {
     'cupcake-dozen': 'Cupcakes',
     'choco-basque-cheesecake': 'Chocolate Basque Cheesecake',
     'pave-choco-basque-cheesecake': 'Pave Chocolate Basque Cheesecake',
+    'fresh-lemon-cupcakes-4': 'Fresh Lemon Cupcakes · 4 cupcakes',
+    'fresh-lemon-cupcakes-6': 'Fresh Lemon Cupcakes · 6 cupcakes',
+    'fresh-lemon-cupcakes-8': 'Fresh Lemon Cupcakes · 8 cupcakes',
+    'fresh-lemon-cupcakes-12': 'Fresh Lemon Cupcakes · 12 cupcakes',
   }
   const finishLabels = {
     'extra-chocolate': 'Extra chocolate',
@@ -61,6 +65,8 @@ function cakeLabel(document) {
     if (chocolateLabels[document.chocolateType]) options.push(chocolateLabels[document.chocolateType])
   } else if (document.productId === 'choco-basque-cheesecake' || document.productId === 'pave-choco-basque-cheesecake') {
     options.push('6 inch / 15cm')
+  } else if (document.productId?.startsWith('fresh-lemon-cupcakes-')) {
+    // Pack size is included in the product label; there are no configurable finishes.
   } else if (finishLabels[document.poundAddon]) {
     options.push(finishLabels[document.poundAddon])
   } else {

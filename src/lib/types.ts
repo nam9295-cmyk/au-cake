@@ -12,6 +12,10 @@ export type ProductId =
   | 'cupcake-dozen'
   | 'choco-basque-cheesecake'
   | 'pave-choco-basque-cheesecake'
+  | 'fresh-lemon-cupcakes-4'
+  | 'fresh-lemon-cupcakes-6'
+  | 'fresh-lemon-cupcakes-8'
+  | 'fresh-lemon-cupcakes-12'
 
 export type ReservationStatus = '예약신청' | '예약확정' | '픽업완료' | '취소'
 

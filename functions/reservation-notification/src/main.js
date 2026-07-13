@@ -13,6 +13,10 @@ const MARKET_CONFIG = {
       'cupcake-dozen': '초코 컵케이크 1다스',
       'choco-basque-cheesecake': '초코 바스크 치즈케이크',
       'pave-choco-basque-cheesecake': '파베초코 바스크 치즈케이크',
+      'fresh-lemon-cupcakes-4': '프레시 레몬 컵케이크 · 4개',
+      'fresh-lemon-cupcakes-6': '프레시 레몬 컵케이크 · 6개',
+      'fresh-lemon-cupcakes-8': '프레시 레몬 컵케이크 · 8개',
+      'fresh-lemon-cupcakes-12': '프레시 레몬 컵케이크 · 12개',
     },
     sizeLabels: {
       mini: '미니케이크',
@@ -89,6 +93,10 @@ const MARKET_CONFIG = {
       'cupcake-dozen': 'Chocolate Cupcakes (1 dozen)',
       'choco-basque-cheesecake': 'Chocolate Basque Cheesecake',
       'pave-choco-basque-cheesecake': 'Pave Chocolate Basque Cheesecake',
+      'fresh-lemon-cupcakes-4': 'Fresh Lemon Cupcakes · 4 cupcakes',
+      'fresh-lemon-cupcakes-6': 'Fresh Lemon Cupcakes · 6 cupcakes',
+      'fresh-lemon-cupcakes-8': 'Fresh Lemon Cupcakes · 8 cupcakes',
+      'fresh-lemon-cupcakes-12': 'Fresh Lemon Cupcakes · 12 cupcakes',
     },
     sizeLabels: {
       mini: 'Mini cake',

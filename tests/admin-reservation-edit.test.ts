@@ -72,6 +72,24 @@ test('admin reservation edits normalise irrelevant options for selected product'
   assert.equal(update.totalPriceCents, 5000)
 })
 
+test('admin Fresh Lemon Cupcake edits keep one selected pack and ignore irrelevant options', () => {
+  const update = buildAdminReservationUpdate(baseReservation, {
+    productId: 'fresh-lemon-cupcakes-12',
+    cakeSize: '22cm',
+    chocolateType: 'milk',
+    poundAddon: 'extra-chocolate',
+    quantity: 3,
+  })
+
+  assert.equal(update.productId, 'fresh-lemon-cupcakes-12')
+  assert.equal(update.quantity, 1)
+  assert.equal(update.cakeSize, '15cm')
+  assert.equal(update.chocolateType, 'dark')
+  assert.equal(update.poundAddon, 'none')
+  assert.equal(update.totalPrice, 65)
+  assert.equal(update.totalPriceCents, 6500)
+})
+
 test('admin edits preserve an audited promo discount and recalculate the discounted cents', () => {
   const promoReservation: Reservation = {
     ...baseReservation,

@@ -63,6 +63,20 @@ test('calendar cheesecake events show the selected variant without irrelevant fi
   assert.equal(event.label, 'Pave Chocolate Basque Cheesecake · 6 inch / 15cm ×1')
 })
 
+test('calendar Fresh Lemon Cupcake events show the selected pack without finish text', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'lemon-cupcakes-id',
+    pickupDate: '2026-08-02',
+    pickupTime: '13:00',
+    productId: 'fresh-lemon-cupcakes-8',
+    poundAddon: 'none',
+    quantity: 1,
+    status: '예약신청',
+  })
+
+  assert.equal(event.label, 'Fresh Lemon Cupcakes · 8 cupcakes ×1')
+})
+
 test('calendar class events expose only class schedule and status', () => {
   const event = sanitizeClassCalendarEvent({
     $id: 'class-private-id',

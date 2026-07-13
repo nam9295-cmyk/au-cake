@@ -3,6 +3,8 @@ import {
   ArrowLeft,
   CalendarDays,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Clipboard,
   Copy,
   Download,
@@ -19,6 +21,8 @@ import poundCakeCardImg from './assets/pound-side.webp'
 import cupcakeCardImg from './assets/cupcake-side.webp'
 import basqueCheesecakeHeroImg from './assets/basquecheesecake.webp'
 import basqueCheesecakeCardImg from './assets/basquecheesecake-side.webp'
+import freshLemonCupcakesHeroImg from './assets/lemoncake.webp'
+import freshLemonCupcakesCardImg from './assets/lemoncake-side.webp'
 import kidsClassHeroImg from './assets/kids-class-hero.webp'
 import kidsClassProcessImg from './assets/kids-class-process.webp'
 import kidsClassFinishedImg from './assets/kids-class-finished.webp'
@@ -40,6 +44,8 @@ import {
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
   getProductById,
+  getFreshLemonCupcakePackSize,
+  isFreshLemonCupcakeProduct,
   getReservationPrice,
   getReservationUnitPrice,
   PAYMENT_STATUSES,
@@ -587,13 +593,20 @@ function ProductDetailRows({ reservation, language = 'ko' }: {
         <dt>{copy.product}</dt>
         <dd>{productText.name}</dd>
       </div>
-      <div>
-        <dt>{copy.quantity}</dt>
-        <dd>
-          {reservation.quantity}
-          {copy.quantityUnit}
-        </dd>
-      </div>
+      {isFreshLemonCupcakeProduct(product.id) ? (
+        <div>
+          <dt>{language === 'ko' ? '구성' : 'Pack size'}</dt>
+          <dd>{getFreshLemonCupcakePackSize(product.id)} {language === 'ko' ? '개' : 'cupcakes'}</dd>
+        </div>
+      ) : (
+        <div>
+          <dt>{copy.quantity}</dt>
+          <dd>
+            {reservation.quantity}
+            {copy.quantityUnit}
+          </dd>
+        </div>
+      )}
       {(product.usesSizeOptions || isCheesecakeProduct(product.id)) && (
         <div>
           <dt>{copy.size}</dt>
@@ -663,11 +676,23 @@ function HomePage({
   const [activeHeroCake, setActiveHeroCake] = useState(1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
+  const [heroPaused, setHeroPaused] = useState(false)
   const heroCakes = [
-    { image: basqueCheesecakeHeroImg, label: 'cheesecake', tagKey: 'mini', className: 'hero-cake-one' },
-    { image: heroCake2Img, label: '6/7.5/8.7inch', tagKey: 'first', className: 'hero-cake-two' },
-    { image: heroCake3Img, label: 'pound / cupcake', tagKey: 'pound', className: 'hero-cake-three' },
+    { image: basqueCheesecakeHeroImg, label: 'Chocolate Basque', tagKey: 'mini', className: 'hero-cake-one' },
+    { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
+    { image: heroCake3Img, label: 'Chocolate Pound Cake', tagKey: 'pound', className: 'hero-cake-three' },
+    { image: freshLemonCupcakesHeroImg, label: 'Fresh Lemon Cupcakes', tagKey: 'lemon', className: 'hero-cake-four' },
   ]
+
+  useEffect(() => {
+    if (heroPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const intervalId = window.setInterval(() => {
+      setActiveHeroCake((current) => (current + 1) % 4)
+    }, 3000)
+
+    return () => window.clearInterval(intervalId)
+  }, [heroPaused])
   const catalogCards = [
     {
       id: 'pave',
@@ -707,6 +732,20 @@ function HomePage({
       priceLabel: `${language === 'ko' ? 'AUD 55부터' : 'From AUD 55'}`,
       optionLabel: language === 'ko' ? '두 가지 치즈케이크 선택' : 'Two cheesecake options',
     },
+    {
+      id: 'fresh-lemon-cupcakes',
+      productId: 'fresh-lemon-cupcakes-6' as ProductId,
+      image: freshLemonCupcakesCardImg,
+      name: language === 'ko' ? '프레시 레몬 컵케이크' : 'Fresh Lemon Cupcakes',
+      description: language === 'ko'
+        ? '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.'
+        : 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
+      features: language === 'ko'
+        ? ['4, 6, 8, 12개 구성', '6개 · Most Popular', '12개 · Best Value']
+        : ['Packs of 4, 6, 8 or 12', '6 cupcakes · Most Popular', '12 cupcakes · Best Value'],
+      priceLabel: language === 'ko' ? 'AUD 24부터' : 'From AUD 24',
+      optionLabel: language === 'ko' ? '구성 수량만 선택' : 'Choose a pack size',
+    },
   ]
 
   const rotateHeroCake = useCallback((direction: 1 | -1) => {
@@ -717,27 +756,32 @@ function HomePage({
     const offset = (index - activeHeroCake + heroCakes.length) % heroCakes.length
     if (offset === 0) return 'center'
     if (offset === 1) return 'right'
-    return 'left'
+    if (offset === heroCakes.length - 1) return 'left'
+    return 'hidden'
   }
 
   function handleHeroPointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (window.matchMedia('(max-width: 560px)').matches) {
-      setSwipeStartX(event.clientX)
-      setHeroDragX(0)
-    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setHeroPaused(true)
+    setSwipeStartX(event.clientX)
+    setHeroDragX(0)
   }
 
   function handleHeroPointerMove(event: PointerEvent<HTMLDivElement>) {
     if (swipeStartX === null) return
     const deltaX = event.clientX - swipeStartX
-    setHeroDragX(Math.max(-84, Math.min(84, deltaX)))
+    setHeroDragX(Math.max(-120, Math.min(120, deltaX)))
   }
 
   function handleHeroPointerUp(event: PointerEvent<HTMLDivElement>) {
     if (swipeStartX === null) return
     const deltaX = event.clientX - swipeStartX
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
     setSwipeStartX(null)
     setHeroDragX(0)
+    setHeroPaused(false)
     if (Math.abs(deltaX) < 34) return
     rotateHeroCake(deltaX < 0 ? 1 : -1)
   }
@@ -760,13 +804,17 @@ function HomePage({
           </div>
           <div className="hero-copy">
             <h1 className="hero-title">{copy.homeTitle}</h1>
-            <p className="hero-description">{copy.homeDescription}</p>
+            <p className="hero-description">
+              {language === 'ko' ? (
+                <><strong>Very Good Chocolate</strong>이 만드는 소량 생산 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
+              ) : (
+                <>Small-batch cakes made by <strong>Very Good Chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
+              )}
+            </p>
             <div className="hero-actions">
               <button className="primary-button" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
-                {copy.reserveCta}
+                {language === 'ko' ? <><span>다음 날 픽업</span><span>주문하기</span></> : <><span>Order for</span><span>next-day pick-up</span></>}
               </button>
-              <small className="hero-pickup-note">{copy.announcement}</small>
-              <span>{language === 'ko' ? copy.dailyLimitText : settings.dailyLimitText}</span>
             </div>
           </div>
           <div
@@ -776,9 +824,17 @@ function HomePage({
             onPointerDown={handleHeroPointerDown}
             onPointerMove={handleHeroPointerMove}
             onPointerUp={handleHeroPointerUp}
-            onPointerCancel={() => {
+            onPointerEnter={() => setHeroPaused(true)}
+            onPointerLeave={() => setHeroPaused(false)}
+            onFocusCapture={() => setHeroPaused(true)}
+            onBlurCapture={() => setHeroPaused(false)}
+            onPointerCancel={(event) => {
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.releasePointerCapture(event.pointerId)
+              }
               setSwipeStartX(null)
               setHeroDragX(0)
+              setHeroPaused(false)
             }}
           >
             <div className="hero-cake-cluster" aria-hidden="true">
@@ -786,10 +842,9 @@ function HomePage({
                 const position = heroCakePosition(index)
                 return (
                   <div
-                    className="hero-cake-slide"
+                    className={`hero-cake-slide${cake.className === 'hero-cake-four' ? ' hero-cake-slide-lemon' : ''}`}
                     data-position={position}
                     key={cake.label}
-                    onClick={() => setActiveHeroCake(index)}
                   >
                     <img src={cake.image} alt="" className={`hero-cake ${cake.className}`} draggable="false" />
                     <span className={`hero-size-tag hero-size-tag-${cake.tagKey}`}>
@@ -799,9 +854,34 @@ function HomePage({
                 )
               })}
             </div>
-            <div className="hero-carousel-dots" aria-hidden="true">
+            <button
+              type="button"
+              className="hero-carousel-arrow hero-carousel-arrow-previous"
+              aria-label="Show previous cake"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => rotateHeroCake(-1)}
+            >
+              <ChevronLeft size={24} strokeWidth={1.8} />
+            </button>
+            <button
+              type="button"
+              className="hero-carousel-arrow hero-carousel-arrow-next"
+              aria-label="Show next cake"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => rotateHeroCake(1)}
+            >
+              <ChevronRight size={24} strokeWidth={1.8} />
+            </button>
+            <div className="hero-carousel-dots" aria-label="Choose featured cake">
               {heroCakes.map((cake, index) => (
-                <span className={index === activeHeroCake ? 'is-active' : ''} key={cake.label} />
+                <button
+                  type="button"
+                  className={index === activeHeroCake ? 'is-active' : ''}
+                  key={cake.label}
+                  aria-label={`Show ${cake.label}`}
+                  aria-pressed={index === activeHeroCake}
+                  onClick={() => setActiveHeroCake(index)}
+                />
               ))}
             </div>
           </div>
@@ -1608,7 +1688,9 @@ function ReservePage({
       ? cupcakeCardImg
       : selectedProduct.id === 'choco-basque-cheesecake' || selectedProduct.id === 'pave-choco-basque-cheesecake'
         ? basqueCheesecakeCardImg
-        : paveCakeCardImg
+        : isFreshLemonCupcakeProduct(selectedProduct.id)
+          ? freshLemonCupcakesCardImg
+          : paveCakeCardImg
   const priceOptions = {
     cacaoPercent: form.cacaoPercent,
     cakeSize: form.cakeSize,
@@ -1664,6 +1746,7 @@ function ReservePage({
       cakeSize: product.usesSizeOptions ? form.cakeSize : DEFAULT_CAKE_SIZE,
       chocolateType: usesReservationChocolateType(product.id, form.poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
       poundAddon: product.usesPoundAddonOptions ? form.poundAddon : DEFAULT_POUND_ADDON,
+      quantity: isFreshLemonCupcakeProduct(productId) ? 1 : form.quantity,
     })
   }
 
@@ -1707,13 +1790,21 @@ function ReservePage({
                   )}
                 </dd>
               </div>
-              <div>
-                <dt>{labels.quantity}</dt>
-                <dd>
-                  {form.quantity}
-                  {copy.quantityUnit}
-                </dd>
-              </div>
+              {isFreshLemonCupcakeProduct(selectedProduct.id) && (
+                <div>
+                  <dt>{language === 'ko' ? '구성' : 'Pack size'}</dt>
+                  <dd>{getFreshLemonCupcakePackSize(selectedProduct.id)} {language === 'ko' ? '개' : 'cupcakes'}</dd>
+                </div>
+              )}
+              {!isFreshLemonCupcakeProduct(selectedProduct.id) && (
+                <div>
+                  <dt>{labels.quantity}</dt>
+                  <dd>
+                    {form.quantity}
+                    {copy.quantityUnit}
+                  </dd>
+                </div>
+              )}
               {(selectedProduct.usesSizeOptions || isCheesecakeProduct(selectedProduct.id)) && (
                 <div>
                   <dt>{labels.size}</dt>
@@ -1762,9 +1853,19 @@ function ReservePage({
                       ? getProductText('pave-cake', language).name
                       : group.id === 'pound-cupcake'
                         ? language === 'ko' ? '초코 파운드케이크 & 컵케이크' : 'Chocolate Pound Cake & Cupcakes'
-                        : language === 'ko' ? '초코 바스크 치즈케이크' : 'Chocolate Basque Cheesecake'
-                    const groupImage = group.id === 'pave' ? paveCakeCardImg : group.id === 'pound-cupcake' ? poundCakeCardImg : basqueCheesecakeCardImg
-                    const groupPrice = group.id === 'pave' ? formatCurrency(75) : group.id === 'pound-cupcake' ? 'From AUD 45' : 'From AUD 55'
+                        : group.id === 'cheesecake'
+                          ? language === 'ko' ? '초코 바스크 치즈케이크' : 'Chocolate Basque Cheesecake'
+                          : language === 'ko' ? '프레시 레몬 컵케이크' : 'Fresh Lemon Cupcakes'
+                    const groupImage = group.id === 'pave'
+                      ? paveCakeCardImg
+                      : group.id === 'pound-cupcake'
+                        ? poundCakeCardImg
+                        : group.id === 'cheesecake' ? basqueCheesecakeCardImg : freshLemonCupcakesCardImg
+                    const groupPrice = group.id === 'pave'
+                      ? formatCurrency(75)
+                      : group.id === 'pound-cupcake'
+                        ? 'From AUD 45'
+                        : group.id === 'cheesecake' ? 'From AUD 55' : 'From AUD 24'
                     return (
                       <label
                         className={`product-choice-card${isSelected ? ' is-selected' : ''}`}
@@ -1796,11 +1897,15 @@ function ReservePage({
 
             {selectedProductGroup.productIds.length > 1 && (
               <fieldset>
-                <legend>{language === 'ko' ? '종류 선택' : 'Choose type'}</legend>
+                <legend>{selectedProductGroup.id === 'fresh-lemon-cupcakes'
+                  ? language === 'ko' ? '구성 선택' : 'Choose pack size'
+                  : language === 'ko' ? '종류 선택' : 'Choose type'}</legend>
                 <div className="choice-list">
                   {selectedProductGroup.productIds.map((productId) => {
                     const optionProduct = getProductById(productId)
                     const optionText = getProductText(productId, language)
+                    const isLemonPack = isFreshLemonCupcakeProduct(productId)
+                    const packSize = getFreshLemonCupcakePackSize(productId)
                     const extraFromBase = optionProduct.price - getProductById(selectedProductGroup.defaultProductId).price
                     return (
                       <label className="choice-item" key={productId}>
@@ -1812,10 +1917,15 @@ function ReservePage({
                         />
                         <span className="choice-copy">
                           <strong>
-                            {optionText.name} · {formatCurrency(optionProduct.price)}
-                            {extraFromBase > 0 && ` (+${formatCurrency(extraFromBase)})`}
+                            {isLemonPack
+                              ? `${packSize} ${language === 'ko' ? '개' : 'cupcakes'} · ${formatCurrency(optionProduct.price)}`
+                              : `${optionText.name} · ${formatCurrency(optionProduct.price)}${extraFromBase > 0 ? ` (+${formatCurrency(extraFromBase)})` : ''}`}
+                            {productId === 'fresh-lemon-cupcakes-6' && <span className="pack-choice-badge">Most Popular</span>}
+                            {productId === 'fresh-lemon-cupcakes-12' && <span className="pack-choice-badge is-value">Best Value</span>}
                           </strong>
-                          <span>{optionText.priceNote}</span>
+                          <span>{isLemonPack
+                            ? language === 'ko' ? '레몬 크림과 꽃무늬 장식 포함' : 'Lemon cream and floral decoration included'
+                            : optionText.priceNote}</span>
                         </span>
                       </label>
                     )
@@ -1930,24 +2040,26 @@ function ReservePage({
               </fieldset>
             )}
 
-            <fieldset>
-              <legend>{labels.quantity}</legend>
-              <label>
-                {labels.orderQuantity}
-                <select
-                  value={form.quantity}
-                  onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
-                >
-                  {Array.from({ length: MAX_RESERVATION_QUANTITY }, (_, index) => index + 1).map((quantity) => (
-                    <option value={quantity} key={quantity}>
-                      {quantity}
-                      {copy.quantityUnit}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <p className="field-help">{labels.quantityHelp}</p>
-            </fieldset>
+            {!isFreshLemonCupcakeProduct(selectedProduct.id) && (
+              <fieldset>
+                <legend>{labels.quantity}</legend>
+                <label>
+                  {labels.orderQuantity}
+                  <select
+                    value={form.quantity}
+                    onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
+                  >
+                    {Array.from({ length: MAX_RESERVATION_QUANTITY }, (_, index) => index + 1).map((quantity) => (
+                      <option value={quantity} key={quantity}>
+                        {quantity}
+                        {copy.quantityUnit}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="field-help">{labels.quantityHelp}</p>
+              </fieldset>
+            )}
 
             <div className="field-row">
               <label>

@@ -6,6 +6,7 @@ import {
   PROMO_CODE,
   applyPromoDiscount,
   getReservationPrice,
+  isFreshLemonCupcakeProduct,
   normalizeCakeSize,
   normalizePoundAddon,
   normalizeReservationChocolateType,
@@ -97,7 +98,9 @@ export function buildAdminReservationUpdate(
     (edits.chocolateType || reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE) as ChocolateType,
     poundAddon,
   )
-  const quantity = normalizeQuantity(edits.quantity ?? reservation.quantity)
+  const quantity = isFreshLemonCupcakeProduct(productId)
+    ? 1
+    : normalizeQuantity(edits.quantity ?? reservation.quantity)
   const cacaoPercent = (edits.cacaoPercent || reservation.cacaoPercent || '기본') as CacaoPercent
   const originalTotalPrice = getReservationPrice(productId, { cacaoPercent, cakeSize, chocolateType, poundAddon }, quantity)
   const promoKind = reservationPromoKind(reservation)

@@ -49,6 +49,18 @@ const koProducts: Record<ProductId, ProductText> = {
     description: '초코 바스크 치즈케이크 위에 꾸덕한 파베 초콜릿을 더한 15cm 케이크예요.',
     priceNote: '6 inch / 15cm 고정 사이즈',
   },
+  'fresh-lemon-cupcakes-4': {
+    name: '프레시 레몬 컵케이크 · 4개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '4개 구성 · 레몬 크림과 꽃 장식 포함',
+  },
+  'fresh-lemon-cupcakes-6': {
+    name: '프레시 레몬 컵케이크 · 6개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '6개 구성 · Most Popular',
+  },
+  'fresh-lemon-cupcakes-8': {
+    name: '프레시 레몬 컵케이크 · 8개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '8개 구성 · 레몬 크림과 꽃 장식 포함',
+  },
+  'fresh-lemon-cupcakes-12': {
+    name: '프레시 레몬 컵케이크 · 12개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '12개 구성 · Best Value',
+  },
 }
 
 const koProductFeatures: Record<ProductId, string[]> = {
@@ -57,6 +69,10 @@ const koProductFeatures: Record<ProductId, string[]> = {
   'cupcake-dozen': ['12개 1다스 구성', '파운드케이크에서 10달러 추가', '기본, 초콜릿 추가, 바닐라 크림 마감'],
   'choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '진한 초코 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '파베 초콜릿 마감', '더 진한 치즈케이크 옵션'],
+  'fresh-lemon-cupcakes-4': ['4개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
+  'fresh-lemon-cupcakes-6': ['6개 구성', 'Most Popular', '레몬 크림과 꽃 장식 포함'],
+  'fresh-lemon-cupcakes-8': ['8개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
+  'fresh-lemon-cupcakes-12': ['12개 구성', 'Best Value', '레몬 크림과 꽃 장식 포함'],
 }
 
 export function getProductText(productId: ProductId, language: Language): ProductText {
@@ -125,8 +141,8 @@ export function cakeCopy(language: Language) {
       languageHelp: '한국어로 보기',
       announcement: '오후 8시 전 주문 시 다음 날 픽업 · 오후 8시 이후 주문은 다음 날 낮 12시부터',
       brandName: 'Verygood Chocolate',
-      homeTitle: '시드니 초콜릿 케이크 주문',
-      homeDescription: '베리굿초콜릿의 진한 초콜릿 맛을 시드니에서도 예약 주문으로 만나보세요. 픽업은 Melrose Park에서 진행됩니다.',
+      homeTitle: '시드니 주문 제작 케이크',
+      homeDescription: 'Very Good Chocolate이 만드는 소량 생산 케이크를 Melrose Park 픽업 예약으로 만나보세요.',
       reserveCta: '다음 날 픽업 주문하기',
       lookupNav: '주문 조회',
       adminNav: 'Admin',
