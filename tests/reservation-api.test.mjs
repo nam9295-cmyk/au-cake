@@ -401,10 +401,18 @@ test('cake creation returns the original document when the same request ID is re
     },
   }
 
-  const futureCakeInput = { ...cakeInput, pickupDate: '2099-07-11' }
+  const futureCakeInput = {
+    ...cakeInput,
+    productId: 'fresh-lemon-cupcakes-4',
+    chocolateIcingCount: 3,
+    quantity: 1,
+    pickupDate: '2099-07-11',
+  }
   const first = await createCake(databases, { ...futureCakeInput, requestId })
   const retry = await createCake(databases, { ...futureCakeInput, requestId })
   assert.equal(creates, 1)
+  assert.equal(first.chocolateIcingCount, 3)
+  assert.equal(first.totalPriceCents, 2550)
   assert.equal(retry.id, first.id)
   assert.equal(retry.reservationNumber, first.reservationNumber)
 })
