@@ -56,7 +56,7 @@ test('AU catalogue exposes Fresh Lemon Cupcakes as a fourth grouped product fami
   assert.equal(getProductGroupByProductId('fresh-lemon-cupcakes-8' as ProductId).id, 'fresh-lemon-cupcakes')
 })
 
-test('Fresh Lemon Cupcakes use fixed pack prices and the six pack is the default', () => {
+test('Lemon Cake variants use fixed pack prices and the six pack is the default', () => {
   const variants = [
     ['fresh-lemon-cupcakes-4', 24],
     ['fresh-lemon-cupcakes-6', 36],
@@ -66,7 +66,7 @@ test('Fresh Lemon Cupcakes use fixed pack prices and the six pack is the default
 
   for (const [productId, price] of variants) {
     const product = getProductById(productId)
-    assert.equal(product.name.includes('Fresh Lemon Cupcakes'), true)
+    assert.equal(product.name.startsWith('Lemon Cake · '), true)
     assert.equal(product.price, price)
     assert.equal(product.usesSizeOptions, false)
     assert.equal(product.usesChocolateTypeOptions, false)
@@ -83,9 +83,9 @@ test('AU cheesecake variants are fixed 6 inch cakes priced at AUD 55 and AUD 65'
   const chocoBasque = getProductById('choco-basque-cheesecake')
   const paveBasque = getProductById('pave-choco-basque-cheesecake')
 
-  assert.equal(chocoBasque.name, 'Chocolate Basque Cheesecake')
+  assert.equal(chocoBasque.name, "Chocolatier's Basque Cheesecake")
   assert.equal(chocoBasque.price, 55)
-  assert.equal(paveBasque.name, 'Pave Chocolate Basque Cheesecake')
+  assert.equal(paveBasque.name, "Pave Chocolatier's Basque Cheesecake")
   assert.equal(paveBasque.price, 65)
   assert.equal(chocoBasque.usesSizeOptions, false)
   assert.equal(chocoBasque.usesPoundAddonOptions, false)
@@ -477,7 +477,7 @@ test('AU cheesecake confirmation includes the selected variant and fixed 6 inch 
     updatedAt: '2026-07-04T00:00:00.000Z',
   })
 
-  assert.match(message, /Pave Chocolate Basque Cheesecake/)
+  assert.match(message, /Pave Chocolatier's Basque Cheesecake/)
   assert.match(message, /Size: 6 inch \/ 15cm/)
   assert.equal(message.includes('Finish:'), false)
 })

@@ -598,7 +598,7 @@ function ProductDetailRows({ reservation, language = 'ko' }: {
       {isFreshLemonCupcakeProduct(product.id) ? (
         <div>
           <dt>{language === 'ko' ? '구성' : 'Pack size'}</dt>
-          <dd>{getFreshLemonCupcakePackSize(product.id)} {language === 'ko' ? '개' : 'cupcakes'}</dd>
+          <dd>{getFreshLemonCupcakePackSize(product.id)} {language === 'ko' ? '개' : 'pieces'}</dd>
         </div>
       ) : (
         <div>
@@ -680,10 +680,10 @@ function HomePage({
   const [heroDragX, setHeroDragX] = useState(0)
   const [heroPaused, setHeroPaused] = useState(false)
   const heroCakes = [
-    { image: basqueCheesecakeHeroImg, label: 'Chocolate Basque', tagKey: 'mini', className: 'hero-cake-one' },
+    { image: basqueCheesecakeHeroImg, label: "Chocolatier's Basque", tagKey: 'mini', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'Chocolate Pound Cake', tagKey: 'pound', className: 'hero-cake-three' },
-    { image: freshLemonCupcakesHeroImg, label: 'Fresh Lemon Cupcakes', tagKey: 'lemon', className: 'hero-cake-four' },
+    { image: freshLemonCupcakesHeroImg, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
   ]
 
   useEffect(() => {
@@ -724,13 +724,13 @@ function HomePage({
       id: 'cheesecake',
       productId: 'choco-basque-cheesecake' as ProductId,
       image: basqueCheesecakeCardImg,
-      name: language === 'ko' ? '초코 바스크 치즈케이크' : 'Chocolate Basque Cheesecake',
+      name: language === 'ko' ? '쇼콜라티에 바스크 치즈케이크' : "Chocolatier's Basque Cheesecake",
       description: language === 'ko'
         ? '기본 초코 바스크와 파베초코를 올린 두 가지 15cm 치즈케이크 중 선택할 수 있어요.'
         : 'Choose our classic chocolate Basque or the richer pave chocolate finish. Both are 6 inch cakes.',
       features: language === 'ko'
-        ? ['글루텐 프리', '6 inch / 15cm 고정 사이즈', '초코 바스크 AUD 55', '파베초코 바스크 AUD 65']
-        : ['Gluten-free', '6 inch / 15cm fixed size', 'Chocolate Basque AUD 55', 'Pave Chocolate Basque AUD 65'],
+        ? ['글루텐 프리', '6 inch / 15cm 고정 사이즈', '쇼콜라티에 바스크 AUD 55', '파베 쇼콜라티에 바스크 AUD 65']
+        : ['Gluten-free', '6 inch / 15cm fixed size', "Chocolatier's Basque AUD 55", "Pave Chocolatier's Basque AUD 65"],
       priceLabel: `${language === 'ko' ? 'AUD 55부터' : 'From AUD 55'}`,
       optionLabel: language === 'ko' ? '두 가지 치즈케이크 선택' : 'Two cheesecake options',
     },
@@ -738,13 +738,13 @@ function HomePage({
       id: 'fresh-lemon-cupcakes',
       productId: 'fresh-lemon-cupcakes-6' as ProductId,
       image: freshLemonCupcakesCardImg,
-      name: language === 'ko' ? '프레시 레몬 컵케이크' : 'Fresh Lemon Cupcakes',
+      name: language === 'ko' ? '레몬 케이크' : 'Lemon Cake',
       description: language === 'ko'
         ? '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.'
         : 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
       features: language === 'ko'
         ? ['4, 6, 8, 12개 구성', '6개 · Most Popular', '12개 · Best Value']
-        : ['Packs of 4, 6, 8 or 12', '6 cupcakes · Most Popular', '12 cupcakes · Best Value'],
+        : ['Boxes of 4, 6, 8 or 12', '6 pieces · Most Popular', '12 pieces · Best Value'],
       priceLabel: language === 'ko' ? 'AUD 24부터' : 'From AUD 24',
       optionLabel: language === 'ko' ? '구성 수량만 선택' : 'Choose a pack size',
     },
@@ -1867,8 +1867,8 @@ function ReservePage({
                       : group.id === 'pound-cupcake'
                         ? language === 'ko' ? '초코 파운드케이크 & 컵케이크' : 'Chocolate Pound Cake & Cupcakes'
                         : group.id === 'cheesecake'
-                          ? language === 'ko' ? '초코 바스크 치즈케이크' : 'Chocolate Basque Cheesecake'
-                          : language === 'ko' ? '프레시 레몬 컵케이크' : 'Fresh Lemon Cupcakes'
+                          ? language === 'ko' ? '쇼콜라티에 바스크 치즈케이크' : "Chocolatier's Basque Cheesecake"
+                          : language === 'ko' ? '레몬 케이크' : 'Lemon Cake'
                     const groupImage = group.id === 'pave'
                       ? paveCakeCardImg
                       : group.id === 'pound-cupcake'
@@ -1931,7 +1931,7 @@ function ReservePage({
                         <span className="choice-copy">
                           <strong>
                             {isLemonPack
-                              ? `${packSize} ${language === 'ko' ? '개' : 'cupcakes'} · ${formatCurrency(optionProduct.price)}`
+                              ? `${packSize} ${language === 'ko' ? '개' : 'pieces'} · ${formatCurrency(optionProduct.price)}`
                               : `${optionText.name} · ${formatCurrency(optionProduct.price)}${extraFromBase > 0 ? ` (+${formatCurrency(extraFromBase)})` : ''}`}
                             {productId === 'fresh-lemon-cupcakes-6' && <span className="pack-choice-badge">Most Popular</span>}
                             {productId === 'fresh-lemon-cupcakes-12' && <span className="pack-choice-badge is-value">Best Value</span>}

@@ -60,7 +60,7 @@ test('calendar cheesecake events show the selected variant without irrelevant fi
     status: '예약신청',
   })
 
-  assert.equal(event.label, 'Pave Chocolate Basque Cheesecake · 6 inch / 15cm ×1')
+  assert.equal(event.label, "Pave Chocolatier's Basque Cheesecake · 6 inch / 15cm ×1")
 })
 
 test('calendar Fresh Lemon Cupcake events show the selected pack without finish text', () => {
@@ -74,7 +74,7 @@ test('calendar Fresh Lemon Cupcake events show the selected pack without finish 
     status: '예약신청',
   })
 
-  assert.equal(event.label, 'Fresh Lemon Cupcakes · 8 cupcakes ×1')
+  assert.equal(event.label, 'Lemon Cake · 8 pieces ×1')
 })
 
 test('calendar class events expose only class schedule and status', () => {

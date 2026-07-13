@@ -40,26 +40,26 @@ const koProducts: Record<ProductId, ProductText> = {
     priceNote: '파운드케이크에서 10달러 추가, 마감 옵션 선택 가능',
   },
   'choco-basque-cheesecake': {
-    name: '초코 바스크 치즈케이크',
+    name: '쇼콜라티에 바스크 치즈케이크',
     description: '진한 초콜릿과 크림치즈를 높은 온도에서 구운 15cm 바스크 치즈케이크예요.',
     priceNote: '6 inch / 15cm 고정 사이즈',
   },
   'pave-choco-basque-cheesecake': {
-    name: '파베초코 바스크 치즈케이크',
-    description: '초코 바스크 치즈케이크 위에 꾸덕한 파베 초콜릿을 더한 15cm 케이크예요.',
+    name: '파베 쇼콜라티에 바스크 치즈케이크',
+    description: '쇼콜라티에 바스크 치즈케이크 위에 꾸덕한 파베 초콜릿을 더한 15cm 케이크예요.',
     priceNote: '6 inch / 15cm 고정 사이즈',
   },
   'fresh-lemon-cupcakes-4': {
-    name: '프레시 레몬 컵케이크 · 4개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '4개 구성 · 레몬 크림과 꽃 장식 포함',
+    name: '레몬 케이크 · 4개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '4개 구성 · 레몬 크림과 꽃 장식 포함',
   },
   'fresh-lemon-cupcakes-6': {
-    name: '프레시 레몬 컵케이크 · 6개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '6개 구성 · Most Popular',
+    name: '레몬 케이크 · 6개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '6개 구성 · Most Popular',
   },
   'fresh-lemon-cupcakes-8': {
-    name: '프레시 레몬 컵케이크 · 8개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '8개 구성 · 레몬 크림과 꽃 장식 포함',
+    name: '레몬 케이크 · 8개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '8개 구성 · 레몬 크림과 꽃 장식 포함',
   },
   'fresh-lemon-cupcakes-12': {
-    name: '프레시 레몬 컵케이크 · 12개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '12개 구성 · Best Value',
+    name: '레몬 케이크 · 12개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '12개 구성 · Best Value',
   },
 }
 
@@ -67,7 +67,7 @@ const koProductFeatures: Record<ProductId, string[]> = {
   'pave-cake': ['초콜릿 시트와 파베 가나슈', '6 / 7.5 / 8.7 inch 사이즈', '다크 또는 밀크 선택'],
   'pound-cake': ['직사각형 갸또 쇼콜라', '고정 사이즈', '기본, 초콜릿 추가, 바닐라 크림 마감'],
   'cupcake-dozen': ['12개 1다스 구성', '파운드케이크에서 10달러 추가', '기본, 초콜릿 추가, 바닐라 크림 마감'],
-  'choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '진한 초코 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
+  'choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '쇼콜라티에 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '파베 초콜릿 마감', '더 진한 치즈케이크 옵션'],
   'fresh-lemon-cupcakes-4': ['4개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
   'fresh-lemon-cupcakes-6': ['6개 구성', 'Most Popular', '레몬 크림과 꽃 장식 포함'],

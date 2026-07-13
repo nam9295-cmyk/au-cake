@@ -46,12 +46,12 @@ function cakeLabel(document) {
     'pave-cake': 'Pave cake',
     'pound-cake': 'Pound cake',
     'cupcake-dozen': 'Cupcakes',
-    'choco-basque-cheesecake': 'Chocolate Basque Cheesecake',
-    'pave-choco-basque-cheesecake': 'Pave Chocolate Basque Cheesecake',
-    'fresh-lemon-cupcakes-4': 'Fresh Lemon Cupcakes · 4 cupcakes',
-    'fresh-lemon-cupcakes-6': 'Fresh Lemon Cupcakes · 6 cupcakes',
-    'fresh-lemon-cupcakes-8': 'Fresh Lemon Cupcakes · 8 cupcakes',
-    'fresh-lemon-cupcakes-12': 'Fresh Lemon Cupcakes · 12 cupcakes',
+    'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
+    'pave-choco-basque-cheesecake': "Pave Chocolatier's Basque Cheesecake",
+    'fresh-lemon-cupcakes-4': 'Lemon Cake · 4 pieces',
+    'fresh-lemon-cupcakes-6': 'Lemon Cake · 6 pieces',
+    'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
+    'fresh-lemon-cupcakes-12': 'Lemon Cake · 12 pieces',
   }
   const finishLabels = {
     'extra-chocolate': 'Extra chocolate',
