@@ -230,15 +230,17 @@ export function buildSmsMessage(reservation: Reservation, settings: StoreSetting
   if (marketConfig.market === 'AU') {
     return `${labels.title}
 
-Thank you for your order ${reservation.customerName}
+Thank you for your order ${reservation.customerName}. (${reservation.customerPhone})
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${(product.usesSizeOptions || product.id === 'choco-basque-cheesecake' || product.id === 'pave-choco-basque-cheesecake') ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${(product.usesSizeOptions || product.id === 'choco-basque-cheesecake' || product.id === 'pave-choco-basque-cheesecake') ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
+${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
-${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
+Pick-up location: https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw
 
-${labels.thanks}`
+Thank you for your order:)
+Have a verygood day!`
   }
 
   const contactLine = /TBC/i.test(settings.storePhone) ? '' : `${labels.contact}: ${settings.storePhone}\n`

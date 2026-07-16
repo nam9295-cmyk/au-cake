@@ -458,17 +458,19 @@ test('AU cake confirmation message matches Jenny request copy', () => {
 
   assert.equal(message, `[Verygood Chocolate SYD]
 
-Thank you for your order Jenny
+Thank you for your order Jenny. (0412345678)
 
 Booking number: VG-C-AU-20260704-204051216
 Product: Pave Chocolate Cake
 Size: 6 inch / 15cm
+Quantity: 1ea
 Chocolate: Dark chocolate
 Pick-up date: 2026-07-04
 Pick-up time: 10:00
-Quantity: 1ea
+Pick-up location: https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw
 
-Thank you:)`)
+Thank you for your order:)
+Have a verygood day!`)
   assert.doesNotMatch(message, /Product: Gâteau au Chocolat Pave Chocolate Cake/)
   assert.doesNotMatch(message, /Pick-up address:/)
   assert.doesNotMatch(message, /Contact: .*TBC/)
