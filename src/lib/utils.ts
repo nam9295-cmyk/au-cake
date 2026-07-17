@@ -219,8 +219,8 @@ function formatLemonIcingMix(reservation: Reservation, korean = false) {
   const lemonCount = getLemonIcingCount(reservation.productId, reservation.chocolateIcingCount)
   const chocolateCount = normalizeChocolateIcingCount(reservation.productId, reservation.chocolateIcingCount)
   return korean
-    ? `아이싱: 레몬 ${lemonCount}개 / 초코 ${chocolateCount}개\n`
-    : `Icing mix: Lemon ${lemonCount} / Chocolate ${chocolateCount}\n`
+    ? `마감 구성: 생레몬 제스트 아이싱 ${lemonCount}개 / 다크 커버춰 초콜릿 ${chocolateCount}개\n`
+    : `Finishing mix: Fresh lemon zest icing ${lemonCount} / Dark couverture chocolate ${chocolateCount}\n`
 }
 
 export function buildSmsMessage(reservation: Reservation, settings: StoreSettings = marketConfig.defaultSettings) {
@@ -277,7 +277,7 @@ export function reservationsToCsv(reservations: Reservation[]) {
     usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
     getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',
     isFreshLemonCupcakeProduct(reservation.productId)
-      ? `Lemon ${getLemonIcingCount(reservation.productId, reservation.chocolateIcingCount)} / Chocolate ${normalizeChocolateIcingCount(reservation.productId, reservation.chocolateIcingCount)}`
+      ? `Fresh lemon zest icing ${getLemonIcingCount(reservation.productId, reservation.chocolateIcingCount)} / Dark couverture chocolate ${normalizeChocolateIcingCount(reservation.productId, reservation.chocolateIcingCount)}`
       : '-',
     String(reservation.quantity),
     reservation.pickupDate,

@@ -75,7 +75,7 @@ test('calendar Lemon Cake events show the selected pack and icing mix', () => {
     status: '예약신청',
   })
 
-  assert.equal(event.label, 'Lemon Cake · 8 pieces · Icing: Lemon 5 / Chocolate 3 ×1')
+  assert.equal(event.label, 'Lemon Cake · 8 pieces · Finishing: Fresh lemon zest icing 5 / Dark couverture chocolate 3 ×1')
 })
 
 test('calendar treats legacy Lemon Cake reservations without icing count as all lemon', () => {
@@ -88,7 +88,7 @@ test('calendar treats legacy Lemon Cake reservations without icing count as all 
     status: '예약신청',
   })
 
-  assert.equal(event.label, 'Lemon Cake · 4 pieces · Icing: Lemon 4 / Chocolate 0 ×1')
+  assert.equal(event.label, 'Lemon Cake · 4 pieces · Finishing: Fresh lemon zest icing 4 / Dark couverture chocolate 0 ×1')
 })
 
 test('calendar class events expose only class schedule and status', () => {

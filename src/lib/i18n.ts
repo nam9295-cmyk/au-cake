@@ -53,13 +53,16 @@ const koProducts: Record<ProductId, ProductText> = {
     name: '레몬 케이크 · 4개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '4개 구성 · 레몬 크림과 꽃 장식 포함',
   },
   'fresh-lemon-cupcakes-6': {
-    name: '레몬 케이크 · 6개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '6개 구성 · Most Popular',
+    name: '레몬 케이크 · 6개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '6개 구성 · 레몬 크림과 꽃 장식 포함',
   },
   'fresh-lemon-cupcakes-8': {
     name: '레몬 케이크 · 8개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '8개 구성 · 레몬 크림과 꽃 장식 포함',
   },
   'fresh-lemon-cupcakes-12': {
-    name: '레몬 케이크 · 12개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '12개 구성 · Best Value',
+    name: '레몬 케이크 · 12개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '12개 구성 · Most Popular',
+  },
+  'fresh-lemon-cupcakes-16': {
+    name: '레몬 케이크 · 16개', description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.', priceNote: '16개 구성 · 레몬 크림과 꽃 장식 포함',
   },
 }
 
@@ -70,9 +73,10 @@ const koProductFeatures: Record<ProductId, string[]> = {
   'choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '쇼콜라티에 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '파베 초콜릿 마감', '더 진한 치즈케이크 옵션'],
   'fresh-lemon-cupcakes-4': ['4개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
-  'fresh-lemon-cupcakes-6': ['6개 구성', 'Most Popular', '레몬 크림과 꽃 장식 포함'],
+  'fresh-lemon-cupcakes-6': ['6개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
   'fresh-lemon-cupcakes-8': ['8개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
-  'fresh-lemon-cupcakes-12': ['12개 구성', 'Best Value', '레몬 크림과 꽃 장식 포함'],
+  'fresh-lemon-cupcakes-12': ['12개 구성', 'Most Popular', '레몬 크림과 꽃 장식 포함'],
+  'fresh-lemon-cupcakes-16': ['16개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
 }
 
 export function getProductText(productId: ProductId, language: Language): ProductText {

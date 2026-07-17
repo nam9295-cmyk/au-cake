@@ -17,6 +17,7 @@ const MARKET_CONFIG = {
       'fresh-lemon-cupcakes-6': '레몬 케이크 · 6개',
       'fresh-lemon-cupcakes-8': '레몬 케이크 · 8개',
       'fresh-lemon-cupcakes-12': '레몬 케이크 · 12개',
+      'fresh-lemon-cupcakes-16': '레몬 케이크 · 16개',
     },
     sizeLabels: {
       mini: '미니케이크',
@@ -50,7 +51,7 @@ const MARKET_CONFIG = {
       size: '사이즈',
       chocolate: '초콜릿',
       finish: '마감',
-      icingMix: '아이싱 구성',
+      icingMix: '마감 구성',
       quantity: '수량',
       customer: '예약자명',
       mobile: '연락처',
@@ -98,6 +99,7 @@ const MARKET_CONFIG = {
       'fresh-lemon-cupcakes-6': 'Lemon Cake · 6 pieces',
       'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
       'fresh-lemon-cupcakes-12': 'Lemon Cake · 12 pieces',
+      'fresh-lemon-cupcakes-16': 'Lemon Cake · 16 pieces',
     },
     sizeLabels: {
       mini: 'Mini cake',
@@ -131,7 +133,7 @@ const MARKET_CONFIG = {
       size: 'Size',
       chocolate: 'Chocolate',
       finish: 'Finish',
-      icingMix: 'Icing mix',
+      icingMix: 'Finishing mix',
       quantity: 'Quantity',
       customer: 'Customer name',
       mobile: 'Mobile',
@@ -224,8 +226,8 @@ function getIcingMixText(reservation, config) {
   const chocolateCount = Number.isInteger(rawCount) ? Math.min(packSize, Math.max(0, rawCount)) : 0
   const lemonCount = packSize - chocolateCount
   return config.currency === 'AUD'
-    ? `Lemon ${lemonCount} / Chocolate ${chocolateCount}`
-    : `레몬 ${lemonCount}개 / 초코 ${chocolateCount}개`
+    ? `Fresh lemon zest icing ${lemonCount} / Dark couverture chocolate ${chocolateCount}`
+    : `생레몬 제스트 아이싱 ${lemonCount}개 / 다크 커버춰 초콜릿 ${chocolateCount}개`
 }
 
 function getQuantity(reservation) {

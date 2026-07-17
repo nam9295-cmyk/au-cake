@@ -17,10 +17,10 @@ export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
 
 const CHEESECAKE_PROMO_PRODUCT_IDS: ProductId[] = ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake']
 const LEMON_PROMO_PRODUCT_IDS: ProductId[] = [
-  'fresh-lemon-cupcakes-4',
   'fresh-lemon-cupcakes-6',
   'fresh-lemon-cupcakes-8',
   'fresh-lemon-cupcakes-12',
+  'fresh-lemon-cupcakes-16',
 ]
 
 const PROMOTIONS = [
@@ -90,8 +90,8 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
   },
   ...(marketConfig.market === 'AU' ? [{
     id: 'fresh-lemon-cupcakes' as const,
-    defaultProductId: 'fresh-lemon-cupcakes-6' as const,
-    productIds: ['fresh-lemon-cupcakes-4', 'fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12'] as ProductId[],
+    defaultProductId: 'fresh-lemon-cupcakes-12' as const,
+    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'] as ProductId[],
   }] : []),
 ]
 
@@ -102,7 +102,7 @@ export function isFreshLemonCupcakeProduct(productId: ProductId) {
 export function getFreshLemonCupcakePackSize(productId: ProductId) {
   if (!isFreshLemonCupcakeProduct(productId)) return null
   const packSize = Number(productId.split('-').at(-1))
-  return [4, 6, 8, 12].includes(packSize) ? packSize : null
+  return [4, 6, 8, 12, 16].includes(packSize) ? packSize : null
 }
 
 export function normalizeChocolateIcingCount(productId: ProductId, value?: number | null) {

@@ -233,7 +233,13 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'fresh-lemon-cupcakes-12': {
         id: 'fresh-lemon-cupcakes-12', name: '프레시 레몬 컵케이크 · 12개',
         description: '레몬 모양 케이크에 레몬 크림을 채우고 꽃무늬 장식으로 마무리한 시드니 전용 상품입니다.',
-        price: 65000, priceNote: '12개 구성 · Best Value',
+        price: 65000, priceNote: '12개 구성 · Most Popular',
+        usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
+      },
+      'fresh-lemon-cupcakes-16': {
+        id: 'fresh-lemon-cupcakes-16', name: '프레시 레몬 컵케이크 · 16개',
+        description: '레몬 모양 케이크에 레몬 크림을 채우고 꽃무늬 장식으로 마무리한 시드니 전용 상품입니다.',
+        price: 85000, priceNote: '16개 구성 · 레몬 크림과 꽃 장식 포함',
         usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
       },
     },
@@ -295,9 +301,10 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '진한 초코 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
       'pave-choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '초코 바스크 위 파베 초콜릿', '더 진한 초콜릿 마감'],
       'fresh-lemon-cupcakes-4': ['4개 구성', '레몬 크림', '꽃무늬 장식 포함'],
-      'fresh-lemon-cupcakes-6': ['6개 구성', 'Most Popular', '레몬 크림과 꽃 장식 포함'],
+      'fresh-lemon-cupcakes-6': ['6개 구성', '레몬 크림', '꽃무늬 장식 포함'],
       'fresh-lemon-cupcakes-8': ['8개 구성', '레몬 크림', '꽃무늬 장식 포함'],
-      'fresh-lemon-cupcakes-12': ['12개 구성', 'Best Value', '레몬 크림과 꽃 장식 포함'],
+      'fresh-lemon-cupcakes-12': ['12개 구성', 'Most Popular', '레몬 크림과 꽃 장식 포함'],
+      'fresh-lemon-cupcakes-16': ['16개 구성', '레몬 크림', '꽃무늬 장식 포함'],
     },
     guideSteps: [
       { title: '예약 신청', text: '원하는 케이크와 픽업 시간을 선택해 신청합니다.' },
@@ -401,7 +408,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'fresh-lemon-cupcakes-6': {
         id: 'fresh-lemon-cupcakes-6', name: 'Lemon Cake · 6 pieces',
         description: 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
-        price: 36, priceNote: '6-piece box · Most Popular',
+        price: 36, priceNote: '6-piece box · fresh lemon cream and floral finish included',
         usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
       },
       'fresh-lemon-cupcakes-8': {
@@ -413,7 +420,13 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'fresh-lemon-cupcakes-12': {
         id: 'fresh-lemon-cupcakes-12', name: 'Lemon Cake · 12 pieces',
         description: 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
-        price: 65, priceNote: '12-piece box · Best Value',
+        price: 65, priceNote: '12-piece box · Most Popular',
+        usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
+      },
+      'fresh-lemon-cupcakes-16': {
+        id: 'fresh-lemon-cupcakes-16', name: 'Lemon Cake · 16 pieces',
+        description: 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
+        price: 85, priceNote: '16-piece box · fresh lemon cream and floral finish included',
         usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
       },
     },
@@ -474,9 +487,10 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'choco-basque-cheesecake': ['6 inch / 15cm fixed size', "Chocolatier's Basque cheesecake", 'Smooth, rich centre'],
       'pave-choco-basque-cheesecake': ['6 inch / 15cm fixed size', 'Pave chocolate finish', 'Our richer cheesecake option'],
       'fresh-lemon-cupcakes-4': ['4 pieces', 'Fresh lemon cream', 'Floral decoration included'],
-      'fresh-lemon-cupcakes-6': ['6 pieces', 'Most Popular', 'Fresh lemon cream and floral finish'],
+      'fresh-lemon-cupcakes-6': ['6 pieces', 'Fresh lemon cream', 'Floral decoration included'],
       'fresh-lemon-cupcakes-8': ['8 pieces', 'Fresh lemon cream', 'Floral decoration included'],
-      'fresh-lemon-cupcakes-12': ['12 pieces', 'Best Value', 'Fresh lemon cream and floral finish'],
+      'fresh-lemon-cupcakes-12': ['12 pieces', 'Most Popular', 'Fresh lemon cream and floral finish'],
+      'fresh-lemon-cupcakes-16': ['16 pieces', 'Fresh lemon cream', 'Floral decoration included'],
     },
     guideSteps: [
       { title: 'Request', text: 'Choose your cake and preferred pick-up time.' },
@@ -484,7 +498,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       { title: 'Payment', text: 'Your order is confirmed after payment. Online checkout is not available yet.' },
       { title: 'Pick-up', text: 'Collect your cake during the confirmed pick-up window.' },
     ],
-    csvHeaders: ['Created at', 'Booking number', 'Customer name', 'Mobile', 'Product', 'Size', 'Cacao', 'Chocolate', 'Finish', 'Icing mix', 'Quantity', 'Pick-up date', 'Pick-up time', 'Request note', 'Booking status', 'Payment status', 'Total price', 'Admin memo'],
+    csvHeaders: ['Created at', 'Booking number', 'Customer name', 'Mobile', 'Product', 'Size', 'Cacao', 'Chocolate', 'Finish', 'Finishing mix', 'Quantity', 'Pick-up date', 'Pick-up time', 'Request note', 'Booking status', 'Payment status', 'Total price', 'Admin memo'],
     smsLabels: {
       title: '[Verygood Chocolate SYD]',
       greeting: 'Hello, this is Verygood Chocolate.',

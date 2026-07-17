@@ -605,10 +605,10 @@ function ProductDetailRows({ reservation, language = 'ko' }: {
             <dd>{getFreshLemonCupcakePackSize(product.id)} {language === 'ko' ? '개' : 'pieces'}</dd>
           </div>
           <div>
-            <dt>{language === 'ko' ? '아이싱' : 'Icing mix'}</dt>
+            <dt>{language === 'ko' ? '마감 구성' : 'Finishing mix'}</dt>
             <dd>{language === 'ko'
-              ? `레몬 ${getLemonIcingCount(product.id, reservation.chocolateIcingCount)}개 / 초코 ${normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount)}개`
-              : `Lemon ${getLemonIcingCount(product.id, reservation.chocolateIcingCount)} / Chocolate ${normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount)}`}</dd>
+              ? `생레몬 제스트 아이싱 ${getLemonIcingCount(product.id, reservation.chocolateIcingCount)}개 / 다크 커버춰 초콜릿 ${normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount)}개`
+              : `Fresh lemon zest icing ${getLemonIcingCount(product.id, reservation.chocolateIcingCount)} / Dark couverture chocolate ${normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount)}`}</dd>
           </div>
         </>
       ) : (
@@ -747,16 +747,16 @@ function HomePage({
     },
     {
       id: 'fresh-lemon-cupcakes',
-      productId: 'fresh-lemon-cupcakes-6' as ProductId,
+      productId: 'fresh-lemon-cupcakes-12' as ProductId,
       image: freshLemonCupcakesCardImg,
       name: language === 'ko' ? '레몬 케이크' : 'Lemon Cake',
       description: language === 'ko'
         ? '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.'
         : 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
       features: language === 'ko'
-        ? ['4, 6, 8, 12개 구성', '6개 · Most Popular', '12개 · Best Value']
-        : ['Boxes of 4, 6, 8 or 12', '6 pieces · Most Popular', '12 pieces · Best Value'],
-      priceLabel: language === 'ko' ? 'AUD 24부터' : 'From AUD 24',
+        ? ['6, 8, 12, 16개 구성', '12개 · Most Popular', '기본 또는 스페셜 마감 선택']
+        : ['Boxes of 6, 8, 12 or 16', '12 pieces · Most Popular', 'Choose basic or special finishing'],
+      priceLabel: language === 'ko' ? 'AUD 36부터' : 'From AUD 36',
       optionLabel: language === 'ko' ? '구성 수량만 선택' : 'Choose a pack size',
     },
   ]
@@ -1837,10 +1837,10 @@ function ReservePage({
               )}
               {isFreshLemonCupcakeProduct(selectedProduct.id) && (
                 <div>
-                  <dt>{language === 'ko' ? '아이싱' : 'Icing mix'}</dt>
+                  <dt>{language === 'ko' ? '마감 구성' : 'Finishing mix'}</dt>
                   <dd>{language === 'ko'
-                    ? `레몬 ${lemonIcingCount}개 / 초코 ${chocolateIcingCount}개`
-                    : `Lemon ${lemonIcingCount} / Chocolate ${chocolateIcingCount}`}</dd>
+                    ? `생레몬 제스트 아이싱 ${lemonIcingCount}개 / 다크 커버춰 초콜릿 ${chocolateIcingCount}개`
+                    : `Fresh lemon zest icing ${lemonIcingCount} / Dark couverture chocolate ${chocolateIcingCount}`}</dd>
                 </div>
               )}
               {!isFreshLemonCupcakeProduct(selectedProduct.id) && (
@@ -1912,7 +1912,7 @@ function ReservePage({
                       ? formatCurrency(75)
                       : group.id === 'pound-cupcake'
                         ? 'From AUD 45'
-                        : group.id === 'cheesecake' ? 'From AUD 55' : 'From AUD 24'
+                        : group.id === 'cheesecake' ? 'From AUD 55' : 'From AUD 36'
                     return (
                       <label
                         className={`product-choice-card${isSelected ? ' is-selected' : ''}`}
@@ -1967,8 +1967,7 @@ function ReservePage({
                             {isLemonPack
                               ? `${packSize} ${language === 'ko' ? '개' : 'pieces'} · ${formatCurrency(optionProduct.price)}`
                               : `${optionText.name} · ${formatCurrency(optionProduct.price)}${extraFromBase > 0 ? ` (+${formatCurrency(extraFromBase)})` : ''}`}
-                            {productId === 'fresh-lemon-cupcakes-6' && <span className="pack-choice-badge">Most Popular</span>}
-                            {productId === 'fresh-lemon-cupcakes-12' && <span className="pack-choice-badge is-value">Best Value</span>}
+                            {productId === 'fresh-lemon-cupcakes-12' && <span className="pack-choice-badge">Most Popular</span>}
                           </strong>
                           <span>{isLemonPack
                             ? language === 'ko' ? '레몬 크림과 꽃무늬 장식 포함' : 'Lemon cream and floral decoration included'
@@ -1983,43 +1982,43 @@ function ReservePage({
 
             {isFreshLemonCupcakeProduct(selectedProduct.id) && (
               <fieldset className="icing-mix-fieldset">
-                <legend>{language === 'ko' ? '아이싱 구성 선택' : 'Choose icing mix'}</legend>
+                <legend>{language === 'ko' ? '마감 구성 선택' : 'Choose finishing'}</legend>
                 <p className="field-help">
                   {language === 'ko'
-                    ? '레몬 아이싱이 기본이며, 초코 아이싱 변경은 개당 AUD 0.50이 추가돼요.'
-                    : 'Lemon icing is included. Chocolate icing is +AUD 0.50 per piece.'}
+                    ? '기본 마감은 생레몬 제스트 아이싱이며, 스페셜 다크 커버춰 초콜릿은 개당 AUD 0.50이 추가돼요.'
+                    : 'Basic finishing: Fresh lemon zest icing. Special finishing: Dark couverture chocolate (+AUD 0.50 per piece).'}
                 </p>
                 <div className="icing-mix-summary" aria-live="polite">
-                  <div><span>{language === 'ko' ? '레몬 아이싱' : 'Lemon icing'}</span><strong>{lemonIcingCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
-                  <div><span>{language === 'ko' ? '초코 아이싱' : 'Chocolate icing'}</span><strong>{chocolateIcingCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
+                  <div><span>{language === 'ko' ? '기본 · 생레몬 제스트 아이싱' : 'Basic · Fresh lemon zest icing'}</span><strong>{lemonIcingCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
+                  <div><span>{language === 'ko' ? '스페셜 · 다크 커버춰 초콜릿' : 'Special · Dark couverture chocolate'}</span><strong>{chocolateIcingCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
                 </div>
                 <div className="icing-count-stepper">
                   <button
                     type="button"
-                    aria-label={language === 'ko' ? '초코 아이싱 한 개 줄이기' : 'Remove one chocolate icing'}
+                    aria-label={language === 'ko' ? '다크 커버춰 초콜릿 한 개 줄이기' : 'Remove one dark couverture chocolate finishing'}
                     disabled={chocolateIcingCount === 0}
                     onClick={() => selectChocolateIcingCount(chocolateIcingCount - 1)}
                   >−</button>
                   <output>
-                    <strong>{language === 'ko' ? `초코 ${chocolateIcingCount}개` : `${chocolateIcingCount} chocolate`}</strong>
+                    <strong>{language === 'ko' ? `스페셜 ${chocolateIcingCount}개` : `${chocolateIcingCount} special`}</strong>
                     <span>+{formatCurrency(chocolateIcingSurcharge)}</span>
                   </output>
                   <button
                     type="button"
-                    aria-label={language === 'ko' ? '초코 아이싱 한 개 늘리기' : 'Add one chocolate icing'}
+                    aria-label={language === 'ko' ? '다크 커버춰 초콜릿 한 개 늘리기' : 'Add one dark couverture chocolate finishing'}
                     disabled={chocolateIcingCount === lemonPackSize}
                     onClick={() => selectChocolateIcingCount(chocolateIcingCount + 1)}
                   >+</button>
                 </div>
                 <div className="icing-quick-choices">
                   <button type="button" className={chocolateIcingCount === 0 ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(0)}>
-                    {language === 'ko' ? '전부 레몬' : 'All lemon'}
+                    {language === 'ko' ? '전부 기본' : 'All basic'}
                   </button>
                   <button type="button" className={chocolateIcingCount === lemonPackSize / 2 ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(lemonPackSize / 2)}>
                     {language === 'ko' ? '반반' : 'Half & half'}
                   </button>
                   <button type="button" className={chocolateIcingCount === lemonPackSize ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(lemonPackSize)}>
-                    {language === 'ko' ? '전부 초코' : 'All chocolate'}
+                    {language === 'ko' ? '전부 스페셜' : 'All special'}
                   </button>
                 </div>
               </fieldset>
@@ -3278,7 +3277,7 @@ function ReservationDrawer({
             <label>
               제품
               <select value={productId} onChange={(event) => setProductId(event.target.value as ProductId)}>
-                {Object.values(PRODUCTS).map((product) => (
+                {Object.values(PRODUCTS).filter((product) => product.id !== 'fresh-lemon-cupcakes-4' || product.id === reservation.productId).map((product) => (
                   <option value={product.id} key={product.id}>{product.name}</option>
                 ))}
               </select>
@@ -3317,7 +3316,7 @@ function ReservationDrawer({
             )}
             {isFreshLemonCupcakeProduct(draftUpdate.productId) && (
               <label>
-                초코 아이싱 개수
+                다크 커버춰 초콜릿 개수
                 <input
                   type="number"
                   min="0"

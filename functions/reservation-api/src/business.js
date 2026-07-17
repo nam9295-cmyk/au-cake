@@ -8,10 +8,10 @@ export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
 export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
 const CHEESECAKE_PROMO_PRODUCT_IDS = new Set(['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'])
 const FRESH_LEMON_CUPCAKE_PRODUCT_IDS = new Set([
-  'fresh-lemon-cupcakes-4',
   'fresh-lemon-cupcakes-6',
   'fresh-lemon-cupcakes-8',
   'fresh-lemon-cupcakes-12',
+  'fresh-lemon-cupcakes-16',
 ])
 const PROMOTIONS = [
   { code: PROMO_CODE, expiresOn: CHOCOLATE_PROMO_EXPIRES_ON, productIds: CHEESECAKE_PROMO_PRODUCT_IDS },
@@ -54,10 +54,10 @@ const PRODUCTS = {
     usesSize: false,
     usesFinish: false,
   },
-  'fresh-lemon-cupcakes-4': { basePrice: 24, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-6': { basePrice: 36, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-8': { basePrice: 45, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-12': { basePrice: 65, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-16': { basePrice: 85, sizePrices: {}, usesSize: false, usesFinish: false },
 }
 
 const FINISH_PRICES = {

@@ -102,10 +102,10 @@ test('cake API derives protected fields and cents on the server', () => {
 
 test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and enforces one pack per reservation', () => {
   const prices = {
-    'fresh-lemon-cupcakes-4': 24,
     'fresh-lemon-cupcakes-6': 36,
     'fresh-lemon-cupcakes-8': 45,
     'fresh-lemon-cupcakes-12': 65,
+    'fresh-lemon-cupcakes-16': 85,
   }
 
   for (const [productId, expectedPrice] of Object.entries(prices)) {
@@ -128,32 +128,32 @@ test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and enforces on
 })
 
 test('cake API prices Lemon Cake chocolate icing per piece before promo', () => {
-  const fourPack = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-4', quantity: 1, chocolateIcingCount: 3 },
-    { now, reservationNumber: 'VG-C-AU-LEMON-4-3' },
+  const sixPack = buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 1, chocolateIcingCount: 3 },
+    { now, reservationNumber: 'VG-C-AU-LEMON-6-3' },
   )
   const twelvePack = buildCakeReservation(
     { ...cakeInput, productId: 'fresh-lemon-cupcakes-12', quantity: 1, chocolateIcingCount: 8 },
     { now, reservationNumber: 'VG-C-AU-LEMON-12-8' },
   )
   const promoted = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-4', quantity: 1, chocolateIcingCount: 3, promoCode: 'lemoni' },
-    { now, reservationNumber: 'VG-C-AU-LEMON-4-3-PROMO' },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 1, chocolateIcingCount: 3, promoCode: 'lemoni' },
+    { now, reservationNumber: 'VG-C-AU-LEMON-6-3-PROMO' },
   )
 
-  assert.equal(fourPack.chocolateIcingCount, 3)
-  assert.equal(fourPack.totalPrice, 25.5)
-  assert.equal(fourPack.totalPriceCents, 2550)
+  assert.equal(sixPack.chocolateIcingCount, 3)
+  assert.equal(sixPack.totalPrice, 37.5)
+  assert.equal(sixPack.totalPriceCents, 3750)
   assert.equal(twelvePack.chocolateIcingCount, 8)
   assert.equal(twelvePack.totalPrice, 69)
-  assert.equal(promoted.totalPrice, 22.95)
-  assert.equal(promoted.totalPriceCents, 2295)
+  assert.equal(promoted.totalPrice, 33.75)
+  assert.equal(promoted.totalPriceCents, 3375)
 })
 
 test('cake API validates Lemon Cake chocolate icing count and clears it for other products', () => {
-  for (const chocolateIcingCount of [-1, 1.5, 5]) {
+  for (const chocolateIcingCount of [-1, 1.5, 7]) {
     assertApiError('INVALID_ICING_COUNT', () => buildCakeReservation(
-      { ...cakeInput, productId: 'fresh-lemon-cupcakes-4', quantity: 1, chocolateIcingCount },
+      { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 1, chocolateIcingCount },
       { now, reservationNumber: `VG-C-AU-INVALID-ICING-${chocolateIcingCount}` },
     ))
   }
@@ -403,7 +403,7 @@ test('cake creation returns the original document when the same request ID is re
 
   const futureCakeInput = {
     ...cakeInput,
-    productId: 'fresh-lemon-cupcakes-4',
+    productId: 'fresh-lemon-cupcakes-6',
     chocolateIcingCount: 3,
     quantity: 1,
     pickupDate: '2099-07-11',
@@ -412,7 +412,7 @@ test('cake creation returns the original document when the same request ID is re
   const retry = await createCake(databases, { ...futureCakeInput, requestId })
   assert.equal(creates, 1)
   assert.equal(first.chocolateIcingCount, 3)
-  assert.equal(first.totalPriceCents, 2550)
+  assert.equal(first.totalPriceCents, 3750)
   assert.equal(retry.id, first.id)
   assert.equal(retry.reservationNumber, first.reservationNumber)
 })

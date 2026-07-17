@@ -52,6 +52,7 @@ function cakeLabel(document) {
     'fresh-lemon-cupcakes-6': 'Lemon Cake · 6 pieces',
     'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
     'fresh-lemon-cupcakes-12': 'Lemon Cake · 12 pieces',
+    'fresh-lemon-cupcakes-16': 'Lemon Cake · 16 pieces',
   }
   const finishLabels = {
     'extra-chocolate': 'Extra chocolate',
@@ -71,7 +72,7 @@ function cakeLabel(document) {
     const chocolateCount = Number.isInteger(rawChocolateCount)
       ? Math.min(packSize, Math.max(0, rawChocolateCount))
       : 0
-    options.push(`Icing: Lemon ${packSize - chocolateCount} / Chocolate ${chocolateCount}`)
+    options.push(`Finishing: Fresh lemon zest icing ${packSize - chocolateCount} / Dark couverture chocolate ${chocolateCount}`)
   } else if (finishLabels[document.poundAddon]) {
     options.push(finishLabels[document.poundAddon])
   } else {
