@@ -1472,7 +1472,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           </section>
 
           <section className="class-form-section" aria-labelledby="consent-title">
-            <h2 id="consent-title">5. Consent & Confirmation</h2>
+            <h2 id="consent-title">8. Consent & Confirmation</h2>
             <label className="class-check-row">
               <input type="checkbox" checked={form.parentConsent} onChange={(event) => setForm({ ...form, parentConsent: event.target.checked })} />
               <span>I am the parent/guardian and consent to my child joining this class.</span>
