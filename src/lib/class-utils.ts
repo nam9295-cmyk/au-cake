@@ -1,10 +1,11 @@
-import type { ClassBookingType, ClassReservation } from './types.js'
+import type { ClassAgeGroup, ClassBookingType, ClassPartySize, ClassReservation, ClassType } from './types.js'
 import { escapeCsvCell } from './csv.js'
 import { MARKET_CONFIG } from './market.js'
 
 export const CLASS_TYPE_ID = 'school-holiday-private-cake-class' as const
+export const CLASS_TYPE_IDS: readonly ClassType[] = [CLASS_TYPE_ID, 'cupcake-chocolate-class']
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00'] as const
-export const CLASS_SESSION_DURATION_MINUTES = 120
+export const CLASS_SESSION_DURATION_MINUTES = 90
 export const CLASS_DEPOSIT_AMOUNT = 0
 export const CLASS_PAYMENT_SETTINGS = MARKET_CONFIG.AU.defaultSettings
 
@@ -25,6 +26,15 @@ const CLASS_BOOKING_PRICES: Record<ClassBookingType, number> = {
 
 export function getClassBookingPrice(bookingType: ClassBookingType) {
   return CLASS_BOOKING_PRICES[bookingType]
+}
+
+export function getClassTypeLabel(classType: ClassType) {
+  return classType === 'cupcake-chocolate-class' ? '4 Cupcakes & Chocolate Class' : 'Chocolate Cake Course'
+}
+
+export function getClassBookingType(ageGroup: ClassAgeGroup, partySize: ClassPartySize): ClassBookingType {
+  if (partySize === 2) return '2-friends'
+  return ageGroup === 'kindy-year-2' ? 'year-1-2' : '1-child'
 }
 
 export function getClassDepositAmount() {
@@ -245,6 +255,9 @@ function buildClassSafetyNotes() {
 export function buildClassPaymentMessage(reservation: ClassReservation) {
   return `Hi ${reservation.parentName}, thank you for your booking for ${formatClassChildNames(reservation)}
 
+Course:
+${getClassTypeLabel(reservation.classType)}
+
 Requested session:
 ${reservation.classDate} ${reservation.classTime}
 
@@ -269,6 +282,9 @@ export const buildClassDepositMessage = buildClassPaymentMessage
 export function buildClassConfirmationMessage(reservation: ClassReservation) {
   return `Hi ${reservation.parentName}, ${formatClassChildNames(reservation)}'s cake class booking is confirmed.
 
+Course:
+${getClassTypeLabel(reservation.classType)}
+
 Date/time:
 ${reservation.classDate} ${reservation.classTime}
 
@@ -282,9 +298,9 @@ Thank you:)`
 }
 
 export function formatClassBookingType(bookingType: ClassBookingType) {
-  if (bookingType === 'year-1-2') return 'Year 1-2'
-  if (bookingType === '2-friends') return '2 kids / siblings / friends'
-  return 'Year 3-6'
+  if (bookingType === 'year-1-2') return 'Kindy–Year 2'
+  if (bookingType === '2-friends') return '2 children'
+  return 'Year 3–6'
 }
 
 export function classReservationsToCsv(reservations: ClassReservation[]) {
@@ -294,6 +310,7 @@ export function classReservationsToCsv(reservations: ClassReservation[]) {
     'Class date',
     'Class time',
     'Booking type',
+    'Class name',
     'Parent name',
     'Parent mobile',
     'Parent email',
@@ -321,6 +338,7 @@ export function classReservationsToCsv(reservations: ClassReservation[]) {
     reservation.classDate,
     reservation.classTime,
     formatClassBookingType(reservation.bookingType),
+    getClassTypeLabel(reservation.classType),
     reservation.parentName,
     reservation.parentPhone,
     reservation.parentEmail,

@@ -21,7 +21,8 @@ export const MAX_RESERVATION_QUANTITY = 5
 export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
-export const CLASS_SESSION_DURATION_MINUTES = 120
+export const CLASS_SESSION_DURATION_MINUTES = 90
+const CLASS_TYPES = new Set(['school-holiday-private-cake-class', 'cupcake-chocolate-class'])
 
 const PRODUCTS = {
   'pave-cake': {
@@ -364,6 +365,8 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
   if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
   if (!Object.hasOwn(CLASS_PRICES, input.bookingType)) fail('INVALID_BOOKING_TYPE')
+  const classType = input.classType || 'school-holiday-private-cake-class'
+  if (!CLASS_TYPES.has(classType)) fail('INVALID_CLASS_TYPE')
   if (!isValidDateValue(input.classDate) || input.classDate < sydneyDateValue(now)) fail('INVALID_CLASS_DATE')
   if (!CLASS_SESSION_TIMES.includes(input.classTime)) fail('INVALID_CLASS_TIME')
   if (input.parentConsent !== true || input.cancellationAgreement !== true || input.privacyConsent !== true) {
@@ -375,7 +378,7 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
   const createdAt = now.toISOString()
   return {
     reservationNumber,
-    classType: 'school-holiday-private-cake-class',
+    classType,
     classDate: input.classDate,
     classTime: input.classTime,
     bookingType: input.bookingType,

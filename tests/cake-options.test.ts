@@ -230,31 +230,31 @@ test('AU pick-up time options run until 20:00 every day', () => {
   assert.ok(weekendTimes.includes('19:30'))
 })
 
-test('10:00 class blocks every half-hour pick-up boundary through 12:00 inclusive', () => {
+test('10:00 class blocks every half-hour pick-up boundary through 11:30 inclusive', () => {
   const bookedSlots = [{ classDate: '2026-07-10', classTime: '10:00' }]
 
-  assert.equal(CLASS_SESSION_DURATION_MINUTES, 120)
-  for (const pickupTime of ['10:00', '10:30', '11:00', '11:30', '12:00']) {
+  assert.equal(CLASS_SESSION_DURATION_MINUTES, 90)
+  for (const pickupTime of ['10:00', '10:30', '11:00', '11:30']) {
     assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
   }
   assert.equal(isCakePickupBlockedByClass('2026-07-10', '09:30', bookedSlots), false)
-  assert.equal(isCakePickupBlockedByClass('2026-07-10', '12:30', bookedSlots), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '12:00', bookedSlots), false)
 })
 
-test('13:00 and 16:00 classes block their inclusive two-hour pick-up windows', () => {
+test('13:00 and 16:00 classes block their inclusive 90-minute pick-up windows', () => {
   const bookedSlots = [
     { classDate: '2026-07-10', classTime: '13:00' },
     { classDate: '2026-07-10', classTime: '16:00' },
   ]
 
-  for (const pickupTime of ['13:00', '13:30', '14:00', '14:30', '15:00']) {
+  for (const pickupTime of ['13:00', '13:30', '14:00', '14:30']) {
     assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
   }
-  assert.equal(isCakePickupBlockedByClass('2026-07-10', '15:30', bookedSlots), false)
-  for (const pickupTime of ['16:00', '16:30', '17:00', '17:30', '18:00']) {
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '15:00', bookedSlots), false)
+  for (const pickupTime of ['16:00', '16:30', '17:00', '17:30']) {
     assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
   }
-  assert.equal(isCakePickupBlockedByClass('2026-07-10', '18:30', bookedSlots), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '18:00', bookedSlots), false)
 })
 
 test('booking all known class sessions blocks the whole cake pick-up day', () => {
@@ -335,7 +335,7 @@ test('class filtering returns only unblocked supplied times without mutating inp
 
   assert.deepEqual(
     filterCakePickupTimesForClass('2026-07-10', pickupTimes, bookedSlots, pickupOpenings),
-    ['09:30', '10:30', '12:30', '15:30', '18:30'],
+    ['09:30', '10:30', '12:00', '12:30', '15:30', '18:00', '18:30'],
   )
   assert.deepEqual(pickupTimes, originalPickupTimes)
   assert.deepEqual(bookedSlots, originalBookedSlots)

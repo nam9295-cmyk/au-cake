@@ -1608,6 +1608,10 @@ textarea {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.class-booking-grid.class-two-option-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .class-availability-note {
   grid-column: 1 / -1;
   margin: 8px 0 0;
@@ -4314,6 +4318,7 @@ td select {
   }
 
   .class-booking-grid,
+  .class-booking-grid.class-two-option-grid,
   .class-time-grid,
   .class-photo-options {
     grid-template-columns: 1fr;

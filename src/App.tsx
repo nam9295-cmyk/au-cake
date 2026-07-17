@@ -110,7 +110,7 @@ import {
   trackEvent,
   trackPageView,
 } from './lib/analytics'
-import type { CacaoPercent, CakeSize, ChocolateType, ClassBookingType, ClassReservation, ClassReservationFilters, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings } from './lib/types'
+import type { CacaoPercent, CakeSize, ChocolateType, ClassAgeGroup, ClassPartySize, ClassReservation, ClassReservationFilters, ClassType, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
   buildClassPaymentDetails,
@@ -124,6 +124,8 @@ import {
   formatClassBookingType,
   getAvailableClassSessionTimes,
   getClassBookingPrice,
+  getClassBookingType,
+  getClassTypeLabel,
   isCakePickupBlockedByClass,
   isClassDateBooked,
   type CakePickupOpening,
@@ -1053,9 +1055,10 @@ function HomePage({
 
 function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
   const essentials = [
-    ['Year 1-6 courses', 'Age-aware private sessions for primary school children'],
+    ['Kindy–Year 6 courses', 'Age-aware private sessions for primary school children'],
     ['Professional-style course', 'Real studio guidance from planning to finishing'],
-    ['One 15cm cake per child', 'Plan, build, and finish a real chocolate cake'],
+    ['Two course choices', 'Make a 15cm chocolate cake or 4 cupcakes plus chocolate'],
+    ['90-minute class', 'A focused hands-on session with Jenny'],
     ['Max 2 kids per session', 'Private small group focus'],
   ]
   const steps = [
@@ -1074,7 +1077,7 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
             <h1 id="kids-class-title">Kids Professional Cake Course</h1>
             <p className="kids-location">Melrose Park, Sydney</p>
             <p className="kids-hero-text">
-              A private chocolate cake course where kids imagine their dream cake, learn real studio techniques, and bring it to life with Jenny's guidance.
+              Two private, hands-on choices: make a 15cm chocolate cake, or make 4 cupcakes plus chocolate with Jenny's guidance.
             </p>
             <div className="kids-hero-actions">
               <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
@@ -1098,6 +1101,20 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
                 <p>{text}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section className="kids-section reveal-up" aria-labelledby="course-choices-title">
+          <h2 id="course-choices-title">Choose a Course</h2>
+          <div className="kids-step-grid">
+            <article className="kids-step-card">
+              <strong>Chocolate Cake Course</strong>
+              <p>Plan, build, and finish one 15cm chocolate cake to take home.</p>
+            </article>
+            <article className="kids-step-card">
+              <strong>4 Cupcakes & Chocolate Class</strong>
+              <p>Make four cupcakes and enjoy a guided hands-on chocolate-making activity.</p>
+            </article>
           </div>
         </section>
 
@@ -1133,9 +1150,10 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
         <section className="kids-bottom-grid reveal-up" aria-label="Pricing and safety information">
           <article className="kids-price-card">
             <h2>Launch Pricing</h2>
-            <strong>{formatCurrency(99)} / Year 1-2</strong>
-            <p className="kids-price-line">{formatCurrency(109)} / Year 3-6</p>
-            <p className="kids-price-line">{formatCurrency(198)} / two kids, siblings, or friends</p>
+            <strong>{formatCurrency(99)} / Kindy–Year 2</strong>
+            <p className="kids-price-line">{formatCurrency(109)} / Year 3–6</p>
+            <p className="kids-price-line">{formatCurrency(198)} / two children</p>
+            <p className="kids-small-note">Same pricing for both course choices · 90 minutes</p>
             <p className="kids-small-note">
               * Booking is completed after availability and full payment are confirmed by Jenny.
             </p>
@@ -1170,7 +1188,9 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
   const [form, setForm] = useState<{
     classDate: string
     classTime: string
-    bookingType: ClassBookingType
+    classType: ClassType
+    ageGroup: ClassAgeGroup
+    partySize: ClassPartySize
     parentName: string
     parentPhone: string
     parentEmail: string
@@ -1191,7 +1211,9 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
   }>({
     classDate: addDaysInputValue(4),
     classTime: CLASS_SESSION_TIMES[0],
-    bookingType: 'year-1-2',
+    classType: 'school-holiday-private-cake-class',
+    ageGroup: 'kindy-year-2',
+    partySize: 1,
     parentName: '',
     parentPhone: '',
     parentEmail: '',
@@ -1216,7 +1238,8 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
   const [availabilityLoaded, setAvailabilityLoaded] = useState(false)
   const [availabilityError, setAvailabilityError] = useState(false)
   const today = useTodayInputValue()
-  const price = getClassBookingPrice(form.bookingType)
+  const bookingType = getClassBookingType(form.ageGroup, form.partySize)
+  const price = getClassBookingPrice(bookingType)
   const availableSessionTimes = getAvailableClassSessionTimes(form.classDate, bookedClassSlots)
   const selectedDateBooked = isClassDateBooked(form.classDate, bookedClassSlots)
 
@@ -1244,14 +1267,16 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     if (!form.classDate || form.classDate < today) return setError('Please choose a future class date.')
     if (selectedDateBooked) return setError('This date is already booked. Please choose another date.')
     if (!availableSessionTimes.includes(form.classTime as (typeof CLASS_SESSION_TIMES)[number])) return setError('Please choose an available class time.')
-    if (form.bookingType === '2-friends' && (!form.secondChildName.trim() || !form.secondChildSchoolYear.trim())) return setError('Please enter Child 2 name and school year.')
+    if (form.partySize === 2 && (!form.secondChildName.trim() || !form.secondChildSchoolYear.trim())) return setError('Please enter Child 2 name and school year.')
     if (!form.emergencyContact.trim() || !form.pickupPerson.trim()) return setError('Emergency contact and pick-up person are required.')
     if (!form.parentConsent || !form.cancellationAgreement || !form.privacyConsent) return setError('Parent, privacy, and booking agreements are required.')
     setSubmitting(true)
     try {
-      const reservation = await createClassReservation({ ...form, parentPhone: phone, requestId })
+      const reservation = await createClassReservation({ ...form, bookingType, parentPhone: phone, requestId })
       trackEvent('class_booking_request', {
-        booking_type: form.bookingType,
+        booking_type: bookingType,
+        class_type: form.classType,
+        age_group: form.ageGroup,
         value: price,
         currency: 'AUD',
       })
@@ -1285,26 +1310,62 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
             <p>Please fill out the details below. Jenny will confirm availability and send full payment details.</p>
           </header>
 
-          <section className="class-form-section" aria-labelledby="session-type-title">
-            <h2 id="session-type-title">1. Select Session Type</h2>
-            <div className="class-booking-grid">
-              {(['year-1-2', '1-child', '2-friends'] as const).map((type) => (
-                <label className="class-option-card" key={type}>
+          <section className="class-form-section" aria-labelledby="course-type-title">
+            <h2 id="course-type-title">1. Choose a Course</h2>
+            <div className="class-booking-grid class-two-option-grid">
+              {(['school-holiday-private-cake-class', 'cupcake-chocolate-class'] as const).map((classType) => (
+                <label className="class-option-card" key={classType}>
                   <input
                     type="radio"
-                    name="classBookingType"
-                    checked={form.bookingType === type}
-                    onChange={() => setForm({ ...form, bookingType: type })}
+                    name="classType"
+                    checked={form.classType === classType}
+                    onChange={() => setForm({ ...form, classType })}
                   />
-                  <span>{formatClassBookingType(type)}</span>
-                  <strong>{formatCurrency(getClassBookingPrice(type))}</strong>
+                  <span>{getClassTypeLabel(classType)}</span>
+                  <strong>{classType === 'cupcake-chocolate-class' ? '4 cupcakes + chocolate making' : 'One 15cm chocolate cake'}</strong>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <section className="class-form-section" aria-labelledby="school-group-title">
+            <h2 id="school-group-title">2. Choose School Year Group</h2>
+            <div className="class-booking-grid class-two-option-grid">
+              {(['kindy-year-2', 'year-3-6'] as const).map((ageGroup) => (
+                <label className="class-option-card" key={ageGroup}>
+                  <input
+                    type="radio"
+                    name="classAgeGroup"
+                    checked={form.ageGroup === ageGroup}
+                    onChange={() => setForm({ ...form, ageGroup })}
+                  />
+                  <span>{ageGroup === 'kindy-year-2' ? 'Kindy–Year 2' : 'Year 3–6'}</span>
+                  <strong>{formatCurrency(getClassBookingPrice(getClassBookingType(ageGroup, 1)))}</strong>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <section className="class-form-section" aria-labelledby="children-count-title">
+            <h2 id="children-count-title">3. Number of Children</h2>
+            <div className="class-booking-grid class-two-option-grid">
+              {([1, 2] as const).map((partySize) => (
+                <label className="class-option-card" key={partySize}>
+                  <input
+                    type="radio"
+                    name="classPartySize"
+                    checked={form.partySize === partySize}
+                    onChange={() => setForm({ ...form, partySize })}
+                  />
+                  <span>{partySize === 1 ? '1 child' : '2 children / siblings / friends'}</span>
+                  <strong>{formatCurrency(getClassBookingPrice(getClassBookingType(form.ageGroup, partySize)))}</strong>
                 </label>
               ))}
             </div>
           </section>
 
           <section className="class-form-section class-form-section-tight" aria-labelledby="session-detail-title">
-            <h2 id="session-detail-title">Preferred Session</h2>
+            <h2 id="session-detail-title">4. Preferred Session · 90 minutes</h2>
             <label className="class-field">
               <span>Preferred Date</span>
               <input
@@ -1341,7 +1402,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           </section>
 
           <section className="class-form-section" aria-labelledby="guardian-detail-title">
-            <h2 id="guardian-detail-title">2. Parent / Guardian Details</h2>
+            <h2 id="guardian-detail-title">5. Parent / Guardian Details</h2>
             <label className="class-field">
               <span>Full Name</span>
               <input value={form.parentName} onChange={(event) => setForm({ ...form, parentName: event.target.value })} placeholder="Parent or guardian name" />
@@ -1357,7 +1418,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           </section>
 
           <section className="class-form-section" aria-labelledby="child-detail-title">
-            <h2 id="child-detail-title">3. Child Details</h2>
+            <h2 id="child-detail-title">6. Child Details</h2>
             <label className="class-field">
               <span>Child 1 Name</span>
               <input value={form.childName} onChange={(event) => setForm({ ...form, childName: event.target.value })} placeholder="Leo" />
@@ -1372,7 +1433,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                 <input value={form.schoolYear} onChange={(event) => setForm({ ...form, schoolYear: event.target.value })} placeholder="Year 4" />
               </label>
             </div>
-            {form.bookingType === '2-friends' && (
+            {form.partySize === 2 && (
               <>
                 <label className="class-field">
                   <span>Child 2 Name</span>
@@ -1393,7 +1454,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           </section>
 
           <section className="class-form-section" aria-labelledby="safety-title">
-            <h2 id="safety-title">4. Allergy & Safety Declarations</h2>
+            <h2 id="safety-title">7. Allergy & Safety Declarations</h2>
             <label className="class-field">
               <span>Allergy declarations & safety notes</span>
               <textarea value={form.allergyNote} onChange={(event) => setForm({ ...form, allergyNote: event.target.value })} placeholder="Please write known allergies, dietary notes, or none." />
@@ -1441,7 +1502,9 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
 
           <aside className="class-reserve-summary" aria-label="Class request summary">
             <dl>
-              <div><dt>Booking</dt><dd>{formatClassBookingType(form.bookingType)}</dd></div>
+              <div><dt>Course</dt><dd>{getClassTypeLabel(form.classType)}</dd></div>
+              <div><dt>School group</dt><dd>{form.ageGroup === 'kindy-year-2' ? 'Kindy–Year 2' : 'Year 3–6'}</dd></div>
+              <div><dt>Children</dt><dd>{form.partySize}</dd></div>
               <div><dt>Total</dt><dd>{formatCurrency(price)}</dd></div>
               <div><dt>Payment</dt><dd>Full payment required</dd></div>
             </dl>
@@ -1472,7 +1535,7 @@ function ClassCompletePage({ navigate, reservation }: { navigate: (page: Page) =
           <h1 id="class-complete-title">Booking Request Sent!</h1>
 
           <div className="class-complete-message">
-            <strong>Your kids course request has been sent.</strong>
+            <strong>Your {reservation ? getClassTypeLabel(reservation.classType) : 'kids course'} request has been sent.</strong>
             <p>Jenny will check availability and confirm the session shortly.</p>
             <p>Your booking is complete once full payment has been received.</p>
             <span>Booking ID: {reservationNumber}</span>
@@ -3133,7 +3196,7 @@ function AdminClassesPage({ navigate }: { navigate: (page: Page) => void }) {
                         <span>{reservation.schoolYear}</span>
                         {reservation.secondChildName && <span>{reservation.secondChildName} ({reservation.secondChildAge})</span>}
                       </td>
-                      <td><strong>{formatClassBookingType(reservation.bookingType)}</strong><span>{formatCurrency(reservation.totalPrice)}</span></td>
+                      <td><strong>{getClassTypeLabel(reservation.classType)}</strong><span>{formatClassBookingType(reservation.bookingType)} · {formatCurrency(reservation.totalPrice)}</span></td>
                       <td className={hasAllergy ? 'class-allergy-cell warning' : 'class-allergy-cell'}>{hasAllergy ? reservation.allergyNote : 'None'}</td>
                       <td>
                         <select className={`class-status-select ${reservation.status.toLowerCase()}`} value={reservation.status} onChange={(event) => saveReservation(reservation.id, { status: event.target.value as ClassReservation['status'] })}>

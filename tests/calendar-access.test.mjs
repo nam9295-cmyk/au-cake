@@ -94,6 +94,7 @@ test('calendar treats legacy Lemon Cake reservations without icing count as all 
 test('calendar class events expose only class schedule and status', () => {
   const event = sanitizeClassCalendarEvent({
     $id: 'class-private-id',
+    classType: 'cupcake-chocolate-class',
     classDate: '2026-07-25',
     classTime: '11:00',
     parentName: 'Private Parent',
@@ -111,7 +112,7 @@ test('calendar class events expose only class schedule and status', () => {
     kind: 'class',
     date: '2026-07-25',
     time: '11:00',
-    label: 'Kids class',
+    label: '4 Cupcakes & Chocolate Class',
     status: 'Requested',
     isCancelled: false,
   })

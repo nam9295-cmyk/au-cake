@@ -110,7 +110,7 @@ export function sanitizeClassCalendarEvent(document) {
     kind: 'class',
     date: document.classDate,
     time: document.classTime,
-    label: 'Kids class',
+    label: document.classType === 'cupcake-chocolate-class' ? '4 Cupcakes & Chocolate Class' : 'Chocolate Cake Course',
     status: document.status || 'Requested',
     isCancelled: document.status === 'Cancelled',
   }

@@ -740,7 +740,7 @@ export async function createClassReservation(input: ClassReservationInput): Prom
   const now = new Date().toISOString()
   const data = {
     reservationNumber: generateClassReservationNumber(),
-    classType: CLASS_TYPE_ID,
+    classType: input.classType,
     classDate: input.classDate,
     classTime: input.classTime,
     bookingType: input.bookingType,

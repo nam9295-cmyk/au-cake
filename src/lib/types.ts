@@ -106,6 +106,9 @@ export type ReservationFilters = {
 }
 
 export type ClassBookingType = 'year-1-2' | '1-child' | '2-friends'
+export type ClassType = 'school-holiday-private-cake-class' | 'cupcake-chocolate-class'
+export type ClassAgeGroup = 'kindy-year-2' | 'year-3-6'
+export type ClassPartySize = 1 | 2
 
 export type ClassReservationStatus = 'Requested' | 'Confirmed' | 'Completed' | 'Cancelled'
 
@@ -114,7 +117,7 @@ export type ClassPaymentStatus = 'Payment pending' | 'Pending deposit' | 'Deposi
 export type ClassReservation = {
   id: string
   reservationNumber: string
-  classType: 'school-holiday-private-cake-class'
+  classType: ClassType
   classDate: string
   classTime: string
   bookingType: ClassBookingType
@@ -146,6 +149,7 @@ export type ClassReservationInput = Pick<
   ClassReservation,
   | 'classDate'
   | 'classTime'
+  | 'classType'
   | 'bookingType'
   | 'parentName'
   | 'parentPhone'

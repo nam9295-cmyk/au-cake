@@ -1,5 +1,5 @@
 import { getProductById } from './constants.js'
-import { formatClassBookingType } from './class-utils.js'
+import { formatClassBookingType, getClassTypeLabel } from './class-utils.js'
 import type { ClassReservation, Reservation } from './types.js'
 
 export type CalendarGridDay = {
@@ -109,7 +109,7 @@ function mapClassReservation(reservation: ClassReservation): AdminCalendarEvent 
     id: reservation.id,
     date: reservation.classDate,
     time: reservation.classTime,
-    title: `Kids Class · ${reservation.childName}${secondChildText}`,
+    title: `${getClassTypeLabel(reservation.classType)} · ${reservation.childName}${secondChildText}`,
     subtitle: `${formatClassBookingType(reservation.bookingType)} · ${reservation.paymentStatus}`,
     isCancelled: reservation.status === 'Cancelled',
     reservation,

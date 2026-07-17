@@ -30,6 +30,7 @@ const cakeInput = {
 }
 
 const classInput = {
+  classType: 'school-holiday-private-cake-class',
   classDate: '2026-07-11',
   classTime: '13:00',
   bookingType: 'year-1-2',
@@ -54,6 +55,23 @@ const classInput = {
 function assertApiError(code, callback) {
   assert.throws(callback, (error) => error instanceof ReservationApiError && error.code === code)
 }
+
+test('class API stores both kids course types at the existing prices', () => {
+  const cakeCourse = buildClassReservation(classInput, { now, reservationNumber: 'VG-KC-AU-CAKE' })
+  const cupcakeCourse = buildClassReservation(
+    { ...classInput, classType: 'cupcake-chocolate-class', bookingType: '1-child' },
+    { now, reservationNumber: 'VG-KC-AU-CUPCAKE' },
+  )
+
+  assert.equal(cakeCourse.classType, 'school-holiday-private-cake-class')
+  assert.equal(cakeCourse.totalPrice, 99)
+  assert.equal(cupcakeCourse.classType, 'cupcake-chocolate-class')
+  assert.equal(cupcakeCourse.totalPrice, 109)
+  assertApiError('INVALID_CLASS_TYPE', () => buildClassReservation(
+    { ...classInput, classType: 'unknown-class' },
+    { now, reservationNumber: 'VG-KC-AU-INVALID' },
+  ))
+})
 
 test('cake API prices cheesecake variants and keeps cupcake finish pricing', () => {
   const chocoBasque = buildCakeReservation(
@@ -288,6 +306,7 @@ test('class API derives price and protected fields and validates the second chil
 test('pickup blocking honours class session windows and explicit openings', () => {
   const slots = [{ classDate: '2026-07-11', classTime: '13:00' }]
   assert.equal(isCakePickupBlocked('2026-07-11', '14:30', slots), true)
+  assert.equal(isCakePickupBlocked('2026-07-11', '15:00', slots), false)
   assert.equal(isCakePickupBlocked('2026-07-11', '15:30', slots), false)
   assert.equal(
     isCakePickupBlocked('2026-07-11', '14:30', slots, [{ pickupDate: '2026-07-11', pickupTime: '14:30' }]),

@@ -40,9 +40,13 @@ const MARKET_CONFIG = {
     classSubjectPrefix: '[베리굿초콜릿] 새 키즈 클래스 예약',
     classHeading: '새 키즈 클래스 예약',
     bookingTypeLabels: {
-      'year-1-2': 'Year 1-2 child',
-      '1-child': '1 child private class',
-      '2-friends': '2 friends private class',
+      'year-1-2': 'Kindy–Year 2',
+      '1-child': 'Year 3–6',
+      '2-friends': '2 children',
+    },
+    classTypeLabels: {
+      'school-holiday-private-cake-class': 'Chocolate Cake Course',
+      'cupcake-chocolate-class': '4 Cupcakes & Chocolate Class',
     },
     yesNoLabels: { true: '예', false: '아니오' },
     labels: {
@@ -122,9 +126,13 @@ const MARKET_CONFIG = {
     classSubjectPrefix: '[Verygood Chocolate AU] New kids class request',
     classHeading: 'New kids class request',
     bookingTypeLabels: {
-      'year-1-2': 'Year 1-2 child',
-      '1-child': '1 child private class',
-      '2-friends': '2 friends private class',
+      'year-1-2': 'Kindy–Year 2',
+      '1-child': 'Year 3–6',
+      '2-friends': '2 children',
+    },
+    classTypeLabels: {
+      'school-holiday-private-cake-class': 'Chocolate Cake Course',
+      'cupcake-chocolate-class': '4 Cupcakes & Chocolate Class',
     },
     yesNoLabels: { true: 'Yes', false: 'No' },
     labels: {
@@ -297,6 +305,10 @@ function getBookingTypeText(reservation, config) {
   return config.bookingTypeLabels[reservation.bookingType] || reservation.bookingType || '-'
 }
 
+function getClassTypeText(reservation, config) {
+  return config.classTypeLabels[reservation.classType] || reservation.classType || 'Chocolate Cake Course'
+}
+
 function getBooleanText(value, config) {
   return config.yesNoLabels[String(Boolean(value))] || String(Boolean(value))
 }
@@ -332,7 +344,7 @@ function buildCakeRows(reservation, config) {
 function buildClassRows(reservation, config) {
   return [
     [config.labels.bookingNumber, reservation.reservationNumber],
-    [config.labels.className, 'School holiday private cake class'],
+    [config.labels.className, getClassTypeText(reservation, config)],
     [config.labels.classDate, reservation.classDate],
     [config.labels.classTime, reservation.classTime],
     [config.labels.bookingType, getBookingTypeText(reservation, config)],

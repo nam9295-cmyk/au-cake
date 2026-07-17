@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import {
+  CLASS_SESSION_DURATION_MINUTES,
   CLASS_SESSION_TIMES,
   buildClassConfirmationMessage,
   buildClassPaymentMessage,
@@ -8,10 +9,13 @@ import {
   generateClassReservationNumber,
   getAvailableClassSessionTimes,
   getClassBookingPrice,
+  getClassBookingType,
   getClassDepositAmount,
+  getClassTypeLabel,
   getClassSlotAvailability,
   isClassDateBooked,
   isClassSessionTimeBooked,
+  formatClassBookingType,
 } from '../src/lib/class-utils.js'
 import type { ClassReservation } from '../src/lib/types.js'
 
@@ -48,10 +52,23 @@ const sampleReservation: ClassReservation = {
 
 test('class booking prices and session times match Jenny feedback', () => {
   assert.deepEqual([...CLASS_SESSION_TIMES], ['10:00', '13:00', '16:00'])
+  assert.equal(CLASS_SESSION_DURATION_MINUTES, 90)
   assert.equal(getClassBookingPrice('year-1-2'), 99)
   assert.equal(getClassBookingPrice('1-child'), 109)
   assert.equal(getClassBookingPrice('2-friends'), 198)
   assert.equal(getClassDepositAmount(), 0)
+})
+
+test('class course, school group and child count map to the legacy pricing types', () => {
+  assert.equal(getClassTypeLabel('school-holiday-private-cake-class'), 'Chocolate Cake Course')
+  assert.equal(getClassTypeLabel('cupcake-chocolate-class'), '4 Cupcakes & Chocolate Class')
+  assert.equal(formatClassBookingType('year-1-2'), 'Kindy–Year 2')
+  assert.equal(formatClassBookingType('1-child'), 'Year 3–6')
+  assert.equal(formatClassBookingType('2-friends'), '2 children')
+  assert.equal(getClassBookingType('kindy-year-2', 1), 'year-1-2')
+  assert.equal(getClassBookingType('year-3-6', 1), '1-child')
+  assert.equal(getClassBookingType('kindy-year-2', 2), '2-friends')
+  assert.equal(getClassBookingType('year-3-6', 2), '2-friends')
 })
 
 test('class reservation number uses kids class AU prefix and date', () => {
@@ -61,6 +78,7 @@ test('class reservation number uses kids class AU prefix and date', () => {
 
 test('payment and confirmation messages include session, child, parent, soft payment wording and safety details', () => {
   const payment = buildClassPaymentMessage(sampleReservation)
+  assert.match(payment, /Chocolate Cake Course/)
   assert.match(payment, /Jenny Parent/)
   assert.match(payment, /thank you for your booking for Mina and Leo/)
   assert.match(payment, /2026-07-10 10:00/)
@@ -74,6 +92,9 @@ test('payment and confirmation messages include session, child, parent, soft pay
   assert.match(payment, /create their own special cake/)
   assert.match(payment, /1 Bundil Blvd, Melrose Park, Sydney/)
   assert.doesNotMatch(payment, /deposit/i)
+
+  const cupcakePayment = buildClassPaymentMessage({ ...sampleReservation, classType: 'cupcake-chocolate-class' })
+  assert.match(cupcakePayment, /4 Cupcakes & Chocolate Class/)
 
   const confirmation = buildClassConfirmationMessage(sampleReservation)
   assert.match(confirmation, /Mina and Leo's cake class booking is confirmed/)
