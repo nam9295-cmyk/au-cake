@@ -13,6 +13,7 @@ const MARKET_CONFIG = {
       'cupcake-dozen': '초코 컵케이크 1다스',
       'choco-basque-cheesecake': '초코 바스크 치즈케이크',
       'pave-choco-basque-cheesecake': '파베초코 바스크 치즈케이크',
+      'eiffel-tower-basque-cheesecake': '에펠탑 초콜릿 바스크 치즈케이크',
       'fresh-lemon-cupcakes-4': '레몬 케이크 · 4개',
       'fresh-lemon-cupcakes-6': '레몬 케이크 · 6개',
       'fresh-lemon-cupcakes-8': '레몬 케이크 · 8개',
@@ -98,7 +99,8 @@ const MARKET_CONFIG = {
       'pound-cake': 'Chocolate Pound Cake',
       'cupcake-dozen': 'Chocolate Cupcakes (1 dozen)',
       'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
-      'pave-choco-basque-cheesecake': "Pave Chocolatier's Basque Cheesecake",
+      'pave-choco-basque-cheesecake': 'Pave chocolate on top',
+      'eiffel-tower-basque-cheesecake': 'Cake finishing with Eiffel Tower',
       'fresh-lemon-cupcakes-4': 'Lemon Cake · 4 pieces',
       'fresh-lemon-cupcakes-6': 'Lemon Cake · 6 pieces',
       'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
@@ -199,7 +201,7 @@ function getProductName(reservation, config) {
 
 function getCakeSizeText(reservation, config) {
   if (['pound-cake', 'cupcake-dozen'].includes(reservation.productId)) return '-'
-  if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'].includes(reservation.productId)) return '6 inch / 15cm'
+  if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(reservation.productId)) return '6 inch / 15cm'
   return config.sizeLabels[reservation.cakeSize] || reservation.cakeSize || '-'
 }
 
@@ -216,18 +218,28 @@ function normalizePoundAddonValue(value) {
 
 function getChocolateText(reservation, config) {
   const poundAddon = normalizePoundAddonValue(reservation.poundAddon)
-  const showsChocolate = reservation.productId === 'pave-cake' || (['pound-cake', 'cupcake-dozen'].includes(reservation.productId) && poundAddon === 'extra-chocolate')
+  const showsChocolate = reservation.productId === 'pave-cake' || (reservation.productId === 'pound-cake' && poundAddon === 'extra-chocolate')
   if (!showsChocolate) return '-'
   return config.chocolateLabels[reservation.chocolateType] || reservation.chocolateType || '-'
 }
 
 function getPoundAddonText(reservation, config) {
-  if (!['pound-cake', 'cupcake-dozen'].includes(reservation.productId)) return '-'
+  if (reservation.productId !== 'pound-cake') return '-'
   const poundAddon = normalizePoundAddonValue(reservation.poundAddon)
   return config.poundAddonLabels[poundAddon] || config.poundAddonLabels[reservation.poundAddon] || reservation.poundAddon || '-'
 }
 
 function getIcingMixText(reservation, config) {
+  if (reservation.productId === 'cupcake-dozen') {
+    const rawVanilla = Number(reservation.vanillaCreamCount || 0)
+    const rawParty = Number(reservation.partyDecorationCount || 0)
+    const vanilla = Number.isInteger(rawVanilla) ? Math.min(12, Math.max(0, rawVanilla)) : 0
+    const party = Number.isInteger(rawParty) ? Math.min(12 - vanilla, Math.max(0, rawParty)) : 0
+    const basic = 12 - vanilla - party
+    return config.currency === 'AUD'
+      ? `Basic ${basic} / Vanilla cream ${vanilla} / Party decoration ${party}`
+      : `기본 ${basic}개 / 바닐라 크림 ${vanilla}개 / 파티용 데코 ${party}개`
+  }
   if (!String(reservation.productId || '').startsWith('fresh-lemon-cupcakes-')) return config.labels.none
   const packSize = Number(String(reservation.productId).split('-').at(-1))
   const rawCount = Number(reservation.chocolateIcingCount || 0)

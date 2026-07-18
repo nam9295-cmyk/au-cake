@@ -4,9 +4,16 @@ export const PROMO_CODE = 'chocolate'
 export const LEMON_PROMO_CODE = 'lemoni'
 export const PROMO_DISCOUNT_RATE = 0.1
 export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
+export const CUPCAKE_PACK_SIZE = 12
+export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
+export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
 export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
-const CHEESECAKE_PROMO_PRODUCT_IDS = new Set(['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'])
+const CHEESECAKE_PROMO_PRODUCT_IDS = new Set([
+  'choco-basque-cheesecake',
+  'pave-choco-basque-cheesecake',
+  'eiffel-tower-basque-cheesecake',
+])
 const FRESH_LEMON_CUPCAKE_PRODUCT_IDS = new Set([
   'fresh-lemon-cupcakes-6',
   'fresh-lemon-cupcakes-8',
@@ -41,7 +48,7 @@ const PRODUCTS = {
     basePrice: 55,
     sizePrices: {},
     usesSize: false,
-    usesFinish: true,
+    usesFinish: false,
   },
   'choco-basque-cheesecake': {
     basePrice: 55,
@@ -51,6 +58,12 @@ const PRODUCTS = {
   },
   'pave-choco-basque-cheesecake': {
     basePrice: 65,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
+  'eiffel-tower-basque-cheesecake': {
+    basePrice: 75,
     sizePrices: {},
     usesSize: false,
     usesFinish: false,
@@ -240,6 +253,21 @@ function normalizeChocolateIcingCount(productId, value) {
   return count
 }
 
+function normalizeCupcakeFinishCounts(productId, vanillaValue, partyValue) {
+  if (productId !== 'cupcake-dozen') return { vanillaCreamCount: 0, partyDecorationCount: 0 }
+  const normalize = (value) => value === undefined || value === null || value === '' ? 0 : value
+  const vanillaCreamCount = normalize(vanillaValue)
+  const partyDecorationCount = normalize(partyValue)
+  if (
+    !Number.isInteger(vanillaCreamCount) ||
+    !Number.isInteger(partyDecorationCount) ||
+    vanillaCreamCount < 0 ||
+    partyDecorationCount < 0 ||
+    vanillaCreamCount + partyDecorationCount > CUPCAKE_PACK_SIZE
+  ) fail('INVALID_CUPCAKE_FINISH_COUNT')
+  return { vanillaCreamCount, partyDecorationCount }
+}
+
 function normalizeCakeOptions(input) {
   if (!Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
   const product = PRODUCTS[input.productId]
@@ -255,8 +283,13 @@ function normalizeCakeOptions(input) {
     ? input.chocolateType
     : 'dark'
   const chocolateIcingCount = normalizeChocolateIcingCount(input.productId, input.chocolateIcingCount)
+  const cupcakeFinishCounts = normalizeCupcakeFinishCounts(
+    input.productId,
+    input.vanillaCreamCount,
+    input.partyDecorationCount,
+  )
 
-  return { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount }
+  return { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount, ...cupcakeFinishCounts }
 }
 
 function getValidPromoCode(productId, promoCode, now) {
@@ -267,10 +300,23 @@ function getValidPromoCode(productId, promoCode, now) {
   return promo.code
 }
 
-function calculateCakeTotal(productId, product, cakeSize, poundAddon, chocolateIcingCount, quantity, promoCode, now) {
+function calculateCakeTotal(
+  productId,
+  product,
+  cakeSize,
+  poundAddon,
+  chocolateIcingCount,
+  vanillaCreamCount,
+  partyDecorationCount,
+  quantity,
+  promoCode,
+  now,
+) {
   const unitPriceCents = Math.round((product.usesSize ? product.sizePrices[cakeSize] : product.basePrice) * 100)
     + Math.round((product.usesFinish ? FINISH_PRICES[poundAddon] : 0) * 100)
     + chocolateIcingCount * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS
+    + vanillaCreamCount * CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS
+    + partyDecorationCount * CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS
   const originalTotalCents = unitPriceCents * quantity
   const originalTotal = originalTotalCents / 100
   const appliedPromoCode = getValidPromoCode(productId, promoCode, now)
@@ -318,13 +364,23 @@ export function buildCakeReservation(input, { now = new Date(), reservationNumbe
   validatePickupDateTime(input.pickupDate, input.pickupTime, now)
 
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
-  const { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount } = normalizeCakeOptions(input)
+  const {
+    product,
+    cakeSize,
+    poundAddon,
+    chocolateType,
+    chocolateIcingCount,
+    vanillaCreamCount,
+    partyDecorationCount,
+  } = normalizeCakeOptions(input)
   const pricing = calculateCakeTotal(
     input.productId,
     product,
     cakeSize,
     poundAddon,
     chocolateIcingCount,
+    vanillaCreamCount,
+    partyDecorationCount,
     quantity,
     input.promoCode,
     now,
@@ -340,6 +396,8 @@ export function buildCakeReservation(input, { now = new Date(), reservationNumbe
     chocolateType,
     poundAddon,
     chocolateIcingCount,
+    vanillaCreamCount,
+    partyDecorationCount,
     quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -446,6 +504,8 @@ export function publicCakeReservation(document) {
     chocolateType: document.chocolateType || 'dark',
     poundAddon: document.poundAddon || 'none',
     chocolateIcingCount: Number(document.chocolateIcingCount || 0),
+    vanillaCreamCount: Number(document.vanillaCreamCount || 0),
+    partyDecorationCount: Number(document.partyDecorationCount || 0),
     quantity: Number(document.quantity || 1),
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,

@@ -9,6 +9,7 @@ import {
   isFreshLemonCupcakeProduct,
   normalizeCakeSize,
   normalizeChocolateIcingCount,
+  normalizeCupcakeFinishCounts,
   normalizePoundAddon,
   normalizeReservationChocolateType,
   toCurrencyCents,
@@ -30,6 +31,8 @@ export type AdminReservationEditInput = Partial<Pick<Reservation,
   | 'chocolateType'
   | 'poundAddon'
   | 'chocolateIcingCount'
+  | 'vanillaCreamCount'
+  | 'partyDecorationCount'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'
@@ -45,6 +48,8 @@ export type AdminReservationUpdate = Pick<Reservation,
   | 'chocolateType'
   | 'poundAddon'
   | 'chocolateIcingCount'
+  | 'vanillaCreamCount'
+  | 'partyDecorationCount'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'
@@ -70,7 +75,11 @@ function discountedByTenPercent(total: number) {
 
 function promoAppliesToProduct(kind: ReservationPromoKind, productId: ProductId) {
   if (kind === PROMO_CODE) {
-    return productId === 'choco-basque-cheesecake' || productId === 'pave-choco-basque-cheesecake'
+    return [
+      'choco-basque-cheesecake',
+      'pave-choco-basque-cheesecake',
+      'eiffel-tower-basque-cheesecake',
+    ].includes(productId)
   }
   if (kind === LEMON_PROMO_CODE) return isFreshLemonCupcakeProduct(productId)
   return true
@@ -99,6 +108,8 @@ function reservationPromoKind(reservation: Reservation): ReservationPromoKind | 
       chocolateType: reservation.chocolateType,
       poundAddon: reservation.poundAddon,
       chocolateIcingCount: reservation.chocolateIcingCount || 0,
+      vanillaCreamCount: reservation.vanillaCreamCount || 0,
+      partyDecorationCount: reservation.partyDecorationCount || 0,
     },
     normalizeQuantity(reservation.quantity),
   )
@@ -126,10 +137,15 @@ export function buildAdminReservationUpdate(
     productId,
     edits.chocolateIcingCount ?? reservation.chocolateIcingCount ?? 0,
   )
+  const cupcakeFinishCounts = normalizeCupcakeFinishCounts(
+    productId,
+    edits.vanillaCreamCount ?? reservation.vanillaCreamCount ?? 0,
+    edits.partyDecorationCount ?? reservation.partyDecorationCount ?? 0,
+  )
   const cacaoPercent = (edits.cacaoPercent || reservation.cacaoPercent || '기본') as CacaoPercent
   const originalTotalPrice = getReservationPrice(
     productId,
-    { cacaoPercent, cakeSize, chocolateType, poundAddon, chocolateIcingCount },
+    { cacaoPercent, cakeSize, chocolateType, poundAddon, chocolateIcingCount, ...cupcakeFinishCounts },
     quantity,
   )
   const promoKind = reservationPromoKind(reservation)
@@ -143,6 +159,7 @@ export function buildAdminReservationUpdate(
     chocolateType,
     poundAddon,
     chocolateIcingCount,
+    ...cupcakeFinishCounts,
     quantity,
     pickupDate: edits.pickupDate || reservation.pickupDate,
     pickupTime: edits.pickupTime || reservation.pickupTime,

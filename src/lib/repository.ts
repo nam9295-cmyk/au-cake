@@ -15,6 +15,7 @@ import {
   getReservationPrice,
   normalizeCakeSize,
   normalizeChocolateIcingCount,
+  normalizeCupcakeFinishCounts,
   normalizeReservationChocolateType,
   normalizePoundAddon,
 } from './constants'
@@ -56,7 +57,7 @@ const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 
 export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'quantity' | 'totalPriceCents'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'quantity' | 'totalPriceCents'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
@@ -65,6 +66,8 @@ type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeS
   chocolateType?: ChocolateType
   poundAddon?: PoundAddon
   chocolateIcingCount?: number
+  vanillaCreamCount?: number
+  partyDecorationCount?: number
   quantity?: number
   totalPriceCents?: number
 }
@@ -183,6 +186,11 @@ function normalizeReservation(reservation: Reservation): Reservation {
       getProductById(reservation.productId).id,
       reservation.chocolateIcingCount,
     ),
+    ...normalizeCupcakeFinishCounts(
+      getProductById(reservation.productId).id,
+      reservation.vanillaCreamCount,
+      reservation.partyDecorationCount,
+    ),
     quantity: normalizeQuantity(reservation.quantity),
     totalPrice: reservation.totalPriceCents === undefined || reservation.totalPriceCents === null
       ? reservation.totalPrice
@@ -205,6 +213,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     ),
     poundAddon,
     chocolateIcingCount: normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount),
+    ...normalizeCupcakeFinishCounts(product.id, reservation.vanillaCreamCount, reservation.partyDecorationCount),
     quantity: normalizeQuantity(reservation.quantity),
     pickupDate: reservation.pickupDate,
     pickupTime: reservation.pickupTime,
@@ -282,6 +291,11 @@ function toReservation(document: AppwriteReservationDocument): Reservation {
     chocolateIcingCount: normalizeChocolateIcingCount(
       getProductById(document.productId).id,
       document.chocolateIcingCount,
+    ),
+    ...normalizeCupcakeFinishCounts(
+      getProductById(document.productId).id,
+      document.vanillaCreamCount,
+      document.partyDecorationCount,
     ),
     quantity: normalizeQuantity(document.quantity),
     pickupDate: document.pickupDate,
@@ -540,10 +554,15 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   const poundAddon = normalizePoundAddon(product.id, input.poundAddon)
   const chocolateType = normalizeReservationChocolateType(product.id, input.chocolateType, poundAddon)
   const chocolateIcingCount = normalizeChocolateIcingCount(product.id, input.chocolateIcingCount)
+  const cupcakeFinishCounts = normalizeCupcakeFinishCounts(
+    product.id,
+    input.vanillaCreamCount,
+    input.partyDecorationCount,
+  )
   const quantity = normalizeQuantity(input.quantity)
   const originalTotalPrice = getReservationPrice(
     product.id,
-    { cacaoPercent, cakeSize, chocolateType, poundAddon, chocolateIcingCount },
+    { cacaoPercent, cakeSize, chocolateType, poundAddon, chocolateIcingCount, ...cupcakeFinishCounts },
     quantity,
   )
   const totalPrice = applyPromoDiscount(originalTotalPrice, product.id, input.promoCode)
@@ -557,6 +576,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     chocolateType,
     poundAddon,
     chocolateIcingCount,
+    ...cupcakeFinishCounts,
     quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -655,6 +675,8 @@ export async function updateReservation(
     | 'chocolateType'
     | 'poundAddon'
     | 'chocolateIcingCount'
+    | 'vanillaCreamCount'
+    | 'partyDecorationCount'
     | 'quantity'
     | 'pickupDate'
     | 'pickupTime'

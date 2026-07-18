@@ -47,7 +47,8 @@ function cakeLabel(document) {
     'pound-cake': 'Pound cake',
     'cupcake-dozen': 'Cupcakes',
     'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
-    'pave-choco-basque-cheesecake': "Pave Chocolatier's Basque Cheesecake",
+    'pave-choco-basque-cheesecake': 'Pave chocolate on top',
+    'eiffel-tower-basque-cheesecake': 'Cake finishing with Eiffel Tower',
     'fresh-lemon-cupcakes-4': 'Lemon Cake · 4 pieces',
     'fresh-lemon-cupcakes-6': 'Lemon Cake · 6 pieces',
     'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
@@ -64,7 +65,7 @@ function cakeLabel(document) {
   if (document.productId === 'pave-cake') {
     if (document.cakeSize) options.push(document.cakeSize)
     if (chocolateLabels[document.chocolateType]) options.push(chocolateLabels[document.chocolateType])
-  } else if (document.productId === 'choco-basque-cheesecake' || document.productId === 'pave-choco-basque-cheesecake') {
+  } else if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(document.productId)) {
     options.push('6 inch / 15cm')
   } else if (document.productId?.startsWith('fresh-lemon-cupcakes-')) {
     const packSize = Number(document.productId.split('-').at(-1))
@@ -73,6 +74,12 @@ function cakeLabel(document) {
       ? Math.min(packSize, Math.max(0, rawChocolateCount))
       : 0
     options.push(`Finishing: Fresh lemon zest icing ${packSize - chocolateCount} / Dark couverture chocolate ${chocolateCount}`)
+  } else if (document.productId === 'cupcake-dozen') {
+    const rawVanilla = Number(document.vanillaCreamCount || 0)
+    const rawParty = Number(document.partyDecorationCount || 0)
+    const vanilla = Number.isInteger(rawVanilla) ? Math.min(12, Math.max(0, rawVanilla)) : 0
+    const party = Number.isInteger(rawParty) ? Math.min(12 - vanilla, Math.max(0, rawParty)) : 0
+    options.push(`Finishing: Basic ${12 - vanilla - party} / Vanilla cream ${vanilla} / Party decoration ${party}`)
   } else if (finishLabels[document.poundAddon]) {
     options.push(finishLabels[document.poundAddon])
   } else {

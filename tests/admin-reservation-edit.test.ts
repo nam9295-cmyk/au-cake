@@ -27,11 +27,13 @@ const baseReservation: Reservation = {
   updatedAt: '2026-07-01T00:00:00.000Z',
 }
 
-test('admin reservation edits recalculate price when product, options, quantity and pickup change', () => {
+test('admin reservation edits recalculate cupcake per-piece finishes and clear retired chocolate options', () => {
   const update = buildAdminReservationUpdate(baseReservation, {
     productId: 'cupcake-dozen',
     poundAddon: 'extra-chocolate',
     chocolateType: 'milk',
+    vanillaCreamCount: 4,
+    partyDecorationCount: 3,
     quantity: 2,
     pickupDate: '2026-07-22',
     pickupTime: '13:30',
@@ -43,19 +45,34 @@ test('admin reservation edits recalculate price when product, options, quantity 
   assert.deepEqual(update, {
     productId: 'cupcake-dozen',
     cakeSize: '15cm',
-    chocolateType: 'milk',
-    poundAddon: 'extra-chocolate',
+    chocolateType: 'dark',
+    poundAddon: 'none',
     chocolateIcingCount: 0,
+    vanillaCreamCount: 4,
+    partyDecorationCount: 3,
     quantity: 2,
     pickupDate: '2026-07-22',
     pickupTime: '13:30',
     cacaoPercent: '기본',
     status: '예약확정',
     paymentStatus: '입금대기',
-    totalPrice: 124,
-    totalPriceCents: 12400,
+    totalPrice: 120,
+    totalPriceCents: 12000,
     adminMemo: 'Changed by Jenny request',
   })
+})
+
+test('admin cupcake finish counts clamp to twelve pieces and recalculate', () => {
+  const update = buildAdminReservationUpdate(baseReservation, {
+    productId: 'cupcake-dozen',
+    vanillaCreamCount: 9,
+    partyDecorationCount: 8,
+  })
+
+  assert.equal(update.vanillaCreamCount, 9)
+  assert.equal(update.partyDecorationCount, 3)
+  assert.equal(update.totalPrice, 62.5)
+  assert.equal(update.totalPriceCents, 6250)
 })
 
 test('admin reservation edits normalise irrelevant options for selected product', () => {

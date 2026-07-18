@@ -32,6 +32,7 @@ import {
   CAKE_SIZE_OPTIONS,
   CACAO_OPTIONS,
   CHOCOLATE_TYPE_OPTIONS,
+  CUPCAKE_PACK_SIZE,
   DEFAULT_CAKE_SIZE,
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
@@ -46,13 +47,16 @@ import {
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
   getChocolateIcingSurcharge,
+  getCupcakeFinishSurcharge,
   getLemonIcingCount,
   getProductById,
   getFreshLemonCupcakePackSize,
+  isCupcakeDozenProduct,
   isFreshLemonCupcakeProduct,
   getReservationPrice,
   getReservationUnitPrice,
   normalizeChocolateIcingCount,
+  normalizeCupcakeFinishCounts,
   PAYMENT_STATUSES,
   POUND_ADDON_OPTIONS,
   PRODUCT_GROUPS,
@@ -586,13 +590,19 @@ function formatPaymentStatus(status: string) {
 }
 
 function ProductDetailRows({ reservation, language = 'ko' }: {
-  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount'>
+  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount'>
   language?: Language
 }) {
   const product = getProductById(reservation.productId)
   const productText = getProductText(product.id, language)
   const copy = cakeCopy(language)
   const showChocolate = usesReservationChocolateType(product.id, reservation.poundAddon)
+  const cupcakeFinishCounts = normalizeCupcakeFinishCounts(
+    product.id,
+    reservation.vanillaCreamCount,
+    reservation.partyDecorationCount,
+  )
+  const basicCupcakeCount = CUPCAKE_PACK_SIZE - cupcakeFinishCounts.vanillaCreamCount - cupcakeFinishCounts.partyDecorationCount
 
   return (
     <>
@@ -620,6 +630,14 @@ function ProductDetailRows({ reservation, language = 'ko' }: {
             {reservation.quantity}
             {copy.quantityUnit}
           </dd>
+        </div>
+      )}
+      {isCupcakeDozenProduct(product.id) && (
+        <div>
+          <dt>{language === 'ko' ? '마감 구성' : 'Finishing mix'}</dt>
+          <dd>{language === 'ko'
+            ? `기본 ${basicCupcakeCount}개 / 바닐라 크림 ${cupcakeFinishCounts.vanillaCreamCount}개 / 파티용 데코 ${cupcakeFinishCounts.partyDecorationCount}개`
+            : `Basic ${basicCupcakeCount} / Vanilla cream ${cupcakeFinishCounts.vanillaCreamCount} / Party decoration ${cupcakeFinishCounts.partyDecorationCount}`}</dd>
         </div>
       )}
       {(product.usesSizeOptions || isCheesecakeProduct(product.id)) && (
@@ -656,7 +674,11 @@ function reservationCacaoText(reservation: Reservation) {
 }
 
 function isCheesecakeProduct(productId: ProductId) {
-  return productId === 'choco-basque-cheesecake' || productId === 'pave-choco-basque-cheesecake'
+  return [
+    'choco-basque-cheesecake',
+    'pave-choco-basque-cheesecake',
+    'eiffel-tower-basque-cheesecake',
+  ].includes(productId)
 }
 
 function reservationCakeSizeText(reservation: Reservation) {
@@ -688,6 +710,7 @@ function HomePage({
   setLanguage: (language: Language) => void
 }) {
   const copy = cakeCopy(language)
+  const homeReserveCta = language === 'ko' ? '지금 주문하기' : 'Order Now'
   const [activeHeroCake, setActiveHeroCake] = useState(1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
@@ -739,13 +762,13 @@ function HomePage({
       image: basqueCheesecakeCardImg,
       name: language === 'ko' ? '쇼콜라티에 바스크 치즈케이크' : "Chocolatier's Basque Cheesecake",
       description: language === 'ko'
-        ? '기본 초코 바스크와 파베초코를 올린 두 가지 15cm 치즈케이크 중 선택할 수 있어요.'
-        : 'Choose our classic chocolate Basque or the richer pave chocolate finish. Both are 6 inch cakes.',
+        ? '기본, 파베 초콜릿 on top, 에펠탑 초콜릿 마감 중에서 선택할 수 있는 15cm 치즈케이크예요.'
+        : 'Choose classic, pave chocolate on top, or a full pave chocolate finish with one Eiffel Tower chocolate.',
       features: language === 'ko'
-        ? ['글루텐 프리', '6 inch / 15cm 고정 사이즈', '쇼콜라티에 바스크 AUD 55', '파베 쇼콜라티에 바스크 AUD 65']
-        : ['Gluten-free', '6 inch / 15cm fixed size', "Chocolatier's Basque AUD 55", "Pave Chocolatier's Basque AUD 65"],
+        ? ['글루텐 프리', '6 inch / 15cm 고정 사이즈', '기본 AUD 55', '파베 on top +AUD 10', '에펠탑 마감 +AUD 20']
+        : ['Gluten-free', '6 inch / 15cm fixed size', 'Classic AUD 55', 'Pave chocolate on top +AUD 10', 'Eiffel Tower finish +AUD 20'],
       priceLabel: `${language === 'ko' ? 'AUD 55부터' : 'From AUD 55'}`,
-      optionLabel: language === 'ko' ? '두 가지 치즈케이크 선택' : 'Two cheesecake options',
+      optionLabel: language === 'ko' ? '세 가지 마감 선택' : 'Three finishing options',
     },
     {
       id: 'fresh-lemon-cupcakes',
@@ -828,7 +851,7 @@ function HomePage({
             </p>
             <div className="hero-actions">
               <button className="primary-button" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
-                {language === 'ko' ? <><span>다음 날 픽업</span><span>주문하기</span></> : <><span>Order for</span><span>next-day pick-up</span></>}
+                {homeReserveCta}
               </button>
             </div>
           </div>
@@ -937,7 +960,7 @@ function HomePage({
                   </div>
                 </dl>
                 <button className="secondary-button full-width" type="button" onClick={() => onReserveProduct(card.productId)}>
-                  {copy.reserveCta}
+                  {homeReserveCta}
                 </button>
               </article>
             ))}
@@ -1047,7 +1070,7 @@ function HomePage({
         {marketConfig.market === 'AU' && <PickupLocationCard language={language} />}
       </main>
       <button className="sticky-cta" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
-        {copy.reserveCta}
+        {homeReserveCta}
       </button>
     </>
   )
@@ -1576,6 +1599,8 @@ function ReservePage({
     chocolateType: DEFAULT_CHOCOLATE_TYPE as ChocolateType,
     poundAddon: DEFAULT_POUND_ADDON as PoundAddon,
     chocolateIcingCount: 0,
+    vanillaCreamCount: 0,
+    partyDecorationCount: 0,
     pickupDate: todayInputValue(),
     pickupTime: '',
     quantity: 1,
@@ -1732,6 +1757,8 @@ function ReservePage({
           chocolateType: form.chocolateType,
           poundAddon: form.poundAddon,
           chocolateIcingCount: form.chocolateIcingCount,
+          vanillaCreamCount: form.vanillaCreamCount,
+          partyDecorationCount: form.partyDecorationCount,
           quantity: form.quantity,
           pickupDate,
           pickupTime: selectedPickupTime,
@@ -1771,7 +1798,7 @@ function ReservePage({
     ? poundCakeCardImg
     : selectedProduct.id === 'cupcake-dozen'
       ? cupcakeCardImg
-      : selectedProduct.id === 'choco-basque-cheesecake' || selectedProduct.id === 'pave-choco-basque-cheesecake'
+      : isCheesecakeProduct(selectedProduct.id)
         ? basqueCheesecakeCardImg
         : isFreshLemonCupcakeProduct(selectedProduct.id)
           ? freshLemonCupcakesCardImg
@@ -1782,6 +1809,8 @@ function ReservePage({
     chocolateType: form.chocolateType,
     poundAddon: form.poundAddon,
     chocolateIcingCount: form.chocolateIcingCount,
+    vanillaCreamCount: form.vanillaCreamCount,
+    partyDecorationCount: form.partyDecorationCount,
   }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
@@ -1793,6 +1822,17 @@ function ReservePage({
   const chocolateIcingCount = normalizeChocolateIcingCount(selectedProduct.id, form.chocolateIcingCount)
   const lemonIcingCount = getLemonIcingCount(selectedProduct.id, chocolateIcingCount)
   const chocolateIcingSurcharge = getChocolateIcingSurcharge(selectedProduct.id, chocolateIcingCount)
+  const cupcakeFinishCounts = normalizeCupcakeFinishCounts(
+    selectedProduct.id,
+    form.vanillaCreamCount,
+    form.partyDecorationCount,
+  )
+  const basicCupcakeCount = CUPCAKE_PACK_SIZE - cupcakeFinishCounts.vanillaCreamCount - cupcakeFinishCounts.partyDecorationCount
+  const cupcakeFinishSurcharge = getCupcakeFinishSurcharge(
+    selectedProduct.id,
+    cupcakeFinishCounts.vanillaCreamCount,
+    cupcakeFinishCounts.partyDecorationCount,
+  )
   const promoHint = isFreshLemonCupcakeProduct(selectedProduct.id)
     ? language === 'ko' ? '대소문자 구분 없음 · 7월 16일까지 유효' : 'Not case-sensitive · Valid through 16 July'
     : language === 'ko' ? '대소문자 구분 없음 · 7월 15일까지 유효' : 'Not case-sensitive · Valid through 15 July'
@@ -1841,6 +1881,7 @@ function ReservePage({
       chocolateType: usesReservationChocolateType(product.id, form.poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
       poundAddon: product.usesPoundAddonOptions ? form.poundAddon : DEFAULT_POUND_ADDON,
       chocolateIcingCount: normalizeChocolateIcingCount(productId, form.chocolateIcingCount),
+      ...normalizeCupcakeFinishCounts(productId, form.vanillaCreamCount, form.partyDecorationCount),
       quantity: isFreshLemonCupcakeProduct(productId) ? 1 : form.quantity,
     })
   }
@@ -1850,6 +1891,15 @@ function ReservePage({
       ...form,
       chocolateIcingCount: normalizeChocolateIcingCount(form.productId, value),
     })
+  }
+
+  function selectCupcakeFinishCount(kind: 'vanilla' | 'party', value: number) {
+    const counts = normalizeCupcakeFinishCounts(
+      form.productId,
+      kind === 'vanilla' ? value : form.vanillaCreamCount,
+      kind === 'party' ? value : form.partyDecorationCount,
+    )
+    setForm({ ...form, ...counts })
   }
 
   function selectPoundAddon(poundAddon: PoundAddon) {
@@ -1904,6 +1954,14 @@ function ReservePage({
                   <dd>{language === 'ko'
                     ? `생레몬 제스트 아이싱 ${lemonIcingCount}개 / 다크 커버춰 초콜릿 ${chocolateIcingCount}개`
                     : `Fresh lemon zest icing ${lemonIcingCount} / Dark couverture chocolate ${chocolateIcingCount}`}</dd>
+                </div>
+              )}
+              {isCupcakeDozenProduct(selectedProduct.id) && (
+                <div>
+                  <dt>{language === 'ko' ? '마감 구성' : 'Finishing mix'}</dt>
+                  <dd>{language === 'ko'
+                    ? `기본 ${basicCupcakeCount}개 / 바닐라 크림 ${cupcakeFinishCounts.vanillaCreamCount}개 / 파티용 데코 ${cupcakeFinishCounts.partyDecorationCount}개`
+                    : `Basic ${basicCupcakeCount} / Vanilla cream ${cupcakeFinishCounts.vanillaCreamCount} / Party decoration ${cupcakeFinishCounts.partyDecorationCount}`}</dd>
                 </div>
               )}
               {!isFreshLemonCupcakeProduct(selectedProduct.id) && (
@@ -2084,6 +2142,38 @@ function ReservePage({
                     {language === 'ko' ? '전부 스페셜' : 'All special'}
                   </button>
                 </div>
+              </fieldset>
+            )}
+
+            {isCupcakeDozenProduct(selectedProduct.id) && (
+              <fieldset className="icing-mix-fieldset">
+                <legend>{language === 'ko' ? '컵케이크 마감 선택' : 'Choose cupcake finishing'}</legend>
+                <p className="field-help">
+                  {language === 'ko'
+                    ? '기본 마감은 무료예요. 바닐라 크림은 개당 AUD 0.50, 파티용 데코는 개당 AUD 1.00이 추가돼요.'
+                    : 'Basic finishing is included. Vanilla cream is +AUD 0.50 each and party decoration is +AUD 1.00 each.'}
+                </p>
+                <div className="icing-mix-summary" aria-live="polite">
+                  <div><span>{language === 'ko' ? '기본 마감' : 'Basic finishing'}</span><strong>{basicCupcakeCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
+                  <div><span>{language === 'ko' ? '바닐라 크림' : 'Vanilla cream'}</span><strong>{cupcakeFinishCounts.vanillaCreamCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
+                  <div><span>{language === 'ko' ? '파티용 데코' : 'Party decoration'}</span><strong>{cupcakeFinishCounts.partyDecorationCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
+                </div>
+                <div className="icing-count-stepper">
+                  <button type="button" aria-label={language === 'ko' ? '바닐라 크림 한 개 줄이기' : 'Remove one vanilla cream finish'} disabled={cupcakeFinishCounts.vanillaCreamCount === 0} onClick={() => selectCupcakeFinishCount('vanilla', cupcakeFinishCounts.vanillaCreamCount - 1)}>−</button>
+                  <output><strong>{language === 'ko' ? `바닐라 크림 ${cupcakeFinishCounts.vanillaCreamCount}개` : `Vanilla cream ${cupcakeFinishCounts.vanillaCreamCount}`}</strong><span>+{formatCurrency(cupcakeFinishCounts.vanillaCreamCount * 0.5)}</span></output>
+                  <button type="button" aria-label={language === 'ko' ? '바닐라 크림 한 개 늘리기' : 'Add one vanilla cream finish'} disabled={basicCupcakeCount === 0} onClick={() => selectCupcakeFinishCount('vanilla', cupcakeFinishCounts.vanillaCreamCount + 1)}>+</button>
+                </div>
+                <div className="icing-count-stepper">
+                  <button type="button" aria-label={language === 'ko' ? '파티용 데코 한 개 줄이기' : 'Remove one party decoration'} disabled={cupcakeFinishCounts.partyDecorationCount === 0} onClick={() => selectCupcakeFinishCount('party', cupcakeFinishCounts.partyDecorationCount - 1)}>−</button>
+                  <output><strong>{language === 'ko' ? `파티용 데코 ${cupcakeFinishCounts.partyDecorationCount}개` : `Party decoration ${cupcakeFinishCounts.partyDecorationCount}`}</strong><span>+{formatCurrency(cupcakeFinishCounts.partyDecorationCount)}</span></output>
+                  <button type="button" aria-label={language === 'ko' ? '파티용 데코 한 개 늘리기' : 'Add one party decoration'} disabled={basicCupcakeCount === 0} onClick={() => selectCupcakeFinishCount('party', cupcakeFinishCounts.partyDecorationCount + 1)}>+</button>
+                </div>
+                <div className="icing-quick-choices">
+                  <button type="button" className={basicCupcakeCount === CUPCAKE_PACK_SIZE ? 'is-selected' : ''} onClick={() => setForm({ ...form, vanillaCreamCount: 0, partyDecorationCount: 0 })}>{language === 'ko' ? '전부 기본' : 'All basic'}</button>
+                  <button type="button" className={cupcakeFinishCounts.vanillaCreamCount === CUPCAKE_PACK_SIZE ? 'is-selected' : ''} onClick={() => setForm({ ...form, vanillaCreamCount: CUPCAKE_PACK_SIZE, partyDecorationCount: 0 })}>{language === 'ko' ? '전부 바닐라' : 'All vanilla'}</button>
+                  <button type="button" className={cupcakeFinishCounts.partyDecorationCount === CUPCAKE_PACK_SIZE ? 'is-selected' : ''} onClick={() => setForm({ ...form, vanillaCreamCount: 0, partyDecorationCount: CUPCAKE_PACK_SIZE })}>{language === 'ko' ? '전부 파티 데코' : 'All party'}</button>
+                </div>
+                <p className="field-help">{language === 'ko' ? `마감 추가금 ${formatCurrency(cupcakeFinishSurcharge)}` : `Finishing surcharge ${formatCurrency(cupcakeFinishSurcharge)}`}</p>
               </fieldset>
             )}
 
@@ -3279,6 +3369,8 @@ function ReservationDrawer({
   const [chocolateType, setChocolateType] = useState<ChocolateType>(reservation.chocolateType)
   const [poundAddon, setPoundAddon] = useState<PoundAddon>(reservation.poundAddon)
   const [chocolateIcingCount, setChocolateIcingCount] = useState(reservation.chocolateIcingCount || 0)
+  const [vanillaCreamCount, setVanillaCreamCount] = useState(reservation.vanillaCreamCount || 0)
+  const [partyDecorationCount, setPartyDecorationCount] = useState(reservation.partyDecorationCount || 0)
   const [quantity, setQuantity] = useState(reservation.quantity)
   const [pickupDate, setPickupDate] = useState(reservation.pickupDate)
   const [pickupTime, setPickupTime] = useState(reservation.pickupTime)
@@ -3293,6 +3385,8 @@ function ReservationDrawer({
     chocolateType,
     poundAddon,
     chocolateIcingCount,
+    vanillaCreamCount,
+    partyDecorationCount,
     quantity,
     pickupDate,
     pickupTime,
@@ -3388,6 +3482,18 @@ function ReservationDrawer({
                   onChange={(event) => setChocolateIcingCount(Number(event.target.value || 0))}
                 />
               </label>
+            )}
+            {isCupcakeDozenProduct(draftUpdate.productId) && (
+              <>
+                <label>
+                  바닐라 크림 개수 (+AUD 0.50)
+                  <input type="number" min="0" max={CUPCAKE_PACK_SIZE - (draftUpdate.partyDecorationCount || 0)} value={draftUpdate.vanillaCreamCount || 0} onChange={(event) => setVanillaCreamCount(Number(event.target.value || 0))} />
+                </label>
+                <label>
+                  파티용 데코 개수 (+AUD 1.00)
+                  <input type="number" min="0" max={CUPCAKE_PACK_SIZE - (draftUpdate.vanillaCreamCount || 0)} value={draftUpdate.partyDecorationCount || 0} onChange={(event) => setPartyDecorationCount(Number(event.target.value || 0))} />
+                </label>
+              </>
             )}
             {!isFreshLemonCupcakeProduct(draftUpdate.productId) && (
               <label>

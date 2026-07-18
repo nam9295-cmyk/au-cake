@@ -20,6 +20,8 @@ test-results
 .DS_Store
 ._*
 .hermes/
+.understand-anything/
+docs/AU_CAKE_CODEBASE_DECK.html
 *.suo
 *.ntvs*
 *.njsproj

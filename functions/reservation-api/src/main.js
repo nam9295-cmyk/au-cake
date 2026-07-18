@@ -118,6 +118,8 @@ function cakeReservationResponse(document) {
     chocolateType: document.chocolateType,
     poundAddon: document.poundAddon,
     chocolateIcingCount: Number(document.chocolateIcingCount || 0),
+    vanillaCreamCount: Number(document.vanillaCreamCount || 0),
+    partyDecorationCount: Number(document.partyDecorationCount || 0),
     quantity: document.quantity,
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,

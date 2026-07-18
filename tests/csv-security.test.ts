@@ -65,6 +65,21 @@ test('cake CSV neutralises spreadsheet formulas including leading control charac
   assert.match(csv, /"'@IMPORTDATA\(""https:\/\/example\.test""\)"/)
 })
 
+test('cake CSV exports cupcake per-piece finishing and omits retired chocolate finish', () => {
+  const csv = reservationsToCsv([{
+    ...cakeReservation,
+    productId: 'cupcake-dozen',
+    poundAddon: 'extra-chocolate',
+    vanillaCreamCount: 4,
+    partyDecorationCount: 3,
+    totalPrice: 60,
+    totalPriceCents: 6000,
+  }])
+
+  assert.match(csv, /Basic 5 \/ Vanilla cream 4 \/ Party decoration 3/)
+  assert.equal(csv.includes('Extra chocolate'), false)
+})
+
 test('class CSV neutralises spreadsheet formulas in customer-entered fields', () => {
   const csv = classReservationsToCsv([classReservation])
   assert.match(csv, /"'-1\+1"/)

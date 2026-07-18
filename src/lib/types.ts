@@ -12,6 +12,7 @@ export type ProductId =
   | 'cupcake-dozen'
   | 'choco-basque-cheesecake'
   | 'pave-choco-basque-cheesecake'
+  | 'eiffel-tower-basque-cheesecake'
   | 'fresh-lemon-cupcakes-4'
   | 'fresh-lemon-cupcakes-6'
   | 'fresh-lemon-cupcakes-8'
@@ -32,6 +33,8 @@ export type Reservation = {
   chocolateType: ChocolateType
   poundAddon: PoundAddon
   chocolateIcingCount?: number
+  vanillaCreamCount?: number
+  partyDecorationCount?: number
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -54,6 +57,8 @@ export type ReservationInput = {
   chocolateType: ChocolateType
   poundAddon: PoundAddon
   chocolateIcingCount: number
+  vanillaCreamCount?: number
+  partyDecorationCount?: number
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -73,6 +78,8 @@ export type PublicReservation = Pick<
   | 'chocolateType'
   | 'poundAddon'
   | 'chocolateIcingCount'
+  | 'vanillaCreamCount'
+  | 'partyDecorationCount'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'

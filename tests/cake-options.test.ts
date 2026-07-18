@@ -13,8 +13,10 @@ import {
   getFreshLemonCupcakePackSize,
   getLemonIcingCount,
   getChocolateIcingSurcharge,
+  getCupcakeFinishSurcharge,
   getProductById,
   getReservationUnitPrice,
+  normalizeCupcakeFinishCounts,
   normalizePoundAddon,
   normalizeReservationChocolateType,
   usesReservationChocolateType,
@@ -46,7 +48,11 @@ test('AU catalogue exposes Fresh Lemon Cupcakes as a fourth grouped product fami
     [
       { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
       { id: 'pound-cupcake', defaultProductId: 'pound-cake', productIds: ['pound-cake', 'cupcake-dozen'] },
-      { id: 'cheesecake', defaultProductId: 'choco-basque-cheesecake', productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'] },
+      {
+        id: 'cheesecake',
+        defaultProductId: 'choco-basque-cheesecake',
+        productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'],
+      },
       {
         id: 'fresh-lemon-cupcakes',
         defaultProductId: 'fresh-lemon-cupcakes-12',
@@ -99,25 +105,59 @@ test('Lemoni discounts the Lemon Cake subtotal after chocolate icing surcharge',
   assert.equal(applyPromoDiscount(subtotal, 'fresh-lemon-cupcakes-6', 'lemoni', new Date('2026-07-13T00:00:00Z')), 33.75)
 })
 
-test('AU cheesecake variants are fixed 6 inch cakes priced at AUD 55 and AUD 65', () => {
+test('AU cheesecake variants expose base, pave-on-top and Eiffel Tower finishes at fixed prices', () => {
   const chocoBasque = getProductById('choco-basque-cheesecake')
   const paveBasque = getProductById('pave-choco-basque-cheesecake')
+  const eiffelBasque = getProductById('eiffel-tower-basque-cheesecake')
 
   assert.equal(chocoBasque.name, "Chocolatier's Basque Cheesecake")
   assert.equal(chocoBasque.price, 55)
-  assert.equal(paveBasque.name, "Pave Chocolatier's Basque Cheesecake")
+  assert.equal(paveBasque.name, 'Pave chocolate on top')
   assert.equal(paveBasque.price, 65)
-  assert.equal(chocoBasque.usesSizeOptions, false)
-  assert.equal(chocoBasque.usesPoundAddonOptions, false)
+  assert.equal(paveBasque.description.includes('pave chocolate on top'), true)
+  assert.equal(eiffelBasque.name, 'Cake finishing with Eiffel Tower')
+  assert.equal(eiffelBasque.price, 75)
+  assert.equal(eiffelBasque.description.includes('Eiffel Tower chocolate'), true)
+  assert.equal(eiffelBasque.description.includes('covered with pave chocolate'), true)
+  for (const product of [chocoBasque, paveBasque, eiffelBasque]) {
+    assert.equal(product.usesSizeOptions, false)
+    assert.equal(product.usesPoundAddonOptions, false)
+  }
   assert.equal(getReservationUnitPrice('choco-basque-cheesecake'), 55)
   assert.equal(getReservationUnitPrice('pave-choco-basque-cheesecake'), 65)
+  assert.equal(getReservationUnitPrice('eiffel-tower-basque-cheesecake' as ProductId), 75)
 })
 
-test('cupcakes stay AUD 10 above pound cake and keep the existing finish prices', () => {
-  assert.equal(getReservationUnitPrice('pound-cake', { poundAddon: 'none' }), 45)
-  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'none' }), 55)
-  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'extra-chocolate' }), 62)
-  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'vanilla-cream' }), 60)
+test('cupcakes replace chocolate finish with per-piece vanilla cream and party decoration', () => {
+  const cupcakes = getProductById('cupcake-dozen')
+
+  assert.equal(cupcakes.usesChocolateTypeOptions, false)
+  assert.equal(cupcakes.usesPoundAddonOptions, false)
+  assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), false)
+  assert.deepEqual(normalizeCupcakeFinishCounts('cupcake-dozen', 4, 3), {
+    vanillaCreamCount: 4,
+    partyDecorationCount: 3,
+  })
+  assert.equal(getCupcakeFinishSurcharge('cupcake-dozen', 4, 3), 5)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { vanillaCreamCount: 4, partyDecorationCount: 3 }), 60)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { vanillaCreamCount: 0, partyDecorationCount: 12 }), 67)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'extra-chocolate', chocolateType: 'milk' }), 55)
+})
+
+test('cupcake finish counts clamp safely and do not affect other products', () => {
+  assert.deepEqual(normalizeCupcakeFinishCounts('cupcake-dozen', 9, 8), {
+    vanillaCreamCount: 9,
+    partyDecorationCount: 3,
+  })
+  assert.deepEqual(normalizeCupcakeFinishCounts('cupcake-dozen', -2, 1.8), {
+    vanillaCreamCount: 0,
+    partyDecorationCount: 1,
+  })
+  assert.deepEqual(normalizeCupcakeFinishCounts('pound-cake', 4, 3), {
+    vanillaCreamCount: 0,
+    partyDecorationCount: 0,
+  })
+  assert.equal(getCupcakeFinishSurcharge('pave-cake', 4, 3), 0)
 })
 
 test('client request IDs are valid UUIDs for idempotent reservation retries', () => {
@@ -165,19 +205,18 @@ test('pound cake only asks dark or milk chocolate when extra chocolate is select
   assert.equal(normalizeReservationChocolateType('pound-cake', 'milk', 'vanilla-cream'), 'dark')
 })
 
-test('cupcakes are sold by the dozen and use pound cake finish options', () => {
+test('cupcakes are sold by the dozen with per-piece finishing instead of pound cake options', () => {
   const cupcakes = getProductById('cupcake-dozen')
 
   assert.equal(cupcakes.name, 'Chocolate Cupcakes (1 dozen)')
   assert.equal(cupcakes.price, 55)
   assert.equal(cupcakes.usesSizeOptions, false)
   assert.equal(cupcakes.usesChocolateTypeOptions, false)
-  assert.equal(cupcakes.usesPoundAddonOptions, true)
-  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'none' }), 55)
-  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'extra-chocolate', chocolateType: 'milk' }), 62)
-  assert.equal(getReservationUnitPrice('cupcake-dozen', { poundAddon: 'vanilla-cream' }), 60)
-  assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), true)
-  assert.equal(normalizeReservationChocolateType('cupcake-dozen', 'milk', 'vanilla-cream'), 'dark')
+  assert.equal(cupcakes.usesPoundAddonOptions, false)
+  assert.equal(getReservationUnitPrice('cupcake-dozen'), 55)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { vanillaCreamCount: 6 }), 58)
+  assert.equal(getReservationUnitPrice('cupcake-dozen', { partyDecorationCount: 6 }), 61)
+  assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), false)
 })
 
 test('pave cake pricing uses size and chocolate type choices without pound finish', () => {
@@ -476,32 +515,41 @@ Have a verygood day!`)
   assert.doesNotMatch(message, /Contact: .*TBC/)
 })
 
-test('AU cheesecake confirmation includes the selected variant and fixed 6 inch size', () => {
-  const message = buildSmsMessage({
+test('AU cheesecake confirmations include the selected finish and fixed 6 inch size', () => {
+  const reservation = {
     id: 'test-cheesecake-id',
     reservationNumber: 'VG-C-AU-20260704-CHEESE',
     customerName: 'Jenny',
     customerPhone: '0412345678',
-    productId: 'pave-choco-basque-cheesecake',
-    cakeSize: '15cm',
-    chocolateType: 'dark',
-    poundAddon: 'none',
+    productId: 'pave-choco-basque-cheesecake' as ProductId,
+    cakeSize: '15cm' as const,
+    chocolateType: 'dark' as const,
+    poundAddon: 'none' as const,
     quantity: 1,
     pickupDate: '2026-07-04',
     pickupTime: '12:00',
-    cacaoPercent: '기본',
+    cacaoPercent: '기본' as const,
     requestNote: '',
-    status: '예약신청',
-    paymentStatus: '입금대기',
+    status: '예약신청' as const,
+    paymentStatus: '입금대기' as const,
     totalPrice: 65,
     adminMemo: '',
     createdAt: '2026-07-04T00:00:00.000Z',
     updatedAt: '2026-07-04T00:00:00.000Z',
+  }
+  const paveMessage = buildSmsMessage(reservation)
+  const eiffelMessage = buildSmsMessage({
+    ...reservation,
+    productId: 'eiffel-tower-basque-cheesecake',
+    totalPrice: 75,
   })
 
-  assert.match(message, /Pave Chocolatier's Basque Cheesecake/)
-  assert.match(message, /Size: 6 inch \/ 15cm/)
-  assert.equal(message.includes('Finish:'), false)
+  assert.match(paveMessage, /Product: Pave chocolate on top/)
+  assert.match(paveMessage, /Size: 6 inch \/ 15cm/)
+  assert.equal(paveMessage.includes('Finish:'), false)
+  assert.match(eiffelMessage, /Product: Cake finishing with Eiffel Tower/)
+  assert.match(eiffelMessage, /Size: 6 inch \/ 15cm/)
+  assert.equal(eiffelMessage.includes('Finish:'), false)
 })
 
 test('AU pound cake extra chocolate SMS includes selected chocolate type', () => {
@@ -530,4 +578,35 @@ test('AU pound cake extra chocolate SMS includes selected chocolate type', () =>
   assert.match(message, /Product: Chocolate Pound Cake/)
   assert.match(message, /Finish: Extra chocolate/)
   assert.match(message, /Chocolate: Dark chocolate/)
+})
+
+test('AU cupcake SMS shows vanilla cream and party decoration counts without chocolate option', () => {
+  const message = buildSmsMessage({
+    id: 'test-cupcake-id',
+    reservationNumber: 'VG-C-AU-CUPCAKE',
+    customerName: 'Jenny',
+    customerPhone: '0412345678',
+    productId: 'cupcake-dozen',
+    cakeSize: '15cm',
+    chocolateType: 'milk',
+    poundAddon: 'extra-chocolate',
+    vanillaCreamCount: 4,
+    partyDecorationCount: 3,
+    quantity: 1,
+    pickupDate: '2026-07-20',
+    pickupTime: '10:00',
+    cacaoPercent: '기본',
+    requestNote: '',
+    status: '예약신청',
+    paymentStatus: '입금대기',
+    totalPrice: 60,
+    totalPriceCents: 6000,
+    adminMemo: '',
+    createdAt: '2026-07-04T00:00:00.000Z',
+    updatedAt: '2026-07-04T00:00:00.000Z',
+  })
+
+  assert.match(message, /Finishing mix: Basic 5 \/ Vanilla cream 4 \/ Party decoration 3/)
+  assert.equal(message.includes('Finish: Extra chocolate'), false)
+  assert.equal(message.includes('Chocolate: Milk chocolate'), false)
 })

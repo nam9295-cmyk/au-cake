@@ -60,7 +60,7 @@ test('calendar cheesecake events show the selected variant without irrelevant fi
     status: '예약신청',
   })
 
-  assert.equal(event.label, "Pave Chocolatier's Basque Cheesecake · 6 inch / 15cm ×1")
+  assert.equal(event.label, 'Pave chocolate on top · 6 inch / 15cm ×1')
 })
 
 test('calendar Lemon Cake events show the selected pack and icing mix', () => {
@@ -89,6 +89,43 @@ test('calendar treats legacy Lemon Cake reservations without icing count as all 
   })
 
   assert.equal(event.label, 'Lemon Cake · 4 pieces · Finishing: Fresh lemon zest icing 4 / Dark couverture chocolate 0 ×1')
+})
+
+test('calendar cupcake events show vanilla cream and party decoration counts without chocolate finish', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'cupcake-dozen-id',
+    pickupDate: '2026-08-03',
+    pickupTime: '14:00',
+    productId: 'cupcake-dozen',
+    poundAddon: 'extra-chocolate',
+    vanillaCreamCount: 4,
+    partyDecorationCount: 3,
+    quantity: 2,
+    status: '예약확정',
+  })
+
+  assert.equal(event.label, 'Cupcakes · Finishing: Basic 5 / Vanilla cream 4 / Party decoration 3 ×2')
+  assert.equal(event.label.includes('Extra chocolate'), false)
+})
+
+test('calendar labels both cheesecake finishing upgrades at the fixed size', () => {
+  const pave = sanitizeCakeCalendarEvent({
+    $id: 'pave-cheesecake-id',
+    pickupDate: '2026-08-03',
+    pickupTime: '11:00',
+    productId: 'pave-choco-basque-cheesecake',
+  })
+  const eiffel = sanitizeCakeCalendarEvent({
+    $id: 'eiffel-cheesecake-id',
+    pickupDate: '2026-08-03',
+    pickupTime: '12:00',
+    productId: 'eiffel-tower-basque-cheesecake',
+  })
+
+  assert.match(pave.label, /Pave chocolate on top/)
+  assert.match(eiffel.label, /Cake finishing with Eiffel Tower/)
+  assert.match(pave.label, /6 inch \/ 15cm/)
+  assert.match(eiffel.label, /6 inch \/ 15cm/)
 })
 
 test('calendar class events expose only class schedule and status', () => {

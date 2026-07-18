@@ -45,8 +45,13 @@ const koProducts: Record<ProductId, ProductText> = {
     priceNote: '6 inch / 15cm 고정 사이즈',
   },
   'pave-choco-basque-cheesecake': {
-    name: '파베 쇼콜라티에 바스크 치즈케이크',
-    description: '쇼콜라티에 바스크 치즈케이크 위에 꾸덕한 파베 초콜릿을 더한 15cm 케이크예요.',
+    name: '파베 초콜릿 on top',
+    description: '쇼콜라티에 바스크 치즈케이크 위에 파베 초콜릿을 올린 15cm 케이크예요.',
+    priceNote: '6 inch / 15cm 고정 사이즈',
+  },
+  'eiffel-tower-basque-cheesecake': {
+    name: '에펠탑 초콜릿 케이크 마감',
+    description: '파베 초콜릿으로 케이크 전체를 덮고 에펠탑 초콜릿 하나를 올린 15cm 케이크예요.',
     priceNote: '6 inch / 15cm 고정 사이즈',
   },
   'fresh-lemon-cupcakes-4': {
@@ -72,6 +77,7 @@ const koProductFeatures: Record<ProductId, string[]> = {
   'cupcake-dozen': ['12개 1다스 구성', '파운드케이크에서 10달러 추가', '기본, 초콜릿 추가, 바닐라 크림 마감'],
   'choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '쇼콜라티에 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '파베 초콜릿 마감', '더 진한 치즈케이크 옵션'],
+  'eiffel-tower-basque-cheesecake': ['6 inch / 15cm 고정 사이즈', '전체 파베 초콜릿 마감', '에펠탑 초콜릿 1개 장식'],
   'fresh-lemon-cupcakes-4': ['4개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
   'fresh-lemon-cupcakes-6': ['6개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
   'fresh-lemon-cupcakes-8': ['8개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],

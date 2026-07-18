@@ -73,7 +73,7 @@ test('class API stores both kids course types at the existing prices', () => {
   ))
 })
 
-test('cake API prices cheesecake variants and keeps cupcake finish pricing', () => {
+test('cake API prices cheesecake variants and cupcake per-piece finishes', () => {
   const chocoBasque = buildCakeReservation(
     { ...cakeInput, productId: 'choco-basque-cheesecake', cakeSize: '22cm', poundAddon: 'extra-chocolate' },
     { now, reservationNumber: 'VG-C-AU-CHEESE-55' },
@@ -82,8 +82,19 @@ test('cake API prices cheesecake variants and keeps cupcake finish pricing', () 
     { ...cakeInput, productId: 'pave-choco-basque-cheesecake' },
     { now, reservationNumber: 'VG-C-AU-CHEESE-65' },
   )
+  const eiffelBasque = buildCakeReservation(
+    { ...cakeInput, productId: 'eiffel-tower-basque-cheesecake' },
+    { now, reservationNumber: 'VG-C-AU-CHEESE-75' },
+  )
   const cupcakes = buildCakeReservation(
-    { ...cakeInput, productId: 'cupcake-dozen', poundAddon: 'extra-chocolate' },
+    {
+      ...cakeInput,
+      productId: 'cupcake-dozen',
+      poundAddon: 'extra-chocolate',
+      chocolateType: 'milk',
+      vanillaCreamCount: 4,
+      partyDecorationCount: 3,
+    },
     { now, reservationNumber: 'VG-C-AU-CUPCAKE' },
   )
 
@@ -91,7 +102,37 @@ test('cake API prices cheesecake variants and keeps cupcake finish pricing', () 
   assert.equal(chocoBasque.cakeSize, '15cm')
   assert.equal(chocoBasque.poundAddon, 'none')
   assert.equal(paveBasque.totalPrice, 65)
-  assert.equal(cupcakes.totalPrice, 62)
+  assert.equal(eiffelBasque.totalPrice, 75)
+  assert.equal(eiffelBasque.totalPriceCents, 7500)
+  assert.equal(cupcakes.poundAddon, 'none')
+  assert.equal(cupcakes.chocolateType, 'dark')
+  assert.equal(cupcakes.vanillaCreamCount, 4)
+  assert.equal(cupcakes.partyDecorationCount, 3)
+  assert.equal(cupcakes.totalPrice, 60)
+  assert.equal(cupcakes.totalPriceCents, 6000)
+})
+
+test('cake API strictly validates cupcake finish counts', () => {
+  for (const input of [
+    { vanillaCreamCount: -1, partyDecorationCount: 0 },
+    { vanillaCreamCount: 1.5, partyDecorationCount: 0 },
+    { vanillaCreamCount: 13, partyDecorationCount: 0 },
+    { vanillaCreamCount: 8, partyDecorationCount: 5 },
+    { vanillaCreamCount: '4', partyDecorationCount: 0 },
+  ]) {
+    assertApiError('INVALID_CUPCAKE_FINISH_COUNT', () => buildCakeReservation(
+      { ...cakeInput, productId: 'cupcake-dozen', ...input },
+      { now, reservationNumber: 'VG-C-AU-CUPCAKE-INVALID' },
+    ))
+  }
+
+  const legacy = buildCakeReservation(
+    { ...cakeInput, productId: 'cupcake-dozen' },
+    { now, reservationNumber: 'VG-C-AU-CUPCAKE-LEGACY' },
+  )
+  assert.equal(legacy.vanillaCreamCount, 0)
+  assert.equal(legacy.partyDecorationCount, 0)
+  assert.equal(legacy.totalPrice, 55)
 })
 
 test('cake API derives protected fields and cents on the server', () => {

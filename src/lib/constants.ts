@@ -14,8 +14,15 @@ export const PROMO_DISCOUNT_RATE = 0.1
 export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
 export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
 export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
+export const CUPCAKE_PACK_SIZE = 12
+export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
+export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 
-const CHEESECAKE_PROMO_PRODUCT_IDS: ProductId[] = ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake']
+const CHEESECAKE_PROMO_PRODUCT_IDS: ProductId[] = [
+  'choco-basque-cheesecake',
+  'pave-choco-basque-cheesecake',
+  'eiffel-tower-basque-cheesecake',
+]
 const LEMON_PROMO_PRODUCT_IDS: ProductId[] = [
   'fresh-lemon-cupcakes-6',
   'fresh-lemon-cupcakes-8',
@@ -86,7 +93,7 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
   {
     id: 'cheesecake',
     defaultProductId: 'choco-basque-cheesecake',
-    productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake'],
+    productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'],
   },
   ...(marketConfig.market === 'AU' ? [{
     id: 'fresh-lemon-cupcakes' as const,
@@ -124,6 +131,38 @@ export function getChocolateIcingSurcharge(productId: ProductId, chocolateIcingC
   return fromCurrencyCents(count * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS)
 }
 
+export function isCupcakeDozenProduct(productId: ProductId) {
+  return productId === 'cupcake-dozen'
+}
+
+export function normalizeCupcakeFinishCounts(
+  productId: ProductId,
+  vanillaCreamCount?: number | null,
+  partyDecorationCount?: number | null,
+) {
+  if (!isCupcakeDozenProduct(productId)) return { vanillaCreamCount: 0, partyDecorationCount: 0 }
+  const normalize = (value?: number | null) => {
+    const count = Number(value || 0)
+    if (!Number.isFinite(count)) return 0
+    return Math.min(CUPCAKE_PACK_SIZE, Math.max(0, Math.floor(count)))
+  }
+  const vanilla = normalize(vanillaCreamCount)
+  const party = Math.min(normalize(partyDecorationCount), CUPCAKE_PACK_SIZE - vanilla)
+  return { vanillaCreamCount: vanilla, partyDecorationCount: party }
+}
+
+export function getCupcakeFinishSurcharge(
+  productId: ProductId,
+  vanillaCreamCount?: number | null,
+  partyDecorationCount?: number | null,
+) {
+  const counts = normalizeCupcakeFinishCounts(productId, vanillaCreamCount, partyDecorationCount)
+  return fromCurrencyCents(
+    counts.vanillaCreamCount * CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS +
+    counts.partyDecorationCount * CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS,
+  )
+}
+
 export function getProductGroupByProductId(productId: ProductId) {
   return PRODUCT_GROUPS.find((group) => group.productIds.includes(productId)) || PRODUCT_GROUPS[0]
 }
@@ -134,6 +173,8 @@ export type ReservationPriceOptions = {
   chocolateType?: ChocolateType
   poundAddon?: PoundAddon
   chocolateIcingCount?: number
+  vanillaCreamCount?: number
+  partyDecorationCount?: number
 }
 
 export function getProductById(productId?: string) {
@@ -226,6 +267,8 @@ function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoP
       chocolateType: DEFAULT_CHOCOLATE_TYPE,
       poundAddon: DEFAULT_POUND_ADDON,
       chocolateIcingCount: 0,
+      vanillaCreamCount: 0,
+      partyDecorationCount: 0,
     }
   }
   return {
@@ -234,6 +277,8 @@ function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoP
     chocolateType: optionsOrCacao?.chocolateType || DEFAULT_CHOCOLATE_TYPE,
     poundAddon: optionsOrCacao?.poundAddon || DEFAULT_POUND_ADDON,
     chocolateIcingCount: optionsOrCacao?.chocolateIcingCount || 0,
+    vanillaCreamCount: optionsOrCacao?.vanillaCreamCount || 0,
+    partyDecorationCount: optionsOrCacao?.partyDecorationCount || 0,
   }
 }
 
@@ -257,7 +302,8 @@ export function getReservationUnitPrice(
     (product.usesCacaoOptions ? cacaoOption?.extraPrice || 0 : 0) +
     (product.usesChocolateTypeOptions ? chocolateOption.extraPrice : 0) +
     (product.usesPoundAddonOptions ? addonOption.extraPrice : 0) +
-    getChocolateIcingSurcharge(product.id, options.chocolateIcingCount)
+    getChocolateIcingSurcharge(product.id, options.chocolateIcingCount) +
+    getCupcakeFinishSurcharge(product.id, options.vanillaCreamCount, options.partyDecorationCount)
   )
 }
 
