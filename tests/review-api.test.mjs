@@ -19,6 +19,7 @@ import {
   validateReviewInput,
 } from '../functions/review-api/src/business.js'
 import {
+  createPublicReviewPhotoUrlBuilder,
   createReviewRepository,
   handleReviewRequest,
   parseRequestBody,
@@ -330,12 +331,29 @@ test('public review projection enforces publication and allowlists fields', () =
     photoUrl: 'https://appwrite.example/v1/storage/public-photo',
     photoPublishConsent: true,
     photoFileId: 'private-file-id',
-  }), {
+  }, () => 'https://appwrite.example/v1/storage/buckets/review-photos/files/private-file-id/view?project=project_au'), {
     sourceType: 'cake', rating: 5, body: 'Great', displayName: 'Verified cake order',
-    hasPhoto: false, photoUrl: null, createdAt: '2026-07-19T00:00:00.000Z', incentivised: true,
+    hasPhoto: true,
+    photoUrl: 'https://appwrite.example/v1/storage/buckets/review-photos/files/private-file-id/view?project=project_au',
+    createdAt: '2026-07-19T00:00:00.000Z', incentivised: true,
   })
   assertReviewError('REVIEW_NOT_PUBLIC', () => toPublicReview({ ...contaminated, publishConsent: false }))
   assertReviewError('REVIEW_NOT_PUBLIC', () => toPublicReview({ ...contaminated, moderationStatus: 'pending' }))
+})
+
+test('public review photo URLs use only the configured HTTPS Appwrite endpoint and project', () => {
+  const builder = createPublicReviewPhotoUrlBuilder({
+    APPWRITE_PUBLIC_ENDPOINT: 'https://api.example.test/v1',
+    APPWRITE_FUNCTION_PROJECT_ID: 'project_au',
+  }, { reviewPhotosBucketId: 'review-photos' })
+  assert.equal(
+    builder({ photoFileId: 'approved-photo' }),
+    'https://api.example.test/v1/storage/buckets/review-photos/files/approved-photo/view?project=project_au',
+  )
+  assert.throws(() => createPublicReviewPhotoUrlBuilder({
+    APPWRITE_PUBLIC_ENDPOINT: 'http://api.example.test/v1',
+    APPWRITE_FUNCTION_PROJECT_ID: 'project_au',
+  }, { reviewPhotosBucketId: 'review-photos' }), /FUNCTION_CONFIGURATION_ERROR/)
 })
 
 test('public review list is bounded to three, newest-first deterministically, and rejects invalid limits', async () => {
@@ -884,6 +902,18 @@ test('review lists and moderation use allowlisted DTOs and enforce consent guard
   const moderationRepository = makeRepository({ review: published })
   await moderateReview(moderationRepository, 'review-1', 'hidden', { now: fixedNow, hmacSecret })
   assert.deepEqual(moderationRepository.calls.at(-1), ['updateReview', 'review-1', { moderationStatus: 'hidden', updatedAt: fixedNow.toISOString() }])
+
+  const photoReview = { ...published, photoFileId: 'private-photo', photoPublishConsent: true }
+  const photoRepository = makeRepository({ review: photoReview })
+  const photoCalls = []
+  const photoStorage = {
+    async makePublic(fileId) { photoCalls.push(['public', fileId]) },
+    async makePrivate(fileId) { photoCalls.push(['private', fileId]) },
+  }
+  await moderateReview(photoRepository, 'review-1', 'published', { now: fixedNow, photoStorage })
+  assert.deepEqual(photoCalls, [['public', 'private-photo']])
+  await moderateReview(photoRepository, 'review-1', 'hidden', { now: fixedNow, photoStorage })
+  assert.deepEqual(photoCalls.at(-1), ['private', 'private-photo'])
 })
 
 test('request parsing gives only an exact valid photo upload the 2.4MB cap and keeps all other actions at 20KB', () => {

@@ -166,6 +166,7 @@ export function resolveDeployConfig(env = {}) {
     runtime: sharpCompatibleRuntime(env),
     adminUserIds: admins,
     runtimeVariables: {
+      APPWRITE_PUBLIC_ENDPOINT: endpoint(env),
       APPWRITE_CAKE_DATABASE_ID: cakeDatabaseId,
       APPWRITE_KIDS_DATABASE_ID: kidsDatabaseId,
       ...collectionIds,
@@ -217,6 +218,7 @@ export function maskValue(value) {
 export function buildDryRunPlan(env = {}) {
   const functionId = env.APPWRITE_REVIEW_API_FUNCTION_ID || 'review-api'
   const variableValues = {
+    APPWRITE_PUBLIC_ENDPOINT: env.APPWRITE_ENDPOINT,
     APPWRITE_CAKE_DATABASE_ID: env.APPWRITE_CAKE_DATABASE_ID,
     APPWRITE_KIDS_DATABASE_ID: env.APPWRITE_KIDS_DATABASE_ID,
     ...Object.fromEntries(Object.entries(ID_VARIABLES).map(([key, fallback]) => [key, env[key] || fallback])),

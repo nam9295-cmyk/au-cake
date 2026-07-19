@@ -1,4 +1,4 @@
-import { Account, AppwriteException, Client, Databases, ID, Query, Storage } from 'node-appwrite'
+import { Account, AppwriteException, Client, Databases, ID, Permission, Query, Role, Storage } from 'node-appwrite'
 import { InputFile } from 'node-appwrite/file'
 import {
   createAdminPhotoPreviewDependencies,
@@ -297,6 +297,33 @@ export function createReviewPhotoStorage(storage, config = resolveReviewConfig()
     async deletePhoto(fileId) {
       return storage.deleteFile({ bucketId: config.reviewPhotosBucketId, fileId })
     },
+    async makePublic(fileId) {
+      return storage.updateFile({
+        bucketId: config.reviewPhotosBucketId,
+        fileId,
+        permissions: [Permission.read(Role.any())],
+      })
+    },
+    async makePrivate(fileId) {
+      return storage.updateFile({ bucketId: config.reviewPhotosBucketId, fileId, permissions: [] })
+    },
+  }
+}
+
+export function createPublicReviewPhotoUrlBuilder(env, config = resolveReviewConfig(env)) {
+  const endpoint = String(env.APPWRITE_PUBLIC_ENDPOINT || '').trim().replace(/\/$/, '')
+  const projectId = String(env.APPWRITE_FUNCTION_PROJECT_ID || '').trim()
+  let parsed
+  try { parsed = new URL(endpoint) } catch { throw new ReviewApiError('FUNCTION_CONFIGURATION_ERROR', 500) }
+  if (parsed.protocol !== 'https:' || parsed.username || parsed.password || !APPWRITE_RESOURCE_ID.test(projectId)) {
+    throw new ReviewApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+  }
+  return (review) => {
+    const fileId = String(review?.photoFileId || '')
+    if (!APPWRITE_RESOURCE_ID.test(fileId)) throw new ReviewApiError('INVALID_PUBLIC_REVIEW', 500)
+    const url = new URL(`${endpoint}/storage/buckets/${encodeURIComponent(config.reviewPhotosBucketId)}/files/${encodeURIComponent(fileId)}/view`)
+    url.searchParams.set('project', projectId)
+    return url.toString()
   }
 }
 
@@ -375,7 +402,9 @@ export async function handleReviewRequest(body, headers, env = process.env, serv
       encryptionKey: options.encryptionKey,
     })
   }
-  if (action === 'list-public') return services.listPublic(repository, body.limit)
+  if (action === 'list-public') return services.listPublic(repository, body.limit, {
+    photoUrlForReview: options.photoUrlForReview,
+  })
   if (action === 'upload-photo') {
     return services.uploadPhoto(repository, photoStorage, body.token, {
       mimeType: body.mimeType,
@@ -400,7 +429,7 @@ export async function handleReviewRequest(body, headers, env = process.env, serv
   if (action === 'cleanup-photo-files') {
     return services.cleanupPhotos(repository, photoStorage, { batchLimit: data.limit })
   }
-  return services.moderate(repository, data.reviewId, data.moderationStatus)
+  return services.moderate(repository, data.reviewId, data.moderationStatus, { photoStorage })
 }
 
 function isDirectPhotoPreviewRequest(req) {
@@ -453,9 +482,11 @@ export default async ({ req, res, log, error }) => {
     const databases = new Databases(client)
     const repository = createReviewRepository(databases, config)
     const photoStorage = createReviewPhotoStorage(new Storage(client), config)
+    const photoUrlForReview = createPublicReviewPhotoUrlBuilder(process.env, config)
     const result = await handleReviewRequest(body, req.headers, process.env, defaultServices, repository, photoStorage, {
       hmacSecret,
       encryptionKey,
+      photoUrlForReview,
     })
     log(`review-api completed: ${action}`)
     return res.json({ ok: true, result }, 200)

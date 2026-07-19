@@ -155,7 +155,7 @@ export function generateCoupon(rewardPercent, hmacSecret, { randomBytes: randomB
   return { code, persisted: { codeHash: digestReviewCouponCode(code, secret), codeLast4: code.slice(-4) } }
 }
 
-export function toPublicReview(review) {
+export function toPublicReview(review, photoUrlForReview) {
   if (!review?.publishConsent || review.moderationStatus !== 'published') fail('REVIEW_NOT_PUBLIC', 404)
   if ((review.sourceType !== 'cake' && review.sourceType !== 'class') ||
       !Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5 ||
@@ -166,14 +166,19 @@ export function toPublicReview(review) {
   if (typeof createdAt !== 'string' || Number.isNaN(Date.parse(createdAt))) fail('INVALID_PUBLIC_REVIEW', 500)
   const displayName = typeof review.displayName === 'string' ? review.displayName.trim() : ''
   if (displayName.length > 50) fail('INVALID_PUBLIC_REVIEW', 500)
+  const photoUrl = review.photoPublishConsent === true && typeof review.photoFileId === 'string' && review.photoFileId
+    ? photoUrlForReview?.(review) || null
+    : null
+  if (photoUrl !== null && (typeof photoUrl !== 'string' || !photoUrl.startsWith('https://'))) {
+    fail('INVALID_PUBLIC_REVIEW', 500)
+  }
   return {
     sourceType: review.sourceType,
     rating: review.rating,
     body: review.body,
     displayName: displayName || (review.sourceType === 'cake' ? 'Verified cake order' : 'Verified class booking'),
-    // Task10 seam: photos live in a private bucket. Never expose a file id or unusable bucket URL here.
-    hasPhoto: false,
-    photoUrl: null,
+    hasPhoto: photoUrl !== null,
+    photoUrl,
     createdAt,
     incentivised: true,
   }
@@ -573,7 +578,7 @@ export async function submitReview(repository, token, input, {
   }
 }
 
-export async function listPublicReviews(repository, limit = 3) {
+export async function listPublicReviews(repository, limit = 3, { photoUrlForReview } = {}) {
   if (!Number.isInteger(limit) || limit < 1 || limit > 3) fail('INVALID_REQUEST')
   const reviews = await repository.listPublishedReviews(limit)
   return reviews
@@ -584,7 +589,7 @@ export async function listPublicReviews(repository, limit = 3) {
       return String(left.$id || left.id || '').localeCompare(String(right.$id || right.id || ''))
     })
     .slice(0, limit)
-    .map(toPublicReview)
+    .map((review) => toPublicReview(review, photoUrlForReview))
 }
 
 function toAdminReview(review, rewardSummary) {
@@ -623,7 +628,7 @@ export async function listAdminReviews(repository, options = {}) {
   }
 }
 
-export async function moderateReview(repository, reviewId, moderationStatus, { now = new Date() } = {}) {
+export async function moderateReview(repository, reviewId, moderationStatus, { now = new Date(), photoStorage } = {}) {
   if (!['pending', 'published', 'hidden'].includes(moderationStatus)) fail('INVALID_MODERATION_STATUS')
   if (typeof reviewId !== 'string' || !reviewId.trim()) fail('REVIEW_NOT_FOUND', 404)
   const review = await repository.getReview(reviewId)
@@ -631,7 +636,21 @@ export async function moderateReview(repository, reviewId, moderationStatus, { n
   if (moderationStatus === 'published' && review.publishConsent !== true) {
     fail('REVIEW_PUBLISH_CONSENT_REQUIRED', 409)
   }
-  const updated = await repository.updateReview(reviewId, { moderationStatus, updatedAt: now.toISOString() })
+  const photoFileId = typeof review.photoFileId === 'string' && review.photoFileId ? review.photoFileId : null
+  const publishPhoto = moderationStatus === 'published' && review.photoPublishConsent === true && photoFileId
+  if (photoFileId && photoStorage) {
+    if (publishPhoto) await photoStorage.makePublic(photoFileId)
+    else await photoStorage.makePrivate(photoFileId)
+  }
+  let updated
+  try {
+    updated = await repository.updateReview(reviewId, { moderationStatus, updatedAt: now.toISOString() })
+  } catch (error) {
+    if (publishPhoto && photoStorage) {
+      try { await photoStorage.makePrivate(photoFileId) } catch { /* keep the original moderation failure */ }
+    }
+    throw error
+  }
   return toAdminReview(updated, await loadAdminRewardSummary(repository, updated, now))
 }
 

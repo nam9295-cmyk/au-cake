@@ -111,6 +111,7 @@ test('function variables map exact server-only IDs without VITE fallbacks', () =
   })
   assert.equal(config.functionId, 'custom-review-api')
   assert.deepEqual(config.runtimeVariables, {
+    APPWRITE_PUBLIC_ENDPOINT: 'https://appwrite.example.com/v1',
     APPWRITE_CAKE_DATABASE_ID: 'cake_db',
     APPWRITE_KIDS_DATABASE_ID: 'kids_db',
     APPWRITE_CAKE_RESERVATIONS_TABLE_ID: 'cake_reservations',

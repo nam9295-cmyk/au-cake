@@ -260,16 +260,25 @@ test('storage adapter uses Appwrite InputFile with private permissions and confi
   const storage = createReviewPhotoStorage({
     async createFile(params) { calls.push(['create', params]) },
     async deleteFile(params) { calls.push(['delete', params]) },
+    async updateFile(params) { calls.push(['update', params]) },
   }, { reviewPhotosBucketId: 'private-review-photos' })
   const bytes = await tinyWebp()
   await storage.createPrivatePhoto({ fileId: 'server-id', name: 'server-random.webp', buffer: bytes, mimeType: 'image/webp' })
   await storage.deletePhoto('server-id')
+  await storage.makePublic('server-id')
+  await storage.makePrivate('server-id')
   assert.equal(calls[0][1].bucketId, 'private-review-photos')
   assert.equal(calls[0][1].fileId, 'server-id')
   assert.equal(calls[0][1].file.name, 'server-random.webp')
   assert.equal(calls[0][1].file.size, bytes.length)
   assert.deepEqual(calls[0][1].permissions, [])
   assert.deepEqual(calls[1][1], { bucketId: 'private-review-photos', fileId: 'server-id' })
+  assert.deepEqual(calls[2][1], {
+    bucketId: 'private-review-photos', fileId: 'server-id', permissions: ['read("any")'],
+  })
+  assert.deepEqual(calls[3][1], {
+    bucketId: 'private-review-photos', fileId: 'server-id', permissions: [],
+  })
 })
 
 test('upload commit transport error refetches and treats the newly attached file as committed', async () => {
