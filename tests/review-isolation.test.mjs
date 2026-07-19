@@ -4,6 +4,7 @@ import * as assert from 'node:assert/strict'
 
 const indexHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const appwriteSource = await readFile(new URL('../src/lib/appwrite.ts', import.meta.url), 'utf8')
 const reviewPageSource = await readFile(new URL('../src/ReviewPage.tsx', import.meta.url), 'utf8')
 
 test('review route is gated before Chatwoot token, analytics, listeners, SDK, or launcher creation', () => {
@@ -60,4 +61,8 @@ test('review demo booking paths are development-only and invite copying uses the
   assert.match(reviewPageSource, /import\.meta\.env\.DEV\s*&&\s*isReviewDemoMode/)
   assert.match(appSource, /reviewDemoMode=\{import\.meta\.env\.DEV\s*&&\s*import\.meta\.env\.VITE_REVIEW_DEMO_MODE === 'true'\}/)
   assert.match(appSource, /copyAdminRewardMessage\(buildReviewRequestMessage\(/)
+})
+
+test('review API function id has a production-safe default when Cloudflare omits the optional override', () => {
+  assert.match(appwriteSource, /reviewApiFunctionId:\s*import\.meta\.env\.VITE_REVIEW_API_FUNCTION_ID\s*\|\|\s*'review-api'/)
 })

@@ -63,7 +63,7 @@ export const appwriteConfig = {
     import.meta.env.VITE_APPWRITE_REVIEW_PHOTOS_BUCKET_ID ||
     import.meta.env.APPWRITE_REVIEW_PHOTOS_BUCKET_ID ||
     'review-photos',
-  reviewApiFunctionId: import.meta.env.VITE_REVIEW_API_FUNCTION_ID || '',
+  reviewApiFunctionId: import.meta.env.VITE_REVIEW_API_FUNCTION_ID || 'review-api',
   reviewApiDirectUrl: import.meta.env.VITE_REVIEW_API_DIRECT_URL || '',
   reservationApiFunctionId: import.meta.env.VITE_RESERVATION_API_FUNCTION_ID || 'reservation-api',
   reservationApiMode: normalizeReservationApiMode(import.meta.env.VITE_RESERVATION_API_MODE),
