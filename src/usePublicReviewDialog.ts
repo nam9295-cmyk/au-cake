@@ -32,7 +32,7 @@ export function usePublicReviewDialog(reviews: PublicReview[]) {
     if (!reviewIds.has(reviewId)) return
     setSelectedId(reviewId)
     window.history.replaceState(
-      { ...(window.history.state || {}), vgReviewDialog: true },
+      window.history.state,
       '',
       reviewDialogHref(window.location.pathname, window.location.search, reviewId),
     )

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { adjacentReviewId } from './lib/public-review-dialog.js'
@@ -25,6 +25,8 @@ export function PublicReviewDialog({
   const descriptionId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const layoutRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const ids = useMemo(() => reviews.map((item) => item.id), [reviews])
   const previousId = adjacentReviewId(ids, review.id, -1)
   const nextId = adjacentReviewId(ids, review.id, 1)
@@ -32,6 +34,11 @@ export function PublicReviewDialog({
     year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Australia/Sydney',
   })
   const starLabel = language === 'ko' ? `별점 5점 중 ${review.rating}점` : `${review.rating} out of 5 stars`
+
+  useLayoutEffect(() => {
+    if (layoutRef.current) layoutRef.current.scrollTop = 0
+    if (contentRef.current) contentRef.current.scrollTop = 0
+  }, [review.id])
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -76,7 +83,7 @@ export function PublicReviewDialog({
   }
 
   const sourceLabel = review.sourceType === 'cake'
-    ? (language === 'ko' ? '검증된 케이크 주문' : 'Verified cake order')
+    ? (language === 'ko' ? '검증된 주문' : 'Verified order')
     : (language === 'ko' ? '검증된 클래스 예약' : 'Verified class booking')
 
   return createPortal(
@@ -102,7 +109,7 @@ export function PublicReviewDialog({
           </button>
         </header>
 
-        <div className="public-review-dialog-layout">
+        <div ref={layoutRef} className="public-review-dialog-layout">
           {review.photoUrl && (
             <figure className="public-review-dialog-photo-wrap">
               <img
@@ -113,8 +120,8 @@ export function PublicReviewDialog({
               />
             </figure>
           )}
-          <div className="public-review-dialog-content">
-            <div className="public-review-dialog-stars" aria-label={starLabel}>
+          <div ref={contentRef} className="public-review-dialog-content">
+            <div className="public-review-dialog-stars" role="img" aria-label={starLabel}>
               <span aria-hidden="true">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
             </div>
             <h2 id={titleId}>{review.displayName}</h2>

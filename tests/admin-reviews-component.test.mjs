@@ -49,7 +49,8 @@ test('admin review cards use a private JWT-backed photo preview without file ide
   assert.match(photoPreview, /credentials:\s*'omit'/)
   assert.match(photoPreview, /referrerPolicy:\s*'no-referrer'/)
   assert.doesNotMatch(page, /Private photo preview available after Review API rollout/)
-  assert.match(page, /src="\/demo-review-cake\.webp"/)
+  assert.match(page, /adminReviewDemoPhotoUrl/)
+  assert.match(page, /src=\{demoPhotoUrl\}/)
   assert.match(page, /운영 Storage에서 불러온 사진이 아닙니다/)
   for (const forbidden of ['phone', 'email', 'childName', 'sourceReservationId', 'sourceReservationNumber', 'couponCode', 'couponHash', 'couponLast4', 'inviteToken', 'tokenHash', 'photoFileId']) {
     assert.doesNotMatch(page, new RegExp(`review\\.${forbidden}`))

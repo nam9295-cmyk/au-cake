@@ -1,7 +1,9 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import {
+  buildGetPublicReviewPayload,
   buildListPublicReviewsPayload,
+  getPublicReview,
   listPublicReviewsPage,
   parsePublicReviewsPageResult,
 } from '../src/lib/public-reviews.js'
@@ -31,6 +33,20 @@ test('public review request supports exact homepage and archive cursor payloads'
   for (const [limit, cursor] of [[0, undefined], [7, undefined], [3.5, undefined], [3, 'bad/id']] as const) {
     assert.throws(() => buildListPublicReviewsPayload(limit, cursor))
   }
+})
+
+test('public review hash lookup uses an exact public id payload and strict nullable DTO', async () => {
+  assert.deepEqual(buildGetPublicReviewPayload('review-b'), { action: 'get-public', id: 'review-b' })
+  assert.throws(() => buildGetPublicReviewPayload('bad/id'))
+  const executor = {
+    async createExecution() {
+      return { status: 'completed', responseStatusCode: 200, responseBody: JSON.stringify({ ok: true, result: validReviews[1] }) }
+    },
+  }
+  assert.deepEqual(
+    await getPublicReview(executor, 'review-api', 'https://cloud.appwrite.io/v1', 'review-b', { pageOrigin: 'https://verygood.test' }),
+    validReviews[1],
+  )
 })
 
 test('public review executor returns a strict cursor page', async () => {

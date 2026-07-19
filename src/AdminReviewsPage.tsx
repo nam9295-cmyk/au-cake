@@ -90,6 +90,7 @@ export default function AdminReviewsPage({
   const [authorized, setAuthorized] = useState(false)
   const [filter, setFilter] = useState<AdminReviewFilter>('pending')
   const [reviews, setReviews] = useState<AdminReview[]>([])
+  const [demoPhotoUrl, setDemoPhotoUrl] = useState('')
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [actionIds, setActionIds] = useState<Set<string>>(new Set())
@@ -125,8 +126,9 @@ export default function AdminReviewsPage({
     try {
       if (demoMode) {
         if (demoReviewsRef.current.length === 0) {
-          const { adminReviewDemoFixtures } = await import('./lib/admin-reviews-demo')
+          const { adminReviewDemoFixtures, adminReviewDemoPhotoUrl } = await import('./lib/admin-reviews-demo')
           demoReviewsRef.current = adminReviewDemoFixtures()
+          setDemoPhotoUrl(adminReviewDemoPhotoUrl)
         }
         const matching = demoReviewsRef.current.filter((review) => review.moderationStatus === requestedFilter)
         if (generation !== generationRef.current) return
@@ -318,7 +320,7 @@ export default function AdminReviewsPage({
                 {review.hasPhoto && (
                   demoMode ? (
                     <figure className="admin-review-photo-preview">
-                      <img src="/demo-review-cake.webp" alt="DEMO · 리뷰에 첨부된 케이크 사진" loading="lazy" />
+                      <img src={demoPhotoUrl} alt="DEMO · 리뷰에 첨부된 케이크 사진" loading="lazy" />
                       <figcaption>DEMO photo · 운영 Storage에서 불러온 사진이 아닙니다.</figcaption>
                     </figure>
                   ) : (

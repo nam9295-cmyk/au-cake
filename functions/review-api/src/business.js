@@ -588,7 +588,7 @@ export async function submitReview(repository, token, input, {
 
 export async function listPublicReviewPage(repository, limit = 3, { cursor, photoUrlForReview } = {}) {
   if (!Number.isInteger(limit) || limit < 1 || limit > 6 ||
-      (cursor !== undefined && !OPAQUE_ID_PATTERN.test(cursor))) fail('INVALID_REQUEST')
+      (cursor !== undefined && (typeof cursor !== 'string' || !OPAQUE_ID_PATTERN.test(cursor)))) fail('INVALID_REQUEST')
   const reviews = await repository.listPublishedReviews({ limit: limit + 1, cursor })
   const sorted = reviews
     .filter((review) => review.publishConsent === true && review.moderationStatus === 'published')
@@ -604,6 +604,13 @@ export async function listPublicReviewPage(repository, limit = 3, { cursor, phot
     nextCursor: hasMore ? String(pageRows.at(-1)?.$id || pageRows.at(-1)?.id || '') : null,
     hasMore,
   }
+}
+
+export async function getPublicReview(repository, id, { photoUrlForReview } = {}) {
+  if (typeof id !== 'string' || !OPAQUE_ID_PATTERN.test(id)) fail('INVALID_REQUEST')
+  const review = await repository.getReview(id)
+  if (!review || review.publishConsent !== true || review.moderationStatus !== 'published') return null
+  return toPublicReview(review, photoUrlForReview)
 }
 
 export async function listPublicReviews(repository, limit = 3, { photoUrlForReview } = {}) {

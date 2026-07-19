@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Language } from './lib/i18n'
 import {
+  getPublicReview,
   listPublicReviewsPage,
+  type PublicReview,
   type PublicReviewsPage,
   type PublicReviewExecutor,
 } from './lib/public-reviews'
+import { reviewIdFromHash } from './lib/public-review-dialog'
 import { PublicReviewCard } from './PublicReviewCard'
 import { PublicReviewDialog } from './PublicReviewDialog'
 import { usePublicReviewDialog } from './usePublicReviewDialog'
@@ -27,12 +30,43 @@ export default function ReviewsArchive({
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(false)
   const [retryKey, setRetryKey] = useState(0)
-  const { selectedReview, opener, openReview, selectReview, closeReview } = usePublicReviewDialog(page.reviews)
+  const [deepLinkedReview, setDeepLinkedReview] = useState<PublicReview | null>(null)
+  const [, setHistoryRevision] = useState(0)
+  const hashReviewId = reviewIdFromHash(window.location.hash)
+  const deepLinkIsOutsidePage = Boolean(
+    deepLinkedReview && hashReviewId === deepLinkedReview.id && !page.reviews.some((review) => review.id === deepLinkedReview.id),
+  )
+  const dialogReviews = deepLinkIsOutsidePage && deepLinkedReview ? [deepLinkedReview] : page.reviews
+  const { selectedReview, opener, openReview, selectReview, closeReview } = usePublicReviewDialog(dialogReviews)
+
+  useEffect(() => {
+    const syncHistory = () => setHistoryRevision((revision) => revision + 1)
+    window.addEventListener('popstate', syncHistory)
+    return () => window.removeEventListener('popstate', syncHistory)
+  }, [])
 
   useEffect(() => {
     let current = true
-    listPublicReviewsPage(executor, functionId, functionEndpoint, { limit: 6 })
-      .then((result) => { if (current) setPage(result) })
+    const requestedReviewId = reviewIdFromHash(window.location.hash)
+    const deepLinkRequest = requestedReviewId
+      ? getPublicReview(executor, functionId, functionEndpoint, requestedReviewId)
+          .then((review) => ({ completed: true as const, review }))
+          .catch(() => ({ completed: false as const, review: null }))
+      : Promise.resolve({ completed: true as const, review: null })
+
+    Promise.all([
+      listPublicReviewsPage(executor, functionId, functionEndpoint, { limit: 6 }),
+      deepLinkRequest,
+    ])
+      .then(([result, directResult]) => {
+        if (!current) return
+        setPage(result)
+        const appearsOnPage = requestedReviewId && result.reviews.some((review) => review.id === requestedReviewId)
+        setDeepLinkedReview(!appearsOnPage ? directResult.review : null)
+        if (requestedReviewId && !appearsOnPage && directResult.completed && directResult.review === null && reviewIdFromHash(window.location.hash) === requestedReviewId) {
+          window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`)
+        }
+      })
       .catch(() => { if (current) { setPage(EMPTY_PAGE); setError(true) } })
       .finally(() => { if (current) setLoading(false) })
     return () => { current = false }
@@ -132,7 +166,7 @@ export default function ReviewsArchive({
       {selectedReview && (
         <PublicReviewDialog
           review={selectedReview}
-          reviews={page.reviews}
+          reviews={dialogReviews}
           language={language}
           opener={opener}
           onSelect={selectReview}

@@ -1,5 +1,7 @@
 import type { AdminReview } from './admin-reviews.js'
 
+export const adminReviewDemoPhotoUrl = new URL('../assets/demo-review-cake.webp', import.meta.url).href
+
 const DEMO_REVIEWS: readonly AdminReview[] = [
   { id: 'demo-cake-published', sourceType: 'cake', rating: 5, body: 'The chocolate cake felt personal, beautifully finished, and made our family celebration extra special.', displayName: 'Amelia', hasPhoto: true, photoPublishConsent: true, publishConsent: true, moderationStatus: 'published', rewardPercent: 10, rewardCodeLast4: 'Q2MK', rewardStatus: 'active', rewardExpiresAt: '2026-09-17T00:00:00.000Z', rewardMessageAvailable: true, createdAt: '2026-07-17T04:30:00.000Z', updatedAt: '2026-07-17T05:00:00.000Z' },
   { id: 'demo-class-published', sourceType: 'class', rating: 5, body: 'A calm, thoughtful class. My child was proud to bring home a cake they had planned and made themselves.', displayName: 'Ruby', hasPhoto: false, photoPublishConsent: false, publishConsent: true, moderationStatus: 'published', rewardPercent: 5, rewardCodeLast4: 'W4VE', rewardStatus: 'redeemed', rewardExpiresAt: '2026-09-10T00:00:00.000Z', rewardMessageAvailable: false, createdAt: '2026-07-12T06:15:00.000Z', updatedAt: '2026-07-12T07:00:00.000Z' },

@@ -8,6 +8,7 @@ import {
   assertReviewAdmin,
   generateCoupon,
   generateReviewToken,
+  getPublicReview,
   hashSecret,
   issueReviewInvite,
   listAdminReviews,
@@ -383,6 +384,21 @@ test('public review list supports a six-item cursor page with deterministic look
   assert.deepEqual(calls, [{ limit: 4, cursor: 'review-prev' }])
   await assert.rejects(() => listPublicReviewPage(repository, 7), (error) => error instanceof ReviewApiError && error.code === 'INVALID_REQUEST')
   await assert.rejects(() => listPublicReviewPage(repository, 3, { cursor: 'bad/id' }), (error) => error instanceof ReviewApiError && error.code === 'INVALID_REQUEST')
+  for (const cursor of [null, 123, ['review-prev'], { id: 'review-prev' }]) {
+    await assert.rejects(() => listPublicReviewPage(repository, 3, { cursor }), (error) => error instanceof ReviewApiError && error.code === 'INVALID_REQUEST')
+  }
+})
+
+test('public review lookup returns only a published consented DTO and hides every other state', async () => {
+  const published = { $id: 'review-public', sourceType: 'cake', rating: 5, body: 'Public', publishConsent: true, moderationStatus: 'published', createdAt: '2026-07-19T00:00:00.000Z' }
+  const reads = []
+  const repository = { async getReview(id) { reads.push(id); return id === 'review-public' ? published : null } }
+  assert.equal((await getPublicReview(repository, 'review-public')).id, 'review-public')
+  assert.equal(await getPublicReview(repository, 'review-missing'), null)
+  const hiddenRepository = { async getReview() { return { ...published, moderationStatus: 'hidden' } } }
+  assert.equal(await getPublicReview(hiddenRepository, 'review-hidden'), null)
+  await assert.rejects(() => getPublicReview(repository, 123), (error) => error instanceof ReviewApiError && error.code === 'INVALID_REQUEST')
+  assert.deepEqual(reads, ['review-public', 'review-missing'])
 })
 
 const fixedNow = new Date('2026-07-19T00:00:00.000Z')
@@ -974,6 +990,7 @@ test('main routing separates public and admin actions without exposing internal 
     },
     async listPublic(_repo, limit) { calls.push(['public-legacy', limit]); return [] },
     async listPublicPage(_repo, limit, options) { calls.push(['public-page', limit, options.cursor]); return { reviews: [], nextCursor: null, hasMore: false } },
+    async getPublic(_repo, id) { calls.push(['get-public', id]); return null },
     async issue() { calls.push(['issue']); return {} },
     async listAdmin() { calls.push(['admin']); return [] },
     async moderate() { calls.push(['moderate']); return {} },
@@ -993,11 +1010,12 @@ test('main routing separates public and admin actions without exposing internal 
   )
   await handleReviewRequest({ action: 'list-public', limit: 3 }, {}, {}, services)
   await handleReviewRequest({ action: 'list-public-page', limit: 3, cursor: 'review-prev' }, {}, {}, services)
+  await handleReviewRequest({ action: 'get-public', id: 'review-public' }, {}, {}, services)
   await handleReviewRequest({ action: 'upload-photo', token: VALID_TOKEN, mimeType: 'image/webp', base64: 'YQ==' }, {}, {}, services)
   await handleReviewRequest({ action: 'remove-photo', token: VALID_TOKEN }, {}, {}, services)
   assert.deepEqual(calls, [
     ['load', 'token'], ['submit', 'token', { acceptedPhotoFileId: 'forged' }, Buffer.from('hmac'), encryptionKey],
-    ['public-legacy', 3], ['public-page', 3, 'review-prev'],
+    ['public-legacy', 3], ['public-page', 3, 'review-prev'], ['get-public', 'review-public'],
     ['upload', VALID_TOKEN, { mimeType: 'image/webp', base64: 'YQ==' }], ['remove', VALID_TOKEN],
   ])
   await assert.rejects(() => handleReviewRequest({ action: 'create-invite', data: {} }, {}, { REVIEW_ADMIN_USER_IDS: 'admin-1' }, services),

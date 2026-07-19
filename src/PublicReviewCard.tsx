@@ -13,8 +13,8 @@ export function PublicReviewCard({
   buttonRef?: Ref<HTMLButtonElement>
 }) {
   const sourceLabel = review.sourceType === 'cake'
-    ? (language === 'ko' ? '케이크 주문' : 'Cake order')
-    : (language === 'ko' ? '키즈 클래스' : 'Kids class')
+    ? (language === 'ko' ? '검증된 주문' : 'Verified order')
+    : (language === 'ko' ? '검증된 클래스 예약' : 'Verified class booking')
   const date = new Date(review.createdAt).toLocaleDateString(language === 'ko' ? 'ko-KR' : 'en-AU', {
     year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Australia/Sydney',
   })
@@ -46,7 +46,7 @@ export function PublicReviewCard({
         </span>
       )}
       <span className="public-review-card-content">
-        <span className="public-review-stars" aria-label={starLabel}>
+        <span className="public-review-stars" role="img" aria-label={starLabel}>
           <span aria-hidden="true">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
         </span>
         <span className="public-review-quote">“{review.body}”</span>

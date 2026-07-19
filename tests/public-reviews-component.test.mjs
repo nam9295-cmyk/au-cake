@@ -15,6 +15,9 @@ test('homepage showcase uses compact button cards, a shared dialog, and a condit
   assert.match(section, /<PublicReviewDialog/)
   assert.match(card, /<button/)
   assert.match(card, /aria-haspopup="dialog"/)
+  assert.match(card, /Verified order/)
+  assert.match(card, /Verified class booking/)
+  assert.match(card, /className="public-review-stars" role="img"/)
   assert.match(card, /review\.thumbnailUrl/)
   assert.match(card, /loading="lazy"/)
   assert.doesNotMatch(card, /autoPlay|setInterval/)
@@ -22,16 +25,24 @@ test('homepage showcase uses compact button cards, a shared dialog, and a condit
 
 test('review detail is a portal dialog with full photo, keyboard handling, focus restoration, and scroll lock', () => {
   const dialog = read('src/PublicReviewDialog.tsx')
+  const hook = read('src/usePublicReviewDialog.ts')
   assert.match(dialog, /createPortal/)
   assert.match(dialog, /role="dialog"/)
   assert.match(dialog, /aria-modal="true"/)
   assert.match(dialog, /aria-labelledby/)
+  assert.match(dialog, /className="public-review-dialog-stars" role="img"/)
+  assert.match(dialog, /Verified order/)
+  assert.match(dialog, /Verified class booking/)
   assert.match(dialog, /event\.key === 'Escape'/)
   assert.match(dialog, /event\.key === 'Tab'/)
   assert.match(dialog, /document\.body\.style\.overflow/)
+  assert.match(dialog, /useLayoutEffect/)
+  assert.match(dialog, /layoutRef\.current\.scrollTop = 0/)
+  assert.match(dialog, /contentRef\.current\.scrollTop = 0/)
   assert.match(dialog, /opener\?\.focus/)
   assert.match(dialog, /review\.photoUrl/)
   assert.match(dialog, /onBackdrop/)
+  assert.match(hook, /replaceState\(\s*window\.history\.state,/)
 })
 
 test('archive requests six reviews at a time, appends cursor pages, and reuses cards and dialog', () => {
@@ -42,6 +53,11 @@ test('archive requests six reviews at a time, appends cursor pages, and reuses c
   assert.match(archive, /Load more/)
   assert.match(archive, /<PublicReviewCard/)
   assert.match(archive, /<PublicReviewDialog/)
+  assert.match(archive, /getPublicReview/)
+  assert.match(archive, /reviewIdFromHash/)
+  assert.match(archive, /deepLinkedReview/)
+  assert.match(archive, /addEventListener\('popstate'/)
+  assert.match(archive, /setHistoryRevision/)
 })
 
 test('home and classes hand off to one indexable reviews route with generated SEO and sitemap coverage', () => {

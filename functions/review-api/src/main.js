@@ -8,6 +8,7 @@ import {
   ReviewApiError,
   assertReviewAdmin,
   copyReviewRewardMessage,
+  getPublicReview,
   issueReviewInvite,
   listAdminReviews,
   listPublicReviewPage,
@@ -345,6 +346,7 @@ const REVIEW_ACTIONS = new Set([
   'submit-review',
   'list-public',
   'list-public-page',
+  'get-public',
   'upload-photo',
   'remove-photo',
   'cleanup-photo-files',
@@ -394,6 +396,7 @@ const defaultServices = {
   submit: submitReview,
   listPublic: listPublicReviews,
   listPublicPage: listPublicReviewPage,
+  getPublic: getPublicReview,
   issue: issueReviewInvite,
   listAdmin: listAdminReviews,
   moderate: moderateReview,
@@ -419,6 +422,9 @@ export async function handleReviewRequest(body, headers, env = process.env, serv
   })
   if (action === 'list-public-page') return services.listPublicPage(repository, body.limit, {
     cursor: body.cursor,
+    photoUrlForReview: options.photoUrlForReview,
+  })
+  if (action === 'get-public') return services.getPublic(repository, body.id, {
     photoUrlForReview: options.photoUrlForReview,
   })
   if (action === 'upload-photo') {

@@ -54,6 +54,11 @@ function trustedPhotoUrl(value: string, functionEndpoint: string, pageOrigin: st
   }
 }
 
+export function buildGetPublicReviewPayload(id: string) {
+  if (typeof id !== 'string' || !OPAQUE_ID_PATTERN.test(id)) invalidResponse()
+  return { action: 'get-public' as const, id }
+}
+
 export function buildListPublicReviewsPayload(limit = 3, cursor?: string) {
   if (!Number.isInteger(limit) || limit < 1 || limit > 6 ||
       (cursor !== undefined && !OPAQUE_ID_PATTERN.test(cursor))) invalidResponse()
@@ -96,6 +101,10 @@ function parsePublicReview(item: unknown, functionEndpoint: string, pageOrigin: 
   }
 }
 
+export function parsePublicReviewResult(value: unknown, functionEndpoint: string, pageOrigin = ''): PublicReview | null {
+  return value === null ? null : parsePublicReview(value, functionEndpoint, pageOrigin)
+}
+
 export function parsePublicReviewsPageResult(
   value: unknown,
   limit: number,
@@ -115,6 +124,32 @@ export function parsePublicReviewsPageResult(
     return invalidResponse()
   }
   return { reviews, nextCursor: page.nextCursor as string | null, hasMore: page.hasMore }
+}
+
+export async function getPublicReview(
+  executor: PublicReviewExecutor,
+  functionId: string,
+  functionEndpoint: string,
+  id: string,
+  options: { pageOrigin?: string } = {},
+): Promise<PublicReview | null> {
+  const execution = await executor.createExecution({
+    functionId,
+    body: JSON.stringify(buildGetPublicReviewPayload(id)),
+    async: false,
+  })
+  if (execution.status !== 'completed' || execution.responseStatusCode !== 200) return invalidResponse()
+  let response: unknown
+  try {
+    response = JSON.parse(execution.responseBody || '')
+  } catch {
+    return invalidResponse()
+  }
+  if (!response || typeof response !== 'object' || Array.isArray(response)) return invalidResponse()
+  const envelope = response as Record<string, unknown>
+  if (Object.keys(envelope).length !== 2 || envelope.ok !== true || !Object.hasOwn(envelope, 'result')) return invalidResponse()
+  const pageOrigin = options.pageOrigin ?? (typeof window === 'undefined' ? '' : window.location.origin)
+  return parsePublicReviewResult(envelope.result, functionEndpoint, pageOrigin)
 }
 
 export async function listPublicReviewsPage(
