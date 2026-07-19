@@ -1,4 +1,5 @@
 export type PublicReview = {
+  id: string
   sourceType: 'cake' | 'class'
   rating: 1 | 2 | 3 | 4 | 5
   body: string
@@ -6,7 +7,14 @@ export type PublicReview = {
   createdAt: string
   incentivised: true
   hasPhoto: boolean
+  thumbnailUrl: string | null
   photoUrl: string | null
+}
+
+export type PublicReviewsPage = {
+  reviews: PublicReview[]
+  nextCursor: string | null
+  hasMore: boolean
 }
 
 type ReviewExecution = {
@@ -19,9 +27,11 @@ export type PublicReviewExecutor = {
   createExecution(input: { functionId: string; body: string; async: false }): Promise<ReviewExecution>
 }
 
+const OPAQUE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const PUBLIC_REVIEW_KEYS = new Set([
-  'sourceType', 'rating', 'body', 'displayName', 'createdAt', 'incentivised', 'hasPhoto', 'photoUrl',
+  'id', 'sourceType', 'rating', 'body', 'displayName', 'createdAt', 'incentivised', 'hasPhoto', 'thumbnailUrl', 'photoUrl',
 ])
+const PUBLIC_PAGE_KEYS = new Set(['reviews', 'nextCursor', 'hasMore'])
 
 function invalidResponse(): never {
   throw new Error('INVALID_PUBLIC_REVIEWS_RESPONSE')
@@ -44,51 +54,79 @@ function trustedPhotoUrl(value: string, functionEndpoint: string, pageOrigin: st
   }
 }
 
-export function buildListPublicReviewsPayload() {
-  return { action: 'list-public' as const, limit: 3 as const }
+export function buildListPublicReviewsPayload(limit = 3, cursor?: string) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 6 ||
+      (cursor !== undefined && !OPAQUE_ID_PATTERN.test(cursor))) invalidResponse()
+  return {
+    action: 'list-public-page' as const,
+    limit,
+    ...(cursor ? { cursor } : {}),
+  }
 }
 
-export function parsePublicReviewsResult(value: unknown, functionEndpoint: string, pageOrigin = ''): PublicReview[] {
-  if (!Array.isArray(value) || value.length > 3) return invalidResponse()
+function parsePublicReview(item: unknown, functionEndpoint: string, pageOrigin: string): PublicReview {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return invalidResponse()
+  const review = item as Record<string, unknown>
+  const keys = Object.keys(review)
+  if (keys.length !== PUBLIC_REVIEW_KEYS.size || keys.some((key) => !PUBLIC_REVIEW_KEYS.has(key))) return invalidResponse()
+  if (typeof review.id !== 'string' || !OPAQUE_ID_PATTERN.test(review.id)) return invalidResponse()
+  if (review.sourceType !== 'cake' && review.sourceType !== 'class') return invalidResponse()
+  if (!Number.isInteger(review.rating) || Number(review.rating) < 1 || Number(review.rating) > 5) return invalidResponse()
+  if (typeof review.body !== 'string' || !review.body.trim() || review.body.length > 2000) return invalidResponse()
+  if (typeof review.displayName !== 'string' || !review.displayName.trim() || review.displayName.length > 50) return invalidResponse()
+  if (typeof review.createdAt !== 'string' || Number.isNaN(Date.parse(review.createdAt))) return invalidResponse()
+  if (review.incentivised !== true || typeof review.hasPhoto !== 'boolean') return invalidResponse()
+  if (review.hasPhoto === false && (review.thumbnailUrl !== null || review.photoUrl !== null)) return invalidResponse()
+  if (review.hasPhoto === true && (
+    typeof review.thumbnailUrl !== 'string' || !trustedPhotoUrl(review.thumbnailUrl, functionEndpoint, pageOrigin) ||
+    typeof review.photoUrl !== 'string' || !trustedPhotoUrl(review.photoUrl, functionEndpoint, pageOrigin)
+  )) return invalidResponse()
 
-  return value.map((item) => {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) return invalidResponse()
-    const review = item as Record<string, unknown>
-    const keys = Object.keys(review)
-    if (keys.length !== PUBLIC_REVIEW_KEYS.size || keys.some((key) => !PUBLIC_REVIEW_KEYS.has(key))) return invalidResponse()
-    if (review.sourceType !== 'cake' && review.sourceType !== 'class') return invalidResponse()
-    if (!Number.isInteger(review.rating) || Number(review.rating) < 1 || Number(review.rating) > 5) return invalidResponse()
-    if (typeof review.body !== 'string' || !review.body.trim() || review.body.length > 2000) return invalidResponse()
-    if (typeof review.displayName !== 'string' || !review.displayName.trim() || review.displayName.length > 50) return invalidResponse()
-    if (typeof review.createdAt !== 'string' || Number.isNaN(Date.parse(review.createdAt))) return invalidResponse()
-    if (review.incentivised !== true || typeof review.hasPhoto !== 'boolean') return invalidResponse()
-    if (review.hasPhoto === false && review.photoUrl !== null) return invalidResponse()
-    if (review.hasPhoto === true && (typeof review.photoUrl !== 'string' || !trustedPhotoUrl(review.photoUrl, functionEndpoint, pageOrigin))) {
-      return invalidResponse()
-    }
-
-    return {
-      sourceType: review.sourceType,
-      rating: review.rating as PublicReview['rating'],
-      body: review.body,
-      displayName: review.displayName,
-      createdAt: review.createdAt,
-      incentivised: true,
-      hasPhoto: review.hasPhoto,
-      photoUrl: review.photoUrl as string | null,
-    }
-  })
+  return {
+    id: review.id,
+    sourceType: review.sourceType,
+    rating: review.rating as PublicReview['rating'],
+    body: review.body,
+    displayName: review.displayName,
+    createdAt: review.createdAt,
+    incentivised: true,
+    hasPhoto: review.hasPhoto,
+    thumbnailUrl: review.thumbnailUrl as string | null,
+    photoUrl: review.photoUrl as string | null,
+  }
 }
 
-export async function listPublicReviews(
+export function parsePublicReviewsPageResult(
+  value: unknown,
+  limit: number,
+  functionEndpoint: string,
+  pageOrigin = '',
+): PublicReviewsPage {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return invalidResponse()
+  const page = value as Record<string, unknown>
+  const pageKeys = Object.keys(page)
+  if (pageKeys.length !== PUBLIC_PAGE_KEYS.size || pageKeys.some((key) => !PUBLIC_PAGE_KEYS.has(key))) return invalidResponse()
+  if (!Array.isArray(page.reviews) || page.reviews.length > limit || typeof page.hasMore !== 'boolean') return invalidResponse()
+  const reviews = page.reviews.map((item) => parsePublicReview(item, functionEndpoint, pageOrigin))
+  if (page.hasMore) {
+    if (reviews.length === 0 || typeof page.nextCursor !== 'string' || !OPAQUE_ID_PATTERN.test(page.nextCursor) ||
+        page.nextCursor !== reviews.at(-1)?.id) return invalidResponse()
+  } else if (page.nextCursor !== null) {
+    return invalidResponse()
+  }
+  return { reviews, nextCursor: page.nextCursor as string | null, hasMore: page.hasMore }
+}
+
+export async function listPublicReviewsPage(
   executor: PublicReviewExecutor,
   functionId: string,
   functionEndpoint: string,
-  pageOrigin = typeof window === 'undefined' ? '' : window.location.origin,
-): Promise<PublicReview[]> {
+  options: { limit?: number; cursor?: string; pageOrigin?: string } = {},
+): Promise<PublicReviewsPage> {
+  const limit = options.limit ?? 3
   const execution = await executor.createExecution({
     functionId,
-    body: JSON.stringify(buildListPublicReviewsPayload()),
+    body: JSON.stringify(buildListPublicReviewsPayload(limit, options.cursor)),
     async: false,
   })
   if (execution.status !== 'completed' || execution.responseStatusCode !== 200) return invalidResponse()
@@ -101,5 +139,6 @@ export async function listPublicReviews(
   if (!response || typeof response !== 'object' || Array.isArray(response)) return invalidResponse()
   const envelope = response as Record<string, unknown>
   if (Object.keys(envelope).length !== 2 || envelope.ok !== true || !Object.hasOwn(envelope, 'result')) return invalidResponse()
-  return parsePublicReviewsResult(envelope.result, functionEndpoint, pageOrigin)
+  const pageOrigin = options.pageOrigin ?? (typeof window === 'undefined' ? '' : window.location.origin)
+  return parsePublicReviewsPageResult(envelope.result, limit, functionEndpoint, pageOrigin)
 }

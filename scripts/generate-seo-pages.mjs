@@ -43,6 +43,17 @@ const pages = {
         </section>
       </main>`,
   },
+  '/reviews': {
+    title: 'Customer Reviews | Verygood Chocolate Sydney',
+    description: 'Read verified customer reviews from Verygood Chocolate cake orders and kids cake class bookings in Sydney.',
+    robots: 'index, follow',
+    fallbackHtml: `
+      <main class="seo-fallback">
+        <h1>Verified Customer Reviews</h1>
+        <p>Read reviews shared with permission after verified Verygood Chocolate cake orders and kids cake class bookings in Sydney.</p>
+        <p><a href="/">View our cakes</a> or learn about <a href="/classes">kids cake decorating classes</a>.</p>
+      </main>`,
+  },
   '/reserve': {
     title: 'Request a Chocolate Cake | Verygood Chocolate',
     description: 'Submit a cake booking request to Verygood Chocolate Sydney.',

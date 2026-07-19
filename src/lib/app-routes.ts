@@ -1,6 +1,7 @@
 export type Page =
   | 'home'
   | 'review'
+  | 'reviews'
   | 'reserve'
   | 'complete'
   | 'lookup'
@@ -16,6 +17,7 @@ export type Page =
 
 export function getPageFromPath(path: string): Page {
   if (path === '/review' || path === '/review.html') return 'review'
+  if (path === '/reviews') return 'reviews'
   if (path === '/calendar') return 'calendar'
   if (path === '/reserve') return 'reserve'
   if (path === '/complete') return 'complete'
@@ -35,6 +37,7 @@ export function pathForPage(page: Page): string {
   const paths: Record<Page, string> = {
     home: '/',
     review: '/review',
+    reviews: '/reviews',
     reserve: '/reserve',
     complete: '/complete',
     lookup: '/lookup',

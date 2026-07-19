@@ -104,6 +104,12 @@ const publicSeo: Record<string, SeoConfig> = {
       },
     ],
   },
+  '/reviews': {
+    title: 'Customer Reviews | Verygood Chocolate Sydney',
+    description: 'Read verified customer reviews from Verygood Chocolate cake orders and kids cake class bookings in Sydney.',
+    canonical: `${SITE_URL}/reviews`,
+    structuredData: [organization],
+  },
 }
 
 const privateSeo: Record<string, SeoConfig> = {

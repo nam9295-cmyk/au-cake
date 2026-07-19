@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => {
                   // Appwrite only allows configured browser origins. Local Tailscale/IP
                   // previews use this same-origin, dev-only proxy without any API key.
                   proxyRequest.removeHeader('origin')
+                  proxyRequest.removeHeader('referer')
                 })
               },
             },

@@ -17,6 +17,7 @@ function browserAppwriteEndpoint() {
 
 export const appwriteConfig = {
   endpoint: browserAppwriteEndpoint(),
+  publicEndpoint: configuredEndpoint,
   projectId: import.meta.env.VITE_APPWRITE_PROJECT_ID || import.meta.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '',
   databaseId: import.meta.env.VITE_APPWRITE_CAKE_DATABASE_ID || import.meta.env.APPWRITE_CAKE_DATABASE_ID || '',
   classReservationsDatabaseId:

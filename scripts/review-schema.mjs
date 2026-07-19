@@ -151,7 +151,7 @@ export const REVIEW_PHOTO_BUCKET = Object.freeze({
   allowedFileExtensions: Object.freeze(['jpg', 'jpeg', 'png', 'webp']),
   encryption: true,
   antivirus: true,
-  transformations: false,
+  transformations: true,
 })
 
 export function parseAdminUserIds(env = {}) {
@@ -241,6 +241,24 @@ export function sameUnorderedValues(currentValues = [], expectedValues = []) {
   const currentSorted = [...currentValues].sort()
   const expectedSorted = [...expectedValues].sort()
   return currentSorted.every((value, index) => value === expectedSorted[index])
+}
+
+export function reviewPhotoBucketMismatches(current, expected) {
+  const currentPermissions = current.$permissions || current.permissions || []
+  const mismatches = []
+  if (current.name !== expected.name) mismatches.push(`name=${current.name}`)
+  if (!sameUnorderedValues(currentPermissions, expected.permissions)) mismatches.push('permissions differ')
+  for (const key of ['fileSecurity', 'enabled', 'maximumFileSize', 'encryption', 'antivirus', 'transformations']) {
+    if (current[key] !== expected[key]) mismatches.push(`${key}=${current[key]}`)
+  }
+  if (!sameUnorderedValues(current.allowedFileExtensions || [], expected.allowedFileExtensions)) {
+    mismatches.push(`allowedFileExtensions=[${(current.allowedFileExtensions || []).join(', ')}]`)
+  }
+  return mismatches
+}
+
+export function canEnableReviewPhotoTransformations(mismatches, explicitlyRequested) {
+  return explicitlyRequested === true && mismatches.length === 1 && mismatches[0] === 'transformations=false'
 }
 
 function sameOrderedValues(currentValues = [], expectedValues = []) {

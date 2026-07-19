@@ -13,12 +13,14 @@ import {
 import {
   assertCompleteExactAvailableKeySet,
   buildReviewSetupPlan,
+  canEnableReviewPhotoTransformations,
   ensureStrictCollection,
   parseAdminUserIds,
   RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
   REVIEW_COLLECTIONS,
   REVIEW_PHOTO_BUCKET,
   resolveReviewResourceIds,
+  reviewPhotoBucketMismatches,
   sameUnorderedValues,
   toAppwriteIndexCreate,
   validateAdminApplyConfiguration,
@@ -30,6 +32,8 @@ if (process.argv.slice(2).includes('--dry-run')) {
   console.log(JSON.stringify(buildReviewSetupPlan(process.env), null, 2))
   process.exit(0)
 }
+
+const enableReviewPhotoTransformations = process.argv.slice(2).includes('--enable-review-photo-transformations')
 
 loadDotEnvLocal()
 
@@ -638,21 +642,22 @@ async function ensureReviewPhotoBucket() {
     }
   }
 
-  const currentPermissions = current.$permissions || current.permissions || []
-  const mismatches = []
-  if (current.name !== expected.name) mismatches.push(`name=${current.name}`)
-  if (!sameUnorderedValues(currentPermissions, expected.permissions)) mismatches.push('permissions differ')
-  for (const key of ['fileSecurity', 'enabled', 'maximumFileSize', 'encryption', 'antivirus', 'transformations']) {
-    if (current[key] !== expected[key]) mismatches.push(`${key}=${current[key]}`)
-  }
-  if (!sameUnorderedValues(current.allowedFileExtensions || [], expected.allowedFileExtensions)) {
-    mismatches.push(`allowedFileExtensions=[${(current.allowedFileExtensions || []).join(', ')}]`)
-  }
+  const mismatches = reviewPhotoBucketMismatches(current, expected)
   if (mismatches.length > 0) {
-    throw new Error(
-      `bucket ${reviewPhotosBucketId} definition mismatch (${mismatches.join(', ')}). ` +
-      'Resolve the drift manually; setup will not overwrite or recreate this private review bucket.',
-    )
+    if (!canEnableReviewPhotoTransformations(mismatches, enableReviewPhotoTransformations)) {
+      throw new Error(
+        `bucket ${reviewPhotosBucketId} definition mismatch (${mismatches.join(', ')}). ` +
+        'Resolve the drift manually; setup will not overwrite or recreate this private review bucket.',
+      )
+    }
+    await storage.updateBucket({ bucketId: reviewPhotosBucketId, ...expected })
+    const updated = await storage.getBucket({ bucketId: reviewPhotosBucketId })
+    const remainingMismatches = reviewPhotoBucketMismatches(updated, expected)
+    if (remainingMismatches.length > 0) {
+      throw new Error(`bucket ${reviewPhotosBucketId} update verification failed (${remainingMismatches.join(', ')})`)
+    }
+    console.log(`updated bucket ${reviewPhotosBucketId} transformations=true`)
+    return
   }
   console.log(`exists  bucket ${reviewPhotosBucketId}`)
 }

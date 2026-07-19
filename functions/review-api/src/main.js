@@ -10,6 +10,7 @@ import {
   copyReviewRewardMessage,
   issueReviewInvite,
   listAdminReviews,
+  listPublicReviewPage,
   listPublicReviews,
   loadReviewInvite,
   moderateReview,
@@ -233,7 +234,7 @@ export function createReviewRepository(databases, config = resolveReviewConfig()
         ...(transaction ? { transactionId: transactionId(transaction) } : {}),
       })
     },
-    async listPublishedReviews(limit = 3) {
+    async listPublishedReviews({ limit = 4, cursor } = {}) {
       const result = await databases.listDocuments({
         databaseId: config.cakeDatabaseId,
         collectionId: config.reviewsId,
@@ -242,7 +243,8 @@ export function createReviewRepository(databases, config = resolveReviewConfig()
           Query.equal('publishConsent', true),
           Query.orderDesc('createdAt'),
           Query.orderAsc('$id'),
-          Query.limit(Math.min(3, Math.max(1, limit))),
+          Query.limit(Math.min(7, Math.max(2, limit))),
+          ...(cursor ? [Query.cursorAfter(cursor)] : []),
         ],
         total: false,
       })
@@ -321,9 +323,17 @@ export function createPublicReviewPhotoUrlBuilder(env, config = resolveReviewCon
   return (review) => {
     const fileId = String(review?.photoFileId || '')
     if (!APPWRITE_RESOURCE_ID.test(fileId)) throw new ReviewApiError('INVALID_PUBLIC_REVIEW', 500)
-    const url = new URL(`${endpoint}/storage/buckets/${encodeURIComponent(config.reviewPhotosBucketId)}/files/${encodeURIComponent(fileId)}/view`)
-    url.searchParams.set('project', projectId)
-    return url.toString()
+    const base = `${endpoint}/storage/buckets/${encodeURIComponent(config.reviewPhotosBucketId)}/files/${encodeURIComponent(fileId)}`
+    const photoUrl = new URL(`${base}/view`)
+    photoUrl.searchParams.set('project', projectId)
+    const thumbnailUrl = new URL(`${base}/preview`)
+    thumbnailUrl.searchParams.set('project', projectId)
+    thumbnailUrl.searchParams.set('width', '640')
+    thumbnailUrl.searchParams.set('height', '480')
+    thumbnailUrl.searchParams.set('gravity', 'center')
+    thumbnailUrl.searchParams.set('quality', '78')
+    thumbnailUrl.searchParams.set('output', 'webp')
+    return { thumbnailUrl: thumbnailUrl.toString(), photoUrl: photoUrl.toString() }
   }
 }
 
@@ -334,6 +344,7 @@ const REVIEW_ACTIONS = new Set([
   'load-invite',
   'submit-review',
   'list-public',
+  'list-public-page',
   'upload-photo',
   'remove-photo',
   'cleanup-photo-files',
@@ -382,6 +393,7 @@ const defaultServices = {
   loadInvite: loadReviewInvite,
   submit: submitReview,
   listPublic: listPublicReviews,
+  listPublicPage: listPublicReviewPage,
   issue: issueReviewInvite,
   listAdmin: listAdminReviews,
   moderate: moderateReview,
@@ -403,6 +415,10 @@ export async function handleReviewRequest(body, headers, env = process.env, serv
     })
   }
   if (action === 'list-public') return services.listPublic(repository, body.limit, {
+    photoUrlForReview: options.photoUrlForReview,
+  })
+  if (action === 'list-public-page') return services.listPublicPage(repository, body.limit, {
+    cursor: body.cursor,
     photoUrlForReview: options.photoUrlForReview,
   })
   if (action === 'upload-photo') {

@@ -11,6 +11,7 @@ import {
   hashSecret,
   issueReviewInvite,
   listAdminReviews,
+  listPublicReviewPage,
   listPublicReviews,
   loadReviewInvite,
   moderateReview,
@@ -175,14 +176,17 @@ test('review repository public query exactly matches the public_reviews_idx cont
   const repository = createReviewRepository({
     async listDocuments(params) { calls.push(params); return { documents: [] } },
   }, config)
-  await repository.listPublishedReviews(3)
+  await repository.listPublishedReviews({ limit: 7, cursor: 'review-prev' })
   const queries = calls[0].queries.map((query) => JSON.parse(query))
   assert.deepEqual(queries.slice(0, 3), [
     { method: 'equal', attribute: 'moderationStatus', values: ['published'] },
     { method: 'equal', attribute: 'publishConsent', values: [true] },
     { method: 'orderDesc', attribute: 'createdAt' },
   ])
-  assert.deepEqual(queries.at(-1), { method: 'limit', values: [3] })
+  assert.deepEqual(queries.slice(-2), [
+    { method: 'limit', values: [7] },
+    { method: 'cursorAfter', values: ['review-prev'] },
+  ])
 })
 
 test('review repository admin query uses bounded limit and exact document cursor', async () => {
@@ -318,8 +322,10 @@ test('public review projection enforces publication and allowlists fields', () =
     customerName: 'Private', phone: '0412345678', email: 'private@example.com', childName: 'Private child',
   }
   assert.deepEqual(toPublicReview(contaminated), {
+    id: 'review-1',
     sourceType: 'cake', rating: 5, body: 'Great', displayName: 'Verified cake order',
-    hasPhoto: false, photoUrl: null, createdAt: '2026-07-19T00:00:00.000Z', incentivised: true,
+    hasPhoto: false, thumbnailUrl: null, photoUrl: null,
+    createdAt: '2026-07-19T00:00:00.000Z', incentivised: true,
   })
   assert.equal(toPublicReview({
     ...contaminated,
@@ -331,9 +337,14 @@ test('public review projection enforces publication and allowlists fields', () =
     photoUrl: 'https://appwrite.example/v1/storage/public-photo',
     photoPublishConsent: true,
     photoFileId: 'private-file-id',
-  }, () => 'https://appwrite.example/v1/storage/buckets/review-photos/files/private-file-id/view?project=project_au'), {
+  }, () => ({
+    thumbnailUrl: 'https://appwrite.example/v1/storage/buckets/review-photos/files/private-file-id/preview?project=project_au&width=640&height=480&gravity=center&quality=78&output=webp',
+    photoUrl: 'https://appwrite.example/v1/storage/buckets/review-photos/files/private-file-id/view?project=project_au',
+  })), {
+    id: 'review-1',
     sourceType: 'cake', rating: 5, body: 'Great', displayName: 'Verified cake order',
     hasPhoto: true,
+    thumbnailUrl: 'https://appwrite.example/v1/storage/buckets/review-photos/files/private-file-id/preview?project=project_au&width=640&height=480&gravity=center&quality=78&output=webp',
     photoUrl: 'https://appwrite.example/v1/storage/buckets/review-photos/files/private-file-id/view?project=project_au',
     createdAt: '2026-07-19T00:00:00.000Z', incentivised: true,
   })
@@ -346,30 +357,32 @@ test('public review photo URLs use only the configured HTTPS Appwrite endpoint a
     APPWRITE_PUBLIC_ENDPOINT: 'https://api.example.test/v1',
     APPWRITE_FUNCTION_PROJECT_ID: 'project_au',
   }, { reviewPhotosBucketId: 'review-photos' })
-  assert.equal(
-    builder({ photoFileId: 'approved-photo' }),
-    'https://api.example.test/v1/storage/buckets/review-photos/files/approved-photo/view?project=project_au',
-  )
+  assert.deepEqual(builder({ photoFileId: 'approved-photo' }), {
+    thumbnailUrl: 'https://api.example.test/v1/storage/buckets/review-photos/files/approved-photo/preview?project=project_au&width=640&height=480&gravity=center&quality=78&output=webp',
+    photoUrl: 'https://api.example.test/v1/storage/buckets/review-photos/files/approved-photo/view?project=project_au',
+  })
   assert.throws(() => createPublicReviewPhotoUrlBuilder({
     APPWRITE_PUBLIC_ENDPOINT: 'http://api.example.test/v1',
     APPWRITE_FUNCTION_PROJECT_ID: 'project_au',
   }, { reviewPhotosBucketId: 'review-photos' }), /FUNCTION_CONFIGURATION_ERROR/)
 })
 
-test('public review list is bounded to three, newest-first deterministically, and rejects invalid limits', async () => {
+test('public review list supports a six-item cursor page with deterministic lookahead', async () => {
   const reviews = [
     { $id: 'b', sourceType: 'class', rating: 4, body: 'B', publishConsent: true, moderationStatus: 'published', createdAt: '2026-07-18T00:00:00.000Z' },
     { $id: 'c', sourceType: 'cake', rating: 5, body: 'C', publishConsent: true, moderationStatus: 'published', createdAt: '2026-07-19T00:00:00.000Z' },
     { $id: 'a', sourceType: 'cake', rating: 5, body: 'A', publishConsent: true, moderationStatus: 'published', createdAt: '2026-07-19T00:00:00.000Z' },
-    { $id: 'hidden', sourceType: 'cake', rating: 1, body: 'hidden', publishConsent: true, moderationStatus: 'hidden', createdAt: '2026-07-20T00:00:00.000Z' },
+    { $id: 'd', sourceType: 'cake', rating: 5, body: 'D', publishConsent: true, moderationStatus: 'published', createdAt: '2026-07-17T00:00:00.000Z' },
   ]
   const calls = []
-  const repository = { async listPublishedReviews(limit) { calls.push(limit); return reviews } }
-  const result = await listPublicReviews(repository, 3)
-  assert.equal(result.length, 3)
-  assert.deepEqual(result.map((review) => review.body), ['A', 'C', 'B'])
-  assert.deepEqual(calls, [3])
-  await assert.rejects(() => listPublicReviews(repository, 4), (error) => error instanceof ReviewApiError && error.code === 'INVALID_REQUEST')
+  const repository = { async listPublishedReviews(options) { calls.push(options); return reviews } }
+  const result = await listPublicReviewPage(repository, 3, { cursor: 'review-prev' })
+  assert.deepEqual(result.reviews.map((review) => review.body), ['A', 'C', 'B'])
+  assert.equal(result.hasMore, true)
+  assert.equal(result.nextCursor, 'b')
+  assert.deepEqual(calls, [{ limit: 4, cursor: 'review-prev' }])
+  await assert.rejects(() => listPublicReviewPage(repository, 7), (error) => error instanceof ReviewApiError && error.code === 'INVALID_REQUEST')
+  await assert.rejects(() => listPublicReviewPage(repository, 3, { cursor: 'bad/id' }), (error) => error instanceof ReviewApiError && error.code === 'INVALID_REQUEST')
 })
 
 const fixedNow = new Date('2026-07-19T00:00:00.000Z')
@@ -424,7 +437,7 @@ function makeRepository(overrides = {}) {
     async markInviteUsed(id, usedAt, tx) { calls.push(['markInviteUsed', id, usedAt, tx]) },
     async commitTransaction(tx) { calls.push(['commit', tx]); if (overrides.commitError) throw overrides.commitError },
     async rollbackTransaction(tx) { calls.push(['rollback', tx]) },
-    async listPublishedReviews() { return overrides.reviews || [] },
+    async listPublishedReviews(options) { calls.push(['listPublishedReviews', options]); return overrides.reviews || [] },
     async listReviews(options) { calls.push(['listReviews', options]); return overrides.reviews || [] },
     async getReview() { return overrides.review || null },
     async getCoupon() { return overrides.coupon || null },
@@ -869,6 +882,14 @@ test('review lists and moderation use allowlisted DTOs and enforce consent guard
     moderationStatus: 'published', rewardPercent: 5, couponId: 'secret', sourceReservationId: 'private',
     createdAt: fixedNow.toISOString(), customerName: 'Private',
   }
+  assert.deepEqual(await listPublicReviewPage(makeRepository({ reviews: [published] })), {
+    reviews: [{
+      id: 'review-1', sourceType: 'class', rating: 4, body: 'Fun', displayName: 'Verified class booking',
+      hasPhoto: false, thumbnailUrl: null, photoUrl: null, createdAt: fixedNow.toISOString(), incentivised: true,
+    }],
+    nextCursor: null,
+    hasMore: false,
+  })
   assert.deepEqual(await listPublicReviews(makeRepository({ reviews: [published] })), [{
     sourceType: 'class', rating: 4, body: 'Fun', displayName: 'Verified class booking',
     hasPhoto: false, photoUrl: null, createdAt: fixedNow.toISOString(), incentivised: true,
@@ -951,7 +972,8 @@ test('main routing separates public and admin actions without exposing internal 
       calls.push(['submit', token, data, options.hmacSecret, options.encryptionKey])
       return { rewardPercent: 5, couponCode: 'FOXKIWI7Q2MK' }
     },
-    async listPublic(_repo, limit) { calls.push(['public', limit]); return [] },
+    async listPublic(_repo, limit) { calls.push(['public-legacy', limit]); return [] },
+    async listPublicPage(_repo, limit, options) { calls.push(['public-page', limit, options.cursor]); return { reviews: [], nextCursor: null, hasMore: false } },
     async issue() { calls.push(['issue']); return {} },
     async listAdmin() { calls.push(['admin']); return [] },
     async moderate() { calls.push(['moderate']); return {} },
@@ -970,10 +992,12 @@ test('main routing separates public and admin actions without exposing internal 
     { hmacSecret: Buffer.from('hmac'), encryptionKey },
   )
   await handleReviewRequest({ action: 'list-public', limit: 3 }, {}, {}, services)
+  await handleReviewRequest({ action: 'list-public-page', limit: 3, cursor: 'review-prev' }, {}, {}, services)
   await handleReviewRequest({ action: 'upload-photo', token: VALID_TOKEN, mimeType: 'image/webp', base64: 'YQ==' }, {}, {}, services)
   await handleReviewRequest({ action: 'remove-photo', token: VALID_TOKEN }, {}, {}, services)
   assert.deepEqual(calls, [
-    ['load', 'token'], ['submit', 'token', { acceptedPhotoFileId: 'forged' }, Buffer.from('hmac'), encryptionKey], ['public', 3],
+    ['load', 'token'], ['submit', 'token', { acceptedPhotoFileId: 'forged' }, Buffer.from('hmac'), encryptionKey],
+    ['public-legacy', 3], ['public-page', 3, 'review-prev'],
     ['upload', VALID_TOKEN, { mimeType: 'image/webp', base64: 'YQ==' }], ['remove', VALID_TOKEN],
   ])
   await assert.rejects(() => handleReviewRequest({ action: 'create-invite', data: {} }, {}, { REVIEW_ADMIN_USER_IDS: 'admin-1' }, services),

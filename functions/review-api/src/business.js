@@ -166,19 +166,27 @@ export function toPublicReview(review, photoUrlForReview) {
   if (typeof createdAt !== 'string' || Number.isNaN(Date.parse(createdAt))) fail('INVALID_PUBLIC_REVIEW', 500)
   const displayName = typeof review.displayName === 'string' ? review.displayName.trim() : ''
   if (displayName.length > 50) fail('INVALID_PUBLIC_REVIEW', 500)
-  const photoUrl = review.photoPublishConsent === true && typeof review.photoFileId === 'string' && review.photoFileId
+  const id = review.$id || review.id
+  if (!OPAQUE_ID_PATTERN.test(id || '')) fail('INVALID_PUBLIC_REVIEW', 500)
+  const photoUrls = review.photoPublishConsent === true && typeof review.photoFileId === 'string' && review.photoFileId
     ? photoUrlForReview?.(review) || null
     : null
-  if (photoUrl !== null && (typeof photoUrl !== 'string' || !photoUrl.startsWith('https://'))) {
+  if (photoUrls !== null && (
+    typeof photoUrls !== 'object' ||
+    typeof photoUrls.thumbnailUrl !== 'string' || !photoUrls.thumbnailUrl.startsWith('https://') ||
+    typeof photoUrls.photoUrl !== 'string' || !photoUrls.photoUrl.startsWith('https://')
+  )) {
     fail('INVALID_PUBLIC_REVIEW', 500)
   }
   return {
+    id,
     sourceType: review.sourceType,
     rating: review.rating,
     body: review.body,
     displayName: displayName || (review.sourceType === 'cake' ? 'Verified cake order' : 'Verified class booking'),
-    hasPhoto: photoUrl !== null,
-    photoUrl,
+    hasPhoto: photoUrls !== null,
+    thumbnailUrl: photoUrls?.thumbnailUrl || null,
+    photoUrl: photoUrls?.photoUrl || null,
     createdAt,
     incentivised: true,
   }
@@ -578,18 +586,39 @@ export async function submitReview(repository, token, input, {
   }
 }
 
-export async function listPublicReviews(repository, limit = 3, { photoUrlForReview } = {}) {
-  if (!Number.isInteger(limit) || limit < 1 || limit > 3) fail('INVALID_REQUEST')
-  const reviews = await repository.listPublishedReviews(limit)
-  return reviews
+export async function listPublicReviewPage(repository, limit = 3, { cursor, photoUrlForReview } = {}) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 6 ||
+      (cursor !== undefined && !OPAQUE_ID_PATTERN.test(cursor))) fail('INVALID_REQUEST')
+  const reviews = await repository.listPublishedReviews({ limit: limit + 1, cursor })
+  const sorted = reviews
     .filter((review) => review.publishConsent === true && review.moderationStatus === 'published')
     .sort((left, right) => {
       const newest = Date.parse(right.createdAt || right.$createdAt) - Date.parse(left.createdAt || left.$createdAt)
       if (newest !== 0) return newest
       return String(left.$id || left.id || '').localeCompare(String(right.$id || right.id || ''))
     })
-    .slice(0, limit)
-    .map((review) => toPublicReview(review, photoUrlForReview))
+  const pageRows = sorted.slice(0, limit)
+  const hasMore = sorted.length > limit
+  return {
+    reviews: pageRows.map((review) => toPublicReview(review, photoUrlForReview)),
+    nextCursor: hasMore ? String(pageRows.at(-1)?.$id || pageRows.at(-1)?.id || '') : null,
+    hasMore,
+  }
+}
+
+export async function listPublicReviews(repository, limit = 3, { photoUrlForReview } = {}) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 3) fail('INVALID_REQUEST')
+  const page = await listPublicReviewPage(repository, limit, { photoUrlForReview })
+  return page.reviews.map((review) => ({
+    sourceType: review.sourceType,
+    rating: review.rating,
+    body: review.body,
+    displayName: review.displayName,
+    hasPhoto: review.hasPhoto,
+    photoUrl: review.photoUrl,
+    createdAt: review.createdAt,
+    incentivised: review.incentivised,
+  }))
 }
 
 function toAdminReview(review, rewardSummary) {

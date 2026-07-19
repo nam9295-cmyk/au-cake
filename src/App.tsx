@@ -29,6 +29,7 @@ import kidsClassFinishedImg from './assets/kids-class-finished.webp'
 import ReadOnlyCalendarPage from './ReadOnlyCalendarPage'
 import ReviewPage from './ReviewPage'
 import PublicReviewsSection from './PublicReviewsSection'
+import ReviewsArchive from './ReviewsArchive'
 import AdminFrame from './AdminFrame'
 import AdminReviewsPage from './AdminReviewsPage'
 import { getPageFromPath, pathForPage, type Page } from './lib/app-routes'
@@ -437,6 +438,17 @@ function App() {
 
       {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} language={language} setLanguage={setLanguage} />}
       {page === 'classes' && <ClassesPage navigate={navigate} language={language} setLanguage={setLanguage} />}
+      {page === 'reviews' && (
+        <>
+          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+          <ReviewsArchive
+            language={language}
+            executor={functions}
+            functionId={appwriteConfig.reviewApiFunctionId}
+            functionEndpoint={appwriteConfig.publicEndpoint}
+          />
+        </>
+      )}
       {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} />}
       {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} />}
       {page === 'reserve' && (
@@ -1075,7 +1087,8 @@ function HomePage({
           language={language}
           executor={functions}
           functionId={appwriteConfig.reviewApiFunctionId}
-          functionEndpoint={appwriteConfig.endpoint}
+          functionEndpoint={appwriteConfig.publicEndpoint}
+          onViewAll={() => navigate('reviews')}
           demoEnabled={import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
           development={import.meta.env.DEV}
         />
@@ -1212,7 +1225,8 @@ function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Pag
           language={language}
           executor={functions}
           functionId={appwriteConfig.reviewApiFunctionId}
-          functionEndpoint={appwriteConfig.endpoint}
+          functionEndpoint={appwriteConfig.publicEndpoint}
+          onViewAll={() => navigate('reviews')}
           demoEnabled={import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
           development={import.meta.env.DEV}
         />

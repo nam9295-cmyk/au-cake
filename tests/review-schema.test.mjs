@@ -8,8 +8,10 @@ import {
   assertCompleteExactAvailableKeySet,
   assertExactAvailableKeySet,
   buildReviewSetupPlan,
+  canEnableReviewPhotoTransformations,
   ensureStrictCollection,
   parseAdminUserIds,
+  reviewPhotoBucketMismatches,
   RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
   REVIEW_COLLECTIONS,
   REVIEW_PHOTO_BUCKET,
@@ -276,8 +278,22 @@ test('review photo bucket is private and restricted to safe image uploads', () =
     allowedFileExtensions: ['jpg', 'jpeg', 'png', 'webp'],
     encryption: true,
     antivirus: true,
-    transformations: false,
+    transformations: true,
   })
+})
+
+test('review photo bucket migration permits only an explicit false-to-true transformation change', () => {
+  const expected = {
+    name: 'review-photos', permissions: ['read("user:admin")'], fileSecurity: true, enabled: true,
+    maximumFileSize: 1_572_864, allowedFileExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+    encryption: true, antivirus: true, transformations: true,
+  }
+  const current = { ...expected, $permissions: expected.permissions, transformations: false }
+  const mismatches = reviewPhotoBucketMismatches(current, expected)
+  assert.deepEqual(mismatches, ['transformations=false'])
+  assert.equal(canEnableReviewPhotoTransformations(mismatches, true), true)
+  assert.equal(canEnableReviewPhotoTransformations(mismatches, false), false)
+  assert.equal(canEnableReviewPhotoTransformations([...mismatches, 'encryption=false'], true), false)
 })
 
 test('required review attributes never declare Appwrite defaults', () => {
