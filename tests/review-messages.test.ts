@@ -18,14 +18,14 @@ import {
 
 const cakeMessage = `Hi Jenny, thank you again for ordering from Verygood Chocolate.
 
-We’d love to hear how your cake was. An honest review earns 5% off your next cake order, or 10% if you include a cake photo. The reward is the same whether your review is positive or negative.
+We’d love to hear how your cake was. An honest review earns 5% off your next order, or 10% if you include a cake photo. We look forward to your honest feedback.
 
 Write your review: https://au.verygood-chocolate.com/review#cake-token
 The link is valid for 30 days.`
 
 const classMessage = `Hi Alex, thank you for joining Jenny’s cake class.
 
-We’d love to hear how the class went. An honest review earns 5% off your next cake order, or 10% if you include a photo of the finished cake. The reward is the same whether your review is positive or negative.
+We’d love to hear how the class went. An honest review earns 5% off your next order, or 10% if you include a photo of the finished cake. We look forward to your honest feedback.
 
 Write your review: https://au.verygood-chocolate.com/review#class-token
 The link is valid for 30 days.`

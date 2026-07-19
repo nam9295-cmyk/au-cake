@@ -23,10 +23,10 @@ export function buildReviewRequestMessage(
   const link = buildReviewLink(token)
 
   if (sourceType === 'cake') {
-    return `Hi ${firstName}, thank you again for ordering from Verygood Chocolate.\n\nWe’d love to hear how your cake was. An honest review earns 5% off your next cake order, or 10% if you include a cake photo. The reward is the same whether your review is positive or negative.\n\nWrite your review: ${link}\nThe link is valid for 30 days.`
+    return `Hi ${firstName}, thank you again for ordering from Verygood Chocolate.\n\nWe’d love to hear how your cake was. An honest review earns 5% off your next order, or 10% if you include a cake photo. We look forward to your honest feedback.\n\nWrite your review: ${link}\nThe link is valid for 30 days.`
   }
 
-  return `Hi ${firstName}, thank you for joining Jenny’s cake class.\n\nWe’d love to hear how the class went. An honest review earns 5% off your next cake order, or 10% if you include a photo of the finished cake. The reward is the same whether your review is positive or negative.\n\nWrite your review: ${link}\nThe link is valid for 30 days.`
+  return `Hi ${firstName}, thank you for joining Jenny’s cake class.\n\nWe’d love to hear how the class went. An honest review earns 5% off your next order, or 10% if you include a photo of the finished cake. We look forward to your honest feedback.\n\nWrite your review: ${link}\nThe link is valid for 30 days.`
 }
 
 export function canCreateReviewInvite(sourceType: ReviewSourceType, status: string): boolean {
