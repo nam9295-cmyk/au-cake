@@ -15,16 +15,23 @@
 2. `.env.local`의 `APPWRITE_ADMIN_USER_IDS`에 실제 관리자 Appwrite user ID가 있는지 확인합니다.
 3. 배포용 API key에 `functions.read`, `functions.write`를 부여합니다. DB 컬렉션 권한 변경 명령에는 `databases.read`, `databases.write`도 필요합니다.
 4. 호스팅 환경에는 `APPWRITE_API_KEY`나 `RESEND_API_KEY`를 절대 `VITE_` 변수로 넣지 않습니다.
+5. `REVIEW_COUPON_HMAC_SECRET`은 최소 32 random bytes의 padding 없는 canonical base64url 값 하나를 사용합니다. Review API 쿠폰 발급 Function과 Reservation API 쿠폰 사용 Function에 **완전히 같은 값**을 설정하고 `VITE_*`에는 두지 않습니다. `.env.example`은 의도적으로 빈 값이며 실제 값은 secret store에만 둡니다. 발급된 `active` 쿠폰이 남아 있는 동안에는 절대 회전하지 마세요. 기존 digest와 새 digest가 달라져 유효 쿠폰을 사용할 수 없게 됩니다.
 
-이 전환에는 기존 예약 컬렉션의 새 attribute나 데이터 마이그레이션이 필요하지 않습니다. `cake_pickup_openings` 컬렉션이 없어도 Function은 기존 동작과 같이 예외 오픈 슬롯 없이 작동합니다.
+리뷰 쿠폰 사용 전에는 `npm run setup:appwrite`의 별도 승인된 schema apply로 기존 예약 컬렉션의 optional 감사 필드 `subtotalCents`, `discountPercent`, `discountCents`, `appliedPromoCodeLast4`, `reviewCouponId`와 private `review_coupons` 컬렉션/index가 준비되어 있어야 합니다. 먼저 `node scripts/setup-appwrite.mjs --dry-run`으로 계획을 확인하세요. `cake_pickup_openings` 컬렉션이 없어도 Function은 기존 동작과 같이 예외 오픈 슬롯 없이 작동합니다.
 
 ## 1. Function만 먼저 배포
 
 이 명령은 `reservation-api` Function과 변수/코드만 만들며 DB 컬렉션 권한은 변경하지 않습니다.
 
 ```bash
+# credential/.env.local/client/network 없이 masked 계획만 확인
+npm run deploy:reservation-api -- --dry-run
+
+# 실제 Function 배포(별도 운영 승인 후)
 npm run deploy:reservation-api
 ```
+
+배포 변수에는 server-only `APPWRITE_REVIEW_COUPONS_TABLE_ID`와 위의 동일한 `REVIEW_COUPON_HMAC_SECRET`이 포함되고 `VITE_*` fallback은 사용하지 않습니다. 두 Function의 `--dry-run`은 secret 원문을 절대 출력하지 않고 masked 값만 보여 줍니다. Function dynamic key는 atomic reservation/coupon transaction과 read-only schema readiness에 필요한 database/collection/attribute/index/document scope만 사용합니다. 기본 runtime은 transaction을 지원하는 `node-20.0`이며 Node 18 미만은 거부합니다. 안전한 순서는 **schema apply/검증 → Review Function `ready` → Reservation Function `ready` → 잘못된 쿠폰으로 no-write smoke → frontend 전환**입니다.
 
 스크립트가 배포 빌드를 기다린 뒤 읽기 전용 health check를 수행합니다. 마지막에 아래 두 메시지가 모두 나와야 합니다.
 

@@ -110,19 +110,21 @@
         }
       }
     </style>
-    <button id="vg-chat-launcher" type="button" aria-label="Message us" title="Message us">
-      <span class="vg-chat-icon" aria-hidden="true"></span>
-      <span class="vg-chat-label">Message us</span>
-    </button>
     <script>
       (function() {
-        var BASE_URL = "https://chat.verygood-chocolate.com";
-        var WEBSITE_TOKEN = "JPyEBcQEq4FvcZFL5NxeiXyC";
-        var launcher = document.getElementById("vg-chat-launcher");
-        if (window.location.pathname === "/calendar" || window.location.pathname === "/calendar.html") {
-          launcher.remove();
+        var pathname = window.location.pathname;
+        if (pathname === "/review" || pathname === "/review.html" || pathname === "/calendar" || pathname === "/calendar.html") {
           return;
         }
+        var BASE_URL = "https://chat.verygood-chocolate.com";
+        var WEBSITE_TOKEN = "JPyEBcQEq4FvcZFL5NxeiXyC";
+        var launcher = document.createElement("button");
+        launcher.id = "vg-chat-launcher";
+        launcher.type = "button";
+        launcher.setAttribute("aria-label", "Message us");
+        launcher.title = "Message us";
+        launcher.innerHTML = '<span class="vg-chat-icon" aria-hidden="true"></span><span class="vg-chat-label">Message us</span>';
+        document.body.appendChild(launcher);
         var launcherLabel = launcher.querySelector(".vg-chat-label");
         var hasLoadedSdk = false;
 

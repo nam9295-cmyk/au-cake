@@ -4,73 +4,43 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
-import { Client as BrowserClient, ExecutionMethod, Functions as BrowserFunctions } from 'appwrite'
 import {
-  AppwriteException,
-  Client,
-  Functions,
-  Role,
-  Runtime,
-  Scopes,
-} from 'node-appwrite'
-import { File } from 'node-fetch-native-with-agent'
+  FUNCTION_SCOPES,
+  buildDryRunPlan,
+  buildRuntimeCandidates,
+  isSecretFunctionVariable,
+  redactReservationDeploymentDiagnostic,
+  resolveDeployConfig,
+} from './reservation-api-deploy-config.mjs'
 
-const execFileAsync = promisify(execFile)
-const sleep = (ms) => new Promise((resolveSleep) => setTimeout(resolveSleep, ms))
+if (process.argv.includes('--dry-run')) {
+  process.stdout.write(`${JSON.stringify(buildDryRunPlan(process.env), null, 2)}\n`)
+  process.exit(0)
+}
 
 loadDotEnvLocal()
 
-const endpoint = process.env.APPWRITE_ENDPOINT || process.env.VITE_APPWRITE_ENDPOINT
-const projectId = process.env.APPWRITE_PROJECT_ID || process.env.VITE_APPWRITE_PROJECT_ID
-const apiKey = process.env.APPWRITE_API_KEY
-const functionId = process.env.APPWRITE_RESERVATION_API_FUNCTION_ID || 'reservation-api'
-const requestedRuntime = process.env.APPWRITE_RESERVATION_API_RUNTIME || Runtime.Node160
-const runtimeCandidates = [...new Set([
-  requestedRuntime,
-  Runtime.Node200,
-  Runtime.Node180,
-  Runtime.Node160,
-])]
+const [browserSdk, serverSdk, fileSdk] = await Promise.all([
+  import('appwrite'),
+  import('node-appwrite'),
+  import('node-appwrite/file'),
+])
+const { Client: BrowserClient, ExecutionMethod, Functions: BrowserFunctions } = browserSdk
+const { AppwriteException, Client, Functions, Role, Runtime } = serverSdk
+const { InputFile } = fileSdk
 
-const cakeDatabaseId =
-  process.env.APPWRITE_CAKE_DATABASE_ID || process.env.VITE_APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
-const kidsDatabaseId =
-  process.env.APPWRITE_KIDS_DATABASE_ID || process.env.VITE_APPWRITE_KIDS_DATABASE_ID || cakeDatabaseId
-const runtimeVariables = {
-  MARKET: process.env.MARKET || process.env.VITE_MARKET || 'AU',
-  APPWRITE_CAKE_DATABASE_ID: cakeDatabaseId,
-  APPWRITE_KIDS_DATABASE_ID: kidsDatabaseId,
-  APPWRITE_CAKE_RESERVATIONS_TABLE_ID:
-    process.env.APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
-    process.env.VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
-    'reservations',
-  APPWRITE_SETTINGS_TABLE_ID:
-    process.env.APPWRITE_SETTINGS_TABLE_ID || process.env.VITE_APPWRITE_SETTINGS_TABLE_ID || 'settings',
-  APPWRITE_KIDS_RESERVATIONS_TABLE_ID:
-    process.env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
-    process.env.VITE_APPWRITE_KIDS_RESERVATIONS_TABLE_ID ||
-    'class_reservations',
-  APPWRITE_KIDS_BOOKED_DATES_TABLE_ID:
-    process.env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
-    process.env.VITE_APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
-    'class_booked_dates',
-  APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID:
-    process.env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID ||
-    process.env.VITE_APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID ||
-    'cake_pickup_openings',
-  CALENDAR_VIEW_PIN: process.env.CALENDAR_VIEW_PIN,
-  CALENDAR_TOKEN_SECRET: process.env.CALENDAR_TOKEN_SECRET,
-}
-const secretVariableKeys = new Set(['CALENDAR_VIEW_PIN', 'CALENDAR_TOKEN_SECRET'])
-
-if (!endpoint || !projectId || !apiKey) {
-  console.error('APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY 환경변수가 필요합니다.')
-  process.exit(1)
-}
-if (!/^\d{6}$/.test(runtimeVariables.CALENDAR_VIEW_PIN || '') || (runtimeVariables.CALENDAR_TOKEN_SECRET || '').length < 32) {
-  console.error('CALENDAR_VIEW_PIN(6자리)과 CALENDAR_TOKEN_SECRET(32자 이상)가 필요합니다.')
-  process.exit(1)
-}
+const execFileAsync = promisify(execFile)
+const sleep = (ms) => new Promise((resolveSleep) => setTimeout(resolveSleep, ms))
+const deployConfig = resolveDeployConfig(process.env)
+const {
+  endpoint,
+  projectId,
+  apiKey,
+  functionId,
+  runtime: requestedRuntime,
+  runtimeVariables,
+} = deployConfig
+const runtimeCandidates = buildRuntimeCandidates(requestedRuntime, Runtime)
 
 const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey)
 const functions = new Functions(client)
@@ -149,12 +119,7 @@ async function ensureFunctionRuntime(runtime) {
     logging: true,
     entrypoint: 'src/main.js',
     commands: 'npm ci --omit=dev',
-    scopes: [
-      Scopes.DatabasesRead,
-      Scopes.DatabasesWrite,
-      Scopes.DocumentsRead,
-      Scopes.DocumentsWrite,
-    ],
+    scopes: [...FUNCTION_SCOPES],
   }
 
   try {
@@ -186,11 +151,11 @@ async function ensureVariables() {
         variableId: existing.$id,
         key,
         value,
-        secret: secretVariableKeys.has(key),
+        secret: isSecretFunctionVariable(key),
       })
       console.log(`updated variable ${key}`)
     } else {
-      await functions.createVariable({ functionId, key, value, secret: secretVariableKeys.has(key) })
+      await functions.createVariable({ functionId, key, value, secret: isSecretFunctionVariable(key) })
       console.log(`created variable ${key}`)
     }
   }
@@ -202,11 +167,17 @@ async function deployFunction() {
   const archivePath = join(tempDir, 'code.tar.gz')
 
   try {
-    await execFileAsync('tar', ['-czf', archivePath, '-C', functionDir, '.'])
+    await execFileAsync('tar', [
+      '-czf', archivePath,
+      '-C', functionDir,
+      'package.json',
+      'package-lock.json',
+      'src',
+    ])
     const archive = await readFile(archivePath)
     const deployment = await functions.createDeployment({
       functionId,
-      code: new File([archive], 'code.tar.gz'),
+      code: InputFile.fromBuffer(archive, 'code.tar.gz'),
       activate: true,
       entrypoint: 'src/main.js',
       commands: 'npm ci --omit=dev',
@@ -226,7 +197,10 @@ async function waitForDeployment(deploymentId) {
       return
     }
     if (deployment.status === 'failed') {
-      throw new Error(`Reservation API build failed:\n${deployment.buildLogs || 'No build log was returned.'}`)
+      throw new Error(`Reservation API build failed:\n${redactReservationDeploymentDiagnostic(
+        deployment.buildLogs || 'No build log was returned.',
+        [apiKey, ...Object.entries(runtimeVariables).filter(([key]) => isSecretFunctionVariable(key)).map(([, value]) => value)],
+      )}`)
     }
     await sleep(2000)
   }
@@ -249,7 +223,7 @@ async function verifyHealth() {
   } catch {
     throw new Error(`Reservation API health check returned invalid JSON (HTTP ${execution.responseStatusCode}).`)
   }
-  if (execution.responseStatusCode !== 200 || response.ok !== true || response.result?.database !== 'ok') {
+  if (execution.responseStatusCode !== 200 || response.ok !== true || response.result?.status !== 'ready') {
     throw new Error(`Reservation API health check failed (HTTP ${execution.responseStatusCode}).`)
   }
   console.log('read-only health check passed')

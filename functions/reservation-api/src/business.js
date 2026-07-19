@@ -1,4 +1,15 @@
+import { digestReviewCouponCode } from './coupon-digest.js'
+
 const MARKET_TIMEZONE = 'Australia/Sydney'
+export const REVIEW_COUPON_ANIMALS = [
+  'FOX', 'CAT', 'DOG', 'OWL', 'PIG', 'BEE', 'COW', 'CUB', 'EMU', 'HEN', 'KOI', 'PUP', 'RAM', 'YAK', 'APE',
+]
+export const REVIEW_COUPON_FRUITS = [
+  'KIWI', 'FIG', 'LIME', 'PEAR', 'PLUM', 'APPLE', 'GRAPE', 'GUAVA', 'LEMON', 'MANGO', 'MELON', 'PEACH',
+]
+const REVIEW_COUPON_PATTERN = new RegExp(
+  `^(?:${REVIEW_COUPON_ANIMALS.join('|')})(?:${REVIEW_COUPON_FRUITS.join('|')})[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$`,
+)
 
 export const PROMO_CODE = 'chocolate'
 export const LEMON_PROMO_CODE = 'lemoni'
@@ -97,6 +108,40 @@ export class ReservationApiError extends Error {
 
 function fail(code, status = 400) {
   throw new ReservationApiError(code, status)
+}
+
+export function normalizeReviewCouponCode(value) {
+  if (typeof value !== 'string') fail('PROMO_CODE_INVALID')
+  const normalized = value.trim().toUpperCase()
+  if (!REVIEW_COUPON_PATTERN.test(normalized)) fail('PROMO_CODE_INVALID')
+  return normalized
+}
+
+export function hashReviewCouponCode(value, hmacSecret) {
+  return digestReviewCouponCode(normalizeReviewCouponCode(value), hmacSecret, ReservationApiError)
+}
+
+function strictFutureIso(value, now) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return false
+  const timestamp = new Date(value).getTime()
+  return !Number.isNaN(timestamp) && timestamp > now.getTime()
+}
+
+export function validateReviewCoupon(coupon, normalizedCodeValue, now = new Date(), hmacSecret) {
+  const normalizedCode = normalizeReviewCouponCode(normalizedCodeValue)
+  if (
+    !coupon ||
+    coupon.codeHash !== hashReviewCouponCode(normalizedCode, hmacSecret) ||
+    (coupon.rewardPercent !== 5 && coupon.rewardPercent !== 10) ||
+    coupon.scope !== 'cake' ||
+    coupon.status !== 'active' ||
+    !strictFutureIso(coupon.expiresAt, now)
+  ) fail('PROMO_CODE_INVALID')
+  return {
+    id: coupon.$id || coupon.id,
+    rewardPercent: coupon.rewardPercent,
+    codeLast4: normalizedCode.slice(-4),
+  }
 }
 
 function requiredText(value, { min = 1, max, code }) {
@@ -311,6 +356,7 @@ function calculateCakeTotal(
   quantity,
   promoCode,
   now,
+  reviewCoupon,
 ) {
   const unitPriceCents = Math.round((product.usesSize ? product.sizePrices[cakeSize] : product.basePrice) * 100)
     + Math.round((product.usesFinish ? FINISH_PRICES[poundAddon] : 0) * 100)
@@ -319,23 +365,39 @@ function calculateCakeTotal(
     + partyDecorationCount * CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS
   const originalTotalCents = unitPriceCents * quantity
   const originalTotal = originalTotalCents / 100
-  const appliedPromoCode = getValidPromoCode(productId, promoCode, now)
-  const promoApplied = appliedPromoCode !== null
-  const discountedCents = promoApplied
-    ? Math.round(originalTotalCents * (1 - PROMO_DISCOUNT_RATE))
-    : originalTotalCents
+  if (reviewCoupon && typeof promoCode === 'string' && promoCode.trim()) fail('PROMO_CODE_INVALID')
+  const appliedPromoCode = reviewCoupon ? null : getValidPromoCode(productId, promoCode, now)
+  const staticPromoApplied = appliedPromoCode !== null
+  const discountPercent = reviewCoupon?.rewardPercent || (staticPromoApplied ? PROMO_DISCOUNT_RATE * 100 : 0)
+  if (reviewCoupon && (
+    (discountPercent !== 5 && discountPercent !== 10) ||
+    typeof reviewCoupon.id !== 'string' || !reviewCoupon.id ||
+    typeof reviewCoupon.codeLast4 !== 'string' ||
+    !/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/.test(reviewCoupon.codeLast4)
+  )) fail('PROMO_CODE_INVALID')
+  const discountedCents = reviewCoupon
+    ? originalTotalCents - Math.round(originalTotalCents * discountPercent / 100)
+    : staticPromoApplied
+      ? Math.round(originalTotalCents * (1 - PROMO_DISCOUNT_RATE))
+      : originalTotalCents
+  const discountCents = originalTotalCents - discountedCents
   return {
     originalTotal,
+    subtotalCents: originalTotalCents,
+    discountPercent,
+    discountCents,
     totalPrice: discountedCents / 100,
     totalPriceCents: discountedCents,
-    promoApplied,
+    promoApplied: staticPromoApplied || Boolean(reviewCoupon),
     appliedPromoCode,
+    appliedPromoCodeLast4: reviewCoupon?.codeLast4 || (appliedPromoCode ? appliedPromoCode.slice(-4).toUpperCase() : undefined),
+    reviewCouponId: reviewCoupon?.id,
     productId,
   }
 }
 
 function buildPromoNote(note, pricing) {
-  if (!pricing.promoApplied) return note
+  if (!pricing.appliedPromoCode) return note
   const promoLine = `[Promo ${pricing.appliedPromoCode}] 10% discount applied: ${pricing.originalTotal.toFixed(2)} -> ${pricing.totalPrice.toFixed(2)}`
   const result = [promoLine, note].filter(Boolean).join('\n')
   if (result.length > 1000) fail('REQUEST_NOTE_TOO_LONG')
@@ -352,7 +414,11 @@ export function generateClassReservationNumber(date = new Date()) {
   return `VG-KC-AU-${ymd}-${sydneyTimeCode(date)}${Math.floor(Math.random() * 900 + 100)}`
 }
 
-export function buildCakeReservation(input, { now = new Date(), reservationNumber = generateCakeReservationNumber(now) } = {}) {
+export function buildCakeReservation(input, {
+  now = new Date(),
+  reservationNumber = generateCakeReservationNumber(now),
+  reviewCoupon,
+} = {}) {
   if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
   if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
@@ -384,6 +450,7 @@ export function buildCakeReservation(input, { now = new Date(), reservationNumbe
     quantity,
     input.promoCode,
     now,
+    reviewCoupon,
   )
   const createdAt = now.toISOString()
 
@@ -407,6 +474,11 @@ export function buildCakeReservation(input, { now = new Date(), reservationNumbe
     paymentStatus: '입금대기',
     totalPrice: pricing.totalPrice,
     totalPriceCents: pricing.totalPriceCents,
+    subtotalCents: pricing.subtotalCents,
+    discountPercent: pricing.discountPercent,
+    discountCents: pricing.discountCents,
+    ...(pricing.appliedPromoCodeLast4 ? { appliedPromoCodeLast4: pricing.appliedPromoCodeLast4 } : {}),
+    ...(pricing.reviewCouponId ? { reviewCouponId: pricing.reviewCouponId } : {}),
     adminMemo: '',
     createdAt,
     updatedAt: createdAt,
@@ -422,6 +494,9 @@ function validateAge(value, code) {
 export function buildClassReservation(input, { now = new Date(), reservationNumber = generateClassReservationNumber(now) } = {}) {
   if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
+  const promoFieldIsPresent = (value) => value !== undefined && value !== null &&
+    !(typeof value === 'string' && value.trim() === '')
+  if (promoFieldIsPresent(input.promoCode) || promoFieldIsPresent(input.reviewCouponCode)) fail('PROMO_CODE_INVALID')
   if (!Object.hasOwn(CLASS_PRICES, input.bookingType)) fail('INVALID_BOOKING_TYPE')
   const classType = input.classType || 'school-holiday-private-cake-class'
   if (!CLASS_TYPES.has(classType)) fail('INVALID_CLASS_TYPE')

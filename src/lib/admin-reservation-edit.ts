@@ -61,6 +61,33 @@ export type AdminReservationUpdate = Pick<Reservation,
   | 'adminMemo'
 >
 
+const REVIEW_COUPON_PRICE_FIELDS = [
+  'productId',
+  'cakeSize',
+  'chocolateType',
+  'poundAddon',
+  'chocolateIcingCount',
+  'vanillaCreamCount',
+  'partyDecorationCount',
+  'quantity',
+  'cacaoPercent',
+  'totalPrice',
+  'totalPriceCents',
+] as const
+
+export function assertReviewCouponRepricingAllowed(
+  reservation: Reservation,
+  edits: Partial<Reservation>,
+): void {
+  if (!reservation.reviewCouponId) return
+  const changesPrice = REVIEW_COUPON_PRICE_FIELDS.some((field) => (
+    edits[field] !== undefined && edits[field] !== reservation[field]
+  ))
+  if (changesPrice) {
+    throw new Error('리워드 쿠폰 예약은 서버 재가격 계산 기능이 필요합니다. 제품·옵션·수량·카카오·금액은 수정할 수 없습니다.')
+  }
+}
+
 function normalizeQuantity(quantity: number) {
   const value = Number(quantity || 1)
   if (!Number.isFinite(value)) return 1
@@ -122,6 +149,7 @@ export function buildAdminReservationUpdate(
   reservation: Reservation,
   edits: AdminReservationEditInput,
 ): AdminReservationUpdate {
+  assertReviewCouponRepricingAllowed(reservation, edits)
   const productId = (edits.productId || reservation.productId) as ProductId
   const poundAddon = normalizePoundAddon(productId, (edits.poundAddon || reservation.poundAddon || DEFAULT_POUND_ADDON) as PoundAddon)
   const cakeSize = normalizeCakeSize(productId, (edits.cakeSize || reservation.cakeSize || DEFAULT_CAKE_SIZE) as CakeSize)
@@ -149,9 +177,11 @@ export function buildAdminReservationUpdate(
     quantity,
   )
   const promoKind = reservationPromoKind(reservation)
-  const totalPrice = promoKind && promoAppliesToProduct(promoKind, productId)
-    ? discountedByTenPercent(originalTotalPrice)
-    : originalTotalPrice
+  const totalPrice = reservation.reviewCouponId
+    ? reservation.totalPrice
+    : promoKind && promoAppliesToProduct(promoKind, productId)
+      ? discountedByTenPercent(originalTotalPrice)
+      : originalTotalPrice
 
   return {
     productId,

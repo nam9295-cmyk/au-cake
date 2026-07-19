@@ -107,6 +107,11 @@ const publicSeo: Record<string, SeoConfig> = {
 }
 
 const privateSeo: Record<string, SeoConfig> = {
+  '/admin/reviews': {
+    title: 'Review Moderation Admin | Verygood Chocolate',
+    description: 'Private review moderation administration.',
+    noindex: true,
+  },
   '/reserve': {
     title: 'Request a Chocolate Cake | Verygood Chocolate',
     description: 'Submit a cake booking request to Verygood Chocolate Sydney.',
@@ -137,6 +142,12 @@ const privateSeo: Record<string, SeoConfig> = {
     description: 'Private read-only booking schedule.',
     noindex: true,
   },
+  '/review': {
+    title: 'Share Your Review | Verygood Chocolate',
+    description: 'Share private feedback about your Verygood Chocolate experience.',
+    canonical: `${SITE_URL}/review`,
+    noindex: true,
+  },
 }
 
 function setMeta(selector: string, attribute: string, value: string) {
@@ -146,6 +157,7 @@ function setMeta(selector: string, attribute: string, value: string) {
 
 export function getSeoConfig(pathname: string): SeoConfig {
   if (publicSeo[pathname]) return publicSeo[pathname]
+  if (pathname === '/review.html') return privateSeo['/review']
   if (privateSeo[pathname]) return privateSeo[pathname]
   if (pathname.startsWith('/admin')) {
     return {

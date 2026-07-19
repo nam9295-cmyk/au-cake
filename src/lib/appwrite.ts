@@ -1,4 +1,4 @@
-import { Account, Client, Databases, Functions } from 'appwrite'
+import { Account, Client, Databases, Functions, Storage } from 'appwrite'
 
 const configuredEndpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || import.meta.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || ''
 
@@ -43,6 +43,28 @@ export const appwriteConfig = {
     import.meta.env.VITE_APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
     import.meta.env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
     'class_booked_dates',
+  reviewInvitesCollectionId:
+    import.meta.env.VITE_APPWRITE_REVIEW_INVITES_TABLE_ID ||
+    import.meta.env.APPWRITE_REVIEW_INVITES_TABLE_ID ||
+    'review_invites',
+  reviewsCollectionId:
+    import.meta.env.VITE_APPWRITE_REVIEWS_TABLE_ID ||
+    import.meta.env.APPWRITE_REVIEWS_TABLE_ID ||
+    'reviews',
+  reviewCouponsCollectionId:
+    import.meta.env.VITE_APPWRITE_REVIEW_COUPONS_TABLE_ID ||
+    import.meta.env.APPWRITE_REVIEW_COUPONS_TABLE_ID ||
+    'review_coupons',
+  reviewPhotoCleanupCollectionId:
+    import.meta.env.VITE_APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID ||
+    import.meta.env.APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID ||
+    'review_photo_cleanup',
+  reviewPhotosBucketId:
+    import.meta.env.VITE_APPWRITE_REVIEW_PHOTOS_BUCKET_ID ||
+    import.meta.env.APPWRITE_REVIEW_PHOTOS_BUCKET_ID ||
+    'review-photos',
+  reviewApiFunctionId: import.meta.env.VITE_REVIEW_API_FUNCTION_ID || '',
+  reviewApiDirectUrl: import.meta.env.VITE_REVIEW_API_DIRECT_URL || '',
   reservationApiFunctionId: import.meta.env.VITE_RESERVATION_API_FUNCTION_ID || 'reservation-api',
   reservationApiMode: normalizeReservationApiMode(import.meta.env.VITE_RESERVATION_API_MODE),
   adminEmails: (import.meta.env.VITE_ADMIN_EMAILS || 'nam9295@gmail.com')
@@ -69,3 +91,4 @@ if (isAppwriteConfigured) {
 export const account = new Account(client)
 export const databases = new Databases(client)
 export const functions = new Functions(client)
+export const storage = new Storage(client)

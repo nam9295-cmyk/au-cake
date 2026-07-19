@@ -397,21 +397,21 @@ test('public lookup response excludes customer PII, notes and prices', () => {
 
 test('calendar login rejects a wrong PIN and returns a signed token for the configured PIN', () => {
   const env = {
-    CALENDAR_VIEW_PIN: '260717',
+    CALENDAR_VIEW_PIN: '123456',
     CALENDAR_TOKEN_SECRET: 'a-calendar-test-secret-that-is-long-enough',
   }
   assertApiError('CALENDAR_UNAUTHORIZED', () => calendarLogin({ pin: '000000' }, env, now))
-  const result = calendarLogin({ pin: '260717' }, env, now)
+  const result = calendarLogin({ pin: '123456' }, env, now)
   assert.equal(typeof result.token, 'string')
   assert.ok(result.token.length > 40)
 })
 
 test('calendar API returns only sanitised events for the requested month', async () => {
   const env = {
-    CALENDAR_VIEW_PIN: '260717',
+    CALENDAR_VIEW_PIN: '123456',
     CALENDAR_TOKEN_SECRET: 'a-calendar-test-secret-that-is-long-enough',
   }
-  const { token } = calendarLogin({ pin: '260717' }, env, now)
+  const { token } = calendarLogin({ pin: '123456' }, env, now)
   const calls = []
   const databases = {
     async listDocuments(request) {

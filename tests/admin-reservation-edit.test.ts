@@ -1,6 +1,9 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
-import { buildAdminReservationUpdate } from '../src/lib/admin-reservation-edit.js'
+import {
+  assertReviewCouponRepricingAllowed,
+  buildAdminReservationUpdate,
+} from '../src/lib/admin-reservation-edit.js'
 import type { Reservation } from '../src/lib/types.js'
 
 const baseReservation: Reservation = {
@@ -177,4 +180,46 @@ test('a forged promo-looking request note without the matching stored discount i
   const update = buildAdminReservationUpdate(reservation, {})
   assert.equal(update.totalPrice, 75)
   assert.equal(update.totalPriceCents, 7500)
+})
+
+test('review coupon reservations reject every price-affecting admin edit', () => {
+  const couponReservation: Reservation = {
+    ...baseReservation,
+    subtotalCents: 7500,
+    discountPercent: 5,
+    discountCents: 375,
+    totalPrice: 71.25,
+    totalPriceCents: 7125,
+    reviewCouponId: 'coupon-1',
+  }
+
+  for (const edits of [
+    { productId: 'pound-cake' as const },
+    { cakeSize: '19cm' as const },
+    { chocolateType: 'milk' as const },
+    { poundAddon: 'vanilla-cream' as const },
+    { chocolateIcingCount: 1 },
+    { vanillaCreamCount: 1 },
+    { partyDecorationCount: 1 },
+    { quantity: 2 },
+    { cacaoPercent: '70' as const },
+    { totalPrice: 70 },
+    { totalPriceCents: 7000 },
+  ]) {
+    assert.throws(
+      () => assertReviewCouponRepricingAllowed(couponReservation, edits),
+      /리워드 쿠폰 예약은 서버 재가격 계산 기능이 필요합니다/,
+    )
+  }
+})
+
+test('review coupon reservations still allow schedule, status, payment, and memo-only updates', () => {
+  const couponReservation: Reservation = { ...baseReservation, reviewCouponId: 'coupon-1' }
+  assert.doesNotThrow(() => assertReviewCouponRepricingAllowed(couponReservation, {
+    pickupDate: '2026-07-22',
+    pickupTime: '13:30',
+    status: '예약확정',
+    paymentStatus: '입금확인',
+    adminMemo: 'schedule confirmed',
+  }))
 })

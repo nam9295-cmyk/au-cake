@@ -47,6 +47,8 @@ import type {
   StoreSettings,
 } from './types'
 import { generateReservationNumber, isPickupTimeAllowed, isValidPhone, normalizePhone, PICKUP_TIME_TOO_SOON_ERROR, todayInputValue } from './utils'
+import { buildCakeReservationRequest, normalizeReviewCouponCode, parseCakeReservationResult } from './review-coupon-client'
+import { assertReviewCouponRepricingAllowed } from './admin-reservation-edit'
 
 const LOCAL_RESERVATIONS_KEY = `verygood-cake-reservations-${MARKET.toLowerCase()}`
 const LOCAL_CLASS_RESERVATIONS_KEY = `verygood-class-reservations-${MARKET.toLowerCase()}`
@@ -57,7 +59,7 @@ const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 
 export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'quantity' | 'totalPriceCents'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
@@ -70,6 +72,11 @@ type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeS
   partyDecorationCount?: number
   quantity?: number
   totalPriceCents?: number
+  subtotalCents?: number
+  discountPercent?: number
+  discountCents?: number
+  appliedPromoCodeLast4?: string
+  reviewCouponId?: string
 }
 
 type AppwriteClassReservationDocument = Omit<ClassReservation, 'id'> & {
@@ -120,7 +127,7 @@ function shouldUseReservationApi(scope: 'lookup' | 'all') {
   return appwriteConfig.reservationApiMode === 'lookup' || appwriteConfig.reservationApiMode === 'all'
 }
 
-async function executeReservationApi<T>(action: string, data?: unknown): Promise<T> {
+async function executeReservationApi<T>(action: string, data?: unknown, parseResult?: (value: unknown) => T): Promise<T> {
   const execution = await functions.createExecution({
     functionId: appwriteConfig.reservationApiFunctionId,
     body: JSON.stringify({ action, data }),
@@ -138,7 +145,7 @@ async function executeReservationApi<T>(action: string, data?: unknown): Promise
   if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300 || response.ok !== true) {
     throw new Error(response.code || 'RESERVATION_API_UNAVAILABLE')
   }
-  return response.result as T
+  return parseResult ? parseResult(response.result) : response.result as T
 }
 
 export async function loginReadOnlyCalendar(pin: string) {
@@ -196,6 +203,11 @@ function normalizeReservation(reservation: Reservation): Reservation {
       ? reservation.totalPrice
       : fromCurrencyCents(reservation.totalPriceCents),
     totalPriceCents: reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice),
+    subtotalCents: reservation.subtotalCents,
+    discountPercent: reservation.discountPercent,
+    discountCents: reservation.discountCents,
+    appliedPromoCodeLast4: reservation.appliedPromoCodeLast4,
+    reviewCouponId: reservation.reviewCouponId,
   }
 }
 
@@ -308,6 +320,11 @@ function toReservation(document: AppwriteReservationDocument): Reservation {
       ? Number(document.totalPrice || 0)
       : fromCurrencyCents(document.totalPriceCents),
     totalPriceCents: document.totalPriceCents ?? toCurrencyCents(Number(document.totalPrice || 0)),
+    subtotalCents: document.subtotalCents,
+    discountPercent: document.discountPercent,
+    discountCents: document.discountCents,
+    appliedPromoCodeLast4: document.appliedPromoCodeLast4,
+    reviewCouponId: document.reviewCouponId,
     adminMemo: document.adminMemo || '',
     createdAt: document.createdAt || document.$createdAt || '',
     updatedAt: document.updatedAt || document.$updatedAt || '',
@@ -542,9 +559,11 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   }
 
   if (shouldUseReservationApi('all')) {
-    const reservation = await executeReservationApi<Reservation>('create-cake', input)
+    const reservation = await executeReservationApi<Reservation>('create-cake', buildCakeReservationRequest(input), parseCakeReservationResult)
     return normalizeReservation(reservation)
   }
+
+  if (normalizeReviewCouponCode(input.promoCode)) throw new Error('PROMO_CODE_SERVER_REQUIRED')
 
   const now = new Date().toISOString()
   const reservationNumber = generateReservationNumber()
@@ -567,6 +586,9 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   )
   const totalPrice = applyPromoDiscount(originalTotalPrice, product.id, input.promoCode)
   const totalPriceCents = toCurrencyCents(totalPrice)
+  const subtotalCents = toCurrencyCents(originalTotalPrice)
+  const discountCents = Math.max(0, subtotalCents - totalPriceCents)
+  const appliedStaticPromo = getValidPromoCode(product.id, input.promoCode)
   const data = {
     reservationNumber,
     customerName: input.customerName.trim(),
@@ -586,13 +608,21 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     paymentStatus: '입금대기' as PaymentStatus,
     totalPrice,
     totalPriceCents,
+    subtotalCents,
+    discountPercent: discountCents > 0 ? 10 : 0,
+    discountCents,
+    ...(appliedStaticPromo ? { appliedPromoCodeLast4: appliedStaticPromo.slice(-4).toUpperCase() } : {}),
     adminMemo: '',
     createdAt: now,
     updatedAt: now,
   }
 
   if (!isAppwriteConfigured) {
-    const reservation: Reservation = { id: crypto.randomUUID(), ...data }
+    const reservation: Reservation = {
+      id: crypto.randomUUID(),
+      ...data,
+      promotionKind: discountCents > 0 ? 'static' : 'none',
+    }
     writeLocalReservations([reservation, ...readLocalReservations()])
     return reservation
   }
@@ -609,7 +639,8 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
       totalPriceCents,
     },
   )
-  return toReservation(document as unknown as AppwriteReservationDocument)
+  const reservation = toReservation(document as unknown as AppwriteReservationDocument)
+  return { ...reservation, promotionKind: discountCents > 0 ? 'static' : 'none' }
 }
 
 export async function listReservations(filters?: ReservationFilters): Promise<Reservation[]> {
@@ -691,10 +722,18 @@ export async function updateReservation(
     const reservations = readLocalReservations()
     const index = reservations.findIndex((reservation) => reservation.id === id)
     if (index < 0) throw new Error('예약을 찾을 수 없습니다.')
+    assertReviewCouponRepricingAllowed(reservations[index], updates)
     reservations[index] = { ...reservations[index], ...nextUpdates }
     writeLocalReservations(reservations)
     return reservations[index]
   }
+
+  const currentDocument = await databases.getDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.reservationsCollectionId,
+    id,
+  )
+  assertReviewCouponRepricingAllowed(toReservation(currentDocument as unknown as AppwriteReservationDocument), updates)
 
   const document = await databases.updateDocument(
     appwriteConfig.databaseId,

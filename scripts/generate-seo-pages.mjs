@@ -73,6 +73,11 @@ const pages = {
     description: 'Private read-only booking schedule.',
     robots: 'noindex, nofollow',
   },
+  '/review': {
+    title: 'Share Your Review | Verygood Chocolate',
+    description: 'Share private feedback about your Verygood Chocolate experience.',
+    robots: 'noindex, nofollow',
+  },
   '/admin': {
     title: 'Admin | Verygood Chocolate',
     description: 'Verygood Chocolate administration.',
@@ -91,6 +96,11 @@ const pages = {
   '/admin/classes': {
     title: 'Class Reservations Admin | Verygood Chocolate',
     description: 'Verygood Chocolate class reservation administration.',
+    robots: 'noindex, nofollow',
+  },
+  '/admin/reviews': {
+    title: 'Review Moderation Admin | Verygood Chocolate',
+    description: 'Private review moderation administration.',
     robots: 'noindex, nofollow',
   },
 }

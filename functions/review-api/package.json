@@ -1,0 +1,11 @@
+{
+  "name": "verygood-review-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/main.js",
+  "dependencies": {
+    "node-appwrite": "22.1.3",
+    "sharp": "0.32.6"
+  }
+}

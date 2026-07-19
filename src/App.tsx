@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import {
   ArrowLeft,
   CalendarDays,
@@ -8,7 +8,6 @@ import {
   Clipboard,
   Copy,
   Download,
-  LogOut,
   MessageCircleCheck,
   Search,
   Shield,
@@ -28,6 +27,11 @@ import kidsClassHeroImg from './assets/kids-class-hero.webp'
 import kidsClassProcessImg from './assets/kids-class-process.webp'
 import kidsClassFinishedImg from './assets/kids-class-finished.webp'
 import ReadOnlyCalendarPage from './ReadOnlyCalendarPage'
+import ReviewPage from './ReviewPage'
+import PublicReviewsSection from './PublicReviewsSection'
+import AdminFrame from './AdminFrame'
+import AdminReviewsPage from './AdminReviewsPage'
+import { getPageFromPath, pathForPage, type Page } from './lib/app-routes'
 import {
   CAKE_SIZE_OPTIONS,
   CACAO_OPTIONS,
@@ -39,9 +43,7 @@ import {
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
-  applyPromoDiscount,
   formatCakeSizeLabel,
-  getValidPromoCode,
   isPromoEligibleProduct,
   formatCacaoLabel,
   formatChocolateTypeLabel,
@@ -64,7 +66,25 @@ import {
   RESERVATION_STATUSES,
   usesReservationChocolateType,
 } from './lib/constants'
-import { isAppwriteConfigured } from './lib/appwrite'
+import { appwriteConfig, functions, isAppwriteConfigured } from './lib/appwrite'
+import {
+  buildReviewRequestMessage,
+  canCreateReviewInvite,
+  reviewInviteErrorMessage,
+} from './lib/review-messages'
+import { createReviewInvite } from './lib/review-repository'
+import { copyAdminRewardMessage } from './lib/admin-reviews'
+import { shouldLoadStoreSettings } from './lib/review-page'
+import {
+  normalizeReviewCouponCode,
+  getPromoEntryState,
+  getPromoPriceDisplay,
+  getDemoReviewPricingAudit,
+  getOptionalReservationPricingAudit,
+  getReservationPricingAudit,
+  promoErrorMessage,
+  shouldShowPromoInput,
+} from './lib/review-coupon-client'
 import { marketConfig } from './lib/market'
 import {
   cakeCopy,
@@ -92,7 +112,6 @@ import {
   listClassReservations,
   loginAdmin,
   loginAdminWithGoogle,
-  logoutAdmin,
   updateReservation,
   updateClassReservation,
 } from './lib/repository'
@@ -153,20 +172,6 @@ import {
   todayInputValue,
 } from './lib/utils'
 
-type Page =
-  | 'home'
-  | 'reserve'
-  | 'complete'
-  | 'lookup'
-  | 'classes'
-  | 'class-reserve'
-  | 'class-complete'
-  | 'admin-login'
-  | 'admin'
-  | 'admin-reservations'
-  | 'admin-classes'
-  | 'calendar'
-
 const initialFilters: ReservationFilters = {
   pickupDate: '',
   status: '',
@@ -221,41 +226,6 @@ function useCurrentTime() {
 
   return now
 }
-
-function getPageFromPath(): Page {
-  const path = window.location.pathname
-  if (path === '/calendar') return 'calendar'
-  if (path === '/reserve') return 'reserve'
-  if (path === '/complete') return 'complete'
-  if (path === '/lookup') return 'lookup'
-  if (path === '/classes') return 'classes'
-  if (path === '/class-reserve') return 'class-reserve'
-  if (path === '/class-complete') return 'class-complete'
-  if (path === '/admin/login') return 'admin-login'
-  if (path === '/admin/reservations') return 'admin-reservations'
-  if (path === '/admin/classes') return 'admin-classes'
-  if (path === '/admin') return 'admin'
-  return 'home'
-}
-
-function pathForPage(page: Page) {
-  const paths: Record<Page, string> = {
-    home: '/',
-    reserve: '/reserve',
-    complete: '/complete',
-    lookup: '/lookup',
-    classes: '/classes',
-    'class-reserve': '/class-reserve',
-    'class-complete': '/class-complete',
-    'admin-login': '/admin/login',
-    admin: '/admin',
-    'admin-reservations': '/admin/reservations',
-    'admin-classes': '/admin/classes',
-    calendar: '/calendar',
-  }
-  return paths[page]
-}
-
 
 const PICKUP_LOCATION_NAME = 'Pulse - Melrose Park'
 const PICKUP_LOCATION_ADDRESS = '1 Bundil Blvd, Melrose Park NSW 2114'
@@ -387,12 +357,16 @@ function DesktopBackground() {
 }
 
 function App() {
-  const [page, setPage] = useState<Page>(getPageFromPath)
+  const [page, setPage] = useState<Page>(() => getPageFromPath(window.location.pathname))
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
   const [completedReservation, setCompletedReservation] = useState<Reservation | null>(null)
+
   const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
   const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
+  const [pendingReviewCoupon, setPendingReviewCoupon] = useState('')
+  const [pendingReviewRewardPercent, setPendingReviewRewardPercent] = useState<5 | 10 | null>(null)
   const [language, setLanguageState] = useState<Language>(readStoredLanguage)
+  const hasLoadedSettings = useRef(false)
 
   const setLanguage = useCallback((nextLanguage: Language) => {
     setLanguageState(nextLanguage)
@@ -400,18 +374,20 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
+    hasLoadedSettings.current = true
     getSettings().then(setSettings)
-  }, [])
+  }, [page])
 
   useEffect(() => {
-    const handlePop = () => setPage(getPageFromPath())
+    const handlePop = () => setPage(getPageFromPath(window.location.pathname))
     window.addEventListener('popstate', handlePop)
     return () => window.removeEventListener('popstate', handlePop)
   }, [])
 
   useEffect(() => {
     applySeo(window.location.pathname)
-    if (!window.location.pathname.startsWith('/admin') && window.location.pathname !== '/calendar') trackPageView(window.location.pathname)
+    if (!window.location.pathname.startsWith('/admin') && page !== 'calendar' && page !== 'review') trackPageView(window.location.pathname)
   }, [page])
 
   const navigate = useCallback((nextPage: Page) => {
@@ -430,8 +406,25 @@ function App() {
     [navigate],
   )
 
-  const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations' || page === 'admin-classes'
+  const orderCakeFromReview = useCallback((couponCode: string, rewardPercent: 5 | 10) => {
+    const normalized = normalizeReviewCouponCode(couponCode)
+    if (!normalized) return
+    setPendingReviewCoupon(normalized)
+    setPendingReviewRewardPercent(rewardPercent)
+    navigate('reserve')
+  }, [navigate])
+
+  const completeReservation = useCallback((reservation: Reservation) => {
+    setPendingReviewCoupon('')
+    setPendingReviewRewardPercent(null)
+    setCompletedReservation(reservation)
+
+  }, [])
+
+  const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations' || page === 'admin-classes' || page === 'admin-reviews'
   const isPrivatePage = isAdminPage || page === 'calendar'
+
+  if (page === 'review') return <ReviewPage onOrderCake={orderCakeFromReview} />
 
   return (
     <>
@@ -443,7 +436,7 @@ function App() {
       {!isPrivatePage && <AnnouncementTicker language={language} />}
 
       {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} language={language} setLanguage={setLanguage} />}
-      {page === 'classes' && <ClassesPage navigate={navigate} />}
+      {page === 'classes' && <ClassesPage navigate={navigate} language={language} setLanguage={setLanguage} />}
       {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} />}
       {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} />}
       {page === 'reserve' && (
@@ -451,7 +444,11 @@ function App() {
           navigate={navigate}
           settings={settings}
           initialProductId={reservationProductId}
-          onComplete={setCompletedReservation}
+          initialPromoCode={pendingReviewCoupon}
+          initialRewardPercent={pendingReviewRewardPercent}
+          onInitialPromoConsumed={() => setPendingReviewCoupon('')}
+          reviewDemoMode={import.meta.env.DEV && import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
+          onComplete={completeReservation}
           language={language}
           setLanguage={setLanguage}
         />
@@ -464,6 +461,13 @@ function App() {
       {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
       {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
       {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}
+      {page === 'admin-reviews' && (
+        <AdminReviewsPage
+          navigate={navigate}
+          demoEnabled={import.meta.env.DEV && import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
+          development={import.meta.env.DEV}
+        />
+      )}
       {page === 'calendar' && <ReadOnlyCalendarPage />}
       {!isPrivatePage && <AnalyticsConsentBanner language={language} />}
     </div>
@@ -1067,6 +1071,15 @@ function HomePage({
           </div>
         </section>
 
+        <PublicReviewsSection
+          language={language}
+          executor={functions}
+          functionId={appwriteConfig.reviewApiFunctionId}
+          functionEndpoint={appwriteConfig.endpoint}
+          demoEnabled={import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
+          development={import.meta.env.DEV}
+        />
+
         {marketConfig.market === 'AU' && <PickupLocationCard language={language} />}
       </main>
       <button className="sticky-cta" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
@@ -1076,7 +1089,7 @@ function HomePage({
   )
 }
 
-function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
+function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Page) => void; language: Language; setLanguage: (language: Language) => void }) {
   const essentials = [
     ['Kindy–Year 6 courses', 'Age-aware private sessions for primary school children'],
     ['Professional-style course', 'Real studio guidance from planning to finishing'],
@@ -1093,7 +1106,7 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
 
   return (
     <>
-      <SiteHeader navigate={navigate} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
       <main className="kids-class-page">
         <section className="kids-class-hero" aria-labelledby="kids-class-title">
           <div className="kids-hero-copy reveal-up">
@@ -1194,6 +1207,15 @@ function ClassesPage({ navigate }: { navigate: (page: Page) => void }) {
             </ul>
           </article>
         </section>
+
+        <PublicReviewsSection
+          language={language}
+          executor={functions}
+          functionId={appwriteConfig.reviewApiFunctionId}
+          functionEndpoint={appwriteConfig.endpoint}
+          demoEnabled={import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
+          development={import.meta.env.DEV}
+        />
 
         <section className="kids-final-cta reveal-up" aria-label="Request class booking">
           <p>Limited school holiday spots are handled manually so Jenny can confirm each course safely.</p>
@@ -1579,6 +1601,10 @@ function ReservePage({
   navigate,
   settings,
   initialProductId,
+  initialPromoCode,
+  initialRewardPercent,
+  onInitialPromoConsumed,
+  reviewDemoMode,
   onComplete,
   language,
   setLanguage,
@@ -1586,6 +1612,10 @@ function ReservePage({
   navigate: (page: Page) => void
   settings: StoreSettings
   initialProductId: ProductId
+  initialPromoCode: string
+  initialRewardPercent: 5 | 10 | null
+  onInitialPromoConsumed: () => void
+  reviewDemoMode: boolean
   onComplete: (reservation: Reservation) => void
   language: Language
   setLanguage: (language: Language) => void
@@ -1607,10 +1637,18 @@ function ReservePage({
     customerName: '',
     customerPhone: '',
     requestNote: '',
-    promoCode: '',
+    promoCode: initialPromoCode,
     privacy: false,
     website: '',
   })
+  const [reviewRewardHandoff] = useState(() => ({
+    couponCode: normalizeReviewCouponCode(initialPromoCode),
+    rewardPercent: initialRewardPercent,
+  }))
+  const currentReviewCoupon = normalizeReviewCouponCode(form.promoCode)
+  const knownReviewRewardPercent = currentReviewCoupon && currentReviewCoupon === reviewRewardHandoff.couponCode
+    ? reviewRewardHandoff.rewardPercent
+    : null
   const [showCakeSelector, setShowCakeSelector] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -1628,6 +1666,10 @@ function ReservePage({
     pickupOpenings: [],
   })
   const [pickupAvailabilityRefetchKey, setPickupAvailabilityRefetchKey] = useState(0)
+
+  useEffect(() => {
+    if (initialPromoCode) onInitialPromoConsumed()
+  }, [initialPromoCode, onInitialPromoConsumed])
   const now = useCurrentTime()
   const today = dateInputValue(now)
   const todayTimes = useMemo(() => customerTimeOptionsForDate(today, settings, now), [today, settings, now])
@@ -1745,37 +1787,70 @@ function ReservePage({
       setError(copy.errors.privacy)
       return
     }
+    const submittedPromo = getPromoEntryState(form.productId, form.promoCode, undefined, knownReviewRewardPercent)
+    if (submittedPromo.kind === 'invalid') {
+      setError(promoErrorMessage('PROMO_CODE_INVALID', language) || copy.errors.submit)
+      return
+    }
 
     setSubmitting(true)
     try {
-      const reservation = await createReservation(
-        {
-          customerName: form.customerName,
-          customerPhone: phone,
-          productId: form.productId,
-          cakeSize: form.cakeSize,
-          chocolateType: form.chocolateType,
-          poundAddon: form.poundAddon,
-          chocolateIcingCount: form.chocolateIcingCount,
-          vanillaCreamCount: form.vanillaCreamCount,
-          partyDecorationCount: form.partyDecorationCount,
-          quantity: form.quantity,
-          pickupDate,
-          pickupTime: selectedPickupTime,
-          cacaoPercent: form.cacaoPercent,
-          requestNote: form.requestNote,
-          promoCode: form.promoCode,
-          privacyConsent: form.privacy,
-          requestId,
-          website: form.website,
-        }
-      )
+      const reservationInput = {
+        customerName: form.customerName,
+        customerPhone: phone,
+        productId: form.productId,
+        cakeSize: form.cakeSize,
+        chocolateType: form.chocolateType,
+        poundAddon: form.poundAddon,
+        chocolateIcingCount: form.chocolateIcingCount,
+        vanillaCreamCount: form.vanillaCreamCount,
+        partyDecorationCount: form.partyDecorationCount,
+        quantity: form.quantity,
+        pickupDate,
+        pickupTime: selectedPickupTime,
+        cacaoPercent: form.cacaoPercent,
+        requestNote: form.requestNote,
+        promoCode: submittedPromo.normalizedCode,
+        privacyConsent: form.privacy,
+        requestId,
+        website: form.website,
+      }
+      const demoPricing = reviewDemoMode ? getDemoReviewPricingAudit(currentPrice, submittedPromo) : null
+      const reservation: Reservation = demoPricing
+        ? {
+            id: 'demo-reservation',
+            reservationNumber: 'VG-C-AU-DEMO',
+            customerName: form.customerName.trim(),
+            customerPhone: phone,
+            productId: form.productId,
+            cakeSize: form.cakeSize,
+            chocolateType: form.chocolateType,
+            poundAddon: form.poundAddon,
+            chocolateIcingCount: form.chocolateIcingCount,
+            vanillaCreamCount: form.vanillaCreamCount,
+            partyDecorationCount: form.partyDecorationCount,
+            quantity: form.quantity,
+            pickupDate,
+            pickupTime: selectedPickupTime,
+            cacaoPercent: form.cacaoPercent,
+            requestNote: form.requestNote,
+            status: '예약신청',
+            paymentStatus: '입금대기',
+            totalPrice: demoPricing.totalPriceCents / 100,
+            ...demoPricing,
+            promotionKind: 'review-reward',
+            adminMemo: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+        : await createReservation(reservationInput)
       trackEvent('cake_booking_request', {
         product_id: form.productId,
         quantity: form.quantity,
         value: reservation.totalPrice,
         currency: 'AUD',
       })
+      setForm((current) => ({ ...current, promoCode: '' }))
       onComplete(reservation)
       navigate('complete')
     } catch (submitError) {
@@ -1785,7 +1860,9 @@ function ReservePage({
       } else if (submitError instanceof Error && submitError.message === PICKUP_TIME_TOO_SOON_ERROR) {
         setError(copy.errors.pickupLeadTime)
       } else {
-        setError(copy.errors.submit)
+        setError(submitError instanceof Error
+          ? promoErrorMessage(submitError.message, language) || copy.errors.submit
+          : copy.errors.submit)
       }
     } finally {
       setSubmitting(false)
@@ -1814,10 +1891,11 @@ function ReservePage({
   }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
-  const appliedPromoCode = getValidPromoCode(selectedProduct.id, form.promoCode)
-  const isPromoApplied = appliedPromoCode !== null
-  const discountedPrice = applyPromoDiscount(currentPrice, selectedProduct.id, form.promoCode)
-  const promoDiscountAmount = Math.max(0, currentPrice - discountedPrice)
+  const promoEntry = getPromoEntryState(selectedProduct.id, form.promoCode, undefined, knownReviewRewardPercent)
+  const isPromoApplied = promoEntry.kind === 'static-valid' || promoEntry.kind === 'review-pending'
+  const promoPriceDisplay = getPromoPriceDisplay(currentPrice, promoEntry)
+  const promoPreviewPrice = promoPriceDisplay.estimatedPrice ?? promoPriceDisplay.finalPrice
+  const promoDiscountAmount = Math.max(0, currentPrice - promoPreviewPrice)
   const lemonPackSize = getFreshLemonCupcakePackSize(selectedProduct.id) || 0
   const chocolateIcingCount = normalizeChocolateIcingCount(selectedProduct.id, form.chocolateIcingCount)
   const lemonIcingCount = getLemonIcingCount(selectedProduct.id, chocolateIcingCount)
@@ -1833,9 +1911,11 @@ function ReservePage({
     cupcakeFinishCounts.vanillaCreamCount,
     cupcakeFinishCounts.partyDecorationCount,
   )
-  const promoHint = isFreshLemonCupcakeProduct(selectedProduct.id)
-    ? language === 'ko' ? '대소문자 구분 없음 · 7월 16일까지 유효' : 'Not case-sensitive · Valid through 16 July'
-    : language === 'ko' ? '대소문자 구분 없음 · 7월 15일까지 유효' : 'Not case-sensitive · Valid through 15 July'
+  const promoHint = isPromoEligibleProduct(selectedProduct.id)
+    ? isFreshLemonCupcakeProduct(selectedProduct.id)
+      ? language === 'ko' ? 'Lemoni · 대소문자 구분 없음 · 7월 16일까지 유효' : 'Lemoni · Not case-sensitive · Valid through 16 July'
+      : language === 'ko' ? 'Chocolate · 대소문자 구분 없음 · 7월 15일까지 유효' : 'Chocolate · Not case-sensitive · Valid through 15 July'
+    : copy.promoHint
   const showChocolateTypeOptions = usesReservationChocolateType(selectedProduct.id, form.poundAddon)
   const selectedProductGroup = PRODUCT_GROUPS.find((group) => group.productIds.includes(selectedProduct.id)) || PRODUCT_GROUPS[0]
   const labels = {
@@ -1932,13 +2012,22 @@ function ReservePage({
               <div>
                 <dt>{labels.totalPrice}</dt>
                 <dd>
-                  {isPromoApplied ? (
+                  {promoEntry.kind === 'static-valid' ? (
                     <span className="promo-price-summary">
                       <span className="original-price">{formatCurrency(currentPrice)}</span>
-                      <strong>{formatCurrency(discountedPrice)}</strong>
+                      <strong>{formatCurrency(promoPriceDisplay.finalPrice)}</strong>
                     </span>
                   ) : (
-                    formatCurrency(currentPrice)
+                    <>
+                      {formatCurrency(promoPriceDisplay.finalPrice)}
+                      {promoPriceDisplay.estimatedPrice !== null && (
+                        <small className="promo-estimate-summary">
+                          {language === 'ko'
+                            ? `서버 확인 후 예상 ${formatCurrency(promoPriceDisplay.estimatedPrice)}`
+                            : `Estimated ${formatCurrency(promoPriceDisplay.estimatedPrice)} after server validation`}
+                        </small>
+                      )}
+                    </>
                   )}
                 </dd>
               </div>
@@ -2393,19 +2482,31 @@ function ReservePage({
               />
             </label>
 
-            {isPromoEligibleProduct(selectedProduct.id) && (
+            {shouldShowPromoInput('cake', selectedProduct.id) && (
               <label className="promo-code-field">
                 {labels.promoCode}
                 <input
                   value={form.promoCode}
                   onChange={(event) => setForm({ ...form, promoCode: event.target.value })}
                   placeholder={labels.promoPlaceholder}
-                  autoCapitalize="none"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  spellCheck={false}
                 />
-                <span className={isPromoApplied ? 'promo-message is-applied' : 'promo-message'}>
-                  {isPromoApplied
-                    ? `${labels.promoApplied} (-${formatCurrency(promoDiscountAmount)})`
-                    : promoHint}
+                <span
+                  className={isPromoApplied ? 'promo-message is-applied' : 'promo-message'}
+                  role={promoEntry.kind === 'invalid' ? 'alert' : 'status'}
+                  aria-live="polite"
+                >
+                  {promoEntry.kind === 'review-pending'
+                    ? language === 'ko'
+                      ? `후기 리워드 준비됨 · 예상 ${promoEntry.discountPercent}% 할인 (-${formatCurrency(promoDiscountAmount)}) · 주문 시 확인됩니다`
+                      : `Review reward ready · estimated ${promoEntry.discountPercent}% off (-${formatCurrency(promoDiscountAmount)}) · Verified when you place the order`
+                    : promoEntry.kind === 'static-valid'
+                      ? `${labels.promoApplied}: ${promoEntry.discountPercent}% (${formatCurrency(promoDiscountAmount)} off)`
+                      : promoEntry.kind === 'invalid'
+                        ? promoErrorMessage('PROMO_CODE_INVALID', language)
+                        : promoHint}
                 </span>
               </label>
             )}
@@ -2421,9 +2522,9 @@ function ReservePage({
               </span>
             </label>
 
-            {error && <p className="error-text">{error}</p>}
+            {error && <p className="error-text" role="alert">{error}</p>}
 
-            <BankAccountBox settings={settings} totalPrice={discountedPrice} language={language} />
+            <BankAccountBox settings={settings} totalPrice={promoPriceDisplay.finalPrice} language={language} />
 
             <button
               className="primary-button full-width"
@@ -2453,6 +2554,8 @@ function CompletePage({
   setLanguage: (language: Language) => void
 }) {
   const copy = cakeCopy(language)
+  const pricingAudit = reservation ? getReservationPricingAudit(reservation) : null
+  const usedReviewReward = reservation?.promotionKind === 'review-reward'
   return (
     <>
       <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
@@ -2462,6 +2565,9 @@ function CompletePage({
             <Check size={22} />
           </div>
           <h1>{copy.reservationCompleteTitle}</h1>
+          {reservation?.id === 'demo-reservation' && (
+            <p className="notice-line" role="status">DEMO · This order was not saved or sent.</p>
+          )}
           <p>{copy.reservationCompleteText}</p>
 
           {reservation ? (
@@ -2489,6 +2595,30 @@ function CompletePage({
                 <dt>{copy.price}</dt>
                 <dd>{formatCurrency(reservation.totalPrice)}</dd>
               </div>
+              {pricingAudit && pricingAudit.discountCents > 0 && (
+                <>
+                  <div className="discount-summary">
+                    <dt>{language === 'ko' ? '할인 전 금액' : 'Subtotal'}</dt>
+                    <dd>{formatCurrency(pricingAudit.subtotalCents / 100)}</dd>
+                  </div>
+                  <div>
+                    <dt>{language === 'ko' ? '할인' : 'Discount'}</dt>
+                    <dd>{pricingAudit.discountPercent}% · -{formatCurrency(pricingAudit.discountCents / 100)}</dd>
+                  </div>
+                  {pricingAudit.appliedPromoCodeLast4 && (
+                    <div>
+                      <dt>{usedReviewReward ? (language === 'ko' ? '후기 리워드' : 'Review reward') : (language === 'ko' ? '적용 코드' : 'Applied code')}</dt>
+                      <dd>
+                        {usedReviewReward
+                          ? language === 'ko'
+                            ? `후기 리워드 · ${pricingAudit.discountPercent}% 할인 · 코드 끝 ${pricingAudit.appliedPromoCodeLast4}`
+                            : `Review reward · ${pricingAudit.discountPercent}% off · code ending ${pricingAudit.appliedPromoCodeLast4}`
+                          : `•••• ${pricingAudit.appliedPromoCodeLast4}`}
+                      </dd>
+                    </div>
+                  )}
+                </>
+              )}
             </dl>
           ) : (
             <p className="notice-line">{copy.noReservationText}</p>
@@ -2671,42 +2801,6 @@ function AdminLoginPage({ navigate }: { navigate: (page: Page) => void }) {
         </form>
       </main>
     </>
-  )
-}
-
-function AdminFrame({
-  navigate,
-  children,
-}: {
-  navigate: (page: Page) => void
-  children: React.ReactNode
-}) {
-  async function logout() {
-    await logoutAdmin()
-    navigate('admin-login')
-  }
-
-  return (
-    <div className="admin-layout">
-      <aside className="admin-sidebar">
-        <button className="brand-button" type="button" onClick={() => navigate('home')}>
-          Verygood
-        </button>
-        <button type="button" onClick={() => navigate('admin')}>
-          대시보드
-        </button>
-        <button type="button" onClick={() => navigate('admin-reservations')}>
-          예약 목록
-        </button>
-        <button type="button" onClick={() => navigate('admin-classes')}>
-          클래스 예약
-        </button>
-        <button type="button" onClick={logout}>
-          <LogOut size={16} /> 로그아웃
-        </button>
-      </aside>
-      <main className="admin-main">{children}</main>
-    </div>
   )
 }
 
@@ -3339,12 +3433,70 @@ function AdminClassesPage({ navigate }: { navigate: (page: Page) => void }) {
   )
 }
 
+function ReviewInviteButton({
+  sourceType,
+  sourceReservationId,
+  customerName,
+  status,
+}: {
+  sourceType: 'cake' | 'class'
+  sourceReservationId: string
+  customerName: string
+  status: string
+}) {
+  const [issuing, setIssuing] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const issuingRef = useRef(false)
+  const toastTimerRef = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current)
+  }, [])
+
+  if (!canCreateReviewInvite(sourceType, status)) return null
+
+  async function copyReviewRequest() {
+    if (issuingRef.current) return
+    issuingRef.current = true
+    setIssuing(true)
+    setError('')
+    setSuccess('')
+    try {
+      const invite = await createReviewInvite(functions, appwriteConfig.reviewApiFunctionId, {
+        sourceType,
+        sourceReservationId,
+      })
+      await copyAdminRewardMessage(buildReviewRequestMessage(sourceType, customerName, invite.token))
+      setSuccess('리뷰 요청 메시지가 복사되었습니다.')
+      if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = window.setTimeout(() => setSuccess(''), 2500)
+    } catch (copyError) {
+      setError(reviewInviteErrorMessage(copyError))
+    } finally {
+      issuingRef.current = false
+      setIssuing(false)
+    }
+  }
+
+  return (
+    <div className="review-invite-action">
+      {success && <div className="toast" role="status">{success}</div>}
+      <button className="secondary-button" type="button" disabled={issuing} onClick={copyReviewRequest}>
+        <Copy size={16} /> {issuing ? '리뷰 요청 준비 중...' : 'Copy review request'}
+      </button>
+      {error && <p className="error-text review-invite-error" role="alert">{error}</p>}
+    </div>
+  )
+}
+
 function ClassReservationDrawer({ reservation, onClose, onSave, onCopy }: { reservation: ClassReservation; onClose: () => void; onSave: (id: string, updates: Parameters<typeof updateClassReservation>[1]) => Promise<void>; onCopy: (message: string) => Promise<void> }) {
   const [memo, setMemo] = useState(reservation.adminMemo)
   return (
     <div className="drawer-backdrop"><aside className="drawer"><div className="drawer-header"><h2>{reservation.reservationNumber}</h2><button type="button" onClick={onClose}>닫기</button></div>
       <dl className="detail-list"><div><dt>부모</dt><dd>{reservation.parentName}<br />{reservation.parentPhone}<br />{reservation.parentEmail}</dd></div><div><dt>아이</dt><dd>{reservation.childName}, {reservation.childAge}, {reservation.schoolYear}</dd></div><div><dt>세션</dt><dd>{reservation.classDate} {reservation.classTime}</dd></div><div><dt>안전</dt><dd>{reservation.allergyNote || 'none'}<br />Emergency: {reservation.emergencyContact}<br />Pick-up: {reservation.pickupPerson}</dd></div><div><dt>동의</dt><dd>Parent {reservation.parentConsent ? 'yes' : 'no'} / Photo {reservation.photoConsent ? 'yes' : 'no'} / Cancellation {reservation.cancellationAgreement ? 'yes' : 'no'}</dd></div></dl>
       <label>관리자 메모<textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
+      <ReviewInviteButton sourceType="class" sourceReservationId={reservation.id} customerName={reservation.parentName} status={reservation.status} />
       <div className="button-row"><button className="secondary-button" type="button" onClick={() => onCopy(buildClassPaymentMessage(reservation))}>결제 안내 복사</button><button className="secondary-button" type="button" onClick={() => onCopy(buildClassConfirmationMessage(reservation))}>확정 안내 복사</button><button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>메모 저장</button></div>
       <div className="sms-preview"><pre>{buildClassConfirmationMessage(reservation)}</pre></div>
     </aside></div>
@@ -3378,6 +3530,8 @@ function ReservationDrawer({
   const [status, setStatus] = useState(reservation.status)
   const [paymentStatus, setPaymentStatus] = useState(reservation.paymentStatus)
   const [memo, setMemo] = useState(reservation.adminMemo)
+  const hasReviewCoupon = Boolean(reservation.reviewCouponId)
+  const reservationPricingAudit = getOptionalReservationPricingAudit(reservation)
 
   const draftUpdate = buildAdminReservationUpdate(reservation, {
     productId,
@@ -3426,11 +3580,33 @@ function ReservationDrawer({
             <dt>요청사항</dt>
             <dd>{reservation.requestNote || '-'}</dd>
           </div>
+          {reservationPricingAudit && reservationPricingAudit.discountCents > 0 && (
+            <div>
+              <dt>할인 감사 정보</dt>
+              <dd>
+                소계 {formatCurrency(reservationPricingAudit.subtotalCents / 100)} ·
+                {' '}{reservationPricingAudit.discountPercent}% 할인 ·
+                {' '}- {formatCurrency(reservationPricingAudit.discountCents / 100)}
+                {reservationPricingAudit.appliedPromoCodeLast4
+                  ? ` · 코드 끝 4자리 ${reservationPricingAudit.appliedPromoCodeLast4}`
+                  : ''}
+                {reservation.reviewCouponId
+                  ? ` · 리워드 쿠폰 ID ${reservation.reviewCouponId}`
+                  : ''}
+              </dd>
+            </div>
+          )}
         </dl>
 
         <section className="admin-edit-card" aria-label="예약 수정">
           <h3>예약 내용 수정</h3>
+          {hasReviewCoupon && (
+            <p className="notice-line" role="status">
+              리워드 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다.
+            </p>
+          )}
           <div className="admin-edit-grid">
+            <fieldset disabled={hasReviewCoupon} className="admin-repricing-fields">
             <label>
               제품
               <select value={productId} onChange={(event) => setProductId(event.target.value as ProductId)}>
@@ -3501,6 +3677,7 @@ function ReservationDrawer({
                 <input type="number" min="1" max={MAX_RESERVATION_QUANTITY} value={quantity} onChange={(event) => setQuantity(Number(event.target.value || 1))} />
               </label>
             )}
+            </fieldset>
             <label>
               픽업 날짜
               <input type="date" value={pickupDate} onChange={(event) => setPickupDate(event.target.value)} />
@@ -3535,6 +3712,7 @@ function ReservationDrawer({
           <textarea value={memo} onChange={(event) => setMemo(event.target.value)} />
         </label>
 
+        <ReviewInviteButton sourceType="cake" sourceReservationId={reservation.id} customerName={reservation.customerName} status={reservation.status} />
         <div className="button-row">
           <button className="secondary-button" type="button" onClick={() => onCopy(draftReservation)}>
             <Clipboard size={16} /> 확정 문자 복사

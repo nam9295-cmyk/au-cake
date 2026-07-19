@@ -44,6 +44,12 @@ export type Reservation = {
   paymentStatus: PaymentStatus
   totalPrice: number
   totalPriceCents?: number
+  subtotalCents?: number
+  discountPercent?: number
+  discountCents?: number
+  appliedPromoCodeLast4?: string
+  promotionKind?: 'none' | 'static' | 'review-reward'
+  reviewCouponId?: string
   adminMemo: string
   createdAt: string
   updatedAt: string
@@ -184,4 +190,32 @@ export type ClassReservationFilters = {
   status: string
   paymentStatus: string
   search: string
+}
+
+export type ReviewSourceType = 'cake' | 'class'
+export type ReviewRewardPercent = 5 | 10
+export type ReviewRating = 1 | 2 | 3 | 4 | 5
+export type ReviewModerationStatus = 'pending' | 'published' | 'hidden'
+
+export type Review = {
+  id: string
+  sourceType: ReviewSourceType
+  sourceReservationId: string
+  sourceReservationNumber: string
+  rating: ReviewRating
+  body: string
+  photoFileId: string | null
+  displayName: string | null
+  publishConsent: boolean
+  moderationStatus: ReviewModerationStatus
+  rewardPercent: ReviewRewardPercent
+  couponId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type PublicReview = Pick<Review, 'id' | 'sourceType' | 'rating' | 'body' | 'createdAt'> & {
+  displayName: string
+  photoUrl: string | null
+  incentivised: true
 }

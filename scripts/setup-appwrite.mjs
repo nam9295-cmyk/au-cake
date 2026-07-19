@@ -8,7 +8,28 @@ import {
   Permission,
   Query,
   Role,
+  Storage,
 } from 'node-appwrite'
+import {
+  assertCompleteExactAvailableKeySet,
+  buildReviewSetupPlan,
+  ensureStrictCollection,
+  parseAdminUserIds,
+  RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
+  REVIEW_COLLECTIONS,
+  REVIEW_PHOTO_BUCKET,
+  resolveReviewResourceIds,
+  sameUnorderedValues,
+  toAppwriteIndexCreate,
+  validateAdminApplyConfiguration,
+  validateAttributeDefinition,
+  validateIndexDefinition,
+} from './review-schema.mjs'
+
+if (process.argv.slice(2).includes('--dry-run')) {
+  console.log(JSON.stringify(buildReviewSetupPlan(process.env), null, 2))
+  process.exit(0)
+}
 
 loadDotEnvLocal()
 
@@ -33,12 +54,23 @@ const classBookedDatesId =
   process.env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
   process.env.VITE_APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
   'class_booked_dates'
+const {
+  reviewInvitesCollectionId,
+  reviewsCollectionId,
+  reviewCouponsCollectionId,
+  reviewPhotosBucketId,
+  reviewPhotoCleanupCollectionId,
+} = resolveReviewResourceIds(process.env)
 const market = String(process.env.VITE_MARKET || process.env.MARKET || 'KR').toUpperCase() === 'AU' ? 'AU' : 'KR'
 const reservationWriteMode = process.env.APPWRITE_RESERVATION_WRITE_MODE === 'function' ? 'function' : 'direct'
-const adminUserIds = (process.env.APPWRITE_ADMIN_USER_IDS || '')
-  .split(',')
-  .map((id) => id.trim())
-  .filter(Boolean)
+const adminUserIds = parseAdminUserIds(process.env)
+
+try {
+  validateAdminApplyConfiguration(process.env)
+} catch (error) {
+  console.error(error.message)
+  process.exit(1)
+}
 
 if (!endpoint || !projectId || !apiKey) {
   console.error('APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY 환경변수가 필요합니다.')
@@ -48,15 +80,49 @@ if (!endpoint || !projectId || !apiKey) {
 
 const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey)
 const databases = new Databases(client)
+const storage = new Storage(client)
 
 const adminReadRoles = adminUserIds.length > 0 ? adminUserIds.map((id) => Role.user(id)) : [Role.users()]
 const adminWriteRoles = adminUserIds.length > 0 ? adminUserIds.map((id) => Role.user(id)) : [Role.users()]
 const cakePickupOpeningWriteRoles = adminUserIds.map((id) => Role.user(id))
 
-if (adminUserIds.length === 0) {
-  console.error('APPWRITE_ADMIN_USER_IDS is required. Setup will not grant broad access to every authenticated user.')
-  process.exit(1)
+function permissionsForPrivateReviewResource(definition) {
+  const publicPermissions = definition.publicPermissions.map((action) => Permission[action](Role.any()))
+  const adminPermissions = definition.adminPermissions.flatMap((action) =>
+    adminUserIds.map((id) => Permission[action](Role.user(id))),
+  )
+  return [...publicPermissions, ...adminPermissions]
 }
+
+const reviewCollectionPermissions = Object.fromEntries(
+  Object.entries(REVIEW_COLLECTIONS).map(([key, definition]) => [key, permissionsForPrivateReviewResource(definition)]),
+)
+const reviewPhotoPermissions = permissionsForPrivateReviewResource(REVIEW_PHOTO_BUCKET)
+const reviewCollectionResources = [
+  {
+    id: reviewInvitesCollectionId,
+    definition: REVIEW_COLLECTIONS.reviewInvites,
+    permissions: reviewCollectionPermissions.reviewInvites,
+  },
+  {
+    id: reviewsCollectionId,
+    definition: REVIEW_COLLECTIONS.reviews,
+    permissions: reviewCollectionPermissions.reviews,
+  },
+  {
+    id: reviewCouponsCollectionId,
+    definition: REVIEW_COLLECTIONS.reviewCoupons,
+    permissions: reviewCollectionPermissions.reviewCoupons,
+  },
+  {
+    id: reviewPhotoCleanupCollectionId,
+    definition: REVIEW_COLLECTIONS.reviewPhotoCleanup,
+    permissions: reviewCollectionPermissions.reviewPhotoCleanup,
+  },
+]
+const reservationReviewAuditAttributeKeys = new Set(
+  RESERVATION_REVIEW_AUDIT_ATTRIBUTES.map(({ key }) => key),
+)
 
 const reservationPermissions = [
   ...(reservationWriteMode === 'direct'
@@ -163,6 +229,7 @@ const reservationAttributes = [
   },
   { key: 'totalPrice', type: 'integer', required: true, min: 0 },
   { key: 'totalPriceCents', type: 'integer', required: false, min: 0 },
+  ...RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
 ]
 
 const settingsAttributes = [
@@ -301,7 +368,24 @@ async function ensureDatabase(targetDatabaseId = databaseId, name = `Verygood Ca
   console.log(`updated database ${targetDatabaseId}`)
 }
 
-async function ensureCollection(targetDatabaseId, collectionId, name, permissions) {
+async function ensureCollection(targetDatabaseId, collectionId, name, permissions, options = {}) {
+  const documentSecurity = options.documentSecurity ?? false
+  if (options.strict) {
+    const outcome = await ensureStrictCollection({
+      databaseId: targetDatabaseId,
+      collectionId,
+      name,
+      permissions,
+      documentSecurity,
+      getCollection: (params) => databases.getCollection(params),
+      createCollection: (params) => databases.createCollection(params),
+      isMissing,
+      isConflict,
+    })
+    console.log(`${outcome === 'created' ? 'created' : 'exists '} collection ${collectionId}`)
+    return
+  }
+
   try {
     await databases.getCollection({ databaseId: targetDatabaseId, collectionId })
     console.log(`exists  collection ${collectionId}`)
@@ -312,7 +396,7 @@ async function ensureCollection(targetDatabaseId, collectionId, name, permission
       collectionId,
       name,
       permissions,
-      documentSecurity: false,
+      documentSecurity,
       enabled: true,
     })
     console.log(`created collection ${collectionId}`)
@@ -323,7 +407,7 @@ async function ensureCollection(targetDatabaseId, collectionId, name, permission
     collectionId,
     name,
     permissions,
-    documentSecurity: false,
+    documentSecurity,
     enabled: true,
     purge: true,
   })
@@ -335,13 +419,19 @@ function sameEnumElements(currentElements = [], nextElements = []) {
   return nextElements.every((element) => currentElements.includes(element))
 }
 
-async function ensureAttribute(targetDatabaseId, collectionId, attribute) {
+async function ensureAttribute(targetDatabaseId, collectionId, attribute, options = {}) {
   try {
     const current = await databases.getAttribute({
       databaseId: targetDatabaseId,
       collectionId,
       key: attribute.key,
     })
+
+    if (options.strict) {
+      validateAttributeDefinition(collectionId, attribute, current)
+      console.log(`exists  attribute ${collectionId}.${attribute.key}`)
+      return
+    }
 
     if (attribute.type === 'enum' && !sameEnumElements(current.elements || [], attribute.elements || [])) {
       await databases.updateEnumAttribute({
@@ -388,7 +478,8 @@ async function ensureAttribute(targetDatabaseId, collectionId, attribute) {
         key: attribute.key,
         required: attribute.required,
         min: attribute.min,
-        ...(attribute.max ? { max: attribute.max } : {}),
+        ...(attribute.max !== undefined ? { max: attribute.max } : {}),
+        ...(attribute.xdefault !== undefined ? { xdefault: attribute.xdefault } : {}),
       })
     } else if (attribute.type === 'boolean') {
       await databases.createBooleanAttribute({
@@ -402,6 +493,13 @@ async function ensureAttribute(targetDatabaseId, collectionId, attribute) {
     await waitForAttribute(targetDatabaseId, collectionId, attribute.key)
   } catch (error) {
     if (isConflict(error)) {
+      const current = await databases.getAttribute({
+        databaseId: targetDatabaseId,
+        collectionId,
+        key: attribute.key,
+      })
+      validateAttributeDefinition(collectionId, attribute, current)
+      await waitForAttribute(targetDatabaseId, collectionId, attribute.key)
       console.log(`exists  attribute ${collectionId}.${attribute.key}`)
       return
     }
@@ -443,24 +541,6 @@ async function deleteIndexIfExists(targetDatabaseId, collectionId, key) {
     key,
   })
   console.log(`deleted obsolete index ${collectionId}.${key}`)
-}
-
-function sameOrderedValues(currentValues = [], expectedValues = []) {
-  return currentValues.length === expectedValues.length &&
-    expectedValues.every((value, index) => currentValues[index] === value)
-}
-
-function validateIndexDefinition(collectionId, expectedIndex, currentIndex) {
-  const expectedType = expectedIndex.type || 'key'
-  const currentAttributes = Array.isArray(currentIndex.attributes) ? currentIndex.attributes : []
-  if (currentIndex.type === expectedType && sameOrderedValues(currentAttributes, expectedIndex.attributes)) return
-
-  throw new Error(
-    `index ${collectionId}.${expectedIndex.key} definition mismatch: ` +
-    `expected type=${expectedType}, attributes=[${expectedIndex.attributes.join(', ')}]; ` +
-    `found type=${currentIndex.type || 'unknown'}, attributes=[${currentAttributes.join(', ')}]. ` +
-    'Resolve the drift manually; setup will not delete or recreate the index.',
-  )
 }
 
 async function waitForIndex(targetDatabaseId, collectionId, index, initialIndex) {
@@ -519,9 +599,7 @@ async function ensureIndex(targetDatabaseId, collectionId, index) {
     await databases.createIndex({
       databaseId: targetDatabaseId,
       collectionId,
-      key: index.key,
-      type: index.type || 'key',
-      attributes: index.attributes,
+      ...toAppwriteIndexCreate(index),
     })
     created = true
   } catch (error) {
@@ -530,6 +608,53 @@ async function ensureIndex(targetDatabaseId, collectionId, index) {
 
   await waitForIndex(targetDatabaseId, collectionId, index)
   console.log(`${created ? 'created' : 'exists '} index ${collectionId}.${index.key}`)
+}
+
+async function ensureReviewPhotoBucket() {
+  const expected = {
+    name: REVIEW_PHOTO_BUCKET.name,
+    permissions: reviewPhotoPermissions,
+    fileSecurity: REVIEW_PHOTO_BUCKET.fileSecurity,
+    enabled: REVIEW_PHOTO_BUCKET.enabled,
+    maximumFileSize: REVIEW_PHOTO_BUCKET.maximumFileSize,
+    allowedFileExtensions: REVIEW_PHOTO_BUCKET.allowedFileExtensions,
+    encryption: REVIEW_PHOTO_BUCKET.encryption,
+    antivirus: REVIEW_PHOTO_BUCKET.antivirus,
+    transformations: REVIEW_PHOTO_BUCKET.transformations,
+  }
+
+  let current
+  try {
+    current = await storage.getBucket({ bucketId: reviewPhotosBucketId })
+  } catch (error) {
+    if (!isMissing(error)) throw error
+    try {
+      await storage.createBucket({ bucketId: reviewPhotosBucketId, ...expected })
+      console.log(`created bucket ${reviewPhotosBucketId}`)
+      return
+    } catch (createError) {
+      if (!isConflict(createError)) throw createError
+      current = await storage.getBucket({ bucketId: reviewPhotosBucketId })
+    }
+  }
+
+  const currentPermissions = current.$permissions || current.permissions || []
+  const mismatches = []
+  if (current.name !== expected.name) mismatches.push(`name=${current.name}`)
+  if (!sameUnorderedValues(currentPermissions, expected.permissions)) mismatches.push('permissions differ')
+  for (const key of ['fileSecurity', 'enabled', 'maximumFileSize', 'encryption', 'antivirus', 'transformations']) {
+    if (current[key] !== expected[key]) mismatches.push(`${key}=${current[key]}`)
+  }
+  if (!sameUnorderedValues(current.allowedFileExtensions || [], expected.allowedFileExtensions)) {
+    mismatches.push(`allowedFileExtensions=[${(current.allowedFileExtensions || []).join(', ')}]`)
+  }
+  if (mismatches.length > 0) {
+    throw new Error(
+      `bucket ${reviewPhotosBucketId} definition mismatch (${mismatches.join(', ')}). ` +
+      'Resolve the drift manually; setup will not overwrite or recreate this private review bucket.',
+    )
+  }
+  console.log(`exists  bucket ${reviewPhotosBucketId}`)
 }
 
 async function seedSettings(targetDatabaseId = databaseId) {
@@ -620,9 +745,24 @@ await ensureCollection(databaseId, cakePickupOpeningsId, 'cake_pickup_openings',
 await ensureCollection(databaseId, settingsId, 'settings', settingsPermissions)
 await ensureCollection(classDatabaseId, classReservationsId, 'class_reservations', reservationPermissions)
 await ensureCollection(classDatabaseId, classBookedDatesId, 'class_booked_dates', publicBookedDatePermissions)
+for (const resource of reviewCollectionResources) {
+  await ensureCollection(
+    databaseId,
+    resource.id,
+    resource.definition.name,
+    resource.permissions,
+    { strict: true, documentSecurity: false },
+  )
+}
+await ensureReviewPhotoBucket()
 
 for (const attribute of reservationAttributes) {
-  await ensureAttribute(databaseId, reservationsId, attribute)
+  await ensureAttribute(
+    databaseId,
+    reservationsId,
+    attribute,
+    { strict: reservationReviewAuditAttributeKeys.has(attribute.key) },
+  )
 }
 
 for (const attribute of cakePickupOpeningAttributes) {
@@ -641,11 +781,32 @@ for (const attribute of classBookedDateAttributes) {
   await ensureAttribute(classDatabaseId, classBookedDatesId, attribute)
 }
 
+for (const resource of reviewCollectionResources) {
+  for (const attribute of resource.definition.attributes) {
+    await ensureAttribute(databaseId, resource.id, attribute, { strict: true })
+  }
+}
+
 await ensureAttributesReady(databaseId, reservationsId, reservationAttributes)
 await ensureAttributesReady(databaseId, cakePickupOpeningsId, cakePickupOpeningAttributes)
 await ensureAttributesReady(databaseId, settingsId, settingsAttributes)
 await ensureAttributesReady(classDatabaseId, classReservationsId, classReservationAttributes)
 await ensureAttributesReady(classDatabaseId, classBookedDatesId, classBookedDateAttributes)
+for (const resource of reviewCollectionResources) {
+  await ensureAttributesReady(databaseId, resource.id, resource.definition.attributes)
+  const current = await databases.listAttributes({
+    databaseId,
+    collectionId: resource.id,
+    queries: [Query.limit(100)],
+    total: true,
+  })
+  assertCompleteExactAvailableKeySet(
+    `${resource.id} attributes`,
+    resource.definition.attributes,
+    current,
+    'attributes',
+  )
+}
 
 for (const index of reservationIndexes) {
   await ensureIndex(databaseId, reservationsId, index)
@@ -663,6 +824,24 @@ await deleteIndexIfExists(classDatabaseId, classBookedDatesId, 'classDate_unique
 
 for (const index of classBookedDateIndexes) {
   await ensureIndex(classDatabaseId, classBookedDatesId, index)
+}
+
+for (const resource of reviewCollectionResources) {
+  for (const index of resource.definition.indexes) {
+    await ensureIndex(databaseId, resource.id, index)
+  }
+  const current = await databases.listIndexes({
+    databaseId,
+    collectionId: resource.id,
+    queries: [Query.limit(100)],
+    total: true,
+  })
+  assertCompleteExactAvailableKeySet(
+    `${resource.id} indexes`,
+    resource.definition.indexes,
+    current,
+    'indexes',
+  )
 }
 
 await seedSettings(databaseId)
