@@ -10,6 +10,7 @@ import {
   extractReviewToken,
   formatCouponExpiry,
   formatExperienceDate,
+  getDefaultReviewConsentState,
   getReviewDocumentLanguage,
   getReviewSourceLabel,
   getStarAriaLabel,
@@ -35,11 +36,12 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
   const [generationController] = useState(() => createReviewGenerationController())
   const [language, setLanguage] = useState<ReviewLanguage>('en')
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'loading' })
+  const initialConsents = getDefaultReviewConsentState(false)
   const [rating, setRating] = useState(0)
   const [body, setBody] = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [publishConsent, setPublishConsent] = useState(false)
-  const [photoPublishConsent, setPhotoPublishConsent] = useState(false)
+  const [publishConsent, setPublishConsent] = useState(initialConsents.publishConsent)
+  const [photoPublishConsent, setPhotoPublishConsent] = useState(initialConsents.photoPublishConsent)
   const [photoStatus, setPhotoStatus] = useState<PhotoStatus>('idle')
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
   const [photoErrorCode, setPhotoErrorCode] = useState<'invalid' | 'too-large' | 'dimensions-too-large' | 'request' | null>(null)
@@ -73,8 +75,9 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
     setRating(0)
     setBody('')
     setDisplayName('')
-    setPublishConsent(false)
-    setPhotoPublishConsent(false)
+    const consents = getDefaultReviewConsentState(false)
+    setPublishConsent(consents.publishConsent)
+    setPhotoPublishConsent(consents.photoPublishConsent)
     setPhotoStatus('idle')
     setPhotoErrorCode(null)
     previewController.clear()
@@ -105,8 +108,12 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
     setLoadState({ kind: 'loading' })
     if (demoMode) {
       const { reviewDemoFixture } = await import('./lib/review-page-demo')
+      const context = reviewDemoFixture()
       generationController.commit(binding, () => {
-        setLoadState({ kind: 'valid', context: reviewDemoFixture(), binding })
+        const consents = getDefaultReviewConsentState(context.hasPhoto)
+        setPublishConsent(consents.publishConsent)
+        setPhotoPublishConsent(consents.photoPublishConsent)
+        setLoadState({ kind: 'valid', context, binding })
       })
       return
     }
@@ -114,6 +121,9 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
     try {
       const context = await loadReviewInvite(functions, appwriteConfig.reviewApiFunctionId, binding.token)
       generationController.commit(binding, () => {
+        const consents = getDefaultReviewConsentState(context.hasPhoto)
+        setPublishConsent(consents.publishConsent)
+        setPhotoPublishConsent(consents.photoPublishConsent)
         setLoadState({ kind: 'valid', context, binding })
       })
     } catch (error) {
@@ -204,7 +214,7 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
         setPhotoPreviewUrl(nextPreview)
         photoFocusTargetRef.current = 'status'
         setPhotoStatus('attached')
-        setPhotoPublishConsent(false)
+        setPhotoPublishConsent(getDefaultReviewConsentState(true).photoPublishConsent)
       })
       commitPhotoState(binding, true)
     } catch (error) {
@@ -404,6 +414,7 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
                 {photoStatus === 'uploading' && copy.photoUploading}
                 {photoStatus === 'removing' && copy.photoRemoving}
                 {photoStatus === 'attached' && copy.photoAttached}
+                {photoErrorCode && <strong className="review-photo-failure-title">{hasPhoto ? copy.photoUpdateFailed : copy.photoUploadFailed}</strong>}{' '}
                 {photoErrorCode === 'invalid' && copy.photoInvalid}
                 {photoErrorCode === 'too-large' && copy.photoTooLarge}
                 {photoErrorCode === 'dimensions-too-large' && copy.photoDimensionsTooLarge}

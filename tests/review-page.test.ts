@@ -10,6 +10,7 @@ import {
   extractReviewToken,
   formatCouponExpiry,
   formatExperienceDate,
+  getDefaultReviewConsentState,
   getReviewDocumentLanguage,
   getReviewSourceLabel,
   getStarAriaLabel,
@@ -55,6 +56,21 @@ test('review copy defaults to English and provides a Korean toggle without chang
   assert.match(REVIEW_COPY.ko.copyError, /복사하지 못했습니다/)
   assert.match(REVIEW_COPY.en.submissionUncertain, /may have been received/i)
   assert.match(REVIEW_COPY.en.submissionUncertain, /retry/i)
+  assert.equal(REVIEW_COPY.en.photoUploadFailed, 'Photo upload failed. Your photo was not attached. Try again before submitting, or submit without a photo for the 5% reward.')
+  assert.equal(REVIEW_COPY.ko.photoUploadFailed, '사진 업로드에 실패했습니다. 사진이 첨부되지 않았습니다. 제출 전에 다시 시도하거나, 사진 없이 제출하면 5% 혜택이 적용됩니다.')
+  assert.equal(REVIEW_COPY.en.photoUpdateFailed, 'Photo update failed. Your existing photo is still attached.')
+  assert.equal(REVIEW_COPY.ko.photoUpdateFailed, '사진 변경에 실패했습니다. 기존 사진은 그대로 첨부되어 있습니다.')
+})
+
+test('review publication consent defaults on while photo consent follows actual attachment state', () => {
+  assert.deepEqual(getDefaultReviewConsentState(false), {
+    publishConsent: true,
+    photoPublishConsent: false,
+  })
+  assert.deepEqual(getDefaultReviewConsentState(true), {
+    publishConsent: true,
+    photoPublishConsent: true,
+  })
 })
 
 test('review heading uses exact source-neutral copy for cake and class invitations', () => {

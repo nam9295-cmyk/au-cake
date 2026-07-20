@@ -26,6 +26,13 @@ export type ReviewSubmissionResult = {
   couponExpiresAt: string
 }
 
+export function getDefaultReviewConsentState(hasPhoto: boolean) {
+  return {
+    publishConsent: true,
+    photoPublishConsent: hasPhoto,
+  }
+}
+
 export type ReviewGenerationBinding = Readonly<{
   generation: number
   token: string
@@ -126,7 +133,9 @@ export const REVIEW_COPY = {
     photoInvalid: 'Choose a JPG, PNG, WebP, HEIC or HEIF image.',
     photoTooLarge: 'That photo is too large to prepare. Please choose a smaller image.',
     photoDimensionsTooLarge: 'That photo has too many pixels for safe mobile processing. Please choose a photo under 20 megapixels.',
-    photoError: 'We could not update the private photo. Please try again.',
+    photoUploadFailed: 'Photo upload failed. Your photo was not attached. Try again before submitting, or submit without a photo for the 5% reward.',
+    photoUpdateFailed: 'Photo update failed. Your existing photo is still attached.',
+    photoError: 'Please try again.',
     rewardFive: 'No photo attached · 5% reward',
     rewardTen: 'Photo attached · 10% reward',
     submit: 'Submit honest review',
@@ -170,7 +179,9 @@ export const REVIEW_COPY = {
     photoInvalid: 'JPG, PNG, WebP, HEIC 또는 HEIF 사진을 선택해 주세요.',
     photoTooLarge: '사진을 준비하기에 너무 큽니다. 더 작은 사진을 선택해 주세요.',
     photoDimensionsTooLarge: '모바일에서 안전하게 처리하기에는 사진 해상도가 너무 큽니다. 2천만 화소 이하 사진을 선택해 주세요.',
-    photoError: '비공개 사진을 변경하지 못했습니다. 다시 시도해 주세요.',
+    photoUploadFailed: '사진 업로드에 실패했습니다. 사진이 첨부되지 않았습니다. 제출 전에 다시 시도하거나, 사진 없이 제출하면 5% 혜택이 적용됩니다.',
+    photoUpdateFailed: '사진 변경에 실패했습니다. 기존 사진은 그대로 첨부되어 있습니다.',
+    photoError: '다시 시도해 주세요.',
     rewardFive: '사진 미첨부 · 5% 혜택',
     rewardTen: '사진 첨부 · 10% 혜택',
     submit: '솔직한 후기 제출',

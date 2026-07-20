@@ -5814,6 +5814,7 @@ td select {
 .review-photo-actions button:only-child { grid-column: 1 / -1; }
 .review-photo-actions button:disabled { cursor: wait; opacity: 0.55; }
 .review-photo-status { min-height: 1.5em; margin: 0; color: #9f2e28; font-weight: 700; }
+.review-photo-failure-title { display: block; margin-bottom: 4px; }
 .review-photo-attached { margin: 0; color: #035542; font-weight: 800; }
 .review-photo-reward { color: #035542; }
 .review-photo-consent { padding: 14px; border: 1px solid #035542; background: #fff; }
