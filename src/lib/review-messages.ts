@@ -15,18 +15,14 @@ export function buildReviewLink(token: string, origin = CANONICAL_REVIEW_ORIGIN)
 }
 
 export function buildReviewRequestMessage(
-  sourceType: ReviewSourceType,
+  _sourceType: ReviewSourceType,
   fullName: string,
   token: string,
 ): string {
   const firstName = firstNameFromFullName(fullName)
   const link = buildReviewLink(token)
 
-  if (sourceType === 'cake') {
-    return `Hi ${firstName}, thank you again for ordering from Verygood Chocolate.\n\nWe’d love to hear how your cake was. An honest review earns 5% off your next order, or 10% if you include a cake photo. We look forward to your honest feedback.\n\nWrite your review: ${link}\nThe link is valid for 30 days.`
-  }
-
-  return `Hi ${firstName}, thank you for joining Jenny’s cake class.\n\nWe’d love to hear how the class went. An honest review earns 5% off your next order, or 10% if you include a photo of the finished cake. We look forward to your honest feedback.\n\nWrite your review: ${link}\nThe link is valid for 30 days.`
+  return `Hi ${firstName}!\n\nThanks so much for ordering with us! We hope you enjoyed every single bite.\nWe'd love to know how everything turned out.\n\nLeave us an honest review and get 5% off your next order — or make it 10% off if you add a photo or two!\n\n${link}\n\nYour unique code will be valid for 30 days once issued!\n\n-very good chocolate team-`
 }
 
 export function canCreateReviewInvite(sourceType: ReviewSourceType, status: string): boolean {

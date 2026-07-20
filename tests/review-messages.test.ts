@@ -16,27 +16,38 @@ import {
   parseReviewInviteExecution,
 } from '../src/lib/review-repository.js'
 
-const cakeMessage = `Hi Jenny, thank you again for ordering from Verygood Chocolate.
+const cakeMessage = `Hi Jenny!
 
-We’d love to hear how your cake was. An honest review earns 5% off your next order, or 10% if you include a cake photo. We look forward to your honest feedback.
+Thanks so much for ordering with us! We hope you enjoyed every single bite.
+We'd love to know how everything turned out.
 
-Write your review: https://au.verygood-chocolate.com/review#cake-token
-The link is valid for 30 days.`
+Leave us an honest review and get 5% off your next order — or make it 10% off if you add a photo or two!
 
-const classMessage = `Hi Alex, thank you for joining Jenny’s cake class.
+https://au.verygood-chocolate.com/review#cake-token
 
-We’d love to hear how the class went. An honest review earns 5% off your next order, or 10% if you include a photo of the finished cake. We look forward to your honest feedback.
+Your unique code will be valid for 30 days once issued!
 
-Write your review: https://au.verygood-chocolate.com/review#class-token
-The link is valid for 30 days.`
+-very good chocolate team-`
 
-test('cake review request matches the exact full-string contract', () => {
+const classMessage = `Hi Alex!
+
+Thanks so much for ordering with us! We hope you enjoyed every single bite.
+We'd love to know how everything turned out.
+
+Leave us an honest review and get 5% off your next order — or make it 10% off if you add a photo or two!
+
+https://au.verygood-chocolate.com/review#class-token
+
+Your unique code will be valid for 30 days once issued!
+
+-very good chocolate team-`
+
+test('cake review request matches Jenny’s exact full-string contract', () => {
   assert.equal(buildReviewRequestMessage('cake', '  Jenny Kim  ', 'cake-token'), cakeMessage)
 })
 
-test('class review request matches the exact full-string contract including curly apostrophe', () => {
+test('class review request uses the same exact full-string contract', () => {
   assert.equal(buildReviewRequestMessage('class', 'Alex Morgan', 'class-token'), classMessage)
-  assert.match(classMessage, /Jenny’s/)
 })
 
 test('review links use an encoded fragment and canonical production origin by default', () => {
