@@ -84,7 +84,7 @@ export function assertReviewCouponRepricingAllowed(
     edits[field] !== undefined && edits[field] !== reservation[field]
   ))
   if (changesPrice) {
-    throw new Error('리워드 쿠폰 예약은 서버 재가격 계산 기능이 필요합니다. 제품·옵션·수량·카카오·금액은 수정할 수 없습니다.')
+    throw new Error('일회용 쿠폰 예약은 서버 재가격 계산 기능이 필요합니다. 제품·옵션·수량·카카오·금액은 수정할 수 없습니다.')
   }
 }
 

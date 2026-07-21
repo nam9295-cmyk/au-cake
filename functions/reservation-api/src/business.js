@@ -1,15 +1,18 @@
 import { digestReviewCouponCode } from './coupon-digest.js'
 
 const MARKET_TIMEZONE = 'Australia/Sydney'
-export const REVIEW_COUPON_ANIMALS = [
+const GENERATED_REVIEW_COUPON_ANIMALS = [
   'FOX', 'CAT', 'DOG', 'OWL', 'PIG', 'BEE', 'COW', 'CUB', 'EMU', 'HEN', 'KOI', 'PUP', 'RAM', 'YAK', 'APE',
 ]
+export const REVIEW_COUPON_ANIMALS = [...GENERATED_REVIEW_COUPON_ANIMALS, 'JENNIE']
 export const REVIEW_COUPON_FRUITS = [
   'KIWI', 'FIG', 'LIME', 'PEAR', 'PLUM', 'APPLE', 'GRAPE', 'GUAVA', 'LEMON', 'MANGO', 'MELON', 'PEACH',
 ]
 const REVIEW_COUPON_PATTERN = new RegExp(
-  `^(?:${REVIEW_COUPON_ANIMALS.join('|')})(?:${REVIEW_COUPON_FRUITS.join('|')})[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$`,
+  `^(?:${GENERATED_REVIEW_COUPON_ANIMALS.join('|')})(?:${REVIEW_COUPON_FRUITS.join('|')})[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$`,
 )
+const MANUAL_REVIEW_COUPON_PATTERN = /^JENNIE[A-Z0-9]{5}$/
+const SAFE_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 
 export const PROMO_CODE = 'chocolate'
 export const LEMON_PROMO_CODE = 'lemoni'
@@ -113,7 +116,7 @@ function fail(code, status = 400) {
 export function normalizeReviewCouponCode(value) {
   if (typeof value !== 'string') fail('PROMO_CODE_INVALID')
   const normalized = value.trim().toUpperCase()
-  if (!REVIEW_COUPON_PATTERN.test(normalized)) fail('PROMO_CODE_INVALID')
+  if (!REVIEW_COUPON_PATTERN.test(normalized) && !MANUAL_REVIEW_COUPON_PATTERN.test(normalized)) fail('PROMO_CODE_INVALID')
   return normalized
 }
 
@@ -129,10 +132,15 @@ function strictFutureIso(value, now) {
 
 export function validateReviewCoupon(coupon, normalizedCodeValue, now = new Date(), hmacSecret) {
   const normalizedCode = normalizeReviewCouponCode(normalizedCodeValue)
+  const codeLast4 = normalizedCode.slice(-4)
   if (
     !coupon ||
     coupon.codeHash !== hashReviewCouponCode(normalizedCode, hmacSecret) ||
-    (coupon.rewardPercent !== 5 && coupon.rewardPercent !== 10) ||
+    !SAFE_LAST4_PATTERN.test(codeLast4) ||
+    coupon.codeLast4 !== codeLast4 ||
+    (MANUAL_REVIEW_COUPON_PATTERN.test(normalizedCode)
+      ? coupon.rewardPercent !== 5
+      : coupon.rewardPercent !== 5 && coupon.rewardPercent !== 10) ||
     coupon.scope !== 'cake' ||
     coupon.status !== 'active' ||
     !strictFutureIso(coupon.expiresAt, now)
@@ -140,7 +148,7 @@ export function validateReviewCoupon(coupon, normalizedCodeValue, now = new Date
   return {
     id: coupon.$id || coupon.id,
     rewardPercent: coupon.rewardPercent,
-    codeLast4: normalizedCode.slice(-4),
+    codeLast4,
   }
 }
 
@@ -373,7 +381,7 @@ function calculateCakeTotal(
     (discountPercent !== 5 && discountPercent !== 10) ||
     typeof reviewCoupon.id !== 'string' || !reviewCoupon.id ||
     typeof reviewCoupon.codeLast4 !== 'string' ||
-    !/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/.test(reviewCoupon.codeLast4)
+    !SAFE_LAST4_PATTERN.test(reviewCoupon.codeLast4)
   )) fail('PROMO_CODE_INVALID')
   const discountedCents = reviewCoupon
     ? originalTotalCents - Math.round(originalTotalCents * discountPercent / 100)

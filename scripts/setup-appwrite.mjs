@@ -18,6 +18,7 @@ import {
   parseAdminUserIds,
   RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
   REVIEW_COLLECTIONS,
+  REVIEW_COLLECTION_RESOURCE_KEYS,
   REVIEW_PHOTO_BUCKET,
   resolveReviewResourceIds,
   reviewPhotoBucketMismatches,
@@ -58,13 +59,8 @@ const classBookedDatesId =
   process.env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
   process.env.VITE_APPWRITE_KIDS_BOOKED_DATES_TABLE_ID ||
   'class_booked_dates'
-const {
-  reviewInvitesCollectionId,
-  reviewsCollectionId,
-  reviewCouponsCollectionId,
-  reviewPhotosBucketId,
-  reviewPhotoCleanupCollectionId,
-} = resolveReviewResourceIds(process.env)
+const reviewResourceIds = resolveReviewResourceIds(process.env)
+const { reviewPhotosBucketId } = reviewResourceIds
 const market = String(process.env.VITE_MARKET || process.env.MARKET || 'KR').toUpperCase() === 'AU' ? 'AU' : 'KR'
 const reservationWriteMode = process.env.APPWRITE_RESERVATION_WRITE_MODE === 'function' ? 'function' : 'direct'
 const adminUserIds = parseAdminUserIds(process.env)
@@ -102,28 +98,11 @@ const reviewCollectionPermissions = Object.fromEntries(
   Object.entries(REVIEW_COLLECTIONS).map(([key, definition]) => [key, permissionsForPrivateReviewResource(definition)]),
 )
 const reviewPhotoPermissions = permissionsForPrivateReviewResource(REVIEW_PHOTO_BUCKET)
-const reviewCollectionResources = [
-  {
-    id: reviewInvitesCollectionId,
-    definition: REVIEW_COLLECTIONS.reviewInvites,
-    permissions: reviewCollectionPermissions.reviewInvites,
-  },
-  {
-    id: reviewsCollectionId,
-    definition: REVIEW_COLLECTIONS.reviews,
-    permissions: reviewCollectionPermissions.reviews,
-  },
-  {
-    id: reviewCouponsCollectionId,
-    definition: REVIEW_COLLECTIONS.reviewCoupons,
-    permissions: reviewCollectionPermissions.reviewCoupons,
-  },
-  {
-    id: reviewPhotoCleanupCollectionId,
-    definition: REVIEW_COLLECTIONS.reviewPhotoCleanup,
-    permissions: reviewCollectionPermissions.reviewPhotoCleanup,
-  },
-]
+const reviewCollectionResources = REVIEW_COLLECTION_RESOURCE_KEYS.map(([key, idKey]) => ({
+  id: reviewResourceIds[idKey],
+  definition: REVIEW_COLLECTIONS[key],
+  permissions: reviewCollectionPermissions[key],
+}))
 const reservationReviewAuditAttributeKeys = new Set(
   RESERVATION_REVIEW_AUDIT_ATTRIBUTES.map(({ key }) => key),
 )

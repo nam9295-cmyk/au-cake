@@ -2,6 +2,7 @@ export const REVIEW_RESOURCE_DEFAULTS = Object.freeze({
   reviewInvitesCollectionId: 'review_invites',
   reviewsCollectionId: 'reviews',
   reviewCouponsCollectionId: 'review_coupons',
+  manualCouponsCollectionId: 'manual_coupons',
   reviewPhotosBucketId: 'review-photos',
   reviewPhotoCleanupCollectionId: 'review_photo_cleanup',
 })
@@ -20,6 +21,9 @@ export function resolveReviewResourceIds(env = {}) {
       env.APPWRITE_REVIEW_COUPONS_TABLE_ID ||
       env.VITE_APPWRITE_REVIEW_COUPONS_TABLE_ID ||
       REVIEW_RESOURCE_DEFAULTS.reviewCouponsCollectionId,
+    manualCouponsCollectionId:
+      env.APPWRITE_MANUAL_COUPONS_TABLE_ID ||
+      REVIEW_RESOURCE_DEFAULTS.manualCouponsCollectionId,
     reviewPhotosBucketId:
       env.APPWRITE_REVIEW_PHOTOS_BUCKET_ID ||
       env.VITE_APPWRITE_REVIEW_PHOTOS_BUCKET_ID ||
@@ -114,6 +118,26 @@ export const REVIEW_COLLECTIONS = Object.freeze({
       { key: 'expiresAt_idx', attributes: ['expiresAt'] },
     ]),
   }),
+  manualCoupons: Object.freeze({
+    name: 'manual_coupons',
+    ...PRIVATE_REVIEW_ACCESS,
+    attributes: Object.freeze([
+      { key: 'codeHash', type: 'string', size: 64, required: true },
+      { key: 'codeLast4', type: 'string', size: 4, required: true },
+      { key: 'rewardPercent', type: 'integer', required: true, min: 5, max: 5 },
+      { key: 'scope', type: 'enum', required: true, elements: ['cake'] },
+      { key: 'status', type: 'enum', required: true, elements: ['active', 'redeemed', 'expired', 'revoked'] },
+      { key: 'expiresAt', type: 'string', size: 40, required: true },
+      { key: 'redeemedAt', type: 'string', size: 40, required: false },
+      { key: 'redeemedReservationId', type: 'string', size: 64, required: false },
+      { key: 'createdAt', type: 'string', size: 40, required: true },
+    ]),
+    indexes: Object.freeze([
+      { key: 'codeHash_unique', attributes: ['codeHash'], type: 'unique' },
+      { key: 'status_idx', attributes: ['status'] },
+      { key: 'expiresAt_idx', attributes: ['expiresAt'] },
+    ]),
+  }),
   reviewPhotoCleanup: Object.freeze({
     name: 'review_photo_cleanup',
     ...PRIVATE_REVIEW_ACCESS,
@@ -132,6 +156,14 @@ export const REVIEW_COLLECTIONS = Object.freeze({
     ]),
   }),
 })
+
+export const REVIEW_COLLECTION_RESOURCE_KEYS = Object.freeze([
+  Object.freeze(['reviewInvites', 'reviewInvitesCollectionId']),
+  Object.freeze(['reviews', 'reviewsCollectionId']),
+  Object.freeze(['reviewCoupons', 'reviewCouponsCollectionId']),
+  Object.freeze(['manualCoupons', 'manualCouponsCollectionId']),
+  Object.freeze(['reviewPhotoCleanup', 'reviewPhotoCleanupCollectionId']),
+])
 
 export const RESERVATION_REVIEW_AUDIT_ATTRIBUTES = Object.freeze([
   { key: 'subtotalCents', type: 'integer', required: false, min: 0 },
@@ -186,12 +218,7 @@ export function buildReviewSetupPlan(env = {}) {
     env.APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
     env.VITE_APPWRITE_CAKE_RESERVATIONS_TABLE_ID ||
     'reservations'
-  const resources = [
-    ['reviewInvites', ids.reviewInvitesCollectionId],
-    ['reviews', ids.reviewsCollectionId],
-    ['reviewCoupons', ids.reviewCouponsCollectionId],
-    ['reviewPhotoCleanup', ids.reviewPhotoCleanupCollectionId],
-  ]
+  const resources = REVIEW_COLLECTION_RESOURCE_KEYS.map(([key, idKey]) => [key, ids[idKey]])
 
   return {
     mode: 'dry-run',

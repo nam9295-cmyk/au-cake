@@ -17,7 +17,7 @@
 4. 호스팅 환경에는 `APPWRITE_API_KEY`나 `RESEND_API_KEY`를 절대 `VITE_` 변수로 넣지 않습니다.
 5. `REVIEW_COUPON_HMAC_SECRET`은 최소 32 random bytes의 padding 없는 canonical base64url 값 하나를 사용합니다. Review API 쿠폰 발급 Function과 Reservation API 쿠폰 사용 Function에 **완전히 같은 값**을 설정하고 `VITE_*`에는 두지 않습니다. `.env.example`은 의도적으로 빈 값이며 실제 값은 secret store에만 둡니다. 발급된 `active` 쿠폰이 남아 있는 동안에는 절대 회전하지 마세요. 기존 digest와 새 digest가 달라져 유효 쿠폰을 사용할 수 없게 됩니다.
 
-리뷰 쿠폰 사용 전에는 `npm run setup:appwrite`의 별도 승인된 schema apply로 기존 예약 컬렉션의 optional 감사 필드 `subtotalCents`, `discountPercent`, `discountCents`, `appliedPromoCodeLast4`, `reviewCouponId`와 private `review_coupons` 컬렉션/index가 준비되어 있어야 합니다. 먼저 `node scripts/setup-appwrite.mjs --dry-run`으로 계획을 확인하세요. `cake_pickup_openings` 컬렉션이 없어도 Function은 기존 동작과 같이 예외 오픈 슬롯 없이 작동합니다.
+쿠폰 사용 전에는 `npm run setup:appwrite`의 별도 승인된 schema apply로 기존 예약 컬렉션의 optional 감사 필드 `subtotalCents`, `discountPercent`, `discountCents`, `appliedPromoCodeLast4`, `reviewCouponId`, private `review_coupons`, 그리고 리뷰 연결이 없는 private `manual_coupons` 컬렉션/index가 준비되어 있어야 합니다. 먼저 `node scripts/setup-appwrite.mjs --dry-run`으로 계획을 확인하세요. `manual_coupons`는 `rewardPercent=5`만 허용하며 코드 원문은 저장하지 않습니다. `cake_pickup_openings` 컬렉션이 없어도 Function은 기존 동작과 같이 예외 오픈 슬롯 없이 작동합니다.
 
 ## 1. Function만 먼저 배포
 
@@ -31,7 +31,7 @@ npm run deploy:reservation-api -- --dry-run
 npm run deploy:reservation-api
 ```
 
-배포 변수에는 server-only `APPWRITE_REVIEW_COUPONS_TABLE_ID`와 위의 동일한 `REVIEW_COUPON_HMAC_SECRET`이 포함되고 `VITE_*` fallback은 사용하지 않습니다. 두 Function의 `--dry-run`은 secret 원문을 절대 출력하지 않고 masked 값만 보여 줍니다. Function dynamic key는 atomic reservation/coupon transaction과 read-only schema readiness에 필요한 database/collection/attribute/index/document scope만 사용합니다. 기본 runtime은 transaction을 지원하는 `node-20.0`이며 Node 18 미만은 거부합니다. 안전한 순서는 **schema apply/검증 → Review Function `ready` → Reservation Function `ready` → 잘못된 쿠폰으로 no-write smoke → frontend 전환**입니다.
+배포 변수에는 server-only `APPWRITE_REVIEW_COUPONS_TABLE_ID`, `APPWRITE_MANUAL_COUPONS_TABLE_ID`, 그리고 위의 동일한 `REVIEW_COUPON_HMAC_SECRET`이 포함되고 `VITE_*` fallback은 사용하지 않습니다. 두 Function의 `--dry-run`은 secret 원문을 절대 출력하지 않고 masked 값만 보여 줍니다. Function dynamic key는 atomic reservation/coupon transaction과 read-only schema readiness에 필요한 database/collection/attribute/index/document scope만 사용합니다. 이 self-hosted Appwrite에서는 transaction-compatible `node-16.0` runtime을 사용합니다. 안전한 순서는 **schema apply/검증 → Review Function `ready` → Reservation Function `ready` → compatible frontend `all` 배포·검증 → 공개 생성 권한 닫기 → 잘못된 쿠폰 no-write smoke → 수동 쿠폰 발급**입니다.
 
 스크립트가 배포 빌드를 기다린 뒤 읽기 전용 health check를 수행합니다. 마지막에 아래 두 메시지가 모두 나와야 합니다.
 
@@ -91,6 +91,29 @@ APPWRITE_RESERVATION_WRITE_MODE=function
 ```
 
 마지막으로 케이크/클래스 신청과 조회를 다시 한 번 확인합니다.
+
+### 최종 게이트: 수동 1회용 쿠폰 발급
+
+실제 쿠폰은 다음 조건을 모두 확인한 뒤에만 발급합니다.
+
+1. compatible frontend가 배포되고 `VITE_RESERVATION_API_MODE=all`로 실제 예약 저장이 Function을 통과함
+2. 공개 DB 생성 권한이 닫히고 `APPWRITE_RESERVATION_WRITE_MODE=function`이 적용됨
+3. 존재하지 않는 형식상 유효한 수동 쿠폰으로 no-write smoke를 수행해 `PROMO_CODE_INVALID`와 예약 미생성을 확인함
+4. Reservation Function health/readiness가 계속 `ready`임
+
+발급 명령은 인자가 없으면 dotenv, SDK, 코드 원문, 네트워크, 쓰기에 접근하지 않는 dry-run입니다.
+
+```bash
+npm run issue:manual-coupon
+```
+
+실제 발급은 `MANUAL_COUPON_CODE`를 서버 전용 환경에 임시로 설정하고 **유일한 허용 플래그**인 `--apply`를 붙였을 때만 수행됩니다. 코드는 `^JENNIE[A-Z0-9]{5}$` 형식이어야 하며 명령행 인자로 전달하지 않습니다. 출력에는 원문 대신 끝 4자리와 마스킹된 ID만 표시됩니다.
+
+```bash
+MANUAL_COUPON_CODE='(server-only value)' npm run issue:manual-coupon -- --apply
+```
+
+`--dry-run`이나 다른 인자는 거부됩니다. 이 발급은 별도 운영 승인을 받은 최종 단계이며, frontend/function/권한/no-write smoke 중 하나라도 실패하면 실행하지 않습니다.
 
 ## 즉시 롤백 순서
 

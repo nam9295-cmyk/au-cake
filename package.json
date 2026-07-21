@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",
     "lint": "eslint .",
-    "test": "npm run test:cake && npm run test:class && npm run test:reviews && npm run test:admin-reviews && npm run test:review-messages && npm run test:review-page && npm run test:review-photo-client && npm run test:review-coupon-client && npm run test:review-schema && npm run test:review-api && npm run test:review-api-deploy && npm run test:admin-calendar && npm run test:admin-reservation && npm run test:csv-security && npm run test:calendar-access && npm run test:reservation-api && npm run test:reservation-api-deploy",
+    "test": "npm run test:cake && npm run test:class && npm run test:reviews && npm run test:admin-reviews && npm run test:review-messages && npm run test:review-page && npm run test:review-photo-client && npm run test:review-coupon-client && npm run test:review-schema && npm run test:review-api && npm run test:review-api-deploy && npm run test:manual-coupon && npm run test:admin-calendar && npm run test:admin-reservation && npm run test:csv-security && npm run test:calendar-access && npm run test:reservation-api && npm run test:reservation-api-deploy",
     "test:review-coupon-client": "TMP_DIR=/tmp/au-cake-review-coupon-client-test-$(date +%s); VITE_MARKET=AU npx tsc tests/review-coupon-client.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && VITE_MARKET=AU node --test $TMP_DIR/tests/review-coupon-client.test.js && node --test tests/review-coupon-component.test.mjs",
     "test:reviews": "TMP_DIR=/tmp/au-cake-reviews-test-$(date +%s); npx tsc tests/reviews.test.ts tests/public-reviews.test.ts tests/public-review-dialog.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && node --test $TMP_DIR/tests/reviews.test.js $TMP_DIR/tests/public-reviews.test.js $TMP_DIR/tests/public-review-dialog.test.js && node --test tests/public-reviews-component.test.mjs",
     "test:admin-reviews": "TMP_DIR=/tmp/au-cake-admin-reviews-test-$(date +%s); npx tsc tests/admin-reviews.test.ts tests/admin-review-photo-preview.test.ts tests/admin-review-reward-client.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --lib ES2022,DOM --types node --outDir $TMP_DIR --skipLibCheck && node --test $TMP_DIR/tests/admin-reviews.test.js $TMP_DIR/tests/admin-review-photo-preview.test.js $TMP_DIR/tests/admin-review-reward-client.test.js && node --test tests/admin-reviews-component.test.mjs tests/admin-review-reward-component.test.mjs tests/admin-photo-preview-api.test.mjs",
@@ -17,6 +17,7 @@
     "test:review-schema": "node --test tests/review-schema.test.mjs",
     "test:review-api": "node --test tests/review-api.test.mjs tests/review-photo-api.test.mjs tests/review-coupon-encryption.test.mjs tests/admin-review-reward-api.test.mjs",
     "test:review-api-deploy": "node --test tests/review-api-deploy.test.mjs",
+    "test:manual-coupon": "node --test tests/manual-coupon.test.mjs",
     "test:class": "TMP_DIR=/tmp/au-cake-test-$(date +%s); npx tsc tests/class-utils.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && node --test $TMP_DIR/tests/class-utils.test.js",
     "test:cake": "TMP_DIR=/tmp/au-cake-options-test-$(date +%s); VITE_MARKET=AU npx tsc tests/cake-options.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && VITE_MARKET=AU node --test $TMP_DIR/tests/cake-options.test.js",
     "test:admin-reservation": "TMP_DIR=/tmp/au-cake-admin-reservation-test-$(date +%s); VITE_MARKET=AU npx tsc tests/admin-reservation-edit.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && VITE_MARKET=AU node --test $TMP_DIR/tests/admin-reservation-edit.test.js",
@@ -30,6 +31,7 @@
     "deploy:reservation-notification": "node scripts/deploy-reservation-notification.mjs",
     "deploy:reservation-api": "node scripts/deploy-reservation-api.mjs",
     "deploy:review-api": "node scripts/deploy-review-api.mjs",
+    "issue:manual-coupon": "node scripts/issue-manual-coupon.mjs",
     "reservation-api:permissions": "node scripts/set-reservation-write-mode.mjs"
   },
   "dependencies": {

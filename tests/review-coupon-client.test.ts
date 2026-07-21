@@ -9,6 +9,7 @@ import {
   getDemoReviewPricingAudit,
   getOptionalReservationPricingAudit,
   getReservationPricingAudit,
+  normalizeReviewCouponCode,
   parseCakeReservationResult,
   promoErrorMessage,
   shouldShowPromoInput,
@@ -71,6 +72,38 @@ test('review coupon input normalizes exact animal-fruit codes without inferring 
   assert.equal(getPromoEntryState('pave-cake', 'FOXKIWI7Q2MK', validStaticNow, 10).discountPercent, 10)
   for (const invalid of ['FOXKIWI7Q2MI', 'FOXKIWI7Q20K', 'FOXKIWI7Q2M', 'FOXKIWI7Q2MKA', 'RATKIWI7Q2MK', 'FOXORANGE7Q2MK', 'VG5-ABCD-2345']) {
     assert.equal(getPromoEntryState('pave-cake', invalid, validStaticNow).kind, 'invalid')
+  }
+})
+
+test('manual JENNIE-family coupon normalizes as server-pending without lowering the payable amount', () => {
+  const promo = getPromoEntryState('pave-cake', '  jennietest7  ', validStaticNow)
+  assert.deepEqual(promo, {
+    kind: 'review-pending',
+    normalizedCode: 'JENNIETEST7',
+    discountPercent: 5,
+  })
+  assert.deepEqual(getPromoPriceDisplay(75, promo), { finalPrice: 75, estimatedPrice: 71.25 })
+  assert.equal(createReviewCouponHandoff().offer('  jennietest7  '), true)
+  assert.equal(getPromoEntryState('pave-cake', 'JENNIETEST7', validStaticNow, 10).discountPercent, 5)
+})
+
+test('malformed JENNIE lookalikes fail closed while unrelated promo text keeps the existing invalid path', () => {
+  for (const invalid of ['JENNIETEST', 'JENNIETEST77', 'JENNIE-TEST', 'JENNIETES!', 'JENNYTEST7']) {
+    assert.equal(getPromoEntryState('pave-cake', invalid, validStaticNow).kind, 'invalid', invalid)
+    assert.equal(createReviewCouponHandoff().offer(invalid), false, invalid)
+  }
+  assert.deepEqual(getPromoEntryState('pave-cake', ' summer-special ', validStaticNow), {
+    kind: 'invalid',
+    normalizedCode: 'summer-special',
+    discountPercent: 0,
+  })
+})
+
+test('coupon normalizers reject non-string runtime values without coercion', () => {
+  for (const value of [12345, true, false, { toString: () => 'JENNIETEST7' }]) {
+    assert.equal(normalizeReviewCouponCode(value as unknown as string), null)
+    assert.equal(getPromoEntryState('pave-cake', value as unknown as string, validStaticNow).kind, 'empty')
+    assert.equal(createReviewCouponHandoff().offer(value as unknown as string), false)
   }
 })
 
@@ -165,6 +198,15 @@ test('cake response parser allowlists fields and validates authoritative pricing
   })
   assert.equal('reviewCouponId' in parsed, false)
   assert.equal('promoCode' in parsed, false)
+  const manual = parseCakeReservationResult({
+    ...contaminated,
+    promotionKind: 'manual-coupon',
+    discountPercent: 5,
+    discountCents: 375,
+    totalPriceCents: 7125,
+    totalPrice: 71.25,
+  })
+  assert.equal(manual.promotionKind, 'manual-coupon')
   for (const invalid of [
     { discountPercent: 7 }, { subtotalCents: -1 }, { discountCents: 751 }, { totalPriceCents: 6749 },
     { appliedPromoCodeLast4: '12 4' }, { discountPercent: 0, discountCents: 750 },

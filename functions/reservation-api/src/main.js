@@ -34,6 +34,7 @@ function reservationResourceConfig(env = process.env) {
     classBookedDatesId: env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID || 'class_booked_dates',
     cakePickupOpeningsId: env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID || 'cake_pickup_openings',
     reviewCouponsId: env.APPWRITE_REVIEW_COUPONS_TABLE_ID || 'review_coupons',
+    manualCouponsId: env.APPWRITE_MANUAL_COUPONS_TABLE_ID || 'manual_coupons',
     reviewCouponHmacSecret: typeof env.REVIEW_COUPON_HMAC_SECRET === 'string' && env.REVIEW_COUPON_HMAC_SECRET.trim()
       ? resolveReviewCouponHmacSecret(env, ReservationApiError)
       : null,
@@ -129,11 +130,13 @@ async function uniqueReservationNumber(databases, databaseId, collectionId, gene
 
 export function cakeReservationResponse(document) {
   const discountCents = Number(document.discountCents || 0)
-  const promotionKind = document.reviewCouponId
-    ? 'review-reward'
-    : discountCents > 0
-      ? 'static'
-      : 'none'
+  const promotionKind = typeof document.reviewCouponId === 'string' && document.reviewCouponId.startsWith('manual:')
+    ? 'manual-coupon'
+    : document.reviewCouponId
+      ? 'review-reward'
+      : discountCents > 0
+        ? 'static'
+        : 'none'
   return {
     reservationNumber: document.reservationNumber,
     customerName: document.customerName,
@@ -199,7 +202,8 @@ function classReservationResponse(document) {
 }
 
 function reviewCouponInput(value) {
-  if (typeof value !== 'string') return null
+  if (value === undefined) return null
+  if (typeof value !== 'string') throw new ReservationApiError('PROMO_CODE_INVALID')
   const trimmed = value.trim()
   const upper = trimmed.toUpperCase()
   const hasAnimalPrefix = REVIEW_COUPON_ANIMALS.some((animal) => upper.startsWith(animal))
@@ -233,10 +237,18 @@ export function reservationFailureResponse(caught, action) {
   }
 }
 
-async function findReviewCoupon(databases, runtimeConfig, normalizedCode, transactionId) {
+function couponLedgerForCode(runtimeConfig, normalizedCode) {
+  const manual = normalizedCode.startsWith('JENNIE')
+  return {
+    collectionId: manual ? runtimeConfig.manualCouponsId : runtimeConfig.reviewCouponsId,
+    manual,
+  }
+}
+
+async function findReviewCoupon(databases, runtimeConfig, normalizedCode, collectionId, transactionId) {
   const result = await databases.listDocuments({
     databaseId: runtimeConfig.cakeDatabaseId,
-    collectionId: runtimeConfig.reviewCouponsId,
+    collectionId,
     queries: [Query.equal('codeHash', hashReviewCouponCode(normalizedCode, runtimeConfig.reviewCouponHmacSecret)), Query.limit(1)],
     total: false,
     ...(transactionId ? { transactionId } : {}),
@@ -244,7 +256,7 @@ async function findReviewCoupon(databases, runtimeConfig, normalizedCode, transa
   return result.documents[0] || null
 }
 
-async function reconcileReviewCouponCommit(databases, runtimeConfig, documentId, customerPhone, couponId) {
+async function reconcileReviewCouponCommit(databases, runtimeConfig, documentId, customerPhone, couponId, collectionId) {
   let reservation
   let currentCoupon
   try {
@@ -260,7 +272,7 @@ async function reconcileReviewCouponCommit(databases, runtimeConfig, documentId,
       couponId
         ? databases.getDocument({
             databaseId: runtimeConfig.cakeDatabaseId,
-            collectionId: runtimeConfig.reviewCouponsId,
+            collectionId,
             documentId: couponId,
           }).catch((error) => {
             if (error instanceof AppwriteException && error.code === 404) return null
@@ -345,13 +357,23 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
 
   const transaction = await databases.createTransaction()
   const transactionId = transaction.$id || transaction.id
+  const couponLedger = couponLedgerForCode(runtimeConfig, normalizedReviewCode)
   let couponId
   let commitAttempted = false
   try {
-    const couponDocument = await findReviewCoupon(databases, runtimeConfig, normalizedReviewCode, transactionId)
+    const couponDocument = await findReviewCoupon(
+      databases,
+      runtimeConfig,
+      normalizedReviewCode,
+      couponLedger.collectionId,
+      transactionId,
+    )
     const reviewCoupon = validateReviewCoupon(couponDocument, normalizedReviewCode, now, runtimeConfig.reviewCouponHmacSecret)
     couponId = reviewCoupon.id
-    data = buildCakeReservation(safeInput, { now, reservationNumber: data.reservationNumber, reviewCoupon })
+    const pricingCoupon = couponLedger.manual
+      ? { ...reviewCoupon, id: `manual:${reviewCoupon.id}` }
+      : reviewCoupon
+    data = buildCakeReservation(safeInput, { now, reservationNumber: data.reservationNumber, reviewCoupon: pricingCoupon })
     await databases.createDocument({
       databaseId: runtimeConfig.cakeDatabaseId,
       collectionId: runtimeConfig.cakeReservationsId,
@@ -361,9 +383,13 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
     })
     await databases.updateDocument({
       databaseId: runtimeConfig.cakeDatabaseId,
-      collectionId: runtimeConfig.reviewCouponsId,
+      collectionId: couponLedger.collectionId,
       documentId: couponId,
-      data: {
+      data: couponLedger.manual ? {
+        status: 'redeemed',
+        redeemedAt: now.toISOString(),
+        redeemedReservationId: documentId,
+      } : {
         status: 'redeemed',
         redeemedAt: now.toISOString(),
         redeemedReservationId: documentId,
@@ -380,7 +406,14 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
     try { await databases.updateTransaction({ transactionId, rollback: true }) } catch { /* already rolled back or committed */ }
     if (error instanceof ReservationApiError) throw error
     if (commitAttempted || isConflict(error)) {
-      return reconcileReviewCouponCommit(databases, runtimeConfig, documentId, customerPhone, couponId)
+      return reconcileReviewCouponCommit(
+        databases,
+        runtimeConfig,
+        documentId,
+        customerPhone,
+        couponId,
+        couponLedger.collectionId,
+      )
     }
     throw error
   }
@@ -530,7 +563,15 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
     queries: [Query.limit(1)],
     total: false,
   })
-  const [couponCollection, couponAttributeResult, couponIndexResult, reservationAttributeResult] = await Promise.all([
+  const [
+    couponCollection,
+    couponAttributeResult,
+    couponIndexResult,
+    manualCouponCollection,
+    manualCouponAttributeResult,
+    manualCouponIndexResult,
+    reservationAttributeResult,
+  ] = await Promise.all([
     databases.getCollection({
       databaseId: runtimeConfig.cakeDatabaseId,
       collectionId: runtimeConfig.reviewCouponsId,
@@ -547,6 +588,22 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
       queries: [Query.limit(100)],
       total: true,
     }),
+    databases.getCollection({
+      databaseId: runtimeConfig.cakeDatabaseId,
+      collectionId: runtimeConfig.manualCouponsId,
+    }),
+    databases.listAttributes({
+      databaseId: runtimeConfig.cakeDatabaseId,
+      collectionId: runtimeConfig.manualCouponsId,
+      queries: [Query.limit(100)],
+      total: true,
+    }),
+    databases.listIndexes({
+      databaseId: runtimeConfig.cakeDatabaseId,
+      collectionId: runtimeConfig.manualCouponsId,
+      queries: [Query.limit(100)],
+      total: true,
+    }),
     databases.listAttributes({
       databaseId: runtimeConfig.cakeDatabaseId,
       collectionId: runtimeConfig.cakeReservationsId,
@@ -557,33 +614,49 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
 
   const completeResources = (response, key) => {
     const resources = Array.isArray(response?.[key]) ? response[key] : []
-    if (!Number.isInteger(response?.total) || response.total > resources.length) {
+    if (!Number.isInteger(response?.total) || response.total !== resources.length) {
       throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
     }
     return resources
   }
-  const couponPermissions = couponCollection?.$permissions || couponCollection?.permissions
-  if (!Array.isArray(couponPermissions) || couponPermissions.length === 0) {
-    throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+  const validateAdminOnlyPermissions = (collection) => {
+    const permissions = collection?.$permissions || collection?.permissions
+    if (!Array.isArray(permissions) || permissions.length === 0) {
+      throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+    }
+    const permissionsByAdmin = new Map()
+    for (const permission of permissions) {
+      const match = typeof permission === 'string'
+        ? /^(read|update|delete)\("user:([A-Za-z0-9][A-Za-z0-9._-]{0,35})"\)$/.exec(permission)
+        : null
+      if (!match) throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+      const actions = permissionsByAdmin.get(match[2]) || new Set()
+      if (actions.has(match[1])) throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+      actions.add(match[1])
+      permissionsByAdmin.set(match[2], actions)
+    }
+    if ([...permissionsByAdmin.values()].some((actions) =>
+      actions.size !== 3 || !['read', 'update', 'delete'].every((action) => actions.has(action)))) {
+      throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+    }
   }
-  const permissionsByAdmin = new Map()
-  for (const permission of couponPermissions) {
-    const match = typeof permission === 'string'
-      ? /^(read|update|delete)\("user:([A-Za-z0-9][A-Za-z0-9._-]{0,35})"\)$/.exec(permission)
-      : null
-    if (!match) throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
-    const actions = permissionsByAdmin.get(match[2]) || new Set()
-    if (actions.has(match[1])) throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
-    actions.add(match[1])
-    permissionsByAdmin.set(match[2], actions)
-  }
-  if ([...permissionsByAdmin.values()].some((actions) =>
-    actions.size !== 3 || !['read', 'update', 'delete'].every((action) => actions.has(action)))) {
+  const manualCouponCollectionId = manualCouponCollection?.$id || manualCouponCollection?.id
+  if (
+    manualCouponCollectionId !== runtimeConfig.manualCouponsId ||
+    manualCouponCollection?.name !== 'manual_coupons' ||
+    manualCouponCollection?.enabled !== true ||
+    manualCouponCollection?.documentSecurity !== false
+  ) {
     throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
   }
 
+  validateAdminOnlyPermissions(couponCollection)
+  validateAdminOnlyPermissions(manualCouponCollection)
+
   const couponAttributes = completeResources(couponAttributeResult, 'attributes')
   const couponIndexes = completeResources(couponIndexResult, 'indexes')
+  const manualCouponAttributes = completeResources(manualCouponAttributeResult, 'attributes')
+  const manualCouponIndexes = completeResources(manualCouponIndexResult, 'indexes')
   const reservationAttributes = completeResources(reservationAttributeResult, 'attributes')
   const codeHash = couponAttributes.find((attribute) => (attribute.key || attribute.$id) === 'codeHash')
   const uniqueCodeHash = couponIndexes.some((index) =>
@@ -609,6 +682,52 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
     return (current.min ?? null) === expected.min && (current.max ?? null) === expected.max
   }
   if (!expectedCouponEnvelopeAttributes.every(compatibleCouponEnvelopeAttribute)) {
+    throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+  }
+
+  const expectedManualCouponAttributes = [
+    { key: 'codeHash', type: 'string', required: true, size: 64 },
+    { key: 'codeLast4', type: 'string', required: true, size: 4 },
+    { key: 'rewardPercent', type: 'integer', required: true, min: 5, max: 5 },
+    { key: 'scope', type: 'enum', required: true, elements: ['cake'] },
+    { key: 'status', type: 'enum', required: true, elements: ['active', 'redeemed', 'expired', 'revoked'] },
+    { key: 'expiresAt', type: 'string', required: true, size: 40 },
+    { key: 'redeemedAt', type: 'string', required: false, size: 40 },
+    { key: 'redeemedReservationId', type: 'string', required: false, size: 64 },
+    { key: 'createdAt', type: 'string', required: true, size: 40 },
+  ]
+  const compatibleManualAttribute = (expected, current) => {
+    if (!current || current.status !== 'available' || current.required !== expected.required) return false
+    if (expected.type === 'enum') {
+      if (current.type !== 'enum' && current.type !== 'string') return false
+      return Array.isArray(current.elements) &&
+        current.elements.length === expected.elements.length &&
+        expected.elements.every((element, index) => current.elements[index] === element)
+    }
+    if (current.type !== expected.type) return false
+    if (expected.type === 'string') return current.size === expected.size
+    return (current.min ?? null) === expected.min && (current.max ?? null) === expected.max
+  }
+  if (manualCouponAttributes.length !== expectedManualCouponAttributes.length ||
+      !expectedManualCouponAttributes.every((expected) => compatibleManualAttribute(
+        expected,
+        manualCouponAttributes.find((attribute) => (attribute.key || attribute.$id) === expected.key),
+      ))) {
+    throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+  }
+
+  const expectedManualCouponIndexes = [
+    { key: 'codeHash_unique', type: 'unique', attributes: ['codeHash'] },
+    { key: 'status_idx', type: 'key', attributes: ['status'] },
+    { key: 'expiresAt_idx', type: 'key', attributes: ['expiresAt'] },
+  ]
+  if (manualCouponIndexes.length !== expectedManualCouponIndexes.length ||
+      !expectedManualCouponIndexes.every((expected) => {
+        const current = manualCouponIndexes.find((index) => (index.key || index.$id) === expected.key)
+        return current?.status === 'available' && current.type === expected.type &&
+          Array.isArray(current.attributes) && current.attributes.length === expected.attributes.length &&
+          expected.attributes.every((attribute, index) => current.attributes[index] === attribute)
+      })) {
     throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
   }
 

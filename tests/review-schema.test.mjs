@@ -14,6 +14,7 @@ import {
   reviewPhotoBucketMismatches,
   RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
   REVIEW_COLLECTIONS,
+  REVIEW_COLLECTION_RESOURCE_KEYS,
   REVIEW_PHOTO_BUCKET,
   REVIEW_RESOURCE_DEFAULTS,
   resolveReviewResourceIds,
@@ -39,6 +40,7 @@ test('review resource ids use safe defaults and server ids override Vite ids', (
     reviewInvitesCollectionId: 'review_invites',
     reviewsCollectionId: 'reviews',
     reviewCouponsCollectionId: 'review_coupons',
+    manualCouponsCollectionId: 'manual_coupons',
     reviewPhotosBucketId: 'review-photos',
     reviewPhotoCleanupCollectionId: 'review_photo_cleanup',
   })
@@ -49,12 +51,15 @@ test('review resource ids use safe defaults and server ids override Vite ids', (
       APPWRITE_REVIEW_INVITES_TABLE_ID: 'server_invites',
       VITE_APPWRITE_REVIEWS_TABLE_ID: 'vite_reviews',
       VITE_APPWRITE_REVIEW_COUPONS_TABLE_ID: 'vite_coupons',
+      VITE_APPWRITE_MANUAL_COUPONS_TABLE_ID: 'public_manual_must_not_win',
+      APPWRITE_MANUAL_COUPONS_TABLE_ID: 'server_manual_coupons',
       APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'server_photos',
     }),
     {
       reviewInvitesCollectionId: 'server_invites',
       reviewsCollectionId: 'vite_reviews',
       reviewCouponsCollectionId: 'vite_coupons',
+      manualCouponsCollectionId: 'server_manual_coupons',
       reviewPhotosBucketId: 'server_photos',
       reviewPhotoCleanupCollectionId: 'review_photo_cleanup',
     },
@@ -208,6 +213,45 @@ test('review coupon schema supports one-time reward lookup and expiry queries', 
   assert.deepEqual(index(coupons, 'expiresAt_idx').attributes, ['expiresAt'])
 })
 
+test('manual coupon schema is a dedicated exact private 5 percent ledger without review linkage or recovery envelope', () => {
+  const coupons = REVIEW_COLLECTIONS.manualCoupons
+  assert.equal(coupons.name, 'manual_coupons')
+  assert.deepEqual(coupons.publicPermissions, [])
+  assert.deepEqual(coupons.adminPermissions, ['read', 'update', 'delete'])
+  assert.deepEqual(coupons.attributes, [
+    { key: 'codeHash', type: 'string', size: 64, required: true },
+    { key: 'codeLast4', type: 'string', size: 4, required: true },
+    { key: 'rewardPercent', type: 'integer', required: true, min: 5, max: 5 },
+    { key: 'scope', type: 'enum', required: true, elements: ['cake'] },
+    { key: 'status', type: 'enum', required: true, elements: ['active', 'redeemed', 'expired', 'revoked'] },
+    { key: 'expiresAt', type: 'string', size: 40, required: true },
+    { key: 'redeemedAt', type: 'string', size: 40, required: false },
+    { key: 'redeemedReservationId', type: 'string', size: 64, required: false },
+    { key: 'createdAt', type: 'string', size: 40, required: true },
+  ])
+  assert.deepEqual(coupons.indexes, [
+    { key: 'codeHash_unique', attributes: ['codeHash'], type: 'unique' },
+    { key: 'status_idx', attributes: ['status'] },
+    { key: 'expiresAt_idx', attributes: ['expiresAt'] },
+  ])
+  assert.equal(coupons.attributes.some(({ key }) =>
+    key === 'sourceReviewId' ||
+    key === 'codeCiphertext' ||
+    key === 'codeIv' ||
+    key === 'codeAuthTag' ||
+    key === 'codeEncryptionVersion'), false)
+})
+
+test('strict review collection provisioning includes the dedicated manual coupon ledger without dropping existing resources', () => {
+  assert.deepEqual(REVIEW_COLLECTION_RESOURCE_KEYS, [
+    ['reviewInvites', 'reviewInvitesCollectionId'],
+    ['reviews', 'reviewsCollectionId'],
+    ['reviewCoupons', 'reviewCouponsCollectionId'],
+    ['manualCoupons', 'manualCouponsCollectionId'],
+    ['reviewPhotoCleanup', 'reviewPhotoCleanupCollectionId'],
+  ])
+})
+
 test('encrypted coupon attribute drift is rejected exactly while all envelope fields stay migration-safe optional', () => {
   const couponDefinitions = REVIEW_COLLECTIONS.reviewCoupons.attributes
     .filter(({ key }) => key.startsWith('code') && !['codeHash', 'codeLast4'].includes(key))
@@ -313,6 +357,7 @@ test('dry-run plan exposes review ids, private permissions, admin mapping intent
     APPWRITE_REVIEW_INVITES_TABLE_ID: 'invites_test',
     APPWRITE_REVIEWS_TABLE_ID: 'reviews_test',
     APPWRITE_REVIEW_COUPONS_TABLE_ID: 'coupons_test',
+    APPWRITE_MANUAL_COUPONS_TABLE_ID: 'manual_coupons_test',
     APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'photos_test',
     APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'cleanup_test',
     APPWRITE_ADMIN_USER_IDS: 'admin-a, admin-b',
@@ -323,7 +368,10 @@ test('dry-run plan exposes review ids, private permissions, admin mapping intent
   assert.equal(plan.mode, 'dry-run')
   assert.equal(plan.network, false)
   assert.equal(plan.databaseId, 'cake_db_test')
-  assert.deepEqual(plan.collections.map(({ id }) => id), ['invites_test', 'reviews_test', 'coupons_test', 'cleanup_test'])
+  assert.deepEqual(plan.collections.map(({ id }) => id), ['invites_test', 'reviews_test', 'coupons_test', 'manual_coupons_test', 'cleanup_test'])
+  const manualCouponsPlan = plan.collections.find(({ id }) => id === 'manual_coupons_test')
+  assert.deepEqual(manualCouponsPlan.attributeKeys, REVIEW_COLLECTIONS.manualCoupons.attributes.map(({ key }) => key))
+  assert.deepEqual(manualCouponsPlan.indexKeys, ['codeHash_unique', 'status_idx', 'expiresAt_idx'])
   const reviewsPlan = plan.collections.find(({ id }) => id === 'reviews_test')
   assert.deepEqual(
     reviewsPlan.indexes.find(({ key }) => key === 'public_reviews_idx'),

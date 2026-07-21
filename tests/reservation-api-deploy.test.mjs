@@ -22,6 +22,7 @@ const validEnv = {
   APPWRITE_KIDS_BOOKED_DATES_TABLE_ID: 'class_booked_dates',
   APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID: 'cake_pickup_openings',
   APPWRITE_REVIEW_COUPONS_TABLE_ID: 'private_review_coupons',
+  APPWRITE_MANUAL_COUPONS_TABLE_ID: 'private_manual_coupons',
   REVIEW_COUPON_HMAC_SECRET: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
   CALENDAR_VIEW_PIN: '123456',
   CALENDAR_TOKEN_SECRET: 'a-calendar-secret-that-is-at-least-32-characters',
@@ -44,13 +45,15 @@ test('reservation deployment diagnostics redact overlapping secrets, bare values
   assert.ok(output.length <= 1200)
 })
 
-test('reservation deploy maps review coupons with server-only variables', () => {
+test('reservation deploy maps review and manual coupons with server-only variables', () => {
   const config = resolveDeployConfig({
     ...validEnv,
     VITE_APPWRITE_REVIEW_COUPONS_TABLE_ID: 'public_must_not_win',
+    VITE_APPWRITE_MANUAL_COUPONS_TABLE_ID: 'public_manual_must_not_win',
   })
   assert.equal(config.runtime, 'node-16.0')
   assert.equal(config.runtimeVariables.APPWRITE_REVIEW_COUPONS_TABLE_ID, 'private_review_coupons')
+  assert.equal(config.runtimeVariables.APPWRITE_MANUAL_COUPONS_TABLE_ID, 'private_manual_coupons')
   assert.equal(config.runtimeVariables.REVIEW_COUPON_HMAC_SECRET, validEnv.REVIEW_COUPON_HMAC_SECRET)
   assert.equal(Object.keys(config.runtimeVariables).some((key) => key.startsWith('VITE_')), false)
 })
@@ -61,6 +64,7 @@ test('reservation deploy requires a strong shared coupon HMAC secret and marks i
   }
   assert.equal(isSecretFunctionVariable('REVIEW_COUPON_HMAC_SECRET'), true)
   assert.equal(isSecretFunctionVariable('APPWRITE_REVIEW_COUPONS_TABLE_ID'), false)
+  assert.equal(isSecretFunctionVariable('APPWRITE_MANUAL_COUPONS_TABLE_ID'), false)
 })
 
 test('reservation function dynamic key has exact cross-document transaction and readiness scopes', () => {
@@ -86,10 +90,13 @@ test('reservation deploy dry-run is redacted and cannot mutate permissions or ne
   assert.equal(plan.network, false)
   assert.equal(plan.dotenvLoaded, false)
   assert.equal(plan.collectionPermissionChanges, false)
+  assert.equal(plan.function.runtime, 'node-16.0')
   assert.equal(plan.function.variableNames.includes('APPWRITE_REVIEW_COUPONS_TABLE_ID'), true)
+  assert.equal(plan.function.variableNames.includes('APPWRITE_MANUAL_COUPONS_TABLE_ID'), true)
   assert.equal(plan.function.variableNames.includes('REVIEW_COUPON_HMAC_SECRET'), true)
   assert.equal(JSON.stringify(plan).includes(validEnv.REVIEW_COUPON_HMAC_SECRET), false)
   assert.equal(JSON.stringify(plan).includes('private_review_coupons'), false)
+  assert.equal(JSON.stringify(plan).includes('private_manual_coupons'), false)
 })
 
 test('actual reservation deploy CLI dry-run exits before credentials, dotenv and network setup', () => {

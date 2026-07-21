@@ -17,6 +17,7 @@ const REVIEW_COUPON_FRUITS = ['KIWI', 'FIG', 'LIME', 'PEAR', 'PLUM', 'APPLE', 'G
 const REVIEW_COUPON_PATTERN = new RegExp(
   `^(?:${REVIEW_COUPON_ANIMALS.join('|')})(?:${REVIEW_COUPON_FRUITS.join('|')})[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$`,
 )
+const MANUAL_REVIEW_COUPON_PATTERN = /^JENNIE[A-Z0-9]{5}$/
 const SAFE_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 const VALID_CAKE_SIZES = new Set<CakeSize>(['mini', 'size-1', '15cm', '17cm', '19cm', '22cm'])
 const VALID_CHOCOLATE_TYPES = new Set<ChocolateType>(['dark', 'milk'])
@@ -32,8 +33,9 @@ export type PromoEntryState =
   | { kind: 'invalid'; normalizedCode: string; discountPercent: 0 }
 
 export function normalizeReviewCouponCode(value?: string): string | null {
-  const normalized = String(value || '').trim().toUpperCase()
-  return REVIEW_COUPON_PATTERN.test(normalized) ? normalized : null
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toUpperCase()
+  return REVIEW_COUPON_PATTERN.test(normalized) || MANUAL_REVIEW_COUPON_PATTERN.test(normalized) ? normalized : null
 }
 
 export function shouldShowPromoInput(orderKind: 'cake' | 'class', productId?: ProductId): boolean {
@@ -46,7 +48,7 @@ export function getPromoEntryState(
   now = new Date(),
   reviewRewardPercent?: 5 | 10 | null,
 ): PromoEntryState {
-  const trimmed = String(value || '').trim()
+  const trimmed = typeof value === 'string' ? value.trim() : ''
   if (!trimmed) return { kind: 'empty', normalizedCode: '', discountPercent: 0 }
 
   const staticCode = getValidPromoCode(productId, trimmed, now)
@@ -54,10 +56,15 @@ export function getPromoEntryState(
 
   const reviewCode = normalizeReviewCouponCode(trimmed)
   if (reviewCode) {
+    const isManualCoupon = MANUAL_REVIEW_COUPON_PATTERN.test(reviewCode)
     return {
       kind: 'review-pending',
       normalizedCode: reviewCode,
-      discountPercent: reviewRewardPercent === 5 || reviewRewardPercent === 10 ? reviewRewardPercent : null,
+      discountPercent: isManualCoupon
+        ? 5
+        : reviewRewardPercent === 5 || reviewRewardPercent === 10
+          ? reviewRewardPercent
+          : null,
     }
   }
 
@@ -247,9 +254,10 @@ export function parseCakeReservationResult(value: unknown): Reservation {
   const pricing = getReservationPricingAudit(row)
   const totalPrice = requiredFiniteNumber(row, 'totalPrice')
   if (Math.round(totalPrice * 100) !== pricing.totalPriceCents) invalidResponse()
-  const promotionKind = requiredSetValue(row, 'promotionKind', new Set(['none', 'static', 'review-reward'] as const))
+  const promotionKind = requiredSetValue(row, 'promotionKind', new Set(['none', 'static', 'review-reward', 'manual-coupon'] as const))
   if ((promotionKind === 'none') !== (pricing.discountPercent === 0)) invalidResponse()
   if (promotionKind === 'static' && pricing.discountPercent !== 10) invalidResponse()
+  if (promotionKind === 'manual-coupon' && pricing.discountPercent !== 5) invalidResponse()
 
   const productId = requiredProductId(row)
   getProductById(productId)

@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
+import { createHmac } from 'node:crypto'
 import { AppwriteException, Query } from 'node-appwrite'
 import {
   ReservationApiError,
@@ -21,9 +22,11 @@ import {
 const now = new Date('2026-07-10T00:00:00.000Z')
 const requestId = 'f65f7e08-20f7-4b4a-b12a-6b42c043b268'
 const rawCode = 'FOXKIWI7Q2MK'
+const manualCode = 'JENNIETEST7'
 const TEST_SECRET = 'A'.repeat(43)
 const TEST_SECRET_BYTES = Buffer.from(TEST_SECRET, 'base64url')
 const codeHash = hashReviewCouponCode(rawCode, TEST_SECRET_BYTES)
+const manualCodeHash = createHmac('sha256', TEST_SECRET_BYTES).update(manualCode, 'utf8').digest('hex')
 
 test('cake create response omits internal ids and exposes only authoritative promotion kind', () => {
   const base = {
@@ -32,12 +35,15 @@ test('cake create response omits internal ids and exposes only authoritative pro
     pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본', requestNote: '', status: '예약신청',
     paymentStatus: '입금대기', totalPriceCents: 7125, subtotalCents: 7500, discountPercent: 5, discountCents: 375,
     appliedPromoCodeLast4: 'Q2MK', reviewCouponId: 'internal-coupon-id', adminMemo: '', createdAt: now.toISOString(), updatedAt: now.toISOString(),
+    rawCouponCode: manualCode,
   }
   const response = cakeReservationResponse(base)
   assert.equal(response.promotionKind, 'review-reward')
   assert.equal('id' in response, false)
   assert.equal('reviewCouponId' in response, false)
   assert.equal(JSON.stringify(response).includes('internal-'), false)
+  assert.equal(JSON.stringify(response).includes(manualCode), false)
+  assert.equal(cakeReservationResponse({ ...base, reviewCouponId: 'manual:private-coupon-id' }).promotionKind, 'manual-coupon')
   assert.equal(cakeReservationResponse({ ...base, reviewCouponId: undefined, discountPercent: 10, discountCents: 750, totalPriceCents: 6750 }).promotionKind, 'static')
   assert.equal(cakeReservationResponse({ ...base, reviewCouponId: undefined, appliedPromoCodeLast4: undefined, discountPercent: 0, discountCents: 0, totalPriceCents: 7500 }).promotionKind, 'none')
 })
@@ -50,6 +56,7 @@ const runtimeConfig = {
   classBookedDatesId: 'class_booked_dates',
   cakePickupOpeningsId: 'cake_pickup_openings',
   reviewCouponsId: 'review_coupons',
+  manualCouponsId: 'manual_coupons',
   reviewCouponHmacSecret: TEST_SECRET_BYTES,
 }
 
@@ -106,6 +113,20 @@ function coupon(overrides = {}) {
   }
 }
 
+function manualCoupon(overrides = {}) {
+  return {
+    $id: 'coupon-1',
+    codeHash: manualCodeHash,
+    codeLast4: 'EST7',
+    rewardPercent: 5,
+    scope: 'cake',
+    status: 'active',
+    expiresAt: '2099-09-01T00:00:00.000Z',
+    createdAt: '2026-07-01T00:00:00.000Z',
+    ...overrides,
+  }
+}
+
 function recoveryEnvelope(value) {
   return {
     codeCiphertext: value.codeCiphertext,
@@ -134,7 +155,7 @@ function createDatabaseDouble({ couponDocument = coupon(), failAt, commitApplies
         if (!document) throw new AppwriteException('Not found', 404, 'document_not_found')
         return document
       }
-      if (args.collectionId === 'review_coupons') {
+      if (args.collectionId === 'review_coupons' || args.collectionId === 'manual_coupons') {
         if (!storedCoupon || storedCoupon.$id !== args.documentId) throw new AppwriteException('Not found', 404, 'document_not_found')
         return storedCoupon
       }
@@ -142,7 +163,7 @@ function createDatabaseDouble({ couponDocument = coupon(), failAt, commitApplies
     },
     async listDocuments(args) {
       calls.push(['listDocuments', args])
-      if (args.collectionId === 'review_coupons') return { documents: storedCoupon ? [storedCoupon] : [] }
+      if (args.collectionId === 'review_coupons' || args.collectionId === 'manual_coupons') return { documents: storedCoupon ? [storedCoupon] : [] }
       return { documents: [] }
     },
     async createTransaction() {
@@ -190,6 +211,14 @@ test('review coupon format normalizes trim/case and requires curated tokens plus
   }
 })
 
+test('manual JENNIE-family syntax is narrow and normalizes trim and case', () => {
+  assert.equal(normalizeReviewCouponCode('  jennietest7  '), manualCode)
+  assert.equal(hashReviewCouponCode('  jennietest7  ', TEST_SECRET_BYTES), manualCodeHash)
+  for (const invalid of ['JENNIETEST', 'JENNIETEST77', 'JENNIE-TEST', 'JENNIETES!7', 'JENNYTEST7']) {
+    assert.throws(() => normalizeReviewCouponCode(invalid), assertApiCode('PROMO_CODE_INVALID'))
+  }
+})
+
 
 test('malformed animal-prefixed promo input fails closed and arbitrary actions cannot enter logs', async () => {
   const db = createDatabaseDouble({ couponDocument: null })
@@ -202,6 +231,38 @@ test('malformed animal-prefixed promo input fails closed and arbitrary actions c
   assert.equal(safeReservationLogAction('create-cake'), 'create-cake')
   for (const code of ['PROMO_CODE_ALREADY_USED', 'PROMO_CODE_RETRY_REQUIRED', 'PROMO_CODE_INVALID']) {
     assert.equal(publicReservationErrorCode(code), 'PROMO_CODE_INVALID')
+  }
+})
+
+test('malformed JENNIE lookalikes fail closed while unrelated promo text stays on the full-price path', async () => {
+  for (const promoCode of ['JENNIETEST', 'JENNIETEST77', 'JENNIE-TEST', 'JENNIETES!7']) {
+    const db = createDatabaseDouble({ couponDocument: null })
+    await assert.rejects(
+      () => createCake(db, { ...cakeInput, requestId: crypto.randomUUID(), promoCode }, { now, runtimeConfig }),
+      assertApiCode('PROMO_CODE_INVALID'),
+    )
+    assert.equal(db.calls.some(([name]) => name === 'createTransaction' || name === 'createDocument'), false, promoCode)
+  }
+
+  const unrelated = createDatabaseDouble({ couponDocument: null })
+  const result = await createCake(
+    unrelated,
+    { ...cakeInput, requestId: crypto.randomUUID(), promoCode: 'summer-special' },
+    { now, runtimeConfig },
+  )
+  assert.equal(result.totalPriceCents, 7500)
+  assert.equal(unrelated.calls.some(([, args]) => args?.collectionId === 'review_coupons'), false)
+  assert.equal(unrelated.calls.some(([, args]) => args?.collectionId === 'manual_coupons'), false)
+})
+
+test('non-string promoCode values fail closed before any reservation write', async () => {
+  for (const promoCode of [null, 0, false, { toString: () => manualCode }]) {
+    const db = createDatabaseDouble({ couponDocument: null })
+    await assert.rejects(
+      () => createCake(db, { ...cakeInput, requestId: crypto.randomUUID(), promoCode }, { now, runtimeConfig }),
+      assertApiCode('PROMO_CODE_INVALID'),
+    )
+    assert.equal(db.calls.some(([name]) => name === 'createTransaction' || name === 'createDocument'), false)
   }
 })
 
@@ -218,6 +279,28 @@ test('review coupon runtime validation trusts the stored reward and fails closed
     coupon({ expiresAt: now.toISOString() }),
     coupon({ expiresAt: 'not-an-iso-date' }),
   ]) assert.throws(() => validateReviewCoupon(invalid, rawCode, now, TEST_SECRET_BYTES), assertApiCode('PROMO_CODE_INVALID'))
+})
+
+test('manual coupon validation accepts only an active matching 5 percent record with its exact derived last4', () => {
+  const active = coupon({ codeHash: manualCodeHash, codeLast4: 'EST7', rewardPercent: 5 })
+  assert.deepEqual(validateReviewCoupon(active, manualCode, now, TEST_SECRET_BYTES), {
+    id: 'coupon-1', rewardPercent: 5, codeLast4: 'EST7',
+  })
+  for (const unavailable of [
+    null,
+    { ...active, status: 'expired' },
+    { ...active, status: 'revoked' },
+    { ...active, status: 'redeemed' },
+    { ...active, expiresAt: now.toISOString() },
+    { ...active, codeHash },
+    { ...active, codeLast4: 'FAIL' },
+    { ...active, rewardPercent: 10 },
+  ]) {
+    assert.throws(
+      () => validateReviewCoupon(unavailable, manualCode, now, TEST_SECRET_BYTES),
+      assertApiCode('PROMO_CODE_INVALID'),
+    )
+  }
 })
 
 test('review coupon pricing rounds discount cents and persists only safe audit fields', () => {
@@ -292,6 +375,33 @@ test('review coupon creation uses one transaction, exact audit, and never persis
   assert.equal(db.calls.some(([name, args]) => name === 'updateTransaction' && args.commit === true), true)
 })
 
+test('manual JENNIE-family coupon is redeemed atomically with a safe alphanumeric derived last4', async () => {
+  const db = createDatabaseDouble({ couponDocument: manualCoupon() })
+  const manualRequestId = crypto.randomUUID()
+  const result = await createCake(
+    db,
+    { ...cakeInput, requestId: manualRequestId, promoCode: '  jennietest7  ' },
+    { now, runtimeConfig },
+  )
+  assert.equal(result.totalPriceCents, 7125)
+  assert.equal(result.discountPercent, 5)
+  assert.equal(result.appliedPromoCodeLast4, 'EST7')
+  assert.equal(result.promotionKind, 'manual-coupon')
+  assert.equal(JSON.stringify(db.calls).includes(manualCode), false)
+  const couponRead = db.calls.find(([name, args]) => name === 'listDocuments' && args.collectionId === 'manual_coupons')
+  const couponUpdate = db.calls.find(([name, args]) => name === 'updateDocument' && args.collectionId === 'manual_coupons')
+  assert.equal(couponRead[1].transactionId, 'tx-1')
+  assert.equal(db.calls.some(([name, args]) => name === 'listDocuments' && args.collectionId === 'review_coupons'), false)
+  assert.deepEqual(couponUpdate[1].data, {
+    status: 'redeemed',
+    redeemedAt: now.toISOString(),
+    redeemedReservationId: manualRequestId,
+  })
+  assert.equal(couponUpdate[1].transactionId, 'tx-1')
+  assert.equal(db.calls.some(([name, args]) => name === 'createDocument' && args.transactionId === 'tx-1'), true)
+  assert.equal(db.calls.some(([name, args]) => name === 'updateTransaction' && args.commit === true), true)
+})
+
 test('create/update failures roll back and leave coupon active with its recovery envelope intact', async () => {
   const originalEnvelope = recoveryEnvelope(coupon())
   for (const failAt of ['create', 'update']) {
@@ -315,6 +425,25 @@ test('commit uncertainty returns committed reservation only when both records pr
   await assert.rejects(() => createCake(rolledBack, cakeInput, { now, runtimeConfig }), assertApiCode('PROMO_CODE_INVALID'))
   assert.equal(rolledBack.coupon.status, 'active')
   assert.deepEqual(recoveryEnvelope(rolledBack.coupon), recoveryEnvelope(coupon()))
+})
+
+test('manual coupon commit uncertainty reconciles only against the dedicated manual ledger', async () => {
+  const manualInput = { ...cakeInput, requestId: crypto.randomUUID(), promoCode: manualCode }
+  const committed = createDatabaseDouble({ couponDocument: manualCoupon(), failAt: 'commit', commitApplies: true })
+  const result = await createCake(committed, manualInput, { now, runtimeConfig })
+  assert.equal(result.promotionKind, 'manual-coupon')
+  assert.equal(committed.coupon.redeemedReservationId, manualInput.requestId)
+  assert.equal(committed.calls.some(([name, args]) => name === 'getDocument' && args.collectionId === 'manual_coupons'), true)
+  assert.equal(committed.calls.some(([, args]) => args?.collectionId === 'review_coupons'), false)
+
+  const rolledBack = createDatabaseDouble({ couponDocument: manualCoupon(), failAt: 'commit', commitApplies: false })
+  await assert.rejects(
+    () => createCake(rolledBack, manualInput, { now, runtimeConfig }),
+    assertApiCode('PROMO_CODE_INVALID'),
+  )
+  assert.equal(rolledBack.coupon.status, 'active')
+  assert.equal(rolledBack.calls.some(([name, args]) => name === 'getDocument' && args.collectionId === 'manual_coupons'), true)
+  assert.equal(rolledBack.calls.some(([, args]) => args?.collectionId === 'review_coupons'), false)
 })
 
 test('idempotent retry returns existing reservation before coupon lookup or validation', async () => {
@@ -415,13 +544,18 @@ test('reservation config requires and maps the server-only shared HMAC secret', 
     REVIEW_COUPON_HMAC_SECRET: TEST_SECRET,
   })
   assert.equal(defaults.reviewCouponsId, 'review_coupons')
+  assert.equal(defaults.manualCouponsId, 'manual_coupons')
   assert.equal(defaults.reviewCouponHmacSecret.length, 32)
-  assert.equal(resolveReservationConfig({
+  const configured = resolveReservationConfig({
     APPWRITE_CAKE_DATABASE_ID: 'cake-db',
     APPWRITE_REVIEW_COUPONS_TABLE_ID: 'private-coupons',
+    APPWRITE_MANUAL_COUPONS_TABLE_ID: 'private-manual-coupons',
     REVIEW_COUPON_HMAC_SECRET: TEST_SECRET,
     VITE_APPWRITE_REVIEW_COUPONS_TABLE_ID: 'public-ignored',
-  }).reviewCouponsId, 'private-coupons')
+    VITE_APPWRITE_MANUAL_COUPONS_TABLE_ID: 'public-manual-ignored',
+  })
+  assert.equal(configured.reviewCouponsId, 'private-coupons')
+  assert.equal(configured.manualCouponsId, 'private-manual-coupons')
 })
 
 const auditAttributes = [
@@ -440,24 +574,59 @@ const couponAttributes = [
   { key: 'codeEncryptionVersion', type: 'integer', required: false, min: 1, max: 1, status: 'available' },
 ]
 
+const manualCouponAttributes = [
+  { key: 'codeHash', type: 'string', size: 64, required: true, status: 'available' },
+  { key: 'codeLast4', type: 'string', size: 4, required: true, status: 'available' },
+  { key: 'rewardPercent', type: 'integer', required: true, min: 5, max: 5, status: 'available' },
+  { key: 'scope', type: 'string', required: true, elements: ['cake'], status: 'available' },
+  { key: 'status', type: 'string', required: true, elements: ['active', 'redeemed', 'expired', 'revoked'], status: 'available' },
+  { key: 'expiresAt', type: 'string', size: 40, required: true, status: 'available' },
+  { key: 'redeemedAt', type: 'string', size: 40, required: false, status: 'available' },
+  { key: 'redeemedReservationId', type: 'string', size: 64, required: false, status: 'available' },
+  { key: 'createdAt', type: 'string', size: 40, required: true, status: 'available' },
+]
+
+const manualCouponIndexes = [
+  { key: 'codeHash_unique', type: 'unique', attributes: ['codeHash'], status: 'available' },
+  { key: 'status_idx', type: 'key', attributes: ['status'], status: 'available' },
+  { key: 'expiresAt_idx', type: 'key', attributes: ['expiresAt'], status: 'available' },
+]
+
 function readinessDatabase(overrides = {}) {
   const calls = []
   const responses = {
-    collection: { $permissions: ['read("user:admin_1")', 'update("user:admin_1")', 'delete("user:admin_1")'] },
+    reviewCollection: { $permissions: ['read("user:admin_1")', 'update("user:admin_1")', 'delete("user:admin_1")'] },
+    manualCollection: {
+      $id: 'manual_coupons',
+      name: 'manual_coupons',
+      enabled: true,
+      documentSecurity: false,
+      $permissions: ['read("user:admin_1")', 'update("user:admin_1")', 'delete("user:admin_1")'],
+    },
     couponAttributes: { total: couponAttributes.length, attributes: couponAttributes },
     indexes: { total: 1, indexes: [{ key: 'code_hash_unique', type: 'unique', attributes: ['codeHash'], status: 'available' }] },
+    manualCouponAttributes: { total: manualCouponAttributes.length, attributes: manualCouponAttributes },
+    manualCouponIndexes: { total: manualCouponIndexes.length, indexes: manualCouponIndexes },
     reservationAttributes: { total: auditAttributes.length, attributes: auditAttributes },
     ...overrides,
   }
   return {
     calls,
     async listDocuments(args) { calls.push(['listDocuments', args]); return { documents: [] } },
-    async getCollection(args) { calls.push(['getCollection', args]); return responses.collection },
+    async getCollection(args) {
+      calls.push(['getCollection', args])
+      return args.collectionId === runtimeConfig.manualCouponsId ? responses.manualCollection : responses.reviewCollection
+    },
     async listAttributes(args) {
       calls.push(['listAttributes', args])
-      return args.collectionId === runtimeConfig.reviewCouponsId ? responses.couponAttributes : responses.reservationAttributes
+      if (args.collectionId === runtimeConfig.reviewCouponsId) return responses.couponAttributes
+      if (args.collectionId === runtimeConfig.manualCouponsId) return responses.manualCouponAttributes
+      return responses.reservationAttributes
     },
-    async listIndexes(args) { calls.push(['listIndexes', args]); return responses.indexes },
+    async listIndexes(args) {
+      calls.push(['listIndexes', args])
+      return args.collectionId === runtimeConfig.manualCouponsId ? responses.manualCouponIndexes : responses.indexes
+    },
   }
 }
 
@@ -465,7 +634,10 @@ test('reservation readiness returns only generic ready after complete private co
   const databases = readinessDatabase()
   assert.deepEqual(await checkReservationReadiness(databases, runtimeConfig), { status: 'ready' })
   assert.deepEqual(databases.calls.map(([name]) => name), [
-    'listDocuments', 'getCollection', 'listAttributes', 'listIndexes', 'listAttributes',
+    'listDocuments',
+    'getCollection', 'listAttributes', 'listIndexes',
+    'getCollection', 'listAttributes', 'listIndexes',
+    'listAttributes',
   ])
   for (const [name, args] of databases.calls) {
     if (name === 'listDocuments') assert.deepEqual(args.queries, [Query.limit(1)])
@@ -478,14 +650,14 @@ test('reservation readiness returns only generic ready after complete private co
 
 test('reservation readiness fails closed for every coupon privacy or digest drift', async () => {
   const cases = [
-    { collection: { $permissions: [] } },
-    { collection: { $permissions: ['read("any")'] } },
-    { collection: { $permissions: ['read("users")'] } },
-    { collection: { $permissions: ['read("guests")'] } },
-    { collection: { $permissions: ['read("team:staff")'] } },
-    { collection: { $permissions: ['create("user:admin_1")'] } },
-    { collection: { $permissions: ['read("user:admin_1")', 'update("user:admin_1")'] } },
-    { collection: { $permissions: ['read("user:admin_1")', 'update("user:admin_1")', 'delete("user:admin_2")'] } },
+    { reviewCollection: { $permissions: [] } },
+    { reviewCollection: { $permissions: ['read("any")'] } },
+    { reviewCollection: { $permissions: ['read("users")'] } },
+    { reviewCollection: { $permissions: ['read("guests")'] } },
+    { reviewCollection: { $permissions: ['read("team:staff")'] } },
+    { reviewCollection: { $permissions: ['create("user:admin_1")'] } },
+    { reviewCollection: { $permissions: ['read("user:admin_1")', 'update("user:admin_1")'] } },
+    { reviewCollection: { $permissions: ['read("user:admin_1")', 'update("user:admin_1")', 'delete("user:admin_2")'] } },
     { couponAttributes: { total: 0, attributes: [] } },
     { couponAttributes: { total: 1, attributes: [{ key: 'codeHash', type: 'string', size: 63, required: true, status: 'available' }] } },
     { couponAttributes: { total: 1, attributes: [{ key: 'codeHash', type: 'string', size: 64, required: true, status: 'processing' }] } },
@@ -495,6 +667,37 @@ test('reservation readiness fails closed for every coupon privacy or digest drif
   ]
   for (const drift of cases) {
     await assert.rejects(() => checkReservationReadiness(readinessDatabase(drift), runtimeConfig), assertApiCode('FUNCTION_CONFIGURATION_ERROR'))
+  }
+})
+
+test('reservation readiness requires the exact complete available private manual 5 percent schema', async () => {
+  const validPermissions = ['read("user:admin_1")', 'update("user:admin_1")', 'delete("user:admin_1")']
+  const cases = [
+    { manualCollection: { name: 'wrong', enabled: true, documentSecurity: false, $permissions: validPermissions } },
+    { manualCollection: { name: 'manual_coupons', enabled: false, documentSecurity: false, $permissions: validPermissions } },
+    { manualCollection: { name: 'manual_coupons', enabled: true, documentSecurity: true, $permissions: validPermissions } },
+    { manualCollection: { $permissions: [] } },
+    { manualCollection: { $permissions: ['read("any")'] } },
+    { manualCollection: { $permissions: validPermissions.slice(0, 2) } },
+    { manualCouponAttributes: { total: manualCouponAttributes.length - 1, attributes: manualCouponAttributes.slice(1) } },
+    { manualCouponAttributes: { total: manualCouponAttributes.length + 1, attributes: [...manualCouponAttributes, { key: 'sourceReviewId', type: 'string', size: 64, required: true, status: 'available' }] } },
+    { manualCouponAttributes: { total: manualCouponAttributes.length, attributes: manualCouponAttributes.map((attribute) => attribute.key === 'rewardPercent' ? { ...attribute, max: 10 } : attribute) } },
+    { manualCouponAttributes: { total: manualCouponAttributes.length, attributes: manualCouponAttributes.map((attribute) => attribute.key === 'rewardPercent' ? { ...attribute, min: 0 } : attribute) } },
+    { manualCouponAttributes: { total: manualCouponAttributes.length, attributes: manualCouponAttributes.map((attribute) => attribute.key === 'status' ? { ...attribute, elements: ['active', 'redeemed'] } : attribute) } },
+    { manualCouponAttributes: { total: manualCouponAttributes.length, attributes: manualCouponAttributes.map((attribute) => attribute.key === 'redeemedAt' ? { ...attribute, required: true } : attribute) } },
+    { manualCouponAttributes: { total: manualCouponAttributes.length, attributes: manualCouponAttributes.map((attribute) => attribute.key === 'createdAt' ? { ...attribute, status: 'processing' } : attribute) } },
+    { manualCouponAttributes: { total: 101, attributes: manualCouponAttributes } },
+    { manualCouponIndexes: { total: manualCouponIndexes.length - 1, indexes: manualCouponIndexes.slice(1) } },
+    { manualCouponIndexes: { total: manualCouponIndexes.length + 1, indexes: [...manualCouponIndexes, { key: 'source_idx', type: 'key', attributes: ['createdAt'], status: 'available' }] } },
+    { manualCouponIndexes: { total: manualCouponIndexes.length, indexes: manualCouponIndexes.map((index) => index.key === 'codeHash_unique' ? { ...index, type: 'key' } : index) } },
+    { manualCouponIndexes: { total: manualCouponIndexes.length, indexes: manualCouponIndexes.map((index) => index.key === 'status_idx' ? { ...index, status: 'processing' } : index) } },
+    { manualCouponIndexes: { total: 101, indexes: manualCouponIndexes } },
+  ]
+  for (const drift of cases) {
+    await assert.rejects(
+      () => checkReservationReadiness(readinessDatabase(drift), runtimeConfig),
+      assertApiCode('FUNCTION_CONFIGURATION_ERROR'),
+    )
   }
 })
 
@@ -515,9 +718,13 @@ test('reservation readiness fails closed for missing, incompatible, or unavailab
 
 test('reservation readiness rejects incomplete bounded schema pagination', async () => {
   for (const drift of [
+    { couponAttributes: { total: 0, attributes: couponAttributes } },
     { couponAttributes: { total: 101, attributes: Array(100).fill({ key: 'other', status: 'available' }) } },
     { indexes: { total: 101, indexes: Array(100).fill({ key: 'other', status: 'available' }) } },
+    { manualCouponAttributes: { total: 101, attributes: manualCouponAttributes } },
+    { manualCouponIndexes: { total: 101, indexes: manualCouponIndexes } },
     { reservationAttributes: { total: 101, attributes: auditAttributes } },
+    { reservationAttributes: { total: 0, attributes: auditAttributes } },
   ]) {
     await assert.rejects(() => checkReservationReadiness(readinessDatabase(drift), runtimeConfig), assertApiCode('FUNCTION_CONFIGURATION_ERROR'))
   }

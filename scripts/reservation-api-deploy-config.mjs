@@ -17,6 +17,7 @@ const ID_VARIABLES = Object.freeze({
   APPWRITE_KIDS_BOOKED_DATES_TABLE_ID: 'class_booked_dates',
   APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID: 'cake_pickup_openings',
   APPWRITE_REVIEW_COUPONS_TABLE_ID: 'review_coupons',
+  APPWRITE_MANUAL_COUPONS_TABLE_ID: 'manual_coupons',
 })
 
 export const REQUIRED_APPLY_ENVIRONMENT = Object.freeze([
@@ -147,7 +148,7 @@ export function buildDryRunPlan(env = {}) {
     wouldFailApply: REQUIRED_APPLY_ENVIRONMENT.some((key) => !String(env[key] || '').trim()),
     function: {
       id: maskValue(env.APPWRITE_RESERVATION_API_FUNCTION_ID || 'reservation-api'),
-      runtime: env.APPWRITE_RESERVATION_API_RUNTIME || 'node-20.0',
+      runtime: env.APPWRITE_RESERVATION_API_RUNTIME || 'node-16.0',
       source: 'functions/reservation-api/{package.json,package-lock.json,src/**}',
       scopes: [...FUNCTION_SCOPES],
       variableNames: Object.keys(variableValues),

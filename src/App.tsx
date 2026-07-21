@@ -1852,7 +1852,7 @@ function ReservePage({
             paymentStatus: '입금대기',
             totalPrice: demoPricing.totalPriceCents / 100,
             ...demoPricing,
-            promotionKind: 'review-reward',
+            promotionKind: promoEntry.normalizedCode.startsWith('JENNIE') ? 'manual-coupon' : 'review-reward',
             adminMemo: '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -1906,6 +1906,7 @@ function ReservePage({
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
   const promoEntry = getPromoEntryState(selectedProduct.id, form.promoCode, undefined, knownReviewRewardPercent)
+  const isManualCouponPending = promoEntry.kind === 'review-pending' && promoEntry.normalizedCode.startsWith('JENNIE')
   const isPromoApplied = promoEntry.kind === 'static-valid' || promoEntry.kind === 'review-pending'
   const promoPriceDisplay = getPromoPriceDisplay(currentPrice, promoEntry)
   const promoPreviewPrice = promoPriceDisplay.estimatedPrice ?? promoPriceDisplay.finalPrice
@@ -2513,9 +2514,13 @@ function ReservePage({
                   aria-live="polite"
                 >
                   {promoEntry.kind === 'review-pending'
-                    ? language === 'ko'
-                      ? `후기 리워드 준비됨 · 예상 ${promoEntry.discountPercent}% 할인 (-${formatCurrency(promoDiscountAmount)}) · 주문 시 확인됩니다`
-                      : `Review reward ready · estimated ${promoEntry.discountPercent}% off (-${formatCurrency(promoDiscountAmount)}) · Verified when you place the order`
+                    ? isManualCouponPending
+                      ? language === 'ko'
+                        ? `일회용 쿠폰 준비됨 · 예상 ${promoEntry.discountPercent}% 할인 (-${formatCurrency(promoDiscountAmount)}) · 주문 시 확인됩니다`
+                        : `One-time coupon ready · estimated ${promoEntry.discountPercent}% off (-${formatCurrency(promoDiscountAmount)}) · Verified when you place the order`
+                      : language === 'ko'
+                        ? `후기 리워드 준비됨 · 예상 ${promoEntry.discountPercent}% 할인 (-${formatCurrency(promoDiscountAmount)}) · 주문 시 확인됩니다`
+                        : `Review reward ready · estimated ${promoEntry.discountPercent}% off (-${formatCurrency(promoDiscountAmount)}) · Verified when you place the order`
                     : promoEntry.kind === 'static-valid'
                       ? `${labels.promoApplied}: ${promoEntry.discountPercent}% (${formatCurrency(promoDiscountAmount)} off)`
                       : promoEntry.kind === 'invalid'
@@ -3544,7 +3549,7 @@ function ReservationDrawer({
   const [status, setStatus] = useState(reservation.status)
   const [paymentStatus, setPaymentStatus] = useState(reservation.paymentStatus)
   const [memo, setMemo] = useState(reservation.adminMemo)
-  const hasReviewCoupon = Boolean(reservation.reviewCouponId)
+  const hasOneTimeCoupon = Boolean(reservation.reviewCouponId)
   const reservationPricingAudit = getOptionalReservationPricingAudit(reservation)
 
   const draftUpdate = buildAdminReservationUpdate(reservation, {
@@ -3605,7 +3610,7 @@ function ReservationDrawer({
                   ? ` · 코드 끝 4자리 ${reservationPricingAudit.appliedPromoCodeLast4}`
                   : ''}
                 {reservation.reviewCouponId
-                  ? ` · 리워드 쿠폰 ID ${reservation.reviewCouponId}`
+                  ? ` · 일회용 쿠폰 ID ${reservation.reviewCouponId}`
                   : ''}
               </dd>
             </div>
@@ -3614,13 +3619,13 @@ function ReservationDrawer({
 
         <section className="admin-edit-card" aria-label="예약 수정">
           <h3>예약 내용 수정</h3>
-          {hasReviewCoupon && (
+          {hasOneTimeCoupon && (
             <p className="notice-line" role="status">
-              리워드 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다.
+              일회용 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다.
             </p>
           )}
           <div className="admin-edit-grid">
-            <fieldset disabled={hasReviewCoupon} className="admin-repricing-fields">
+            <fieldset disabled={hasOneTimeCoupon} className="admin-repricing-fields">
             <label>
               제품
               <select value={productId} onChange={(event) => setProductId(event.target.value as ProductId)}>

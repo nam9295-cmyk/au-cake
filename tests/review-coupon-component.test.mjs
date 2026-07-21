@@ -33,6 +33,8 @@ test('promo input and reward feedback meet the mobile accessibility contract', (
   assert.match(app, /autoCapitalize="characters"/)
   assert.match(app, /autoComplete="off"/)
   assert.match(app, /Review reward ready/)
+  assert.match(app, /One-time coupon ready/)
+  assert.match(app, /isManualCouponPending/)
   assert.doesNotMatch(app + review, /startsWith\(['"]VG10-/)
   assert.match(app, /initialRewardPercent=\{pendingReviewRewardPercent\}/)
   assert.match(app, /getPromoEntryState\(selectedProduct\.id, form\.promoCode, undefined, knownReviewRewardPercent\)/)
@@ -42,6 +44,7 @@ test('confirmation renders an authoritative semantic review reward summary witho
   assert.match(app, /className="discount-summary"/)
   assert.match(app, /Review reward.*% off.*code ending/)
   assert.match(app, /reservation\?\.promotionKind === 'review-reward'/)
+  assert.match(app, /promoEntry\.normalizedCode\.startsWith\('JENNIE'\)\s*\? 'manual-coupon'\s*: 'review-reward'/)
   assert.doesNotMatch(app, /onComplete\(reservation, submittedPromo/)
   assert.doesNotMatch(app, /pricingAudit[^\n]*reviewCouponId/)
 })
@@ -65,8 +68,9 @@ test('pending review coupon never feeds its estimate into the final summary or b
   assert.doesNotMatch(app, /BankAccountBox settings=\{settings\} totalPrice=\{discountedPrice\}/)
 })
 
-test('review-coupon admin drawer disables repricing and shows the Korean fail-closed notice', () => {
-  assert.match(app, /const hasReviewCoupon = Boolean\(reservation\.reviewCouponId\)/)
-  assert.match(app, /fieldset disabled=\{hasReviewCoupon\}/)
-  assert.match(app, /리워드 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다\./)
+test('one-time coupon admin drawer disables repricing and uses generic coupon wording', () => {
+  assert.match(app, /const hasOneTimeCoupon = Boolean\(reservation\.reviewCouponId\)/)
+  assert.match(app, /fieldset disabled=\{hasOneTimeCoupon\}/)
+  assert.match(app, /일회용 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다\./)
+  assert.doesNotMatch(app, /리워드 쿠폰 ID/)
 })

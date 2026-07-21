@@ -208,7 +208,7 @@ test('review coupon reservations reject every price-affecting admin edit', () =>
   ]) {
     assert.throws(
       () => assertReviewCouponRepricingAllowed(couponReservation, edits),
-      /리워드 쿠폰 예약은 서버 재가격 계산 기능이 필요합니다/,
+      /일회용 쿠폰 예약은 서버 재가격 계산 기능이 필요합니다/,
     )
   }
 })

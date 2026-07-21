@@ -48,7 +48,7 @@ export type Reservation = {
   discountPercent?: number
   discountCents?: number
   appliedPromoCodeLast4?: string
-  promotionKind?: 'none' | 'static' | 'review-reward'
+  promotionKind?: 'none' | 'static' | 'review-reward' | 'manual-coupon'
   reviewCouponId?: string
   adminMemo: string
   createdAt: string
