@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import {
   FUNCTION_SCOPES,
@@ -97,6 +98,12 @@ test('reservation deploy dry-run is redacted and cannot mutate permissions or ne
   assert.equal(JSON.stringify(plan).includes(validEnv.REVIEW_COUPON_HMAC_SECRET), false)
   assert.equal(JSON.stringify(plan).includes('private_review_coupons'), false)
   assert.equal(JSON.stringify(plan).includes('private_manual_coupons'), false)
+})
+
+test('permission transition health gate matches the current ready response contract', () => {
+  const source = readFileSync('scripts/set-reservation-write-mode.mjs', 'utf8')
+  assert.match(source, /response\.result\?\.status !== 'ready'/)
+  assert.doesNotMatch(source, /response\.result\?\.database !== 'ok'/)
 })
 
 test('actual reservation deploy CLI dry-run exits before credentials, dotenv and network setup', () => {

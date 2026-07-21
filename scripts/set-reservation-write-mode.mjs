@@ -192,7 +192,7 @@ async function verifyReservationApiHealth() {
   } catch {
     throw new Error(`Reservation API health check returned invalid JSON (HTTP ${execution.responseStatusCode}).`)
   }
-  if (execution.responseStatusCode !== 200 || response.ok !== true || response.result?.database !== 'ok') {
+  if (execution.responseStatusCode !== 200 || response.ok !== true || response.result?.status !== 'ready') {
     throw new Error(`Reservation API health check failed (HTTP ${execution.responseStatusCode}). Permissions were not changed.`)
   }
   console.log('reservation-api health check passed before permission change')
