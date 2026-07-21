@@ -269,31 +269,41 @@ test('AU pick-up time options run until 20:00 every day', () => {
   assert.ok(weekendTimes.includes('19:30'))
 })
 
-test('10:00 class blocks every half-hour pick-up boundary through 11:30 inclusive', () => {
+test('10:00 class blocks every half-hour pick-up boundary through 12:00 inclusive', () => {
   const bookedSlots = [{ classDate: '2026-07-10', classTime: '10:00' }]
 
-  assert.equal(CLASS_SESSION_DURATION_MINUTES, 90)
-  for (const pickupTime of ['10:00', '10:30', '11:00', '11:30']) {
+  assert.equal(CLASS_SESSION_DURATION_MINUTES, 120)
+  for (const pickupTime of ['10:00', '10:30', '11:00', '11:30', '12:00']) {
     assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
   }
   assert.equal(isCakePickupBlockedByClass('2026-07-10', '09:30', bookedSlots), false)
-  assert.equal(isCakePickupBlockedByClass('2026-07-10', '12:00', bookedSlots), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '12:30', bookedSlots), false)
 })
 
-test('13:00 and 16:00 classes block their inclusive 90-minute pick-up windows', () => {
+test('13:00 and 16:00 classes block their inclusive 120-minute pick-up windows', () => {
   const bookedSlots = [
     { classDate: '2026-07-10', classTime: '13:00' },
     { classDate: '2026-07-10', classTime: '16:00' },
   ]
 
-  for (const pickupTime of ['13:00', '13:30', '14:00', '14:30']) {
+  for (const pickupTime of ['13:00', '13:30', '14:00', '14:30', '15:00']) {
     assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
   }
-  assert.equal(isCakePickupBlockedByClass('2026-07-10', '15:00', bookedSlots), false)
-  for (const pickupTime of ['16:00', '16:30', '17:00', '17:30']) {
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '15:30', bookedSlots), false)
+  for (const pickupTime of ['16:00', '16:30', '17:00', '17:30', '18:00']) {
     assert.equal(isCakePickupBlockedByClass('2026-07-10', pickupTime, bookedSlots), true, pickupTime)
   }
-  assert.equal(isCakePickupBlockedByClass('2026-07-10', '18:00', bookedSlots), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-10', '18:30', bookedSlots), false)
+})
+
+test('an 11:00 class blocks cake pick-up through 13:00 even when it is not a standard session time', () => {
+  const bookedSlots = [{ classDate: '2026-07-25', classTime: '11:00' }]
+
+  for (const pickupTime of ['11:00', '11:30', '12:00', '12:30', '13:00']) {
+    assert.equal(isCakePickupBlockedByClass('2026-07-25', pickupTime, bookedSlots), true, pickupTime)
+  }
+  assert.equal(isCakePickupBlockedByClass('2026-07-25', '10:30', bookedSlots), false)
+  assert.equal(isCakePickupBlockedByClass('2026-07-25', '13:30', bookedSlots), false)
 })
 
 test('booking all known class sessions blocks the whole cake pick-up day', () => {
@@ -354,11 +364,21 @@ test('malformed class and pick-up values are ignored safely', () => {
     'not-a-date',
     { classDate: '2026-07-10', classTime: '25:00' },
     { classDate: '2026-02-30', classTime: '10:00' },
+    { classDate: '2026-07-10', classTime: ' ' },
+    { classDate: '2026-07-10', classTime: 0 },
+    { classDate: '2026-07-10', classTime: false },
   ]
 
   assert.equal(isCakePickupBlockedByClass('not-a-date', '10:00', ['not-a-date']), false)
   assert.equal(isCakePickupBlockedByClass('2026-07-10', 'not-a-time', [{ classDate: '2026-07-10', classTime: '10:00' }]), false)
-  assert.equal(isCakePickupBlockedByClass('2026-07-10', '10:00', malformedBookedSlots), false)
+  assert.equal(
+    isCakePickupBlockedByClass(
+      '2026-07-10',
+      '10:00',
+      malformedBookedSlots as unknown as Parameters<typeof isCakePickupBlockedByClass>[2],
+    ),
+    false,
+  )
 })
 
 test('class filtering returns only unblocked supplied times without mutating inputs', () => {
@@ -374,7 +394,7 @@ test('class filtering returns only unblocked supplied times without mutating inp
 
   assert.deepEqual(
     filterCakePickupTimesForClass('2026-07-10', pickupTimes, bookedSlots, pickupOpenings),
-    ['09:30', '10:30', '12:00', '12:30', '15:30', '18:00', '18:30'],
+    ['09:30', '10:30', '12:30', '15:30', '18:30'],
   )
   assert.deepEqual(pickupTimes, originalPickupTimes)
   assert.deepEqual(bookedSlots, originalBookedSlots)

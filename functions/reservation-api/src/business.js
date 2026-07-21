@@ -39,7 +39,7 @@ export const MAX_RESERVATION_QUANTITY = 5
 export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
-export const CLASS_SESSION_DURATION_MINUTES = 90
+export const CLASS_SESSION_DURATION_MINUTES = 120
 const CLASS_TYPES = new Set(['school-holiday-private-cake-class', 'cupcake-chocolate-class'])
 
 const PRODUCTS = {
@@ -545,7 +545,8 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
 }
 
 function minutes(value) {
-  const match = /^(\d{2}):(\d{2})$/.exec(value || '')
+  if (typeof value !== 'string') return null
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value)
   if (!match) return null
   return Number(match[1]) * 60 + Number(match[2])
 }
@@ -555,11 +556,10 @@ export function isCakePickupBlocked(pickupDate, pickupTime, bookedSlots, pickupO
   const pickupMinutes = minutes(pickupTime)
   if (pickupMinutes === null) return false
   const slots = bookedSlots.filter((slot) => slot.classDate === pickupDate)
-  if (slots.some((slot) => !slot.classTime)) return true
+  if (slots.some((slot) => slot.classTime === undefined || slot.classTime === null || slot.classTime === '')) return true
   const knownTimes = new Set(slots.map((slot) => slot.classTime).filter((time) => CLASS_SESSION_TIMES.includes(time)))
   if (CLASS_SESSION_TIMES.every((time) => knownTimes.has(time))) return true
   return slots.some((slot) => {
-    if (!CLASS_SESSION_TIMES.includes(slot.classTime)) return false
     const start = minutes(slot.classTime)
     return start !== null && pickupMinutes >= start && pickupMinutes <= start + CLASS_SESSION_DURATION_MINUTES
   })

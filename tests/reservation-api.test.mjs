@@ -347,11 +347,45 @@ test('class API derives price and protected fields and validates the second chil
 test('pickup blocking honours class session windows and explicit openings', () => {
   const slots = [{ classDate: '2026-07-11', classTime: '13:00' }]
   assert.equal(isCakePickupBlocked('2026-07-11', '14:30', slots), true)
-  assert.equal(isCakePickupBlocked('2026-07-11', '15:00', slots), false)
+  assert.equal(isCakePickupBlocked('2026-07-11', '15:00', slots), true)
   assert.equal(isCakePickupBlocked('2026-07-11', '15:30', slots), false)
   assert.equal(
     isCakePickupBlocked('2026-07-11', '14:30', slots, [{ pickupDate: '2026-07-11', pickupTime: '14:30' }]),
     false,
+  )
+})
+
+test('pickup blocking honours a real 11:00 class outside the standard session list', () => {
+  const slots = [{ classDate: '2026-07-25', classTime: '11:00' }]
+  assert.equal(isCakePickupBlocked('2026-07-25', '10:30', slots), false)
+  assert.equal(isCakePickupBlocked('2026-07-25', '11:00', slots), true)
+  assert.equal(isCakePickupBlocked('2026-07-25', '12:30', slots), true)
+  assert.equal(isCakePickupBlocked('2026-07-25', '13:00', slots), true)
+  assert.equal(isCakePickupBlocked('2026-07-25', '13:30', slots), false)
+})
+
+test('pickup blocking ignores malformed non-standard class times', () => {
+  const malformedSlots = [
+    { classDate: '2026-07-25', classTime: '09:99' },
+    { classDate: '2026-07-25', classTime: '25:00' },
+    { classDate: '2026-07-25', classTime: ' ' },
+    { classDate: '2026-07-25', classTime: 123 },
+    { classDate: '2026-07-25', classTime: 0 },
+    { classDate: '2026-07-25', classTime: false },
+  ]
+  assert.equal(isCakePickupBlocked('2026-07-25', '11:00', malformedSlots), false)
+})
+
+test('canonical full-day blocking still permits only an exact cake opening', () => {
+  const slots = ['10:00', '13:00', '16:00'].map((classTime) => ({ classDate: '2026-07-25', classTime }))
+  assert.equal(isCakePickupBlocked('2026-07-25', '19:00', slots), true)
+  assert.equal(
+    isCakePickupBlocked('2026-07-25', '19:00', slots, [{ pickupDate: '2026-07-25', pickupTime: '19:00' }]),
+    false,
+  )
+  assert.equal(
+    isCakePickupBlocked('2026-07-25', '19:30', slots, [{ pickupDate: '2026-07-25', pickupTime: '19:00' }]),
+    true,
   )
 })
 

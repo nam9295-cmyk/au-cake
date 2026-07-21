@@ -52,7 +52,7 @@ const sampleReservation: ClassReservation = {
 
 test('class booking prices and session times match Jenny feedback', () => {
   assert.deepEqual([...CLASS_SESSION_TIMES], ['10:00', '13:00', '16:00'])
-  assert.equal(CLASS_SESSION_DURATION_MINUTES, 90)
+  assert.equal(CLASS_SESSION_DURATION_MINUTES, 120)
   assert.equal(getClassBookingPrice('year-1-2'), 99)
   assert.equal(getClassBookingPrice('1-child'), 109)
   assert.equal(getClassBookingPrice('2-friends'), 198)

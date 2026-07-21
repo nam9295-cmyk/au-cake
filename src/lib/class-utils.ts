@@ -5,7 +5,7 @@ import { MARKET_CONFIG } from './market.js'
 export const CLASS_TYPE_ID = 'school-holiday-private-cake-class' as const
 export const CLASS_TYPE_IDS: readonly ClassType[] = [CLASS_TYPE_ID, 'cupcake-chocolate-class']
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00'] as const
-export const CLASS_SESSION_DURATION_MINUTES = 90
+export const CLASS_SESSION_DURATION_MINUTES = 120
 export const CLASS_DEPOSIT_AMOUNT = 0
 export const CLASS_PAYMENT_SETTINGS = MARKET_CONFIG.AU.defaultSettings
 
@@ -128,9 +128,9 @@ function activeClassSlotForDate(entry: unknown, classDate: string): ActiveClassS
 
   const slot = entry as Record<string, unknown>
   if (slot.status === 'Cancelled' || slot.classDate !== classDate || !isValidClassDate(slot.classDate)) return null
-  if (slot.classTime === undefined || slot.classTime === null) return { classTime: null }
+  if (slot.classTime === undefined || slot.classTime === null || slot.classTime === '') return { classTime: null }
   if (typeof slot.classTime !== 'string') return null
-  if (!slot.classTime.trim()) return { classTime: null }
+  if (!slot.classTime.trim()) return null
   if (classTimeToMinutes(slot.classTime) === null) return null
   return { classTime: slot.classTime }
 }
@@ -174,7 +174,7 @@ export function isCakePickupBlockedByClass(
   if (CLASS_SESSION_TIMES.every((classTime) => bookedSessionTimes.has(classTime))) return true
 
   return activeSlots.some((slot) => {
-    if (slot.classTime === null || !isKnownClassSessionTime(slot.classTime)) return false
+    if (slot.classTime === null) return false
     const classStartMinutes = classTimeToMinutes(slot.classTime)
     return classStartMinutes !== null
       && pickupMinutes >= classStartMinutes
