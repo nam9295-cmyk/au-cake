@@ -32,6 +32,7 @@ import PublicReviewsSection from './PublicReviewsSection'
 import ReviewsArchive from './ReviewsArchive'
 import AdminFrame from './AdminFrame'
 import AdminReviewsPage from './AdminReviewsPage'
+import { PickupDatePicker, WeekendDatePicker } from './components/WeekendDatePicker'
 import { getPageFromPath, pathForPage, type Page } from './lib/app-routes'
 import {
   CAKE_SIZE_OPTIONS,
@@ -134,12 +135,14 @@ import {
   trackEvent,
   trackPageView,
 } from './lib/analytics'
-import type { CacaoPercent, CakeSize, ChocolateType, ClassAgeGroup, ClassPartySize, ClassReservation, ClassReservationFilters, ClassType, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings } from './lib/types'
+import type { CacaoPercent, CakeSize, ChocolateType, ClassCoursePlan, ClassExtensionMinutes, ClassPartySize, ClassReservation, ClassReservationFilters, ClassType, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings } from './lib/types'
 import {
   buildClassConfirmationMessage,
   buildClassPaymentDetails,
   buildClassPaymentMessage,
+  calculateClassPricing,
   classReservationsToCsv,
+  CLASS_EXTENSION_WARNING,
   CLASS_PAYMENT_SETTINGS,
   CLASS_PAYMENT_STATUS_OPTIONS,
   CLASS_SESSION_TIMES,
@@ -147,11 +150,18 @@ import {
   filterCakePickupTimesForClass,
   formatClassBookingType,
   getAvailableClassSessionTimes,
-  getClassBookingPrice,
   getClassBookingType,
+  getClassAgeGroupForSchoolYear,
+  getClassCoursePlanLabel,
+  getClassDurationMinutes,
+  getClassSchoolYears,
   getClassTypeLabel,
   isCakePickupBlockedByClass,
+  isCakePickupDateUnavailable,
   isClassDateBooked,
+  isClassSchoolYearAllowed,
+  isWeekendClassDate,
+  normalizeClassReservationInput,
   type CakePickupOpening,
   type ClassBookedSlot,
 } from './lib/class-utils'
@@ -1104,10 +1114,10 @@ function HomePage({
 
 function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Page) => void; language: Language; setLanguage: (language: Language) => void }) {
   const essentials = [
-    ['Kindy–Year 6 courses', 'Age-aware private sessions for primary school children'],
+    ['Basic from Kindy', 'Kindy–Year 2 and Year 3–6 school groups'],
     ['Professional-style course', 'Real studio guidance from planning to finishing'],
-    ['Two course choices', 'Make a 15cm chocolate cake or 4 cupcakes plus chocolate'],
-    ['90-minute class', 'A focused hands-on session with Jenny'],
+    ['Basic and Advanced', 'Start with a 15cm cake or cupcakes, then progress to a 2-tier cake'],
+    ['Weekend classes', 'Saturday and Sunday sessions with Jenny'],
     ['Max 2 kids per session', 'Private small group focus'],
   ]
   const steps = [
@@ -1126,13 +1136,13 @@ function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Pag
             <h1 id="kids-class-title">Kids Professional Cake Course</h1>
             <p className="kids-location">Melrose Park, Sydney</p>
             <p className="kids-hero-text">
-              Two private, hands-on choices: make a 15cm chocolate cake, or make 4 cupcakes plus chocolate with Jenny's guidance.
+              Basic classes from Kindy and Advanced classes from Year 2, available on Saturdays and Sundays.
             </p>
             <div className="kids-hero-actions">
               <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
                 Request a spot
               </button>
-              <span>Professional-style course · Max 2 kids · Limited school holiday spots</span>
+              <span>Basic: Kindy–Year 6 · Advanced: Year 2–6 · Weekend sessions</span>
             </div>
           </div>
 
@@ -1157,12 +1167,16 @@ function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Pag
           <h2 id="course-choices-title">Choose a Course</h2>
           <div className="kids-step-grid">
             <article className="kids-step-card">
-              <strong>Chocolate Cake Course</strong>
-              <p>Plan, build, and finish one 15cm chocolate cake to take home.</p>
+              <strong>Basic Cake Class</strong>
+              <p>Kindy–Year 6 · Plan, build, and finish one 15cm chocolate cake to take home.</p>
             </article>
             <article className="kids-step-card">
-              <strong>4 Cupcakes & Chocolate Class</strong>
-              <p>Make four cupcakes and enjoy a guided hands-on chocolate-making activity.</p>
+              <strong>Basic Cupcakes & Chocolate Class</strong>
+              <p>Kindy–Year 6 · Make four cupcakes and enjoy a guided hands-on chocolate-making activity.</p>
+            </article>
+            <article className="kids-step-card">
+              <strong>Advanced 2-Tier Cake Class</strong>
+              <p>Year 2–6 · A 120-minute, one-child class for building and finishing a two-tier cake.</p>
             </article>
           </div>
         </section>
@@ -1198,11 +1212,12 @@ function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Pag
 
         <section className="kids-bottom-grid reveal-up" aria-label="Pricing and safety information">
           <article className="kids-price-card">
-            <h2>Launch Pricing</h2>
-            <strong>{formatCurrency(99)} / Kindy–Year 2</strong>
-            <p className="kids-price-line">{formatCurrency(109)} / Year 3–6</p>
-            <p className="kids-price-line">{formatCurrency(198)} / two children</p>
-            <p className="kids-small-note">Same pricing for both course choices · 90 minutes</p>
+            <h2>Price Guide</h2>
+            <strong>Basic · Kindy–Year 2 {formatCurrency(99)}</strong>
+            <p className="kids-price-line">Basic · Year 3–6 {formatCurrency(109)}</p>
+            <p className="kids-price-line">Advanced {formatCurrency(159)} · one child</p>
+            <p className="kids-price-line">Basic + Advanced package · 5% off base fees</p>
+            <p className="kids-small-note">Optional 30-minute extension: {formatCurrency(20)} per participant, per class</p>
             <p className="kids-small-note">
               * Booking is completed after availability and full payment are confirmed by Jenny.
             </p>
@@ -1232,7 +1247,7 @@ function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Pag
         />
 
         <section className="kids-final-cta reveal-up" aria-label="Request class booking">
-          <p>Limited school holiday spots are handled manually so Jenny can confirm each course safely.</p>
+          <p>Weekend spots are handled manually so Jenny can confirm each class safely.</p>
           <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
             Request a spot
           </button>
@@ -1242,13 +1257,25 @@ function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Pag
   )
 }
 
+function nextWeekendClassDate() {
+  for (let offset = 0; offset < 8; offset += 1) {
+    const value = addDaysInputValue(offset)
+    if (isWeekendClassDate(value)) return value
+  }
+  return addDaysInputValue(1)
+}
+
 function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => void; onComplete: (reservation: ClassReservation) => void }) {
   const [requestId] = useState(generateRequestId)
   const [form, setForm] = useState<{
     classDate: string
     classTime: string
+    coursePlan: ClassCoursePlan
+    extensionMinutes: ClassExtensionMinutes
+    advancedClassDate: string
+    advancedClassTime: string
+    advancedExtensionMinutes: ClassExtensionMinutes
     classType: ClassType
-    ageGroup: ClassAgeGroup
     partySize: ClassPartySize
     parentName: string
     parentPhone: string
@@ -1268,17 +1295,21 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     privacyConsent: boolean
     website: string
   }>({
-    classDate: addDaysInputValue(4),
+    classDate: nextWeekendClassDate(),
     classTime: CLASS_SESSION_TIMES[0],
+    coursePlan: 'basic',
+    extensionMinutes: 0,
+    advancedClassDate: nextWeekendClassDate(),
+    advancedClassTime: CLASS_SESSION_TIMES[1],
+    advancedExtensionMinutes: 0,
     classType: 'school-holiday-private-cake-class',
-    ageGroup: 'kindy-year-2',
     partySize: 1,
     parentName: '',
     parentPhone: '',
     parentEmail: '',
     childName: '',
     childAge: 7,
-    schoolYear: 'Year 1',
+    schoolYear: 'Year 2',
     secondChildName: '',
     secondChildAge: 9,
     secondChildSchoolYear: '',
@@ -1297,10 +1328,23 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
   const [availabilityLoaded, setAvailabilityLoaded] = useState(false)
   const [availabilityError, setAvailabilityError] = useState(false)
   const today = useTodayInputValue()
-  const bookingType = getClassBookingType(form.ageGroup, form.partySize)
-  const price = getClassBookingPrice(bookingType)
+  const oneChildOnly = form.coursePlan !== 'basic'
+  const partySize = oneChildOnly ? 1 : form.partySize
+  const schoolYears = getClassSchoolYears(form.coursePlan)
+  const selectedAgeGroup = getClassAgeGroupForSchoolYear(form.schoolYear)
+  const bookingType = getClassBookingType(selectedAgeGroup, partySize)
+  const pricing = calculateClassPricing({
+    coursePlan: form.coursePlan,
+    bookingType,
+    extensionMinutes: form.extensionMinutes,
+    advancedExtensionMinutes: form.advancedExtensionMinutes,
+  })
+  const price = pricing.totalPriceCents / 100
   const availableSessionTimes = getAvailableClassSessionTimes(form.classDate, bookedClassSlots)
   const selectedDateBooked = isClassDateBooked(form.classDate, bookedClassSlots)
+  const advancedAvailableSessionTimes = getAvailableClassSessionTimes(form.advancedClassDate, bookedClassSlots)
+  const advancedSelectedUnavailable = form.coursePlan === 'basic-advanced-package' &&
+    !advancedAvailableSessionTimes.includes(form.advancedClassTime as (typeof CLASS_SESSION_TIMES)[number])
 
   useEffect(() => {
     listClassBookedSlots()
@@ -1320,22 +1364,32 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
     setError('')
     const phone = normalizePhone(form.parentPhone)
     if (!form.parentName.trim() || !form.childName.trim()) return setError('Please enter parent and child name.')
-    if (!form.schoolYear.trim()) return setError('Please enter Child 1 school year.')
+    if (!isClassSchoolYearAllowed(form.coursePlan, form.schoolYear)) return setError(form.coursePlan === 'basic' ? 'Please choose a school year from Kindy to Year 6.' : 'Advanced classes are available from Year 2 to Year 6.')
     if (!isValidPhone(phone)) return setError(`Please check the mobile number. ${marketConfig.copy.phoneHelp}`)
     if (!form.parentEmail.includes('@')) return setError('Please enter a valid email address.')
-    if (!form.classDate || form.classDate < today) return setError('Please choose a future class date.')
+    if (!form.classDate || form.classDate < today || !isWeekendClassDate(form.classDate)) return setError('Please choose a Saturday or Sunday.')
     if (selectedDateBooked) return setError('This date is already booked. Please choose another date.')
     if (!availableSessionTimes.includes(form.classTime as (typeof CLASS_SESSION_TIMES)[number])) return setError('Please choose an available class time.')
-    if (form.partySize === 2 && (!form.secondChildName.trim() || !form.secondChildSchoolYear.trim())) return setError('Please enter Child 2 name and school year.')
+    if (form.coursePlan === 'basic-advanced-package') {
+      if (!form.advancedClassDate || form.advancedClassDate < today || !isWeekendClassDate(form.advancedClassDate)) return setError('Please choose a Saturday or Sunday for the Advanced session.')
+      if (advancedSelectedUnavailable || (form.advancedClassDate === form.classDate && form.advancedClassTime === form.classTime)) return setError('Please choose a different available Advanced session.')
+    }
+    if (partySize === 2 && (!form.secondChildName.trim() || !isClassSchoolYearAllowed('basic', form.secondChildSchoolYear))) return setError('Please enter Child 2 name and choose a school year from Kindy to Year 6.')
     if (!form.emergencyContact.trim() || !form.pickupPerson.trim()) return setError('Emergency contact and pick-up person are required.')
     if (!form.parentConsent || !form.cancellationAgreement || !form.privacyConsent) return setError('Parent, privacy, and booking agreements are required.')
     setSubmitting(true)
     try {
-      const reservation = await createClassReservation({ ...form, bookingType, parentPhone: phone, requestId })
+      const reservation = await createClassReservation(normalizeClassReservationInput({
+        ...form,
+        classType: form.coursePlan === 'advanced' ? 'advanced-2-tier-cake-class' : form.classType,
+        bookingType,
+        parentPhone: phone,
+        requestId,
+      }))
       trackEvent('class_booking_request', {
         booking_type: bookingType,
         class_type: form.classType,
-        age_group: form.ageGroup,
+        course_plan: form.coursePlan,
         value: price,
         currency: 'AUD',
       })
@@ -1369,75 +1423,111 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
             <p>Please fill out the details below. Jenny will confirm availability and send full payment details.</p>
           </header>
 
-          <section className="class-form-section" aria-labelledby="course-type-title">
-            <h2 id="course-type-title">1. Choose a Course</h2>
-            <div className="class-booking-grid class-two-option-grid">
-              {(['school-holiday-private-cake-class', 'cupcake-chocolate-class'] as const).map((classType) => (
-                <label className="class-option-card" key={classType}>
+          <section className="class-form-section" aria-labelledby="course-plan-title">
+            <h2 id="course-plan-title">1. Choose a Plan</h2>
+            <div className="class-booking-grid">
+              {([
+                ['basic', 'Basic'],
+                ['advanced', 'Advanced'],
+                ['basic-advanced-package', 'Basic + Advanced Package'],
+              ] as const).map(([coursePlan, label]) => (
+                <label className="class-option-card" key={coursePlan}>
                   <input
                     type="radio"
-                    name="classType"
-                    checked={form.classType === classType}
-                    onChange={() => setForm({ ...form, classType })}
+                    name="coursePlan"
+                    checked={form.coursePlan === coursePlan}
+                    onChange={() => setForm({
+                      ...form,
+                      coursePlan,
+                      partySize: coursePlan === 'basic' ? form.partySize : 1,
+                      schoolYear: isClassSchoolYearAllowed(coursePlan, form.schoolYear) ? form.schoolYear : 'Year 2',
+                      classType: coursePlan === 'advanced' ? 'advanced-2-tier-cake-class' : form.classType === 'advanced-2-tier-cake-class' ? 'school-holiday-private-cake-class' : form.classType,
+                    })}
                   />
-                  <span>{getClassTypeLabel(classType)}</span>
-                  <strong>{classType === 'cupcake-chocolate-class' ? '4 cupcakes + chocolate making' : 'One 15cm chocolate cake'}</strong>
+                  <span>{label}</span>
+                  <strong>{coursePlan === 'advanced' ? 'One child · 2-tier cake' : coursePlan === 'basic-advanced-package' ? 'One child · two weekend sessions' : 'Cake or cupcakes · 1–2 children'}</strong>
                 </label>
               ))}
             </div>
           </section>
 
+          {form.coursePlan !== 'advanced' && (
+            <section className="class-form-section" aria-labelledby="course-type-title">
+              <h2 id="course-type-title">2. Choose a Basic Class</h2>
+              <div className="class-booking-grid class-two-option-grid">
+                {(['school-holiday-private-cake-class', 'cupcake-chocolate-class'] as const).map((classType) => (
+                  <label className="class-option-card" key={classType}>
+                    <input type="radio" name="classType" checked={form.classType === classType} onChange={() => setForm({ ...form, classType })} />
+                    <span>{getClassTypeLabel(classType)}</span>
+                    <strong>{classType === 'cupcake-chocolate-class' ? '4 cupcakes + chocolate making' : 'One 15cm chocolate cake'}</strong>
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="class-form-section" aria-labelledby="school-group-title">
-            <h2 id="school-group-title">2. Choose School Year Group</h2>
-            <div className="class-booking-grid class-two-option-grid">
-              {(['kindy-year-2', 'year-3-6'] as const).map((ageGroup) => (
-                <label className="class-option-card" key={ageGroup}>
-                  <input
-                    type="radio"
-                    name="classAgeGroup"
-                    checked={form.ageGroup === ageGroup}
-                    onChange={() => setForm({ ...form, ageGroup })}
-                  />
-                  <span>{ageGroup === 'kindy-year-2' ? 'Kindy–Year 2' : 'Year 3–6'}</span>
-                  <strong>{formatCurrency(getClassBookingPrice(getClassBookingType(ageGroup, 1)))}</strong>
-                </label>
-              ))}
-            </div>
+            <h2 id="school-group-title">3. Choose School Group</h2>
+            {form.coursePlan === 'basic' ? (
+              <>
+                <p>Basic · Kindy–Year 6</p>
+                <div className="class-booking-grid class-two-option-grid">
+                  <label className="class-option-card">
+                    <input
+                      type="radio"
+                      name="classSchoolGroup"
+                      checked={selectedAgeGroup === 'kindy-year-2' || selectedAgeGroup === 'year-2'}
+                      onChange={() => setForm({ ...form, schoolYear: ['Kindy', 'Year 1', 'Year 2'].includes(form.schoolYear) ? form.schoolYear : 'Kindy' })}
+                    />
+                    <span>Kindy–Year 2</span>
+                    <strong>Younger students</strong>
+                  </label>
+                  <label className="class-option-card">
+                    <input
+                      type="radio"
+                      name="classSchoolGroup"
+                      checked={selectedAgeGroup === 'year-3-6'}
+                      onChange={() => setForm({ ...form, schoolYear: ['Year 3', 'Year 4', 'Year 5', 'Year 6'].includes(form.schoolYear) ? form.schoolYear : 'Year 3' })}
+                    />
+                    <span>Year 3–6</span>
+                    <strong>Primary students</strong>
+                  </label>
+                </div>
+              </>
+            ) : (
+              <p>Advanced · Year 2–6 only</p>
+            )}
           </section>
 
           <section className="class-form-section" aria-labelledby="children-count-title">
-            <h2 id="children-count-title">3. Number of Children</h2>
-            <div className="class-booking-grid class-two-option-grid">
-              {([1, 2] as const).map((partySize) => (
-                <label className="class-option-card" key={partySize}>
-                  <input
-                    type="radio"
-                    name="classPartySize"
-                    checked={form.partySize === partySize}
-                    onChange={() => setForm({ ...form, partySize })}
-                  />
-                  <span>{partySize === 1 ? '1 child' : '2 children / siblings / friends'}</span>
-                  <strong>{formatCurrency(getClassBookingPrice(getClassBookingType(form.ageGroup, partySize)))}</strong>
-                </label>
-              ))}
-            </div>
+            <h2 id="children-count-title">4. Number of Children</h2>
+            {oneChildOnly ? <p>Advanced and package bookings are for one child only.</p> : (
+              <div className="class-booking-grid class-two-option-grid">
+                {([1, 2] as const).map((nextPartySize) => (
+                  <label className="class-option-card" key={nextPartySize}>
+                    <input type="radio" name="classPartySize" checked={form.partySize === nextPartySize} onChange={() => setForm({ ...form, partySize: nextPartySize })} />
+                    <span>{nextPartySize === 1 ? '1 child' : '2 children / siblings / friends'}</span>
+                    <strong>{nextPartySize === 1 ? 'Private session' : 'Learn together'}</strong>
+                  </label>
+                ))}
+              </div>
+            )}
           </section>
 
           <section className="class-form-section class-form-section-tight" aria-labelledby="session-detail-title">
-            <h2 id="session-detail-title">4. Preferred Session · 90 minutes</h2>
-            <label className="class-field">
+            <h2 id="session-detail-title">5. {form.coursePlan === 'advanced' ? 'Advanced' : 'Basic'} Weekend Session · {getClassDurationMinutes(form.coursePlan === 'advanced' ? 'advanced' : 'basic', form.extensionMinutes)} minutes</h2>
+            <div className="class-field">
               <span>Preferred Date</span>
-              <input
-                type="date"
-                min={today}
+              <WeekendDatePicker
+                label="Preferred Date"
                 value={form.classDate}
-                onChange={(event) => {
-                  const nextDate = event.target.value
+                minDate={today}
+                onChange={(nextDate) => {
                   const nextAvailableTimes = getAvailableClassSessionTimes(nextDate, bookedClassSlots)
                   setForm({ ...form, classDate: nextDate, classTime: nextAvailableTimes[0] || CLASS_SESSION_TIMES[0] })
                 }}
               />
-            </label>
+            </div>
             <fieldset className="class-time-fieldset">
               <legend>Preferred Session Time</legend>
               <div className="class-time-grid">
@@ -1458,10 +1548,45 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
               {availabilityLoaded && availabilityError && <p className="class-availability-note unavailable">Availability could not be loaded. Jenny will double-check this session before confirming.</p>}
               {availabilityLoaded && !availabilityError && !selectedDateBooked && <p className="class-availability-note">Available: {availableSessionTimes.join(' / ')}</p>}
             </fieldset>
+            <p className="field-help">Saturday and Sunday only.</p>
+            <label className="class-check-row">
+              <input type="checkbox" checked={form.extensionMinutes === 30} onChange={(event) => setForm({ ...form, extensionMinutes: event.target.checked ? 30 : 0 })} />
+              <span>Add 30 minutes to this class</span>
+            </label>
+            {form.extensionMinutes === 30 && <p className="class-availability-note warning">{CLASS_EXTENSION_WARNING}</p>}
+
+            {form.coursePlan === 'basic-advanced-package' && (
+              <div className="class-package-session">
+                <h3>Advanced Weekend Session · {getClassDurationMinutes('advanced', form.advancedExtensionMinutes)} minutes</h3>
+                <div className="class-field">
+                  <span>Advanced Date · Saturday or Sunday</span>
+                  <WeekendDatePicker label="Advanced Date" minDate={today} value={form.advancedClassDate} onChange={(advancedClassDate) => {
+                    const times = getAvailableClassSessionTimes(advancedClassDate, bookedClassSlots)
+                    setForm({ ...form, advancedClassDate, advancedClassTime: times[0] || CLASS_SESSION_TIMES[0] })
+                  }} />
+                </div>
+                <fieldset className="class-time-fieldset">
+                  <legend>Advanced Session Time</legend>
+                  <div className="class-time-grid">
+                    {advancedAvailableSessionTimes.map((time) => (
+                      <label className="class-time-option" key={`advanced-${time}`}>
+                        <input type="radio" name="advancedClassTime" checked={form.advancedClassTime === time} onChange={() => setForm({ ...form, advancedClassTime: time })} />
+                        <span>{time}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <label className="class-check-row">
+                  <input type="checkbox" checked={form.advancedExtensionMinutes === 30} onChange={(event) => setForm({ ...form, advancedExtensionMinutes: event.target.checked ? 30 : 0 })} />
+                  <span>Add 30 minutes to the Advanced class</span>
+                </label>
+                {form.advancedExtensionMinutes === 30 && <p className="class-availability-note warning">{CLASS_EXTENSION_WARNING}</p>}
+              </div>
+            )}
           </section>
 
           <section className="class-form-section" aria-labelledby="guardian-detail-title">
-            <h2 id="guardian-detail-title">5. Parent / Guardian Details</h2>
+            <h2 id="guardian-detail-title">6. Parent / Guardian Details</h2>
             <label className="class-field">
               <span>Full Name</span>
               <input value={form.parentName} onChange={(event) => setForm({ ...form, parentName: event.target.value })} placeholder="Parent or guardian name" />
@@ -1477,7 +1602,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           </section>
 
           <section className="class-form-section" aria-labelledby="child-detail-title">
-            <h2 id="child-detail-title">6. Child Details</h2>
+            <h2 id="child-detail-title">7. Child Details</h2>
             <label className="class-field">
               <span>Child 1 Name</span>
               <input value={form.childName} onChange={(event) => setForm({ ...form, childName: event.target.value })} placeholder="Leo" />
@@ -1489,10 +1614,12 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
               </label>
               <label className="class-field">
                 <span>Child 1 School Year</span>
-                <input value={form.schoolYear} onChange={(event) => setForm({ ...form, schoolYear: event.target.value })} placeholder="Year 4" />
+                <select value={form.schoolYear} onChange={(event) => setForm({ ...form, schoolYear: event.target.value })}>
+                  {schoolYears.map((year) => <option value={year} key={year}>{year}</option>)}
+                </select>
               </label>
             </div>
-            {form.partySize === 2 && (
+            {partySize === 2 && (
               <>
                 <label className="class-field">
                   <span>Child 2 Name</span>
@@ -1505,7 +1632,10 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
                   </label>
                   <label className="class-field">
                     <span>Child 2 School Year</span>
-                    <input value={form.secondChildSchoolYear} onChange={(event) => setForm({ ...form, secondChildSchoolYear: event.target.value })} placeholder="Year 2" />
+                    <select value={form.secondChildSchoolYear} onChange={(event) => setForm({ ...form, secondChildSchoolYear: event.target.value })}>
+                      <option value="">Choose year</option>
+                      {getClassSchoolYears('basic').map((year) => <option value={year} key={year}>{year}</option>)}
+                    </select>
                   </label>
                 </div>
               </>
@@ -1513,7 +1643,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           </section>
 
           <section className="class-form-section" aria-labelledby="safety-title">
-            <h2 id="safety-title">7. Allergy & Safety Declarations</h2>
+            <h2 id="safety-title">8. Allergy & Safety Declarations</h2>
             <label className="class-field">
               <span>Allergy declarations & safety notes</span>
               <textarea value={form.allergyNote} onChange={(event) => setForm({ ...form, allergyNote: event.target.value })} placeholder="Please write known allergies, dietary notes, or none." />
@@ -1531,7 +1661,7 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
           </section>
 
           <section className="class-form-section" aria-labelledby="consent-title">
-            <h2 id="consent-title">8. Consent & Confirmation</h2>
+            <h2 id="consent-title">9. Consent & Confirmation</h2>
             <label className="class-check-row">
               <input type="checkbox" checked={form.parentConsent} onChange={(event) => setForm({ ...form, parentConsent: event.target.checked })} />
               <span>I am the parent/guardian and consent to my child joining this class.</span>
@@ -1561,9 +1691,14 @@ function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => 
 
           <aside className="class-reserve-summary" aria-label="Class request summary">
             <dl>
-              <div><dt>Course</dt><dd>{getClassTypeLabel(form.classType)}</dd></div>
-              <div><dt>School group</dt><dd>{form.ageGroup === 'kindy-year-2' ? 'Kindy–Year 2' : 'Year 3–6'}</dd></div>
-              <div><dt>Children</dt><dd>{form.partySize}</dd></div>
+              <div><dt>Plan</dt><dd>{getClassCoursePlanLabel(form.coursePlan)}</dd></div>
+              <div><dt>Course</dt><dd>{form.coursePlan === 'advanced' ? 'Advanced 2-Tier Cake Class' : getClassTypeLabel(form.classType)}</dd></div>
+              <div><dt>School year</dt><dd>{form.schoolYear}</dd></div>
+              <div><dt>Children</dt><dd>{partySize}</dd></div>
+              <div><dt>First session</dt><dd>{form.classDate} {form.classTime} · {getClassDurationMinutes(form.coursePlan === 'advanced' ? 'advanced' : 'basic', form.extensionMinutes)} min</dd></div>
+              {form.coursePlan === 'basic-advanced-package' && <div><dt>Advanced session</dt><dd>{form.advancedClassDate} {form.advancedClassTime} · {getClassDurationMinutes('advanced', form.advancedExtensionMinutes)} min</dd></div>}
+              <div><dt>Subtotal</dt><dd>{formatCurrency(pricing.subtotalCents / 100)}</dd></div>
+              {pricing.discountCents > 0 && <div><dt>Package discount</dt><dd>{pricing.discountPercent}% · -{formatCurrency(pricing.discountCents / 100)}</dd></div>}
               <div><dt>Total</dt><dd>{formatCurrency(price)}</dd></div>
               <div><dt>Payment</dt><dd>Full payment required</dd></div>
             </dl>
@@ -1599,6 +1734,15 @@ function ClassCompletePage({ navigate, reservation }: { navigate: (page: Page) =
             <p>Your booking is complete once full payment has been received.</p>
             <span>Booking ID: {reservationNumber}</span>
           </div>
+
+          {reservation && <dl className="detail-list">
+            <div><dt>Plan</dt><dd>{getClassCoursePlanLabel(reservation.coursePlan)}</dd></div>
+            <div><dt>First session</dt><dd>{reservation.classDate} {reservation.classTime} · {reservation.durationMinutes || 120} min{reservation.extensionMinutes === 30 ? ' · +30 min extension' : ''}</dd></div>
+            {reservation.advancedClassDate && reservation.advancedClassTime && <div><dt>Advanced session</dt><dd>{reservation.advancedClassDate} {reservation.advancedClassTime} · {reservation.advancedDurationMinutes || 120} min{reservation.advancedExtensionMinutes === 30 ? ' · +30 min extension' : ''}</dd></div>}
+            <div><dt>Subtotal</dt><dd>{formatCurrency((reservation.subtotalCents ?? reservation.totalPriceCents ?? Math.round(reservation.totalPrice * 100)) / 100)}</dd></div>
+            {(reservation.discountCents || 0) > 0 && <div><dt>Package discount</dt><dd>{reservation.discountPercent}% · -{formatCurrency((reservation.discountCents || 0) / 100)}</dd></div>}
+            <div><dt>Total</dt><dd>{formatCurrency((reservation.totalPriceCents ?? Math.round(reservation.totalPrice * 100)) / 100)}</dd></div>
+          </dl>}
 
           <BankAccountBox settings={CLASS_PAYMENT_SETTINGS} totalPrice={reservation?.totalPrice} language="en" />
 
@@ -1679,6 +1823,12 @@ function ReservePage({
     bookedSlots: [],
     pickupOpenings: [],
   })
+  const [pickupCalendarAvailability, setPickupCalendarAvailability] = useState<{
+    loading: boolean
+    error: boolean
+    bookedSlots: ClassBookedSlot[]
+    pickupOpenings: CakePickupOpening[]
+  }>({ loading: true, error: false, bookedSlots: [], pickupOpenings: [] })
   const [pickupAvailabilityRefetchKey, setPickupAvailabilityRefetchKey] = useState(0)
 
   useEffect(() => {
@@ -1710,6 +1860,17 @@ function ReservePage({
     pickupDate,
   ])
   const selectedPickupTime = times.includes(form.pickupTime) ? form.pickupTime : times[0] || ''
+  const isPickupCalendarDateDisabled = useCallback((date: string) => {
+    const dateTimes = customerTimeOptionsForDate(date, settings, now)
+    if (pickupCalendarAvailability.loading) return true
+    if (pickupCalendarAvailability.error) return dateTimes.length === 0
+    return isCakePickupDateUnavailable(
+      date,
+      dateTimes,
+      pickupCalendarAvailability.bookedSlots,
+      pickupCalendarAvailability.pickupOpenings,
+    )
+  }, [now, pickupCalendarAvailability, settings])
 
   const refetchPickupAvailability = useCallback(() => {
     setPickupAvailability({
@@ -1719,6 +1880,7 @@ function ReservePage({
       bookedSlots: [],
       pickupOpenings: [],
     })
+    setPickupCalendarAvailability((current) => ({ ...current, loading: true, error: false }))
     setPickupAvailabilityRefetchKey((key) => key + 1)
   }, [])
 
@@ -1754,6 +1916,24 @@ function ReservePage({
       cancelled = true
     }
   }, [pickupAvailabilityRefetchKey, pickupDate])
+
+  useEffect(() => {
+    let cancelled = false
+
+    Promise.all([listClassBookedSlots(), listCakePickupOpenings()])
+      .then(([bookedSlots, pickupOpenings]) => {
+        if (cancelled) return
+        setPickupCalendarAvailability({ loading: false, error: false, bookedSlots, pickupOpenings })
+      })
+      .catch(() => {
+        if (cancelled) return
+        setPickupCalendarAvailability({ loading: false, error: true, bookedSlots: [], pickupOpenings: [] })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [pickupAvailabilityRefetchKey])
 
   async function submitReservation(event: React.FormEvent) {
     event.preventDefault()
@@ -2409,22 +2589,22 @@ function ReservePage({
             )}
 
             <div className="field-row">
-              <label>
-                {labels.pickupDate}
-                <input
-                  type="date"
-                  min={minPickupDate}
+              <div className="pickup-date-field">
+                <span>{labels.pickupDate}</span>
+                <PickupDatePicker
+                  label={labels.pickupDate}
+                  minDate={minPickupDate}
                   value={pickupDate}
-                  onChange={(event) => {
-                    const nextDate = event.target.value && event.target.value >= minPickupDate ? event.target.value : minPickupDate
-                    setForm({
-                      ...form,
-                      pickupDate: nextDate,
-                      pickupTime: '',
-                    })
-                  }}
+                  locale={language === 'ko' ? 'ko-KR' : 'en-AU'}
+                  loading={pickupCalendarAvailability.loading}
+                  isDateDisabled={isPickupCalendarDateDisabled}
+                  onChange={(nextDate) => setForm({
+                    ...form,
+                    pickupDate: nextDate,
+                    pickupTime: '',
+                  })}
                 />
-              </label>
+              </div>
               <label>
                 {labels.pickupTime}
                 <select
@@ -2432,7 +2612,7 @@ function ReservePage({
                   onChange={(event) => setForm({ ...form, pickupTime: event.target.value })}
                   disabled={pickupAvailabilityLoading || pickupAvailabilityError || times.length === 0}
                 >
-                  {times.length === 0 ? (
+                  {times.length === 0 && (
                     <option value="" disabled>
                       {pickupAvailabilityLoading
                         ? copy.pickupAvailabilityChecking
@@ -2440,13 +2620,12 @@ function ReservePage({
                           ? copy.pickupAvailabilityError
                           : copy.pickupAvailabilityNone}
                     </option>
-                  ) : (
-                    times.map((time) => (
-                      <option value={time} key={time}>
+                  )}
+                  {baseTimes.map((time) => (
+                      <option value={time} key={time} disabled={!times.includes(time)}>
                         {time}
                       </option>
-                    ))
-                  )}
+                    ))}
                 </select>
               </label>
             </div>
@@ -3389,17 +3568,32 @@ function AdminClassesPage({ navigate }: { navigate: (page: Page) => void }) {
               <tbody>
                 {reservations.map((reservation) => {
                   const hasAllergy = reservation.allergyNote.trim().length > 0
+                  const subtotalCents = reservation.subtotalCents ?? reservation.totalPriceCents ?? Math.round(reservation.totalPrice * 100)
+                  const discountCents = reservation.discountCents || 0
+                  const totalPriceCents = reservation.totalPriceCents ?? Math.round(reservation.totalPrice * 100)
                   return (
                     <tr key={reservation.id}>
                       <td>{reservation.createdAt.slice(0, 10)}</td>
-                      <td><strong>{reservation.classDate}</strong><span>{reservation.classTime}</span></td>
+                      <td>
+                        <strong>{reservation.classDate} {reservation.classTime}</strong>
+                        <span>{reservation.durationMinutes || 120} min{reservation.extensionMinutes === 30 ? ' · +30 min extension' : ''}</span>
+                        {reservation.advancedClassDate && reservation.advancedClassTime && (
+                          <span>Advanced: {reservation.advancedClassDate} {reservation.advancedClassTime} · {reservation.advancedDurationMinutes || 120} min{reservation.advancedExtensionMinutes === 30 ? ' · +30 min extension' : ''}</span>
+                        )}
+                      </td>
                       <td><strong>{reservation.parentName}</strong><span>{reservation.parentPhone}</span><span>{reservation.parentEmail}</span></td>
                       <td>
                         <strong>{reservation.childName} ({reservation.childAge})</strong>
                         <span>{reservation.schoolYear}</span>
                         {reservation.secondChildName && <span>{reservation.secondChildName} ({reservation.secondChildAge})</span>}
                       </td>
-                      <td><strong>{getClassTypeLabel(reservation.classType)}</strong><span>{formatClassBookingType(reservation.bookingType)} · {formatCurrency(reservation.totalPrice)}</span></td>
+                      <td>
+                        <strong>{getClassCoursePlanLabel(reservation.coursePlan)} · {getClassTypeLabel(reservation.classType)}</strong>
+                        <span>{formatClassBookingType(reservation.bookingType)}</span>
+                        <span>Subtotal {formatCurrency(subtotalCents / 100)}</span>
+                        {discountCents > 0 && <span>{reservation.discountPercent || 5}% discount · -{formatCurrency(discountCents / 100)}</span>}
+                        <span>Total {formatCurrency(totalPriceCents / 100)}</span>
+                      </td>
                       <td className={hasAllergy ? 'class-allergy-cell warning' : 'class-allergy-cell'}>{hasAllergy ? reservation.allergyNote : 'None'}</td>
                       <td>
                         <select className={`class-status-select ${reservation.status.toLowerCase()}`} value={reservation.status} onChange={(event) => saveReservation(reservation.id, { status: event.target.value as ClassReservation['status'] })}>
@@ -3511,14 +3705,31 @@ function ReviewInviteButton({
 
 function ClassReservationDrawer({ reservation, onClose, onSave, onCopy }: { reservation: ClassReservation; onClose: () => void; onSave: (id: string, updates: Parameters<typeof updateClassReservation>[1]) => Promise<void>; onCopy: (message: string) => Promise<void> }) {
   const [memo, setMemo] = useState(reservation.adminMemo)
+  const subtotalCents = reservation.subtotalCents ?? reservation.totalPriceCents ?? Math.round(reservation.totalPrice * 100)
+  const discountCents = reservation.discountCents || 0
+  const totalPriceCents = reservation.totalPriceCents ?? Math.round(reservation.totalPrice * 100)
   return (
-    <div className="drawer-backdrop"><aside className="drawer"><div className="drawer-header"><h2>{reservation.reservationNumber}</h2><button type="button" onClick={onClose}>닫기</button></div>
-      <dl className="detail-list"><div><dt>부모</dt><dd>{reservation.parentName}<br />{reservation.parentPhone}<br />{reservation.parentEmail}</dd></div><div><dt>아이</dt><dd>{reservation.childName}, {reservation.childAge}, {reservation.schoolYear}</dd></div><div><dt>세션</dt><dd>{reservation.classDate} {reservation.classTime}</dd></div><div><dt>안전</dt><dd>{reservation.allergyNote || 'none'}<br />Emergency: {reservation.emergencyContact}<br />Pick-up: {reservation.pickupPerson}</dd></div><div><dt>동의</dt><dd>Parent {reservation.parentConsent ? 'yes' : 'no'} / Photo {reservation.photoConsent ? 'yes' : 'no'} / Cancellation {reservation.cancellationAgreement ? 'yes' : 'no'}</dd></div></dl>
-      <label>관리자 메모<textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
-      <ReviewInviteButton sourceType="class" sourceReservationId={reservation.id} customerName={reservation.parentName} status={reservation.status} />
-      <div className="button-row"><button className="secondary-button" type="button" onClick={() => onCopy(buildClassPaymentMessage(reservation))}>결제 안내 복사</button><button className="secondary-button" type="button" onClick={() => onCopy(buildClassConfirmationMessage(reservation))}>확정 안내 복사</button><button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>메모 저장</button></div>
-      <div className="sms-preview"><pre>{buildClassConfirmationMessage(reservation)}</pre></div>
-    </aside></div>
+    <div className="drawer-backdrop">
+      <aside className="drawer">
+        <div className="drawer-header"><h2>{reservation.reservationNumber}</h2><button type="button" onClick={onClose}>닫기</button></div>
+        <dl className="detail-list">
+          <div><dt>부모</dt><dd>{reservation.parentName}<br />{reservation.parentPhone}<br />{reservation.parentEmail}</dd></div>
+          <div><dt>아이</dt><dd>{reservation.childName}, {reservation.childAge}, {reservation.schoolYear}</dd></div>
+          <div><dt>과정</dt><dd>{getClassCoursePlanLabel(reservation.coursePlan)}<br />{getClassTypeLabel(reservation.classType)}</dd></div>
+          <div><dt>첫 세션</dt><dd>{reservation.classDate} {reservation.classTime}<br />{reservation.durationMinutes || 120} min{reservation.extensionMinutes === 30 ? ' · +30 min extension' : ''}</dd></div>
+          {reservation.advancedClassDate && reservation.advancedClassTime && (
+            <div><dt>Advanced 세션</dt><dd>{reservation.advancedClassDate} {reservation.advancedClassTime}<br />{reservation.advancedDurationMinutes || 120} min{reservation.advancedExtensionMinutes === 30 ? ' · +30 min extension' : ''}</dd></div>
+          )}
+          <div><dt>금액 감사</dt><dd>Subtotal {formatCurrency(subtotalCents / 100)}<br />Discount {reservation.discountPercent || 0}% · -{formatCurrency(discountCents / 100)}<br />Total {formatCurrency(totalPriceCents / 100)}</dd></div>
+          <div><dt>안전</dt><dd>{reservation.allergyNote || 'none'}<br />Emergency: {reservation.emergencyContact}<br />Pick-up: {reservation.pickupPerson}</dd></div>
+          <div><dt>동의</dt><dd>Parent {reservation.parentConsent ? 'yes' : 'no'} / Photo {reservation.photoConsent ? 'yes' : 'no'} / Cancellation {reservation.cancellationAgreement ? 'yes' : 'no'}</dd></div>
+        </dl>
+        <label>관리자 메모<textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
+        <ReviewInviteButton sourceType="class" sourceReservationId={reservation.id} customerName={reservation.parentName} status={reservation.status} />
+        <div className="button-row"><button className="secondary-button" type="button" onClick={() => onCopy(buildClassPaymentMessage(reservation))}>결제 안내 복사</button><button className="secondary-button" type="button" onClick={() => onCopy(buildClassConfirmationMessage(reservation))}>확정 안내 복사</button><button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>메모 저장</button></div>
+        <div className="sms-preview"><pre>{buildClassConfirmationMessage(reservation)}</pre></div>
+      </aside>
+    </div>
   )
 }
 

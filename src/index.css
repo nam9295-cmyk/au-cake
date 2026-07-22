@@ -2000,6 +2000,23 @@ textarea {
   gap: 14px;
 }
 
+.pickup-date-field {
+  display: grid;
+  gap: 8px;
+}
+
+.pickup-date-field .weekend-date-trigger {
+  min-height: 43px;
+  border-color: var(--border);
+  border-radius: 0;
+  background: var(--canvas);
+  color: var(--text);
+}
+
+.pickup-date-field .weekend-calendar-popover {
+  width: min(320px, calc(100vw - 40px));
+}
+
 .agree-row {
   display: flex;
   align-items: flex-start;
@@ -2206,6 +2223,158 @@ textarea {
 .class-field input::placeholder,
 .class-field textarea::placeholder {
   color: rgba(60, 47, 47, 0.52);
+}
+
+.weekend-date-picker {
+  position: relative;
+  width: 100%;
+}
+
+.weekend-date-trigger {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #d2c9c0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #3c2f2f;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.weekend-date-trigger:hover {
+  border-color: #a99d92;
+}
+
+.weekend-date-trigger:focus-visible,
+.weekend-calendar-nav:focus-visible,
+.weekend-calendar-day:focus-visible {
+  outline: 2px solid #b88400;
+  outline-offset: 2px;
+}
+
+.weekend-date-trigger-icon {
+  color: #756a62;
+  font-size: 12px;
+  transition: transform 160ms ease;
+}
+
+.weekend-date-trigger[aria-expanded="true"] .weekend-date-trigger-icon {
+  transform: rotate(180deg);
+}
+
+.weekend-calendar-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(320px, calc(100vw - 48px));
+  padding: 12px;
+  border: 1px solid #ded7d0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(60, 47, 47, 0.09);
+}
+
+.weekend-calendar-header {
+  min-height: 36px;
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+  gap: 4px;
+}
+
+.weekend-calendar-header strong {
+  color: #3c2f2f;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.weekend-calendar-nav {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #3c2f2f;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.weekend-calendar-nav:hover:not(:disabled) {
+  background: #f5f1ed;
+}
+
+.weekend-calendar-nav:disabled {
+  color: #c9c3bd;
+  cursor: default;
+}
+
+.weekend-calendar-weekdays,
+.weekend-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.weekend-calendar-weekdays {
+  margin: 7px 0 4px;
+}
+
+.weekend-calendar-weekdays span {
+  color: #8c827a;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.weekend-calendar-day {
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 34px;
+  border: 0;
+  border-radius: 7px;
+  background: #f7f4f1;
+  color: #3c2f2f;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.weekend-calendar-day:hover:not(:disabled):not(.selected) {
+  background: #eee7e1;
+}
+
+.weekend-calendar-day.selected {
+  background: #3c2f2f;
+  color: #ffffff;
+}
+
+.weekend-calendar-day:disabled {
+  background: transparent;
+  color: #c9c3bd;
+  font-weight: 500;
+  cursor: not-allowed;
+}
+
+.weekend-calendar-day.outside-month {
+  color: #ddd8d3;
+}
+
+.weekend-calendar-note {
+  margin: 9px 2px 0;
+  color: #756a62;
+  font-size: 10px;
+  line-height: 1.35;
 }
 
 .class-field textarea {

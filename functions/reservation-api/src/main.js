@@ -17,7 +17,7 @@ import {
 import {
   createCalendarToken,
   sanitizeCakeCalendarEvent,
-  sanitizeClassCalendarEvent,
+  sanitizeClassCalendarEvents,
   secureTextEqual,
   verifyCalendarToken,
 } from './calendar-access.js'
@@ -175,6 +175,15 @@ function classReservationResponse(document) {
     classType: document.classType,
     classDate: document.classDate,
     classTime: document.classTime,
+    coursePlan: document.coursePlan || 'basic',
+    extensionMinutes: Number(document.extensionMinutes || 0),
+    durationMinutes: Number(document.durationMinutes || 120),
+    ...(document.advancedClassDate ? {
+      advancedClassDate: document.advancedClassDate,
+      advancedClassTime: document.advancedClassTime,
+      advancedExtensionMinutes: Number(document.advancedExtensionMinutes || 0),
+      advancedDurationMinutes: Number(document.advancedDurationMinutes || 120),
+    } : {}),
     bookingType: document.bookingType,
     parentName: document.parentName,
     parentPhone: document.parentPhone,
@@ -193,7 +202,13 @@ function classReservationResponse(document) {
     photoConsent: document.photoConsent,
     status: document.status,
     paymentStatus: document.paymentStatus,
-    totalPrice: document.totalPrice,
+    totalPrice: document.totalPriceCents === undefined || document.totalPriceCents === null
+      ? Number(document.totalPrice || 0)
+      : Number(document.totalPriceCents) / 100,
+    totalPriceCents: document.totalPriceCents ?? Math.round(Number(document.totalPrice || 0) * 100),
+    subtotalCents: document.subtotalCents,
+    discountPercent: document.discountPercent,
+    discountCents: document.discountCents,
     depositAmount: document.depositAmount,
     adminMemo: document.adminMemo || '',
     createdAt: document.createdAt || document.$createdAt,
@@ -426,13 +441,13 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
   return cakeReservationResponse(document)
 }
 
-export async function createClass(databases, input) {
+export async function createClass(databases, input, { now = new Date(), runtimeConfig = config } = {}) {
   const documentId = documentIdForInput(input)
-  const data = buildClassReservation(input, { reservationNumber: 'pending' })
+  const data = buildClassReservation(input, { now, reservationNumber: 'pending' })
   const existing = await getIdempotentDocument(
     databases,
-    config.kidsDatabaseId,
-    config.classReservationsId,
+    runtimeConfig.kidsDatabaseId,
+    runtimeConfig.classReservationsId,
     documentId,
     data.parentPhone,
     'parentPhone',
@@ -440,40 +455,51 @@ export async function createClass(databases, input) {
   if (existing) return classReservationResponse(existing)
   data.reservationNumber = await uniqueReservationNumber(
     databases,
-    config.kidsDatabaseId,
-    config.classReservationsId,
-    () => generateClassReservationNumber(),
+    runtimeConfig.kidsDatabaseId,
+    runtimeConfig.classReservationsId,
+    () => generateClassReservationNumber(now),
   )
 
   const transaction = await databases.createTransaction()
+  const transactionId = transaction.$id || transaction.id
+  const slots = [
+    { classDate: data.classDate, classTime: data.classTime, durationMinutes: data.durationMinutes },
+    ...(data.coursePlan === 'basic-advanced-package' ? [{
+      classDate: data.advancedClassDate,
+      classTime: data.advancedClassTime,
+      durationMinutes: data.advancedDurationMinutes,
+    }] : []),
+  ]
 
   try {
+    for (const slot of slots) {
+      await databases.createDocument({
+        databaseId: runtimeConfig.kidsDatabaseId,
+        collectionId: runtimeConfig.classBookedDatesId,
+        documentId: ID.unique(),
+        data: { ...slot, createdAt: data.createdAt },
+        transactionId,
+      })
+    }
     await databases.createDocument({
-      databaseId: config.kidsDatabaseId,
-      collectionId: config.classBookedDatesId,
-      documentId: ID.unique(),
-      data: { classDate: data.classDate, classTime: data.classTime, createdAt: data.createdAt },
-      transactionId: transaction.$id,
-    })
-    await databases.createDocument({
-      databaseId: config.kidsDatabaseId,
-      collectionId: config.classReservationsId,
+      databaseId: runtimeConfig.kidsDatabaseId,
+      collectionId: runtimeConfig.classReservationsId,
       documentId,
       data,
-      transactionId: transaction.$id,
+      transactionId,
     })
-    await databases.updateTransaction({ transactionId: transaction.$id, commit: true })
+    await databases.updateTransaction({ transactionId, commit: true })
   } catch (error) {
     try {
-      await databases.updateTransaction({ transactionId: transaction.$id, rollback: true })
+      await databases.updateTransaction({ transactionId, rollback: true })
     } catch {
       // The transaction may already have been rolled back by Appwrite.
     }
     if (isConflict(error)) {
       const retryDocument = await getIdempotentDocument(
         databases,
-        config.kidsDatabaseId,
-        config.classReservationsId,
+        runtimeConfig.kidsDatabaseId,
+        runtimeConfig.classReservationsId,
         documentId,
         data.parentPhone,
         'parentPhone',
@@ -485,8 +511,8 @@ export async function createClass(databases, input) {
   }
 
   const document = await databases.getDocument({
-    databaseId: config.kidsDatabaseId,
-    collectionId: config.classReservationsId,
+    databaseId: runtimeConfig.kidsDatabaseId,
+    collectionId: runtimeConfig.classReservationsId,
     documentId,
   })
   return classReservationResponse(document)
@@ -535,7 +561,7 @@ export async function listCalendarEvents(databases, input, env = process.env, no
   const startDate = `${month}-01`
   const endDate = new Date(Date.UTC(year, monthNumber, 0)).toISOString().slice(0, 10)
 
-  const [cakeResult, classResult] = await Promise.all([
+  const [cakeResult, primaryClassResult, advancedClassResult] = await Promise.all([
     databases.listDocuments({
       databaseId: config.cakeDatabaseId,
       collectionId: config.cakeReservationsId,
@@ -548,11 +574,22 @@ export async function listCalendarEvents(databases, input, env = process.env, no
       queries: [Query.greaterThanEqual('classDate', startDate), Query.lessThanEqual('classDate', endDate), Query.limit(200)],
       total: false,
     }),
+    databases.listDocuments({
+      databaseId: config.kidsDatabaseId,
+      collectionId: config.classReservationsId,
+      queries: [Query.greaterThanEqual('advancedClassDate', startDate), Query.lessThanEqual('advancedClassDate', endDate), Query.limit(200)],
+      total: false,
+    }),
   ])
+  const classDocuments = Array.from(new Map(
+    [...primaryClassResult.documents, ...advancedClassResult.documents].map((document) => [document.$id, document]),
+  ).values())
   const events = [
     ...cakeResult.documents.map(sanitizeCakeCalendarEvent),
-    ...classResult.documents.map(sanitizeClassCalendarEvent),
-  ].sort((left, right) => `${left.date} ${left.time} ${left.kind}`.localeCompare(`${right.date} ${right.time} ${right.kind}`))
+    ...classDocuments.flatMap(sanitizeClassCalendarEvents),
+  ]
+    .filter((event) => event.date >= startDate && event.date <= endDate)
+    .sort((left, right) => `${left.date} ${left.time} ${left.kind}`.localeCompare(`${right.date} ${right.time} ${right.kind}`))
   return { month, events }
 }
 

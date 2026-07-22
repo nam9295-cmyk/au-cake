@@ -111,14 +111,52 @@ export function sanitizeCakeCalendarEvent(document) {
   }
 }
 
+function safeClassPricing(document) {
+  const totalPriceCents = Number.isInteger(document.totalPriceCents)
+    ? document.totalPriceCents
+    : Math.round((Number(document.totalPrice) || 0) * 100)
+  return {
+    subtotalCents: Number.isInteger(document.subtotalCents) ? document.subtotalCents : totalPriceCents,
+    discountPercent: Number.isInteger(document.discountPercent) ? document.discountPercent : 0,
+    discountCents: Number.isInteger(document.discountCents) ? document.discountCents : 0,
+    totalPriceCents,
+  }
+}
+
 export function sanitizeClassCalendarEvent(document) {
   return {
     id: `class:${document.$id}`,
     kind: 'class',
     date: document.classDate,
     time: document.classTime,
-    label: document.classType === 'cupcake-chocolate-class' ? '4 Cupcakes & Chocolate Class' : 'Chocolate Cake Course',
+    label: document.classType === 'cupcake-chocolate-class'
+      ? 'Basic Cupcakes & Chocolate Class'
+      : document.classType === 'advanced-2-tier-cake-class'
+        ? 'Advanced 2-Tier Cake Class'
+        : 'Basic Cake Class',
+    coursePlan: typeof document.coursePlan === 'string' ? document.coursePlan : 'basic',
+    durationMinutes: Number.isInteger(document.durationMinutes) ? document.durationMinutes : 120,
+    extensionMinutes: document.extensionMinutes === 30 ? 30 : 0,
+    ...safeClassPricing(document),
     status: document.status || 'Requested',
     isCancelled: document.status === 'Cancelled',
   }
+}
+
+export function sanitizeClassCalendarEvents(document) {
+  const primary = sanitizeClassCalendarEvent(document)
+  if (!document.advancedClassDate || !document.advancedClassTime) return [primary]
+  return [primary, {
+    id: `class:${document.$id}:advanced`,
+    kind: 'class',
+    date: document.advancedClassDate,
+    time: document.advancedClassTime,
+    label: 'Advanced 2-Tier Cake Class',
+    coursePlan: 'basic-advanced-package',
+    durationMinutes: Number.isInteger(document.advancedDurationMinutes) ? document.advancedDurationMinutes : 120,
+    extensionMinutes: document.advancedExtensionMinutes === 30 ? 30 : 0,
+    ...safeClassPricing(document),
+    status: document.status || 'Requested',
+    isCancelled: document.status === 'Cancelled',
+  }]
 }

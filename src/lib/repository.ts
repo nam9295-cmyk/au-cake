@@ -21,8 +21,10 @@ import {
 } from './constants'
 import {
   CLASS_TYPE_ID,
+  calculateClassPricing,
+  filterClassReservationsForAdmin,
   generateClassReservationNumber,
-  getClassBookingPrice,
+  getClassDurationMinutes,
   isCakePickupBlockedByClass,
   type CakePickupOpening,
   type ClassBookedSlot,
@@ -90,6 +92,7 @@ type AppwriteClassBookedSlotDocument = {
   $createdAt?: string
   classDate: string
   classTime?: string
+  durationMinutes?: number
   createdAt?: string
 }
 
@@ -112,6 +115,13 @@ export type ReadOnlyCalendarEvent = {
   date: string
   time: string
   label: string
+  coursePlan?: ClassReservation['coursePlan']
+  durationMinutes?: number
+  extensionMinutes?: ClassReservation['extensionMinutes']
+  subtotalCents?: number
+  discountPercent?: number
+  discountCents?: number
+  totalPriceCents?: number
   status: string
   isCancelled: boolean
 }
@@ -364,12 +374,23 @@ function applyLocalFilters(reservations: Reservation[], filters?: ReservationFil
 }
 
 function toClassReservation(document: AppwriteClassReservationDocument): ClassReservation {
+  const extensionMinutes = document.extensionMinutes === 30 ? 30 : 0
+  const coursePlan = document.coursePlan || 'basic'
+  const hasProgramFields = document.coursePlan !== undefined
+  const totalPriceCents = document.totalPriceCents ?? Math.round(Number(document.totalPrice || 0) * 100)
   return {
     id: document.$id,
     reservationNumber: document.reservationNumber,
     classType: document.classType || CLASS_TYPE_ID,
     classDate: document.classDate,
     classTime: document.classTime,
+    coursePlan,
+    extensionMinutes,
+    durationMinutes: Number(document.durationMinutes || (hasProgramFields ? (coursePlan === 'advanced' ? 120 : 90) + extensionMinutes : 120)),
+    advancedClassDate: document.advancedClassDate || undefined,
+    advancedClassTime: document.advancedClassTime || undefined,
+    advancedExtensionMinutes: document.advancedExtensionMinutes === 30 ? 30 : 0,
+    advancedDurationMinutes: document.advancedClassDate ? Number(document.advancedDurationMinutes || 120) : undefined,
     bookingType: document.bookingType,
     parentName: document.parentName,
     parentPhone: document.parentPhone,
@@ -388,7 +409,11 @@ function toClassReservation(document: AppwriteClassReservationDocument): ClassRe
     photoConsent: Boolean(document.photoConsent),
     status: document.status,
     paymentStatus: document.paymentStatus,
-    totalPrice: Number(document.totalPrice || 0),
+    totalPrice: totalPriceCents / 100,
+    totalPriceCents,
+    subtotalCents: document.subtotalCents ?? totalPriceCents,
+    discountPercent: Number(document.discountPercent || 0),
+    discountCents: Number(document.discountCents || 0),
     depositAmount: Number(document.depositAmount || 0),
     adminMemo: document.adminMemo || '',
     createdAt: document.createdAt || document.$createdAt || '',
@@ -397,21 +422,41 @@ function toClassReservation(document: AppwriteClassReservationDocument): ClassRe
 }
 
 function readLocalClassReservations(): ClassReservation[] {
-  return JSON.parse(localStorage.getItem(LOCAL_CLASS_RESERVATIONS_KEY) || '[]') as ClassReservation[]
+  const rows = JSON.parse(localStorage.getItem(LOCAL_CLASS_RESERVATIONS_KEY) || '[]') as ClassReservation[]
+  return rows.map((row) => toClassReservation({ ...row, $id: row.id } as AppwriteClassReservationDocument))
 }
 
 function writeLocalClassReservations(reservations: ClassReservation[]) {
   localStorage.setItem(LOCAL_CLASS_RESERVATIONS_KEY, JSON.stringify(reservations))
 }
 
+function classReservationSlots(reservation: Pick<ClassReservation,
+  'classDate' | 'classTime' | 'durationMinutes' | 'coursePlan' | 'advancedClassDate' | 'advancedClassTime' | 'advancedDurationMinutes'
+>): Exclude<ClassBookedSlot, string>[] {
+  return [
+    { classDate: reservation.classDate, classTime: reservation.classTime, durationMinutes: reservation.durationMinutes },
+    ...(reservation.coursePlan === 'basic-advanced-package' && reservation.advancedClassDate && reservation.advancedClassTime
+      ? [{
+          classDate: reservation.advancedClassDate,
+          classTime: reservation.advancedClassTime,
+          durationMinutes: reservation.advancedDurationMinutes,
+        }]
+      : []),
+  ]
+}
+
 function readLocalClassBookedSlots(): ClassBookedSlot[] {
-  const storedSlots = JSON.parse(localStorage.getItem(LOCAL_CLASS_BOOKED_DATES_KEY) || '[]') as Array<ClassBookedSlot | { classDate?: string; classTime?: string }>
+  const storedSlots = JSON.parse(localStorage.getItem(LOCAL_CLASS_BOOKED_DATES_KEY) || '[]') as Array<ClassBookedSlot | { classDate?: string; classTime?: string; durationMinutes?: number }>
   const normalizedStoredSlots = storedSlots
-    .map((slot) => (typeof slot === 'string' ? slot : slot.classDate ? { classDate: slot.classDate, classTime: slot.classTime || '' } : null))
+    .map((slot) => (typeof slot === 'string' ? slot : slot.classDate ? {
+      classDate: slot.classDate,
+      classTime: slot.classTime || '',
+      durationMinutes: slot.durationMinutes,
+    } : null))
     .filter(Boolean) as ClassBookedSlot[]
   const activeReservationSlots = readLocalClassReservations()
     .filter((reservation) => reservation.status !== 'Cancelled')
-    .map((reservation) => ({ classDate: reservation.classDate, classTime: reservation.classTime }))
+    .flatMap(classReservationSlots)
   const uniqueSlots = new Map<string, ClassBookedSlot>()
   for (const slot of [...normalizedStoredSlots, ...activeReservationSlots]) {
     const key = typeof slot === 'string' ? slot : `${slot.classDate} ${slot.classTime}`
@@ -461,7 +506,7 @@ function isMissingCakePickupOpeningsCollectionError(error: unknown) {
   return error instanceof AppwriteException && error.code === 404 && error.type === 'collection_not_found'
 }
 
-async function createClassBookedSlot(classDate: string, classTime: string) {
+async function createClassBookedSlot(classDate: string, classTime: string, durationMinutes = 120) {
   if (!isAppwriteConfigured) {
     const bookedSlots = readLocalClassBookedSlots()
     const alreadyBooked = bookedSlots.some((slot) => {
@@ -469,7 +514,7 @@ async function createClassBookedSlot(classDate: string, classTime: string) {
       return slot.classDate === classDate && slot.classTime === classTime
     })
     if (alreadyBooked) throw new Error('CLASS_SESSION_UNAVAILABLE')
-    writeLocalClassBookedSlots([...bookedSlots, { classDate, classTime }])
+    writeLocalClassBookedSlots([...bookedSlots, { classDate, classTime, durationMinutes }])
     return
   }
 
@@ -478,7 +523,7 @@ async function createClassBookedSlot(classDate: string, classTime: string) {
       appwriteConfig.classReservationsDatabaseId,
       appwriteConfig.classBookedDatesCollectionId,
       ID.unique(),
-      { classDate, classTime, createdAt: new Date().toISOString() },
+      { classDate, classTime, durationMinutes, createdAt: new Date().toISOString() },
     )
   } catch (error) {
     if (isDuplicateAppwriteError(error)) throw new Error('CLASS_SESSION_UNAVAILABLE', { cause: error })
@@ -511,23 +556,6 @@ async function deleteClassBookedSlot(classDate: string, classTime: string) {
     appwriteConfig.classBookedDatesCollectionId,
     document.$id,
   )
-}
-
-function applyLocalClassFilters(reservations: ClassReservation[], filters?: ClassReservationFilters) {
-  if (!filters) return reservations
-  const search = filters.search.trim().toLowerCase()
-  return reservations.filter((reservation) => {
-    if (filters.classDate && reservation.classDate !== filters.classDate) return false
-    if (filters.status && reservation.status !== filters.status) return false
-    if (filters.paymentStatus && reservation.paymentStatus !== filters.paymentStatus) return false
-    if (!search) return true
-    return (
-      reservation.parentName.toLowerCase().includes(search) ||
-      reservation.childName.toLowerCase().includes(search) ||
-      reservation.parentPhone.includes(search) ||
-      reservation.reservationNumber.toLowerCase().includes(search)
-    )
-  })
 }
 
 export async function getSettings(): Promise<StoreSettings> {
@@ -744,18 +772,22 @@ export async function updateReservation(
   return toReservation(document as unknown as AppwriteReservationDocument)
 }
 
-export async function listCakePickupOpenings(pickupDate: string): Promise<CakePickupOpening[]> {
+export async function listCakePickupOpenings(pickupDate?: string): Promise<CakePickupOpening[]> {
   if (!isAppwriteConfigured) {
-    return readLocalCakePickupOpenings().filter((opening) => opening.pickupDate === pickupDate)
+    const openings = readLocalCakePickupOpenings()
+    return pickupDate === undefined ? openings : openings.filter((opening) => opening.pickupDate === pickupDate)
   }
 
   try {
-    const result = await databases.listDocuments(
+    const queries = pickupDate === undefined
+      ? [Query.greaterThanEqual('pickupDate', todayInputValue()), Query.orderAsc('pickupDate')]
+      : [Query.equal('pickupDate', pickupDate)]
+    const documents = await listAllDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.cakePickupOpeningsCollectionId,
-      [Query.equal('pickupDate', pickupDate), Query.limit(200)],
+      queries,
     )
-    return result.documents
+    return documents
       .map((doc) => {
         const opening = doc as unknown as AppwriteCakePickupOpeningDocument
         if (typeof opening.pickupDate !== 'string' || typeof opening.pickupTime !== 'string') return null
@@ -788,22 +820,37 @@ export async function listClassBookedSlots(classDate?: string): Promise<ClassBoo
     .map((doc) => {
       const slot = doc as unknown as AppwriteClassBookedSlotDocument
       if (!slot.classDate) return null
-      return { classDate: slot.classDate, classTime: slot.classTime || '' }
+      return { classDate: slot.classDate, classTime: slot.classTime || '', durationMinutes: slot.durationMinutes }
     })
     .filter(Boolean) as ClassBookedSlot[]
 }
 
 export async function createClassReservation(input: ClassReservationInput): Promise<ClassReservation> {
-  if (shouldUseReservationApi('all')) {
+  // Configured deployments must always use the authoritative Function for kids classes.
+  // The direct/local path below exists only for an unconfigured local preview.
+  if (isAppwriteConfigured) {
     return executeReservationApi<ClassReservation>('create-class', input)
   }
 
   const now = new Date().toISOString()
+  const coursePlan = input.coursePlan || 'basic'
+  const extensionMinutes: ClassReservation['extensionMinutes'] = input.extensionMinutes === 30 ? 30 : 0
+  const advancedExtensionMinutes: ClassReservation['advancedExtensionMinutes'] = input.advancedExtensionMinutes === 30 ? 30 : 0
+  const pricing = calculateClassPricing({ coursePlan, bookingType: input.bookingType, extensionMinutes, advancedExtensionMinutes })
   const data = {
     reservationNumber: generateClassReservationNumber(),
     classType: input.classType,
     classDate: input.classDate,
     classTime: input.classTime,
+    coursePlan,
+    extensionMinutes,
+    durationMinutes: getClassDurationMinutes(coursePlan === 'advanced' ? 'advanced' : 'basic', extensionMinutes),
+    ...(coursePlan === 'basic-advanced-package' ? {
+      advancedClassDate: input.advancedClassDate,
+      advancedClassTime: input.advancedClassTime,
+      advancedExtensionMinutes,
+      advancedDurationMinutes: getClassDurationMinutes('advanced', advancedExtensionMinutes),
+    } : {}),
     bookingType: input.bookingType,
     parentName: input.parentName.trim(),
     parentPhone: input.parentPhone.trim(),
@@ -822,51 +869,62 @@ export async function createClassReservation(input: ClassReservationInput): Prom
     photoConsent: input.photoConsent,
     status: 'Requested' as ClassReservationStatus,
     paymentStatus: 'Payment pending' as ClassPaymentStatus,
-    totalPrice: getClassBookingPrice(input.bookingType),
+    totalPrice: pricing.totalPriceCents / 100,
+    ...pricing,
     depositAmount: 0,
     adminMemo: '',
     createdAt: now,
     updatedAt: now,
   }
 
-  if (!isAppwriteConfigured) {
-    await createClassBookedSlot(data.classDate, data.classTime)
+  const previousSlots = readLocalClassBookedSlots()
+  try {
+    for (const slot of classReservationSlots(data)) {
+      await createClassBookedSlot(slot.classDate, slot.classTime, slot.durationMinutes)
+    }
     const reservation: ClassReservation = { id: crypto.randomUUID(), ...data }
     writeLocalClassReservations([reservation, ...readLocalClassReservations()])
     return reservation
+  } catch (error) {
+    writeLocalClassBookedSlots(previousSlots)
+    throw error
   }
-
-  await createClassBookedSlot(data.classDate, data.classTime)
-  const document = await databases.createDocument(
-    appwriteConfig.classReservationsDatabaseId,
-    appwriteConfig.classReservationsCollectionId,
-    ID.unique(),
-    data,
-  )
-  return toClassReservation(document as unknown as AppwriteClassReservationDocument)
 }
 
 export async function listClassReservations(filters?: ClassReservationFilters): Promise<ClassReservation[]> {
   if (!isAppwriteConfigured) {
-    return applyLocalClassFilters(readLocalClassReservations(), filters).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    return filterClassReservationsForAdmin(readLocalClassReservations(), filters).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   }
 
-  const queries = [Query.orderDesc('createdAt')]
-  if (filters?.classDate) queries.push(Query.equal('classDate', filters.classDate))
-  if (filters?.status) queries.push(Query.equal('status', filters.status))
-  if (filters?.paymentStatus) queries.push(Query.equal('paymentStatus', filters.paymentStatus))
+  const baseQueries = [Query.orderDesc('createdAt')]
+  if (filters?.status) baseQueries.push(Query.equal('status', filters.status))
+  if (filters?.paymentStatus) baseQueries.push(Query.equal('paymentStatus', filters.paymentStatus))
 
-  const documents = await listAllDocuments(
-    appwriteConfig.classReservationsDatabaseId,
-    appwriteConfig.classReservationsCollectionId,
-    queries,
-  )
-  return applyLocalClassFilters(documents.map((doc) => toClassReservation(doc as unknown as AppwriteClassReservationDocument)), {
-    classDate: '',
-    status: '',
-    paymentStatus: '',
-    search: filters?.search || '',
-  })
+  const documentGroups = filters?.classDate
+    ? await Promise.all([
+      listAllDocuments(
+        appwriteConfig.classReservationsDatabaseId,
+        appwriteConfig.classReservationsCollectionId,
+        [...baseQueries, Query.equal('classDate', filters.classDate)],
+      ),
+      listAllDocuments(
+        appwriteConfig.classReservationsDatabaseId,
+        appwriteConfig.classReservationsCollectionId,
+        [...baseQueries, Query.equal('advancedClassDate', filters.classDate)],
+      ),
+    ])
+    : [await listAllDocuments(
+      appwriteConfig.classReservationsDatabaseId,
+      appwriteConfig.classReservationsCollectionId,
+      baseQueries,
+    )]
+  const documents = Array.from(new Map(
+    documentGroups.flat().map((document) => [document.$id, document]),
+  ).values())
+  return filterClassReservationsForAdmin(
+    documents.map((document) => toClassReservation(document as unknown as AppwriteClassReservationDocument)),
+    filters,
+  ).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 export async function updateClassReservation(
@@ -882,12 +940,20 @@ export async function updateClassReservation(
     const previous = reservations[index]
     const nextStatus = updates.status ?? previous.status
     if (previous.status === 'Cancelled' && nextStatus !== 'Cancelled') {
-      await createClassBookedSlot(previous.classDate, previous.classTime)
+      const previousSlots = readLocalClassBookedSlots()
+      try {
+        for (const slot of classReservationSlots(previous)) {
+          await createClassBookedSlot(slot.classDate, slot.classTime, slot.durationMinutes)
+        }
+      } catch (error) {
+        writeLocalClassBookedSlots(previousSlots)
+        throw error
+      }
     }
     reservations[index] = { ...reservations[index], ...nextUpdates }
     writeLocalClassReservations(reservations)
     if (previous.status !== 'Cancelled' && nextStatus === 'Cancelled') {
-      await deleteClassBookedSlot(previous.classDate, previous.classTime)
+      for (const slot of classReservationSlots(previous)) await deleteClassBookedSlot(slot.classDate, slot.classTime)
     }
     return reservations[index]
   }
@@ -911,19 +977,23 @@ export async function updateClassReservation(
     return toClassReservation(document as unknown as AppwriteClassReservationDocument)
   }
 
-  const slotDocument = isCancelling
-    ? await findClassBookedSlotDocument(current.classDate, current.classTime)
-    : undefined
+  const currentReservation = toClassReservation(current)
+  const slots = classReservationSlots(currentReservation)
+  const slotDocuments = isCancelling
+    ? await Promise.all(slots.map((slot) => findClassBookedSlotDocument(slot.classDate, slot.classTime)))
+    : []
   const transaction = await databases.createTransaction()
   try {
     if (isReactivating) {
-      await databases.createDocument({
-        databaseId: appwriteConfig.classReservationsDatabaseId,
-        collectionId: appwriteConfig.classBookedDatesCollectionId,
-        documentId: ID.unique(),
-        data: { classDate: current.classDate, classTime: current.classTime, createdAt: new Date().toISOString() },
-        transactionId: transaction.$id,
-      })
+      for (const slot of slots) {
+        await databases.createDocument({
+          databaseId: appwriteConfig.classReservationsDatabaseId,
+          collectionId: appwriteConfig.classBookedDatesCollectionId,
+          documentId: ID.unique(),
+          data: { ...slot, createdAt: new Date().toISOString() },
+          transactionId: transaction.$id,
+        })
+      }
     }
     await databases.updateDocument({
       databaseId: appwriteConfig.classReservationsDatabaseId,
@@ -932,13 +1002,15 @@ export async function updateClassReservation(
       data: nextUpdates,
       transactionId: transaction.$id,
     })
-    if (isCancelling && slotDocument) {
-      await databases.deleteDocument({
-        databaseId: appwriteConfig.classReservationsDatabaseId,
-        collectionId: appwriteConfig.classBookedDatesCollectionId,
-        documentId: slotDocument.$id,
-        transactionId: transaction.$id,
-      })
+    if (isCancelling) {
+      for (const slotDocument of slotDocuments.filter(Boolean)) {
+        await databases.deleteDocument({
+          databaseId: appwriteConfig.classReservationsDatabaseId,
+          collectionId: appwriteConfig.classBookedDatesCollectionId,
+          documentId: slotDocument!.$id,
+          transactionId: transaction.$id,
+        })
+      }
     }
     await databases.updateTransaction({ transactionId: transaction.$id, commit: true })
   } catch (error) {

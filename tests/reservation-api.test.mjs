@@ -9,7 +9,7 @@ import {
   matchesLookupPhone,
   publicCakeReservation,
 } from '../functions/reservation-api/src/business.js'
-import { calendarLogin, listCalendarEvents, createCake, lookupCake } from '../functions/reservation-api/src/main.js'
+import { calendarLogin, listCalendarEvents, createCake, createClass, lookupCake } from '../functions/reservation-api/src/main.js'
 
 const now = new Date('2026-07-10T00:00:00.000Z')
 
@@ -59,7 +59,7 @@ function assertApiError(code, callback) {
 test('class API stores both kids course types at the existing prices', () => {
   const cakeCourse = buildClassReservation(classInput, { now, reservationNumber: 'VG-KC-AU-CAKE' })
   const cupcakeCourse = buildClassReservation(
-    { ...classInput, classType: 'cupcake-chocolate-class', bookingType: '1-child' },
+    { ...classInput, classType: 'cupcake-chocolate-class', bookingType: '1-child', schoolYear: 'Year 3' },
     { now, reservationNumber: 'VG-KC-AU-CUPCAKE' },
   )
 
@@ -71,6 +71,90 @@ test('class API stores both kids course types at the existing prices', () => {
     { ...classInput, classType: 'unknown-class' },
     { now, reservationNumber: 'VG-KC-AU-INVALID' },
   ))
+})
+
+test('class API authoritatively prices basic, advanced and package extensions in cents', () => {
+  const basic = buildClassReservation({ ...classInput, coursePlan: 'basic', extensionMinutes: 30 }, { now, reservationNumber: 'BASIC' })
+  assert.equal(basic.durationMinutes, 120)
+  assert.equal(basic.totalPriceCents, 11900)
+  assert.equal(basic.totalPrice, 119)
+
+  const advanced = buildClassReservation({
+    ...classInput, coursePlan: 'advanced', classType: 'advanced-2-tier-cake-class', bookingType: '1-child',
+    schoolYear: 'Year 4', extensionMinutes: 30, totalPriceCents: 1,
+  }, { now, reservationNumber: 'ADVANCED' })
+  assert.equal(advanced.durationMinutes, 150)
+  assert.equal(advanced.totalPriceCents, 17900)
+
+  const packageBooking = buildClassReservation({
+    ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: '2026-07-12', advancedClassTime: '16:00',
+    extensionMinutes: 30, advancedExtensionMinutes: 30, totalPriceCents: 1,
+  }, { now, reservationNumber: 'PACKAGE' })
+  assert.equal(packageBooking.durationMinutes, 120)
+  assert.equal(packageBooking.advancedDurationMinutes, 150)
+  assert.equal(packageBooking.subtotalCents, 29800)
+  assert.equal(packageBooking.discountPercent, 5)
+  assert.equal(packageBooking.discountCents, 1290)
+  assert.equal(packageBooking.totalPriceCents, 28510)
+  assert.equal(packageBooking.totalPrice, 285)
+})
+
+test('class API allows Basic from Kindy but keeps Advanced and packages at Year 2–6', () => {
+  const kindyBasic = buildClassReservation({ ...classInput, schoolYear: 'Kindy' }, { now, reservationNumber: 'BASIC-KINDY' })
+  const yearOneBasic = buildClassReservation({ ...classInput, schoolYear: 'Year 1' }, { now, reservationNumber: 'BASIC-YEAR-1' })
+  assert.equal(kindyBasic.totalPriceCents, 9900)
+  assert.equal(yearOneBasic.totalPriceCents, 9900)
+  assertApiError('INVALID_SCHOOL_YEAR', () => buildClassReservation({
+    ...classInput, coursePlan: 'advanced', classType: 'advanced-2-tier-cake-class', schoolYear: 'Kindy',
+  }, { now }))
+  assertApiError('INVALID_SCHOOL_YEAR', () => buildClassReservation({
+    ...classInput, coursePlan: 'basic-advanced-package', schoolYear: 'Year 1',
+    advancedClassDate: '2026-07-12', advancedClassTime: '16:00',
+  }, { now }))
+})
+
+test('class API rejects weekdays, invalid extensions and multi-child advanced/package requests', () => {
+  assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-07-13' }, { now }))
+  assertApiError('INVALID_EXTENSION', () => buildClassReservation({ ...classInput, extensionMinutes: 15 }, { now }))
+  assertApiError('INVALID_PARTY_SIZE', () => buildClassReservation({
+    ...classInput, coursePlan: 'advanced', classType: 'advanced-2-tier-cake-class', bookingType: '2-friends',
+    secondChildName: 'Leo', secondChildAge: 10, secondChildSchoolYear: 'Year 4',
+  }, { now }))
+  assertApiError('INVALID_PACKAGE_SESSION', () => buildClassReservation({
+    ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: classInput.classDate, advancedClassTime: classInput.classTime,
+  }, { now }))
+})
+
+test('package class creation reserves both slots in the same transaction with actual durations', async () => {
+  const creates = []
+  const documents = new Map()
+  const databases = {
+    async getDocument({ documentId }) {
+      const document = documents.get(documentId)
+      if (!document) throw new AppwriteException('Not found', 404, 'document_not_found')
+      return document
+    },
+    async listDocuments() { return { documents: [] } },
+    async createTransaction() { return { $id: 'tx-package' } },
+    async createDocument(request) {
+      creates.push(request)
+      const document = { $id: request.documentId, ...request.data }
+      if (request.collectionId === 'class_reservations') documents.set(request.documentId, document)
+      return document
+    },
+    async updateTransaction() {},
+  }
+  await createClass(databases, {
+    ...classInput, requestId: 'f65f7e08-20f7-4b4a-b12a-6b42c043b268', coursePlan: 'basic-advanced-package',
+    advancedClassDate: '2026-07-12', advancedClassTime: '16:00', extensionMinutes: 30, advancedExtensionMinutes: 30,
+  }, { now })
+  const slotCreates = creates.filter((request) => request.collectionId === 'class_booked_dates')
+  assert.equal(slotCreates.length, 2)
+  assert.deepEqual(slotCreates.map((request) => request.data), [
+    { classDate: '2026-07-11', classTime: '13:00', durationMinutes: 120, createdAt: now.toISOString() },
+    { classDate: '2026-07-12', classTime: '16:00', durationMinutes: 150, createdAt: now.toISOString() },
+  ])
+  assert.ok(creates.every((request) => request.transactionId === 'tx-package'))
 })
 
 test('cake API prices cheesecake variants and cupcake per-piece finishes', () => {
@@ -340,7 +424,11 @@ test('class API derives price and protected fields and validates the second chil
   assert.equal(reservation.parentEmail, 'jenny@example.com')
   assert.equal(reservation.photoConsent, false)
 
-  assertApiError('INVALID_SECOND_CHILD_NAME', () => buildClassReservation({ ...classInput, bookingType: '2-friends' }, { now }))
+  assertApiError('INVALID_SECOND_CHILD_NAME', () => buildClassReservation({
+    ...classInput,
+    bookingType: '2-friends',
+    secondChildSchoolYear: 'Year 4',
+  }, { now }))
   assertApiError('CONSENT_REQUIRED', () => buildClassReservation({ ...classInput, privacyConsent: false }, { now }))
 })
 
@@ -353,6 +441,13 @@ test('pickup blocking honours class session windows and explicit openings', () =
     isCakePickupBlocked('2026-07-11', '14:30', slots, [{ pickupDate: '2026-07-11', pickupTime: '14:30' }]),
     false,
   )
+})
+
+test('server pickup blocking uses slot duration with 120-minute legacy fallback', () => {
+  assert.equal(isCakePickupBlocked('2026-07-11', '11:30', [{ classDate: '2026-07-11', classTime: '10:00', durationMinutes: 90 }]), true)
+  assert.equal(isCakePickupBlocked('2026-07-11', '12:00', [{ classDate: '2026-07-11', classTime: '10:00', durationMinutes: 90 }]), false)
+  assert.equal(isCakePickupBlocked('2026-07-11', '12:30', [{ classDate: '2026-07-11', classTime: '10:00', durationMinutes: 150 }]), true)
+  assert.equal(isCakePickupBlocked('2026-07-11', '12:00', [{ classDate: '2026-07-11', classTime: '10:00' }]), true)
 })
 
 test('pickup blocking honours a real 11:00 class outside the standard session list', () => {
@@ -456,20 +551,32 @@ test('calendar API returns only sanitised events for the requested month', async
           customerName: 'Private', customerPhone: '0412345678', status: '예약확정', adminMemo: 'Private',
         }] }
       }
+      if (calls.length === 2) return { documents: [{
+        $id: 'class-1', classDate: '2026-07-25', classTime: '11:00',
+        advancedClassDate: '2026-08-01', advancedClassTime: '13:00', coursePlan: 'basic-advanced-package',
+        durationMinutes: 90, advancedDurationMinutes: 120, extensionMinutes: 0, advancedExtensionMinutes: 0,
+        subtotalCents: 25800, discountPercent: 5, discountCents: 1290, totalPriceCents: 24510,
+        parentName: 'Private', childName: 'Private', status: 'Requested', allergyNote: 'Private',
+      }] }
       return { documents: [{
-        $id: 'class-1', classDate: '2026-07-25', classTime: '11:00', parentName: 'Private', childName: 'Private',
-        status: 'Requested', allergyNote: 'Private',
+        $id: 'class-2', classDate: '2026-06-28', classTime: '10:00',
+        advancedClassDate: '2026-07-26', advancedClassTime: '13:00', coursePlan: 'basic-advanced-package',
+        durationMinutes: 90, advancedDurationMinutes: 150, extensionMinutes: 0, advancedExtensionMinutes: 30,
+        subtotalCents: 27800, discountPercent: 5, discountCents: 1290, totalPriceCents: 26510,
+        parentName: 'Private', childName: 'Private', status: 'Requested', allergyNote: 'Private',
       }] }
     },
   }
 
   const result = await listCalendarEvents(databases, { token, month: '2026-07' }, env, now)
-  assert.equal(calls.length, 2)
+  assert.equal(calls.length, 3)
   assert.equal(result.month, '2026-07')
   assert.deepEqual(result.events.map((event) => [event.kind, event.date, event.time]), [
     ['cake', '2026-07-25', '10:00'],
     ['class', '2026-07-25', '11:00'],
+    ['class', '2026-07-26', '13:00'],
   ])
+  assert.equal(result.events.some((event) => event.date === '2026-08-01'), false)
   assert.equal(JSON.stringify(result).includes('Private'), false)
   assert.equal(JSON.stringify(result).includes('0412345678'), false)
 })

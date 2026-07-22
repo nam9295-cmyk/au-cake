@@ -39,7 +39,9 @@ import {
 import {
   CLASS_SESSION_DURATION_MINUTES,
   filterCakePickupTimesForClass,
+  getBookingCalendarMonthDays,
   isCakePickupBlockedByClass,
+  isCakePickupDateUnavailable,
 } from '../src/lib/class-utils.js'
 
 test('AU catalogue exposes Fresh Lemon Cupcakes as a fourth grouped product family', () => {
@@ -315,6 +317,24 @@ test('booking all known class sessions blocks the whole cake pick-up day', () =>
 
   assert.equal(isCakePickupBlockedByClass('2026-07-10', '08:30', bookedSlots), true)
   assert.equal(isCakePickupBlockedByClass('2026-07-10', '19:30', bookedSlots), true)
+})
+
+test('cake calendar keeps partially available class dates open and disables fully blocked dates', () => {
+  const pickupTimes = ['09:30', '10:00', '10:30', '12:30', '13:00', '15:30', '16:00', '18:30']
+  const partialSlots = [{ classDate: '2026-07-25', classTime: '10:00' }]
+  const fullSlots = [
+    { classDate: '2026-07-26', classTime: '10:00' },
+    { classDate: '2026-07-26', classTime: '13:00' },
+    { classDate: '2026-07-26', classTime: '16:00' },
+  ]
+
+  assert.equal(isCakePickupDateUnavailable('2026-07-25', pickupTimes, partialSlots), false)
+  assert.equal(isCakePickupDateUnavailable('2026-07-26', pickupTimes, fullSlots), true)
+  assert.equal(isCakePickupDateUnavailable('2026-07-26', pickupTimes, fullSlots, [{ pickupDate: '2026-07-26', pickupTime: '18:30' }]), false)
+
+  const days = getBookingCalendarMonthDays('2026-07', '2026-07-22', false)
+  assert.equal(days.find((day) => day.isoDate === '2026-07-24')?.disabled, false)
+  assert.equal(days.find((day) => day.isoDate === '2026-07-25')?.disabled, false)
 })
 
 test('legacy date strings and blank class times each block the whole pick-up day', () => {

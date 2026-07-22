@@ -62,7 +62,7 @@ const classBookedDatesId =
 const reviewResourceIds = resolveReviewResourceIds(process.env)
 const { reviewPhotosBucketId } = reviewResourceIds
 const market = String(process.env.VITE_MARKET || process.env.MARKET || 'KR').toUpperCase() === 'AU' ? 'AU' : 'KR'
-const reservationWriteMode = process.env.APPWRITE_RESERVATION_WRITE_MODE === 'function' ? 'function' : 'direct'
+const reservationWriteMode = process.env.APPWRITE_RESERVATION_WRITE_MODE === 'direct' ? 'direct' : 'function'
 const adminUserIds = parseAdminUserIds(process.env)
 
 try {
@@ -238,6 +238,13 @@ const classReservationAttributes = [
   { key: 'classType', type: 'string', size: 80, required: true },
   { key: 'classDate', type: 'string', size: 20, required: true },
   { key: 'classTime', type: 'string', size: 20, required: true },
+  { key: 'coursePlan', type: 'enum', required: false, elements: ['basic', 'advanced', 'basic-advanced-package'] },
+  { key: 'extensionMinutes', type: 'integer', required: false, min: 0, max: 30 },
+  { key: 'advancedClassDate', type: 'string', size: 20, required: false },
+  { key: 'advancedClassTime', type: 'string', size: 20, required: false },
+  { key: 'advancedExtensionMinutes', type: 'integer', required: false, min: 0, max: 30 },
+  { key: 'durationMinutes', type: 'integer', required: false, min: 90, max: 150 },
+  { key: 'advancedDurationMinutes', type: 'integer', required: false, min: 120, max: 150 },
   { key: 'bookingType', type: 'enum', required: true, elements: ['year-1-2', '1-child', '2-friends'] },
   { key: 'parentName', type: 'string', size: 80, required: true },
   { key: 'parentPhone', type: 'string', size: 40, required: true },
@@ -262,6 +269,10 @@ const classReservationAttributes = [
     elements: ['Payment pending', 'Fully paid', 'Refund required', 'Pending deposit', 'Deposit paid'],
   },
   { key: 'totalPrice', type: 'integer', required: true, min: 0 },
+  { key: 'subtotalCents', type: 'integer', required: false, min: 0 },
+  { key: 'discountPercent', type: 'integer', required: false, min: 0, max: 100 },
+  { key: 'discountCents', type: 'integer', required: false, min: 0 },
+  { key: 'totalPriceCents', type: 'integer', required: false, min: 0 },
   { key: 'depositAmount', type: 'integer', required: true, min: 0 },
   { key: 'adminMemo', type: 'string', size: 1000, required: false },
   { key: 'createdAt', type: 'string', size: 40, required: true },
@@ -271,6 +282,7 @@ const classReservationAttributes = [
 const classBookedDateAttributes = [
   { key: 'classDate', type: 'string', size: 20, required: true },
   { key: 'classTime', type: 'string', size: 20, required: false },
+  { key: 'durationMinutes', type: 'integer', required: false, min: 90, max: 150 },
   { key: 'createdAt', type: 'string', size: 40, required: true },
 ]
 
@@ -291,6 +303,7 @@ const cakePickupOpeningIndexes = [
 const classReservationIndexes = [
   { key: 'reservationNumber_idx', attributes: ['reservationNumber'] },
   { key: 'classDate_idx', attributes: ['classDate'] },
+  { key: 'advancedClassDate_idx', attributes: ['advancedClassDate'] },
   { key: 'status_idx', attributes: ['status'] },
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
@@ -670,10 +683,16 @@ async function syncClassBookedDates() {
   const classSlots = Array.from(new Map(
     current.documents
       .filter((reservation) => reservation.classDate && reservation.classTime && reservation.status !== 'Cancelled')
-      .map((reservation) => [`${reservation.classDate} ${reservation.classTime}`, {
+      .flatMap((reservation) => [{
         classDate: reservation.classDate,
         classTime: reservation.classTime,
-      }]),
+        durationMinutes: reservation.durationMinutes || 120,
+      }, ...(reservation.advancedClassDate && reservation.advancedClassTime ? [{
+        classDate: reservation.advancedClassDate,
+        classTime: reservation.advancedClassTime,
+        durationMinutes: reservation.advancedDurationMinutes || 120,
+      }] : [])])
+      .map((slot) => [`${slot.classDate} ${slot.classTime}`, slot]),
   ).values())
 
   const bookedSlotDocs = await databases.listDocuments({

@@ -28,17 +28,22 @@ const pages = {
   },
   '/classes': {
     title: 'Kids Cake Decorating Classes Sydney | Verygood Chocolate',
-    description: 'Private, hands-on chocolate cake decorating classes for primary school children in Melrose Park, Sydney. Limited school holiday sessions.',
+    description: 'Private weekend cake decorating classes in Melrose Park, Sydney: Basic from Kindy to Year 6 and Advanced for Years 2–6.',
     robots: 'index, follow',
     fallbackHtml: `
       <main class="seo-fallback">
         <h1>Kids Cake Decorating Classes Sydney</h1>
-        <p>Private, hands-on chocolate cake classes for primary school children in Years 1-6, held in Melrose Park, Sydney during selected school holiday sessions.</p>
+        <p>Private, hands-on cake classes held in Melrose Park, Sydney on Saturdays and Sundays. Basic welcomes children from Kindy to Year 6; Advanced starts from Year 2.</p>
         <section>
-          <h2>Kids professional chocolate cake course</h2>
-          <p>Each child plans, builds and finishes one 15cm chocolate cake with Jenny's guidance, then boxes the finished cake to take home. Sessions have a maximum of two children.</p>
-          <p>Launch prices are AUD 99 for Years 1-2, AUD 109 for Years 3-6, or AUD 198 for two children. Availability and full payment must be confirmed before the booking is complete.</p>
-          <p>Parents must declare allergies and dietary requirements before confirmation. This is a short private class, not childcare.</p>
+          <h2>Basic and Advanced weekend classes</h2>
+          <article><h3>Basic Cake Class</h3><p>A 90-minute private session for Kindy–Year 6 where children decorate one 15cm chocolate cake. A Basic Cupcakes &amp; Chocolate Class is also available.</p></article>
+          <article><h3>Advanced 2-Tier Cake Class</h3><p>A 120-minute one-child class for Years 2–6, focused on building and finishing a two-tier cake.</p></article>
+          <p>Each class may be extended by 30 minutes. Basic and Advanced can also be requested as two separate weekend sessions in one package.</p>
+        </section>
+        <section>
+          <h2>Price Guide</h2>
+          <p>Basic is AUD 99 for Kindy–Year 2, AUD 109 for Years 3–6, or AUD 198 for two children. Advanced is AUD 159 for one child. A Basic + Advanced package receives 5% off the base class fees. A 30-minute extension is AUD 20 per participant per class and is not discounted.</p>
+          <p>Availability and full payment must be confirmed before the booking is complete. Parents must declare allergies and dietary requirements before confirmation.</p>
           <p><a href="/class-reserve" rel="nofollow">Request a kids cake class</a> or return to <a href="/">Sydney chocolate cake orders</a>.</p>
         </section>
       </main>`,

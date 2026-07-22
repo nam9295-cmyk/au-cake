@@ -43,7 +43,12 @@ export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const CLASS_SESSION_DURATION_MINUTES = 120
-const CLASS_TYPES = new Set(['school-holiday-private-cake-class', 'cupcake-chocolate-class'])
+export const CLASS_BASIC_DURATION_MINUTES = 90
+export const CLASS_ADVANCED_DURATION_MINUTES = 120
+const CLASS_TYPES = new Set(['school-holiday-private-cake-class', 'cupcake-chocolate-class', 'advanced-2-tier-cake-class'])
+const CLASS_COURSE_PLANS = new Set(['basic', 'advanced', 'basic-advanced-package'])
+const BASIC_CLASS_SCHOOL_YEARS = new Set(['Kindy', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
+const ADVANCED_CLASS_SCHOOL_YEARS = new Set(['Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
 
 const PRODUCTS = {
   'pave-cake': {
@@ -499,6 +504,35 @@ function validateAge(value, code) {
   return age
 }
 
+function isWeekendDateValue(value) {
+  if (!isValidDateValue(value)) return false
+  const day = new Date(`${value}T00:00:00.000Z`).getUTCDay()
+  return day === 0 || day === 6
+}
+
+function classExtensionMinutes(value) {
+  const normalized = value === undefined || value === null ? 0 : value
+  if (normalized !== 0 && normalized !== 30) fail('INVALID_EXTENSION')
+  return normalized
+}
+
+function classPricing(coursePlan, bookingType, extensionMinutes, advancedExtensionMinutes) {
+  const participantCount = bookingType === '2-friends' ? 2 : 1
+  const basicBaseCents = CLASS_PRICES[bookingType] * 100
+  const advancedBaseCents = 15900
+  const baseCents = coursePlan === 'advanced'
+    ? advancedBaseCents
+    : coursePlan === 'basic-advanced-package'
+      ? basicBaseCents + advancedBaseCents
+      : basicBaseCents
+  const extensionCents = extensionMinutes === 30 ? 2000 * participantCount : 0
+  const advancedExtensionCents = coursePlan === 'basic-advanced-package' && advancedExtensionMinutes === 30 ? 2000 : 0
+  const discountPercent = coursePlan === 'basic-advanced-package' ? 5 : 0
+  const discountCents = Math.round(baseCents * discountPercent / 100)
+  const subtotalCents = baseCents + extensionCents + advancedExtensionCents
+  return { subtotalCents, discountPercent, discountCents, totalPriceCents: subtotalCents - discountCents }
+}
+
 export function buildClassReservation(input, { now = new Date(), reservationNumber = generateClassReservationNumber(now) } = {}) {
   if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
@@ -506,36 +540,74 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
     !(typeof value === 'string' && value.trim() === '')
   if (promoFieldIsPresent(input.promoCode) || promoFieldIsPresent(input.reviewCouponCode)) fail('PROMO_CODE_INVALID')
   if (!Object.hasOwn(CLASS_PRICES, input.bookingType)) fail('INVALID_BOOKING_TYPE')
+  const coursePlan = input.coursePlan || 'basic'
+  if (!CLASS_COURSE_PLANS.has(coursePlan)) fail('INVALID_COURSE_PLAN')
   const classType = input.classType || 'school-holiday-private-cake-class'
   if (!CLASS_TYPES.has(classType)) fail('INVALID_CLASS_TYPE')
-  if (!isValidDateValue(input.classDate) || input.classDate < sydneyDateValue(now)) fail('INVALID_CLASS_DATE')
+  if (coursePlan === 'advanced' && classType !== 'advanced-2-tier-cake-class') fail('INVALID_CLASS_TYPE')
+  if (coursePlan !== 'advanced' && classType === 'advanced-2-tier-cake-class') fail('INVALID_CLASS_TYPE')
+  if (!isWeekendDateValue(input.classDate) || input.classDate < sydneyDateValue(now)) fail('INVALID_CLASS_DATE')
   if (!CLASS_SESSION_TIMES.includes(input.classTime)) fail('INVALID_CLASS_TIME')
-  if (input.parentConsent !== true || input.cancellationAgreement !== true || input.privacyConsent !== true) {
-    fail('CONSENT_REQUIRED')
-  }
+  if (input.parentConsent !== true || input.cancellationAgreement !== true || input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   if (typeof input.photoConsent !== 'boolean') fail('PHOTO_CONSENT_REQUIRED')
 
+  const extensionMinutes = classExtensionMinutes(input.extensionMinutes)
+  const advancedExtensionMinutes = classExtensionMinutes(input.advancedExtensionMinutes)
+  if (coursePlan !== 'basic-advanced-package' && advancedExtensionMinutes !== 0) fail('INVALID_EXTENSION')
+  const oneChildOnly = coursePlan === 'advanced' || coursePlan === 'basic-advanced-package'
+  if (oneChildOnly && input.bookingType === '2-friends') fail('INVALID_PARTY_SIZE')
+
+  const schoolYear = requiredText(input.schoolYear, { max: 40, code: 'INVALID_SCHOOL_YEAR' })
+  const allowedSchoolYears = coursePlan === 'basic' ? BASIC_CLASS_SCHOOL_YEARS : ADVANCED_CLASS_SCHOOL_YEARS
+  if (!allowedSchoolYears.has(schoolYear)) fail('INVALID_SCHOOL_YEAR')
+  const expectedOneChildBookingType = ['Kindy', 'Year 1', 'Year 2'].includes(schoolYear) ? 'year-1-2' : '1-child'
+  if (input.bookingType !== '2-friends' && input.bookingType !== expectedOneChildBookingType) fail('INVALID_BOOKING_TYPE')
+
+  let advancedClassDate = ''
+  let advancedClassTime = ''
+  if (coursePlan === 'basic-advanced-package') {
+    advancedClassDate = input.advancedClassDate
+    advancedClassTime = input.advancedClassTime
+    if (!isWeekendDateValue(advancedClassDate) || advancedClassDate < sydneyDateValue(now) || !CLASS_SESSION_TIMES.includes(advancedClassTime)) {
+      fail('INVALID_PACKAGE_SESSION')
+    }
+    if (advancedClassDate === input.classDate && advancedClassTime === input.classTime) fail('INVALID_PACKAGE_SESSION')
+  }
+
   const secondChild = input.bookingType === '2-friends'
+  const secondChildSchoolYear = secondChild
+    ? requiredText(input.secondChildSchoolYear, { max: 40, code: 'INVALID_SECOND_CHILD_SCHOOL_YEAR' })
+    : ''
+  if (secondChild && !BASIC_CLASS_SCHOOL_YEARS.has(secondChildSchoolYear)) fail('INVALID_SECOND_CHILD_SCHOOL_YEAR')
+  const pricing = classPricing(coursePlan, input.bookingType, extensionMinutes, advancedExtensionMinutes)
+  const durationMinutes = (coursePlan === 'advanced' ? CLASS_ADVANCED_DURATION_MINUTES : CLASS_BASIC_DURATION_MINUTES) + extensionMinutes
   const createdAt = now.toISOString()
   return {
     reservationNumber,
     classType,
+    coursePlan,
     classDate: input.classDate,
     classTime: input.classTime,
+    extensionMinutes,
+    durationMinutes,
+    ...(coursePlan === 'basic-advanced-package' ? {
+      advancedClassDate,
+      advancedClassTime,
+      advancedExtensionMinutes,
+      advancedDurationMinutes: CLASS_ADVANCED_DURATION_MINUTES + advancedExtensionMinutes,
+    } : {}),
     bookingType: input.bookingType,
     parentName: requiredText(input.parentName, { min: 2, max: 80, code: 'INVALID_PARENT_NAME' }),
     parentPhone: validateAustralianMobile(input.parentPhone),
     parentEmail: validateEmail(input.parentEmail),
     childName: requiredText(input.childName, { min: 1, max: 80, code: 'INVALID_CHILD_NAME' }),
     childAge: validateAge(input.childAge, 'INVALID_CHILD_AGE'),
-    schoolYear: requiredText(input.schoolYear, { max: 40, code: 'INVALID_SCHOOL_YEAR' }),
+    schoolYear,
     secondChildName: secondChild
       ? requiredText(input.secondChildName, { min: 1, max: 80, code: 'INVALID_SECOND_CHILD_NAME' })
       : '',
     secondChildAge: secondChild ? validateAge(input.secondChildAge, 'INVALID_SECOND_CHILD_AGE') : null,
-    secondChildSchoolYear: secondChild
-      ? requiredText(input.secondChildSchoolYear, { max: 40, code: 'INVALID_SECOND_CHILD_SCHOOL_YEAR' })
-      : '',
+    secondChildSchoolYear,
     allergyNote: optionalText(input.allergyNote, { max: 1000, code: 'ALLERGY_NOTE_TOO_LONG' }),
     emergencyContact: requiredText(input.emergencyContact, { max: 120, code: 'INVALID_EMERGENCY_CONTACT' }),
     pickupPerson: requiredText(input.pickupPerson, { max: 80, code: 'INVALID_PICKUP_PERSON' }),
@@ -544,7 +616,8 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
     photoConsent: input.photoConsent,
     status: 'Requested',
     paymentStatus: 'Payment pending',
-    totalPrice: CLASS_PRICES[input.bookingType],
+    totalPrice: Math.round(pricing.totalPriceCents / 100),
+    ...pricing,
     depositAmount: 0,
     adminMemo: '',
     createdAt,
@@ -569,7 +642,10 @@ export function isCakePickupBlocked(pickupDate, pickupTime, bookedSlots, pickupO
   if (CLASS_SESSION_TIMES.every((time) => knownTimes.has(time))) return true
   return slots.some((slot) => {
     const start = minutes(slot.classTime)
-    return start !== null && pickupMinutes >= start && pickupMinutes <= start + CLASS_SESSION_DURATION_MINUTES
+    const durationMinutes = Number.isInteger(slot.durationMinutes) && slot.durationMinutes > 0
+      ? slot.durationMinutes
+      : CLASS_SESSION_DURATION_MINUTES
+    return start !== null && pickupMinutes >= start && pickupMinutes <= start + durationMinutes
   })
 }
 

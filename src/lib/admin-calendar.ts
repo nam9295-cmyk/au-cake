@@ -1,5 +1,5 @@
 import { getProductById } from './constants.js'
-import { formatClassBookingType, getClassTypeLabel } from './class-utils.js'
+import { formatClassBookingType, getClassCoursePlanLabel, getClassTypeLabel } from './class-utils.js'
 import type { ClassReservation, Reservation } from './types.js'
 
 export type CalendarGridDay = {
@@ -102,25 +102,53 @@ function mapCakeReservation(reservation: Reservation): AdminCalendarEvent {
   }
 }
 
-function mapClassReservation(reservation: ClassReservation): AdminCalendarEvent {
+function classCalendarAudit(reservation: ClassReservation, extensionMinutes = 0) {
+  const parts: string[] = []
+  if (extensionMinutes === 30) parts.push('+30 min extension')
+  if ((reservation.discountCents || 0) > 0) parts.push(`${reservation.discountPercent || 5}% off`)
+  const totalCents = reservation.totalPriceCents ?? (reservation.coursePlan ? Math.round(reservation.totalPrice * 100) : undefined)
+  if (totalCents !== undefined) parts.push(`AUD ${(totalCents / 100).toFixed(2)}`)
+  return parts
+}
+
+function mapClassReservation(reservation: ClassReservation): AdminCalendarEvent[] {
   const secondChildText = reservation.secondChildName ? ' +1' : ''
-  return {
+  const planLabel = reservation.coursePlan === 'basic-advanced-package' ? 'Package · Basic' : getClassCoursePlanLabel(reservation.coursePlan)
+  const primarySubtitle = reservation.coursePlan
+    ? [planLabel, `${reservation.durationMinutes || 120} min`, ...classCalendarAudit(reservation, reservation.extensionMinutes), reservation.paymentStatus].join(' · ')
+    : `${formatClassBookingType(reservation.bookingType)} · ${reservation.paymentStatus}`
+  const primary = {
     kind: 'class',
     id: reservation.id,
     date: reservation.classDate,
     time: reservation.classTime,
     title: `${getClassTypeLabel(reservation.classType)} · ${reservation.childName}${secondChildText}`,
-    subtitle: `${formatClassBookingType(reservation.bookingType)} · ${reservation.paymentStatus}`,
+    subtitle: primarySubtitle,
     isCancelled: reservation.status === 'Cancelled',
     reservation,
-  }
+  } satisfies AdminCalendarEvent
+  if (reservation.coursePlan !== 'basic-advanced-package' || !reservation.advancedClassDate || !reservation.advancedClassTime) return [primary]
+  return [primary, {
+    kind: 'class',
+    id: `${reservation.id}:advanced`,
+    date: reservation.advancedClassDate,
+    time: reservation.advancedClassTime,
+    title: `Advanced 2-Tier Cake Class · ${reservation.childName}`,
+    subtitle: ['Package · Advanced', `${reservation.advancedDurationMinutes || 120} min`, ...classCalendarAudit(reservation, reservation.advancedExtensionMinutes), reservation.paymentStatus].join(' · '),
+    isCancelled: reservation.status === 'Cancelled',
+    reservation,
+  }]
 }
 
 export function buildAdminCalendarEvents(
   cakeReservations: Reservation[],
   classReservations: ClassReservation[],
 ): AdminCalendarEvent[] {
-  return [...cakeReservations.map(mapCakeReservation), ...classReservations.map(mapClassReservation)].sort((a, b) => {
+  const events: AdminCalendarEvent[] = [
+    ...cakeReservations.map(mapCakeReservation),
+    ...classReservations.flatMap(mapClassReservation),
+  ]
+  return events.sort((a, b) => {
     const dateOrder = a.date.localeCompare(b.date)
     if (dateOrder !== 0) return dateOrder
     const timeOrder = a.time.localeCompare(b.time)

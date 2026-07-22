@@ -46,8 +46,9 @@ const MARKET_CONFIG = {
       '2-friends': '2 children',
     },
     classTypeLabels: {
-      'school-holiday-private-cake-class': 'Chocolate Cake Course',
-      'cupcake-chocolate-class': '4 Cupcakes & Chocolate Class',
+      'school-holiday-private-cake-class': 'Basic Cake Class',
+      'cupcake-chocolate-class': 'Basic Cupcakes & Chocolate Class',
+      'advanced-2-tier-cake-class': 'Advanced 2-Tier Cake Class',
     },
     yesNoLabels: { true: '예', false: '아니오' },
     labels: {
@@ -67,6 +68,15 @@ const MARKET_CONFIG = {
       createdAt: '신청일시',
       none: '없음',
       className: '클래스',
+      coursePlan: '과정',
+      firstSession: '첫 세션',
+      firstDuration: '첫 세션 시간',
+      firstExtension: '첫 세션 연장',
+      advancedSession: 'Advanced 세션',
+      advancedDuration: 'Advanced 세션 시간',
+      advancedExtension: 'Advanced 세션 연장',
+      subtotal: '소계',
+      discount: '할인',
       classDate: '클래스 날짜',
       classTime: '클래스 시간',
       bookingType: '예약 타입',
@@ -133,8 +143,9 @@ const MARKET_CONFIG = {
       '2-friends': '2 children',
     },
     classTypeLabels: {
-      'school-holiday-private-cake-class': 'Chocolate Cake Course',
-      'cupcake-chocolate-class': '4 Cupcakes & Chocolate Class',
+      'school-holiday-private-cake-class': 'Basic Cake Class',
+      'cupcake-chocolate-class': 'Basic Cupcakes & Chocolate Class',
+      'advanced-2-tier-cake-class': 'Advanced 2-Tier Cake Class',
     },
     yesNoLabels: { true: 'Yes', false: 'No' },
     labels: {
@@ -154,6 +165,15 @@ const MARKET_CONFIG = {
       createdAt: 'Submitted at',
       none: 'None',
       className: 'Class',
+      coursePlan: 'Plan',
+      firstSession: 'First session',
+      firstDuration: 'First duration',
+      firstExtension: 'First extension',
+      advancedSession: 'Advanced session',
+      advancedDuration: 'Advanced duration',
+      advancedExtension: 'Advanced extension',
+      subtotal: 'Subtotal',
+      discount: 'Discount',
       classDate: 'Class date',
       classTime: 'Class time',
       bookingType: 'Booking type',
@@ -314,11 +334,43 @@ function isClassReservation(reservation) {
 }
 
 function getBookingTypeText(reservation, config) {
+  if (reservation.bookingType === 'year-1-2' && reservation.coursePlan && reservation.coursePlan !== 'basic') return 'Year 2'
   return config.bookingTypeLabels[reservation.bookingType] || reservation.bookingType || '-'
 }
 
 function getClassTypeText(reservation, config) {
-  return config.classTypeLabels[reservation.classType] || reservation.classType || 'Chocolate Cake Course'
+  return config.classTypeLabels[reservation.classType] || reservation.classType || 'Basic Cake Class'
+}
+
+function getClassCoursePlanText(reservation) {
+  if (reservation.coursePlan === 'advanced') return 'Advanced'
+  if (reservation.coursePlan === 'basic-advanced-package') return 'Basic + Advanced Package'
+  return 'Basic'
+}
+
+function getClassDurationText(value) {
+  const duration = Number(value)
+  return `${Number.isInteger(duration) && duration > 0 ? duration : 120} minutes`
+}
+
+function getClassExtensionText(value, config) {
+  return Number(value) === 30 ? '30 minutes' : config.labels.none
+}
+
+function getClassPricingAudit(reservation, config) {
+  const totalPriceCents = Number.isInteger(reservation.totalPriceCents)
+    ? reservation.totalPriceCents
+    : Math.round(getReservationTotal(reservation) * 100)
+  const subtotalCents = Number.isInteger(reservation.subtotalCents) ? reservation.subtotalCents : totalPriceCents
+  const discountCents = Number.isInteger(reservation.discountCents) ? reservation.discountCents : 0
+  const discountPercent = Number.isInteger(reservation.discountPercent) ? reservation.discountPercent : 0
+  return {
+    subtotal: formatCurrency(subtotalCents / 100, config),
+    discount: discountCents > 0
+      ? `${discountPercent}% (-${formatCurrency(discountCents / 100, config)})`
+      : config.labels.none,
+    total: formatCurrency(totalPriceCents / 100, config),
+  }
 }
 
 function getBooleanText(value, config) {
@@ -354,11 +406,20 @@ function buildCakeRows(reservation, config) {
 }
 
 function buildClassRows(reservation, config) {
+  const pricing = getClassPricingAudit(reservation, config)
+  const hasAdvancedSession = Boolean(reservation.advancedClassDate && reservation.advancedClassTime)
   return [
     [config.labels.bookingNumber, reservation.reservationNumber],
+    [config.labels.coursePlan, getClassCoursePlanText(reservation)],
     [config.labels.className, getClassTypeText(reservation, config)],
-    [config.labels.classDate, reservation.classDate],
-    [config.labels.classTime, reservation.classTime],
+    [config.labels.firstSession, [reservation.classDate, reservation.classTime].filter(Boolean).join(' ')],
+    [config.labels.firstDuration, getClassDurationText(reservation.durationMinutes)],
+    [config.labels.firstExtension, getClassExtensionText(reservation.extensionMinutes, config)],
+    ...(hasAdvancedSession ? [
+      [config.labels.advancedSession, `${reservation.advancedClassDate} ${reservation.advancedClassTime}`],
+      [config.labels.advancedDuration, getClassDurationText(reservation.advancedDurationMinutes)],
+      [config.labels.advancedExtension, getClassExtensionText(reservation.advancedExtensionMinutes, config)],
+    ] : []),
     [config.labels.bookingType, getBookingTypeText(reservation, config)],
     [config.labels.parentName, reservation.parentName],
     [config.labels.parentPhone, reservation.parentPhone],
@@ -375,10 +436,16 @@ function buildClassRows(reservation, config) {
     [config.labels.photoConsent, getBooleanText(reservation.photoConsent, config)],
     [config.labels.status, reservation.status],
     [config.labels.paymentStatus, reservation.paymentStatus],
-    [config.labels.total, formatCurrency(getReservationTotal(reservation), config)],
+    [config.labels.subtotal, pricing.subtotal],
+    [config.labels.discount, pricing.discount],
+    [config.labels.total, pricing.total],
     [config.labels.deposit, formatCurrency(reservation.depositAmount, config)],
     [config.labels.createdAt, formatCreatedAt(reservation.createdAt || reservation.$createdAt, config)],
   ]
+}
+
+export function buildClassNotificationRows(reservation) {
+  return buildClassRows(reservation, getConfig(reservation))
 }
 
 function buildRows(reservation, config) {

@@ -128,12 +128,19 @@ test('calendar labels both cheesecake finishing upgrades at the fixed size', () 
   assert.match(eiffel.label, /6 inch \/ 15cm/)
 })
 
-test('calendar class events expose only class schedule and status', () => {
+test('calendar class events expose only safe class schedule and pricing audit fields', () => {
   const event = sanitizeClassCalendarEvent({
     $id: 'class-private-id',
     classType: 'cupcake-chocolate-class',
     classDate: '2026-07-25',
     classTime: '11:00',
+    coursePlan: 'basic',
+    durationMinutes: 120,
+    extensionMinutes: 30,
+    subtotalCents: 11900,
+    discountPercent: 0,
+    discountCents: 0,
+    totalPriceCents: 11900,
     parentName: 'Private Parent',
     childName: 'Private Child',
     parentPhone: '0412345678',
@@ -149,7 +156,14 @@ test('calendar class events expose only class schedule and status', () => {
     kind: 'class',
     date: '2026-07-25',
     time: '11:00',
-    label: '4 Cupcakes & Chocolate Class',
+    label: 'Basic Cupcakes & Chocolate Class',
+    coursePlan: 'basic',
+    durationMinutes: 120,
+    extensionMinutes: 30,
+    subtotalCents: 11900,
+    discountPercent: 0,
+    discountCents: 0,
+    totalPriceCents: 11900,
     status: 'Requested',
     isCancelled: false,
   })

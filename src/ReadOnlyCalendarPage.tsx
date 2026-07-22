@@ -28,6 +28,20 @@ function statusLabel(event: ReadOnlyCalendarEvent) {
   return event.status
 }
 
+function eventDetail(event: ReadOnlyCalendarEvent) {
+  const parts = [statusLabel(event)]
+  if (event.kind !== 'class') return parts.join(' · ')
+  const plan = event.coursePlan === 'basic-advanced-package'
+    ? 'Package'
+    : event.coursePlan === 'advanced' ? 'Advanced' : 'Basic'
+  parts.push(plan)
+  if (event.durationMinutes) parts.push(`${event.durationMinutes} min`)
+  if (event.extensionMinutes === 30) parts.push('+30 min extension')
+  if ((event.discountCents || 0) > 0) parts.push(`${event.discountPercent || 5}% off`)
+  if ((event.totalPriceCents || 0) > 0) parts.push(`AUD ${((event.totalPriceCents || 0) / 100).toFixed(2)}`)
+  return parts.join(' · ')
+}
+
 export default function ReadOnlyCalendarPage() {
   const today = sydneyDate()
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || '')
@@ -200,7 +214,7 @@ export default function ReadOnlyCalendarPage() {
           {selectedEvents.map((event) => (
             <article key={event.id} className={`${event.kind}${event.isCancelled ? ' is-cancelled' : ''}`}>
               <time>{event.time}</time>
-              <div><strong>{event.label}</strong><span>{statusLabel(event)}</span></div>
+              <div><strong>{event.label}</strong><span>{eventDetail(event)}</span></div>
             </article>
           ))}
         </div>

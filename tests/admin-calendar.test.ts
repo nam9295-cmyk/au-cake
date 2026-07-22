@@ -94,7 +94,7 @@ test('cake and class reservations become time-sorted colored calendar events', (
   ])
 
   assert.deepEqual(events.map((event) => `${event.kind}:${event.time}:${event.title}:${event.subtitle}`), [
-    'class:09:30:Chocolate Cake Course · Emma:Year 3–6 · Payment pending',
+    'class:09:30:Basic Cake Class · Emma:Year 3–6 · Payment pending',
     'cake:10:00:Jenny · Pave Chocolate Cake:Pave x1 · 입금대기',
     'cake:14:00:Mina · Chocolate Cupcakes (1 dozen):Cupcake x2 · 입금대기',
   ])
@@ -111,4 +111,27 @@ test('daily summary counts active cakes by quantity and classes separately', () 
   ])
 
   assert.equal(getDailyCalendarSummary(events), 'Cake 3 · Class 1')
+})
+
+test('package reservations create separate basic and advanced calendar sessions', () => {
+  const reservation = classBooking({
+    coursePlan: 'basic-advanced-package',
+    classDate: '2026-07-25',
+    classTime: '10:00',
+    durationMinutes: 120,
+    extensionMinutes: 30,
+    advancedClassDate: '2026-07-26',
+    advancedClassTime: '13:00',
+    advancedDurationMinutes: 150,
+    advancedExtensionMinutes: 30,
+    subtotalCents: 27800,
+    discountPercent: 5,
+    discountCents: 1290,
+    totalPriceCents: 26510,
+  })
+  const events = buildAdminCalendarEvents([], [reservation])
+  assert.deepEqual(events.map((event) => [event.date, event.time, event.title, event.subtitle]), [
+    ['2026-07-25', '10:00', 'Basic Cake Class · Emma', 'Package · Basic · 120 min · +30 min extension · 5% off · AUD 265.10 · Payment pending'],
+    ['2026-07-26', '13:00', 'Advanced 2-Tier Cake Class · Emma', 'Package · Advanced · 150 min · +30 min extension · 5% off · AUD 265.10 · Payment pending'],
+  ])
 })

@@ -119,9 +119,11 @@ export type ReservationFilters = {
 }
 
 export type ClassBookingType = 'year-1-2' | '1-child' | '2-friends'
-export type ClassType = 'school-holiday-private-cake-class' | 'cupcake-chocolate-class'
-export type ClassAgeGroup = 'kindy-year-2' | 'year-3-6'
+export type ClassCoursePlan = 'basic' | 'advanced' | 'basic-advanced-package'
+export type ClassType = 'school-holiday-private-cake-class' | 'cupcake-chocolate-class' | 'advanced-2-tier-cake-class'
+export type ClassAgeGroup = 'kindy-year-2' | 'year-2' | 'year-3-6'
 export type ClassPartySize = 1 | 2
+export type ClassExtensionMinutes = 0 | 30
 
 export type ClassReservationStatus = 'Requested' | 'Confirmed' | 'Completed' | 'Cancelled'
 
@@ -133,6 +135,13 @@ export type ClassReservation = {
   classType: ClassType
   classDate: string
   classTime: string
+  coursePlan?: ClassCoursePlan
+  extensionMinutes?: ClassExtensionMinutes
+  advancedClassDate?: string
+  advancedClassTime?: string
+  advancedExtensionMinutes?: ClassExtensionMinutes
+  durationMinutes?: number
+  advancedDurationMinutes?: number
   bookingType: ClassBookingType
   parentName: string
   parentPhone: string
@@ -152,6 +161,10 @@ export type ClassReservation = {
   status: ClassReservationStatus
   paymentStatus: ClassPaymentStatus
   totalPrice: number
+  totalPriceCents?: number
+  subtotalCents?: number
+  discountPercent?: number
+  discountCents?: number
   depositAmount: number
   adminMemo: string
   createdAt: string
@@ -162,6 +175,11 @@ export type ClassReservationInput = Pick<
   ClassReservation,
   | 'classDate'
   | 'classTime'
+  | 'coursePlan'
+  | 'extensionMinutes'
+  | 'advancedClassDate'
+  | 'advancedClassTime'
+  | 'advancedExtensionMinutes'
   | 'classType'
   | 'bookingType'
   | 'parentName'
@@ -181,6 +199,7 @@ export type ClassReservationInput = Pick<
   | 'photoConsent'
 > & {
   privacyConsent: boolean
+  partySize?: ClassPartySize
   requestId?: string
   website?: string
 }

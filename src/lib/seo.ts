@@ -80,7 +80,7 @@ const publicSeo: Record<string, SeoConfig> = {
   },
   '/classes': {
     title: 'Kids Cake Decorating Classes Sydney | Verygood Chocolate',
-    description: 'Private, hands-on chocolate cake decorating classes for primary school children in Melrose Park, Sydney. Limited school holiday sessions.',
+    description: 'Private weekend cake decorating classes in Melrose Park, Sydney: Basic from Kindy to Year 6 and Advanced for Years 2–6.',
     canonical: `${SITE_URL}/classes`,
     structuredData: [
       organization,
@@ -88,10 +88,10 @@ const publicSeo: Record<string, SeoConfig> = {
         '@type': 'Course',
         '@id': `${SITE_URL}/classes#course`,
         name: 'Kids Professional Chocolate Cake Course',
-        description: 'A private, hands-on cake course where primary school children plan, build and finish their own 15cm chocolate cake.',
+        description: 'Private weekend cake courses with Basic classes from Kindy to Year 6 and Advanced 2-Tier classes for Years 2–6.',
         url: `${SITE_URL}/classes`,
         provider: { '@id': `${SITE_URL}/#organization` },
-        educationalLevel: 'Primary school (Years 1-6)',
+        educationalLevel: 'Basic: Kindy–Year 6; Advanced: Years 2–6',
         inLanguage: 'en-AU',
         offers: {
           '@type': 'AggregateOffer',
