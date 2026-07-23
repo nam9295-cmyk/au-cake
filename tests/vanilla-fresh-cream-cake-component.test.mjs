@@ -38,3 +38,13 @@ test('AU catalogue cards follow the approved pound, pave, basque, lemon, vanilla
   assert.equal(positions.every((position) => position >= 0), true)
   assert.deepEqual([...positions].sort((left, right) => left - right), positions)
 })
+
+test('catalogue stacks on mobile, uses two columns on tablet, and shows all five cakes across at desktop width', () => {
+  const tabletStart = css.indexOf('@media (min-width: 768px) {')
+  const desktopStart = css.indexOf('@media (min-width: 1100px)')
+  const tabletCss = css.slice(tabletStart, desktopStart)
+  const desktopCss = css.slice(desktopStart, css.indexOf('@media (max-width: 900px)'))
+  assert.match(css.slice(0, tabletStart), /\.product-grid\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*1fr;/)
+  assert.match(tabletCss, /\.product-grid\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/)
+  assert.match(desktopCss, /\.product-grid\s*\{\s*grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\);/)
+})
