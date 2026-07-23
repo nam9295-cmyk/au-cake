@@ -9,6 +9,7 @@ const MARKET_CONFIG = {
     heading: '새 예약 신청',
     productLabels: {
       'pave-cake': '생초콜릿 파베 케이크',
+      'vanilla-fresh-cream-cake': '바닐라 생크림 케이크',
       'pound-cake': '초코 파운드 케이크',
       'cupcake-dozen': '초코 컵케이크 1다스',
       'choco-basque-cheesecake': '초코 바스크 치즈케이크',
@@ -106,6 +107,7 @@ const MARKET_CONFIG = {
     heading: 'New cake request',
     productLabels: {
       'pave-cake': 'Pave Chocolate Cake',
+      'vanilla-fresh-cream-cake': 'vanilla fresh cream cake',
       'pound-cake': 'Chocolate Pound Cake',
       'cupcake-dozen': 'Chocolate Cupcakes (1 dozen)',
       'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
@@ -120,10 +122,9 @@ const MARKET_CONFIG = {
     sizeLabels: {
       mini: 'Mini cake',
       'size-1': 'Size 1',
-      '15cm': '6 inch / 15cm',
-      '17cm': '6.7 inch / 17cm',
-      '19cm': '7.5 inch / 19cm',
-      '22cm': '8.7 inch / 22cm',
+      '15cm': '6" | serves 8',
+      '19cm': '7.5" | serves 14',
+      '22cm': '9" | serves 22',
     },
     chocolateLabels: {
       dark: 'Dark chocolate',
@@ -221,7 +222,8 @@ function getProductName(reservation, config) {
 
 function getCakeSizeText(reservation, config) {
   if (['pound-cake', 'cupcake-dozen'].includes(reservation.productId)) return '-'
-  if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(reservation.productId)) return '6 inch / 15cm'
+  if (reservation.productId === 'vanilla-fresh-cream-cake') return config.sizeLabels[reservation.cakeSize] || config.sizeLabels['15cm']
+  if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(reservation.productId)) return config.sizeLabels['15cm']
   return config.sizeLabels[reservation.cakeSize] || reservation.cakeSize || '-'
 }
 
@@ -446,6 +448,10 @@ function buildClassRows(reservation, config) {
 
 export function buildClassNotificationRows(reservation) {
   return buildClassRows(reservation, getConfig(reservation))
+}
+
+export function buildCakeNotificationRows(reservation) {
+  return buildCakeRows(reservation, getConfig(reservation))
 }
 
 function buildRows(reservation, config) {

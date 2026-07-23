@@ -8,6 +8,7 @@ export type PoundAddon = 'none' | 'extra-chocolate' | 'vanilla-cream'
 
 export type ProductId =
   | 'pave-cake'
+  | 'vanilla-fresh-cream-cake'
   | 'pound-cake'
   | 'cupcake-dozen'
   | 'choco-basque-cheesecake'

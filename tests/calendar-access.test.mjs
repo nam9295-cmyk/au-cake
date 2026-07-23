@@ -60,7 +60,40 @@ test('calendar cheesecake events show the selected variant without irrelevant fi
     status: '예약신청',
   })
 
-  assert.equal(event.label, 'Pave chocolate on top · 6 inch / 15cm ×1')
+  assert.equal(event.label, 'Pave chocolate on top · 6" | serves 8 ×1')
+})
+
+test('calendar Pave events format compatible CakeSize values with the shared customer label', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'pave-id',
+    pickupDate: '2026-08-01',
+    pickupTime: '12:00',
+    productId: 'pave-cake',
+    cakeSize: '22cm',
+    chocolateType: 'milk',
+    quantity: 2,
+    status: '예약신청',
+  })
+
+  assert.equal(event.label, 'Pave cake · 9" | serves 22 · Milk chocolate ×2')
+})
+
+test('calendar Vanilla Fresh Cream Cake events use the safe name and selected customer size label', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'vanilla-fresh-cream-id',
+    pickupDate: '2026-08-01',
+    pickupTime: '12:00',
+    productId: 'vanilla-fresh-cream-cake',
+    cakeSize: '19cm',
+    chocolateType: 'milk',
+    poundAddon: 'vanilla-cream',
+    quantity: 2,
+    status: '예약신청',
+  })
+
+  assert.equal(event.label, 'vanilla fresh cream cake · 7.5" | serves 14 ×2')
+  assert.equal(event.label.includes('cm'), false)
+  assert.equal(event.label.includes('Vanilla cream'), false)
 })
 
 test('calendar Lemon Cake events show the selected pack and icing mix', () => {
@@ -124,8 +157,8 @@ test('calendar labels both cheesecake finishing upgrades at the fixed size', () 
 
   assert.match(pave.label, /Pave chocolate on top/)
   assert.match(eiffel.label, /Cake finishing with Eiffel Tower/)
-  assert.match(pave.label, /6 inch \/ 15cm/)
-  assert.match(eiffel.label, /6 inch \/ 15cm/)
+  assert.match(pave.label, /6" \| serves 8/)
+  assert.match(eiffel.label, /6" \| serves 8/)
 })
 
 test('calendar class events expose only safe class schedule and pricing audit fields', () => {

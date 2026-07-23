@@ -157,6 +157,45 @@ test('package class creation reserves both slots in the same transaction with ac
   assert.ok(creates.every((request) => request.transactionId === 'tx-package'))
 })
 
+test('cake API preserves Pave CakeSize IDs and approved prices', () => {
+  for (const [cakeSize, expectedPrice] of [['15cm', 75], ['19cm', 95], ['22cm', 115]]) {
+    const reservation = buildCakeReservation(
+      { ...cakeInput, cakeSize },
+      { now, reservationNumber: `VG-C-AU-PAVE-${cakeSize}` },
+    )
+    assert.equal(reservation.cakeSize, cakeSize)
+    assert.equal(reservation.totalPrice, expectedPrice)
+    assert.equal(reservation.totalPriceCents, expectedPrice * 100)
+  }
+})
+
+test('cake API authoritatively prices Vanilla Fresh Cream Cake by size and ignores forged totals and unavailable options', () => {
+  for (const [cakeSize, expectedPrice] of [['15cm', 75], ['19cm', 98], ['22cm', 139]]) {
+    const reservation = buildCakeReservation(
+      {
+        ...cakeInput,
+        productId: 'vanilla-fresh-cream-cake',
+        cakeSize,
+        cacaoPercent: '100',
+        chocolateType: 'milk',
+        poundAddon: 'vanilla-cream',
+        quantity: 2,
+        totalPrice: 1,
+        totalPriceCents: 1,
+      },
+      { now, reservationNumber: `VG-C-AU-VANILLA-${cakeSize}` },
+    )
+
+    assert.equal(reservation.productId, 'vanilla-fresh-cream-cake')
+    assert.equal(reservation.cakeSize, cakeSize)
+    assert.equal(reservation.totalPrice, expectedPrice * 2)
+    assert.equal(reservation.totalPriceCents, expectedPrice * 200)
+    assert.equal(reservation.cacaoPercent, '기본')
+    assert.equal(reservation.chocolateType, 'dark')
+    assert.equal(reservation.poundAddon, 'none')
+  }
+})
+
 test('cake API prices cheesecake variants and cupcake per-piece finishes', () => {
   const chocoBasque = buildCakeReservation(
     { ...cakeInput, productId: 'choco-basque-cheesecake', cakeSize: '22cm', poundAddon: 'extra-chocolate' },

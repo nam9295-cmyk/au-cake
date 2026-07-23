@@ -43,13 +43,14 @@ import {
   isCakePickupBlockedByClass,
   isCakePickupDateUnavailable,
 } from '../src/lib/class-utils.js'
+import { getProductFeatures, getProductText } from '../src/lib/i18n.js'
 
-test('AU catalogue exposes Fresh Lemon Cupcakes as a fourth grouped product family', () => {
+test('AU cake chooser follows the approved pound, pave, basque, lemon, vanilla order', () => {
   assert.deepEqual(
     PRODUCT_GROUPS.map((group) => ({ id: group.id, defaultProductId: group.defaultProductId, productIds: group.productIds })),
     [
-      { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
       { id: 'pound-cupcake', defaultProductId: 'pound-cake', productIds: ['pound-cake', 'cupcake-dozen'] },
+      { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
       {
         id: 'cheesecake',
         defaultProductId: 'choco-basque-cheesecake',
@@ -60,11 +61,40 @@ test('AU catalogue exposes Fresh Lemon Cupcakes as a fourth grouped product fami
         defaultProductId: 'fresh-lemon-cupcakes-12',
         productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'],
       },
+      { id: 'vanilla-fresh-cream', defaultProductId: 'vanilla-fresh-cream-cake', productIds: ['vanilla-fresh-cream-cake'] },
     ],
   )
   assert.equal(getProductGroupByProductId('cupcake-dozen').id, 'pound-cupcake')
+  assert.equal(getProductGroupByProductId('vanilla-fresh-cream-cake').id, 'vanilla-fresh-cream')
   assert.equal(getProductGroupByProductId('pave-choco-basque-cheesecake').id, 'cheesecake')
   assert.equal(getProductGroupByProductId('fresh-lemon-cupcakes-8' as ProductId).id, 'fresh-lemon-cupcakes')
+})
+
+test('Vanilla Fresh Cream Cake is a separate size-only product with approved AUD prices and bilingual text', () => {
+  const vanillaFreshCreamCakeId: ProductId = 'vanilla-fresh-cream-cake'
+  const vanillaFreshCreamCake = getProductById(vanillaFreshCreamCakeId)
+
+  assert.equal(vanillaFreshCreamCake.name, 'vanilla fresh cream cake')
+  assert.deepEqual(vanillaFreshCreamCake.sizePrices, { '15cm': 75, '19cm': 98, '22cm': 139 })
+  assert.equal(vanillaFreshCreamCake.usesSizeOptions, true)
+  assert.equal(vanillaFreshCreamCake.usesCacaoOptions, false)
+  assert.equal(vanillaFreshCreamCake.usesChocolateTypeOptions, false)
+  assert.equal(vanillaFreshCreamCake.usesPoundAddonOptions, false)
+  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '15cm', cacaoPercent: '100', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 75)
+  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '19cm', cacaoPercent: '70', chocolateType: 'dark', poundAddon: 'extra-chocolate' }), 98)
+  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '22cm', cacaoPercent: '80.5', chocolateType: 'milk', poundAddon: 'none' }), 139)
+
+  for (const language of ['en', 'ko'] as const) {
+    const text = getProductText(vanillaFreshCreamCakeId, language)
+    const features = getProductFeatures(vanillaFreshCreamCakeId, language)
+    assert.match(text.description, /four chocolate sponge layers|초콜릿 시트 4단/i)
+    assert.match(text.description, /vanilla fresh cream|바닐라 생크림/)
+    assert.equal(text.description.includes('cm'), false)
+    assert.equal(text.priceNote.includes('cm'), false)
+    assert.deepEqual(features, language === 'en'
+      ? ['Four chocolate sponge layers', 'Vanilla fresh cream', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
+      : ['초콜릿 시트 4단', '바닐라 생크림', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
+  }
 })
 
 test('Lemon Cake variants use fixed pack prices and the twelve pack is Most Popular', () => {
@@ -107,7 +137,7 @@ test('Lemoni discounts the Lemon Cake subtotal after chocolate icing surcharge',
   assert.equal(applyPromoDiscount(subtotal, 'fresh-lemon-cupcakes-6', 'lemoni', new Date('2026-07-13T00:00:00Z')), 33.75)
 })
 
-test('AU cheesecake variants expose base, pave-on-top and Eiffel Tower finishes at fixed prices', () => {
+test('AU cheesecake variants keep fixed prices and show the fixed shared size label', () => {
   const chocoBasque = getProductById('choco-basque-cheesecake')
   const paveBasque = getProductById('pave-choco-basque-cheesecake')
   const eiffelBasque = getProductById('eiffel-tower-basque-cheesecake')
@@ -124,6 +154,14 @@ test('AU cheesecake variants expose base, pave-on-top and Eiffel Tower finishes 
   for (const product of [chocoBasque, paveBasque, eiffelBasque]) {
     assert.equal(product.usesSizeOptions, false)
     assert.equal(product.usesPoundAddonOptions, false)
+    assert.equal(product.priceNote, '6" | serves 8')
+  }
+  for (const productId of ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'] as const) {
+    for (const language of ['en', 'ko'] as const) {
+      assert.equal(getProductText(productId, language).priceNote, '6" | serves 8')
+      assert.match(getProductText(productId, language).description, /6" \| serves 8/)
+      assert.equal(getProductFeatures(productId, language)[0], '6" | serves 8')
+    }
   }
   assert.equal(getReservationUnitPrice('choco-basque-cheesecake'), 55)
   assert.equal(getReservationUnitPrice('pave-choco-basque-cheesecake'), 65)
@@ -166,14 +204,18 @@ test('client request IDs are valid UUIDs for idempotent reservation retries', ()
   assert.match(generateRequestId(), /^[a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i)
 })
 
-test('AU cake size labels show inch and centimetre together with 17cm removed', () => {
+test('AU cake size labels use the approved inch and serves copy while retaining internal CakeSize values', () => {
   assert.deepEqual(
     CAKE_SIZE_OPTIONS.map((option) => option.value),
     ['15cm', '19cm', '22cm'],
   )
-  assert.equal(formatCakeSizeLabel('15cm'), '6 inch / 15cm')
-  assert.equal(formatCakeSizeLabel('19cm'), '7.5 inch / 19cm')
-  assert.equal(formatCakeSizeLabel('22cm'), '8.7 inch / 22cm')
+  assert.deepEqual(
+    CAKE_SIZE_OPTIONS.map((option) => option.label),
+    ['6" | serves 8', '7.5" | serves 14', '9" | serves 22'],
+  )
+  assert.equal(formatCakeSizeLabel('15cm'), '6" | serves 8')
+  assert.equal(formatCakeSizeLabel('19cm'), '7.5" | serves 14')
+  assert.equal(formatCakeSizeLabel('22cm'), '9" | serves 22')
 })
 
 test('pound cake only exposes one finish choice group', () => {
@@ -221,12 +263,15 @@ test('cupcakes are sold by the dozen with per-piece finishing instead of pound c
   assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), false)
 })
 
-test('pave cake pricing uses size and chocolate type choices without pound finish', () => {
+test('pave cake keeps its approved prices behind the new customer size labels', () => {
   const paveCake = getProductById('pave-cake')
 
   assert.equal(paveCake.usesSizeOptions, true)
   assert.equal(paveCake.usesChocolateTypeOptions, true)
   assert.equal(paveCake.usesPoundAddonOptions, false)
+  assert.deepEqual(paveCake.sizePrices, { '15cm': 75, '19cm': 95, '22cm': 115 })
+  assert.equal(getProductFeatures('pave-cake', 'en')[1], '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22')
+  assert.equal(getProductFeatures('pave-cake', 'ko')[1], '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22')
   assert.equal(formatChocolateTypeLabel('dark'), 'Dark chocolate')
   assert.equal(formatChocolateTypeLabel('milk'), 'Milk chocolate')
   assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none' }), 75)
@@ -541,7 +586,7 @@ Thank you for your order Jenny. (0412345678)
 
 Booking number: VG-C-AU-20260704-204051216
 Product: Pave Chocolate Cake
-Size: 6 inch / 15cm
+Size: 6" | serves 8
 Quantity: 1ea
 Chocolate: Dark chocolate
 Pick-up date: 2026-07-04
@@ -555,7 +600,7 @@ Have a verygood day!`)
   assert.doesNotMatch(message, /Contact: .*TBC/)
 })
 
-test('AU cheesecake confirmations include the selected finish and fixed 6 inch size', () => {
+test('AU cheesecake confirmations include the selected finish and fixed shared size label', () => {
   const reservation = {
     id: 'test-cheesecake-id',
     reservationNumber: 'VG-C-AU-20260704-CHEESE',
@@ -585,10 +630,10 @@ test('AU cheesecake confirmations include the selected finish and fixed 6 inch s
   })
 
   assert.match(paveMessage, /Product: Pave chocolate on top/)
-  assert.match(paveMessage, /Size: 6 inch \/ 15cm/)
+  assert.match(paveMessage, /Size: 6" \| serves 8/)
   assert.equal(paveMessage.includes('Finish:'), false)
   assert.match(eiffelMessage, /Product: Cake finishing with Eiffel Tower/)
-  assert.match(eiffelMessage, /Size: 6 inch \/ 15cm/)
+  assert.match(eiffelMessage, /Size: 6" \| serves 8/)
   assert.equal(eiffelMessage.includes('Finish:'), false)
 })
 

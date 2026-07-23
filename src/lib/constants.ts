@@ -80,7 +80,7 @@ export function applyPromoDiscount(total: number, productId: ProductId, code?: s
 
 export const PRODUCTS = marketConfig.products
 
-export type ProductGroupId = 'pave' | 'pound-cupcake' | 'cheesecake' | 'fresh-lemon-cupcakes'
+export type ProductGroupId = 'pave' | 'vanilla-fresh-cream' | 'pound-cupcake' | 'cheesecake' | 'fresh-lemon-cupcakes'
 export type ProductGroup = {
   id: ProductGroupId
   defaultProductId: ProductId
@@ -88,8 +88,8 @@ export type ProductGroup = {
 }
 
 export const PRODUCT_GROUPS: ProductGroup[] = [
-  { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
   { id: 'pound-cupcake', defaultProductId: 'pound-cake', productIds: ['pound-cake', 'cupcake-dozen'] },
+  { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
   {
     id: 'cheesecake',
     defaultProductId: 'choco-basque-cheesecake',
@@ -99,8 +99,16 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
     id: 'fresh-lemon-cupcakes' as const,
     defaultProductId: 'fresh-lemon-cupcakes-12' as const,
     productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'] as ProductId[],
+  }, {
+    id: 'vanilla-fresh-cream' as const,
+    defaultProductId: 'vanilla-fresh-cream-cake' as const,
+    productIds: ['vanilla-fresh-cream-cake'] as ProductId[],
   }] : []),
 ]
+
+export function isVanillaFreshCreamCakeProduct(productId: ProductId) {
+  return productId === 'vanilla-fresh-cream-cake'
+}
 
 export function isFreshLemonCupcakeProduct(productId: ProductId) {
   return productId.startsWith('fresh-lemon-cupcakes-')
@@ -178,7 +186,7 @@ export type ReservationPriceOptions = {
 }
 
 export function getProductById(productId?: string) {
-  return PRODUCTS[(productId as ProductId) || DEFAULT_PRODUCT_ID] || PRODUCTS[DEFAULT_PRODUCT_ID]
+  return (PRODUCTS[(productId as ProductId) || DEFAULT_PRODUCT_ID] || PRODUCTS[DEFAULT_PRODUCT_ID])!
 }
 
 export function formatCacaoLabel(cacaoPercent: CacaoPercent) {

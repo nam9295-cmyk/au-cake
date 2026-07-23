@@ -57,6 +57,7 @@ import {
   getFreshLemonCupcakePackSize,
   isCupcakeDozenProduct,
   isFreshLemonCupcakeProduct,
+  isVanillaFreshCreamCakeProduct,
   getReservationPrice,
   getReservationUnitPrice,
   normalizeChocolateIcingCount,
@@ -699,6 +700,19 @@ function reservationCacaoText(reservation: Reservation) {
   return product.usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-'
 }
 
+function VanillaFreshCreamCakeSilhouette() {
+  return (
+    <div className="vanilla-fresh-cream-silhouette" role="img" aria-label="vanilla fresh cream cake photo coming soon">
+      <svg viewBox="0 0 240 180" aria-hidden="true">
+        <path d="M48 68h144l-14 73H62z" />
+        <path d="M38 58c0-15 18-25 40-25h84c22 0 40 10 40 25v11H38z" />
+        <path d="M65 84h110v12H65zm-7 27h124v12H58z" fill="var(--canvas)" />
+      </svg>
+      <span>COMING SOON</span>
+    </div>
+  )
+}
+
 function isCheesecakeProduct(productId: ProductId) {
   return [
     'choco-basque-cheesecake',
@@ -759,19 +773,10 @@ function HomePage({
   }, [heroPaused])
   const catalogCards = [
     {
-      id: 'pave',
-      productId: 'pave-cake' as ProductId,
-      image: paveCakeCardImg,
-      name: getProductText('pave-cake', language).name,
-      description: getProductText('pave-cake', language).description,
-      features: getProductFeatures('pave-cake', language),
-      priceLabel: formatCurrency(PRODUCTS['pave-cake'].price),
-      optionLabel: getProductText('pave-cake', language).priceNote,
-    },
-    {
       id: 'pound-cupcake',
       productId: 'pound-cake' as ProductId,
       image: poundCakeCardImg,
+      isPhotoComingSoon: false,
       name: language === 'ko' ? '초코 파운드케이크 & 컵케이크' : 'Chocolate Pound Cake & Cupcakes',
       description: language === 'ko'
         ? '파운드케이크를 기본으로 선택하고 10달러를 추가하면 컵케이크 1다스로 변경할 수 있어요.'
@@ -783,16 +788,28 @@ function HomePage({
       optionLabel: language === 'ko' ? '파운드 / 컵케이크와 마감 선택' : 'Choose pound or cupcakes, then a finish',
     },
     {
+      id: 'pave',
+      productId: 'pave-cake' as ProductId,
+      image: paveCakeCardImg,
+      isPhotoComingSoon: false,
+      name: getProductText('pave-cake', language).name,
+      description: getProductText('pave-cake', language).description,
+      features: getProductFeatures('pave-cake', language),
+      priceLabel: formatCurrency(PRODUCTS['pave-cake'].price),
+      optionLabel: getProductText('pave-cake', language).priceNote,
+    },
+    {
       id: 'cheesecake',
       productId: 'choco-basque-cheesecake' as ProductId,
       image: basqueCheesecakeCardImg,
+      isPhotoComingSoon: false,
       name: language === 'ko' ? '쇼콜라티에 바스크 치즈케이크' : "Chocolatier's Basque Cheesecake",
       description: language === 'ko'
-        ? '기본, 파베 초콜릿 on top, 에펠탑 초콜릿 마감 중에서 선택할 수 있는 15cm 치즈케이크예요.'
+        ? `기본, 파베 초콜릿 on top, 에펠탑 초콜릿 마감 중에서 선택할 수 있는 ${formatCakeSizeLabel(DEFAULT_CAKE_SIZE)} 치즈케이크예요.`
         : 'Choose classic, pave chocolate on top, or a full pave chocolate finish with one Eiffel Tower chocolate.',
       features: language === 'ko'
-        ? ['글루텐 프리', '6 inch / 15cm 고정 사이즈', '기본 AUD 55', '파베 on top +AUD 10', '에펠탑 마감 +AUD 20']
-        : ['Gluten-free', '6 inch / 15cm fixed size', 'Classic AUD 55', 'Pave chocolate on top +AUD 10', 'Eiffel Tower finish +AUD 20'],
+        ? ['글루텐 프리', formatCakeSizeLabel(DEFAULT_CAKE_SIZE), '기본 AUD 55', '파베 on top +AUD 10', '에펠탑 마감 +AUD 20']
+        : ['Gluten-free', formatCakeSizeLabel(DEFAULT_CAKE_SIZE), 'Classic AUD 55', 'Pave chocolate on top +AUD 10', 'Eiffel Tower finish +AUD 20'],
       priceLabel: `${language === 'ko' ? 'AUD 55부터' : 'From AUD 55'}`,
       optionLabel: language === 'ko' ? '세 가지 마감 선택' : 'Three finishing options',
     },
@@ -800,6 +817,7 @@ function HomePage({
       id: 'fresh-lemon-cupcakes',
       productId: 'fresh-lemon-cupcakes-12' as ProductId,
       image: freshLemonCupcakesCardImg,
+      isPhotoComingSoon: false,
       name: language === 'ko' ? '레몬 케이크' : 'Lemon Cake',
       description: language === 'ko'
         ? '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.'
@@ -810,6 +828,17 @@ function HomePage({
       priceLabel: language === 'ko' ? 'AUD 36부터' : 'From AUD 36',
       optionLabel: language === 'ko' ? '구성 수량만 선택' : 'Choose a pack size',
     },
+    ...(marketConfig.market === 'AU' ? [{
+      id: 'vanilla-fresh-cream',
+      productId: 'vanilla-fresh-cream-cake' as ProductId,
+      image: '',
+      isPhotoComingSoon: true,
+      name: getProductText('vanilla-fresh-cream-cake', language).name,
+      description: getProductText('vanilla-fresh-cream-cake', language).description,
+      features: getProductFeatures('vanilla-fresh-cream-cake', language),
+      priceLabel: language === 'ko' ? 'AUD 75부터' : 'From AUD 75',
+      optionLabel: getProductText('vanilla-fresh-cream-cake', language).priceNote,
+    }] : []),
   ]
 
   const rotateHeroCake = useCallback((direction: 1 | -1) => {
@@ -957,7 +986,7 @@ function HomePage({
             {catalogCards.map((card) => (
               <article className="product-card" key={card.id}>
                 <div className="product-image-wrap">
-                  <img src={card.image} alt={card.name} />
+                  {card.isPhotoComingSoon ? <VanillaFreshCreamCakeSilhouette /> : <img src={card.image} alt={card.name} />}
                   {card.id === 'cheesecake' && (
                     <img
                       className="gluten-free-stamp"
@@ -2195,7 +2224,7 @@ function ReservePage({
         <section className="reservation-layout">
           <aside className="summary-panel">
             <div className="summary-product-photo">
-              <img src={selectedProductImage} alt={selectedProductText.name} />
+              {isVanillaFreshCreamCakeProduct(selectedProduct.id) ? <VanillaFreshCreamCakeSilhouette /> : <img src={selectedProductImage} alt={selectedProductText.name} />}
             </div>
             <p className="summary-kicker">{copy.productSectionTitle}</p>
             <h1>{labels.title}</h1>
@@ -2303,19 +2332,25 @@ function ReservePage({
                     const isSelected = group.id === selectedProductGroup.id
                     const groupName = group.id === 'pave'
                       ? getProductText('pave-cake', language).name
-                      : group.id === 'pound-cupcake'
+                      : group.id === 'vanilla-fresh-cream'
+                        ? getProductText('vanilla-fresh-cream-cake', language).name
+                        : group.id === 'pound-cupcake'
                         ? language === 'ko' ? '초코 파운드케이크 & 컵케이크' : 'Chocolate Pound Cake & Cupcakes'
                         : group.id === 'cheesecake'
                           ? language === 'ko' ? '쇼콜라티에 바스크 치즈케이크' : "Chocolatier's Basque Cheesecake"
                           : language === 'ko' ? '레몬 케이크' : 'Lemon Cake'
                     const groupImage = group.id === 'pave'
                       ? paveCakeCardImg
-                      : group.id === 'pound-cupcake'
+                      : group.id === 'vanilla-fresh-cream'
+                        ? ''
+                        : group.id === 'pound-cupcake'
                         ? poundCakeCardImg
                         : group.id === 'cheesecake' ? basqueCheesecakeCardImg : freshLemonCupcakesCardImg
                     const groupPrice = group.id === 'pave'
                       ? formatCurrency(75)
-                      : group.id === 'pound-cupcake'
+                      : group.id === 'vanilla-fresh-cream'
+                        ? 'From AUD 75'
+                        : group.id === 'pound-cupcake'
                         ? 'From AUD 45'
                         : group.id === 'cheesecake' ? 'From AUD 55' : 'From AUD 36'
                     return (
@@ -2331,7 +2366,7 @@ function ReservePage({
                           onChange={() => selectProduct(group.defaultProductId)}
                         />
                         <span className="product-choice-thumb" aria-hidden="true">
-                          <img src={groupImage} alt="" />
+                          {group.id === 'vanilla-fresh-cream' ? <VanillaFreshCreamCakeSilhouette /> : <img src={groupImage} alt="" />}
                         </span>
                         <span className="product-choice-copy">
                           <span className="product-choice-topline">
@@ -2479,7 +2514,7 @@ function ReservePage({
                         <strong>
                           {optionText.label} · {formatCurrency(selectedProduct.sizePrices[option.value] || option.price)}
                         </strong>
-                        <span>{optionText.description}</span>
+                        {!isVanillaFreshCreamCakeProduct(selectedProduct.id) && <span>{optionText.description}</span>}
                       </span>
                     </label>
                   )

@@ -21,6 +21,11 @@ export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
 export const CUPCAKE_PACK_SIZE = 12
 export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
+export const CAKE_SIZE_LABELS = {
+  '15cm': '6" | serves 8',
+  '19cm': '7.5" | serves 14',
+  '22cm': '9" | serves 22',
+}
 export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
 export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
 const CHEESECAKE_PROMO_PRODUCT_IDS = new Set([
@@ -54,6 +59,12 @@ const PRODUCTS = {
   'pave-cake': {
     basePrice: 75,
     sizePrices: { '15cm': 75, '19cm': 95, '22cm': 115 },
+    usesSize: true,
+    usesFinish: false,
+  },
+  'vanilla-fresh-cream-cake': {
+    basePrice: 75,
+    sizePrices: { '15cm': 75, '19cm': 98, '22cm': 139 },
     usesSize: true,
     usesFinish: false,
   },
@@ -91,6 +102,10 @@ const PRODUCTS = {
   'fresh-lemon-cupcakes-8': { basePrice: 45, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-12': { basePrice: 65, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-16': { basePrice: 85, sizePrices: {}, usesSize: false, usesFinish: false },
+}
+
+export function formatCakeSizeLabel(cakeSize) {
+  return CAKE_SIZE_LABELS[cakeSize] || CAKE_SIZE_LABELS['15cm']
 }
 
 const FINISH_PRICES = {

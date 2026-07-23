@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { formatCakeSizeLabel } from './business.js'
 
 const CALENDAR_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60
 
@@ -44,6 +45,7 @@ export function verifyCalendarToken(token, secret, now = new Date()) {
 function cakeLabel(document) {
   const labels = {
     'pave-cake': 'Pave cake',
+    'vanilla-fresh-cream-cake': 'vanilla fresh cream cake',
     'pound-cake': 'Pound cake',
     'cupcake-dozen': 'Cupcakes',
     'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
@@ -62,11 +64,11 @@ function cakeLabel(document) {
   const chocolateLabels = { dark: 'Dark chocolate', milk: 'Milk chocolate' }
   const label = labels[document.productId] || 'Cake'
   const options = []
-  if (document.productId === 'pave-cake') {
-    if (document.cakeSize) options.push(document.cakeSize)
-    if (chocolateLabels[document.chocolateType]) options.push(chocolateLabels[document.chocolateType])
+  if (document.productId === 'pave-cake' || document.productId === 'vanilla-fresh-cream-cake') {
+    options.push(formatCakeSizeLabel(document.cakeSize))
+    if (document.productId === 'pave-cake' && chocolateLabels[document.chocolateType]) options.push(chocolateLabels[document.chocolateType])
   } else if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(document.productId)) {
-    options.push('6 inch / 15cm')
+    options.push(formatCakeSizeLabel('15cm'))
   } else if (document.productId?.startsWith('fresh-lemon-cupcakes-')) {
     const packSize = Number(document.productId.split('-').at(-1))
     const rawChocolateCount = Number(document.chocolateIcingCount || 0)
