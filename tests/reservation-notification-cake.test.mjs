@@ -60,13 +60,15 @@ test('AU operator cake notification projection exposes only approved cake-size l
   assert.equal(legacySize, '17cm')
 })
 
-test('AU operator notification gives Vanilla Fresh Cream Cake its safe name and selected no-cm size label', () => {
+test('AU operator notification gives Vanilla Fresh Cream Cake its size, cake sheet, and flavour selections', () => {
   const rows = rowsByLabel({
     reservationNumber: 'VG-C-AU-VANILLA',
     productId: 'vanilla-fresh-cream-cake',
     cakeSize: '22cm',
     chocolateType: 'milk',
     poundAddon: 'vanilla-cream',
+    vanillaCakeSheet: 'chocolate',
+    vanillaCakeFlavor: 'nutella-chocolate-chip',
     quantity: 1,
   })
 
@@ -74,4 +76,6 @@ test('AU operator notification gives Vanilla Fresh Cream Cake its safe name and 
   assert.equal(rows.Size, '9" | serves 22')
   assert.equal(rows.Chocolate, '-')
   assert.equal(rows.Finish, '-')
+  assert.equal(rows['Cake sheet'], 'Chocolate cake sheet')
+  assert.equal(rows.Flavour, 'Nutella chocolate chip')
 })

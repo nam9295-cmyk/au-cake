@@ -10,7 +10,7 @@ import {
   PRODUCTS,
 } from './constants.js'
 import { isValidPhone } from './utils.js'
-import type { CakeSize, CacaoPercent, ChocolateType, PoundAddon, ProductId, Reservation, ReservationInput } from './types.js'
+import type { CakeSize, CacaoPercent, ChocolateType, PoundAddon, ProductId, Reservation, ReservationInput, VanillaCakeFlavor, VanillaCakeSheet } from './types.js'
 
 const REVIEW_COUPON_ANIMALS = ['FOX', 'CAT', 'DOG', 'OWL', 'PIG', 'BEE', 'COW', 'CUB', 'EMU', 'HEN', 'KOI', 'PUP', 'RAM', 'YAK', 'APE']
 const REVIEW_COUPON_FRUITS = ['KIWI', 'FIG', 'LIME', 'PEAR', 'PLUM', 'APPLE', 'GRAPE', 'GUAVA', 'LEMON', 'MANGO', 'MELON', 'PEACH']
@@ -22,6 +22,8 @@ const SAFE_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 const VALID_CAKE_SIZES = new Set<CakeSize>(['mini', 'size-1', '15cm', '17cm', '19cm', '22cm'])
 const VALID_CHOCOLATE_TYPES = new Set<ChocolateType>(['dark', 'milk'])
 const VALID_POUND_ADDONS = new Set<PoundAddon>(['none', 'extra-chocolate', 'vanilla-cream'])
+const VALID_VANILLA_CAKE_SHEETS = new Set<VanillaCakeSheet>(['vanilla', 'chocolate'])
+const VALID_VANILLA_CAKE_FLAVORS = new Set<VanillaCakeFlavor>(['triple-berry', 'nutella-chocolate-chip'])
 const VALID_CACAO = new Set<CacaoPercent>(['기본', '70', '80.5', '100'])
 const VALID_STATUSES = new Set<Reservation['status']>(['예약신청', '예약확정', '픽업완료', '취소'])
 const VALID_PAYMENT_STATUSES = new Set<Reservation['paymentStatus']>(['입금대기', '입금확인', '현장결제', '환불필요'])
@@ -192,6 +194,8 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     chocolateIcingCount: input.chocolateIcingCount,
     vanillaCreamCount: input.vanillaCreamCount,
     partyDecorationCount: input.partyDecorationCount,
+    vanillaCakeSheet: input.vanillaCakeSheet,
+    vanillaCakeFlavor: input.vanillaCakeFlavor,
     quantity: input.quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -267,6 +271,12 @@ export function parseCakeReservationResult(value: unknown): Reservation {
   const chocolateIcingCount = row.chocolateIcingCount === undefined ? 0 : nonnegativeInteger(row.chocolateIcingCount)
   const vanillaCreamCount = row.vanillaCreamCount === undefined ? 0 : nonnegativeInteger(row.vanillaCreamCount)
   const partyDecorationCount = row.partyDecorationCount === undefined ? 0 : nonnegativeInteger(row.partyDecorationCount)
+  const vanillaCakeSheet = row.vanillaCakeSheet === undefined
+    ? 'vanilla'
+    : requiredSetValue(row, 'vanillaCakeSheet', VALID_VANILLA_CAKE_SHEETS)
+  const vanillaCakeFlavor = row.vanillaCakeFlavor === undefined
+    ? 'triple-berry'
+    : requiredSetValue(row, 'vanillaCakeFlavor', VALID_VANILLA_CAKE_FLAVORS)
   const quantity = nonnegativeInteger(row.quantity)
   const normalizedFinishes = normalizeCupcakeFinishCounts(productId, vanillaCreamCount, partyDecorationCount)
   if (
@@ -295,6 +305,8 @@ export function parseCakeReservationResult(value: unknown): Reservation {
     chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,
+    vanillaCakeSheet,
+    vanillaCakeFlavor,
     quantity,
     pickupDate: requiredDateOnly(row, 'pickupDate'),
     pickupTime: requiredTime(row, 'pickupTime'),

@@ -6,6 +6,10 @@ export type ChocolateType = 'dark' | 'milk'
 
 export type PoundAddon = 'none' | 'extra-chocolate' | 'vanilla-cream'
 
+export type VanillaCakeSheet = 'vanilla' | 'chocolate'
+
+export type VanillaCakeFlavor = 'triple-berry' | 'nutella-chocolate-chip'
+
 export type ProductId =
   | 'pave-cake'
   | 'vanilla-fresh-cream-cake'
@@ -36,6 +40,8 @@ export type Reservation = {
   chocolateIcingCount?: number
   vanillaCreamCount?: number
   partyDecorationCount?: number
+  vanillaCakeSheet?: VanillaCakeSheet
+  vanillaCakeFlavor?: VanillaCakeFlavor
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -66,6 +72,8 @@ export type ReservationInput = {
   chocolateIcingCount: number
   vanillaCreamCount?: number
   partyDecorationCount?: number
+  vanillaCakeSheet?: VanillaCakeSheet
+  vanillaCakeFlavor?: VanillaCakeFlavor
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -87,6 +95,8 @@ export type PublicReservation = Pick<
   | 'chocolateIcingCount'
   | 'vanillaCreamCount'
   | 'partyDecorationCount'
+  | 'vanillaCakeSheet'
+  | 'vanillaCakeFlavor'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'

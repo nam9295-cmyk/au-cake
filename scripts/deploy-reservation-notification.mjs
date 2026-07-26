@@ -8,6 +8,7 @@ import { AppwriteException, Client, Functions, Runtime } from 'node-appwrite'
 import { File } from 'node-fetch-native-with-agent'
 
 const execFileAsync = promisify(execFile)
+const sleep = (ms) => new Promise((resolveSleep) => setTimeout(resolveSleep, ms))
 
 loadDotEnvLocal()
 
@@ -79,7 +80,8 @@ const functions = new Functions(client)
 try {
   await ensureFunction()
   await ensureVariables()
-  await deployFunction()
+  const deployment = await deployFunction()
+  await waitForDeployment(deployment.$id)
   console.log('Reservation notification function deployment complete')
 } catch (error) {
   if (error instanceof AppwriteException && error.type === 'general_unauthorized_scope') {
@@ -205,8 +207,24 @@ async function deployFunction() {
       entrypoint: 'src/main.js',
       commands: '',
     })
-    console.log(`created deployment ${deployment.$id}`)
+    console.log(`created deployment ${deployment.$id}; waiting for build`)
+    return deployment
   } finally {
     await rm(tempDir, { recursive: true, force: true })
   }
+}
+
+async function waitForDeployment(deploymentId) {
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const deployment = await functions.getDeployment({ functionId, deploymentId })
+    if (deployment.status === 'ready') {
+      console.log(`deployment ${deploymentId} is ready`)
+      return
+    }
+    if (deployment.status === 'failed') {
+      throw new Error('Reservation notification build failed. Check the Appwrite Function build logs.')
+    }
+    await sleep(2000)
+  }
+  throw new Error('Reservation notification deployment did not become ready within 120 seconds.')
 }

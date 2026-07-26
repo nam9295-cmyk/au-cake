@@ -42,6 +42,8 @@ import {
   DEFAULT_CAKE_SIZE,
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
+  DEFAULT_VANILLA_CAKE_FLAVOR,
+  DEFAULT_VANILLA_CAKE_SHEET,
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
   MAX_RESERVATION_QUANTITY,
@@ -50,6 +52,8 @@ import {
   formatCacaoLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
+  formatVanillaCakeFlavor,
+  formatVanillaCakeSheet,
   getChocolateIcingSurcharge,
   getCupcakeFinishSurcharge,
   getLemonIcingCount,
@@ -62,10 +66,14 @@ import {
   getReservationUnitPrice,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
+  normalizeVanillaCakeFlavor,
+  normalizeVanillaCakeSheet,
   PAYMENT_STATUSES,
   POUND_ADDON_OPTIONS,
   PRODUCT_GROUPS,
   PRODUCTS,
+  VANILLA_CAKE_FLAVOR_OPTIONS,
+  VANILLA_CAKE_SHEET_OPTIONS,
   RESERVATION_STATUSES,
   usesReservationChocolateType,
 } from './lib/constants'
@@ -136,7 +144,7 @@ import {
   trackEvent,
   trackPageView,
 } from './lib/analytics'
-import type { CacaoPercent, CakeSize, ChocolateType, ClassCoursePlan, ClassExtensionMinutes, ClassPartySize, ClassReservation, ClassReservationFilters, ClassType, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings } from './lib/types'
+import type { CacaoPercent, CakeSize, ChocolateType, ClassCoursePlan, ClassExtensionMinutes, ClassPartySize, ClassReservation, ClassReservationFilters, ClassType, PoundAddon, ProductId, PublicReservation, Reservation, ReservationFilters, StoreSettings, VanillaCakeFlavor, VanillaCakeSheet } from './lib/types'
 import {
   buildClassConfirmationMessage,
   buildClassPaymentDetails,
@@ -617,7 +625,7 @@ function formatPaymentStatus(status: string) {
 }
 
 function ProductDetailRows({ reservation, language = 'ko' }: {
-  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount'>
+  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor'>
   language?: Language
 }) {
   const product = getProductById(reservation.productId)
@@ -672,6 +680,22 @@ function ProductDetailRows({ reservation, language = 'ko' }: {
           <dt>{copy.size}</dt>
           <dd>{formatCakeSizeLabel(reservation.cakeSize)}</dd>
         </div>
+      )}
+      {isVanillaFreshCreamCakeProduct(product.id) && (
+        <>
+          <div>
+            <dt>{language === 'ko' ? '케이크 시트' : 'Cake sheet'}</dt>
+            <dd>{language === 'ko'
+              ? reservation.vanillaCakeSheet === 'chocolate' ? '초코 케이크 시트' : '바닐라 케이크 시트'
+              : formatVanillaCakeSheet(reservation.vanillaCakeSheet)}</dd>
+          </div>
+          <div>
+            <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
+            <dd>{language === 'ko'
+              ? reservation.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
+              : formatVanillaCakeFlavor(reservation.vanillaCakeFlavor)}</dd>
+          </div>
+        </>
       )}
       {product.usesCacaoOptions && (
         <div>
@@ -1818,6 +1842,8 @@ function ReservePage({
     chocolateIcingCount: 0,
     vanillaCreamCount: 0,
     partyDecorationCount: 0,
+    vanillaCakeSheet: DEFAULT_VANILLA_CAKE_SHEET as VanillaCakeSheet,
+    vanillaCakeFlavor: DEFAULT_VANILLA_CAKE_FLAVOR as VanillaCakeFlavor,
     pickupDate: todayInputValue(),
     pickupTime: '',
     quantity: 1,
@@ -2028,6 +2054,8 @@ function ReservePage({
         chocolateIcingCount: form.chocolateIcingCount,
         vanillaCreamCount: form.vanillaCreamCount,
         partyDecorationCount: form.partyDecorationCount,
+        vanillaCakeSheet: form.vanillaCakeSheet,
+        vanillaCakeFlavor: form.vanillaCakeFlavor,
         quantity: form.quantity,
         pickupDate,
         pickupTime: selectedPickupTime,
@@ -2052,6 +2080,8 @@ function ReservePage({
             chocolateIcingCount: form.chocolateIcingCount,
             vanillaCreamCount: form.vanillaCreamCount,
             partyDecorationCount: form.partyDecorationCount,
+            vanillaCakeSheet: form.vanillaCakeSheet,
+            vanillaCakeFlavor: form.vanillaCakeFlavor,
             quantity: form.quantity,
             pickupDate,
             pickupTime: selectedPickupTime,
@@ -2111,7 +2141,9 @@ function ReservePage({
     chocolateIcingCount: form.chocolateIcingCount,
     vanillaCreamCount: form.vanillaCreamCount,
     partyDecorationCount: form.partyDecorationCount,
-  }
+    vanillaCakeSheet: form.vanillaCakeSheet,
+    vanillaCakeFlavor: form.vanillaCakeFlavor,
+    }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
   const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
   const promoEntry = getPromoEntryState(selectedProduct.id, form.promoCode, undefined, knownReviewRewardPercent)
@@ -2186,6 +2218,8 @@ function ReservePage({
       poundAddon: product.usesPoundAddonOptions ? form.poundAddon : DEFAULT_POUND_ADDON,
       chocolateIcingCount: normalizeChocolateIcingCount(productId, form.chocolateIcingCount),
       ...normalizeCupcakeFinishCounts(productId, form.vanillaCreamCount, form.partyDecorationCount),
+      vanillaCakeSheet: normalizeVanillaCakeSheet(productId, form.vanillaCakeSheet),
+      vanillaCakeFlavor: normalizeVanillaCakeFlavor(productId, form.vanillaCakeFlavor),
       quantity: isFreshLemonCupcakeProduct(productId) ? 1 : form.quantity,
     })
   }
@@ -2291,6 +2325,22 @@ function ReservePage({
                   <dt>{labels.size}</dt>
                   <dd>{formatCakeSizeLabel(form.cakeSize)}</dd>
                 </div>
+              )}
+              {isVanillaFreshCreamCakeProduct(selectedProduct.id) && (
+                <>
+                  <div>
+                    <dt>{language === 'ko' ? '케이크 시트' : 'Cake sheet'}</dt>
+                    <dd>{language === 'ko'
+                      ? form.vanillaCakeSheet === 'chocolate' ? '초코 케이크 시트' : '바닐라 케이크 시트'
+                      : formatVanillaCakeSheet(form.vanillaCakeSheet)}</dd>
+                  </div>
+                  <div>
+                    <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
+                    <dd>{language === 'ko'
+                      ? form.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
+                      : formatVanillaCakeFlavor(form.vanillaCakeFlavor)}</dd>
+                  </div>
+                </>
               )}
               {showChocolateTypeOptions && (
                 <div>
@@ -2522,6 +2572,47 @@ function ReservePage({
               </div>
               <p className="field-help">{copy.sizeHelp}</p>
               </fieldset>
+            )}
+
+            {isVanillaFreshCreamCakeProduct(selectedProduct.id) && (
+              <>
+                <fieldset>
+                  <legend>{language === 'ko' ? '케이크 시트 선택' : 'Choose cake sheet'}</legend>
+                  <div className="choice-list">
+                    {VANILLA_CAKE_SHEET_OPTIONS.map((option) => (
+                      <label className="choice-item" key={option.value}>
+                        <input
+                          type="radio"
+                          name="vanillaCakeSheet"
+                          checked={form.vanillaCakeSheet === option.value}
+                          onChange={() => setForm({ ...form, vanillaCakeSheet: option.value })}
+                        />
+                        <span className="choice-copy">
+                          <strong>{language === 'ko' ? option.value === 'chocolate' ? '초코 케이크 시트' : '바닐라 케이크 시트' : option.label}</strong>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset>
+                  <legend>{language === 'ko' ? '맛 선택' : 'Choose flavour'}</legend>
+                  <div className="choice-list">
+                    {VANILLA_CAKE_FLAVOR_OPTIONS.map((option) => (
+                      <label className="choice-item" key={option.value}>
+                        <input
+                          type="radio"
+                          name="vanillaCakeFlavor"
+                          checked={form.vanillaCakeFlavor === option.value}
+                          onChange={() => setForm({ ...form, vanillaCakeFlavor: option.value })}
+                        />
+                        <span className="choice-copy">
+                          <strong>{language === 'ko' ? option.value === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리' : option.label}</strong>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              </>
             )}
 
             {selectedProduct.usesCacaoOptions && (

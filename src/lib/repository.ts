@@ -16,6 +16,8 @@ import {
   normalizeCakeSize,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
+  normalizeVanillaCakeFlavor,
+  normalizeVanillaCakeSheet,
   normalizeReservationChocolateType,
   normalizePoundAddon,
 } from './constants'
@@ -47,6 +49,8 @@ import type {
   ReservationInput,
   ReservationStatus,
   StoreSettings,
+  VanillaCakeFlavor,
+  VanillaCakeSheet,
 } from './types'
 import { generateReservationNumber, isPickupTimeAllowed, isValidPhone, normalizePhone, PICKUP_TIME_TOO_SOON_ERROR, todayInputValue } from './utils'
 import { buildCakeReservationRequest, normalizeReviewCouponCode, parseCakeReservationResult } from './review-coupon-client'
@@ -61,7 +65,7 @@ const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 
 export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
@@ -72,6 +76,8 @@ type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeS
   chocolateIcingCount?: number
   vanillaCreamCount?: number
   partyDecorationCount?: number
+  vanillaCakeSheet?: VanillaCakeSheet
+  vanillaCakeFlavor?: VanillaCakeFlavor
   quantity?: number
   totalPriceCents?: number
   subtotalCents?: number
@@ -208,6 +214,8 @@ function normalizeReservation(reservation: Reservation): Reservation {
       reservation.vanillaCreamCount,
       reservation.partyDecorationCount,
     ),
+    vanillaCakeSheet: normalizeVanillaCakeSheet(getProductById(reservation.productId).id, reservation.vanillaCakeSheet),
+    vanillaCakeFlavor: normalizeVanillaCakeFlavor(getProductById(reservation.productId).id, reservation.vanillaCakeFlavor),
     quantity: normalizeQuantity(reservation.quantity),
     totalPrice: reservation.totalPriceCents === undefined || reservation.totalPriceCents === null
       ? reservation.totalPrice
@@ -236,6 +244,8 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     poundAddon,
     chocolateIcingCount: normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount),
     ...normalizeCupcakeFinishCounts(product.id, reservation.vanillaCreamCount, reservation.partyDecorationCount),
+    vanillaCakeSheet: normalizeVanillaCakeSheet(product.id, reservation.vanillaCakeSheet),
+    vanillaCakeFlavor: normalizeVanillaCakeFlavor(product.id, reservation.vanillaCakeFlavor),
     quantity: normalizeQuantity(reservation.quantity),
     pickupDate: reservation.pickupDate,
     pickupTime: reservation.pickupTime,
@@ -319,6 +329,8 @@ function toReservation(document: AppwriteReservationDocument): Reservation {
       document.vanillaCreamCount,
       document.partyDecorationCount,
     ),
+    vanillaCakeSheet: normalizeVanillaCakeSheet(getProductById(document.productId).id, document.vanillaCakeSheet),
+    vanillaCakeFlavor: normalizeVanillaCakeFlavor(getProductById(document.productId).id, document.vanillaCakeFlavor),
     quantity: normalizeQuantity(document.quantity),
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
@@ -606,6 +618,8 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     input.vanillaCreamCount,
     input.partyDecorationCount,
   )
+  const vanillaCakeSheet = normalizeVanillaCakeSheet(product.id, input.vanillaCakeSheet)
+  const vanillaCakeFlavor = normalizeVanillaCakeFlavor(product.id, input.vanillaCakeFlavor)
   const quantity = normalizeQuantity(input.quantity)
   const originalTotalPrice = getReservationPrice(
     product.id,
@@ -627,6 +641,8 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     poundAddon,
     chocolateIcingCount,
     ...cupcakeFinishCounts,
+    vanillaCakeSheet,
+    vanillaCakeFlavor,
     quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,

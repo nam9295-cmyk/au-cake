@@ -171,18 +171,18 @@ test('legacy reservations without complete audit fields do not crash admin rende
   assert.deepEqual(getOptionalReservationPricingAudit(reservation()), getReservationPricingAudit(reservation()))
 })
 
-test('cake request projection sends the exact allowlisted payload and promoCode only when needed', () => {
+test('cake request projection sends the exact allowlisted payload including Vanilla Fresh Cream Cake sheet and flavour', () => {
   const contaminated = {
-    customerName: 'Customer', customerPhone: '0412345678', productId: 'pave-cake', cakeSize: '15cm',
+    customerName: 'Customer', customerPhone: '0412345678', productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm',
     chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0,
-    partyDecorationCount: 0, quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
+    partyDecorationCount: 0, vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'nutella-chocolate-chip', quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
     requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
     promoCode: 'FOXKIWI7Q2MK', reviewCouponCode: 'forbidden', reviewCouponId: 'private', rewardPercent: 10,
   }
   assert.deepEqual(buildCakeReservationRequest(contaminated as ReservationInput), {
-    customerName: 'Customer', customerPhone: '0412345678', productId: 'pave-cake', cakeSize: '15cm',
+    customerName: 'Customer', customerPhone: '0412345678', productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm',
     chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0,
-    partyDecorationCount: 0, quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
+    partyDecorationCount: 0, vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'nutella-chocolate-chip', quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
     requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
     promoCode: 'FOXKIWI7Q2MK',
   })

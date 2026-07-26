@@ -24,8 +24,17 @@ test('reservation selection renders the Vanilla Fresh Cream Cake silhouette rath
   assert.match(reserve, /group\.id === 'vanilla-fresh-cream'[\s\S]*?<VanillaFreshCreamCakeSilhouette/)
 })
 
-test('Vanilla Fresh Cream Cake size choices show only approved size, serves, and price facts', () => {
+test('Vanilla Fresh Cream Cake selects its size before its exact cake-sheet and flavour radios', () => {
   assert.match(reserve, /!isVanillaFreshCreamCakeProduct\(selectedProduct\.id\)\s*&&\s*<span>\{optionText\.description\}<\/span>/)
+  assert.match(reserve, /selectedProduct\.usesSizeOptions && \(/)
+  assert.match(reserve, /isVanillaFreshCreamCakeProduct\(selectedProduct\.id\) && \(/)
+  assert.match(reserve, /name="vanillaCakeSheet"/)
+  assert.match(reserve, /name="vanillaCakeFlavor"/)
+  assert.match(reserve, /VANILLA_CAKE_SHEET_OPTIONS\.map/)
+  assert.match(reserve, /VANILLA_CAKE_FLAVOR_OPTIONS\.map/)
+  assert.match(reserve, /form\.cakeSize === option\.value/)
+  assert.match(reserve, /form\.vanillaCakeSheet === option\.value/)
+  assert.match(reserve, /form\.vanillaCakeFlavor === option\.value/)
 })
 
 test('Vanilla Fresh Cream Cake catalogue card exists only for the AU market', () => {

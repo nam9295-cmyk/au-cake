@@ -4,8 +4,12 @@ import {
   DEFAULT_CAKE_SIZE,
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
+  DEFAULT_VANILLA_CAKE_FLAVOR,
+  DEFAULT_VANILLA_CAKE_SHEET,
   DEFAULT_SETTINGS,
   CAKE_SIZE_OPTIONS,
+  VANILLA_CAKE_FLAVOR_OPTIONS,
+  VANILLA_CAKE_SHEET_OPTIONS,
   applyPromoDiscount,
   formatCakeSizeLabel,
   formatChocolateTypeLabel,
@@ -19,6 +23,8 @@ import {
   normalizeCupcakeFinishCounts,
   normalizePoundAddon,
   normalizeReservationChocolateType,
+  normalizeVanillaCakeFlavor,
+  normalizeVanillaCakeSheet,
   usesReservationChocolateType,
   PRODUCT_GROUPS,
   getProductGroupByProductId,
@@ -70,7 +76,7 @@ test('AU cake chooser follows the approved pound, pave, basque, lemon, vanilla o
   assert.equal(getProductGroupByProductId('fresh-lemon-cupcakes-8' as ProductId).id, 'fresh-lemon-cupcakes')
 })
 
-test('Vanilla Fresh Cream Cake is a separate size-only product with approved AUD prices and bilingual text', () => {
+test('Vanilla Fresh Cream Cake keeps its size prices and offers the approved cake-sheet and flavour choices', () => {
   const vanillaFreshCreamCakeId: ProductId = 'vanilla-fresh-cream-cake'
   const vanillaFreshCreamCake = getProductById(vanillaFreshCreamCakeId)
 
@@ -80,6 +86,20 @@ test('Vanilla Fresh Cream Cake is a separate size-only product with approved AUD
   assert.equal(vanillaFreshCreamCake.usesCacaoOptions, false)
   assert.equal(vanillaFreshCreamCake.usesChocolateTypeOptions, false)
   assert.equal(vanillaFreshCreamCake.usesPoundAddonOptions, false)
+  assert.equal(DEFAULT_VANILLA_CAKE_SHEET, 'vanilla')
+  assert.equal(DEFAULT_VANILLA_CAKE_FLAVOR, 'triple-berry')
+  assert.deepEqual(VANILLA_CAKE_SHEET_OPTIONS, [
+    { value: 'vanilla', label: 'Vanilla cake sheet' },
+    { value: 'chocolate', label: 'Chocolate cake sheet' },
+  ])
+  assert.deepEqual(VANILLA_CAKE_FLAVOR_OPTIONS, [
+    { value: 'triple-berry', label: 'Triple berry' },
+    { value: 'nutella-chocolate-chip', label: 'Nutella chocolate chip' },
+  ])
+  assert.equal(normalizeVanillaCakeSheet(vanillaFreshCreamCakeId, 'chocolate'), 'chocolate')
+  assert.equal(normalizeVanillaCakeFlavor(vanillaFreshCreamCakeId, 'nutella-chocolate-chip'), 'nutella-chocolate-chip')
+  assert.equal(normalizeVanillaCakeSheet('pave-cake', 'chocolate'), 'vanilla')
+  assert.equal(normalizeVanillaCakeFlavor('pave-cake', 'nutella-chocolate-chip'), 'triple-berry')
   assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '15cm', cacaoPercent: '100', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 75)
   assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '19cm', cacaoPercent: '70', chocolateType: 'dark', poundAddon: 'extra-chocolate' }), 98)
   assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '22cm', cacaoPercent: '80.5', chocolateType: 'milk', poundAddon: 'none' }), 139)
@@ -87,13 +107,13 @@ test('Vanilla Fresh Cream Cake is a separate size-only product with approved AUD
   for (const language of ['en', 'ko'] as const) {
     const text = getProductText(vanillaFreshCreamCakeId, language)
     const features = getProductFeatures(vanillaFreshCreamCakeId, language)
-    assert.match(text.description, /four chocolate sponge layers|초콜릿 시트 4단/i)
+    assert.match(text.description, /cake sheet|케이크 시트/i)
     assert.match(text.description, /vanilla fresh cream|바닐라 생크림/)
     assert.equal(text.description.includes('cm'), false)
     assert.equal(text.priceNote.includes('cm'), false)
     assert.deepEqual(features, language === 'en'
-      ? ['Four chocolate sponge layers', 'Vanilla fresh cream', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
-      : ['초콜릿 시트 4단', '바닐라 생크림', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
+      ? ['Choose vanilla or chocolate cake sheet', 'Triple berry or Nutella chocolate chip', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
+      : ['바닐라 또는 초코 케이크 시트', '트리플베리 또는 누텔라 초코칩', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
   }
 })
 

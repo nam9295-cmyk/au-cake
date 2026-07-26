@@ -1,5 +1,5 @@
 import { marketConfig, PAYMENT_STATUSES, RESERVATION_STATUSES } from './market.js'
-import type { CacaoPercent, CakeSize, ChocolateType, PoundAddon, ProductId } from './types.js'
+import type { CacaoPercent, CakeSize, ChocolateType, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakeSheet } from './types.js'
 
 export const PRODUCT_NAME = marketConfig.copy.productName
 
@@ -7,6 +7,8 @@ export const DEFAULT_PRODUCT_ID: ProductId = 'pave-cake'
 export const DEFAULT_CAKE_SIZE: CakeSize = '15cm'
 export const DEFAULT_CHOCOLATE_TYPE: ChocolateType = 'dark'
 export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
+export const DEFAULT_VANILLA_CAKE_SHEET: VanillaCakeSheet = 'vanilla'
+export const DEFAULT_VANILLA_CAKE_FLAVOR: VanillaCakeFlavor = 'triple-berry'
 export const MAX_RESERVATION_QUANTITY = 5
 export const PROMO_CODE = 'chocolate'
 export const LEMON_PROMO_CODE = 'lemoni'
@@ -108,6 +110,34 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
 
 export function isVanillaFreshCreamCakeProduct(productId: ProductId) {
   return productId === 'vanilla-fresh-cream-cake'
+}
+
+export const VANILLA_CAKE_SHEET_OPTIONS: Array<{ value: VanillaCakeSheet; label: string }> = [
+  { value: 'vanilla', label: 'Vanilla cake sheet' },
+  { value: 'chocolate', label: 'Chocolate cake sheet' },
+]
+
+export const VANILLA_CAKE_FLAVOR_OPTIONS: Array<{ value: VanillaCakeFlavor; label: string }> = [
+  { value: 'triple-berry', label: 'Triple berry' },
+  { value: 'nutella-chocolate-chip', label: 'Nutella chocolate chip' },
+]
+
+export function normalizeVanillaCakeSheet(productId: ProductId, value?: VanillaCakeSheet | string) {
+  if (!isVanillaFreshCreamCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_SHEET
+  return VANILLA_CAKE_SHEET_OPTIONS.some((option) => option.value === value) ? value as VanillaCakeSheet : DEFAULT_VANILLA_CAKE_SHEET
+}
+
+export function normalizeVanillaCakeFlavor(productId: ProductId, value?: VanillaCakeFlavor | string) {
+  if (!isVanillaFreshCreamCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_FLAVOR
+  return VANILLA_CAKE_FLAVOR_OPTIONS.some((option) => option.value === value) ? value as VanillaCakeFlavor : DEFAULT_VANILLA_CAKE_FLAVOR
+}
+
+export function formatVanillaCakeSheet(value?: VanillaCakeSheet | string) {
+  return VANILLA_CAKE_SHEET_OPTIONS.find((option) => option.value === value)?.label || VANILLA_CAKE_SHEET_OPTIONS[0].label
+}
+
+export function formatVanillaCakeFlavor(value?: VanillaCakeFlavor | string) {
+  return VANILLA_CAKE_FLAVOR_OPTIONS.find((option) => option.value === value)?.label || VANILLA_CAKE_FLAVOR_OPTIONS[0].label
 }
 
 export function isFreshLemonCupcakeProduct(productId: ProductId) {

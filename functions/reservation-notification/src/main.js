@@ -58,6 +58,8 @@ const MARKET_CONFIG = {
       size: '사이즈',
       chocolate: '초콜릿',
       finish: '마감',
+      cakeSheet: '케이크 시트',
+      flavour: '맛',
       icingMix: '마감 구성',
       quantity: '수량',
       customer: '예약자명',
@@ -155,6 +157,8 @@ const MARKET_CONFIG = {
       size: 'Size',
       chocolate: 'Chocolate',
       finish: 'Finish',
+      cakeSheet: 'Cake sheet',
+      flavour: 'Flavour',
       icingMix: 'Finishing mix',
       quantity: 'Quantity',
       customer: 'Customer name',
@@ -225,6 +229,22 @@ function getCakeSizeText(reservation, config) {
   if (reservation.productId === 'vanilla-fresh-cream-cake') return config.sizeLabels[reservation.cakeSize] || config.sizeLabels['15cm']
   if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(reservation.productId)) return config.sizeLabels['15cm']
   return config.sizeLabels[reservation.cakeSize] || reservation.cakeSize || '-'
+}
+
+function getVanillaCakeSheetText(reservation, config) {
+  if (reservation.productId !== 'vanilla-fresh-cream-cake') return null
+  const chocolate = reservation.vanillaCakeSheet === 'chocolate'
+  return config.currency === 'AUD'
+    ? chocolate ? 'Chocolate cake sheet' : 'Vanilla cake sheet'
+    : chocolate ? '초코 케이크 시트' : '바닐라 케이크 시트'
+}
+
+function getVanillaCakeFlavorText(reservation, config) {
+  if (reservation.productId !== 'vanilla-fresh-cream-cake') return null
+  const nutellaChocolateChip = reservation.vanillaCakeFlavor === 'nutella-chocolate-chip'
+  return config.currency === 'AUD'
+    ? nutellaChocolateChip ? 'Nutella chocolate chip' : 'Triple berry'
+    : nutellaChocolateChip ? '누텔라 초코칩' : '트리플베리'
 }
 
 function normalizeOptionKey(value = '') {
@@ -393,6 +413,10 @@ function buildCakeRows(reservation, config) {
     [config.labels.bookingNumber, reservation.reservationNumber],
     [config.labels.product, getProductName(reservation, config)],
     [config.labels.size, getCakeSizeText(reservation, config)],
+    ...(reservation.productId === 'vanilla-fresh-cream-cake' ? [
+      [config.labels.cakeSheet, getVanillaCakeSheetText(reservation, config)],
+      [config.labels.flavour, getVanillaCakeFlavorText(reservation, config)],
+    ] : []),
     [config.labels.chocolate, getChocolateText(reservation, config)],
     [config.labels.finish, getPoundAddonText(reservation, config)],
     [config.labels.icingMix, getIcingMixText(reservation, config)],

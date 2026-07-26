@@ -169,7 +169,7 @@ test('cake API preserves Pave CakeSize IDs and approved prices', () => {
   }
 })
 
-test('cake API authoritatively prices Vanilla Fresh Cream Cake by size and ignores forged totals and unavailable options', () => {
+test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and flavour choices at the size price', () => {
   for (const [cakeSize, expectedPrice] of [['15cm', 75], ['19cm', 98], ['22cm', 139]]) {
     const reservation = buildCakeReservation(
       {
@@ -179,6 +179,8 @@ test('cake API authoritatively prices Vanilla Fresh Cream Cake by size and ignor
         cacaoPercent: '100',
         chocolateType: 'milk',
         poundAddon: 'vanilla-cream',
+        vanillaCakeSheet: 'chocolate',
+        vanillaCakeFlavor: 'nutella-chocolate-chip',
         quantity: 2,
         totalPrice: 1,
         totalPriceCents: 1,
@@ -193,6 +195,26 @@ test('cake API authoritatively prices Vanilla Fresh Cream Cake by size and ignor
     assert.equal(reservation.cacaoPercent, '기본')
     assert.equal(reservation.chocolateType, 'dark')
     assert.equal(reservation.poundAddon, 'none')
+    assert.equal(reservation.vanillaCakeSheet, 'chocolate')
+    assert.equal(reservation.vanillaCakeFlavor, 'nutella-chocolate-chip')
+  }
+
+  const legacy = buildCakeReservation(
+    { ...cakeInput, productId: 'vanilla-fresh-cream-cake' },
+    { now, reservationNumber: 'VG-C-AU-VANILLA-LEGACY' },
+  )
+  assert.equal(legacy.vanillaCakeSheet, 'vanilla')
+  assert.equal(legacy.vanillaCakeFlavor, 'triple-berry')
+  for (const invalid of [
+    { vanillaCakeSheet: 'red-velvet' },
+    { vanillaCakeFlavor: 'strawberry' },
+    { vanillaCakeSheet: 1 },
+    { vanillaCakeFlavor: 1 },
+  ]) {
+    assertApiError('INVALID_VANILLA_CAKE_OPTION', () => buildCakeReservation(
+      { ...cakeInput, productId: 'vanilla-fresh-cream-cake', ...invalid },
+      { now, reservationNumber: 'VG-C-AU-VANILLA-INVALID' },
+    ))
   }
 })
 

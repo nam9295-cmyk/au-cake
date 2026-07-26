@@ -21,6 +21,8 @@ export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
 export const CUPCAKE_PACK_SIZE = 12
 export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
+export const VANILLA_CAKE_SHEETS = new Set(['vanilla', 'chocolate'])
+export const VANILLA_CAKE_FLAVORS = new Set(['triple-berry', 'nutella-chocolate-chip'])
 export const CAKE_SIZE_LABELS = {
   '15cm': '6" | serves 8',
   '19cm': '7.5" | serves 14',
@@ -341,6 +343,18 @@ function normalizeCupcakeFinishCounts(productId, vanillaValue, partyValue) {
   return { vanillaCreamCount, partyDecorationCount }
 }
 
+function normalizeVanillaCakeOptions(productId, cakeSheet, flavor) {
+  if (productId !== 'vanilla-fresh-cream-cake') {
+    return { vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry' }
+  }
+  const vanillaCakeSheet = cakeSheet === undefined ? 'vanilla' : cakeSheet
+  const vanillaCakeFlavor = flavor === undefined ? 'triple-berry' : flavor
+  if (!VANILLA_CAKE_SHEETS.has(vanillaCakeSheet) || !VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)) {
+    fail('INVALID_VANILLA_CAKE_OPTION')
+  }
+  return { vanillaCakeSheet, vanillaCakeFlavor }
+}
+
 function normalizeCakeOptions(input) {
   if (!Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
   const product = PRODUCTS[input.productId]
@@ -361,8 +375,9 @@ function normalizeCakeOptions(input) {
     input.vanillaCreamCount,
     input.partyDecorationCount,
   )
+  const vanillaCakeOptions = normalizeVanillaCakeOptions(input.productId, input.vanillaCakeSheet, input.vanillaCakeFlavor)
 
-  return { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount, ...cupcakeFinishCounts }
+  return { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount, ...cupcakeFinishCounts, ...vanillaCakeOptions }
 }
 
 function getValidPromoCode(productId, promoCode, now) {
@@ -466,6 +481,8 @@ export function buildCakeReservation(input, {
     chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,
+    vanillaCakeSheet,
+    vanillaCakeFlavor,
   } = normalizeCakeOptions(input)
   const pricing = calculateCakeTotal(
     input.productId,
@@ -493,6 +510,8 @@ export function buildCakeReservation(input, {
     chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,
+    vanillaCakeSheet,
+    vanillaCakeFlavor,
     quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -680,6 +699,8 @@ export function publicCakeReservation(document) {
     chocolateIcingCount: Number(document.chocolateIcingCount || 0),
     vanillaCreamCount: Number(document.vanillaCreamCount || 0),
     partyDecorationCount: Number(document.partyDecorationCount || 0),
+    vanillaCakeSheet: document.vanillaCakeSheet || 'vanilla',
+    vanillaCakeFlavor: document.vanillaCakeFlavor || 'triple-berry',
     quantity: Number(document.quantity || 1),
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
