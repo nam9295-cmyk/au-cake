@@ -34,6 +34,7 @@ import AdminFrame from './AdminFrame'
 import AdminReviewsPage from './AdminReviewsPage'
 import { PickupDatePicker, WeekendDatePicker } from './components/WeekendDatePicker'
 import { getPageFromPath, pathForPage, type Page } from './lib/app-routes'
+import { getAuCakeCatalogCards, type CakeCatalogImageKey } from './lib/cake-catalog'
 import {
   CAKE_SIZE_OPTIONS,
   CACAO_OPTIONS,
@@ -205,6 +206,14 @@ const initialClassFilters: ClassReservationFilters = {
   status: '',
   paymentStatus: '',
   search: '',
+}
+
+const catalogImages: Record<CakeCatalogImageKey, string> = {
+  'pound-cake': poundCakeCardImg,
+  'pave-cake': paveCakeCardImg,
+  'basque-cheesecake': basqueCheesecakeCardImg,
+  'lemon-cake': freshLemonCupcakesCardImg,
+  'vanilla-fresh-cream-cake': '',
 }
 
 function useTodayInputValue() {
@@ -795,11 +804,12 @@ function HomePage({
 
     return () => window.clearInterval(intervalId)
   }, [heroPaused])
-  const catalogCards = [
+  const legacyKrCatalogCards = [
     {
       id: 'pound-cupcake',
+      slug: 'chocolate-pound-cake-and-cupcakes',
       productId: 'pound-cake' as ProductId,
-      image: poundCakeCardImg,
+      imageKey: 'pound-cake' as const,
       isPhotoComingSoon: false,
       name: language === 'ko' ? '초코 파운드케이크 & 컵케이크' : 'Chocolate Pound Cake & Cupcakes',
       description: language === 'ko'
@@ -813,8 +823,9 @@ function HomePage({
     },
     {
       id: 'pave',
+      slug: 'pave-chocolate-cake',
       productId: 'pave-cake' as ProductId,
-      image: paveCakeCardImg,
+      imageKey: 'pave-cake' as const,
       isPhotoComingSoon: false,
       name: getProductText('pave-cake', language).name,
       description: getProductText('pave-cake', language).description,
@@ -824,8 +835,9 @@ function HomePage({
     },
     {
       id: 'cheesecake',
+      slug: 'chocolatiers-basque-cheesecake',
       productId: 'choco-basque-cheesecake' as ProductId,
-      image: basqueCheesecakeCardImg,
+      imageKey: 'basque-cheesecake' as const,
       isPhotoComingSoon: false,
       name: language === 'ko' ? '쇼콜라티에 바스크 치즈케이크' : "Chocolatier's Basque Cheesecake",
       description: language === 'ko'
@@ -839,8 +851,9 @@ function HomePage({
     },
     {
       id: 'fresh-lemon-cupcakes',
+      slug: 'lemon-cake',
       productId: 'fresh-lemon-cupcakes-12' as ProductId,
-      image: freshLemonCupcakesCardImg,
+      imageKey: 'lemon-cake' as const,
       isPhotoComingSoon: false,
       name: language === 'ko' ? '레몬 케이크' : 'Lemon Cake',
       description: language === 'ko'
@@ -852,18 +865,10 @@ function HomePage({
       priceLabel: language === 'ko' ? 'AUD 36부터' : 'From AUD 36',
       optionLabel: language === 'ko' ? '구성 수량만 선택' : 'Choose a pack size',
     },
-    ...(marketConfig.market === 'AU' ? [{
-      id: 'vanilla-fresh-cream',
-      productId: 'vanilla-fresh-cream-cake' as ProductId,
-      image: '',
-      isPhotoComingSoon: true,
-      name: getProductText('vanilla-fresh-cream-cake', language).name,
-      description: getProductText('vanilla-fresh-cream-cake', language).description,
-      features: getProductFeatures('vanilla-fresh-cream-cake', language),
-      priceLabel: language === 'ko' ? 'AUD 75부터' : 'From AUD 75',
-      optionLabel: getProductText('vanilla-fresh-cream-cake', language).priceNote,
-    }] : []),
   ]
+  const catalogCards = marketConfig.market === 'AU'
+    ? getAuCakeCatalogCards(language)
+    : legacyKrCatalogCards
 
   const rotateHeroCake = useCallback((direction: 1 | -1) => {
     setActiveHeroCake((current) => (current + direction + heroCakes.length) % heroCakes.length)
@@ -1010,7 +1015,7 @@ function HomePage({
             {catalogCards.map((card) => (
               <article className="product-card" key={card.id}>
                 <div className="product-image-wrap">
-                  {card.isPhotoComingSoon ? <VanillaFreshCreamCakeSilhouette /> : <img src={card.image} alt={card.name} />}
+                  {card.isPhotoComingSoon ? <VanillaFreshCreamCakeSilhouette /> : <img src={catalogImages[card.imageKey]} alt={card.name} />}
                   {card.id === 'cheesecake' && (
                     <img
                       className="gluten-free-stamp"
