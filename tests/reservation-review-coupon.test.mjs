@@ -564,6 +564,8 @@ const auditAttributes = [
   { key: 'discountCents', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807, status: 'available' },
   { key: 'appliedPromoCodeLast4', type: 'string', size: 4, required: false, status: 'available' },
   { key: 'reviewCouponId', type: 'string', size: 64, required: false, status: 'available' },
+  { key: 'vanillaCakeSheet', type: 'string', size: 20, required: false, status: 'available' },
+  { key: 'vanillaCakeFlavor', type: 'string', size: 40, required: false, status: 'available' },
 ]
 
 const couponAttributes = [
@@ -703,6 +705,11 @@ test('reservation readiness requires the exact complete available private manual
 
 test('reservation readiness fails closed for missing, incompatible, or unavailable reservation audit attributes', async () => {
   const cases = [
+    auditAttributes.filter((attribute) => attribute.key !== 'vanillaCakeSheet'),
+    auditAttributes.filter((attribute) => attribute.key !== 'vanillaCakeFlavor'),
+    auditAttributes.map((attribute) => attribute.key === 'vanillaCakeSheet' ? { ...attribute, size: 19 } : attribute),
+    auditAttributes.map((attribute) => attribute.key === 'vanillaCakeFlavor' ? { ...attribute, required: true } : attribute),
+    auditAttributes.map((attribute) => attribute.key === 'vanillaCakeFlavor' ? { ...attribute, status: 'processing' } : attribute),
     auditAttributes.slice(1),
     auditAttributes.map((attribute) => attribute.key === 'discountPercent' ? { ...attribute, max: 99 } : attribute),
     auditAttributes.map((attribute) => attribute.key === 'appliedPromoCodeLast4' ? { ...attribute, required: true } : attribute),

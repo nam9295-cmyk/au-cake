@@ -776,6 +776,8 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
     { key: 'discountCents', type: 'integer', required: false, min: 0, max: null },
     { key: 'appliedPromoCodeLast4', type: 'string', required: false, size: 4 },
     { key: 'reviewCouponId', type: 'string', required: false, size: 64 },
+    { key: 'vanillaCakeSheet', type: 'string', required: false, size: 20 },
+    { key: 'vanillaCakeFlavor', type: 'string', required: false, size: 40 },
   ]
   const compatibleAuditAttribute = (expected) => {
     const current = reservationAttributes.find((attribute) => (attribute.key || attribute.$id) === expected.key)
