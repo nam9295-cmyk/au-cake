@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { marketConfig } from '../src/lib/market.js'
 import { getProductFeatures } from '../src/lib/i18n.js'
+import { isSchoolPickupWindowClosed } from '../src/lib/utils.js'
 import {
   getAuCakeCatalog,
   getCakeCatalogEntryByProductId,
@@ -21,4 +22,9 @@ test('AU-only cake catalog helpers fail closed in the KR market', () => {
   assert.equal(getCakeCatalogEntryBySlug('vanilla-fresh-cream-cake'), null)
   assert.equal(getCakeCatalogEntryByProductId('fresh-lemon-cupcakes-12'), null)
   assert.equal(getCakeCatalogUnitPrice('vanilla-fresh-cream-cake', { cakeSize: '22cm' }), null)
+})
+
+test('AU school-run cake closures do not alter the KR market schedule', () => {
+  assert.equal(isSchoolPickupWindowClosed('2026-08-03', '15:00'), false)
+  assert.equal(isSchoolPickupWindowClosed('2026-08-04', '17:30'), false)
 })

@@ -7,6 +7,7 @@ import { promisify } from 'node:util'
 import {
   FUNCTION_SCOPES,
   buildDryRunPlan,
+  buildHealthFailureDiagnostic,
   buildRuntimeCandidates,
   isSecretFunctionVariable,
   redactReservationDeploymentDiagnostic,
@@ -224,7 +225,13 @@ async function verifyHealth() {
     throw new Error(`Reservation API health check returned invalid JSON (HTTP ${execution.responseStatusCode}).`)
   }
   if (execution.responseStatusCode !== 200 || response.ok !== true || response.result?.status !== 'ready') {
-    throw new Error(`Reservation API health check failed (HTTP ${execution.responseStatusCode}).`)
+    const secrets = [
+      apiKey,
+      ...Object.entries(runtimeVariables)
+        .filter(([key]) => isSecretFunctionVariable(key))
+        .map(([, value]) => value),
+    ]
+    throw new Error(`Reservation API health check failed:\n${buildHealthFailureDiagnostic(execution, secrets)}`)
   }
   console.log('read-only health check passed')
 }

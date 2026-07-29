@@ -129,6 +129,16 @@ export function redactReservationDeploymentDiagnostic(value, secrets = []) {
   return output.slice(0, 1200)
 }
 
+export function buildHealthFailureDiagnostic(execution = {}, secrets = []) {
+  return redactReservationDeploymentDiagnostic([
+    `status=${String(execution.status || 'unknown')}`,
+    `http=${String(execution.responseStatusCode ?? 'unknown')}`,
+    `errors=${String(execution.errors || '')}`,
+    `logs=${String(execution.logs || '')}`,
+    `body=${String(execution.responseBody || '')}`,
+  ].join('\n'), secrets)
+}
+
 export function buildDryRunPlan(env = {}) {
   const variableValues = {
     MARKET: env.MARKET || 'AU',

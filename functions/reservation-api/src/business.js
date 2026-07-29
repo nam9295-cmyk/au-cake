@@ -48,6 +48,9 @@ const PROMOTIONS = [
 export const MAX_RESERVATION_QUANTITY = 5
 export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
+const SCHOOL_PICKUP_START_MINUTES = 15 * 60
+const SHORT_SCHOOL_PICKUP_END_MINUTES = 15 * 60 + 30
+const LONG_SCHOOL_PICKUP_END_MINUTES = 17 * 60 + 30
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const CLASS_SESSION_DURATION_MINUTES = 120
 export const CLASS_BASIC_DURATION_MINUTES = 90
@@ -297,6 +300,27 @@ function zonedTimestamp(dateValue, timeValue) {
   return Object.entries(target).every(([key, value]) => resolved[key] === value) ? timestamp : null
 }
 
+export function isSchoolPickupWindowClosed(dateValue, timeValue) {
+  if (!isValidDateValue(dateValue)) return false
+  const match = /^(\d{2}):(\d{2})$/.exec(timeValue || '')
+  if (!match) return false
+
+  const weekday = new Date(`${dateValue}T00:00:00.000Z`).getUTCDay()
+  const hour = Number(match[1])
+  const minute = Number(match[2])
+  if (hour > 23 || minute > 59) return false
+  const pickupMinutes = hour * 60 + minute
+  const endMinutes = weekday === 2 || weekday === 4
+    ? LONG_SCHOOL_PICKUP_END_MINUTES
+    : weekday === 1 || weekday === 3 || weekday === 5
+      ? SHORT_SCHOOL_PICKUP_END_MINUTES
+      : null
+
+  return endMinutes !== null
+    && pickupMinutes >= SCHOOL_PICKUP_START_MINUTES
+    && pickupMinutes <= endMinutes
+}
+
 function validatePickupDateTime(dateValue, timeValue, now) {
   if (!isValidDateValue(dateValue)) fail('INVALID_PICKUP_DATE')
   const match = /^(\d{2}):(\d{2})$/.exec(timeValue || '')
@@ -308,6 +332,7 @@ function validatePickupDateTime(dateValue, timeValue, now) {
     fail('INVALID_PICKUP_TIME')
   }
   if (zonedTimestamp(dateValue, timeValue) === null) fail('INVALID_PICKUP_DATE')
+  if (isSchoolPickupWindowClosed(dateValue, timeValue)) fail('PICKUP_TIME_UNAVAILABLE', 409)
 
   const today = sydneyDateValue(now)
   const tomorrow = addDaysToDateValue(today, 1)

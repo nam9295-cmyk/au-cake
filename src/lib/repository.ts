@@ -52,7 +52,16 @@ import type {
   VanillaCakeFlavor,
   VanillaCakeSheet,
 } from './types'
-import { generateReservationNumber, isPickupTimeAllowed, isValidPhone, normalizePhone, PICKUP_TIME_TOO_SOON_ERROR, todayInputValue } from './utils'
+import {
+  generateReservationNumber,
+  isPickupTimeAllowed,
+  isSchoolPickupWindowClosed,
+  isValidPhone,
+  normalizePhone,
+  PICKUP_TIME_TOO_SOON_ERROR,
+  PICKUP_TIME_UNAVAILABLE_ERROR,
+  todayInputValue,
+} from './utils'
 import { buildCakeReservationRequest, normalizeReviewCouponCode, parseCakeReservationResult } from './review-coupon-client'
 import { assertReviewCouponRepricingAllowed } from './admin-reservation-edit'
 
@@ -586,6 +595,9 @@ export async function getSettings(): Promise<StoreSettings> {
 }
 
 export async function createReservation(input: ReservationInput): Promise<Reservation> {
+  if (isSchoolPickupWindowClosed(input.pickupDate, input.pickupTime)) {
+    throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
+  }
   if (!isPickupTimeAllowed(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_TOO_SOON_ERROR)
   }

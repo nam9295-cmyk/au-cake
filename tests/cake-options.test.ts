@@ -38,6 +38,7 @@ import {
   formatCurrency,
   generateRequestId,
   isPickupTimeAllowed,
+  isSchoolPickupWindowClosed,
   isValidPhone,
   normalizePhone,
   timeOptionsForDate,
@@ -334,6 +335,42 @@ test('AU pick-up time options run until 20:00 every day', () => {
   assert.equal(weekendTimes.at(-1), '20:00')
   assert.ok(weekdayTimes.includes('19:30'))
   assert.ok(weekendTimes.includes('19:30'))
+})
+
+test('AU weekday cake pick-ups close during the inclusive school run windows', () => {
+  const now = new Date('2026-07-10T00:00:00.000Z')
+  const shortClosureDates = ['2026-08-03', '2026-08-05', '2026-08-07']
+  const longClosureDates = ['2026-08-04', '2026-08-06']
+
+  for (const date of shortClosureDates) {
+    assert.equal(isSchoolPickupWindowClosed(date, '14:30'), false, `${date} 14:30`)
+    assert.equal(isSchoolPickupWindowClosed(date, '15:00'), true, `${date} 15:00`)
+    assert.equal(isSchoolPickupWindowClosed(date, '15:30'), true, `${date} 15:30`)
+    assert.equal(isSchoolPickupWindowClosed(date, '16:00'), false, `${date} 16:00`)
+    const times = customerTimeOptionsForDate(date, DEFAULT_SETTINGS, now)
+    assert.equal(times.includes('15:00'), false, `${date} 15:00 option`)
+    assert.equal(times.includes('15:30'), false, `${date} 15:30 option`)
+    assert.equal(times.includes('16:00'), true, `${date} 16:00 option`)
+  }
+
+  for (const date of longClosureDates) {
+    for (const time of ['15:00', '15:30', '16:00', '16:30', '17:00', '17:30']) {
+      assert.equal(isSchoolPickupWindowClosed(date, time), true, `${date} ${time}`)
+    }
+    assert.equal(isSchoolPickupWindowClosed(date, '14:30'), false, `${date} 14:30`)
+    assert.equal(isSchoolPickupWindowClosed(date, '18:00'), false, `${date} 18:00`)
+    const times = customerTimeOptionsForDate(date, DEFAULT_SETTINGS, now)
+    assert.equal(times.includes('15:00'), false, `${date} 15:00 option`)
+    assert.equal(times.includes('17:30'), false, `${date} 17:30 option`)
+    assert.equal(times.includes('18:00'), true, `${date} 18:00 option`)
+  }
+
+  for (const weekendDate of ['2026-08-08', '2026-08-09']) {
+    assert.equal(isSchoolPickupWindowClosed(weekendDate, '15:00'), false)
+    assert.equal(customerTimeOptionsForDate(weekendDate, DEFAULT_SETTINGS, now).includes('15:00'), true)
+  }
+  assert.equal(isSchoolPickupWindowClosed('2026-08-04', '15:99'), false)
+  assert.equal(isSchoolPickupWindowClosed('not-a-date', '15:00'), false)
 })
 
 test('10:00 class blocks every half-hour pick-up boundary through 12:00 inclusive', () => {

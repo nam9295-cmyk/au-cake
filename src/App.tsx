@@ -186,7 +186,9 @@ import {
   formatCurrency,
   generateRequestId,
   isPickupTimeAllowed,
+  isSchoolPickupWindowClosed,
   PICKUP_TIME_TOO_SOON_ERROR,
+  PICKUP_TIME_UNAVAILABLE_ERROR,
   isValidPhone,
   maskPhone,
   normalizePhone,
@@ -2031,6 +2033,10 @@ function ReservePage({
       setError(copy.errors.pickupTime)
       return
     }
+    if (isSchoolPickupWindowClosed(pickupDate, selectedPickupTime)) {
+      setError(copy.errors.pickupTimeUnavailable)
+      return
+    }
     if (!isPickupTimeAllowed(pickupDate, selectedPickupTime)) {
       setError(copy.errors.pickupLeadTime)
       return
@@ -2123,7 +2129,10 @@ function ReservePage({
       onComplete(reservation)
       navigate('complete')
     } catch (submitError) {
-      if (submitError instanceof Error && submitError.message === PICKUP_TIME_CLASS_CONFLICT_ERROR) {
+      if (submitError instanceof Error && (
+        submitError.message === PICKUP_TIME_CLASS_CONFLICT_ERROR ||
+        submitError.message === PICKUP_TIME_UNAVAILABLE_ERROR
+      )) {
         setError(copy.errors.pickupTimeUnavailable)
         refetchPickupAvailability()
       } else if (submitError instanceof Error && submitError.message === PICKUP_TIME_TOO_SOON_ERROR) {

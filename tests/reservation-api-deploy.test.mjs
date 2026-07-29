@@ -5,6 +5,7 @@ import { test } from 'node:test'
 import {
   FUNCTION_SCOPES,
   buildDryRunPlan,
+  buildHealthFailureDiagnostic,
   buildRuntimeCandidates,
   isSecretFunctionVariable,
   redactReservationDeploymentDiagnostic,
@@ -43,6 +44,23 @@ test('reservation deployment diagnostics redact overlapping secrets, bare values
     assert.equal(output.includes(secret), false)
   }
   assert.equal(output.includes('\r'), false)
+  assert.ok(output.length <= 1200)
+})
+
+test('reservation health diagnostics include runtime evidence without leaking secrets', () => {
+  const secret = validEnv.REVIEW_COUPON_HMAC_SECRET
+  const output = buildHealthFailureDiagnostic({
+    status: 'failed',
+    responseStatusCode: 500,
+    responseBody: `{"ok":false,"detail":"${secret}"}`,
+    errors: `ReferenceError: ${secret}`,
+    logs: 'runtime boot failed',
+  }, [secret])
+
+  assert.match(output, /status=failed/)
+  assert.match(output, /http=500/)
+  assert.match(output, /runtime boot failed/)
+  assert.equal(output.includes(secret), false)
   assert.ok(output.length <= 1200)
 })
 
