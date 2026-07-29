@@ -347,44 +347,8 @@ function AnalyticsConsentBanner({ language }: { language: Language }) {
   )
 }
 
-function DesktopBackground() {
-  return (
-    <div className="desktop-background-pattern" aria-hidden="true">
-      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="verygood-pattern" width="240" height="240" patternUnits="userSpaceOnUse">
-            <text
-              x="60"
-              y="60"
-              transform="rotate(-30 60 60)"
-              fill="rgba(255, 250, 243, 0.15)"
-              fontFamily="'Work Sans', sans-serif"
-              fontSize="13px"
-              fontWeight="300"
-              letterSpacing="0.08em"
-              textAnchor="middle"
-            >
-              very good
-            </text>
-            <text
-              x="180"
-              y="180"
-              transform="rotate(-30 180 180)"
-              fill="rgba(255, 250, 243, 0.15)"
-              fontFamily="'Work Sans', sans-serif"
-              fontSize="13px"
-              fontWeight="300"
-              letterSpacing="0.08em"
-              textAnchor="middle"
-            >
-              very good
-            </text>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#verygood-pattern)" />
-      </svg>
-    </div>
-  )
+function HomeTigerBackground() {
+  return <div className="home-tiger-background" aria-hidden="true" />
 }
 
 function App() {
@@ -459,8 +423,8 @@ function App() {
 
   return (
     <>
-      {!isPrivatePage && <DesktopBackground />}
-      <div className={`app-shell${isPrivatePage ? ' admin-shell' : ''}`}>
+      {page === 'home' && <HomeTigerBackground />}
+      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && (
         <div className="env-notice">Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.</div>
       )}

@@ -95,13 +95,34 @@ p {
   line-height: 1.65;
 }
 
-.desktop-background-pattern {
-  display: none;
+.home-tiger-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: url('./assets/tiger-pattern-desktop.webp');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.09;
+  pointer-events: none;
 }
 
 .app-shell {
   min-height: 100vh;
   background: var(--canvas);
+}
+
+.app-shell.home-shell {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+@media (max-width: 767px) {
+  .home-tiger-background {
+    background-image: url('./assets/tiger-pattern-mobile.webp');
+    opacity: 0.09;
+  }
 }
 
 .app-shell.admin-shell {
