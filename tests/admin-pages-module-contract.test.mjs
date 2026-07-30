@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 const readSource = async (path) => readFile(new URL(path, import.meta.url), 'utf8').catch(() => '')
 
 const appSource = await readSource('../src/App.tsx')
+const adminDashboardSource = await readSource('../src/AdminDashboardPage.tsx')
 const adminLoginSource = await readSource('../src/AdminLoginPage.tsx')
 const adminReservationsSource = await readSource('../src/AdminReservationsPage.tsx')
 const adminClassesSource = await readSource('../src/AdminClassesPage.tsx')
@@ -13,19 +14,18 @@ const reservationDrawerSource = await readSource('../src/ReservationDrawer.tsx')
 const classReservationDrawerSource = await readSource('../src/ClassReservationDrawer.tsx')
 
 test('App delegates the named admin pages and drawers to explicit top-level modules', () => {
+  assert.match(appSource, /from '\.\/AdminDashboardPage'/)
   assert.match(appSource, /from '\.\/AdminLoginPage'/)
   assert.match(appSource, /from '\.\/AdminReservationsPage'/)
   assert.match(appSource, /from '\.\/AdminClassesPage'/)
-  assert.match(appSource, /from '\.\/ReservationDrawer'/)
-  assert.match(appSource, /from '\.\/ClassReservationDrawer'/)
-  assert.doesNotMatch(appSource, /function (?:AdminLoginPage|AdminReservationsPage|AdminClassesPage|ReviewInviteButton|ReservationDrawer|ClassReservationDrawer)\b/)
-
-  assert.match(appSource, /function AdminDashboardPage\b/)
-  assert.match(appSource, /function AdminMonthlyCalendar\b/)
+  assert.doesNotMatch(appSource, /from '\.\/(?:ReservationDrawer|ClassReservationDrawer)'/)
+  assert.doesNotMatch(appSource, /function (?:AdminDashboardPage|AdminMonthlyCalendar|AdminLoginPage|AdminReservationsPage|AdminClassesPage|ReviewInviteButton|ReservationDrawer|ClassReservationDrawer)\b/)
+  assert.match(appSource, /\{page === 'admin' && <AdminDashboardPage navigate=\{navigate\} \/>\}/)
 })
 
 test('admin page modules export exact navigate-only page contracts', () => {
   for (const [source, signature] of [
+    [adminDashboardSource, /export function AdminDashboardPage\(\{ navigate \}: \{ navigate: \(page: Page\) => void \}\)/],
     [adminLoginSource, /export function AdminLoginPage\(\{ navigate \}: \{ navigate: \(page: Page\) => void \}\)/],
     [adminReservationsSource, /export function AdminReservationsPage\(\{\s*navigate,\s*\}: \{\s*navigate: \(page: Page\) => void\s*\}\)/],
     [adminClassesSource, /export function AdminClassesPage\(\{ navigate \}: \{ navigate: \(page: Page\) => void \}\)/],
@@ -33,6 +33,12 @@ test('admin page modules export exact navigate-only page contracts', () => {
     assert.match(source, signature)
     assert.doesNotMatch(source, /from '\.\/App'/)
   }
+})
+
+test('AdminDashboardPage privately owns its monthly calendar implementation', () => {
+  assert.match(adminDashboardSource, /function AdminMonthlyCalendar\b/)
+  assert.doesNotMatch(adminDashboardSource, /export function AdminMonthlyCalendar\b/)
+  assert.doesNotMatch(appSource, /function AdminMonthlyCalendar\b/)
 })
 
 test('reservation and class filter defaults plus reservation display helpers move to their private page owners', () => {
@@ -59,11 +65,17 @@ test('admin drawer modules export their components and share one ReviewInviteBut
 })
 
 test('extracted admin components depend downward on explicit lib modules only', () => {
-  for (const source of [adminLoginSource, adminReservationsSource, adminClassesSource, reviewInviteSource, reservationDrawerSource, classReservationDrawerSource]) {
+  for (const source of [adminDashboardSource, adminLoginSource, adminReservationsSource, adminClassesSource, reviewInviteSource, reservationDrawerSource, classReservationDrawerSource]) {
     assert.doesNotMatch(source, /from '\.\/App'/)
     assert.doesNotMatch(source, /from '\.\/pages\//)
   }
 
+  assert.match(adminDashboardSource, /from '\.\/AdminFrame'/)
+  assert.match(adminDashboardSource, /from '\.\/ReservationDrawer'/)
+  assert.match(adminDashboardSource, /from '\.\/ClassReservationDrawer'/)
+  assert.match(adminDashboardSource, /from '\.\/lib\/admin-calendar'/)
+  assert.match(adminDashboardSource, /from '\.\/lib\/repository'/)
+  assert.match(adminDashboardSource, /from '\.\/lib\/utils'/)
   assert.match(adminLoginSource, /from '\.\/lib\/repository'/)
   assert.match(adminReservationsSource, /from '\.\/lib\/repository'/)
   assert.match(adminClassesSource, /from '\.\/lib\/class-utils'/)

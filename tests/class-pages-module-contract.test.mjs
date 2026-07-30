@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 const readSource = async (path) => readFile(new URL(path, import.meta.url), 'utf8').catch(() => '')
 
 const appSource = await readSource('../src/App.tsx')
+const adminDashboardSource = await readSource('../src/AdminDashboardPage.tsx')
 const classesSource = await readSource('../src/pages/ClassesPage.tsx')
 const classReserveSource = await readSource('../src/pages/ClassReservePage.tsx')
 const classCompleteSource = await readSource('../src/pages/ClassCompletePage.tsx')
@@ -35,8 +36,10 @@ test('class reservation keeps its weekend default private and shares reusable le
   assert.doesNotMatch(appSource, /function BankAccountBox\b/)
 
   assert.match(todayHookSource, /export function useTodayInputValue\b/)
-  assert.match(appSource, /from '\.\/hooks\/useTodayInputValue'/)
+  assert.match(adminDashboardSource, /from '\.\/hooks\/useTodayInputValue'/)
   assert.match(classReserveSource, /from '\.\.\/hooks\/useTodayInputValue'/)
+  assert.doesNotMatch(appSource, /from '\.\/hooks\/useTodayInputValue'/)
   assert.doesNotMatch(appSource, /function useTodayInputValue\b/)
+  assert.doesNotMatch(adminDashboardSource, /function useTodayInputValue\b/)
   assert.doesNotMatch(classReserveSource, /function useTodayInputValue\b/)
 })
