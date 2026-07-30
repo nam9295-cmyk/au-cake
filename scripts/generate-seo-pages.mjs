@@ -118,6 +118,11 @@ const pages = {
         <p><a href="/">View our cakes</a> or learn about <a href="/classes">kids cake decorating classes</a>.</p>
       </main>`,
   },
+  '/cart': {
+    title: 'Your Cart | Verygood Chocolate',
+    description: 'Review your selected cakes before sending one cake request to Verygood Chocolate Sydney.',
+    robots: 'noindex, nofollow',
+  },
   '/reserve': {
     title: 'Request a Chocolate Cake | Verygood Chocolate',
     description: 'Submit a cake booking request to Verygood Chocolate Sydney.',

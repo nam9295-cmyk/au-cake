@@ -3,6 +3,7 @@ import * as assert from 'node:assert/strict'
 import {
   CART_STORAGE_KEY,
   addCartLine,
+  getCartEstimatedSubtotal,
   getCartLineKey,
   getCartTotalQuantity,
   loadCartLines,
@@ -275,5 +276,23 @@ test('saving ignores storage write failures without mutating in-memory lines', (
   }
 
   assert.doesNotThrow(() => saveCartLines(storage, lines))
+  assert.deepEqual(lines, snapshot)
+})
+
+test('estimated subtotal reprices every current cart selection without mutating lines', () => {
+  const lines = [
+    ...addCartLine([], baseSelection({ quantity: 2, poundAddon: 'extra-chocolate' })),
+    ...addCartLine([], baseSelection({
+      productId: 'vanilla-fresh-cream-cake',
+      cakeSize: '19cm',
+      vanillaCakeSheet: 'chocolate',
+      vanillaCakeFlavor: 'nutella-chocolate-chip',
+      quantity: 3,
+    })),
+  ]
+  const snapshot = structuredClone(lines)
+
+  assert.equal(getCartEstimatedSubtotal([]), 0)
+  assert.equal(getCartEstimatedSubtotal(lines), 398)
   assert.deepEqual(lines, snapshot)
 })

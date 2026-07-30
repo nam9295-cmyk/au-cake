@@ -36,6 +36,8 @@ test('SEO generator writes the cake catalogue and every canonical cake detail pa
   const dist = join(workdir, 'dist')
   await mkdir(dist)
   await writeFile(join(dist, 'index.html'), template)
+  const sitemap = '<?xml version="1.0"?><urlset><url><loc>https://au.verygood-chocolate.com/</loc></url></urlset>'
+  await writeFile(join(dist, 'sitemap.xml'), sitemap)
 
   const result = spawnSync(process.execPath, [generatorPath], {
     cwd: workdir,
@@ -46,6 +48,12 @@ test('SEO generator writes the cake catalogue and every canonical cake detail pa
   const catalogue = await readFile(join(dist, 'cakes.html'), 'utf8')
   assert.match(catalogue, /<link rel="canonical" href="https:\/\/au\.verygood-chocolate\.com\/cakes"/)
   assert.match(catalogue, /<h1>Choose Your Cake<\/h1>/)
+
+  const cart = await readFile(join(dist, 'cart.html'), 'utf8')
+  assert.match(cart, /<title>Your Cart \| Verygood Chocolate<\/title>/)
+  assert.match(cart, /<meta name="robots" content="noindex, nofollow"/)
+  assert.equal(await readFile(join(dist, 'sitemap.xml'), 'utf8'), sitemap)
+  assert.doesNotMatch(await readFile(join(dist, 'sitemap.xml'), 'utf8'), /\/cart/)
 
   for (const slug of cakeSlugs) {
     const detail = await readFile(join(dist, 'cakes', `${slug}.html`), 'utf8')

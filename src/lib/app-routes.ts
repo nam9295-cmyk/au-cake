@@ -1,5 +1,6 @@
 export type Page =
   | 'home'
+  | 'cart'
   | 'cakes'
   | 'cake-detail'
   | 'review'
@@ -28,6 +29,7 @@ export function pathForCake(slug: string): string {
 }
 
 export function getPageFromPath(path: string): Page {
+  if (path === '/cart') return 'cart'
   if (path === '/cakes') return 'cakes'
   if (getCakeSlugFromPath(path)) return 'cake-detail'
   if (path === '/review' || path === '/review.html') return 'review'
@@ -50,6 +52,7 @@ export function getPageFromPath(path: string): Page {
 export function pathForPage(page: Page): string {
   const paths: Record<Page, string> = {
     home: '/',
+    cart: '/cart',
     cakes: '/cakes',
     'cake-detail': '/cakes',
     review: '/review',

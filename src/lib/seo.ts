@@ -160,6 +160,11 @@ function getCakeDetailSeo(pathname: string): SeoConfig | null {
 }
 
 const privateSeo: Record<string, SeoConfig> = {
+  '/cart': {
+    title: 'Your Cart | Verygood Chocolate',
+    description: 'Review your selected cakes before sending one cake request to Verygood Chocolate Sydney.',
+    noindex: true,
+  },
   '/admin/reviews': {
     title: 'Review Moderation Admin | Verygood Chocolate',
     description: 'Private review moderation administration.',

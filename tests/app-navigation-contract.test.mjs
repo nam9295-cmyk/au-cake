@@ -7,7 +7,7 @@ const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'ut
 test('App stores the pathname so navigation between two cake detail URLs always rerenders', () => {
   assert.match(appSource, /const \[pathname, setPathname\] = useState\(\(\) => window\.location\.pathname\)/)
   assert.match(appSource, /const page = getPageFromPath\(pathname\)/)
-  assert.match(appSource, /const handlePop = \(\) => setPathname\(window\.location\.pathname\)/)
+  assert.match(appSource, /const handlePop = \(\) => \{[\s\S]*cartOriginLineKeyRef\.current = null[\s\S]*setPathname\(window\.location\.pathname\)[\s\S]*\}/)
   assert.match(appSource, /window\.history\.pushState\(null, '', path\)[\s\S]*?setPathname\(path\)/)
   assert.match(appSource, /const currentCakeSlug = getCakeSlugFromPath\(pathname\) \|\| ''/)
   assert.doesNotMatch(appSource, /const \[page, setPage\]/)

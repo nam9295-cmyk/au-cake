@@ -1,6 +1,7 @@
 import { MAX_RESERVATION_QUANTITY } from './constants.js'
 import { getCakeCatalogEntryByProductId } from './cake-catalog.js'
 import {
+  getCakeDetailSelectionTotal,
   selectCakeDetailProduct,
   type CakeDetailSelection,
 } from './cake-detail.js'
@@ -75,6 +76,10 @@ export function addCartLine(lines: readonly CartLine[], selection: CakeDetailSel
 
 export function getCartTotalQuantity(lines: readonly CartLine[]) {
   return lines.reduce((total, line) => total + line.selection.quantity, 0)
+}
+
+export function getCartEstimatedSubtotal(lines: readonly CartLine[]) {
+  return lines.reduce((subtotal, line) => subtotal + getCakeDetailSelectionTotal(line.selection), 0)
 }
 
 export function updateCartLineQuantity(

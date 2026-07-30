@@ -29,3 +29,12 @@ test('direct cake pages expose one Product schema with the detail URL', () => {
   assert.equal((product.offers as Record<string, unknown>).url, `https://au.verygood-chocolate.com${path}`)
   assert.equal((product.offers as Record<string, unknown>).priceCurrency, 'AUD')
 })
+
+test('cart route has private noindex metadata for direct loads', () => {
+  const config = getSeoConfig('/cart')
+
+  assert.equal(config.title, 'Your Cart | Verygood Chocolate')
+  assert.equal(config.description, 'Review your selected cakes before sending one cake request to Verygood Chocolate Sydney.')
+  assert.equal(config.noindex, true)
+  assert.equal(config.structuredData, undefined)
+})
