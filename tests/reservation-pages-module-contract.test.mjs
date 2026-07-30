@@ -9,6 +9,7 @@ const reserveSource = await readSource('../src/pages/ReservePage.tsx')
 const completeSource = await readSource('../src/pages/CompletePage.tsx')
 const lookupSource = await readSource('../src/pages/LookupPage.tsx')
 const productDetailsSource = await readSource('../src/components/ProductDetailRows.tsx')
+const adminReservationsSource = await readSource('../src/AdminReservationsPage.tsx')
 const constantsSource = await readSource('../src/lib/constants.ts')
 
 test('App delegates customer reservation pages to explicit page modules', () => {
@@ -31,7 +32,7 @@ test('ReservePage privately owns its current-time hook', () => {
   assert.doesNotMatch(appSource, /function useCurrentTime\b/)
 })
 
-test('customer pages own customer display while App keeps admin-only table helpers', () => {
+test('customer pages own customer display while AdminReservationsPage privately owns admin table helpers', () => {
   assert.match(productDetailsSource, /export function ProductDetailRows\b/)
   assert.match(completeSource, /from '\.\.\/components\/ProductDetailRows'/)
   assert.match(lookupSource, /from '\.\.\/components\/ProductDetailRows'/)
@@ -41,7 +42,8 @@ test('customer pages own customer display while App keeps admin-only table helpe
   assert.doesNotMatch(productDetailsSource, /function (?:formatReservationStatus|formatPaymentStatus|reservationCacaoText|reservationCakeSizeText|reservationChocolateText|reservationFinishText)\b/)
 
   for (const helper of ['reservationCacaoText', 'reservationCakeSizeText', 'reservationChocolateText', 'reservationFinishText']) {
-    assert.match(appSource, new RegExp(`function ${helper}\\b`))
+    assert.match(adminReservationsSource, new RegExp(`function ${helper}\\b`))
+    assert.doesNotMatch(appSource, new RegExp(`function ${helper}\\b`))
   }
 })
 
@@ -49,8 +51,10 @@ test('cheesecake product detection has one shared domain owner', () => {
   assert.match(constantsSource, /export function isCheesecakeProduct\b/)
   assert.match(reserveSource, /isCheesecakeProduct/)
   assert.match(productDetailsSource, /isCheesecakeProduct/)
-  assert.match(appSource, /isCheesecakeProduct/)
+  assert.match(adminReservationsSource, /isCheesecakeProduct/)
   assert.doesNotMatch(reserveSource, /function isCheesecakeProduct\b/)
   assert.doesNotMatch(productDetailsSource, /function isCheesecakeProduct\b/)
+  assert.doesNotMatch(adminReservationsSource, /function isCheesecakeProduct\b/)
   assert.doesNotMatch(appSource, /function isCheesecakeProduct\b/)
+  assert.doesNotMatch(appSource, /isCheesecakeProduct/)
 })

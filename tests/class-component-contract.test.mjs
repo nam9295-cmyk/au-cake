@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
-const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const adminClasses = readFileSync(new URL('../src/AdminClassesPage.tsx', import.meta.url), 'utf8')
 const classReservationDrawer = readFileSync(new URL('../src/ClassReservationDrawer.tsx', import.meta.url), 'utf8')
 const landing = readFileSync(new URL('../src/pages/ClassesPage.tsx', import.meta.url), 'utf8')
 const reserve = readFileSync(new URL('../src/pages/ClassReservePage.tsx', import.meta.url), 'utf8')
@@ -77,9 +77,7 @@ test('kids class SEO distinguishes Basic Kindy–Year 6 from Advanced Year 2–6
 })
 
 test('class admin surfaces plan, both sessions, extensions and cent pricing audit', () => {
-  const admin = app.slice(app.indexOf('function AdminClassesPage'), app.indexOf('export default App'))
-  const drawer = classReservationDrawer
-  for (const source of [admin, drawer]) {
+  for (const source of [adminClasses, classReservationDrawer]) {
     assert.match(source, /getClassCoursePlanLabel/)
     assert.match(source, /advancedClassDate/)
     assert.match(source, /extensionMinutes/)
