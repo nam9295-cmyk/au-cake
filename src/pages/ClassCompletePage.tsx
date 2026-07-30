@@ -10,12 +10,12 @@ import {
 import type { ClassReservation } from '../lib/types'
 import { formatCurrency } from '../lib/utils'
 
-export function ClassCompletePage({ navigate, reservation }: { navigate: (page: Page) => void; reservation: ClassReservation | null }) {
+export function ClassCompletePage({ navigate, reservation, cartItemCount }: { navigate: (page: Page) => void; reservation: ClassReservation | null; cartItemCount: number }) {
   const reservationNumber = reservation?.reservationNumber || 'VG-2026-0702'
 
   return (
     <>
-      <SiteHeader navigate={navigate} />
+      <SiteHeader navigate={navigate} cartItemCount={cartItemCount} />
       <main className="class-complete-page">
         <section className="class-complete-card" aria-labelledby="class-complete-title">
           <div className="class-complete-icon" aria-hidden="true">

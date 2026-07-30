@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ShoppingBag } from 'lucide-react'
 import tigerImg from '../assets/tiger.png'
 import heartLogoImg from '../assets/heart_logo.png'
 import { type Page } from '../lib/app-routes'
@@ -102,12 +103,21 @@ export function SiteHeader({
   navigate,
   language,
   setLanguage,
+  cartItemCount,
 }: {
   navigate: (page: Page) => void
   language?: Language
   setLanguage?: (language: Language) => void
+  cartItemCount?: number
 }) {
   const copy = cakeCopy(language || 'en')
+  const cartAriaLabel = cartItemCount === undefined
+    ? ''
+    : language === 'ko'
+      ? cartItemCount === 0 ? '주문 목록 열기, 비어 있음' : `주문 목록 열기, 총 ${cartItemCount}개`
+      : cartItemCount === 0
+        ? 'Open order, empty'
+        : cartItemCount === 1 ? 'Open order, 1 item' : `Open order, ${cartItemCount} items`
   return (
     <>
       <header className="site-header">
@@ -124,6 +134,23 @@ export function SiteHeader({
           <a href="/lookup" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('lookup') }}>
             {copy.lookupNav}
           </a>
+          {cartItemCount !== undefined && (
+            <a
+              className="cart-nav-button"
+              href="/cart"
+              rel="nofollow"
+              aria-label={cartAriaLabel}
+              onClick={(event) => { event.preventDefault(); navigate('cart') }}
+            >
+              <ShoppingBag size={16} aria-hidden="true" />
+              <span className="cart-nav-label">{language === 'ko' ? '주문' : 'Order'}</span>
+              {cartItemCount > 0 && (
+                <span className="cart-nav-count" aria-hidden="true">
+                  {cartItemCount > 99 ? '99+' : cartItemCount}
+                </span>
+              )}
+            </a>
+          )}
           <a className="admin-nav-button" href="/admin/login" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('admin-login') }}>
             {copy.adminNav}
           </a>

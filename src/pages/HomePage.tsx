@@ -34,12 +34,14 @@ export function HomePage({
   navigateToCake,
   language,
   setLanguage,
+  cartItemCount,
 }: {
   navigate: (page: Page) => void
   settings: StoreSettings
   navigateToCake: (slug: string) => void
   language: Language
   setLanguage: (language: Language) => void
+  cartItemCount: number
 }) {
   const copy = cakeCopy(language)
   const [activeHeroCake, setActiveHeroCake] = useState(1)
@@ -170,7 +172,7 @@ export function HomePage({
 
   return (
     <>
-      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
       <main>
         <section className="hero-section">
           <span className="featured-seal" aria-hidden="true">

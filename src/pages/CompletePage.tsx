@@ -14,19 +14,21 @@ export function CompletePage({
   settings,
   language,
   setLanguage,
+  cartItemCount,
 }: {
   navigate: (page: Page) => void
   reservation: Reservation | null
   settings: StoreSettings
   language: Language
   setLanguage: (language: Language) => void
+  cartItemCount: number
 }) {
   const copy = cakeCopy(language)
   const pricingAudit = reservation ? getReservationPricingAudit(reservation) : null
   const usedReviewReward = reservation?.promotionKind === 'review-reward'
   return (
     <>
-      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
       <main className="narrow-page">
         <section className="complete-panel">
           <div className="check-icon">

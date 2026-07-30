@@ -8,7 +8,7 @@ import { type Page } from '../lib/app-routes'
 import { type Language } from '../lib/i18n'
 import { formatCurrency } from '../lib/utils'
 
-export function ClassesPage({ navigate, language, setLanguage }: { navigate: (page: Page) => void; language: Language; setLanguage: (language: Language) => void }) {
+export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: { navigate: (page: Page) => void; language: Language; setLanguage: (language: Language) => void; cartItemCount: number }) {
   const essentials = [
     ['Basic from Kindy', 'Kindy–Year 2 and Year 3–6 school groups'],
     ['Professional-style course', 'Real studio guidance from planning to finishing'],
@@ -25,7 +25,7 @@ export function ClassesPage({ navigate, language, setLanguage }: { navigate: (pa
 
   return (
     <>
-      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
       <main className="kids-class-page">
         <section className="kids-class-hero" aria-labelledby="kids-class-title">
           <div className="kids-hero-copy reveal-up">

@@ -61,6 +61,7 @@ function PrivateRouteFallback() {
 function App() {
   const {
     lines: cartLines,
+    itemCount: cartItemCount,
     add: addCartLine,
     update: updateCartLine,
     remove: removeCartLine,
@@ -174,16 +175,16 @@ function App() {
       )}
       {!isPrivatePage && <AnnouncementTicker language={language} />}
 
-      {page === 'home' && <HomePage navigate={navigate} settings={settings} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} />}
+      {page === 'home' && <HomePage navigate={navigate} settings={settings} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'cakes' && (
         <>
-          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
           <CakesPage language={language} onOpenCake={navigateToCake} />
         </>
       )}
       {page === 'cart' && (
         <>
-          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
           <CartPage
             language={language}
             lines={cartLines}
@@ -196,7 +197,7 @@ function App() {
       )}
       {page === 'cake-detail' && (
         <>
-          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
           <CakeDetailPage
             key={currentCakeSlug}
             slug={currentCakeSlug}
@@ -209,10 +210,10 @@ function App() {
           />
         </>
       )}
-      {page === 'classes' && <ClassesPage navigate={navigate} language={language} setLanguage={setLanguage} />}
+      {page === 'classes' && <ClassesPage navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'reviews' && (
         <>
-          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
           <ReviewsArchive
             language={language}
             executor={functions}
@@ -221,8 +222,8 @@ function App() {
           />
         </>
       )}
-      {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} />}
-      {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} />}
+      {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} cartItemCount={cartItemCount} />}
+      {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} cartItemCount={cartItemCount} />}
       {page === 'reserve' && (
         <ReservePage
           key={reservationSessionKey}
@@ -237,12 +238,13 @@ function App() {
           onComplete={completeReservation}
           language={language}
           setLanguage={setLanguage}
+          cartItemCount={cartItemCount}
         />
       )}
       {page === 'complete' && (
-        <CompletePage navigate={navigate} reservation={completedReservation} settings={settings} language={language} setLanguage={setLanguage} />
+        <CompletePage navigate={navigate} reservation={completedReservation} settings={settings} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
       )}
-      {page === 'lookup' && <LookupPage navigate={navigate} language={language} setLanguage={setLanguage} />}
+      {page === 'lookup' && <LookupPage navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {isPrivatePage && (
         <Suspense fallback={<PrivateRouteFallback />}>
           {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}

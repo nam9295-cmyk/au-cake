@@ -49,7 +49,7 @@ function nextWeekendClassDate() {
   return addDaysInputValue(1)
 }
 
-export function ClassReservePage({ navigate, onComplete }: { navigate: (page: Page) => void; onComplete: (reservation: ClassReservation) => void }) {
+export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navigate: (page: Page) => void; onComplete: (reservation: ClassReservation) => void; cartItemCount: number }) {
   const [requestId] = useState(generateRequestId)
   const [form, setForm] = useState<{
     classDate: string
@@ -192,7 +192,7 @@ export function ClassReservePage({ navigate, onComplete }: { navigate: (page: Pa
 
   return (
     <>
-      <SiteHeader navigate={navigate} />
+      <SiteHeader navigate={navigate} cartItemCount={cartItemCount} />
       <main className="class-reserve-page">
         <form className="class-reserve-form" onSubmit={submitClassReservation}>
           <label className="website-field" aria-hidden="true">

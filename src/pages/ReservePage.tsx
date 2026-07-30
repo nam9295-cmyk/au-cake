@@ -125,6 +125,7 @@ export function ReservePage({
   onComplete,
   language,
   setLanguage,
+  cartItemCount,
 }: {
   navigate: (page: Page) => void
   settings: StoreSettings
@@ -137,6 +138,7 @@ export function ReservePage({
   onComplete: (reservation: Reservation) => void
   language: Language
   setLanguage: (language: Language) => void
+  cartItemCount: number
 }) {
   const [requestId] = useState(generateRequestId)
   const copy = cakeCopy(language)
@@ -564,7 +566,7 @@ export function ReservePage({
 
   return (
     <>
-      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
       <main className="form-page">
         <button className="text-button" type="button" onClick={() => navigate('home')}>
           <ArrowLeft size={16} /> {labels.back}

@@ -34,10 +34,12 @@ export function LookupPage({
   navigate,
   language,
   setLanguage,
+  cartItemCount,
 }: {
   navigate: (page: Page) => void
   language: Language
   setLanguage: (language: Language) => void
+  cartItemCount: number
 }) {
   const copy = cakeCopy(language)
   const [reservationNumber, setReservationNumber] = useState('')
@@ -69,7 +71,7 @@ export function LookupPage({
 
   return (
     <>
-      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
       <main className="narrow-page">
         <form className="lookup-form" onSubmit={lookup}>
           <h1>{copy.lookupTitle}</h1>
