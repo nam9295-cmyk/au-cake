@@ -62,12 +62,14 @@ test('archive requests six reviews at a time, appends cursor pages, and reuses c
 
 test('home and classes hand off to one indexable reviews route with generated SEO and sitemap coverage', () => {
   const app = read('src/App.tsx')
+  const home = read('src/pages/HomePage.tsx')
   const routes = read('src/lib/app-routes.ts')
   const generatedSeo = read('scripts/generate-seo-pages.mjs')
   const sitemap = read('public/sitemap.xml')
+  const publicPageSources = app + home
   assert.match(app, /page === 'reviews'.*<ReviewsArchive/s)
-  assert.equal((app.match(/onViewAll=\{\(\) => navigate\('reviews'\)\}/g) || []).length, 2)
-  assert.equal((app.match(/functionEndpoint=\{appwriteConfig\.publicEndpoint\}/g) || []).length, 3)
+  assert.equal((publicPageSources.match(/onViewAll=\{\(\) => navigate\('reviews'\)\}/g) || []).length, 2)
+  assert.equal((publicPageSources.match(/functionEndpoint=\{appwriteConfig\.publicEndpoint\}/g) || []).length, 3)
   assert.match(routes, /if \(path === '\/reviews'\) return 'reviews'/)
   assert.match(generatedSeo, /'\/reviews': \{[\s\S]*robots: 'index, follow'/)
   assert.match(sitemap, /<loc>https:\/\/au\.verygood-chocolate\.com\/reviews<\/loc>/)

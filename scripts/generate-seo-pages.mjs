@@ -50,6 +50,20 @@ const cakeRoutePages = Object.fromEntries(cakeDetails.map((cake) => {
 }))
 
 const pages = {
+  '/cakes': {
+    title: 'Made-to-Order Cakes Sydney | Verygood Chocolate',
+    description: 'Browse five small-batch cakes and request confirmed pick-up in Melrose Park, Sydney.',
+    robots: 'index, follow',
+    fallbackHtml: `
+      <main class="seo-fallback">
+        <h1>Choose Your Cake</h1>
+        <p>Browse five made-to-order cakes for pre-arranged pick-up in Melrose Park, Sydney.</p>
+        <ul>
+          ${cakeDetails.map((cake) => `<li><a href="/cakes/${cake.slug}">${cake.name}</a></li>`).join('\n          ')}
+        </ul>
+      </main>`,
+  },
+  ...cakeRoutePages,
   '/': {
     title: 'Made-to-Order Chocolate Cakes Sydney | Verygood Chocolate',
     description: 'Order small-batch chocolate cakes, gâteau au chocolat and cupcakes for pre-arranged pick-up in Melrose Park, Sydney.',

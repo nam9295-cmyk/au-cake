@@ -3,22 +3,23 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
+const home = readFileSync(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 const catalog = readFileSync(new URL('../src/lib/cake-catalog.ts', import.meta.url), 'utf8')
-const home = app.slice(app.indexOf('function HomePage'), app.indexOf('function ClassesPage'))
 const reserve = app.slice(app.indexOf('function ReservePage'), app.indexOf('function CompletePage'))
 
 test('photo-less Vanilla Fresh Cream Cake uses only a black SVG silhouette with COMING SOON while details stay active', () => {
-  assert.match(app, /function VanillaFreshCreamCakeSilhouette\(/)
-  assert.match(app, /className="vanilla-fresh-cream-silhouette"/)
-  assert.match(app, />COMING SOON</)
+  assert.match(chrome, /export function VanillaFreshCreamCakeSilhouette\(/)
+  assert.match(chrome, /className="vanilla-fresh-cream-silhouette"/)
+  assert.match(chrome, />COMING SOON</)
   assert.match(css, /\.vanilla-fresh-cream-silhouette\s*\{[\s\S]*color:\s*#000/)
   assert.match(catalog, /defaultProductId:\s*'vanilla-fresh-cream-cake'/)
   assert.match(catalog, /isPhotoComingSoon:\s*true/)
   assert.match(home, /card\.isPhotoComingSoon\s*\?\s*<VanillaFreshCreamCakeSilhouette/)
   assert.match(home, /onClick=\{\(\) => navigateToCake\(card\.slug\)\}/)
   assert.match(catalog, /id:\s*'vanilla-fresh-cream'[\s\S]*?defaultProductId:\s*'vanilla-fresh-cream-cake'[\s\S]*?imageKey:\s*'vanilla-fresh-cream-cake'[\s\S]*?isPhotoComingSoon:\s*true/)
-  assert.match(app, /'vanilla-fresh-cream-cake':\s*''/)
+  assert.match(home, /'vanilla-fresh-cream-cake':\s*''/)
 })
 
 test('reservation selection renders the Vanilla Fresh Cream Cake silhouette rather than another product image', () => {

@@ -3,11 +3,12 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
 const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const detailSource = await readFile(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
 test('home catalogue opens shared cake detail routes instead of skipping to the request form', () => {
-  assert.match(appSource, /navigateToCake\(card\.slug\)/)
+  assert.match(homeSource, /navigateToCake\(card\.slug\)/)
   assert.match(appSource, /<CakeDetailPage/)
   assert.match(appSource, /<CakesPage/)
 })

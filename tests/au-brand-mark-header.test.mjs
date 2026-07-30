@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
-const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
-const header = app.slice(app.indexOf('function SiteHeader'), app.indexOf('function HomePage'))
+const header = chrome.slice(chrome.indexOf('export function SiteHeader'), chrome.indexOf('export function SiteFooter'))
 
 test('AU public header uses the supplied favicon brand mark instead of a text-only wordmark', () => {
   assert.match(header, /<img\s+className="brand-mark"\s+src="\/favicon\.png"\s+alt="Verygood Chocolate"/)

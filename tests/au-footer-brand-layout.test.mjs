@@ -3,14 +3,15 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
-const footerStart = app.indexOf('function SiteFooter')
-const footerEnd = app.indexOf('function formatReservationStatus')
-const footer = footerStart >= 0 && footerEnd > footerStart ? app.slice(footerStart, footerEnd) : ''
+const footerStart = chrome.indexOf('export function SiteFooter')
+const footerEnd = chrome.indexOf('export function VanillaFreshCreamCakeSilhouette')
+const footer = footerStart >= 0 && footerEnd > footerStart ? chrome.slice(footerStart, footerEnd) : ''
 
 test('public routes mount a responsive branded footer with the supplied cutout assets', () => {
-  assert.match(app, /import tigerImg from '\.\/assets\/tiger\.png'/)
-  assert.match(app, /import heartLogoImg from '\.\/assets\/heart_logo\.png'/)
+  assert.match(chrome, /import tigerImg from '\.\.\/assets\/tiger\.png'/)
+  assert.match(chrome, /import heartLogoImg from '\.\.\/assets\/heart_logo\.png'/)
   assert.match(app, /!isPrivatePage && <SiteFooter navigate=\{navigate\} language=\{language\} \/>/)
   assert.match(footer, /<footer className="site-footer">/)
   assert.match(footer, /className="site-footer-tiger" src=\{tigerImg\}/)

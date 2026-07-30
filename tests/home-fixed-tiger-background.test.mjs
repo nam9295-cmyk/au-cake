@@ -3,11 +3,12 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 
 test('the fixed tiger wallpaper is mounted on the home route only', () => {
-  assert.match(app, /function HomeTigerBackground\(\)/)
-  assert.match(app, /<div className="home-tiger-background" aria-hidden="true" \/>/)
+  assert.match(chrome, /export function HomeTigerBackground\(\)/)
+  assert.match(chrome, /<div className="home-tiger-background" aria-hidden="true" \/>/)
   assert.match(app, /\{page === 'home' && <HomeTigerBackground \/>\}/)
   assert.match(app, /page === 'home' \? ' home-shell' : ''/)
   assert.doesNotMatch(app, /!isPrivatePage && <HomeTigerBackground \/>/)
