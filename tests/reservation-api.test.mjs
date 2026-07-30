@@ -8,7 +8,9 @@ import {
   isCakePickupBlocked,
   isSchoolPickupWindowClosed,
   matchesLookupPhone,
+  parseStoredOrderLines,
   publicCakeReservation,
+  serializeStoredOrderLines,
 } from '../functions/reservation-api/src/business.js'
 import { calendarLogin, listCalendarEvents, createCake, createClass, lookupCake } from '../functions/reservation-api/src/main.js'
 
@@ -53,8 +55,28 @@ const classInput = {
   photoConsent: false,
 }
 
-function assertApiError(code, callback) {
-  assert.throws(callback, (error) => error instanceof ReservationApiError && error.code === code)
+function assertApiError(code, callback, status) {
+  assert.throws(callback, (error) => error instanceof ReservationApiError
+    && error.code === code
+    && (status === undefined || error.status === status))
+}
+
+function multiCakeInput(orderLines, overrides = {}) {
+  const {
+    productId: _productId,
+    cakeSize: _cakeSize,
+    chocolateType: _chocolateType,
+    poundAddon: _poundAddon,
+    chocolateIcingCount: _chocolateIcingCount,
+    vanillaCreamCount: _vanillaCreamCount,
+    partyDecorationCount: _partyDecorationCount,
+    vanillaCakeSheet: _vanillaCakeSheet,
+    vanillaCakeFlavor: _vanillaCakeFlavor,
+    quantity: _quantity,
+    cacaoPercent: _cacaoPercent,
+    ...common
+  } = cakeInput
+  return { ...common, orderLines, ...overrides }
 }
 
 test('class API stores both kids course types at the existing prices', () => {
@@ -625,6 +647,332 @@ test('public lookup response excludes customer PII, notes and prices', () => {
   assert.equal('requestNote' in response, false)
   assert.equal('adminMemo' in response, false)
   assert.equal('totalPrice' in response, false)
+})
+
+test('cake API preserves legacy one-line pricing and promo note while storing a versioned line', () => {
+  const reservation = buildCakeReservation(
+    { ...cakeInput, productId: 'choco-basque-cheesecake', promoCode: ' ChOcOlAtE ' },
+    { now, reservationNumber: 'VG-C-AU-LEGACY-LINE' },
+  )
+  const stored = parseStoredOrderLines(reservation)
+
+  assert.equal(reservation.productId, 'choco-basque-cheesecake')
+  assert.equal(reservation.quantity, 1)
+  assert.equal(reservation.subtotalCents, 5500)
+  assert.equal(reservation.discountCents, 550)
+  assert.equal(reservation.totalPriceCents, 4950)
+  assert.equal(reservation.totalPrice, 49.5)
+  assert.equal(reservation.requestNote, '[Promo chocolate] 10% discount applied: 55.00 -> 49.50\nHappy birthday')
+  assert.equal(reservation.orderLineCount, 1)
+  assert.equal(reservation.orderItemCount, 1)
+  assert.equal(reservation.discountBasisCents, 5500)
+  assert.equal(stored.version, 1)
+  assert.equal(stored.lines.length, 1)
+  assert.equal(stored.lines[0].unitPriceCents, 5500)
+  assert.doesNotThrow(() => parseStoredOrderLines({
+    ...reservation,
+    totalPrice: Math.round(reservation.totalPrice),
+  }))
+})
+
+test('cake API normalizes, authoritatively prices and aggregates two distinct server lines', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'pave-cake', cakeSize: '19cm', chocolateType: 'milk', quantity: 2 },
+    { productId: 'pound-cake', poundAddon: 'extra-chocolate', chocolateType: 'milk', quantity: 1 },
+  ]), { now, reservationNumber: 'VG-C-AU-MULTI-2' })
+  const { lines } = parseStoredOrderLines(reservation)
+
+  assert.deepEqual(
+    [reservation.productId, reservation.cakeSize, reservation.chocolateType, reservation.quantity],
+    ['pave-cake', '19cm', 'milk', 2],
+  )
+  assert.deepEqual(
+    [reservation.subtotalCents, reservation.discountBasisCents, reservation.discountPercent, reservation.discountCents, reservation.totalPriceCents, reservation.totalPrice],
+    [24200, 0, 0, 0, 24200, 242],
+  )
+  assert.deepEqual([reservation.orderLineCount, reservation.orderItemCount], [2, 3])
+  assert.deepEqual(lines.map((line) => [line.productId, line.unitPriceCents, line.subtotalCents, line.totalPriceCents]), [
+    ['pave-cake', 9500, 19000, 19000],
+    ['pound-cake', 5200, 5200, 5200],
+  ])
+})
+
+test('multi-line cake API rejects client line metadata, forged prices and top-level legacy line fields', () => {
+  for (const forged of [
+    { lineKey: 'client-key' },
+    { unitPriceCents: 1 },
+    { subtotalCents: 1 },
+    { totalPriceCents: 1 },
+    { promoCode: 'lemoni' },
+    { customerName: 'Private' },
+    { requestNote: 'Private' },
+    { pickupDate: '2099-01-01' },
+    { unknown: true },
+  ]) {
+    assertApiError('INVALID_ORDER_LINE', () => buildCakeReservation(multiCakeInput([
+      { productId: 'pave-cake', quantity: 1, ...forged },
+    ]), { now }))
+  }
+  for (const legacyField of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'quantity', 'cacaoPercent']) {
+    assertApiError('INVALID_ORDER_LINE', () => buildCakeReservation({
+      ...multiCakeInput([{ productId: 'pave-cake', quantity: 1 }]),
+      [legacyField]: legacyField === 'quantity' ? 1 : 'forged',
+    }, { now }))
+  }
+  for (const orderLines of [null, {}, [], 'lines']) {
+    assertApiError('INVALID_ORDER_LINE', () => buildCakeReservation({ ...multiCakeInput([]), orderLines }, { now }))
+  }
+})
+
+test('multi-line cake API merges normalized hidden-option duplicates in first-seen position', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    {
+      productId: 'choco-basque-cheesecake', cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'extra-chocolate',
+      chocolateIcingCount: 4, vanillaCreamCount: 4, partyDecorationCount: 4,
+      vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'nutella-chocolate-chip', quantity: 2,
+    },
+    { productId: 'pave-cake', cakeSize: '15cm', quantity: 1 },
+    { productId: 'choco-basque-cheesecake', quantity: 3 },
+  ]), { now, reservationNumber: 'VG-C-AU-MERGED' })
+  const { lines } = parseStoredOrderLines(reservation)
+
+  assert.deepEqual(lines.map((line) => [line.productId, line.quantity]), [
+    ['choco-basque-cheesecake', 5],
+    ['pave-cake', 1],
+  ])
+  assert.deepEqual(
+    [lines[0].cakeSize, lines[0].chocolateType, lines[0].poundAddon, lines[0].chocolateIcingCount,
+      lines[0].vanillaCreamCount, lines[0].partyDecorationCount, lines[0].vanillaCakeSheet, lines[0].vanillaCakeFlavor],
+    ['15cm', 'dark', 'none', 0, 0, 0, 'vanilla', 'triple-berry'],
+  )
+  assert.deepEqual([reservation.orderLineCount, reservation.orderItemCount], [2, 6])
+})
+
+test('multi-line cake API rejects merged quantity overflow, non-integer quantities and unknown products', () => {
+  assertApiError('INVALID_QUANTITY', () => buildCakeReservation(multiCakeInput([
+    { productId: 'pave-cake', cakeSize: '15cm', quantity: 3 },
+    { productId: 'pave-cake', cakeSize: '15cm', quantity: 3 },
+  ]), { now }))
+  for (const quantity of ['1', 0, 1.5, 6]) {
+    assertApiError('INVALID_QUANTITY', () => buildCakeReservation(multiCakeInput([
+      { productId: 'pave-cake', quantity },
+    ]), { now }))
+  }
+  for (const productId of ['retired4', '__proto__']) {
+    assertApiError('INVALID_PRODUCT', () => buildCakeReservation(multiCakeInput([
+      { productId, quantity: 1 },
+    ]), { now }))
+  }
+})
+
+test('static promo discounts only eligible lines from one aggregate basis and writes one bounded audit line', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+    { productId: 'pave-cake', cakeSize: '15cm', quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-8', quantity: 1 },
+  ], { promoCode: ' LeMoNi ' }), { now, reservationNumber: 'VG-C-AU-MIXED-PROMO' })
+  const { lines } = parseStoredOrderLines(reservation)
+
+  assert.deepEqual(
+    [reservation.subtotalCents, reservation.discountBasisCents, reservation.discountPercent, reservation.discountCents, reservation.totalPriceCents],
+    [15650, 8150, 10, 815, 14835],
+  )
+  assert.deepEqual(lines.map((line) => [line.productId, line.discountPercent, line.discountCents]), [
+    ['fresh-lemon-cupcakes-6', 10, 365],
+    ['pave-cake', 0, 0],
+    ['fresh-lemon-cupcakes-8', 10, 450],
+  ])
+  assert.equal(reservation.requestNote, '[Promo lemoni] 10% discount applied: 81.50 -> 73.35\nHappy birthday')
+  assert.equal(reservation.requestNote.match(/\[Promo/g)?.length, 1)
+})
+
+test('aggregate discount allocation breaks equal fractional ties by canonical key, not request order', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'fresh-lemon-cupcakes-8', chocolateIcingCount: 1, quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+  ], { promoCode: '' }), {
+    now,
+    reservationNumber: 'VG-C-AU-TIE',
+    reviewCoupon: { id: 'coupon-tie', rewardPercent: 5, codeLast4: 'Q2MK' },
+  })
+  const { lines } = parseStoredOrderLines(reservation)
+
+  assert.deepEqual(lines.map((line) => [line.productId, line.discountCents]), [
+    ['fresh-lemon-cupcakes-8', 227],
+    ['fresh-lemon-cupcakes-6', 183],
+  ])
+  assert.equal(reservation.discountBasisCents, 8200)
+  assert.equal(reservation.discountCents, 410)
+})
+
+test('review and manual coupon percentages apply once across every normalized line', () => {
+  for (const [rewardPercent, expectedDiscount, expectedTotal] of [[5, 558, 10592], [10, 1115, 10035]]) {
+    const reservation = buildCakeReservation(multiCakeInput([
+      { productId: 'pave-cake', quantity: 1 },
+      { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+    ], { promoCode: '' }), {
+      now,
+      reservationNumber: `VG-C-AU-REVIEW-${rewardPercent}`,
+      reviewCoupon: { id: `coupon-${rewardPercent}`, rewardPercent, codeLast4: 'Q2MK' },
+    })
+    const { lines } = parseStoredOrderLines(reservation)
+    assert.equal(reservation.discountBasisCents, 11150)
+    assert.equal(reservation.discountPercent, rewardPercent)
+    assert.equal(reservation.discountCents, expectedDiscount)
+    assert.equal(reservation.totalPriceCents, expectedTotal)
+    assert.deepEqual(lines.map((line) => line.discountPercent), [rewardPercent, rewardPercent])
+    assert.equal(reservation.requestNote, 'Happy birthday')
+  }
+})
+
+test('stored order line JSON contains only canonical order and authoritative price fields', () => {
+  const rawPromo = ' LeMoNi '
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+  ], { promoCode: rawPromo }), { now, reservationNumber: 'VG-C-AU-SAFE-JSON' })
+  const payload = JSON.parse(reservation.orderLinesJson)
+  const allowed = [
+    'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount',
+    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity', 'unitPriceCents',
+    'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
+  ].sort()
+
+  assert.deepEqual(Object.keys(payload).sort(), ['lines', 'version'])
+  assert.deepEqual(Object.keys(payload.lines[0]).sort(), allowed)
+  assert.equal(reservation.orderLinesJson.includes('Jenny Cake'), false)
+  assert.equal(reservation.orderLinesJson.includes('0412345678'), false)
+  assert.equal(reservation.orderLinesJson.includes('Happy birthday'), false)
+  assert.equal(reservation.orderLinesJson.includes(rawPromo.trim()), false)
+  assert.equal(reservation.orderLinesJson.includes('lineKey'), false)
+})
+
+test('stored order line parser fails closed on malformed, unsupported, empty, extra-key and inconsistent documents', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'pave-cake', quantity: 1 },
+    { productId: 'pound-cake', quantity: 1 },
+  ]), { now, reservationNumber: 'VG-C-AU-PARSE' })
+  const parsed = JSON.parse(reservation.orderLinesJson)
+  const withPayload = (payload, overrides = {}) => ({ ...reservation, ...overrides, orderLinesJson: JSON.stringify(payload) })
+  const extraKey = JSON.parse(JSON.stringify(parsed))
+  extraKey.lines[0].customerName = 'Private'
+  const badPrice = JSON.parse(JSON.stringify(parsed))
+  badPrice.lines[0].totalPriceCents -= 1
+
+  assert.equal(parseStoredOrderLines({ reservationNumber: 'legacy' }), null)
+  for (const document of [
+    { ...reservation, orderLinesJson: '{' },
+    withPayload({ version: 2, lines: parsed.lines }),
+    withPayload({ version: 1, lines: [] }),
+    withPayload(extraKey),
+    withPayload(badPrice),
+    { ...reservation, totalPriceCents: reservation.totalPriceCents + 1 },
+    { ...reservation, orderLineCount: 99 },
+    { ...reservation, orderItemCount: 99 },
+    { ...reservation, productId: 'pound-cake' },
+  ]) {
+    assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(document), 500)
+  }
+  assertApiError('INVALID_STORED_ORDER', () => publicCakeReservation({ ...reservation, orderLinesJson: '{' }), 500)
+})
+
+test('stored order parser requires aggregate and first-line projections for versioned documents', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'pave-cake', cakeSize: '19cm', chocolateType: 'milk', quantity: 2 },
+    { productId: 'pound-cake', poundAddon: 'extra-chocolate', quantity: 1 },
+  ]), { now, reservationNumber: 'VG-C-AU-REQUIRED-PROJECTIONS' })
+  const requiredKeys = [
+    'subtotalCents', 'discountBasisCents', 'discountPercent', 'discountCents', 'totalPriceCents', 'totalPrice',
+    'orderLineCount', 'orderItemCount', 'productId', 'cakeSize', 'chocolateType', 'poundAddon',
+    'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity',
+  ]
+  for (const key of requiredKeys) {
+    const incomplete = { ...reservation }
+    delete incomplete[key]
+    assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(incomplete), 500)
+  }
+})
+
+test('stored order parser rejects missing, partial, or ineligible discount provenance', () => {
+  const review = buildCakeReservation(multiCakeInput([
+    { productId: 'pave-cake', quantity: 1 },
+    { productId: 'pound-cake', quantity: 1 },
+  ], { promoCode: '' }), {
+    now,
+    reservationNumber: 'VG-C-AU-REVIEW-PROVENANCE',
+    reviewCoupon: { id: 'review-proof', rewardPercent: 10, codeLast4: 'Q2MK' },
+  })
+  const missingProvenance = { ...review }
+  delete missingProvenance.reviewCouponId
+  delete missingProvenance.appliedPromoCodeLast4
+  assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(missingProvenance), 500)
+
+  const partialPayload = JSON.parse(review.orderLinesJson)
+  partialPayload.lines[1].discountPercent = 0
+  partialPayload.lines[1].discountCents = 0
+  partialPayload.lines[1].totalPriceCents = partialPayload.lines[1].subtotalCents
+  const partialReview = {
+    ...review,
+    orderLinesJson: JSON.stringify(partialPayload),
+    discountBasisCents: partialPayload.lines[0].subtotalCents,
+    discountCents: partialPayload.lines[0].discountCents,
+    totalPriceCents: partialPayload.lines.reduce((sum, line) => sum + line.totalPriceCents, 0),
+  }
+  partialReview.totalPrice = partialReview.totalPriceCents / 100
+  assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(partialReview), 500)
+
+  const staticOrder = buildCakeReservation(multiCakeInput([
+    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+    { productId: 'pave-cake', quantity: 1 },
+  ], { promoCode: 'lemoni' }), { now, reservationNumber: 'VG-C-AU-STATIC-PROVENANCE' })
+  const ineligiblePayload = JSON.parse(staticOrder.orderLinesJson)
+  ineligiblePayload.lines[0].discountPercent = 0
+  ineligiblePayload.lines[0].discountCents = 0
+  ineligiblePayload.lines[0].totalPriceCents = ineligiblePayload.lines[0].subtotalCents
+  ineligiblePayload.lines[1].discountPercent = 10
+  ineligiblePayload.lines[1].discountCents = 750
+  ineligiblePayload.lines[1].totalPriceCents = ineligiblePayload.lines[1].subtotalCents - 750
+  const ineligibleStatic = {
+    ...staticOrder,
+    orderLinesJson: JSON.stringify(ineligiblePayload),
+    discountBasisCents: 7500,
+    discountCents: 750,
+    totalPriceCents: ineligiblePayload.lines.reduce((sum, line) => sum + line.totalPriceCents, 0),
+  }
+  ineligibleStatic.totalPrice = ineligibleStatic.totalPriceCents / 100
+  assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(ineligibleStatic), 500)
+})
+
+test('public cake projection exposes sanitized multi-lines and synthesizes sanitized legacy counts', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'pave-cake', cakeSize: '19cm', quantity: 2 },
+    { productId: 'pound-cake', poundAddon: 'vanilla-cream', quantity: 1 },
+  ]), { now, reservationNumber: 'VG-C-AU-PUBLIC-MULTI' })
+  const response = publicCakeReservation({
+    ...reservation,
+    customerName: 'Private Name', customerPhone: '0412345678', requestNote: 'Private note', adminMemo: 'Private memo',
+  })
+
+  assert.deepEqual([response.orderLineCount, response.orderItemCount], [2, 3])
+  assert.deepEqual(response.orderLines.map((line) => [line.productId, line.quantity]), [['pave-cake', 2], ['pound-cake', 1]])
+  assert.equal(JSON.stringify(response.orderLines).includes('Price'), false)
+  assert.equal(JSON.stringify(response.orderLines).includes('discount'), false)
+  assert.equal(JSON.stringify(response.orderLines).includes('Private'), false)
+
+  const legacy = publicCakeReservation({
+    reservationNumber: 'VG-C-AU-PUBLIC-LEGACY', productId: 'pave-cake', cakeSize: '22cm', chocolateType: 'milk',
+    poundAddon: 'none', quantity: 2, pickupDate: '2099-07-11', pickupTime: '10:00', status: '예약신청', paymentStatus: '입금대기',
+  })
+  assert.deepEqual([legacy.orderLineCount, legacy.orderItemCount], [1, 2])
+  assert.deepEqual(legacy.orderLines, [{
+    productId: 'pave-cake', cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'none', chocolateIcingCount: 0,
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
+  }])
+})
+
+test('versioned order line serialization enforces only the UTF-8 technical byte ceiling', () => {
+  const reservation = buildCakeReservation(cakeInput, { now, reservationNumber: 'VG-C-AU-SERIALIZE' })
+  const line = parseStoredOrderLines(reservation).lines[0]
+  assertApiError('ORDER_TOO_LARGE', () => serializeStoredOrderLines(Array.from({ length: 500 }, () => line)), 413)
 })
 
 test('calendar login rejects a wrong PIN and returns a signed token for the configured PIN', () => {

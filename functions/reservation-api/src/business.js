@@ -405,6 +405,103 @@ function normalizeCakeOptions(input) {
   return { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount, ...cupcakeFinishCounts, ...vanillaCakeOptions }
 }
 
+const ORDER_LINE_IDENTITY_KEYS = [
+  'productId',
+  'cakeSize',
+  'chocolateType',
+  'poundAddon',
+  'chocolateIcingCount',
+  'vanillaCreamCount',
+  'partyDecorationCount',
+  'vanillaCakeSheet',
+  'vanillaCakeFlavor',
+]
+const ORDER_LINE_INPUT_KEYS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity'])
+const LEGACY_ORDER_LINE_FIELDS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity', 'cacaoPercent'])
+const STORED_ORDER_LINE_KEYS = new Set([
+  ...ORDER_LINE_IDENTITY_KEYS,
+  'quantity',
+  'unitPriceCents',
+  'subtotalCents',
+  'discountPercent',
+  'discountCents',
+  'totalPriceCents',
+])
+const STORED_ORDER_MAX_BYTES = 65535
+const REQUIRED_STORED_ORDER_DOCUMENT_KEYS = new Set([
+  ...ORDER_LINE_IDENTITY_KEYS,
+  'quantity',
+  'subtotalCents',
+  'discountBasisCents',
+  'discountPercent',
+  'discountCents',
+  'totalPriceCents',
+  'totalPrice',
+  'orderLineCount',
+  'orderItemCount',
+])
+
+function isPlainObject(value) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
+}
+
+function normalizedCakeLine(input, quantity) {
+  const {
+    cakeSize,
+    poundAddon,
+    chocolateType,
+    chocolateIcingCount,
+    vanillaCreamCount,
+    partyDecorationCount,
+    vanillaCakeSheet,
+    vanillaCakeFlavor,
+  } = normalizeCakeOptions(input)
+  return {
+    productId: input.productId,
+    cakeSize,
+    chocolateType,
+    poundAddon,
+    chocolateIcingCount,
+    vanillaCreamCount,
+    partyDecorationCount,
+    vanillaCakeSheet,
+    vanillaCakeFlavor,
+    quantity,
+  }
+}
+
+function canonicalOrderLineKey(line) {
+  return JSON.stringify(ORDER_LINE_IDENTITY_KEYS.map((key) => line[key]))
+}
+
+export function normalizeCakeOrderLines(orderLines) {
+  if (!Array.isArray(orderLines) || orderLines.length === 0) fail('INVALID_ORDER_LINE')
+  const normalized = []
+  const positions = new Map()
+  for (const input of orderLines) {
+    if (!isPlainObject(input) || Reflect.ownKeys(input).some((key) => typeof key !== 'string' || !ORDER_LINE_INPUT_KEYS.has(key))) {
+      fail('INVALID_ORDER_LINE')
+    }
+    if (!Number.isInteger(input.quantity) || input.quantity < 1 || input.quantity > MAX_RESERVATION_QUANTITY) {
+      fail('INVALID_QUANTITY')
+    }
+    const line = normalizedCakeLine(input, input.quantity)
+    const key = canonicalOrderLineKey(line)
+    const existingPosition = positions.get(key)
+    if (existingPosition === undefined) {
+      positions.set(key, normalized.length)
+      normalized.push(line)
+      continue
+    }
+    const mergedQuantity = normalized[existingPosition].quantity + line.quantity
+    if (mergedQuantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
+    normalized[existingPosition] = { ...normalized[existingPosition], quantity: mergedQuantity }
+  }
+  return normalized
+}
+
 function getValidPromoCode(productId, promoCode, now) {
   if (typeof promoCode !== 'string') return null
   const normalizedCode = promoCode.trim().toLowerCase()
@@ -413,60 +510,95 @@ function getValidPromoCode(productId, promoCode, now) {
   return promo.code
 }
 
-function calculateCakeTotal(
-  productId,
-  product,
-  cakeSize,
-  poundAddon,
-  chocolateIcingCount,
-  vanillaCreamCount,
-  partyDecorationCount,
-  quantity,
-  promoCode,
-  now,
-  reviewCoupon,
-) {
-  const unitPriceCents = Math.round((product.usesSize ? product.sizePrices[cakeSize] : product.basePrice) * 100)
-    + Math.round((product.usesFinish ? FINISH_PRICES[poundAddon] : 0) * 100)
-    + chocolateIcingCount * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS
-    + vanillaCreamCount * CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS
-    + partyDecorationCount * CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS
-  const originalTotalCents = unitPriceCents * quantity
-  const originalTotal = originalTotalCents / 100
+function unitPriceForCakeLine(line) {
+  const product = PRODUCTS[line.productId]
+  return Math.round((product.usesSize ? product.sizePrices[line.cakeSize] : product.basePrice) * 100)
+    + Math.round((product.usesFinish ? FINISH_PRICES[line.poundAddon] : 0) * 100)
+    + line.chocolateIcingCount * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS
+    + line.vanillaCreamCount * CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS
+    + line.partyDecorationCount * CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS
+}
+
+function validatePricingCoupon(promoCode, reviewCoupon) {
   if (reviewCoupon && typeof promoCode === 'string' && promoCode.trim()) fail('PROMO_CODE_INVALID')
-  const appliedPromoCode = reviewCoupon ? null : getValidPromoCode(productId, promoCode, now)
-  const staticPromoApplied = appliedPromoCode !== null
-  const discountPercent = reviewCoupon?.rewardPercent || (staticPromoApplied ? PROMO_DISCOUNT_RATE * 100 : 0)
   if (reviewCoupon && (
-    (discountPercent !== 5 && discountPercent !== 10) ||
+    (reviewCoupon.rewardPercent !== 5 && reviewCoupon.rewardPercent !== 10) ||
     typeof reviewCoupon.id !== 'string' || !reviewCoupon.id ||
     typeof reviewCoupon.codeLast4 !== 'string' ||
     !SAFE_LAST4_PATTERN.test(reviewCoupon.codeLast4)
   )) fail('PROMO_CODE_INVALID')
-  const discountedCents = reviewCoupon
-    ? originalTotalCents - Math.round(originalTotalCents * discountPercent / 100)
-    : staticPromoApplied
-      ? Math.round(originalTotalCents * (1 - PROMO_DISCOUNT_RATE))
-      : originalTotalCents
-  const discountCents = originalTotalCents - discountedCents
+}
+
+function allocateDiscounts(lines, eligibleIndexes, discountPercent, discountCents) {
+  const allocations = new Array(lines.length).fill(0)
+  const ranked = eligibleIndexes.map((index) => {
+    const numerator = lines[index].subtotalCents * discountPercent
+    const floorCents = Math.floor(numerator / 100)
+    allocations[index] = floorCents
+    return { index, remainder: numerator % 100, key: canonicalOrderLineKey(lines[index]) }
+  }).sort((left, right) => right.remainder - left.remainder || (left.key < right.key ? -1 : left.key > right.key ? 1 : 0))
+  let remainderCents = discountCents - allocations.reduce((sum, value) => sum + value, 0)
+  for (const candidate of ranked) {
+    if (remainderCents <= 0) break
+    allocations[candidate.index] += 1
+    remainderCents -= 1
+  }
+  return allocations
+}
+
+function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
+  validatePricingCoupon(promoCode, reviewCoupon)
+  const baseLines = lines.map((line) => {
+    const unitPriceCents = unitPriceForCakeLine(line)
+    return { ...line, unitPriceCents, subtotalCents: unitPriceCents * line.quantity }
+  })
+  let appliedPromoCode = null
+  const eligibleIndexes = []
+  for (let index = 0; index < baseLines.length; index += 1) {
+    const linePromoCode = reviewCoupon ? null : getValidPromoCode(baseLines[index].productId, promoCode, now)
+    if (reviewCoupon || linePromoCode) eligibleIndexes.push(index)
+    if (linePromoCode) appliedPromoCode = linePromoCode
+  }
+  const discountPercent = reviewCoupon?.rewardPercent || (eligibleIndexes.length > 0 ? PROMO_DISCOUNT_RATE * 100 : 0)
+  const discountBasisCents = eligibleIndexes.reduce((sum, index) => sum + baseLines[index].subtotalCents, 0)
+  const discountCents = Math.round(discountBasisCents * discountPercent / 100)
+  const allocations = allocateDiscounts(baseLines, eligibleIndexes, discountPercent, discountCents)
+  const pricedLines = baseLines.map((line, index) => {
+    const lineDiscountPercent = eligibleIndexes.includes(index) ? discountPercent : 0
+    const lineDiscountCents = allocations[index]
+    return {
+      ...line,
+      discountPercent: lineDiscountPercent,
+      discountCents: lineDiscountCents,
+      totalPriceCents: line.subtotalCents - lineDiscountCents,
+    }
+  })
+  const subtotalCents = pricedLines.reduce((sum, line) => sum + line.subtotalCents, 0)
+  const totalPriceCents = subtotalCents - discountCents
   return {
-    originalTotal,
-    subtotalCents: originalTotalCents,
+    lines: pricedLines,
+    subtotalCents,
+    discountBasisCents,
     discountPercent,
     discountCents,
-    totalPrice: discountedCents / 100,
-    totalPriceCents: discountedCents,
-    promoApplied: staticPromoApplied || Boolean(reviewCoupon),
+    totalPrice: totalPriceCents / 100,
+    totalPriceCents,
     appliedPromoCode,
     appliedPromoCodeLast4: reviewCoupon?.codeLast4 || (appliedPromoCode ? appliedPromoCode.slice(-4).toUpperCase() : undefined),
     reviewCouponId: reviewCoupon?.id,
-    productId,
   }
+}
+
+export function serializeStoredOrderLines(lines) {
+  const serialized = JSON.stringify({ version: 1, lines })
+  if (new TextEncoder().encode(serialized).byteLength > STORED_ORDER_MAX_BYTES) fail('ORDER_TOO_LARGE', 413)
+  return serialized
 }
 
 function buildPromoNote(note, pricing) {
   if (!pricing.appliedPromoCode) return note
-  const promoLine = `[Promo ${pricing.appliedPromoCode}] 10% discount applied: ${pricing.originalTotal.toFixed(2)} -> ${pricing.totalPrice.toFixed(2)}`
+  const discountedBasisCents = pricing.discountBasisCents - pricing.discountCents
+  const promoLine = `[Promo ${pricing.appliedPromoCode}] 10% discount applied: ${(pricing.discountBasisCents / 100).toFixed(2)} -> ${(discountedBasisCents / 100).toFixed(2)}`
   const result = [promoLine, note].filter(Boolean).join('\n')
   if (result.length > 1000) fail('REQUEST_NOTE_TOO_LONG')
   return result
@@ -492,51 +624,39 @@ export function buildCakeReservation(input, {
   if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
   const customerPhone = validateAustralianMobile(input.customerPhone)
-  const quantity = Number(input.quantity)
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
   validatePickupDateTime(input.pickupDate, input.pickupTime, now)
 
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
-  const {
-    product,
-    cakeSize,
-    poundAddon,
-    chocolateType,
-    chocolateIcingCount,
-    vanillaCreamCount,
-    partyDecorationCount,
-    vanillaCakeSheet,
-    vanillaCakeFlavor,
-  } = normalizeCakeOptions(input)
-  const pricing = calculateCakeTotal(
-    input.productId,
-    product,
-    cakeSize,
-    poundAddon,
-    chocolateIcingCount,
-    vanillaCreamCount,
-    partyDecorationCount,
-    quantity,
-    input.promoCode,
-    now,
-    reviewCoupon,
-  )
+  let normalizedLines
+  if (Object.hasOwn(input, 'orderLines')) {
+    if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
+    normalizedLines = normalizeCakeOrderLines(input.orderLines)
+  } else {
+    const quantity = Number(input.quantity)
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
+    normalizedLines = [normalizedCakeLine(input, quantity)]
+  }
+  const pricing = priceCakeOrderLines(normalizedLines, input.promoCode, now, reviewCoupon)
+  const firstLine = pricing.lines[0]
+  const orderLineCount = pricing.lines.length
+  const orderItemCount = pricing.lines.reduce((sum, line) => sum + line.quantity, 0)
+  const orderLinesJson = serializeStoredOrderLines(pricing.lines)
   const createdAt = now.toISOString()
 
   return {
     reservationNumber,
     customerName,
     customerPhone,
-    productId: input.productId,
-    cakeSize,
-    chocolateType,
-    poundAddon,
-    chocolateIcingCount,
-    vanillaCreamCount,
-    partyDecorationCount,
-    vanillaCakeSheet,
-    vanillaCakeFlavor,
-    quantity,
+    productId: firstLine.productId,
+    cakeSize: firstLine.cakeSize,
+    chocolateType: firstLine.chocolateType,
+    poundAddon: firstLine.poundAddon,
+    chocolateIcingCount: firstLine.chocolateIcingCount,
+    vanillaCreamCount: firstLine.vanillaCreamCount,
+    partyDecorationCount: firstLine.partyDecorationCount,
+    vanillaCakeSheet: firstLine.vanillaCakeSheet,
+    vanillaCakeFlavor: firstLine.vanillaCakeFlavor,
+    quantity: firstLine.quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
     cacaoPercent: '기본',
@@ -546,8 +666,12 @@ export function buildCakeReservation(input, {
     totalPrice: pricing.totalPrice,
     totalPriceCents: pricing.totalPriceCents,
     subtotalCents: pricing.subtotalCents,
+    discountBasisCents: pricing.discountBasisCents,
     discountPercent: pricing.discountPercent,
     discountCents: pricing.discountCents,
+    orderLineCount,
+    orderItemCount,
+    orderLinesJson,
     ...(pricing.appliedPromoCodeLast4 ? { appliedPromoCodeLast4: pricing.appliedPromoCodeLast4 } : {}),
     ...(pricing.reviewCouponId ? { reviewCouponId: pricing.reviewCouponId } : {}),
     adminMemo: '',
@@ -713,9 +837,139 @@ export function matchesLookupPhone(storedPhone, suppliedPhone) {
   return /^04\d{8}$/.test(suppliedDigits) && storedDigits === suppliedDigits
 }
 
-export function publicCakeReservation(document) {
+function hasExactOwnKeys(value, allowedKeys) {
+  const keys = isPlainObject(value) ? Reflect.ownKeys(value) : []
+  return keys.length === allowedKeys.size
+    && keys.every((key) => typeof key === 'string' && allowedKeys.has(key))
+}
+
+function sanitizedOrderLine(line) {
   return {
-    reservationNumber: document.reservationNumber,
+    productId: line.productId,
+    cakeSize: line.cakeSize,
+    chocolateType: line.chocolateType,
+    poundAddon: line.poundAddon,
+    chocolateIcingCount: line.chocolateIcingCount,
+    vanillaCreamCount: line.vanillaCreamCount,
+    partyDecorationCount: line.partyDecorationCount,
+    vanillaCakeSheet: line.vanillaCakeSheet,
+    vanillaCakeFlavor: line.vanillaCakeFlavor,
+    quantity: line.quantity,
+  }
+}
+
+export function parseStoredOrderLines(document) {
+  if (!document || !Object.hasOwn(document, 'orderLinesJson')) return null
+  try {
+    if (typeof document.orderLinesJson !== 'string') throw new Error('invalid serialization')
+    if (new TextEncoder().encode(document.orderLinesJson).byteLength > STORED_ORDER_MAX_BYTES) throw new Error('oversized serialization')
+    const payload = JSON.parse(document.orderLinesJson)
+    if (!hasExactOwnKeys(payload, new Set(['version', 'lines'])) || payload.version !== 1 || !Array.isArray(payload.lines) || payload.lines.length === 0) {
+      throw new Error('invalid payload')
+    }
+    if ([...REQUIRED_STORED_ORDER_DOCUMENT_KEYS].some((key) => !Object.hasOwn(document, key))) {
+      throw new Error('missing document projection')
+    }
+
+    const canonicalKeys = new Set()
+    for (const line of payload.lines) {
+      if (!hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)) throw new Error('invalid line keys')
+      if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('invalid quantity')
+      for (const key of ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount']) {
+        if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid option count')
+      }
+      for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'vanillaCakeSheet', 'vanillaCakeFlavor']) {
+        if (typeof line[key] !== 'string') throw new Error('invalid option')
+      }
+      const normalized = normalizedCakeLine(line, line.quantity)
+      if (ORDER_LINE_IDENTITY_KEYS.some((key) => normalized[key] !== line[key])) throw new Error('noncanonical line')
+      const canonicalKey = canonicalOrderLineKey(line)
+      if (canonicalKeys.has(canonicalKey)) throw new Error('duplicate line')
+      canonicalKeys.add(canonicalKey)
+      for (const key of ['unitPriceCents', 'subtotalCents', 'discountCents', 'totalPriceCents']) {
+        if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid price')
+      }
+      if (line.unitPriceCents !== unitPriceForCakeLine(line)) throw new Error('invalid unit price')
+      if (line.subtotalCents !== line.unitPriceCents * line.quantity) throw new Error('invalid subtotal')
+      if (line.discountPercent !== 0 && line.discountPercent !== 5 && line.discountPercent !== 10) throw new Error('invalid discount percent')
+      if (line.totalPriceCents !== line.subtotalCents - line.discountCents) throw new Error('invalid total')
+      if (line.discountPercent === 0 && line.discountCents !== 0) throw new Error('invalid undiscounted line')
+    }
+
+    const discountPercent = document.discountPercent
+    if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10) throw new Error('invalid aggregate discount percent')
+    const hasReviewCoupon = Object.hasOwn(document, 'reviewCouponId')
+    const hasPromoLast4 = Object.hasOwn(document, 'appliedPromoCodeLast4')
+    let eligibleIndexes = []
+    if (hasReviewCoupon) {
+      if (
+        typeof document.reviewCouponId !== 'string' || !document.reviewCouponId ||
+        !hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string' ||
+        !SAFE_LAST4_PATTERN.test(document.appliedPromoCodeLast4) ||
+        (discountPercent !== 5 && discountPercent !== 10)
+      ) throw new Error('invalid review discount provenance')
+      eligibleIndexes = payload.lines.map((_, index) => index)
+    } else if (discountPercent === 10) {
+      if (!hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string' || !SAFE_LAST4_PATTERN.test(document.appliedPromoCodeLast4)) {
+        throw new Error('invalid static discount provenance')
+      }
+      const matchingPromotions = PROMOTIONS.filter(
+        (promotion) => promotion.code.slice(-4).toUpperCase() === document.appliedPromoCodeLast4,
+      )
+      const createdAt = new Date(document.createdAt)
+      if (matchingPromotions.length !== 1 || !Number.isFinite(createdAt.getTime())) throw new Error('unknown static promotion')
+      const promotion = matchingPromotions[0]
+      eligibleIndexes = payload.lines
+        .map((line, index) => getValidPromoCode(line.productId, promotion.code, createdAt) === promotion.code ? index : -1)
+        .filter((index) => index >= 0)
+      if (eligibleIndexes.length === 0) throw new Error('ineligible static promotion')
+    } else if (discountPercent === 0) {
+      if (hasPromoLast4) throw new Error('unexpected discount provenance')
+    } else {
+      throw new Error('missing review discount provenance')
+    }
+    const eligibleIndexSet = new Set(eligibleIndexes)
+    if (payload.lines.some((line, index) => line.discountPercent !== (eligibleIndexSet.has(index) ? discountPercent : 0))) {
+      throw new Error('invalid line discount eligibility')
+    }
+    const discountBasisCents = eligibleIndexes.reduce((sum, index) => sum + payload.lines[index].subtotalCents, 0)
+    const discountCents = Math.round(discountBasisCents * discountPercent / 100)
+    const expectedAllocations = allocateDiscounts(payload.lines, eligibleIndexes, discountPercent, discountCents)
+    if (payload.lines.some((line, index) => line.discountCents !== expectedAllocations[index])) throw new Error('invalid discount allocation')
+
+    const subtotalCents = payload.lines.reduce((sum, line) => sum + line.subtotalCents, 0)
+    const totalPriceCents = payload.lines.reduce((sum, line) => sum + line.totalPriceCents, 0)
+    const orderLineCount = payload.lines.length
+    const orderItemCount = payload.lines.reduce((sum, line) => sum + line.quantity, 0)
+    const expectedDocumentValues = {
+      subtotalCents,
+      discountBasisCents,
+      discountPercent,
+      discountCents,
+      totalPriceCents,
+      orderLineCount,
+      orderItemCount,
+    }
+    for (const [key, expected] of Object.entries(expectedDocumentValues)) {
+      if (document[key] !== expected) throw new Error(`inconsistent ${key}`)
+    }
+    const exactTotal = totalPriceCents / 100
+    if (document.totalPrice !== exactTotal && document.totalPrice !== Math.round(exactTotal)) {
+      throw new Error('inconsistent totalPrice')
+    }
+    const firstLine = payload.lines[0]
+    for (const key of [...ORDER_LINE_IDENTITY_KEYS, 'quantity']) {
+      if (document[key] !== firstLine[key]) throw new Error(`inconsistent ${key}`)
+    }
+    return payload
+  } catch {
+    throw new ReservationApiError('INVALID_STORED_ORDER', 500)
+  }
+}
+
+export function publicCakeReservation(document) {
+  const stored = parseStoredOrderLines(document)
+  const legacyLine = {
     productId: document.productId || 'pave-cake',
     cakeSize: document.cakeSize || '15cm',
     chocolateType: document.chocolateType || 'dark',
@@ -726,10 +980,19 @@ export function publicCakeReservation(document) {
     vanillaCakeSheet: document.vanillaCakeSheet || 'vanilla',
     vanillaCakeFlavor: document.vanillaCakeFlavor || 'triple-berry',
     quantity: Number(document.quantity || 1),
+  }
+  const orderLines = stored ? stored.lines.map(sanitizedOrderLine) : [legacyLine]
+  const firstLine = orderLines[0]
+  return {
+    reservationNumber: document.reservationNumber,
+    ...firstLine,
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
     cacaoPercent: document.cacaoPercent || '기본',
     status: document.status,
     paymentStatus: document.paymentStatus,
+    orderLines,
+    orderLineCount: orderLines.length,
+    orderItemCount: orderLines.reduce((sum, line) => sum + line.quantity, 0),
   }
 }
