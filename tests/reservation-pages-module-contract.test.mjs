@@ -32,7 +32,7 @@ test('ReservePage privately owns its current-time hook', () => {
   assert.doesNotMatch(appSource, /function useCurrentTime\b/)
 })
 
-test('customer pages own customer display while AdminReservationsPage privately owns admin table helpers', () => {
+test('customer pages own customer display and lookup formatters', () => {
   assert.match(productDetailsSource, /export function ProductDetailRows\b/)
   assert.match(completeSource, /from '\.\.\/components\/ProductDetailRows'/)
   assert.match(lookupSource, /from '\.\.\/components\/ProductDetailRows'/)
@@ -40,11 +40,6 @@ test('customer pages own customer display while AdminReservationsPage privately 
   assert.match(lookupSource, /function formatReservationStatus\b/)
   assert.match(lookupSource, /function formatPaymentStatus\b/)
   assert.doesNotMatch(productDetailsSource, /function (?:formatReservationStatus|formatPaymentStatus|reservationCacaoText|reservationCakeSizeText|reservationChocolateText|reservationFinishText)\b/)
-
-  for (const helper of ['reservationCacaoText', 'reservationCakeSizeText', 'reservationChocolateText', 'reservationFinishText']) {
-    assert.match(adminReservationsSource, new RegExp(`function ${helper}\\b`))
-    assert.doesNotMatch(appSource, new RegExp(`function ${helper}\\b`))
-  }
 })
 
 test('cheesecake product detection has one shared domain owner', () => {

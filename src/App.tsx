@@ -1,14 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import ReadOnlyCalendarPage from './ReadOnlyCalendarPage'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
 import CakesPage from './CakesPage'
 import ReviewPage from './ReviewPage'
 import ReviewsArchive from './ReviewsArchive'
-import { AdminClassesPage } from './AdminClassesPage'
-import { AdminDashboardPage } from './AdminDashboardPage'
-import { AdminLoginPage } from './AdminLoginPage'
-import { AdminReservationsPage } from './AdminReservationsPage'
-import AdminReviewsPage from './AdminReviewsPage'
 import {
   AnnouncementTicker,
   AnalyticsConsentBanner,
@@ -49,6 +43,17 @@ import type {
   Reservation,
   StoreSettings,
 } from './lib/types'
+
+const AdminLoginPage = lazy(() => import('./AdminLoginPage').then(({ AdminLoginPage }) => ({ default: AdminLoginPage })))
+const AdminDashboardPage = lazy(() => import('./AdminDashboardPage').then(({ AdminDashboardPage }) => ({ default: AdminDashboardPage })))
+const AdminReservationsPage = lazy(() => import('./AdminReservationsPage').then(({ AdminReservationsPage }) => ({ default: AdminReservationsPage })))
+const AdminClassesPage = lazy(() => import('./AdminClassesPage').then(({ AdminClassesPage }) => ({ default: AdminClassesPage })))
+const AdminReviewsPage = lazy(() => import('./AdminReviewsPage'))
+const ReadOnlyCalendarPage = lazy(() => import('./ReadOnlyCalendarPage'))
+
+function PrivateRouteFallback() {
+  return <div role="status" aria-live="polite">Loading…</div>
+}
 
 function App() {
   const [pathname, setPathname] = useState(() => window.location.pathname)
@@ -192,18 +197,22 @@ function App() {
         <CompletePage navigate={navigate} reservation={completedReservation} settings={settings} language={language} setLanguage={setLanguage} />
       )}
       {page === 'lookup' && <LookupPage navigate={navigate} language={language} setLanguage={setLanguage} />}
-      {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
-      {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
-      {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
-      {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}
-      {page === 'admin-reviews' && (
-        <AdminReviewsPage
-          navigate={navigate}
-          demoEnabled={import.meta.env.DEV && import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
-          development={import.meta.env.DEV}
-        />
+      {isPrivatePage && (
+        <Suspense fallback={<PrivateRouteFallback />}>
+          {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
+          {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
+          {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
+          {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}
+          {page === 'admin-reviews' && (
+            <AdminReviewsPage
+              navigate={navigate}
+              demoEnabled={import.meta.env.DEV && import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
+              development={import.meta.env.DEV}
+            />
+          )}
+          {page === 'calendar' && <ReadOnlyCalendarPage />}
+        </Suspense>
       )}
-      {page === 'calendar' && <ReadOnlyCalendarPage />}
       {!isPrivatePage && <SiteFooter navigate={navigate} language={language} />}
       {!isPrivatePage && <AnalyticsConsentBanner language={language} />}
     </div>
