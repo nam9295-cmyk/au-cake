@@ -86,3 +86,12 @@ test('extracted admin components depend downward on explicit lib modules only', 
   assert.match(reservationDrawerSource, /from '\.\/lib\/admin-reservation-edit'/)
   assert.match(classReservationDrawerSource, /from '\.\/lib\/class-utils'/)
 })
+
+test('admin list and drawer expose every multi-line item and make repricing controls read-only', () => {
+  assert.match(adminReservationsSource, /reservation\.orderLines\?\.map/)
+  assert.match(adminReservationsSource, /getReservationItemCount/)
+  assert.match(reservationDrawerSource, /<OrderDetailRows reservation=\{reservation\}/)
+  assert.match(reservationDrawerSource, /const isVersionedOrder = Array\.isArray\(reservation\.orderLines\)/)
+  assert.match(reservationDrawerSource, /disabled=\{hasOneTimeCoupon \|\| isVersionedOrder\}/)
+  assert.match(reservationDrawerSource, /서버 산출 주문은 제품·옵션·수량/)
+})

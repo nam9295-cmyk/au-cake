@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { PRODUCTS } from '../src/lib/constants.js'
 import {
+  buildCakeOrderRequest,
   buildCakeReservationRequest,
   createReviewCouponHandoff,
   getPromoEntryState,
@@ -10,7 +11,9 @@ import {
   getOptionalReservationPricingAudit,
   getReservationPricingAudit,
   normalizeReviewCouponCode,
+  parseCakeOrderResult,
   parseCakeReservationResult,
+  parseReservationApiCapabilities,
   promoErrorMessage,
   shouldShowPromoInput,
 } from '../src/lib/review-coupon-client.js'
@@ -187,6 +190,427 @@ test('cake request projection sends the exact allowlisted payload including Vani
     promoCode: 'FOXKIWI7Q2MK',
   })
   assert.equal('promoCode' in buildCakeReservationRequest({ ...contaminated, promoCode: ' ' } as ReservationInput), false)
+})
+
+test('reservation API capability parser enables multi-line orders only for exact numeric capability one', () => {
+  assert.deepEqual(parseReservationApiCapabilities({ status: 'ready', capabilities: { cakeOrderLines: 1 } }), {
+    cakeOrderLines: 1,
+  })
+  for (const invalid of [
+    null,
+    {},
+    { status: 'ready' },
+    { status: 'ready', capabilities: { cakeOrderLines: 1 }, unexpected: true },
+    { status: 'ready', capabilities: { cakeOrderLines: 1, unexpected: true } },
+    { status: 'warming', capabilities: { cakeOrderLines: 1 } },
+    { status: 'ready', capabilities: { cakeOrderLines: '1' } },
+    { status: 'ready', capabilities: { cakeOrderLines: true } },
+    { status: 'ready', capabilities: { cakeOrderLines: 0 } },
+  ]) assert.throws(() => parseReservationApiCapabilities(invalid), /RESERVATION_API_INVALID_RESPONSE/)
+
+  let getterRead = false
+  const capabilityAccessor = { status: 'ready', capabilities: { cakeOrderLines: 1 } }
+  Object.defineProperty(capabilityAccessor, 'status', { enumerable: true, get: () => { getterRead = true; return 'ready' } })
+  assert.throws(() => parseReservationApiCapabilities(capabilityAccessor), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.equal(getterRead, false)
+  assert.throws(() => parseReservationApiCapabilities(Object.create({ status: 'ready', capabilities: { cakeOrderLines: 1 } })), /RESERVATION_API_INVALID_RESPONSE/)
+  const inheritedCapability = { status: 'ready', capabilities: Object.create({ cakeOrderLines: 1 }) }
+  assert.throws(() => parseReservationApiCapabilities(inheritedCapability), /RESERVATION_API_INVALID_RESPONSE/)
+
+  let proxyGetCalls = 0
+  const capabilityProxy = new Proxy({ cakeOrderLines: 0 }, {
+    get(target, key, receiver) {
+      proxyGetCalls += 1
+      if (key === 'cakeOrderLines') return 1
+      return Reflect.get(target, key, receiver)
+    },
+  })
+  const responseProxy = new Proxy({ status: 'warming', capabilities: capabilityProxy }, {
+    get(target, key, receiver) {
+      proxyGetCalls += 1
+      if (key === 'status') return 'ready'
+      return Reflect.get(target, key, receiver)
+    },
+  })
+  assert.throws(() => parseReservationApiCapabilities(responseProxy), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.equal(proxyGetCalls, 0)
+})
+
+test('multi-line request projection requires a UUID and strips all cart metadata and per-line private fields', () => {
+  const contaminated = {
+    customerName: 'Customer',
+    customerPhone: '0412345678',
+    pickupDate: '2099-07-11',
+    pickupTime: '10:00',
+    requestNote: 'Please confirm',
+    promoCode: ' FOXKIWI7Q2MK ',
+    privacyConsent: true,
+    requestId: '11111111-1111-4111-8111-111111111111',
+    website: '',
+    orderLines: [
+      {
+        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none',
+        chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
+        lineKey: 'private-key', unitPriceCents: 1, customerName: 'Private', promoCode: 'forged', cacaoPercent: '100',
+      },
+      {
+        productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1,
+        totalPriceCents: 1, pickupDate: 'private', requestNote: 'private',
+      },
+    ],
+    price: 1,
+  }
+  assert.deepEqual(buildCakeOrderRequest(contaminated as never), {
+    customerName: 'Customer', customerPhone: '0412345678', pickupDate: '2099-07-11', pickupTime: '10:00',
+    requestNote: 'Please confirm', promoCode: 'FOXKIWI7Q2MK', privacyConsent: true,
+    requestId: '11111111-1111-4111-8111-111111111111', website: '',
+    orderLines: [
+      {
+        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none',
+        chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
+      },
+      {
+        productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1,
+      },
+    ],
+  })
+
+  const withoutOwnPromo = { ...contaminated } as Record<string, unknown>
+  delete withoutOwnPromo.promoCode
+  Object.defineProperty(Object.prototype, 'promoCode', { value: 'FOXKIWI7Q2MK', configurable: true })
+  try {
+    const projected = buildCakeOrderRequest(withoutOwnPromo as never)
+    assert.equal(Object.hasOwn(projected, 'promoCode'), false)
+  } finally {
+    delete (Object.prototype as { promoCode?: string }).promoCode
+  }
+
+  for (const requestId of ['', 'not-a-uuid', '11111111-1111-1111-1111-111111111111']) {
+    assert.throws(() => buildCakeOrderRequest({ ...contaminated, requestId } as never), /INVALID_REQUEST_ID/)
+  }
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, requestId: { toString: () => contaminated.requestId } } as never), /INVALID_REQUEST_ID/)
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: [contaminated.orderLines[0]] } as never), /INVALID_ORDER_LINES/)
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: Array(2) } as never), /INVALID_ORDER_LINES/)
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: [contaminated.orderLines[0], null] } as never), /INVALID_ORDER_LINES/)
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: [{}, {}] } as never), /INVALID_ORDER_LINES/)
+  for (const missingField of [
+    'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount',
+    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity',
+  ]) {
+    const missing = { ...contaminated.orderLines[0] } as Record<string, unknown>
+    delete missing[missingField]
+    assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: [missing, contaminated.orderLines[1]] } as never), /INVALID_ORDER_LINES/)
+    const undefinedField = { ...contaminated.orderLines[0], [missingField]: undefined }
+    assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: [undefinedField, contaminated.orderLines[1]] } as never), /INVALID_ORDER_LINES/)
+  }
+  let getterRead = false
+  const accessorLine = { ...contaminated.orderLines[0] }
+  Object.defineProperty(accessorLine, 'quantity', { enumerable: true, get: () => { getterRead = true; return 2 } })
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: [accessorLine, contaminated.orderLines[1]] } as never), /INVALID_ORDER_LINES/)
+  assert.equal(getterRead, false)
+
+  let arrayGetterReads = 0
+  const accessorLines: unknown[] = []
+  Object.defineProperty(accessorLines, 0, { enumerable: true, get: () => { arrayGetterReads += 1; return contaminated.orderLines[0] } })
+  Object.defineProperty(accessorLines, 1, { enumerable: true, get: () => { arrayGetterReads += 1; return contaminated.orderLines[1] } })
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: accessorLines } as never), /INVALID_ORDER_LINES/)
+  assert.equal(arrayGetterReads, 0)
+
+  let requestMapCalls = 0
+  const ownMapLines = [...contaminated.orderLines]
+  Object.defineProperty(ownMapLines, 'map', { value: (...args: unknown[]) => { requestMapCalls += 1; return Array.prototype.map.apply(ownMapLines, args as never) } })
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: ownMapLines } as never), /INVALID_ORDER_LINES/)
+  assert.equal(requestMapCalls, 0)
+
+  const customPrototypeLines = [...contaminated.orderLines]
+  Object.setPrototypeOf(customPrototypeLines, Object.create(Array.prototype))
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: customPrototypeLines } as never), /INVALID_ORDER_LINES/)
+
+  getterRead = false
+  const accessorRequest = { ...contaminated }
+  Object.defineProperty(accessorRequest, 'customerName', { enumerable: true, get: () => { getterRead = true; return 'Customer' } })
+  assert.throws(() => buildCakeOrderRequest(accessorRequest as never), /INVALID_ORDER_REQUEST/)
+  assert.equal(getterRead, false)
+
+  let proxyGetCalls = 0
+  const proxyRequest = new Proxy({ ...contaminated, customerName: 1 }, {
+    get(target, key, receiver) {
+      proxyGetCalls += 1
+      if (key === 'customerName') return 'Customer'
+      return Reflect.get(target, key, receiver)
+    },
+  })
+  assert.throws(() => buildCakeOrderRequest(proxyRequest as never), /INVALID_ORDER_REQUEST/)
+  assert.equal(proxyGetCalls, 0)
+  const proxyLine = new Proxy({ ...contaminated.orderLines[0], quantity: 0 }, {
+    get(target, key, receiver) {
+      proxyGetCalls += 1
+      if (key === 'quantity') return 2
+      return Reflect.get(target, key, receiver)
+    },
+  })
+  assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: [proxyLine, contaminated.orderLines[1]] } as never), /INVALID_ORDER_LINES/)
+  assert.equal(proxyGetCalls, 0)
+
+  const inheritedRequest = Object.assign(Object.create({ customerName: 'Customer' }), contaminated) as Record<string, unknown>
+  delete inheritedRequest.customerName
+  assert.throws(() => buildCakeOrderRequest(inheritedRequest as never), /INVALID_ORDER_REQUEST/)
+
+  assert.throws(() => buildCakeOrderRequest({
+    ...contaminated,
+    orderLines: [contaminated.orderLines[0], { ...contaminated.orderLines[0] }],
+  } as never), /INVALID_ORDER_LINES/)
+  assert.throws(() => buildCakeOrderRequest({
+    ...contaminated,
+    orderLines: [
+      { ...contaminated.orderLines[0], productId: 'fresh-lemon-cupcakes-4', chocolateType: 'dark' },
+      contaminated.orderLines[1],
+    ],
+  } as never), /INVALID_ORDER_LINES/)
+})
+
+function multiOrderResponse(overrides: Record<string, unknown> = {}) {
+  const orderLines = [
+    {
+      productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+      vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+      quantity: 2, unitPriceCents: 7500, subtotalCents: 15000, discountPercent: 0, discountCents: 0, totalPriceCents: 15000,
+    },
+    {
+      productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+      vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+      quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, discountPercent: 0, discountCents: 0, totalPriceCents: 5500,
+    },
+  ]
+  return {
+    ...reservation({
+      productId: 'pave-cake', quantity: 2, chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+      vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+      totalPrice: 205, totalPriceCents: 20500, subtotalCents: 20500,
+      discountPercent: 0, discountCents: 0, appliedPromoCodeLast4: undefined, promotionKind: 'none',
+    }),
+    orderLines,
+    orderLineCount: 2,
+    orderItemCount: 3,
+    discountBasisCents: 0,
+    privateFingerprint: 'forbidden',
+    ...overrides,
+  }
+}
+
+test('multi-line response parser allowlists authoritative lines and validates every aggregate', () => {
+  const parsed = parseCakeOrderResult(multiOrderResponse())
+  assert.equal(parsed.orderLines.length, 2)
+  assert.equal(parsed.orderLineCount, 2)
+  assert.equal(parsed.orderItemCount, 3)
+  assert.equal(parsed.totalPriceCents, 20500)
+  assert.equal('privateFingerprint' in parsed, false)
+  assert.equal('reviewCouponId' in parsed, false)
+
+  const base = multiOrderResponse()
+  const rows = base.orderLines as Array<Record<string, unknown>>
+  for (const invalid of [
+    { orderLineCount: 1 },
+    { orderItemCount: 99 },
+    { discountBasisCents: 1 },
+    { orderLines: [{ ...rows[0], private: true }, rows[1]] },
+    { orderLines: [rows[0], { ...rows[1], totalPriceCents: 5499 }] },
+    { orderLines: [{ ...rows[0], unitPriceCents: 1, subtotalCents: 2, totalPriceCents: 2 }, rows[1]], subtotalCents: 5502, totalPriceCents: 5502, totalPrice: 55.02 },
+    { subtotalCents: Number.MAX_SAFE_INTEGER + 1 },
+    { totalPrice: 205.004 },
+    { productId: 'pound-cake' },
+  ]) assert.throws(() => parseCakeOrderResult({ ...base, ...invalid }), /RESERVATION_API_INVALID_RESPONSE/)
+
+  const customPrototypeLine = Object.assign(Object.create({ custom: true }), rows[0])
+  assert.throws(() => parseCakeOrderResult({ ...base, orderLines: [customPrototypeLine, rows[1]] }), /RESERVATION_API_INVALID_RESPONSE/)
+  let getterRead = false
+  const accessorLine = { ...rows[0] }
+  Object.defineProperty(accessorLine, 'quantity', { enumerable: true, get: () => { getterRead = true; return 2 } })
+  assert.throws(() => parseCakeOrderResult({ ...base, orderLines: [accessorLine, rows[1]] }), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.equal(getterRead, false)
+
+  let responseProxyGets = 0
+  const responseProxy = new Proxy({ ...base, subtotalCents: 1 }, {
+    get(target, key, receiver) {
+      responseProxyGets += 1
+      if (key === 'subtotalCents') return 20500
+      return Reflect.get(target, key, receiver)
+    },
+  })
+  assert.throws(() => parseCakeOrderResult(responseProxy), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.equal(responseProxyGets, 0)
+  const responseLineProxy = new Proxy({ ...rows[0], quantity: 0 }, {
+    get(target, key, receiver) {
+      responseProxyGets += 1
+      if (key === 'quantity') return 2
+      return Reflect.get(target, key, receiver)
+    },
+  })
+  assert.throws(() => parseCakeOrderResult({ ...base, orderLines: [responseLineProxy, rows[1]] }), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.equal(responseProxyGets, 0)
+
+  let responseArrayGetterReads = 0
+  const accessorOrderLines: unknown[] = []
+  Object.defineProperty(accessorOrderLines, 0, { enumerable: true, get: () => { responseArrayGetterReads += 1; return rows[0] } })
+  Object.defineProperty(accessorOrderLines, 1, { enumerable: true, get: () => { responseArrayGetterReads += 1; return rows[1] } })
+  assert.throws(() => parseCakeOrderResult({ ...base, orderLines: accessorOrderLines }), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.equal(responseArrayGetterReads, 0)
+
+  responseArrayGetterReads = 0
+  const inheritedOrderLines = [rows[0]] as unknown[]
+  inheritedOrderLines.length = 2
+  const inheritedArrayPrototype = Object.create(Array.prototype)
+  Object.defineProperty(inheritedArrayPrototype, 1, { enumerable: true, get: () => { responseArrayGetterReads += 1; return rows[1] } })
+  Object.setPrototypeOf(inheritedOrderLines, inheritedArrayPrototype)
+  assert.throws(() => parseCakeOrderResult({ ...base, orderLines: inheritedOrderLines }), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.equal(responseArrayGetterReads, 0)
+
+  let responseMapCalls = 0
+  const ownMapOrderLines = [...rows]
+  Object.defineProperty(ownMapOrderLines, 'map', { value: (...args: unknown[]) => { responseMapCalls += 1; return Array.prototype.map.apply(ownMapOrderLines, args as never) } })
+  assert.throws(() => parseCakeOrderResult({ ...base, orderLines: ownMapOrderLines }), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.equal(responseMapCalls, 0)
+
+  const customPrototypeOrderLines = [...rows]
+  Object.setPrototypeOf(customPrototypeOrderLines, Object.create(Array.prototype))
+  assert.throws(() => parseCakeOrderResult({ ...base, orderLines: customPrototypeOrderLines }), /RESERVATION_API_INVALID_RESPONSE/)
+
+  const retired = {
+    ...rows[0], productId: 'fresh-lemon-cupcakes-4', chocolateType: 'dark', quantity: 1,
+    unitPriceCents: 2400, subtotalCents: 2400, totalPriceCents: 2400,
+  }
+  assert.throws(() => parseCakeOrderResult({
+    ...base, ...retired, orderLines: [retired, rows[1]], orderItemCount: 2,
+    subtotalCents: 7900, totalPriceCents: 7900, totalPrice: 79,
+  }), /RESERVATION_API_INVALID_RESPONSE/)
+})
+
+test('multi-line response accepts exact cents represented by authoritative division', () => {
+  const pound = {
+    productId: 'pound-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+    quantity: 1, unitPriceCents: 4500, subtotalCents: 4500, discountPercent: 5, discountCents: 225, totalPriceCents: 4275,
+  }
+  const lemon = {
+    productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 2,
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+    quantity: 1, unitPriceCents: 3700, subtotalCents: 3700, discountPercent: 5, discountCents: 185, totalPriceCents: 3515,
+  }
+  const parsed = parseCakeOrderResult(multiOrderResponse({
+    ...pound, orderLines: [pound, lemon], orderItemCount: 2,
+    subtotalCents: 8200, discountBasisCents: 8200, discountPercent: 5, discountCents: 410,
+    totalPriceCents: 7790, totalPrice: 77.9, appliedPromoCodeLast4: 'Q2MK', promotionKind: 'review-reward',
+  }))
+  assert.equal(parsed.totalPriceCents, 7790)
+  assert.equal(parsed.totalPrice, 77.9)
+})
+
+test('multi-line response rejects duplicate canonical lines and shifted discount allocation', () => {
+  const base = multiOrderResponse()
+  const rows = base.orderLines as Array<Record<string, unknown>>
+  assert.throws(() => parseCakeOrderResult({
+    ...base,
+    orderLines: [rows[0], { ...rows[0] }],
+    orderItemCount: 4,
+    subtotalCents: 30000,
+    totalPriceCents: 30000,
+    totalPrice: 300,
+  }), /RESERVATION_API_INVALID_RESPONSE/)
+
+  for (const hiddenVanillaOption of [
+    { vanillaCakeSheet: 'chocolate' },
+    { vanillaCakeFlavor: 'nutella-chocolate-chip' },
+  ]) assert.throws(() => parseCakeOrderResult({
+    ...base,
+    orderLines: [rows[0], { ...rows[0], ...hiddenVanillaOption }],
+    orderItemCount: 4,
+    subtotalCents: 30000,
+    totalPriceCents: 30000,
+    totalPrice: 300,
+  }), /RESERVATION_API_INVALID_RESPONSE/)
+
+  const shifted = [
+    { ...rows[0], discountPercent: 5, discountCents: 749, totalPriceCents: 14251 },
+    { ...rows[1], discountPercent: 5, discountCents: 276, totalPriceCents: 5224 },
+  ]
+  assert.throws(() => parseCakeOrderResult({
+    ...base,
+    totalPrice: 194.75,
+    totalPriceCents: 19475,
+    discountPercent: 5,
+    discountCents: 1025,
+    appliedPromoCodeLast4: 'Q2MK',
+    promotionKind: 'review-reward',
+    orderLines: shifted,
+    discountBasisCents: 20500,
+  }), /RESERVATION_API_INVALID_RESPONSE/)
+})
+
+test('multi-line response validates static discount against eligible basis rather than whole subtotal', () => {
+  const lemon = {
+    productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+    quantity: 1, unitPriceCents: 3600, subtotalCents: 3600, discountPercent: 10, discountCents: 360, totalPriceCents: 3240,
+  }
+  const pave = {
+    productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+    quantity: 1, unitPriceCents: 7500, subtotalCents: 7500, discountPercent: 0, discountCents: 0, totalPriceCents: 7500,
+  }
+  const parsed = parseCakeOrderResult(multiOrderResponse({
+    productId: lemon.productId,
+    quantity: 1,
+    totalPrice: 107.4,
+    totalPriceCents: 10740,
+    subtotalCents: 11100,
+    discountPercent: 10,
+    discountCents: 360,
+    appliedPromoCodeLast4: 'MONI',
+    promotionKind: 'static',
+    orderLines: [lemon, pave],
+    orderItemCount: 2,
+    discountBasisCents: 3600,
+  }))
+  assert.equal(parsed.discountCents, 360)
+  assert.equal(parsed.discountBasisCents, 3600)
+  assert.throws(() => parseCakeOrderResult({
+    ...multiOrderResponse({
+      productId: lemon.productId,
+      quantity: 1,
+      totalPrice: 107.4,
+      totalPriceCents: 10740,
+      subtotalCents: 11100,
+      discountPercent: 10,
+      discountCents: 360,
+      appliedPromoCodeLast4: 'ABCD',
+      promotionKind: 'static',
+      orderLines: [lemon, pave],
+      orderItemCount: 2,
+      discountBasisCents: 3600,
+    }),
+  }), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.throws(() => parseCakeOrderResult({
+    ...multiOrderResponse({
+      productId: lemon.productId,
+      quantity: 1,
+      totalPrice: 107.4,
+      totalPriceCents: 10740,
+      subtotalCents: 11100,
+      discountPercent: 10,
+      discountCents: 360,
+      appliedPromoCodeLast4: 'Q2MK',
+      promotionKind: 'review-reward',
+      orderLines: [lemon, pave],
+      orderItemCount: 2,
+      discountBasisCents: 3600,
+    }),
+  }), /RESERVATION_API_INVALID_RESPONSE/)
 })
 
 test('cake response parser allowlists fields and validates authoritative pricing parity', () => {

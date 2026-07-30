@@ -17,7 +17,12 @@ import {
 } from '../lib/constants'
 import { cakeCopy, formatChocolateTypeText, formatPoundAddonText, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
-import type { Reservation } from '../lib/types'
+import { formatCurrency } from '../lib/utils'
+import type { CakeOrderLineRequest, CakeOrderLineResult, PublicReservation, Reservation } from '../lib/types'
+
+type OrderAwareReservation = (Reservation | PublicReservation) & {
+  orderLines?: Array<CakeOrderLineRequest | CakeOrderLineResult>
+}
 
 export function ProductDetailRows({ reservation, language = 'ko' }: {
   reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor'>
@@ -112,4 +117,32 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
       )}
     </>
   )
+}
+
+export function OrderDetailRows({ reservation, language = 'ko' }: {
+  reservation: Reservation | PublicReservation
+  language?: Language
+}) {
+  const orderReservation = reservation as OrderAwareReservation
+  const lines = orderReservation.orderLines?.length ? orderReservation.orderLines : [reservation]
+  return lines.map((line, index) => {
+    const pricedLine = line as Partial<CakeOrderLineResult>
+    return (
+      <div className="order-detail-line" key={`${line.productId}-${index}`}>
+        {lines.length > 1 && (
+          <div className="order-detail-line-heading">
+            <dt>{language === 'ko' ? `선택 ${index + 1}` : `Selection ${index + 1}`}</dt>
+            <dd />
+          </div>
+        )}
+        <ProductDetailRows reservation={{ ...line, cacaoPercent: reservation.cacaoPercent }} language={language} />
+        {Number.isSafeInteger(pricedLine.totalPriceCents) && (
+          <div>
+            <dt>{language === 'ko' ? '품목 합계' : 'Line total'}</dt>
+            <dd>{formatCurrency(pricedLine.totalPriceCents! / 100)}</dd>
+          </div>
+        )}
+      </div>
+    )
+  })
 }

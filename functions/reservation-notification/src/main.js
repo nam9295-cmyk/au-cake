@@ -1,4 +1,5 @@
 import https from 'node:https'
+import { parseStoredOrderLines } from '../shared/reservation-api/business.js'
 
 const MARKET_CONFIG = {
   KR: {
@@ -352,6 +353,7 @@ function parseBody(bodyRaw) {
 }
 
 function isClassReservation(reservation) {
+  if (reservation && Object.hasOwn(reservation, 'orderLinesJson')) return false
   return Boolean(reservation?.classType || reservation?.bookingType || reservation?.parentName || reservation?.childName)
 }
 
@@ -407,20 +409,41 @@ function getSecondChildText(reservation, config) {
   return parts.length > 0 ? parts.join(' / ') : config.labels.none
 }
 
-function buildCakeRows(reservation, config) {
+function readStoredCakeLines(reservation) {
+  if (!reservation || !Object.hasOwn(reservation, 'orderLinesJson')) return null
+  try {
+    return parseStoredOrderLines(reservation)?.lines || null
+  } catch {
+    throw new Error('INVALID_STORED_ORDER')
+  }
+}
+
+function cakeDetailRows(reservation, config, suffix = '') {
   const quantity = getQuantity(reservation)
+  const label = (value) => `${value}${suffix}`
+  return [
+    [label(config.labels.product), getProductName(reservation, config)],
+    [label(config.labels.size), getCakeSizeText(reservation, config)],
+    ...(reservation.productId === 'vanilla-fresh-cream-cake' ? [
+      [label(config.labels.cakeSheet), getVanillaCakeSheetText(reservation, config)],
+      [label(config.labels.flavour), getVanillaCakeFlavorText(reservation, config)],
+    ] : []),
+    [label(config.labels.chocolate), getChocolateText(reservation, config)],
+    [label(config.labels.finish), getPoundAddonText(reservation, config)],
+    [label(config.labels.icingMix), getIcingMixText(reservation, config)],
+    [label(config.labels.quantity), `${quantity}${config.quantityUnit}`],
+  ]
+}
+
+function buildCakeRows(reservation, config) {
+  const storedLines = readStoredCakeLines(reservation)
+  const lines = storedLines || [reservation]
+  const detailRows = lines.length > 1
+    ? lines.flatMap((line, index) => cakeDetailRows(line, config, ` ${index + 1}`))
+    : cakeDetailRows({ ...reservation, ...lines[0] }, config)
   return [
     [config.labels.bookingNumber, reservation.reservationNumber],
-    [config.labels.product, getProductName(reservation, config)],
-    [config.labels.size, getCakeSizeText(reservation, config)],
-    ...(reservation.productId === 'vanilla-fresh-cream-cake' ? [
-      [config.labels.cakeSheet, getVanillaCakeSheetText(reservation, config)],
-      [config.labels.flavour, getVanillaCakeFlavorText(reservation, config)],
-    ] : []),
-    [config.labels.chocolate, getChocolateText(reservation, config)],
-    [config.labels.finish, getPoundAddonText(reservation, config)],
-    [config.labels.icingMix, getIcingMixText(reservation, config)],
-    [config.labels.quantity, `${quantity}${config.quantityUnit}`],
+    ...detailRows,
     [config.labels.customer, reservation.customerName],
     [config.labels.mobile, reservation.customerPhone],
     [config.labels.pickupDate, reservation.pickupDate],
@@ -482,12 +505,16 @@ function buildRows(reservation, config) {
   return isClassReservation(reservation) ? buildClassRows(reservation, config) : buildCakeRows(reservation, config)
 }
 
+function plainTextCell(value) {
+  return String(value ?? '')
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/gu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim()
+}
+
 function getSubject(reservation, config) {
   const prefix = isClassReservation(reservation) ? config.classSubjectPrefix : config.subjectPrefix
-  const safeReservationNumber = Array.from(String(reservation.reservationNumber || ''))
-    .filter((character) => character.charCodeAt(0) >= 0x20 && character.charCodeAt(0) !== 0x7f)
-    .join('')
-    .slice(0, 80)
+  const safeReservationNumber = plainTextCell(reservation.reservationNumber).slice(0, 80)
   return `${prefix} ${safeReservationNumber}`
 }
 
@@ -499,8 +526,12 @@ function buildText(reservation, config) {
   return [
     getSubject(reservation, config),
     '',
-    ...buildRows(reservation, config).map(([label, value]) => `${label}: ${value}`),
+    ...buildRows(reservation, config).map(([label, value]) => `${plainTextCell(label)}: ${plainTextCell(value)}`),
   ].join('\n')
+}
+
+export function buildNotificationText(reservation) {
+  return buildText(reservation, getConfig(reservation))
 }
 
 function buildHtml(reservation, config) {
@@ -508,15 +539,15 @@ function buildHtml(reservation, config) {
 
   return `
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55;">
-      <h2 style="margin: 0 0 16px;">${escapeHtml(getHeading(reservation, config))}</h2>
+      <h2 style="margin: 0 0 16px;">${escapeHtml(plainTextCell(getHeading(reservation, config)))}</h2>
       <table style="border-collapse: collapse; width: 100%; max-width: 640px;">
         <tbody>
           ${rows
             .map(
               ([label, value]) => `
                 <tr>
-                  <th style="width: 150px; padding: 10px 12px; border: 1px solid #e8ded5; background: #fbf6ef; text-align: left;">${escapeHtml(label)}</th>
-                  <td style="padding: 10px 12px; border: 1px solid #e8ded5;">${escapeHtml(value)}</td>
+                  <th style="width: 150px; padding: 10px 12px; border: 1px solid #e8ded5; background: #fbf6ef; text-align: left;">${escapeHtml(plainTextCell(label))}</th>
+                  <td style="padding: 10px 12px; border: 1px solid #e8ded5;">${escapeHtml(plainTextCell(value))}</td>
                 </tr>
               `,
             )
@@ -525,6 +556,10 @@ function buildHtml(reservation, config) {
       </table>
     </div>
   `
+}
+
+export function buildNotificationHtml(reservation) {
+  return buildHtml(reservation, getConfig(reservation))
 }
 
 async function postJson(url, payload, headers) {

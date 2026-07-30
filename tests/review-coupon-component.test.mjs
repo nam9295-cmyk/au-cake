@@ -42,7 +42,8 @@ test('promo input and reward feedback meet the mobile accessibility contract', (
   assert.match(reserve, /isManualCouponPending/)
   assert.doesNotMatch(app + reserve + review, /startsWith\(['"]VG10-/)
   assert.match(app, /initialRewardPercent=\{pendingReviewRewardPercent\}/)
-  assert.match(reserve, /getPromoEntryState\(selectedProduct\.id, form\.promoCode, undefined, knownReviewRewardPercent\)/)
+  assert.match(reserve, /const promoProductId = orderSelections\?\.find\([^\n]*getValidPromoCode/)
+  assert.match(reserve, /getPromoEntryState\(promoProductId, form\.promoCode, undefined, knownReviewRewardPercent\)/)
 })
 
 test('confirmation renders an authoritative semantic review reward summary without raw code', () => {
@@ -64,14 +65,17 @@ test('canonical npm test includes server and client review coupon suites', () =>
 })
 
 test('pending review coupon never feeds its estimate into the final summary or bank amount', () => {
-  assert.match(reserve, /const promoPriceDisplay = getPromoPriceDisplay\(currentPrice, promoEntry\)/)
+  assert.match(reserve, /const basePromoPriceDisplay = getPromoPriceDisplay\(currentPrice, promoEntry\)/)
+  assert.match(reserve, /orderSelections && promoEntry\.kind === 'static-valid'/)
   assert.match(reserve, /BankAccountBox settings=\{settings\} totalPrice=\{promoPriceDisplay\.finalPrice\}/)
   assert.doesNotMatch(reserve, /BankAccountBox settings=\{settings\} totalPrice=\{discountedPrice\}/)
 })
 
-test('one-time coupon admin drawer disables repricing and uses generic coupon wording', () => {
+test('coupon and versioned-order admin drawer disables repricing with the matching generic wording', () => {
   assert.match(reservationDrawer, /const hasOneTimeCoupon = Boolean\(reservation\.reviewCouponId\)/)
-  assert.match(reservationDrawer, /fieldset disabled=\{hasOneTimeCoupon\}/)
+  assert.match(reservationDrawer, /const isVersionedOrder = Array\.isArray\(reservation\.orderLines\)/)
+  assert.match(reservationDrawer, /fieldset disabled=\{hasOneTimeCoupon \|\| isVersionedOrder\}/)
+  assert.match(reservationDrawer, /서버 산출 주문은 제품·옵션·수량을 수정할 수 없습니다\./)
   assert.match(reservationDrawer, /일회용 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다\./)
   assert.doesNotMatch(reservationDrawer, /리워드 쿠폰 ID/)
 })

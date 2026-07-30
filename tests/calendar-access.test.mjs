@@ -141,6 +141,29 @@ test('calendar cupcake events show vanilla cream and party decoration counts wit
   assert.equal(event.label.includes('Extra chocolate'), false)
 })
 
+test('calendar cake event label includes every validated stored order line', () => {
+  const lines = [
+    { productId: 'pound-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 4500, subtotalCents: 4500, discountPercent: 0, discountCents: 0, totalPriceCents: 4500 },
+    { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2, unitPriceCents: 7500, subtotalCents: 15000, discountPercent: 0, discountCents: 0, totalPriceCents: 15000 },
+  ]
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'multi-id', pickupDate: '2026-08-03', pickupTime: '14:00', status: '예약신청',
+    ...lines[0], subtotalCents: 19500, discountBasisCents: 0, discountPercent: 0, discountCents: 0,
+    totalPriceCents: 19500, totalPrice: 195, orderLineCount: 2, orderItemCount: 3,
+    orderLinesJson: JSON.stringify({ version: 1, lines }),
+  })
+
+  assert.equal(event.label, 'Pound cake · Basic finish ×1 / Pave cake · 6" | serves 8 · Dark chocolate ×2')
+  assert.equal(JSON.stringify(event).includes('orderLinesJson'), false)
+})
+
+test('calendar cake event fails closed when stored order lines are present but malformed', () => {
+  assert.throws(() => sanitizeCakeCalendarEvent({
+    $id: 'broken-id', pickupDate: '2026-08-03', pickupTime: '14:00', status: '예약신청',
+    productId: 'pound-cake', quantity: 1, orderLinesJson: '{broken',
+  }), /INVALID_STORED_ORDER/)
+})
+
 test('calendar labels both cheesecake finishing upgrades at the fixed size', () => {
   const pave = sanitizeCakeCalendarEvent({
     $id: 'pave-cheesecake-id',

@@ -11,6 +11,7 @@ const lookupSource = await readSource('../src/pages/LookupPage.tsx')
 const productDetailsSource = await readSource('../src/components/ProductDetailRows.tsx')
 const adminReservationsSource = await readSource('../src/AdminReservationsPage.tsx')
 const constantsSource = await readSource('../src/lib/constants.ts')
+const repositorySource = await readSource('../src/lib/repository.ts')
 
 test('App delegates customer reservation pages to explicit page modules', () => {
   assert.match(appSource, /from '\.\/pages\/ReservePage'/)
@@ -40,6 +41,18 @@ test('customer pages own customer display and lookup formatters', () => {
   assert.match(lookupSource, /function formatReservationStatus\b/)
   assert.match(lookupSource, /function formatPaymentStatus\b/)
   assert.doesNotMatch(productDetailsSource, /function (?:formatReservationStatus|formatPaymentStatus|reservationCacaoText|reservationCakeSizeText|reservationChocolateText|reservationFinishText)\b/)
+})
+
+test('completion and lookup render every authoritative order line with legacy fallback', () => {
+  assert.match(productDetailsSource, /export function OrderDetailRows\b/)
+  assert.match(productDetailsSource, /orderReservation\.orderLines\?\.length[\s\S]*\[reservation\]/)
+  assert.match(productDetailsSource, /pricedLine\.totalPriceCents/)
+  assert.match(completeSource, /<OrderDetailRows reservation=\{reservation\}/)
+  assert.match(lookupSource, /<OrderDetailRows reservation=\{reservation\}/)
+  assert.match(completeSource, /reservation\.totalPriceCents[\s\S]*\/ 100/)
+  assert.match(lookupSource, /totalPriceCents[\s\S]*\/ 100/)
+  assert.match(repositorySource, /orderLines = payload\.orderLines\?\.map/)
+  assert.match(repositorySource, /'totalPriceCents'/)
 })
 
 test('cheesecake product detection has one shared domain owner', () => {

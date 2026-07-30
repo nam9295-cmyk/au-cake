@@ -13,6 +13,7 @@ import {
   usesReservationChocolateType,
 } from './constants.js'
 import { marketConfig } from './market.js'
+import { formatOrderLineSummary, getReservationItemCount, getReservationLineCount, getReservationOrderLines } from './order-lines.js'
 import type { Reservation, StoreSettings } from './types.js'
 import { escapeCsvCell } from './csv.js'
 
@@ -274,6 +275,25 @@ function formatCupcakeFinishMix(reservation: Reservation, korean = false) {
 export function buildSmsMessage(reservation: Reservation, settings: StoreSettings = marketConfig.defaultSettings) {
   const product = getProductById(reservation.productId)
   const labels = marketConfig.smsLabels
+  const orderLines = getReservationOrderLines(reservation)
+
+  if (marketConfig.market === 'AU' && orderLines.length > 1) {
+    const itemLines = orderLines.map((line, index) => `${index + 1}. ${formatOrderLineSummary(line)}`).join('\n')
+    return `${labels.title}
+
+Thank you for your order ${reservation.customerName}. (${reservation.customerPhone})
+
+${labels.reservationNumber}: ${reservation.reservationNumber}
+Items:
+${itemLines}
+Total items: ${getReservationItemCount(reservation)}
+${labels.pickupDate}: ${reservation.pickupDate}
+${labels.pickupTime}: ${reservation.pickupTime}
+Pick-up location: https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw
+
+Thank you for your order:)
+Have a verygood day!`
+  }
 
   if (marketConfig.market === 'AU') {
     return `${labels.title}
@@ -313,7 +333,7 @@ ${marketConfig.copy.smsFooter}`
 }
 
 export function reservationsToCsv(reservations: Reservation[]) {
-  const headers = marketConfig.csvHeaders
+  const headers = [...marketConfig.csvHeaders, 'Order line count', 'Order item count', 'Order items']
   const rows = reservations.map((reservation) => [
     reservation.createdAt,
     reservation.reservationNumber,
@@ -337,6 +357,9 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.paymentStatus,
     String(reservation.totalPrice),
     reservation.adminMemo,
+    String(getReservationLineCount(reservation)),
+    String(getReservationItemCount(reservation)),
+    getReservationOrderLines(reservation).map(formatOrderLineSummary).join(' | '),
   ])
   return [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\n')
 }

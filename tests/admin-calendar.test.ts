@@ -113,6 +113,23 @@ test('daily summary counts active cakes by quantity and classes separately', () 
   assert.equal(getDailyCalendarSummary(events), 'Cake 3 · Class 1')
 })
 
+test('admin calendar shows every multi-line cake and counts aggregate items', () => {
+  const reservation = cake({
+    customerName: 'Jenny',
+    orderLineCount: 2,
+    orderItemCount: 3,
+    orderLines: [
+      { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 7500, subtotalCents: 7500, discountPercent: 0, discountCents: 0, totalPriceCents: 7500 },
+      { productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2, unitPriceCents: 5500, subtotalCents: 11000, discountPercent: 0, discountCents: 0, totalPriceCents: 11000 },
+    ],
+  })
+  const events = buildAdminCalendarEvents([reservation], [])
+  assert.equal(events[0].title, 'Jenny · 3 items')
+  assert.match(events[0].subtitle, /Pave x1/)
+  assert.match(events[0].subtitle, /Chocolatier's Basque Cheesecake x2/)
+  assert.equal(getDailyCalendarSummary(events), 'Cake 3')
+})
+
 test('package reservations create separate basic and advanced calendar sessions', () => {
   const reservation = classBooking({
     coursePlan: 'basic-advanced-package',

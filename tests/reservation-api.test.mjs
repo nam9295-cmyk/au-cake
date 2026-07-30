@@ -633,7 +633,7 @@ test('lookup API rejects a last-four-only request before reading reservations', 
   assert.equal(listCalls, 0)
 })
 
-test('public lookup response excludes customer PII, notes and prices', () => {
+test('public lookup response excludes customer PII, notes and raw dollar totals', () => {
   const response = publicCakeReservation({
     ...buildCakeReservation(cakeInput, { now, reservationNumber: 'VG-C-AU-PUBLIC' }),
     customerName: 'Private Name',
@@ -647,6 +647,7 @@ test('public lookup response excludes customer PII, notes and prices', () => {
   assert.equal('requestNote' in response, false)
   assert.equal('adminMemo' in response, false)
   assert.equal('totalPrice' in response, false)
+  assert.equal(response.totalPriceCents, 7500)
 })
 
 test('cake API preserves legacy one-line pricing and promo note while storing a versioned line', () => {
@@ -972,8 +973,13 @@ test('public cake projection exposes sanitized multi-lines and synthesizes sanit
 
   assert.deepEqual([response.orderLineCount, response.orderItemCount], [2, 3])
   assert.deepEqual(response.orderLines.map((line) => [line.productId, line.quantity]), [['pave-cake', 2], ['pound-cake', 1]])
-  assert.equal(JSON.stringify(response.orderLines).includes('Price'), false)
-  assert.equal(JSON.stringify(response.orderLines).includes('discount'), false)
+  assert.deepEqual(response.orderLines.map((line) => [
+    line.unitPriceCents, line.subtotalCents, line.discountPercent, line.discountCents, line.totalPriceCents,
+  ]), [[9500, 19000, 0, 0, 19000], [5000, 5000, 0, 0, 5000]])
+  assert.deepEqual([
+    response.subtotalCents, response.discountBasisCents, response.discountPercent,
+    response.discountCents, response.totalPriceCents,
+  ], [24000, 0, 0, 0, 24000])
   assert.equal(JSON.stringify(response.orderLines).includes('Private'), false)
 
   const legacy = publicCakeReservation({
@@ -981,6 +987,7 @@ test('public cake projection exposes sanitized multi-lines and synthesizes sanit
     poundAddon: 'none', quantity: 2, pickupDate: '2099-07-11', pickupTime: '10:00', status: '예약신청', paymentStatus: '입금대기',
   })
   assert.deepEqual([legacy.orderLineCount, legacy.orderItemCount], [1, 2])
+  assert.equal('totalPriceCents' in legacy, false)
   assert.deepEqual(legacy.orderLines, [{
     productId: 'pave-cake', cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'none', chocolateIcingCount: 0,
     vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,

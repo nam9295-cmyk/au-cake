@@ -30,6 +30,56 @@ const baseReservation: Reservation = {
   updatedAt: '2026-07-01T00:00:00.000Z',
 }
 
+test('admin multi-line edits preserve pricing and reject first-line repricing', () => {
+  const multiLine = {
+    ...baseReservation,
+    orderLineCount: 2,
+    orderItemCount: 3,
+    totalPrice: 195,
+    totalPriceCents: 19500,
+  } as Reservation & { orderLineCount: number; orderItemCount: number }
+
+  assert.throws(
+    () => buildAdminReservationUpdate(multiLine, { quantity: 2 }),
+    /MULTI_LINE_EDIT_UNAVAILABLE/,
+  )
+  const scheduleOnly = buildAdminReservationUpdate(multiLine, {
+    pickupDate: '2026-07-24', status: '예약확정', paymentStatus: '입금확인', adminMemo: 'confirmed',
+  })
+  assert.equal(scheduleOnly.totalPrice, 195)
+  assert.equal(scheduleOnly.totalPriceCents, 19500)
+  assert.equal(scheduleOnly.productId, multiLine.productId)
+  assert.equal(scheduleOnly.quantity, multiLine.quantity)
+  assert.equal(scheduleOnly.pickupDate, '2026-07-24')
+  assert.equal(scheduleOnly.status, '예약확정')
+})
+
+test('admin versioned single-line orders preserve authoritative pricing and reject every repricing edit', () => {
+  const versionedSingle: Reservation = {
+    ...baseReservation,
+    orderLines: [{
+      productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+      chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+      vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1,
+      unitPriceCents: 7500, subtotalCents: 7500, discountPercent: 0, discountCents: 0, totalPriceCents: 7500,
+    }],
+    orderLineCount: 1,
+    orderItemCount: 1,
+    subtotalCents: 7500,
+    discountBasisCents: 0,
+    discountPercent: 0,
+    discountCents: 0,
+  }
+  assert.throws(() => buildAdminReservationUpdate(versionedSingle, { quantity: 2 }), /MULTI_LINE_EDIT_UNAVAILABLE/)
+  assert.throws(() => buildAdminReservationUpdate(versionedSingle, { quantity: undefined }), /MULTI_LINE_EDIT_UNAVAILABLE/)
+  const scheduleOnly = buildAdminReservationUpdate(versionedSingle, {
+    pickupDate: '2026-07-24', status: '예약확정', paymentStatus: '입금확인', adminMemo: 'confirmed',
+  })
+  assert.equal(scheduleOnly.quantity, 1)
+  assert.equal(scheduleOnly.totalPriceCents, 7500)
+  assert.equal(scheduleOnly.pickupDate, '2026-07-24')
+})
+
 test('admin reservation edits recalculate cupcake per-piece finishes and clear retired chocolate options', () => {
   const update = buildAdminReservationUpdate(baseReservation, {
     productId: 'cupcake-dozen',
@@ -202,6 +252,7 @@ test('review coupon reservations reject every price-affecting admin edit', () =>
     { vanillaCreamCount: 1 },
     { partyDecorationCount: 1 },
     { quantity: 2 },
+    { quantity: undefined },
     { cacaoPercent: '70' as const },
     { totalPrice: 70 },
     { totalPriceCents: 7000 },

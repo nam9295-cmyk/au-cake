@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Clipboard } from 'lucide-react'
+import { OrderDetailRows } from './components/ProductDetailRows'
 import { ReviewInviteButton } from './ReviewInviteButton'
 import { buildAdminReservationUpdate } from './lib/admin-reservation-edit'
 import {
@@ -59,6 +60,8 @@ export function ReservationDrawer({
   const [paymentStatus, setPaymentStatus] = useState(reservation.paymentStatus)
   const [memo, setMemo] = useState(reservation.adminMemo)
   const hasOneTimeCoupon = Boolean(reservation.reviewCouponId)
+  const isVersionedOrder = Array.isArray(reservation.orderLines)
+  const isMultiLineOrder = (reservation.orderLines?.length || 0) > 1
   const reservationPricingAudit = getOptionalReservationPricingAudit(reservation)
 
   const draftUpdate = buildAdminReservationUpdate(reservation, {
@@ -126,15 +129,26 @@ export function ReservationDrawer({
           )}
         </dl>
 
+        {isMultiLineOrder && (
+          <section className="admin-order-summary" aria-label="다중 품목 주문 구성">
+            <h3>주문 구성 · {reservation.orderItemCount || reservation.orderLines?.reduce((total, line) => total + line.quantity, 0)}개</h3>
+            <dl className="detail-list order-detail-list">
+              <OrderDetailRows reservation={reservation} language="en" />
+            </dl>
+          </section>
+        )}
+
         <section className="admin-edit-card" aria-label="예약 수정">
           <h3>예약 내용 수정</h3>
-          {hasOneTimeCoupon && (
+          {(hasOneTimeCoupon || isVersionedOrder) && (
             <p className="notice-line" role="status">
-              일회용 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다.
+              {isVersionedOrder
+                ? '서버 산출 주문은 제품·옵션·수량을 수정할 수 없습니다. 픽업·상태·입금·메모만 변경하세요.'
+                : '일회용 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다.'}
             </p>
           )}
           <div className="admin-edit-grid">
-            <fieldset disabled={hasOneTimeCoupon} className="admin-repricing-fields">
+            <fieldset disabled={hasOneTimeCoupon || isVersionedOrder} className="admin-repricing-fields">
             <label>
               제품
               <select value={productId} onChange={(event) => setProductId(event.target.value as ProductId)}>

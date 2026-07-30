@@ -27,6 +27,7 @@ import {
   listReservations,
   updateReservation,
 } from './lib/repository'
+import { formatOrderLineSummary, getReservationItemCount } from './lib/order-lines'
 import type {
   Reservation,
   ReservationFilters,
@@ -214,12 +215,20 @@ export function AdminReservationsPage({
                 <td>{reservation.reservationNumber}</td>
                 <td>{reservation.customerName}</td>
                 <td>{reservation.customerPhone}</td>
-                <td>{getProductById(reservation.productId).name}</td>
-                <td>{reservationCakeSizeText(reservation)}</td>
-                <td>{reservationCacaoText(reservation)}</td>
-                <td>{reservationChocolateText(reservation)}</td>
-                <td>{reservationFinishText(reservation)}</td>
-                <td>{reservation.quantity}개</td>
+                <td>
+                  {reservation.orderLines?.length ? (
+                    <ul className="admin-order-lines">
+                      {reservation.orderLines?.map((line, index) => (
+                        <li key={`${line.productId}-${index}`}>{formatOrderLineSummary(line)}</li>
+                      ))}
+                    </ul>
+                  ) : getProductById(reservation.productId).name}
+                </td>
+                <td>{reservation.orderLines?.length ? '-' : reservationCakeSizeText(reservation)}</td>
+                <td>{reservation.orderLines?.length ? '-' : reservationCacaoText(reservation)}</td>
+                <td>{reservation.orderLines?.length ? '-' : reservationChocolateText(reservation)}</td>
+                <td>{reservation.orderLines?.length ? '-' : reservationFinishText(reservation)}</td>
+                <td>{getReservationItemCount(reservation)}개</td>
                 <td>{reservation.pickupDate}</td>
                 <td>{reservation.pickupTime}</td>
                 <td className="note-cell">{reservation.requestNote || '-'}</td>

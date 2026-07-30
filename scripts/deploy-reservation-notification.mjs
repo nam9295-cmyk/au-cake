@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { cp, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { execFile } from 'node:child_process'
@@ -194,11 +194,24 @@ async function ensureVariables() {
 
 async function deployFunction() {
   const functionDir = resolve(process.cwd(), 'functions/reservation-notification')
+  const parserSourcePaths = [
+    'functions/reservation-api/src/business.js',
+    'functions/reservation-api/src/coupon-digest.js',
+    'functions/reservation-api/src/active-cake-products.js',
+  ]
   const tempDir = await mkdtemp(join(tmpdir(), 'reservation-notification-'))
+  const stagingDir = join(tempDir, 'source')
+  const parserTargetDir = join(stagingDir, 'shared/reservation-api')
   const archivePath = join(tempDir, 'code.tar.gz')
 
   try {
-    await execFileAsync('tar', ['-czf', archivePath, '-C', functionDir, '.'])
+    await cp(functionDir, stagingDir, { recursive: true })
+    await mkdir(parserTargetDir, { recursive: true })
+    for (const sourcePath of parserSourcePaths) {
+      const fileName = sourcePath.slice(sourcePath.lastIndexOf('/') + 1)
+      await cp(resolve(process.cwd(), sourcePath), join(parserTargetDir, fileName))
+    }
+    await execFileAsync('tar', ['-czf', archivePath, '-C', stagingDir, '.'])
     const archive = await readFile(archivePath)
     const deployment = await functions.createDeployment({
       functionId,

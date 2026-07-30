@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react'
 import { BankAccountBox } from '../components/BankAccountBox'
-import { ProductDetailRows } from '../components/ProductDetailRows'
+import { OrderDetailRows } from '../components/ProductDetailRows'
 import { SiteHeader } from '../components/SiteChrome'
 import { type Page } from '../lib/app-routes'
 import { cakeCopy, type Language } from '../lib/i18n'
@@ -26,6 +26,9 @@ export function CompletePage({
   const copy = cakeCopy(language)
   const pricingAudit = reservation ? getReservationPricingAudit(reservation) : null
   const usedReviewReward = reservation?.promotionKind === 'review-reward'
+  const authoritativeTotalPrice = reservation?.totalPriceCents === undefined
+    ? reservation?.totalPrice
+    : reservation.totalPriceCents / 100
   return (
     <>
       <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
@@ -54,7 +57,7 @@ export function CompletePage({
                 <dt>{copy.mobile}</dt>
                 <dd>{maskPhone(reservation.customerPhone)}</dd>
               </div>
-              <ProductDetailRows reservation={reservation} language={language} />
+              <OrderDetailRows reservation={reservation} language={language} />
               <div>
                 <dt>{copy.pickUp}</dt>
                 <dd>
@@ -63,7 +66,7 @@ export function CompletePage({
               </div>
               <div>
                 <dt>{copy.price}</dt>
-                <dd>{formatCurrency(reservation.totalPrice)}</dd>
+                <dd>{formatCurrency(authoritativeTotalPrice || 0)}</dd>
               </div>
               {pricingAudit && pricingAudit.discountCents > 0 && (
                 <>
@@ -95,7 +98,7 @@ export function CompletePage({
           )}
 
           <div className="complete-bank-section">
-            <BankAccountBox settings={settings} totalPrice={reservation?.totalPrice} language={language} />
+            <BankAccountBox settings={settings} totalPrice={authoritativeTotalPrice} language={language} />
             <p>{copy.paymentConfirmText}</p>
           </div>
 

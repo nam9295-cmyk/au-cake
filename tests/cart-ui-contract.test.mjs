@@ -21,8 +21,10 @@ test('CartPage has the exact bilingual Phase B2a request copy', () => {
     '예상 소계',
     'Continue to reservation',
     '주문 신청 계속하기',
-    'To request now, keep one cake selection in your order. Multiple selections will be available soon.',
-    '지금 신청하려면 한 가지 케이크 선택만 남겨 주세요. 여러 선택 동시 신청은 곧 제공됩니다.',
+    'Multiple-cake requests are currently unavailable. Please check again shortly.',
+    '현재 여러 케이크 동시 신청을 사용할 수 없어요. 잠시 후 다시 확인해 주세요.',
+    'You can request all of these cakes together.',
+    '여러 케이크를 한 번에 신청할 수 있어요.',
     'No payment is taken now. Jenny will confirm availability and send payment details after you submit your request.',
     '지금 결제되지 않습니다. 주문 신청 후 Jenny가 가능 여부를 확인하고 결제 정보를 안내합니다.',
   ]) {
@@ -30,7 +32,7 @@ test('CartPage has the exact bilingual Phase B2a request copy', () => {
   }
 
   assert.match(cartPageSource, /lines\.length === 0/)
-  assert.match(cartPageSource, /const canContinue = lines\.length === 1/)
+  assert.match(cartPageSource, /const canContinue = lines\.length === 1 \|\| \(lines\.length > 1 && cakeOrderLinesAvailable === true\)/)
   assert.match(cartPageSource, /lines\.length > 1/)
   assert.match(cartPageSource, /disabled=\{!canContinue\}/)
 })
@@ -69,7 +71,7 @@ test('CartPage quantity and removal callbacks always receive the rendered line e
   assert.match(cartPageSource, /onUpdate\(line\.lineKey, line\.selection\.quantity - 1\)/)
   assert.match(cartPageSource, /onUpdate\(line\.lineKey, line\.selection\.quantity \+ 1\)/)
   assert.match(cartPageSource, /onRemove\(line\.lineKey\)/)
-  assert.match(cartPageSource, /onContinue\(lines\[0\]\)/)
+  assert.match(cartPageSource, /onContinue\(\)/)
   assert.match(cartPageSource, /MAX_RESERVATION_QUANTITY/)
   assert.match(cartPageSource, /getCartEstimatedSubtotal\(lines\)/)
   assert.doesNotMatch(cartPageSource, /as Reservation/)
@@ -87,26 +89,27 @@ test('App owns cart once, adds detail selections, and renders the direct cart ro
   assert.match(appSource, /!isPrivatePage && <SiteFooter/)
 })
 
-test('cart-to-reserve handoff copies one selection and removes only that successful origin line', () => {
-  assert.match(appSource, /const cartOriginLineKeyRef = useRef<string \| null>\(null\)/)
-  assert.match(appSource, /setReservationSelection\(\{ \.\.\.line\.selection \}\)/)
-  assert.match(appSource, /cartOriginLineKeyRef\.current = line\.lineKey/)
-  assert.match(appSource, /const originLineKey = cartOriginLineKeyRef\.current[\s\S]*if \(originLineKey\) \{[\s\S]*removeCartLine\(originLineKey\)[\s\S]*cartOriginLineKeyRef\.current = null/)
-  assert.equal((appSource.match(/removeCartLine\(/g) || []).length, 1)
-  assert.doesNotMatch(reserveSource, /catch[\s\S]{0,600}removeCartLine/)
+test('cart-to-reserve handoff snapshots selections and subtracts only successful origin quantities', () => {
+  assert.match(appSource, /const cartOriginLinesRef = useRef<CartLine\[\]>\(\[\]\)/)
+  assert.match(appSource, /const snapshot: CartLine\[\] = cartLines\.map/)
+  assert.match(appSource, /setReservationSelection\(\{ \.\.\.first\.selection \}\)/)
+  assert.match(appSource, /cartOriginLinesRef\.current = snapshot/)
+  assert.match(appSource, /const originLines = cartOriginLinesRef\.current[\s\S]*removeSubmittedCartLines\(originLines\)[\s\S]*cartOriginLinesRef\.current = \[\]/)
+  assert.equal((appSource.match(/removeSubmittedCartLines\(/g) || []).length, 1)
+  assert.doesNotMatch(reserveSource, /catch[\s\S]{0,600}removeSubmittedCartLines/)
 })
 
 test('direct, review, and cart reserve entries retain fresh session-key behavior', () => {
   assert.match(appSource, /const \[reservationSessionKey, setReservationSessionKey\] = useState\(0\)/)
   assert.match(appSource, /nextPage === ['"]reserve['"][\s\S]*setReservationProductId\(DEFAULT_PRODUCT_ID\)[\s\S]*setReservationSelection\(null\)[\s\S]*setReservationSessionKey\(\(current\) => current \+ 1\)/)
-  assert.match(appSource, /const continueCartLine = useCallback[\s\S]*setReservationSessionKey\(\(current\) => current \+ 1\)[\s\S]*pushPage\(['"]reserve['"]\)/)
+  assert.match(appSource, /const continueCartOrder = useCallback[\s\S]*setReservationSessionKey\(\(current\) => current \+ 1\)[\s\S]*pushPage\(['"]reserve['"]\)/)
   assert.match(appSource, /const orderCakeFromReview = useCallback[\s\S]*navigate\(['"]reserve['"]\)/)
   assert.match(appSource, /<ReservePage[\s\S]*key=\{reservationSessionKey\}/)
 })
 
 test('ordinary and history navigation clear cart origin without a direct detail request callback', () => {
   assert.match(appSource, /const pushPage = useCallback/)
-  assert.match(appSource, /const navigate = useCallback[\s\S]*cartOriginLineKeyRef\.current = null[\s\S]*nextPage === ['"]reserve['"][\s\S]*setReservationProductId\(DEFAULT_PRODUCT_ID\)[\s\S]*setReservationSelection\(null\)[\s\S]*pushPage\(nextPage\)/)
-  assert.match(appSource, /const handlePop = \(\) => \{[\s\S]*cartOriginLineKeyRef\.current = null[\s\S]*setPathname\(window\.location\.pathname\)/)
+  assert.match(appSource, /const navigate = useCallback[\s\S]*cartOriginLinesRef\.current = \[\][\s\S]*setReservationOrderLines\(null\)[\s\S]*nextPage === ['"]reserve['"][\s\S]*setReservationProductId\(DEFAULT_PRODUCT_ID\)[\s\S]*setReservationSelection\(null\)[\s\S]*pushPage\(nextPage\)/)
+  assert.match(appSource, /const handlePop = \(\) => \{[\s\S]*cartOriginLinesRef\.current = \[\][\s\S]*setReservationOrderLines\(null\)[\s\S]*setPathname\(window\.location\.pathname\)/)
   assert.doesNotMatch(appSource, /requestCakeSelection/)
 })

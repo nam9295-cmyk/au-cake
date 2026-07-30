@@ -54,6 +54,10 @@ export type Reservation = {
   subtotalCents?: number
   discountPercent?: number
   discountCents?: number
+  discountBasisCents?: number
+  orderLines?: CakeOrderLineResult[]
+  orderLineCount?: number
+  orderItemCount?: number
   appliedPromoCodeLast4?: string
   promotionKind?: 'none' | 'static' | 'review-reward' | 'manual-coupon'
   reviewCouponId?: string
@@ -85,6 +89,52 @@ export type ReservationInput = {
   website?: string
 }
 
+export type CakeOrderLineRequest = Pick<ReservationInput,
+  | 'productId'
+  | 'cakeSize'
+  | 'chocolateType'
+  | 'poundAddon'
+  | 'chocolateIcingCount'
+  | 'vanillaCreamCount'
+  | 'partyDecorationCount'
+  | 'vanillaCakeSheet'
+  | 'vanillaCakeFlavor'
+  | 'quantity'
+>
+
+export type CakeOrderRequest = Pick<ReservationInput,
+  | 'customerName'
+  | 'customerPhone'
+  | 'pickupDate'
+  | 'pickupTime'
+  | 'requestNote'
+  | 'promoCode'
+  | 'privacyConsent'
+  | 'website'
+> & {
+  requestId: string
+  orderLines: CakeOrderLineRequest[]
+}
+
+export type CakeOrderLineResult = CakeOrderLineRequest & {
+  unitPriceCents: number
+  subtotalCents: number
+  discountPercent: 0 | 5 | 10
+  discountCents: number
+  totalPriceCents: number
+}
+
+export type CakeOrderReservation = Reservation & {
+  orderLines: CakeOrderLineResult[]
+  orderLineCount: number
+  orderItemCount: number
+  discountBasisCents: number
+}
+
+export type ReservationApiCapabilities = {
+  cakeOrderLines: 1
+}
+
 export type PublicReservation = Pick<
   Reservation,
   | 'reservationNumber'
@@ -103,7 +153,17 @@ export type PublicReservation = Pick<
   | 'cacaoPercent'
   | 'status'
   | 'paymentStatus'
->
+> & Partial<Pick<
+  Reservation,
+  | 'orderLines'
+  | 'orderLineCount'
+  | 'orderItemCount'
+  | 'subtotalCents'
+  | 'discountBasisCents'
+  | 'discountPercent'
+  | 'discountCents'
+  | 'totalPriceCents'
+>>
 
 export type StoreSettings = {
   price: number

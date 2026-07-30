@@ -36,6 +36,7 @@ import {
   isVanillaFreshCreamCakeProduct,
   getReservationPrice,
   getReservationUnitPrice,
+  getValidPromoCode,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
   normalizeVanillaCakeFlavor,
@@ -65,7 +66,9 @@ import {
   type Language,
 } from '../lib/i18n'
 import {
+  CAKE_ORDER_LINES_UNAVAILABLE_ERROR,
   PICKUP_TIME_CLASS_CONFLICT_ERROR,
+  createCakeOrder,
   createReservation,
   listCakePickupOpenings,
   listClassBookedSlots,
@@ -118,6 +121,7 @@ export function ReservePage({
   settings,
   initialProductId,
   initialSelection,
+  initialOrderLines,
   initialPromoCode,
   initialRewardPercent,
   onInitialPromoConsumed,
@@ -131,6 +135,7 @@ export function ReservePage({
   settings: StoreSettings
   initialProductId: ProductId
   initialSelection: CakeDetailSelection | null
+  initialOrderLines: readonly CakeDetailSelection[] | null
   initialPromoCode: string
   initialRewardPercent: 5 | 10 | null
   onInitialPromoConsumed: () => void
@@ -140,6 +145,8 @@ export function ReservePage({
   setLanguage: (language: Language) => void
   cartItemCount: number
 }) {
+  const orderSelections = initialOrderLines && initialOrderLines.length > 1 ? initialOrderLines : null
+  const isMultiOrder = orderSelections !== null
   const [requestId] = useState(generateRequestId)
   const copy = cakeCopy(language)
   const [form, setForm] = useState({
@@ -341,7 +348,7 @@ export function ReservePage({
       setError(copy.errors.pickupTimeUnavailable)
       return
     }
-    if (form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY) {
+    if (!isMultiOrder && (form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY)) {
       setError(copy.errors.quantity(MAX_RESERVATION_QUANTITY))
       return
     }
@@ -349,7 +356,7 @@ export function ReservePage({
       setError(copy.errors.privacy)
       return
     }
-    const submittedPromo = getPromoEntryState(form.productId, form.promoCode, undefined, knownReviewRewardPercent)
+    const submittedPromo = getPromoEntryState(promoProductId, form.promoCode, undefined, knownReviewRewardPercent)
     if (submittedPromo.kind === 'invalid') {
       setError(promoErrorMessage('PROMO_CODE_INVALID', language) || copy.errors.submit)
       return
@@ -409,10 +416,34 @@ export function ReservePage({
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           }
-        : await createReservation(reservationInput)
+        : orderSelections
+          ? await createCakeOrder({
+              customerName: form.customerName,
+              customerPhone: phone,
+              pickupDate,
+              pickupTime: selectedPickupTime,
+              requestNote: form.requestNote,
+              promoCode: submittedPromo.normalizedCode,
+              privacyConsent: form.privacy,
+              requestId,
+              website: form.website,
+              orderLines: orderSelections.map((selection) => ({
+                productId: selection.productId,
+                cakeSize: selection.cakeSize,
+                chocolateType: selection.chocolateType,
+                poundAddon: selection.poundAddon,
+                chocolateIcingCount: selection.chocolateIcingCount,
+                vanillaCreamCount: selection.vanillaCreamCount,
+                partyDecorationCount: selection.partyDecorationCount,
+                vanillaCakeSheet: selection.vanillaCakeSheet,
+                vanillaCakeFlavor: selection.vanillaCakeFlavor,
+                quantity: selection.quantity,
+              })),
+            })
+          : await createReservation(reservationInput)
       trackEvent('cake_booking_request', {
         product_id: form.productId,
-        quantity: form.quantity,
+        quantity: orderSelections?.reduce((sum, selection) => sum + selection.quantity, 0) || form.quantity,
         value: reservation.totalPrice,
         currency: 'AUD',
       })
@@ -428,6 +459,10 @@ export function ReservePage({
         refetchPickupAvailability()
       } else if (submitError instanceof Error && submitError.message === PICKUP_TIME_TOO_SOON_ERROR) {
         setError(copy.errors.pickupLeadTime)
+      } else if (submitError instanceof Error && submitError.message === CAKE_ORDER_LINES_UNAVAILABLE_ERROR) {
+        setError(language === 'ko'
+          ? '여러 케이크 동시 신청을 현재 사용할 수 없어요. 장바구니에서 잠시 후 다시 확인해 주세요.'
+          : 'Multiple-cake requests are currently unavailable. Please return to your order and try again shortly.')
       } else {
         setError(submitError instanceof Error
           ? promoErrorMessage(submitError.message, language) || copy.errors.submit
@@ -461,11 +496,27 @@ export function ReservePage({
     vanillaCakeFlavor: form.vanillaCakeFlavor,
     }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
-  const currentPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
-  const promoEntry = getPromoEntryState(selectedProduct.id, form.promoCode, undefined, knownReviewRewardPercent)
+  const singleSelectionPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
+  const currentPrice = orderSelections
+    ? orderSelections.reduce((sum, selection) => sum + getReservationPrice(selection.productId, selection, selection.quantity), 0)
+    : singleSelectionPrice
+  const promoProductId = orderSelections?.find((selection) => getValidPromoCode(selection.productId, form.promoCode))?.productId || selectedProduct.id
+  const promoEntry = getPromoEntryState(promoProductId, form.promoCode, undefined, knownReviewRewardPercent)
   const isManualCouponPending = promoEntry.kind === 'review-pending' && promoEntry.normalizedCode.startsWith('JENNIE')
   const isPromoApplied = promoEntry.kind === 'static-valid' || promoEntry.kind === 'review-pending'
-  const promoPriceDisplay = getPromoPriceDisplay(currentPrice, promoEntry)
+  const basePromoPriceDisplay = getPromoPriceDisplay(currentPrice, promoEntry)
+  const promoPriceDisplay = orderSelections && promoEntry.kind === 'static-valid'
+    ? (() => {
+        const eligibleBasisCents = orderSelections.reduce((sum, selection) => {
+          if (!getValidPromoCode(selection.productId, promoEntry.normalizedCode)) return sum
+          return sum + Math.round(getReservationPrice(selection.productId, selection, selection.quantity) * 100)
+        }, 0)
+        return {
+          finalPrice: Math.max(0, Math.round(currentPrice * 100) - Math.round(eligibleBasisCents * promoEntry.discountPercent / 100)) / 100,
+          estimatedPrice: null,
+        }
+      })()
+    : basePromoPriceDisplay
   const promoPreviewPrice = promoPriceDisplay.estimatedPrice ?? promoPriceDisplay.finalPrice
   const promoDiscountAmount = Math.max(0, currentPrice - promoPreviewPrice)
   const lemonPackSize = getFreshLemonCupcakePackSize(selectedProduct.id) || 0
@@ -581,7 +632,9 @@ export function ReservePage({
             <dl>
               <div>
                 <dt>{labels.product}</dt>
-                <dd>{selectedProductText.name}</dd>
+                <dd>{isMultiOrder
+                  ? language === 'ko' ? `${orderSelections.length}개 구성` : `${orderSelections.length} selections`
+                  : selectedProductText.name}</dd>
               </div>
               <div>
                 <dt>{labels.totalPrice}</dt>
@@ -605,6 +658,7 @@ export function ReservePage({
                   )}
                 </dd>
               </div>
+              {!isMultiOrder && (<>
               {isFreshLemonCupcakeProduct(selectedProduct.id) && (
                 <div>
                   <dt>{language === 'ko' ? '구성' : 'Pack size'}</dt>
@@ -672,13 +726,14 @@ export function ReservePage({
                 <dt>{labels.options}</dt>
                 <dd>{selectedProductText.priceNote}</dd>
               </div>
+              </>)}
               <div>
                 <dt>{labels.production}</dt>
                 <dd>{language === 'ko' ? copy.dailyLimitText : settings.dailyLimitText}</dd>
               </div>
             </dl>
-            <button className="change-cake-button" type="button" onClick={() => setShowCakeSelector(true)}>
-              {labels.changeCake}
+            <button className="change-cake-button" type="button" onClick={() => isMultiOrder ? navigate('cart') : setShowCakeSelector(true)}>
+              {isMultiOrder ? (language === 'ko' ? '장바구니에서 수정' : 'Edit order') : labels.changeCake}
             </button>
             <p>{language === 'ko' ? copy.reservationCompleteText : settings.reservationNotice}</p>
           </aside>
@@ -688,6 +743,21 @@ export function ReservePage({
             Leave this field blank
             <input name="website" value={form.website} onChange={(event) => setForm({ ...form, website: event.target.value })} tabIndex={-1} autoComplete="off" />
           </label>
+            {isMultiOrder && (
+              <section className="multi-order-summary" aria-labelledby="multi-order-title">
+                <h2 id="multi-order-title">{language === 'ko' ? '신청 상품' : 'Order items'}</h2>
+                <p>{language === 'ko' ? '장바구니에서 선택한 구성은 이 화면에서 변경되지 않아요.' : 'Selections from your order are read-only on this form.'}</p>
+                <ul>
+                  {orderSelections.map((selection, index) => (
+                    <li key={`${selection.productId}-${index}`}>
+                      <span>{getProductText(selection.productId, language).name}</span>
+                      <strong>{selection.quantity}{copy.quantityUnit} · {formatCurrency(getReservationPrice(selection.productId, selection, selection.quantity))}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {!isMultiOrder && (<>
             {showCakeSelector && (
               <fieldset className="cake-selector-fieldset">
                 <legend>{labels.cakeSelect}</legend>
@@ -1025,6 +1095,7 @@ export function ReservePage({
               </label>
               <p className="field-help">{labels.quantityHelp}</p>
             </fieldset>
+            </>)}
 
             <div className="field-row">
               <div className="pickup-date-field">

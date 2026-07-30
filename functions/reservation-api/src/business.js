@@ -1,4 +1,5 @@
 import { digestReviewCouponCode } from './coupon-digest.js'
+import { ACTIVE_CAKE_ORDER_PRODUCT_IDS, isActiveCakeOrderProductId } from './active-cake-products.js'
 
 const MARKET_TIMEZONE = 'Australia/Sydney'
 const GENERATED_REVIEW_COUPON_ANIMALS = [
@@ -108,6 +109,11 @@ const PRODUCTS = {
   'fresh-lemon-cupcakes-8': { basePrice: 45, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-12': { basePrice: 65, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-16': { basePrice: 85, sizePrices: {}, usesSize: false, usesFinish: false },
+}
+
+if (ACTIVE_CAKE_ORDER_PRODUCT_IDS.length !== Object.keys(PRODUCTS).length
+  || ACTIVE_CAKE_ORDER_PRODUCT_IDS.some((productId) => !Object.hasOwn(PRODUCTS, productId))) {
+  throw new Error('ACTIVE_CAKE_ORDER_PRODUCT_CATALOG_MISMATCH')
 }
 
 export function formatCakeSizeLabel(cakeSize) {
@@ -382,7 +388,7 @@ function normalizeVanillaCakeOptions(productId, cakeSheet, flavor) {
 }
 
 function normalizeCakeOptions(input) {
-  if (!Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
+  if (!isActiveCakeOrderProductId(input.productId) || !Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
   const product = PRODUCTS[input.productId]
 
   const cakeSize = product.usesSize && Object.hasOwn(product.sizePrices, input.cakeSize)
@@ -1024,8 +1030,17 @@ export function publicCakeReservation(document) {
     vanillaCakeFlavor: document.vanillaCakeFlavor || 'triple-berry',
     quantity: Number(document.quantity || 1),
   }
-  const orderLines = stored ? stored.lines.map(sanitizedOrderLine) : [legacyLine]
-  const firstLine = orderLines[0]
+  const orderLines = stored
+    ? stored.lines.map((line) => ({
+        ...sanitizedOrderLine(line),
+        unitPriceCents: line.unitPriceCents,
+        subtotalCents: line.subtotalCents,
+        discountPercent: line.discountPercent,
+        discountCents: line.discountCents,
+        totalPriceCents: line.totalPriceCents,
+      }))
+    : [legacyLine]
+  const firstLine = sanitizedOrderLine(orderLines[0])
   return {
     reservationNumber: document.reservationNumber,
     ...firstLine,
@@ -1037,5 +1052,12 @@ export function publicCakeReservation(document) {
     orderLines,
     orderLineCount: orderLines.length,
     orderItemCount: orderLines.reduce((sum, line) => sum + line.quantity, 0),
+    ...(stored ? {
+      subtotalCents: document.subtotalCents,
+      discountBasisCents: document.discountBasisCents,
+      discountPercent: document.discountPercent,
+      discountCents: document.discountCents,
+      totalPriceCents: document.totalPriceCents,
+    } : {}),
   }
 }

@@ -30,9 +30,10 @@ import { formatCurrency } from './lib/utils'
 type CartPageProps = {
   language: Language
   lines: readonly CartLine[]
+  cakeOrderLinesAvailable: boolean | null
   onUpdate: (lineKey: string, quantity: number) => void
   onRemove: (lineKey: string) => void
-  onContinue: (line: CartLine) => void
+  onContinue: () => void
   onBrowseCakes: () => void
 }
 
@@ -113,12 +114,13 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
 export default function CartPage({
   language,
   lines,
+  cakeOrderLinesAvailable,
   onUpdate,
   onRemove,
   onContinue,
   onBrowseCakes,
 }: CartPageProps) {
-  const canContinue = lines.length === 1
+  const canContinue = lines.length === 1 || (lines.length > 1 && cakeOrderLinesAvailable === true)
   const subtotal = getCartEstimatedSubtotal(lines)
   const copy = language === 'ko'
     ? {
@@ -130,7 +132,11 @@ export default function CartPage({
         lineTotal: '상품 합계',
         subtotal: '예상 소계',
         continue: '주문 신청 계속하기',
-        multiNotice: '지금 신청하려면 한 가지 케이크 선택만 남겨 주세요. 여러 선택 동시 신청은 곧 제공됩니다.',
+        multiNotice: cakeOrderLinesAvailable === null
+          ? '여러 케이크 동시 신청 가능 여부를 확인하고 있어요.'
+          : cakeOrderLinesAvailable
+            ? '여러 케이크를 한 번에 신청할 수 있어요.'
+            : '현재 여러 케이크 동시 신청을 사용할 수 없어요. 잠시 후 다시 확인해 주세요.',
         confirmation: '지금 결제되지 않습니다. 주문 신청 후 Jenny가 가능 여부를 확인하고 결제 정보를 안내합니다.',
       }
     : {
@@ -142,7 +148,11 @@ export default function CartPage({
         lineTotal: 'Line total',
         subtotal: 'Estimated subtotal',
         continue: 'Continue to reservation',
-        multiNotice: 'To request now, keep one cake selection in your order. Multiple selections will be available soon.',
+        multiNotice: cakeOrderLinesAvailable === null
+          ? 'Checking whether multiple-cake requests are available.'
+          : cakeOrderLinesAvailable
+            ? 'You can request all of these cakes together.'
+            : 'Multiple-cake requests are currently unavailable. Please check again shortly.',
         confirmation: 'No payment is taken now. Jenny will confirm availability and send payment details after you submit your request.',
       }
 
@@ -217,7 +227,7 @@ export default function CartPage({
                 type="button"
                 className="primary-button"
                 disabled={!canContinue}
-                onClick={() => canContinue && onContinue(lines[0])}
+                onClick={() => canContinue && onContinue()}
               >
                 {copy.continue}
               </button>

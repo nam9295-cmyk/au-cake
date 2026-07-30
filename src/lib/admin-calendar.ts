@@ -1,4 +1,5 @@
 import { getProductById } from './constants.js'
+import { getReservationItemCount, getReservationOrderLines } from './order-lines.js'
 import { formatClassBookingType, getClassCoursePlanLabel, getClassTypeLabel } from './class-utils.js'
 import type { ClassReservation, Reservation } from './types.js'
 
@@ -90,13 +91,19 @@ function shortProductName(productId: Reservation['productId']) {
 
 function mapCakeReservation(reservation: Reservation): AdminCalendarEvent {
   const product = getProductById(reservation.productId)
+  const orderLines = getReservationOrderLines(reservation)
+  const isMultiLine = orderLines.length > 1
   return {
     kind: 'cake',
     id: reservation.id,
     date: reservation.pickupDate,
     time: reservation.pickupTime,
-    title: `${reservation.customerName} · ${product.name}`,
-    subtitle: `${shortProductName(reservation.productId)} x${reservation.quantity} · ${reservation.paymentStatus}`,
+    title: isMultiLine
+      ? `${reservation.customerName} · ${getReservationItemCount(reservation)} items`
+      : `${reservation.customerName} · ${product.name}`,
+    subtitle: isMultiLine
+      ? `${orderLines.map((line) => `${shortProductName(line.productId)} x${line.quantity}`).join(' + ')} · ${reservation.paymentStatus}`
+      : `${shortProductName(reservation.productId)} x${reservation.quantity} · ${reservation.paymentStatus}`,
     isCancelled: reservation.status === '취소',
     reservation,
   }
@@ -162,7 +169,7 @@ export function getDailyCalendarSummary(events: AdminCalendarEvent[]) {
   const activeEvents = events.filter((event) => !event.isCancelled)
   const cakeCount = activeEvents
     .filter((event): event is Extract<AdminCalendarEvent, { kind: 'cake' }> => event.kind === 'cake')
-    .reduce((total, event) => total + event.reservation.quantity, 0)
+    .reduce((total, event) => total + getReservationItemCount(event.reservation), 0)
   const classCount = activeEvents.filter((event) => event.kind === 'class').length
 
   if (cakeCount === 0 && classCount === 0) return ''

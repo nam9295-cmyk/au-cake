@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { classReservationsToCsv } from '../src/lib/class-utils.js'
 import type { ClassReservation, Reservation } from '../src/lib/types.js'
-import { reservationsToCsv } from '../src/lib/utils.js'
+import { buildSmsMessage, reservationsToCsv } from '../src/lib/utils.js'
 
 const cakeReservation: Reservation = {
   id: 'cake-1',
@@ -78,6 +78,42 @@ test('cake CSV exports cupcake per-piece finishing and omits retired chocolate f
 
   assert.match(csv, /Basic 5 \/ Vanilla cream 4 \/ Party decoration 3/)
   assert.equal(csv.includes('Extra chocolate'), false)
+})
+
+test('cake CSV preserves legacy columns and appends every multi-line item with authoritative counts', () => {
+  const csv = reservationsToCsv([{
+    ...cakeReservation,
+    totalPrice: 130,
+    totalPriceCents: 13000,
+    orderLineCount: 2,
+    orderItemCount: 2,
+    orderLines: [
+      { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 7500, subtotalCents: 7500, discountPercent: 0, discountCents: 0, totalPriceCents: 7500 },
+      { productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, discountPercent: 0, discountCents: 0, totalPriceCents: 5500 },
+    ],
+  }])
+
+  const [header, row] = csv.split('\n')
+  assert.match(header, /"Order line count","Order item count","Order items"$/)
+  assert.match(row, /Pave Chocolate Cake.*x1.*AUD 75\.00/)
+  assert.match(row, /Chocolatier's Basque Cheesecake.*x1.*AUD 55\.00/)
+  assert.match(row, /,"2","2",/)
+})
+
+test('cake confirmation SMS lists every multi-line item instead of only the legacy first projection', () => {
+  const message = buildSmsMessage({
+    ...cakeReservation,
+    customerName: 'Jenny',
+    orderLineCount: 2,
+    orderItemCount: 2,
+    orderLines: [
+      { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 7500, subtotalCents: 7500, discountPercent: 0, discountCents: 0, totalPriceCents: 7500 },
+      { productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, discountPercent: 0, discountCents: 0, totalPriceCents: 5500 },
+    ],
+  })
+  assert.match(message, /1\. Pave Chocolate Cake/)
+  assert.match(message, /2\. Chocolatier's Basque Cheesecake/)
+  assert.match(message, /Total items: 2/)
 })
 
 test('class CSV neutralises spreadsheet formulas in customer-entered fields', () => {

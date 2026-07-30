@@ -34,7 +34,7 @@ import {
   storeLanguage,
   type Language,
 } from './lib/i18n'
-import { getSettings } from './lib/repository'
+import { getSettings, supportsCakeOrderLines } from './lib/repository'
 import { applySeo } from './lib/seo'
 import {
   trackEvent,
@@ -65,6 +65,7 @@ function App() {
     add: addCartLine,
     update: updateCartLine,
     remove: removeCartLine,
+    removeSubmitted: removeSubmittedCartLines,
   } = useCart()
   const [pathname, setPathname] = useState(() => window.location.pathname)
   const page = getPageFromPath(pathname)
@@ -74,12 +75,14 @@ function App() {
   const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
   const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
   const [reservationSelection, setReservationSelection] = useState<CakeDetailSelection | null>(null)
+  const [reservationOrderLines, setReservationOrderLines] = useState<CakeDetailSelection[] | null>(null)
+  const [cakeOrderLinesAvailable, setCakeOrderLinesAvailable] = useState<boolean | null>(null)
   const [reservationSessionKey, setReservationSessionKey] = useState(0)
   const [pendingReviewCoupon, setPendingReviewCoupon] = useState('')
   const [pendingReviewRewardPercent, setPendingReviewRewardPercent] = useState<5 | 10 | null>(null)
   const [language, setLanguageState] = useState<Language>(readStoredLanguage)
   const hasLoadedSettings = useRef(false)
-  const cartOriginLineKeyRef = useRef<string | null>(null)
+  const cartOriginLinesRef = useRef<CartLine[]>([])
 
   const setLanguage = useCallback((nextLanguage: Language) => {
     setLanguageState(nextLanguage)
@@ -93,8 +96,18 @@ function App() {
   }, [page])
 
   useEffect(() => {
+    if (page !== 'cart' || cartLines.length < 2) return
+    let cancelled = false
+    supportsCakeOrderLines().then((available) => {
+      if (!cancelled) setCakeOrderLinesAvailable(available)
+    })
+    return () => { cancelled = true }
+  }, [cartLines.length, page])
+
+  useEffect(() => {
     const handlePop = () => {
-      cartOriginLineKeyRef.current = null
+      cartOriginLinesRef.current = []
+      setReservationOrderLines(null)
       setPathname(window.location.pathname)
     }
     window.addEventListener('popstate', handlePop)
@@ -116,7 +129,8 @@ function App() {
   }, [])
 
   const navigate = useCallback((nextPage: Page) => {
-    cartOriginLineKeyRef.current = null
+    cartOriginLinesRef.current = []
+    setReservationOrderLines(null)
     if (nextPage === 'reserve') {
       setReservationProductId(DEFAULT_PRODUCT_ID)
       setReservationSelection(null)
@@ -126,20 +140,25 @@ function App() {
   }, [pushPage])
 
   const navigateToCake = useCallback((slug: string) => {
-    cartOriginLineKeyRef.current = null
+    cartOriginLinesRef.current = []
+    setReservationOrderLines(null)
     const path = pathForCake(slug)
     window.history.pushState(null, '', path)
     setPathname(path)
     window.scrollTo({ top: 0 })
   }, [])
 
-  const continueCartLine = useCallback((line: CartLine) => {
-    setReservationProductId(line.selection.productId)
-    setReservationSelection({ ...line.selection })
-    cartOriginLineKeyRef.current = line.lineKey
+  const continueCartOrder = useCallback(() => {
+    const snapshot: CartLine[] = cartLines.map((line) => ({ lineKey: line.lineKey, selection: { ...line.selection } }))
+    if (snapshot.length === 0 || (snapshot.length > 1 && cakeOrderLinesAvailable !== true)) return
+    const first = snapshot[0]
+    setReservationProductId(first.selection.productId)
+    setReservationSelection({ ...first.selection })
+    setReservationOrderLines(snapshot.length > 1 ? snapshot.map((line) => ({ ...line.selection })) : null)
+    cartOriginLinesRef.current = snapshot
     setReservationSessionKey((current) => current + 1)
     pushPage('reserve')
-  }, [pushPage])
+  }, [cakeOrderLinesAvailable, cartLines, pushPage])
 
   const orderCakeFromReview = useCallback((couponCode: string, rewardPercent: 5 | 10) => {
     const normalized = normalizeReviewCouponCode(couponCode)
@@ -150,15 +169,14 @@ function App() {
   }, [navigate])
 
   const completeReservation = useCallback((reservation: Reservation) => {
-    const originLineKey = cartOriginLineKeyRef.current
-    if (originLineKey) {
-      removeCartLine(originLineKey)
-      cartOriginLineKeyRef.current = null
-    }
+    const originLines = cartOriginLinesRef.current
+    removeSubmittedCartLines(originLines)
+    cartOriginLinesRef.current = []
+    setReservationOrderLines(null)
     setPendingReviewCoupon('')
     setPendingReviewRewardPercent(null)
     setCompletedReservation(reservation)
-  }, [removeCartLine])
+  }, [removeSubmittedCartLines])
 
   const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations' || page === 'admin-classes' || page === 'admin-reviews'
   const isPrivatePage = isAdminPage || page === 'calendar'
@@ -188,9 +206,10 @@ function App() {
           <CartPage
             language={language}
             lines={cartLines}
+            cakeOrderLinesAvailable={cakeOrderLinesAvailable}
             onUpdate={updateCartLine}
             onRemove={removeCartLine}
-            onContinue={continueCartLine}
+            onContinue={continueCartOrder}
             onBrowseCakes={() => navigate('cakes')}
           />
         </>
@@ -231,6 +250,7 @@ function App() {
           settings={settings}
           initialProductId={reservationProductId}
           initialSelection={reservationSelection}
+          initialOrderLines={reservationOrderLines}
           initialPromoCode={pendingReviewCoupon}
           initialRewardPercent={pendingReviewRewardPercent}
           onInitialPromoConsumed={() => setPendingReviewCoupon('')}

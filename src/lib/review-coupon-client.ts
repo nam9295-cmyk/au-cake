@@ -1,5 +1,6 @@
 import {
   getProductById,
+  getReservationPrice,
   getValidPromoCode,
   MAX_RESERVATION_QUANTITY,
   normalizeCakeSize,
@@ -7,10 +8,13 @@ import {
   normalizeCupcakeFinishCounts,
   normalizePoundAddon,
   normalizeReservationChocolateType,
+  normalizeVanillaCakeFlavor,
+  normalizeVanillaCakeSheet,
   PRODUCTS,
 } from './constants.js'
 import { isValidPhone } from './utils.js'
-import type { CakeSize, CacaoPercent, ChocolateType, PoundAddon, ProductId, Reservation, ReservationInput, VanillaCakeFlavor, VanillaCakeSheet } from './types.js'
+import { isActiveCakeOrderProductId } from '../../functions/reservation-api/src/active-cake-products.js'
+import type { CakeOrderLineRequest, CakeOrderLineResult, CakeOrderRequest, CakeOrderReservation, CakeSize, CacaoPercent, ChocolateType, PoundAddon, ProductId, Reservation, ReservationApiCapabilities, ReservationInput, VanillaCakeFlavor, VanillaCakeSheet } from './types.js'
 
 const REVIEW_COUPON_ANIMALS = ['FOX', 'CAT', 'DOG', 'OWL', 'PIG', 'BEE', 'COW', 'CUB', 'EMU', 'HEN', 'KOI', 'PUP', 'RAM', 'YAK', 'APE']
 const REVIEW_COUPON_FRUITS = ['KIWI', 'FIG', 'LIME', 'PEAR', 'PLUM', 'APPLE', 'GRAPE', 'GUAVA', 'LEMON', 'MANGO', 'MELON', 'PEACH']
@@ -147,12 +151,74 @@ function invalidResponse(): never {
 }
 
 function nonnegativeInteger(value: unknown): number {
-  if (!Number.isInteger(value) || Number(value) < 0) invalidResponse()
+  if (!Number.isSafeInteger(value) || Number(value) < 0) invalidResponse()
   return Number(value)
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
+}
+
+function isPlainDataRecord(value: unknown): value is Record<string, unknown> {
+  if (!isPlainRecord(value)) return false
+  return Reflect.ownKeys(value).every((key) => {
+    if (typeof key !== 'string') return false
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    return Boolean(descriptor && Object.prototype.hasOwnProperty.call(descriptor, 'value'))
+  })
+}
+
+function readPlainDataRecordSnapshot(value: unknown): Record<string, unknown> | null {
+  if (!isPlainRecord(value)) return null
+  const keys = Reflect.ownKeys(value)
+  if (keys.some((key) => typeof key !== 'string')) return null
+  const snapshot: Record<string, unknown> = Object.create(null)
+  for (const key of keys as string[]) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor, 'value')) return null
+    snapshot[key] = descriptor.value
+  }
+  return snapshot
+}
+
+function readExactPlainDataRecordSnapshot(value: unknown, fields: readonly string[]): Record<string, unknown> | null {
+  const snapshot = readPlainDataRecordSnapshot(value)
+  if (!snapshot) return null
+  const keys = Object.keys(snapshot)
+  return keys.length === fields.length && fields.every((key) => Object.hasOwn(snapshot, key)) ? snapshot : null
+}
+
+function hasOwnDataFields(row: Record<string, unknown>, fields: readonly string[]): boolean {
+  return fields.every((key) => {
+    const descriptor = Object.getOwnPropertyDescriptor(row, key)
+    return Boolean(descriptor && Object.prototype.hasOwnProperty.call(descriptor, 'value'))
+  })
+}
+
+function readDensePlainDataArray(value: unknown, minimumLength: number): unknown[] | null {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) return null
+  const lengthDescriptor = Object.getOwnPropertyDescriptor(value, 'length')
+  if (!lengthDescriptor || !Object.prototype.hasOwnProperty.call(lengthDescriptor, 'value')) return null
+  const length = lengthDescriptor.value
+  if (!Number.isSafeInteger(length) || length < minimumLength) return null
+  const keys = Reflect.ownKeys(value)
+  if (keys.length !== length + 1 || !keys.includes('length')) return null
+
+  const result = new Array<unknown>(length)
+  for (let index = 0; index < length; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index))
+    if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor, 'value')) return null
+    result[index] = descriptor.value
+  }
+  return result
+}
+
 export function getReservationPricingAudit(value: unknown): ReservationPricingAudit {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) invalidResponse()
+  if (!isPlainDataRecord(value) || !hasOwnDataFields(value, [
+    'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
+  ])) invalidResponse()
   const reservation = value as Record<string, unknown>
   const subtotalCents = nonnegativeInteger(reservation.subtotalCents)
   const discountCents = nonnegativeInteger(reservation.discountCents)
@@ -172,7 +238,7 @@ export function getReservationPricingAudit(value: unknown): ReservationPricingAu
 }
 
 export function getOptionalReservationPricingAudit(value: unknown): ReservationPricingAudit | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  if (!isPlainDataRecord(value)) return null
   const row = value as Record<string, unknown>
   const required = ['subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents']
   if (!required.every((key) => row[key] !== undefined)) return null
@@ -205,18 +271,126 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     requestId: input.requestId,
     website: input.website,
   }
-  if (typeof input.promoCode === 'string' && input.promoCode.trim()) request.promoCode = input.promoCode.trim()
-  return request
+  const promoDescriptor = Object.getOwnPropertyDescriptor(input, 'promoCode')
+  const promoCode = promoDescriptor && Object.prototype.hasOwnProperty.call(promoDescriptor, 'value')
+    && typeof promoDescriptor.value === 'string'
+    ? promoDescriptor.value.trim()
+    : ''
+  return promoCode ? { ...request, promoCode } : request
+}
+
+export function parseReservationApiCapabilities(value: unknown): ReservationApiCapabilities {
+  const row = readExactPlainDataRecordSnapshot(value, ['status', 'capabilities'])
+  if (!row || row.status !== 'ready') invalidResponse()
+  const capabilities = readExactPlainDataRecordSnapshot(row.capabilities, ['cakeOrderLines'])
+  if (!capabilities || capabilities.cakeOrderLines !== 1) invalidResponse()
+  return { cakeOrderLines: 1 }
+}
+
+function projectCakeOrderLine(line: CakeOrderLineRequest): CakeOrderLineRequest {
+  return {
+    productId: line.productId,
+    cakeSize: line.cakeSize,
+    chocolateType: line.chocolateType,
+    poundAddon: line.poundAddon,
+    chocolateIcingCount: line.chocolateIcingCount,
+    vanillaCreamCount: line.vanillaCreamCount,
+    partyDecorationCount: line.partyDecorationCount,
+    vanillaCakeSheet: line.vanillaCakeSheet,
+    vanillaCakeFlavor: line.vanillaCakeFlavor,
+    quantity: line.quantity,
+  }
+}
+
+const CAKE_ORDER_LINE_FIELDS = [
+  'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount',
+  'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity',
+] as const
+
+function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
+  if (!isPlainRecord(value)) return false
+  for (const key of CAKE_ORDER_LINE_FIELDS) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor, 'value')) return false
+  }
+  const line = value as Record<string, unknown>
+  if (
+    typeof line.productId !== 'string' || !isActiveCakeOrderProductId(line.productId) || !Object.prototype.hasOwnProperty.call(PRODUCTS, line.productId) ||
+    typeof line.cakeSize !== 'string' || !VALID_CAKE_SIZES.has(line.cakeSize as CakeSize) ||
+    typeof line.chocolateType !== 'string' || !VALID_CHOCOLATE_TYPES.has(line.chocolateType as ChocolateType) ||
+    typeof line.poundAddon !== 'string' || !VALID_POUND_ADDONS.has(line.poundAddon as PoundAddon) ||
+    typeof line.vanillaCakeSheet !== 'string' || !VALID_VANILLA_CAKE_SHEETS.has(line.vanillaCakeSheet as VanillaCakeSheet) ||
+    typeof line.vanillaCakeFlavor !== 'string' || !VALID_VANILLA_CAKE_FLAVORS.has(line.vanillaCakeFlavor as VanillaCakeFlavor) ||
+    !Number.isSafeInteger(line.chocolateIcingCount) || Number(line.chocolateIcingCount) < 0 ||
+    !Number.isSafeInteger(line.vanillaCreamCount) || Number(line.vanillaCreamCount) < 0 ||
+    !Number.isSafeInteger(line.partyDecorationCount) || Number(line.partyDecorationCount) < 0 ||
+    !Number.isSafeInteger(line.quantity) || Number(line.quantity) < 1 || Number(line.quantity) > MAX_RESERVATION_QUANTITY
+  ) return false
+  const productId = line.productId as ProductId
+  const finishes = normalizeCupcakeFinishCounts(productId, Number(line.vanillaCreamCount), Number(line.partyDecorationCount))
+  return (
+    line.cakeSize === normalizeCakeSize(productId, line.cakeSize as CakeSize) &&
+    line.poundAddon === normalizePoundAddon(productId, line.poundAddon as PoundAddon) &&
+    line.chocolateType === normalizeReservationChocolateType(productId, line.chocolateType as ChocolateType, line.poundAddon as PoundAddon) &&
+    line.chocolateIcingCount === normalizeChocolateIcingCount(productId, Number(line.chocolateIcingCount)) &&
+    line.vanillaCreamCount === finishes.vanillaCreamCount &&
+    line.partyDecorationCount === finishes.partyDecorationCount &&
+    line.vanillaCakeSheet === normalizeVanillaCakeSheet(productId, line.vanillaCakeSheet as VanillaCakeSheet) &&
+    line.vanillaCakeFlavor === normalizeVanillaCakeFlavor(productId, line.vanillaCakeFlavor as VanillaCakeFlavor)
+  )
+}
+
+export function buildCakeOrderRequest(input: CakeOrderRequest): CakeOrderRequest {
+  const row = readPlainDataRecordSnapshot(input)
+  if (!row || !hasOwnDataFields(row, [
+    'customerName', 'customerPhone', 'pickupDate', 'pickupTime', 'requestNote', 'privacyConsent',
+    'requestId', 'website', 'orderLines',
+  ])) throw new Error('INVALID_ORDER_REQUEST')
+  if (typeof row.requestId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(row.requestId)) {
+    throw new Error('INVALID_REQUEST_ID')
+  }
+  if (
+    typeof row.customerName !== 'string' ||
+    typeof row.customerPhone !== 'string' ||
+    typeof row.pickupDate !== 'string' ||
+    typeof row.pickupTime !== 'string' ||
+    typeof row.requestNote !== 'string' ||
+    row.privacyConsent !== true ||
+    typeof row.website !== 'string' ||
+    (row.promoCode !== undefined && typeof row.promoCode !== 'string')
+  ) throw new Error('INVALID_ORDER_REQUEST')
+  const rawOrderLines = readDensePlainDataArray(row.orderLines, 2)
+  if (!rawOrderLines) throw new Error('INVALID_ORDER_LINES')
+  const orderLines = rawOrderLines.map(readPlainDataRecordSnapshot)
+  if (orderLines.some((line) => !line || !isValidCakeOrderLine(line))) throw new Error('INVALID_ORDER_LINES')
+  const trustedOrderLines = orderLines as CakeOrderLineRequest[]
+  const canonicalKeys = trustedOrderLines.map(canonicalOrderLineKey)
+  if (new Set(canonicalKeys).size !== canonicalKeys.length) throw new Error('INVALID_ORDER_LINES')
+  const promoCode = typeof row.promoCode === 'string' ? row.promoCode.trim() : ''
+  return {
+    customerName: row.customerName,
+    customerPhone: row.customerPhone,
+    pickupDate: row.pickupDate,
+    pickupTime: row.pickupTime,
+    requestNote: row.requestNote,
+    privacyConsent: true,
+    requestId: row.requestId,
+    website: row.website,
+    orderLines: trustedOrderLines.map(projectCakeOrderLine),
+    ...(promoCode ? { promoCode } : {}),
+  }
 }
 
 function requiredString(row: Record<string, unknown>, key: string): string {
-  if (typeof row[key] !== 'string') invalidResponse()
-  return row[key] as string
+  const descriptor = Object.getOwnPropertyDescriptor(row, key)
+  if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor, 'value') || typeof descriptor.value !== 'string') invalidResponse()
+  return descriptor.value as string
 }
 
 function requiredFiniteNumber(row: Record<string, unknown>, key: string): number {
-  if (typeof row[key] !== 'number' || !Number.isFinite(row[key])) invalidResponse()
-  return row[key] as number
+  const descriptor = Object.getOwnPropertyDescriptor(row, key)
+  if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor, 'value') || typeof descriptor.value !== 'number' || !Number.isFinite(descriptor.value)) invalidResponse()
+  return descriptor.value as number
 }
 
 function requiredSetValue<T extends string>(row: Record<string, unknown>, key: string, allowed: ReadonlySet<T>): T {
@@ -227,7 +401,7 @@ function requiredSetValue<T extends string>(row: Record<string, unknown>, key: s
 
 function requiredProductId(row: Record<string, unknown>): ProductId {
   const value = requiredString(row, 'productId')
-  if (!Object.prototype.hasOwnProperty.call(PRODUCTS, value)) invalidResponse()
+  if (!isActiveCakeOrderProductId(value) || !Object.prototype.hasOwnProperty.call(PRODUCTS, value)) invalidResponse()
   return value as ProductId
 }
 
@@ -252,9 +426,222 @@ function requiredIsoTimestamp(row: Record<string, unknown>, key: string): string
   return value
 }
 
+function canonicalOrderLineKey(line: CakeOrderLineRequest): string {
+  return JSON.stringify([
+    line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.chocolateIcingCount,
+    line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
+  ])
+}
+
+function safeSum(values: number[]): number {
+  let sum = 0
+  for (const value of values) {
+    sum += value
+    if (!Number.isSafeInteger(sum)) invalidResponse()
+  }
+  return sum
+}
+
+function expectedLineDiscounts(lines: CakeOrderLineResult[], eligibleIndexes: number[], discountPercent: 0 | 5 | 10, discountCents: number): number[] {
+  const allocations = new Array<number>(lines.length).fill(0)
+  const ranked = eligibleIndexes.map((index) => {
+    const numerator = lines[index].subtotalCents * discountPercent
+    if (!Number.isSafeInteger(numerator)) invalidResponse()
+    const floorCents = Math.floor(numerator / 100)
+    allocations[index] = floorCents
+    return { index, remainder: numerator % 100, key: canonicalOrderLineKey(lines[index]) }
+  }).sort((left, right) => right.remainder - left.remainder || (left.key < right.key ? -1 : left.key > right.key ? 1 : 0))
+  let remainderCents = discountCents - safeSum(allocations)
+  for (const candidate of ranked) {
+    if (remainderCents <= 0) break
+    allocations[candidate.index] += 1
+    remainderCents -= 1
+  }
+  if (remainderCents !== 0) invalidResponse()
+  return allocations
+}
+
+export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
+  const row = readPlainDataRecordSnapshot(value)
+  if (!row) invalidResponse()
+  if (!hasOwnDataFields(row, [
+    'orderLines', 'orderLineCount', 'orderItemCount', 'discountBasisCents', 'subtotalCents',
+    'discountPercent', 'discountCents', 'totalPriceCents', 'promotionKind', 'createdAt',
+    'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount',
+    'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity',
+    'totalPrice', 'customerName', 'customerPhone', 'reservationNumber', 'pickupDate', 'pickupTime',
+    'cacaoPercent', 'requestNote', 'status', 'paymentStatus', 'adminMemo', 'updatedAt',
+  ])) invalidResponse()
+  const rawOrderLines = readDensePlainDataArray(row.orderLines, 2)
+  if (!rawOrderLines) invalidResponse()
+
+  const lineKeys = new Set([
+    'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount',
+    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity', 'unitPriceCents',
+    'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
+  ])
+  const orderLines = rawOrderLines.map((value): CakeOrderLineResult => {
+    const line = readPlainDataRecordSnapshot(value)
+    if (!line) invalidResponse()
+    const keys = Object.keys(line)
+    if (keys.length !== lineKeys.size || !keys.every((key) => typeof key === 'string' && lineKeys.has(key))) invalidResponse()
+    const productId = requiredProductId(line)
+    const cakeSize = requiredSetValue(line, 'cakeSize', VALID_CAKE_SIZES)
+    const chocolateType = requiredSetValue(line, 'chocolateType', VALID_CHOCOLATE_TYPES)
+    const poundAddon = requiredSetValue(line, 'poundAddon', VALID_POUND_ADDONS)
+    const chocolateIcingCount = nonnegativeInteger(line.chocolateIcingCount)
+    const vanillaCreamCount = nonnegativeInteger(line.vanillaCreamCount)
+    const partyDecorationCount = nonnegativeInteger(line.partyDecorationCount)
+    const vanillaCakeSheet = requiredSetValue(line, 'vanillaCakeSheet', VALID_VANILLA_CAKE_SHEETS)
+    const vanillaCakeFlavor = requiredSetValue(line, 'vanillaCakeFlavor', VALID_VANILLA_CAKE_FLAVORS)
+    const quantity = nonnegativeInteger(line.quantity)
+    const normalizedFinishes = normalizeCupcakeFinishCounts(productId, vanillaCreamCount, partyDecorationCount)
+    if (
+      cakeSize !== normalizeCakeSize(productId, cakeSize) ||
+      poundAddon !== normalizePoundAddon(productId, poundAddon) ||
+      chocolateType !== normalizeReservationChocolateType(productId, chocolateType, poundAddon) ||
+      chocolateIcingCount !== normalizeChocolateIcingCount(productId, chocolateIcingCount) ||
+      vanillaCreamCount !== normalizedFinishes.vanillaCreamCount ||
+      partyDecorationCount !== normalizedFinishes.partyDecorationCount ||
+      vanillaCakeSheet !== normalizeVanillaCakeSheet(productId, vanillaCakeSheet) ||
+      vanillaCakeFlavor !== normalizeVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
+      quantity < 1 || quantity > MAX_RESERVATION_QUANTITY
+    ) invalidResponse()
+    const unitPriceCents = nonnegativeInteger(line.unitPriceCents)
+    const subtotalCents = nonnegativeInteger(line.subtotalCents)
+    const discountCents = nonnegativeInteger(line.discountCents)
+    const totalPriceCents = nonnegativeInteger(line.totalPriceCents)
+    const discountPercent = line.discountPercent
+    if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10) invalidResponse()
+    const authoritativeUnitPriceCents = Math.round(getReservationPrice(productId, {
+      cakeSize, chocolateType, poundAddon, chocolateIcingCount, vanillaCreamCount, partyDecorationCount,
+    }) * 100)
+    const expectedSubtotalCents = unitPriceCents * quantity
+    if (
+      !Number.isSafeInteger(authoritativeUnitPriceCents) ||
+      !Number.isSafeInteger(expectedSubtotalCents) ||
+      unitPriceCents !== authoritativeUnitPriceCents ||
+      expectedSubtotalCents !== subtotalCents ||
+      subtotalCents - discountCents !== totalPriceCents
+    ) invalidResponse()
+    if (discountPercent === 0 && discountCents !== 0) invalidResponse()
+    return {
+      productId, cakeSize, chocolateType, poundAddon, chocolateIcingCount, vanillaCreamCount,
+      partyDecorationCount, vanillaCakeSheet, vanillaCakeFlavor, quantity,
+      unitPriceCents, subtotalCents, discountPercent, discountCents, totalPriceCents,
+    }
+  })
+  const canonicalKeys = orderLines.map(canonicalOrderLineKey)
+  if (new Set(canonicalKeys).size !== canonicalKeys.length) invalidResponse()
+
+  const subtotalCents = nonnegativeInteger(row.subtotalCents)
+  const discountBasisCents = nonnegativeInteger(row.discountBasisCents)
+  const discountCents = nonnegativeInteger(row.discountCents)
+  const totalPriceCents = nonnegativeInteger(row.totalPriceCents)
+  const discountPercent = row.discountPercent
+  if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10) invalidResponse()
+  if (subtotalCents - discountCents !== totalPriceCents) invalidResponse()
+  const aggregateDiscountNumerator = discountBasisCents * Number(discountPercent)
+  if (!Number.isSafeInteger(aggregateDiscountNumerator) || discountCents !== Math.round(aggregateDiscountNumerator / 100)) invalidResponse()
+  const appliedPromoCodeLast4 = row.appliedPromoCodeLast4 === undefined
+    ? ''
+    : typeof row.appliedPromoCodeLast4 === 'string'
+      ? row.appliedPromoCodeLast4.toUpperCase()
+      : invalidResponse()
+  if (discountPercent === 0 && (discountBasisCents !== 0 || discountCents !== 0 || appliedPromoCodeLast4 !== '')) invalidResponse()
+  if (discountPercent !== 0 && (discountBasisCents <= 0 || discountCents <= 0 || !SAFE_LAST4_PATTERN.test(appliedPromoCodeLast4))) invalidResponse()
+
+  const promotionKind = requiredSetValue(row, 'promotionKind', new Set(['none', 'static', 'review-reward', 'manual-coupon'] as const))
+  const createdAt = requiredIsoTimestamp(row, 'createdAt')
+  if ((promotionKind === 'none') !== (discountPercent === 0)) invalidResponse()
+  if (promotionKind === 'static' && discountPercent !== 10) invalidResponse()
+  if (promotionKind === 'manual-coupon' && discountPercent !== 5) invalidResponse()
+
+  let eligibleIndexes: number[] = []
+  if (promotionKind === 'static') {
+    const staticCode = appliedPromoCodeLast4 === 'LATE'
+      ? 'chocolate'
+      : appliedPromoCodeLast4 === 'MONI'
+        ? 'lemoni'
+        : invalidResponse()
+    const createdDate = new Date(createdAt)
+    eligibleIndexes = orderLines
+      .map((line, index) => getValidPromoCode(line.productId, staticCode, createdDate) === staticCode ? index : -1)
+      .filter((index) => index >= 0)
+    if (eligibleIndexes.length === 0) invalidResponse()
+  } else if (promotionKind === 'review-reward' || promotionKind === 'manual-coupon') {
+    eligibleIndexes = orderLines.map((_, index) => index)
+  }
+  const eligibleIndexSet = new Set(eligibleIndexes)
+  if (orderLines.some((line, index) => line.discountPercent !== (eligibleIndexSet.has(index) ? discountPercent : 0))) invalidResponse()
+
+  const expectedBasis = safeSum(eligibleIndexes.map((index) => orderLines[index].subtotalCents))
+  const expectedAllocations = expectedLineDiscounts(orderLines, eligibleIndexes, discountPercent, discountCents)
+  if (orderLines.some((line, index) => line.discountCents !== expectedAllocations[index])) invalidResponse()
+  const lineSubtotal = safeSum(orderLines.map((line) => line.subtotalCents))
+  const lineDiscount = safeSum(orderLines.map((line) => line.discountCents))
+  const lineTotal = safeSum(orderLines.map((line) => line.totalPriceCents))
+  const itemCount = safeSum(orderLines.map((line) => line.quantity))
+  if (
+    nonnegativeInteger(row.orderLineCount) !== orderLines.length ||
+    nonnegativeInteger(row.orderItemCount) !== itemCount ||
+    lineSubtotal !== subtotalCents ||
+    expectedBasis !== discountBasisCents ||
+    lineDiscount !== discountCents ||
+    lineTotal !== totalPriceCents
+  ) invalidResponse()
+
+  const first = orderLines[0]
+  for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity'] as const) {
+    if (row[key] !== first[key]) invalidResponse()
+  }
+  const totalPrice = requiredFiniteNumber(row, 'totalPrice')
+  if (!Number.isSafeInteger(totalPriceCents) || totalPrice !== totalPriceCents / 100) invalidResponse()
+  const customerName = requiredString(row, 'customerName')
+  const customerPhone = requiredString(row, 'customerPhone')
+  if (customerName.trim().length < 2 || !isValidPhone(customerPhone)) invalidResponse()
+
+  return {
+    id: '',
+    reservationNumber: requiredString(row, 'reservationNumber'),
+    customerName,
+    customerPhone,
+    productId: first.productId,
+    cakeSize: first.cakeSize,
+    chocolateType: first.chocolateType,
+    poundAddon: first.poundAddon,
+    chocolateIcingCount: first.chocolateIcingCount,
+    vanillaCreamCount: first.vanillaCreamCount,
+    partyDecorationCount: first.partyDecorationCount,
+    vanillaCakeSheet: first.vanillaCakeSheet,
+    vanillaCakeFlavor: first.vanillaCakeFlavor,
+    quantity: first.quantity,
+    pickupDate: requiredDateOnly(row, 'pickupDate'),
+    pickupTime: requiredTime(row, 'pickupTime'),
+    cacaoPercent: requiredSetValue(row, 'cacaoPercent', VALID_CACAO),
+    requestNote: requiredString(row, 'requestNote'),
+    status: requiredSetValue(row, 'status', VALID_STATUSES),
+    paymentStatus: requiredSetValue(row, 'paymentStatus', VALID_PAYMENT_STATUSES),
+    totalPrice,
+    subtotalCents,
+    discountPercent,
+    discountCents,
+    totalPriceCents,
+    promotionKind,
+    ...(appliedPromoCodeLast4 ? { appliedPromoCodeLast4 } : {}),
+    adminMemo: requiredString(row, 'adminMemo'),
+    createdAt,
+    updatedAt: requiredIsoTimestamp(row, 'updatedAt'),
+    orderLines,
+    orderLineCount: orderLines.length,
+    orderItemCount: itemCount,
+    discountBasisCents,
+  }
+}
+
 export function parseCakeReservationResult(value: unknown): Reservation {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) invalidResponse()
-  const row = value as Record<string, unknown>
+  const row = readPlainDataRecordSnapshot(value)
+  if (!row) invalidResponse()
   const pricing = getReservationPricingAudit(row)
   const totalPrice = requiredFiniteNumber(row, 'totalPrice')
   if (Math.round(totalPrice * 100) !== pricing.totalPriceCents) invalidResponse()

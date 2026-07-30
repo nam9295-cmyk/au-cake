@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { formatCakeSizeLabel } from './business.js'
+import { formatCakeSizeLabel, parseStoredOrderLines } from './business.js'
 
 const CALENDAR_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60
 
@@ -42,7 +42,7 @@ export function verifyCalendarToken(token, secret, now = new Date()) {
   }
 }
 
-function cakeLabel(document) {
+function cakeLineLabel(document) {
   const labels = {
     'pave-cake': 'Pave cake',
     'vanilla-fresh-cream-cake': 'vanilla fresh cream cake',
@@ -89,6 +89,12 @@ function cakeLabel(document) {
   }
   const count = Math.max(1, Number(document.quantity) || 1)
   return `${label}${options.length ? ` · ${options.join(' · ')}` : ''} ×${count}`
+}
+
+function cakeLabel(document) {
+  const stored = parseStoredOrderLines(document)
+  const lines = stored?.lines || [document]
+  return lines.map(cakeLineLabel).join(' / ')
 }
 
 function cakeStatus(status) {

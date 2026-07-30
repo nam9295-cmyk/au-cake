@@ -13,6 +13,7 @@ import {
   loadCartLines,
   removeCartLine,
   saveCartLines,
+  subtractSubmittedCartLines,
   updateCartLineQuantity,
   type CartLine,
   type StorageLike,
@@ -25,6 +26,7 @@ type CartContextValue = {
   add: (selection: CakeDetailSelection) => void
   update: (lineKey: string, quantity: number) => void
   remove: (lineKey: string) => void
+  removeSubmitted: (submitted: readonly CartLine[]) => void
   clear: () => void
 }
 
@@ -63,6 +65,10 @@ export function CartProvider({ children }: PropsWithChildren) {
     setLines((current) => removeCartLine(current, lineKey))
   }, [])
 
+  const removeSubmitted = useCallback((submitted: readonly CartLine[]) => {
+    setLines((current) => subtractSubmittedCartLines(current, submitted))
+  }, [])
+
   const clear = useCallback(() => setLines([]), [])
   const itemCount = useMemo(() => getCartTotalQuantity(lines), [lines])
   const value = useMemo<CartContextValue>(() => ({
@@ -71,8 +77,9 @@ export function CartProvider({ children }: PropsWithChildren) {
     add,
     update,
     remove,
+    removeSubmitted,
     clear,
-  }), [lines, itemCount, add, update, remove, clear])
+  }), [lines, itemCount, add, update, remove, removeSubmitted, clear])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { ProductDetailRows } from '../components/ProductDetailRows'
+import { OrderDetailRows } from '../components/ProductDetailRows'
 import { SiteHeader } from '../components/SiteChrome'
 import { type Page } from '../lib/app-routes'
 import { cakeCopy, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 import { getReservationByNumber } from '../lib/repository'
 import type { PublicReservation } from '../lib/types'
-import { isValidPhone, normalizePhone } from '../lib/utils'
+import { formatCurrency, isValidPhone, normalizePhone } from '../lib/utils'
 
 function formatReservationStatus(status: string) {
   if (marketConfig.market === 'KR') return status
@@ -46,6 +46,10 @@ export function LookupPage({
   const [phone, setPhone] = useState('')
   const [reservation, setReservation] = useState<PublicReservation | null>(null)
   const [message, setMessage] = useState('')
+  const totalPriceCents = reservation && 'totalPriceCents' in reservation
+    && Number.isSafeInteger(reservation.totalPriceCents)
+    ? reservation.totalPriceCents as number
+    : null
   const [searching, setSearching] = useState(false)
 
   async function lookup(event: React.FormEvent) {
@@ -107,7 +111,13 @@ export function LookupPage({
                 <dt>{copy.paymentStatus}</dt>
                 <dd>{formatPaymentStatus(reservation.paymentStatus)}</dd>
               </div>
-              <ProductDetailRows reservation={reservation} language={language} />
+              <OrderDetailRows reservation={reservation} language={language} />
+              {totalPriceCents !== null && (
+                <div>
+                  <dt>{copy.price}</dt>
+                  <dd>{formatCurrency(totalPriceCents / 100)}</dd>
+                </div>
+              )}
               <div>
                 <dt>{copy.pickUp}</dt>
                 <dd>

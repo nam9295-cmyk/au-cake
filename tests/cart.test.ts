@@ -12,6 +12,7 @@ import {
   removeCartLine,
   saveCartLines,
   serializeCartLines,
+  subtractSubmittedCartLines,
   updateCartLineQuantity,
 } from '../src/lib/cart.js'
 import type { CakeDetailSelection } from '../src/lib/cake-detail.js'
@@ -125,6 +126,28 @@ test('updating one line clamps its quantity without changing other lines', () =>
   assert.equal(updated[0].selection.quantity, 5)
   assert.equal(updated[1].selection.quantity, 1)
   assert.deepEqual(updateCartLineQuantity(updated, 'missing', 2), updated)
+})
+
+test('successful snapshot cleanup subtracts only submitted quantities and preserves every later addition', () => {
+  const submitted = [
+    ...addCartLine([], baseSelection()),
+    ...addCartLine([], baseSelection({ productId: 'pave-cake', cakeSize: '19cm' })),
+  ]
+  const distinctAddedAfterSubmission = addCartLine([], baseSelection({
+    productId: 'vanilla-fresh-cream-cake',
+    cakeSize: '22cm',
+    vanillaCakeSheet: 'chocolate',
+  }))[0]
+  const currentWithSameKeyAddition = addCartLine(submitted, baseSelection())
+  const current = [...currentWithSameKeyAddition, distinctAddedAfterSubmission]
+  const afterSuccess = subtractSubmittedCartLines(current, submitted)
+
+  assert.deepEqual(afterSuccess, [
+    { ...submitted[0], selection: { ...submitted[0].selection, quantity: 1 } },
+    distinctAddedAfterSubmission,
+  ])
+  assert.equal(current[0].selection.quantity, 2)
+  assert.equal(submitted[0].selection.quantity, 1)
 })
 
 test('removing a line deletes only its exact normalized configuration', () => {

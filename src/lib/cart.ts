@@ -102,6 +102,30 @@ export function removeCartLine(lines: readonly CartLine[], lineKey: string): Car
   return lines.filter((line) => line.lineKey !== lineKey)
 }
 
+export function subtractSubmittedCartLines(
+  lines: readonly CartLine[],
+  submitted: readonly CartLine[],
+): CartLine[] {
+  const submittedQuantities = new Map<string, number>()
+  for (const line of submitted) {
+    submittedQuantities.set(
+      line.lineKey,
+      (submittedQuantities.get(line.lineKey) || 0) + line.selection.quantity,
+    )
+  }
+
+  return lines.flatMap((line) => {
+    const submittedQuantity = submittedQuantities.get(line.lineKey)
+    if (!submittedQuantity) return [line]
+    const remainingQuantity = line.selection.quantity - submittedQuantity
+    if (remainingQuantity <= 0) return []
+    return [{
+      ...line,
+      selection: { ...line.selection, quantity: remainingQuantity },
+    }]
+  })
+}
+
 function toPersistedSelection(selection: CakeDetailSelection): CakeDetailSelection | null {
   const normalized = normalizeCartSelection(selection)
   if (!normalized) return null
