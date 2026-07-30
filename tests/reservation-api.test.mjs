@@ -906,6 +906,24 @@ test('stored order parser rejects missing, partial, or ineligible discount prove
   delete missingProvenance.appliedPromoCodeLast4
   assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(missingProvenance), 500)
 
+  const validManual = buildCakeReservation(multiCakeInput([
+    { productId: 'pave-cake', quantity: 1 },
+    { productId: 'pound-cake', quantity: 1 },
+  ], { promoCode: '' }), {
+    now,
+    reservationNumber: 'VG-C-AU-MANUAL-PROVENANCE',
+    reviewCoupon: { id: 'manual:coupon-proof', rewardPercent: 5, codeLast4: 'Q2MK' },
+  })
+  assert.doesNotThrow(() => parseStoredOrderLines(validManual))
+  for (const reviewCouponId of ['manual:', 'manual:bad space', 'manual:_bad']) {
+    assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines({ ...validManual, reviewCouponId }), 500)
+  }
+  assertApiError(
+    'INVALID_STORED_ORDER',
+    () => parseStoredOrderLines({ ...review, reviewCouponId: 'manual:coupon-proof' }),
+    500,
+  )
+
   const partialPayload = JSON.parse(review.orderLinesJson)
   partialPayload.lines[1].discountPercent = 0
   partialPayload.lines[1].discountCents = 0
@@ -1060,8 +1078,14 @@ test('cake creation returns the original document when the same request ID is re
     quantity: 1,
     pickupDate: '2099-07-11',
   }
-  const first = await createCake(databases, { ...futureCakeInput, requestId })
-  const retry = await createCake(databases, { ...futureCakeInput, requestId })
+  const runtimeConfig = {
+    cakeDatabaseId: 'verygood_cake_au', kidsDatabaseId: 'verygood_cake_au',
+    cakeReservationsId: 'reservations', classBookedDatesId: 'class_booked_dates',
+    cakePickupOpeningsId: 'cake_pickup_openings', reviewCouponsId: 'review_coupons', manualCouponsId: 'manual_coupons',
+    reviewCouponHmacSecret: Buffer.alloc(32, 7),
+  }
+  const first = await createCake(databases, { ...futureCakeInput, requestId }, { runtimeConfig })
+  const retry = await createCake(databases, { ...futureCakeInput, requestId }, { runtimeConfig })
   assert.equal(creates, 1)
   assert.equal(first.chocolateIcingCount, 3)
   assert.equal(first.totalPriceCents, 3750)

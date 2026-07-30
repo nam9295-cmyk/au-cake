@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
-import { createHmac } from 'node:crypto'
+import { createHmac, randomUUID } from 'node:crypto'
 import { AppwriteException, Query } from 'node-appwrite'
 import {
   ReservationApiError,
@@ -10,7 +10,7 @@ import {
   normalizeReviewCouponCode,
   validateReviewCoupon,
 } from '../functions/reservation-api/src/business.js'
-import {
+import reservationHandler, {
   createCake,
   cakeReservationResponse,
   checkReservationReadiness,
@@ -27,6 +27,44 @@ const TEST_SECRET = 'A'.repeat(43)
 const TEST_SECRET_BYTES = Buffer.from(TEST_SECRET, 'base64url')
 const codeHash = hashReviewCouponCode(rawCode, TEST_SECRET_BYTES)
 const manualCodeHash = createHmac('sha256', TEST_SECRET_BYTES).update(manualCode, 'utf8').digest('hex')
+
+test('request cap measures UTF-8 bytes before configuration or database access', async () => {
+  let response
+  await reservationHandler({
+    req: {
+      bodyText: JSON.stringify({ action: 'health', padding: '🍰'.repeat(5_000) }),
+      bodyJson: { action: 'health' },
+      headers: {},
+    },
+    res: { json(body, status) { response = { body, status } } },
+    log() {},
+    error() {},
+  })
+  assert.deepEqual(response, { body: { ok: false, code: 'REQUEST_TOO_LARGE' }, status: 413 })
+})
+
+test('multi-line cake creation requires a valid request ID before database access', async () => {
+  const calls = []
+  const databases = new Proxy({}, {
+    get(_target, property) {
+      return async () => { calls.push(property); throw new Error('database must not be reached') }
+    },
+  })
+  const input = {
+    customerName: cakeInput.customerName,
+    customerPhone: cakeInput.customerPhone,
+    pickupDate: cakeInput.pickupDate,
+    pickupTime: cakeInput.pickupTime,
+    requestNote: cakeInput.requestNote,
+    promoCode: '',
+    privacyConsent: true,
+    orderLines: [{
+      productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1,
+    }],
+  }
+  await assert.rejects(() => createCake(databases, input, { now, runtimeConfig }), assertApiCode('INVALID_REQUEST_ID'))
+  assert.deepEqual(calls, [])
+})
 
 test('cake create response omits internal ids and exposes only authoritative promotion kind', () => {
   const base = {
@@ -47,6 +85,63 @@ test('cake create response omits internal ids and exposes only authoritative pro
   assert.equal(cakeReservationResponse({ ...base, reviewCouponId: undefined, discountPercent: 10, discountCents: 750, totalPriceCents: 6750 }).promotionKind, 'static')
   assert.equal(cakeReservationResponse({ ...base, reviewCouponId: undefined, appliedPromoCodeLast4: undefined, discountPercent: 0, discountCents: 0, totalPriceCents: 7500 }).promotionKind, 'none')
 })
+test('multi-line create responses expose only authoritative stored line pricing and aggregates', () => {
+  const document = buildCakeReservation({
+    customerName: cakeInput.customerName,
+    customerPhone: cakeInput.customerPhone,
+    pickupDate: cakeInput.pickupDate,
+    pickupTime: cakeInput.pickupTime,
+    requestNote: cakeInput.requestNote,
+    promoCode: '',
+    privacyConsent: true,
+    orderLines: [
+      { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 2 },
+      { productId: 'choco-basque-cheesecake', quantity: 1 },
+    ],
+  }, { now, reservationNumber: 'VG-C-AU-MULTI' })
+  const response = cakeReservationResponse({ $id: 'private', ...document, requestFingerprint: 'f'.repeat(64) })
+  assert.equal(response.orderLineCount, 2)
+  assert.equal(response.orderItemCount, 3)
+  assert.equal(response.discountBasisCents, 0)
+  assert.deepEqual(response.orderLines.map((line) => ({
+    productId: line.productId,
+    quantity: line.quantity,
+    unitPriceCents: line.unitPriceCents,
+    subtotalCents: line.subtotalCents,
+    totalPriceCents: line.totalPriceCents,
+  })), [
+    { productId: 'pave-cake', quantity: 2, unitPriceCents: 7500, subtotalCents: 15000, totalPriceCents: 15000 },
+    { productId: 'choco-basque-cheesecake', quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, totalPriceCents: 5500 },
+  ])
+  assert.equal('requestFingerprint' in response, false)
+  assert.equal(JSON.stringify(response).includes('private'), false)
+})
+
+test('create response rejects any present malformed or inconsistent stored order JSON', () => {
+  const document = buildCakeReservation({
+    customerName: cakeInput.customerName,
+    customerPhone: cakeInput.customerPhone,
+    pickupDate: cakeInput.pickupDate,
+    pickupTime: cakeInput.pickupTime,
+    requestNote: '',
+    promoCode: '',
+    privacyConsent: true,
+    orderLines: [
+      { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
+      { productId: 'choco-basque-cheesecake', quantity: 1 },
+    ],
+  }, { now, reservationNumber: 'VG-C-AU-CORRUPT' })
+  for (const corrupted of [
+    { ...document, orderLineCount: 1 },
+    { ...document, orderLineCount: 1, orderLinesJson: '{malformed' },
+  ]) {
+    assert.throws(
+      () => cakeReservationResponse(corrupted),
+      (error) => error instanceof ReservationApiError && error.code === 'INVALID_STORED_ORDER' && error.status === 500,
+    )
+  }
+})
+
 const runtimeConfig = {
   cakeDatabaseId: 'verygood_cake_au',
   kidsDatabaseId: 'verygood_cake_au',
@@ -238,7 +333,7 @@ test('malformed JENNIE lookalikes fail closed while unrelated promo text stays o
   for (const promoCode of ['JENNIETEST', 'JENNIETEST77', 'JENNIE-TEST', 'JENNIETES!7']) {
     const db = createDatabaseDouble({ couponDocument: null })
     await assert.rejects(
-      () => createCake(db, { ...cakeInput, requestId: crypto.randomUUID(), promoCode }, { now, runtimeConfig }),
+      () => createCake(db, { ...cakeInput, requestId: randomUUID(), promoCode }, { now, runtimeConfig }),
       assertApiCode('PROMO_CODE_INVALID'),
     )
     assert.equal(db.calls.some(([name]) => name === 'createTransaction' || name === 'createDocument'), false, promoCode)
@@ -247,7 +342,7 @@ test('malformed JENNIE lookalikes fail closed while unrelated promo text stays o
   const unrelated = createDatabaseDouble({ couponDocument: null })
   const result = await createCake(
     unrelated,
-    { ...cakeInput, requestId: crypto.randomUUID(), promoCode: 'summer-special' },
+    { ...cakeInput, requestId: randomUUID(), promoCode: 'summer-special' },
     { now, runtimeConfig },
   )
   assert.equal(result.totalPriceCents, 7500)
@@ -259,7 +354,7 @@ test('non-string promoCode values fail closed before any reservation write', asy
   for (const promoCode of [null, 0, false, { toString: () => manualCode }]) {
     const db = createDatabaseDouble({ couponDocument: null })
     await assert.rejects(
-      () => createCake(db, { ...cakeInput, requestId: crypto.randomUUID(), promoCode }, { now, runtimeConfig }),
+      () => createCake(db, { ...cakeInput, requestId: randomUUID(), promoCode }, { now, runtimeConfig }),
       assertApiCode('PROMO_CODE_INVALID'),
     )
     assert.equal(db.calls.some(([name]) => name === 'createTransaction' || name === 'createDocument'), false)
@@ -332,7 +427,7 @@ test('static Chocolate/Lemoni pricing and audit remain local without review look
     ['fresh-lemon-cupcakes-8', 'Lemoni', 4050],
   ]) {
     const db = createDatabaseDouble({ couponDocument: null })
-    const result = await createCake(db, { ...cakeInput, requestId: crypto.randomUUID(), productId, promoCode }, { now, runtimeConfig })
+    const result = await createCake(db, { ...cakeInput, requestId: randomUUID(), productId, promoCode }, { now, runtimeConfig })
     assert.equal(result.totalPriceCents, expected)
     assert.equal(db.calls.some(([, args]) => args?.collectionId === 'review_coupons'), false)
   }
@@ -377,7 +472,7 @@ test('review coupon creation uses one transaction, exact audit, and never persis
 
 test('manual JENNIE-family coupon is redeemed atomically with a safe alphanumeric derived last4', async () => {
   const db = createDatabaseDouble({ couponDocument: manualCoupon() })
-  const manualRequestId = crypto.randomUUID()
+  const manualRequestId = randomUUID()
   const result = await createCake(
     db,
     { ...cakeInput, requestId: manualRequestId, promoCode: '  jennietest7  ' },
@@ -427,8 +522,50 @@ test('commit uncertainty returns committed reservation only when both records pr
   assert.deepEqual(recoveryEnvelope(rolledBack.coupon), recoveryEnvelope(coupon()))
 })
 
+test('commit uncertainty rejects a reservation with a mismatched request fingerprint', async () => {
+  const db = createDatabaseDouble({ failAt: 'commit', commitApplies: true })
+  const originalGetDocument = db.getDocument.bind(db)
+  let commitAttempted = false
+  const originalUpdateTransaction = db.updateTransaction.bind(db)
+  db.updateTransaction = async (args) => {
+    if (args.commit) commitAttempted = true
+    return originalUpdateTransaction(args)
+  }
+  db.getDocument = async (args) => {
+    const document = await originalGetDocument(args)
+    return commitAttempted && args.collectionId === 'reservations'
+      ? { ...document, requestFingerprint: '0'.repeat(64) }
+      : document
+  }
+  await assert.rejects(
+    () => createCake(db, cakeInput, { now, runtimeConfig }),
+    assertApiCode('PROMO_CODE_INVALID'),
+  )
+})
+
+test('commit uncertainty rejects a reservation linked to a different coupon', async () => {
+  const db = createDatabaseDouble({ failAt: 'commit', commitApplies: true })
+  const originalGetDocument = db.getDocument.bind(db)
+  let commitAttempted = false
+  const originalUpdateTransaction = db.updateTransaction.bind(db)
+  db.updateTransaction = async (args) => {
+    if (args.commit) commitAttempted = true
+    return originalUpdateTransaction(args)
+  }
+  db.getDocument = async (args) => {
+    const document = await originalGetDocument(args)
+    return commitAttempted && args.collectionId === 'reservations'
+      ? { ...document, reviewCouponId: 'coupon-from-another-request' }
+      : document
+  }
+  await assert.rejects(
+    () => createCake(db, cakeInput, { now, runtimeConfig }),
+    assertApiCode('PROMO_CODE_INVALID'),
+  )
+})
+
 test('manual coupon commit uncertainty reconciles only against the dedicated manual ledger', async () => {
-  const manualInput = { ...cakeInput, requestId: crypto.randomUUID(), promoCode: manualCode }
+  const manualInput = { ...cakeInput, requestId: randomUUID(), promoCode: manualCode }
   const committed = createDatabaseDouble({ couponDocument: manualCoupon(), failAt: 'commit', commitApplies: true })
   const result = await createCake(committed, manualInput, { now, runtimeConfig })
   assert.equal(result.promotionKind, 'manual-coupon')
@@ -446,6 +583,110 @@ test('manual coupon commit uncertainty reconciles only against the dedicated man
   assert.equal(rolledBack.calls.some(([, args]) => args?.collectionId === 'review_coupons'), false)
 })
 
+test('new multi-line request IDs reject a different canonical payload', async () => {
+  const db = createDatabaseDouble({ couponDocument: null })
+  const multiRequestId = randomUUID()
+  const input = {
+    requestId: multiRequestId,
+    customerName: cakeInput.customerName,
+    customerPhone: cakeInput.customerPhone,
+    pickupDate: cakeInput.pickupDate,
+    pickupTime: cakeInput.pickupTime,
+    requestNote: cakeInput.requestNote,
+    promoCode: '',
+    privacyConsent: true,
+    orderLines: [
+      { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
+      { productId: 'choco-basque-cheesecake', quantity: 1 },
+    ],
+  }
+  await createCake(db, input, { now, runtimeConfig })
+  const stored = db.documents.get(multiRequestId)
+  assert.match(stored.requestFingerprint, /^[a-f0-9]{64}$/)
+  await assert.rejects(
+    () => createCake(db, { ...input, orderLines: [{ ...input.orderLines[0], quantity: 2 }, input.orderLines[1]] }, { now, runtimeConfig }),
+    (error) => error instanceof ReservationApiError && error.code === 'REQUEST_ID_CONFLICT' && error.status === 409,
+  )
+})
+
+test('multi-line retries canonicalize line order before fingerprint comparison', async () => {
+  const db = createDatabaseDouble({ couponDocument: null })
+  const multiRequestId = randomUUID()
+  const input = {
+    requestId: multiRequestId,
+    customerName: cakeInput.customerName,
+    customerPhone: cakeInput.customerPhone,
+    pickupDate: cakeInput.pickupDate,
+    pickupTime: cakeInput.pickupTime,
+    requestNote: cakeInput.requestNote,
+    promoCode: '',
+    privacyConsent: true,
+    orderLines: [
+      { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
+      { productId: 'choco-basque-cheesecake', quantity: 1 },
+    ],
+  }
+  const first = await createCake(db, input, { now, runtimeConfig })
+  const retry = await createCake(db, { ...input, orderLines: [...input.orderLines].reverse() }, { now, runtimeConfig })
+  assert.equal(retry.reservationNumber, first.reservationNumber)
+  assert.equal(db.calls.filter(([name]) => name === 'createDocument').length, 1)
+})
+
+test('fingerprinted retry rejects pickup whitespace that fresh persistence would reject', async () => {
+  const db = createDatabaseDouble({ couponDocument: null })
+  const input = {
+    requestId: randomUUID(),
+    customerName: cakeInput.customerName,
+    customerPhone: cakeInput.customerPhone,
+    pickupDate: cakeInput.pickupDate,
+    pickupTime: cakeInput.pickupTime,
+    requestNote: '',
+    promoCode: '',
+    privacyConsent: true,
+    orderLines: [{
+      productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1,
+    }],
+  }
+  await createCake(db, input, { now, runtimeConfig })
+  for (const changed of [
+    { pickupDate: ` ${input.pickupDate}` },
+    { pickupTime: `${input.pickupTime} ` },
+  ]) {
+    await assert.rejects(
+      () => createCake(db, { ...input, ...changed }, { now, runtimeConfig }),
+      (error) => error instanceof ReservationApiError && error.code === 'REQUEST_ID_CONFLICT' && error.status === 409,
+    )
+  }
+})
+
+test('create-conflict reconciliation rejects a stored document without a request fingerprint', async () => {
+  const conflictRequestId = randomUUID()
+  const db = createDatabaseDouble({ couponDocument: null })
+  const stored = buildCakeReservation({ ...cakeInput, requestId: conflictRequestId, promoCode: '' }, {
+    now,
+    reservationNumber: 'VG-C-AU-LEGACY-RACE',
+  })
+  db.documents.set(conflictRequestId, stored)
+  const originalGetDocument = db.getDocument.bind(db)
+  let staleInitialRead = true
+  db.getDocument = async (args) => {
+    if (staleInitialRead && args.collectionId === 'reservations') {
+      staleInitialRead = false
+      throw new AppwriteException('Not found', 404, 'document_not_found')
+    }
+    return originalGetDocument(args)
+  }
+  db.createDocument = async (args) => {
+    db.calls.push(['createDocument', args])
+    throw new AppwriteException('Document already exists', 409, 'document_already_exists')
+  }
+
+  await assert.rejects(
+    () => createCake(db, { ...cakeInput, requestId: conflictRequestId, promoCode: '' }, { now, runtimeConfig }),
+    (error) => error instanceof ReservationApiError && error.code === 'REQUEST_ID_CONFLICT' && error.status === 409,
+  )
+})
+
 test('idempotent retry returns existing reservation before coupon lookup or validation', async () => {
   const db = createDatabaseDouble({ couponDocument: coupon({ status: 'redeemed', redeemedReservationId: requestId }) })
   db.documents.set(requestId, {
@@ -459,6 +700,49 @@ test('idempotent retry returns existing reservation before coupon lookup or vali
   const result = await createCake(db, { ...cakeInput, pickupDate: 'bad-date' }, { now, runtimeConfig })
   assert.equal(result.reservationNumber, 'VG-C-AU-ORIGINAL')
   assert.equal(db.calls.some(([, args]) => args?.collectionId === 'review_coupons'), false)
+})
+
+test('exact coupon retry reconciles when its initial reservation read is stale', async () => {
+  const db = createDatabaseDouble()
+  const first = await createCake(db, cakeInput, { now, runtimeConfig })
+  const originalGetDocument = db.getDocument.bind(db)
+  let staleReservationRead = true
+  db.getDocument = async (args) => {
+    if (staleReservationRead && args.collectionId === 'reservations') {
+      staleReservationRead = false
+      throw new AppwriteException('Not found', 404, 'document_not_found')
+    }
+    return originalGetDocument(args)
+  }
+  const originalUpdateTransaction = db.updateTransaction.bind(db)
+  db.updateTransaction = async (args) => args.rollback ? { $id: 'tx-stale-retry' } : originalUpdateTransaction(args)
+
+  const retry = await createCake(db, cakeInput, { now, runtimeConfig })
+  assert.equal(retry.reservationNumber, first.reservationNumber)
+  assert.equal(db.documents.size, 1)
+  assert.equal(db.coupon.status, 'redeemed')
+})
+
+test('coupon reconciliation rejects a stored document without a request fingerprint', async () => {
+  const db = createDatabaseDouble()
+  await createCake(db, cakeInput, { now, runtimeConfig })
+  delete db.documents.get(requestId).requestFingerprint
+  const originalGetDocument = db.getDocument.bind(db)
+  let staleReservationRead = true
+  db.getDocument = async (args) => {
+    if (staleReservationRead && args.collectionId === 'reservations') {
+      staleReservationRead = false
+      throw new AppwriteException('Not found', 404, 'document_not_found')
+    }
+    return originalGetDocument(args)
+  }
+  const originalUpdateTransaction = db.updateTransaction.bind(db)
+  db.updateTransaction = async (args) => args.rollback ? { $id: 'tx-stale-legacy' } : originalUpdateTransaction(args)
+
+  await assert.rejects(
+    () => createCake(db, cakeInput, { now, runtimeConfig }),
+    assertApiCode('PROMO_CODE_INVALID'),
+  )
 })
 
 test('interleaved concurrent coupon submissions have one winner and a generic invalid-code loser', async () => {

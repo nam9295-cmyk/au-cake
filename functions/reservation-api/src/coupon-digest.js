@@ -22,6 +22,16 @@ export function resolveReviewCouponHmacSecret(env = process.env, ErrorClass = Er
   return secret
 }
 
+export function digestCakeRequestPayload(payload, secretValue, ErrorClass = Error) {
+  const secret = Buffer.isBuffer(secretValue)
+    ? secretValue
+    : resolveReviewCouponHmacSecret({ REVIEW_COUPON_HMAC_SECRET: secretValue }, ErrorClass)
+  return createHmac('sha256', secret)
+    .update('cake-request-v1\0', 'utf8')
+    .update(JSON.stringify(payload), 'utf8')
+    .digest('hex')
+}
+
 export function digestReviewCouponCode(normalizedCode, secretValue, ErrorClass = Error) {
   const secret = Buffer.isBuffer(secretValue)
     ? secretValue

@@ -12,6 +12,7 @@ const REVIEW_COUPON_PATTERN = new RegExp(
   `^(?:${GENERATED_REVIEW_COUPON_ANIMALS.join('|')})(?:${REVIEW_COUPON_FRUITS.join('|')})[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$`,
 )
 const MANUAL_REVIEW_COUPON_PATTERN = /^JENNIE[A-Z0-9]{5}$/
+const MANUAL_REVIEW_COUPON_ID_PATTERN = /^manual:[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const SAFE_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 
 export const PROMO_CODE = 'chocolate'
@@ -502,6 +503,45 @@ export function normalizeCakeOrderLines(orderLines) {
   return normalized
 }
 
+export function canonicalCakeRequestPayload(input) {
+  if (!isPlainObject(input)) fail('INVALID_REQUEST')
+  if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
+  if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
+  const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
+  const customerPhone = validateAustralianMobile(input.customerPhone)
+  const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
+  let lines
+  if (Object.hasOwn(input, 'orderLines')) {
+    if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
+    lines = normalizeCakeOrderLines(input.orderLines)
+  } else {
+    const quantity = Number(input.quantity)
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
+    lines = [normalizedCakeLine(input, quantity)]
+  }
+  const promoText = input.promoCode === undefined
+    ? ''
+    : typeof input.promoCode === 'string'
+      ? input.promoCode.trim()
+      : fail('PROMO_CODE_INVALID')
+  const promoUpper = promoText.toUpperCase()
+  const looksLikeCoupon = promoUpper.startsWith('VG') || promoUpper.startsWith('JENNIE')
+    || REVIEW_COUPON_ANIMALS.some((animal) => promoUpper.startsWith(animal))
+  const reviewCode = looksLikeCoupon ? normalizeReviewCouponCode(promoText) : null
+  const staticCode = PROMOTIONS.find((promotion) => promotion.code === promoText.toLowerCase()
+    && lines.some((line) => promotion.productIds.has(line.productId)))?.code
+  return {
+    version: 1,
+    customerName,
+    customerPhone,
+    pickupDate: typeof input.pickupDate === 'string' ? input.pickupDate : '',
+    pickupTime: typeof input.pickupTime === 'string' ? input.pickupTime : '',
+    requestNote,
+    promoCode: reviewCode || staticCode || '',
+    orderLines: [...lines].sort((left, right) => canonicalOrderLineKey(left).localeCompare(canonicalOrderLineKey(right))),
+  }
+}
+
 function getValidPromoCode(productId, promoCode, now) {
   if (typeof promoCode !== 'string') return null
   const normalizedCode = promoCode.trim().toLowerCase()
@@ -906,7 +946,10 @@ export function parseStoredOrderLines(document) {
         typeof document.reviewCouponId !== 'string' || !document.reviewCouponId ||
         !hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string' ||
         !SAFE_LAST4_PATTERN.test(document.appliedPromoCodeLast4) ||
-        (discountPercent !== 5 && discountPercent !== 10)
+        (discountPercent !== 5 && discountPercent !== 10) ||
+        (document.reviewCouponId.startsWith('manual:') && (
+          !MANUAL_REVIEW_COUPON_ID_PATTERN.test(document.reviewCouponId) || discountPercent !== 5
+        ))
       ) throw new Error('invalid review discount provenance')
       eligibleIndexes = payload.lines.map((_, index) => index)
     } else if (discountPercent === 10) {

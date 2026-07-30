@@ -4,6 +4,7 @@ import {
   REVIEW_COUPON_ANIMALS,
   buildCakeReservation,
   buildClassReservation,
+  canonicalCakeRequestPayload,
   generateCakeReservationNumber,
   generateClassReservationNumber,
   hashReviewCouponCode,
@@ -11,6 +12,7 @@ import {
   matchesLookupPhone,
   normalizeAustralianMobile,
   normalizeReviewCouponCode,
+  parseStoredOrderLines,
   publicCakeReservation,
   validateReviewCoupon,
 } from './business.js'
@@ -21,7 +23,7 @@ import {
   secureTextEqual,
   verifyCalendarToken,
 } from './calendar-access.js'
-import { resolveReviewCouponHmacSecret } from './coupon-digest.js'
+import { digestCakeRequestPayload, resolveReviewCouponHmacSecret } from './coupon-digest.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -69,7 +71,7 @@ function clientForRequest(req) {
 }
 
 function requestBody(req) {
-  if (typeof req.bodyText === 'string' && req.bodyText.length > 20_000) {
+  if (typeof req.bodyText === 'string' && Buffer.byteLength(req.bodyText, 'utf8') > 20_000) {
     throw new ReservationApiError('REQUEST_TOO_LARGE', 413)
   }
   const body = req.bodyJson
@@ -86,7 +88,13 @@ function isConflict(error) {
 }
 
 function documentIdForInput(input) {
-  if (input?.requestId === undefined || input?.requestId === null || input?.requestId === '') return ID.unique()
+  const requestIdMissing = input?.requestId === undefined || input?.requestId === null || input?.requestId === ''
+  if (requestIdMissing) {
+    if (input && Object.prototype.hasOwnProperty.call(input, 'orderLines')) {
+      throw new ReservationApiError('INVALID_REQUEST_ID')
+    }
+    return ID.unique()
+  }
   if (typeof input.requestId !== 'string' || !/^[a-f\d]{8}-[a-f\d]{4}-[1-8][a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i.test(input.requestId)) {
     throw new ReservationApiError('INVALID_REQUEST_ID')
   }
@@ -105,6 +113,28 @@ async function getIdempotentDocument(databases, databaseId, collectionId, docume
     if (error instanceof AppwriteException && error.code === 404) return null
     throw error
   }
+}
+
+function cakeRequestFingerprint(input, runtimeConfig) {
+  return digestCakeRequestPayload(
+    canonicalCakeRequestPayload(input),
+    runtimeConfig.reviewCouponHmacSecret,
+    ReservationApiError,
+  )
+}
+
+function assertMatchingRequestFingerprint(document, fingerprint) {
+  if (!Object.hasOwn(document, 'requestFingerprint')) return
+  if (typeof document.requestFingerprint !== 'string' || !secureTextEqual(document.requestFingerprint, fingerprint)) {
+    throw new ReservationApiError('REQUEST_ID_CONFLICT', 409)
+  }
+}
+
+function assertRequiredMatchingRequestFingerprint(document, fingerprint) {
+  if (!Object.hasOwn(document, 'requestFingerprint')) {
+    throw new ReservationApiError('REQUEST_ID_CONFLICT', 409)
+  }
+  assertMatchingRequestFingerprint(document, fingerprint)
 }
 
 async function listCakePickupOpenings(databases, pickupDate) {
@@ -141,6 +171,8 @@ async function uniqueReservationNumber(databases, databaseId, collectionId, gene
 
 export function cakeReservationResponse(document) {
   const discountCents = Number(document.discountCents || 0)
+  const storedOrder = Object.hasOwn(document, 'orderLinesJson') ? parseStoredOrderLines(document) : null
+  const multiLineOrder = storedOrder && storedOrder.lines.length > 1 ? storedOrder : null
   const promotionKind = typeof document.reviewCouponId === 'string' && document.reviewCouponId.startsWith('manual:')
     ? 'manual-coupon'
     : document.reviewCouponId
@@ -173,6 +205,12 @@ export function cakeReservationResponse(document) {
     subtotalCents: document.subtotalCents,
     discountPercent: document.discountPercent,
     discountCents: document.discountCents,
+    ...(multiLineOrder ? {
+      orderLines: multiLineOrder.lines,
+      orderLineCount: document.orderLineCount,
+      orderItemCount: document.orderItemCount,
+      discountBasisCents: document.discountBasisCents,
+    } : {}),
     promotionKind,
     ...(document.appliedPromoCodeLast4 ? { appliedPromoCodeLast4: document.appliedPromoCodeLast4 } : {}),
     adminMemo: document.adminMemo || '',
@@ -284,7 +322,16 @@ async function findReviewCoupon(databases, runtimeConfig, normalizedCode, collec
   return result.documents[0] || null
 }
 
-async function reconcileReviewCouponCommit(databases, runtimeConfig, documentId, customerPhone, couponId, collectionId) {
+async function reconcileReviewCouponCommit(
+  databases,
+  runtimeConfig,
+  documentId,
+  customerPhone,
+  requestFingerprint,
+  couponId,
+  collectionId,
+  expectedReviewCouponId,
+) {
   let reservation
   let currentCoupon
   try {
@@ -308,10 +355,16 @@ async function reconcileReviewCouponCommit(databases, runtimeConfig, documentId,
           })
         : Promise.resolve(null),
     ])
+    if (reservation) assertRequiredMatchingRequestFingerprint(reservation, requestFingerprint)
   } catch {
     throw new ReservationApiError('PROMO_CODE_INVALID')
   }
-  if (reservation && currentCoupon?.status === 'redeemed' && currentCoupon.redeemedReservationId === documentId) {
+  if (
+    reservation &&
+    reservation.reviewCouponId === expectedReviewCouponId &&
+    currentCoupon?.status === 'redeemed' &&
+    currentCoupon.redeemedReservationId === documentId
+  ) {
     return cakeReservationResponse(reservation)
   }
   if (currentCoupon?.status === 'redeemed') throw new ReservationApiError('PROMO_CODE_INVALID')
@@ -333,11 +386,22 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
     customerPhone,
     'customerPhone',
   )
-  if (existing) return cakeReservationResponse(existing)
+  let requestFingerprint
+  if (existing) {
+    if (Object.hasOwn(existing, 'requestFingerprint')) {
+      requestFingerprint = cakeRequestFingerprint(input, runtimeConfig)
+      assertMatchingRequestFingerprint(existing, requestFingerprint)
+    }
+    return cakeReservationResponse(existing)
+  }
+  requestFingerprint = cakeRequestFingerprint(input, runtimeConfig)
 
   const normalizedReviewCode = reviewCouponInput(input?.promoCode)
   const safeInput = normalizedReviewCode ? { ...input, promoCode: '' } : input
-  let data = buildCakeReservation(safeInput, { now, reservationNumber: 'pending' })
+  let data = {
+    ...buildCakeReservation(safeInput, { now, reservationNumber: 'pending' }),
+    requestFingerprint,
+  }
   data.reservationNumber = await uniqueReservationNumber(
     databases,
     runtimeConfig.cakeDatabaseId,
@@ -378,6 +442,7 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
         'customerPhone',
       )
       if (!retryDocument) throw error
+      assertRequiredMatchingRequestFingerprint(retryDocument, requestFingerprint)
       document = retryDocument
     }
     return cakeReservationResponse(document)
@@ -387,6 +452,7 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
   const transactionId = transaction.$id || transaction.id
   const couponLedger = couponLedgerForCode(runtimeConfig, normalizedReviewCode)
   let couponId
+  let expectedReviewCouponId
   let commitAttempted = false
   try {
     const couponDocument = await findReviewCoupon(
@@ -396,12 +462,17 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
       couponLedger.collectionId,
       transactionId,
     )
+    couponId = couponDocument?.$id || couponDocument?.id
+    expectedReviewCouponId = couponLedger.manual && couponId ? `manual:${couponId}` : couponId
     const reviewCoupon = validateReviewCoupon(couponDocument, normalizedReviewCode, now, runtimeConfig.reviewCouponHmacSecret)
-    couponId = reviewCoupon.id
     const pricingCoupon = couponLedger.manual
       ? { ...reviewCoupon, id: `manual:${reviewCoupon.id}` }
       : reviewCoupon
-    data = buildCakeReservation(safeInput, { now, reservationNumber: data.reservationNumber, reviewCoupon: pricingCoupon })
+    expectedReviewCouponId = pricingCoupon.id
+    data = {
+      ...buildCakeReservation(safeInput, { now, reservationNumber: data.reservationNumber, reviewCoupon: pricingCoupon }),
+      requestFingerprint,
+    }
     await databases.createDocument({
       databaseId: runtimeConfig.cakeDatabaseId,
       collectionId: runtimeConfig.cakeReservationsId,
@@ -432,15 +503,29 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
     await databases.updateTransaction({ transactionId, commit: true })
   } catch (error) {
     try { await databases.updateTransaction({ transactionId, rollback: true }) } catch { /* already rolled back or committed */ }
-    if (error instanceof ReservationApiError) throw error
+    if (error instanceof ReservationApiError) {
+      if (error.code !== 'PROMO_CODE_INVALID' || !couponId) throw error
+      return reconcileReviewCouponCommit(
+        databases,
+        runtimeConfig,
+        documentId,
+        customerPhone,
+        requestFingerprint,
+        couponId,
+        couponLedger.collectionId,
+        expectedReviewCouponId,
+      )
+    }
     if (commitAttempted || isConflict(error)) {
       return reconcileReviewCouponCommit(
         databases,
         runtimeConfig,
         documentId,
         customerPhone,
+        requestFingerprint,
         couponId,
         couponLedger.collectionId,
+        expectedReviewCouponId,
       )
     }
     throw error
