@@ -3,6 +3,8 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const classReserve = await readFile(new URL('../src/pages/ClassReservePage.tsx', import.meta.url), 'utf8')
+const classComplete = await readFile(new URL('../src/pages/ClassCompletePage.tsx', import.meta.url), 'utf8')
 const review = await readFile(new URL('../src/ReviewPage.tsx', import.meta.url), 'utf8')
 const i18n = await readFile(new URL('../src/lib/i18n.ts', import.meta.url), 'utf8')
 const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
@@ -50,11 +52,7 @@ test('confirmation renders an authoritative semantic review reward summary witho
 })
 
 test('class booking path has no promo or review coupon payload', () => {
-  const classStart = app.indexOf('function ClassReservePage')
-  const cakeStart = app.indexOf('function ReservePage')
-  assert.ok(classStart >= 0 && cakeStart > classStart)
-  const classSource = app.slice(classStart, cakeStart)
-  assert.doesNotMatch(classSource, /promoCode|reviewCoupon/i)
+  assert.doesNotMatch(classReserve + classComplete, /promoCode|reviewCoupon/i)
 })
 
 test('canonical npm test includes server and client review coupon suites', () => {

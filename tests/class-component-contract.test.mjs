@@ -3,14 +3,14 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const landing = readFileSync(new URL('../src/pages/ClassesPage.tsx', import.meta.url), 'utf8')
+const reserve = readFileSync(new URL('../src/pages/ClassReservePage.tsx', import.meta.url), 'utf8')
 const setup = readFileSync(new URL('../scripts/setup-appwrite.mjs', import.meta.url), 'utf8')
 const seo = readFileSync(new URL('../src/lib/seo.ts', import.meta.url), 'utf8')
 const generatedSeo = readFileSync(new URL('../scripts/generate-seo-pages.mjs', import.meta.url), 'utf8')
 const repository = readFileSync(new URL('../src/lib/repository.ts', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 const calendar = readFileSync(new URL('../src/components/WeekendDatePicker.tsx', import.meta.url), 'utf8')
-const reserve = app.slice(app.indexOf('function ClassReservePage'), app.indexOf('function ClassCompletePage'))
-const landing = app.slice(app.indexOf('function ClassesPage'), app.indexOf('function ClassReservePage'))
 
 test('kids class landing presents Basic, Advanced and weekend-only wording without visible Holiday copy', () => {
   assert.match(landing, /Basic Cake Class/)
