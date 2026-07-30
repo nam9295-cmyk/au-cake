@@ -2,9 +2,8 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
-const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const calendar = readFileSync(new URL('../src/components/WeekendDatePicker.tsx', import.meta.url), 'utf8')
-const reserve = app.slice(app.indexOf('function ReservePage'), app.indexOf('function CompletePage'))
+const reserve = readFileSync(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 
 test('cake reserve uses the shared compact calendar and keeps class conflict filtering authoritative', () => {
   assert.match(reserve, /<PickupDatePicker/)

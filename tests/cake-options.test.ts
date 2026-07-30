@@ -25,6 +25,7 @@ import {
   normalizeReservationChocolateType,
   normalizeVanillaCakeFlavor,
   normalizeVanillaCakeSheet,
+  isCheesecakeProduct,
   usesReservationChocolateType,
   PRODUCT_GROUPS,
   getProductGroupByProductId,
@@ -75,6 +76,13 @@ test('AU cake chooser follows the approved pound, pave, basque, lemon, vanilla o
   assert.equal(getProductGroupByProductId('vanilla-fresh-cream-cake').id, 'vanilla-fresh-cream')
   assert.equal(getProductGroupByProductId('pave-choco-basque-cheesecake').id, 'cheesecake')
   assert.equal(getProductGroupByProductId('fresh-lemon-cupcakes-8' as ProductId).id, 'fresh-lemon-cupcakes')
+})
+
+test('cheesecake product detection is shared by customer and admin presentation', () => {
+  assert.equal(isCheesecakeProduct('choco-basque-cheesecake'), true)
+  assert.equal(isCheesecakeProduct('pave-choco-basque-cheesecake'), true)
+  assert.equal(isCheesecakeProduct('eiffel-tower-basque-cheesecake'), true)
+  assert.equal(isCheesecakeProduct('pave-cake'), false)
 })
 
 test('Vanilla Fresh Cream Cake keeps its size prices and offers the approved cake-sheet and flavour choices', () => {

@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
-const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
 const home = readFileSync(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
+const reserve = readFileSync(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 const catalog = readFileSync(new URL('../src/lib/cake-catalog.ts', import.meta.url), 'utf8')
-const reserve = app.slice(app.indexOf('function ReservePage'), app.indexOf('function CompletePage'))
+
 
 test('photo-less Vanilla Fresh Cream Cake uses only a black SVG silhouette with COMING SOON while details stay active', () => {
   assert.match(chrome, /export function VanillaFreshCreamCakeSilhouette\(/)

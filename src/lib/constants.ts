@@ -62,6 +62,10 @@ export function isPromoEligibleProduct(productId: ProductId) {
   return PROMOTIONS.some((promo) => promo.productIds.includes(productId))
 }
 
+export function isCheesecakeProduct(productId: ProductId) {
+  return CHEESECAKE_PROMO_PRODUCT_IDS.includes(productId)
+}
+
 export function getValidPromoCode(productId: ProductId, code?: string, now = new Date()) {
   const normalizedCode = code?.trim().toLowerCase()
   if (!normalizedCode) return null
