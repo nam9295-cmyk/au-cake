@@ -61,6 +61,7 @@ function PrivateRouteFallback() {
 function App() {
   const {
     lines: cartLines,
+    add: addCartLine,
     update: updateCartLine,
     remove: removeCartLine,
   } = useCart()
@@ -130,14 +131,6 @@ function App() {
     setPathname(path)
     window.scrollTo({ top: 0 })
   }, [])
-
-  const requestCakeSelection = useCallback((selection: CakeDetailSelection) => {
-    setReservationProductId(selection.productId)
-    setReservationSelection(selection)
-    cartOriginLineKeyRef.current = null
-    setReservationSessionKey((current) => current + 1)
-    pushPage('reserve')
-  }, [pushPage])
 
   const continueCartLine = useCallback((line: CartLine) => {
     setReservationProductId(line.selection.productId)
@@ -211,7 +204,8 @@ function App() {
             onBack={() => navigate('cakes')}
             onBrowseCakes={() => navigate('cakes')}
             onOpenCake={navigateToCake}
-            onRequest={requestCakeSelection}
+            onAddToOrder={addCartLine}
+            onViewOrder={() => navigate('cart')}
           />
         </>
       )}

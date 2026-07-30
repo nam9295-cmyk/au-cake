@@ -63,7 +63,8 @@ type CakeDetailPageProps = {
   onBack: () => void
   onBrowseCakes: () => void
   onOpenCake: (slug: string) => void
-  onRequest: (selection: CakeDetailSelection) => void
+  onAddToOrder: (selection: CakeDetailSelection) => void
+  onViewOrder: () => void
 }
 
 function OptionButton({
@@ -93,11 +94,13 @@ export default function CakeDetailPage({
   onBack,
   onBrowseCakes,
   onOpenCake,
-  onRequest,
+  onAddToOrder,
+  onViewOrder,
 }: CakeDetailPageProps) {
   const detail = useMemo(() => getCakeDetailBySlug(slug, language), [language, slug])
   const [selection, setSelection] = useState<CakeDetailSelection | null>(() => createCakeDetailSelection(slug))
   const [activeImage, setActiveImage] = useState(0)
+  const [addedToOrder, setAddedToOrder] = useState(false)
 
   if (!detail || !selection) {
     return (
@@ -116,16 +119,24 @@ export default function CakeDetailPage({
   const total = getCakeDetailSelectionTotal(selection)
   const galleryCount = detail.gallery.length
   const currentImageKey = detail.gallery[Math.min(activeImage, Math.max(0, galleryCount - 1))]
-  const requestLabel = language === 'ko' ? '이 케이크 요청하기' : 'Request this cake'
+  const addLabel = language === 'ko' ? '주문에 담기' : 'Add to order'
 
   function updateSelection(patch: Partial<CakeDetailSelection>) {
+    setAddedToOrder(false)
     setSelection((current) => current
       ? selectCakeDetailProduct({ ...current, ...patch }, patch.productId || current.productId)
       : current)
   }
 
   function chooseProduct(productId: ProductId) {
+    setAddedToOrder(false)
     setSelection((current) => current ? selectCakeDetailProduct(current, productId) : current)
+  }
+
+  function addToOrder() {
+    if (!selection) return
+    onAddToOrder(selection)
+    setAddedToOrder(true)
   }
 
   function rotateGallery(direction: 1 | -1) {
@@ -399,9 +410,19 @@ export default function CakeDetailPage({
             <strong>{formatCurrency(total)}</strong>
           </div>
 
-          <button type="button" className="primary-button cake-detail-request" onClick={() => onRequest(selection)}>
-            {requestLabel}
+          <button type="button" className="primary-button cake-detail-request" onClick={addToOrder}>
+            {addLabel}
           </button>
+          {addedToOrder && (
+            <div className="cake-detail-added">
+              <p role="status">
+                {language === 'ko' ? '주문에 담았어요.' : 'Added to your order.'}
+              </p>
+              <button type="button" className="secondary-button" onClick={onViewOrder}>
+                {language === 'ko' ? '주문 보기' : 'View order'}
+              </button>
+            </div>
+          )}
           <p className="cake-detail-confirmation-note">
             {language === 'ko'
               ? '지금 결제되지 않습니다. Jenny가 가능 여부를 확인한 뒤 결제 정보를 안내합니다.'

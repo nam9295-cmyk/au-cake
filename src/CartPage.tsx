@@ -49,7 +49,7 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
   const chocolateIcingCount = normalizeChocolateIcingCount(product.id, selection.chocolateIcingCount)
 
   return (
-    <dl className="detail-list">
+    <dl className="cart-line-options">
       {(product.usesSizeOptions || isCheesecakeProduct(product.id)) && (
         <div>
           <dt>{copy.size}</dt>
@@ -122,98 +122,108 @@ export default function CartPage({
   const subtotal = getCartEstimatedSubtotal(lines)
   const copy = language === 'ko'
     ? {
-        title: '장바구니',
-        empty: '아직 장바구니에 담긴 케이크가 없어요.',
+        title: '주문 목록',
+        empty: '주문에 담긴 케이크가 없어요.',
         browse: '케이크 보기',
         quantity: '수량',
         remove: '삭제',
         lineTotal: '상품 합계',
         subtotal: '예상 소계',
-        continue: '이 케이크 요청 계속하기',
-        multiNotice: '한 번에 한 가지 케이크 구성만 요청할 수 있어요. 여러 상품을 함께 요청하는 기능은 곧 제공될 예정입니다.',
-        confirmation: '지금 결제되지 않습니다. Jenny가 가능 여부를 확인한 뒤 결제 정보를 안내합니다.',
+        continue: '주문 신청 계속하기',
+        multiNotice: '지금 신청하려면 한 가지 케이크 선택만 남겨 주세요. 여러 선택 동시 신청은 곧 제공됩니다.',
+        confirmation: '지금 결제되지 않습니다. 주문 신청 후 Jenny가 가능 여부를 확인하고 결제 정보를 안내합니다.',
       }
     : {
-        title: 'Your cart',
-        empty: 'Your cart is empty.',
+        title: 'Your order',
+        empty: 'Your order is empty.',
         browse: 'Browse cakes',
         quantity: 'Quantity',
         remove: 'Remove',
         lineTotal: 'Line total',
         subtotal: 'Estimated subtotal',
-        continue: 'Continue with this cake request',
-        multiNotice: 'Only one cake configuration can be requested at a time. Multi-item requests are coming soon.',
-        confirmation: 'No payment is taken now. Jenny will confirm availability and send payment details.',
+        continue: 'Continue to reservation',
+        multiNotice: 'To request now, keep one cake selection in your order. Multiple selections will be available soon.',
+        confirmation: 'No payment is taken now. Jenny will confirm availability and send payment details after you submit your request.',
       }
 
   return (
-    <main className="narrow-page">
-      <section className="complete-panel" aria-labelledby="cart-title">
+    <main className="cart-page">
+      <section className="cart-panel" aria-labelledby="cart-title">
         <p className="summary-kicker">Verygood Chocolate</p>
         <h1 id="cart-title">{copy.title}</h1>
 
         {lines.length === 0 ? (
-          <>
+          <div className="cart-empty">
             <p>{copy.empty}</p>
             <button type="button" className="primary-button" onClick={onBrowseCakes}>{copy.browse}</button>
-          </>
+          </div>
         ) : (
           <>
-            {lines.map((line) => {
-              const productText = getProductText(line.selection.productId, language)
-              return (
-                <article className="cake-detail-order-summary" key={line.lineKey}>
-                  <div>
-                    <strong>{productText.name}</strong>
+            <div className="cart-list">
+              {lines.map((line) => {
+                const productText = getProductText(line.selection.productId, language)
+                return (
+                  <article className="cart-line" key={line.lineKey}>
+                    <header className="cart-line-heading">
+                      <div>
+                        <h2>{productText.name}</h2>
+                        <span>{copy.lineTotal}</span>
+                      </div>
+                      <strong>{formatCurrency(getCakeDetailSelectionTotal(line.selection))}</strong>
+                    </header>
+
                     <CartLineOptions line={line} language={language} />
-                    <span>{copy.quantity}</span>
-                    <div className="cake-detail-quantity">
-                      <button
-                        type="button"
-                        aria-label={language === 'ko' ? '수량 줄이기' : 'Decrease quantity'}
-                        disabled={line.selection.quantity <= 1}
-                        onClick={() => onUpdate(line.lineKey, line.selection.quantity - 1)}
-                      >
-                        <Minus aria-hidden="true" />
-                      </button>
-                      <output aria-live="polite">{line.selection.quantity}</output>
-                      <button
-                        type="button"
-                        aria-label={language === 'ko' ? '수량 늘리기' : 'Increase quantity'}
-                        disabled={line.selection.quantity >= MAX_RESERVATION_QUANTITY}
-                        onClick={() => onUpdate(line.lineKey, line.selection.quantity + 1)}
-                      >
-                        <Plus aria-hidden="true" />
+
+                    <div className="cart-line-actions">
+                      <div>
+                        <span>{copy.quantity}</span>
+                        <div className="cart-quantity">
+                          <button
+                            type="button"
+                            aria-label={language === 'ko' ? '수량 줄이기' : 'Decrease quantity'}
+                            disabled={line.selection.quantity <= 1}
+                            onClick={() => onUpdate(line.lineKey, line.selection.quantity - 1)}
+                          >
+                            <Minus aria-hidden="true" />
+                          </button>
+                          <output aria-live="polite">{line.selection.quantity}</output>
+                          <button
+                            type="button"
+                            aria-label={language === 'ko' ? '수량 늘리기' : 'Increase quantity'}
+                            disabled={line.selection.quantity >= MAX_RESERVATION_QUANTITY}
+                            onClick={() => onUpdate(line.lineKey, line.selection.quantity + 1)}
+                          >
+                            <Plus aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+                      <button type="button" className="secondary-button" onClick={() => onRemove(line.lineKey)}>
+                        <Trash2 size={16} aria-hidden="true" />
+                        {copy.remove}
                       </button>
                     </div>
-                    <button type="button" className="secondary-button" onClick={() => onRemove(line.lineKey)}>
-                      <Trash2 size={16} aria-hidden="true" />
-                      {copy.remove}
-                    </button>
-                  </div>
-                  <div>
-                    <span>{copy.lineTotal}</span>
-                    <strong>{formatCurrency(getCakeDetailSelectionTotal(line.selection))}</strong>
-                  </div>
-                </article>
-              )
-            })}
-
-            <div className="cake-detail-order-summary">
-              <span>{copy.subtotal}</span>
-              <strong>{formatCurrency(subtotal)}</strong>
+                  </article>
+                )
+              })}
             </div>
-            {lines.length > 1 && <p role="status">{copy.multiNotice}</p>}
-            <button
-              type="button"
-              className="primary-button"
-              disabled={!canContinue}
-              onClick={() => canContinue && onContinue(lines[0])}
-            >
-              {copy.continue}
-            </button>
-            <p className="cake-detail-confirmation-note">{copy.confirmation}</p>
-            <button type="button" className="secondary-button" onClick={onBrowseCakes}>{copy.browse}</button>
+
+            <section className="cart-summary" aria-label={copy.subtotal}>
+              <div className="cart-summary-total">
+                <span>{copy.subtotal}</span>
+                <strong>{formatCurrency(subtotal)}</strong>
+              </div>
+              {lines.length > 1 && <p className="cart-multi-notice" role="status">{copy.multiNotice}</p>}
+              <button
+                type="button"
+                className="primary-button"
+                disabled={!canContinue}
+                onClick={() => canContinue && onContinue(lines[0])}
+              >
+                {copy.continue}
+              </button>
+              <p className="cart-checkout-note">{copy.confirmation}</p>
+              <button type="button" className="secondary-button" onClick={onBrowseCakes}>{copy.browse}</button>
+            </section>
           </>
         )}
       </section>
