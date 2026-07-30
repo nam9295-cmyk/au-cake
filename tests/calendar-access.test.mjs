@@ -5,7 +5,7 @@ import {
   verifyCalendarToken,
   sanitizeCakeCalendarEvent,
   sanitizeClassCalendarEvent,
-} from '../functions/reservation-api/src/calendar-access.js'
+} from '../appwrite-functions/reservation-api/src/calendar-access.js'
 
 const secret = 'a-test-secret-that-is-long-enough-for-hmac'
 

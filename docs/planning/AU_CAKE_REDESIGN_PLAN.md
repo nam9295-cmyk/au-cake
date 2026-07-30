@@ -32,7 +32,7 @@
 - 타입: `src/lib/types.ts`
 - 유틸: `src/lib/utils.ts`
 - Appwrite 스키마 생성: `scripts/setup-appwrite.mjs`
-- 알림 함수: `functions/reservation-notification/src/main.js`
+- 알림 함수: `appwrite-functions/reservation-notification/src/main.js`
 
 ## 디자인 방향
 

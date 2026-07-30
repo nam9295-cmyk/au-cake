@@ -2,9 +2,9 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
-const mainSource = await readFile(new URL('../functions/reservation-notification/src/main.js', import.meta.url), 'utf8')
+const mainSource = await readFile(new URL('../appwrite-functions/reservation-notification/src/main.js', import.meta.url), 'utf8')
 const deploySource = await readFile(new URL('../scripts/deploy-reservation-notification.mjs', import.meta.url), 'utf8')
-const wrapperSource = await readFile(new URL('../functions/reservation-notification/shared/reservation-api/business.js', import.meta.url), 'utf8').catch(() => '')
+const wrapperSource = await readFile(new URL('../appwrite-functions/reservation-notification/shared/reservation-api/business.js', import.meta.url), 'utf8').catch(() => '')
 const packageSource = await readFile(new URL('../package.json', import.meta.url), 'utf8')
 const packageJson = JSON.parse(packageSource)
 

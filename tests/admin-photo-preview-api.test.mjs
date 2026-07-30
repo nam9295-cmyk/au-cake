@@ -4,7 +4,7 @@ import {
   createAdminPhotoPreviewDependencies,
   createAdminPhotoPreviewHandler,
   parseFrontendOrigins,
-} from '../functions/review-api/src/admin-photo-preview.js'
+} from '../appwrite-functions/review-api/src/admin-photo-preview.js'
 
 const REVIEW_ID = 'review-private'
 const JWT = 'header.payload.signature'

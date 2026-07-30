@@ -9,7 +9,7 @@ import {
   hashReviewCouponCode,
   normalizeReviewCouponCode,
   validateReviewCoupon,
-} from '../functions/reservation-api/src/business.js'
+} from '../appwrite-functions/reservation-api/src/business.js'
 import reservationHandler, {
   createCake,
   cakeReservationResponse,
@@ -18,7 +18,7 @@ import reservationHandler, {
   reservationFailureResponse,
   resolveReservationConfig,
   safeReservationLogAction,
-} from '../functions/reservation-api/src/main.js'
+} from '../appwrite-functions/reservation-api/src/main.js'
 const now = new Date('2026-07-10T00:00:00.000Z')
 const requestId = 'f65f7e08-20f7-4b4a-b12a-6b42c043b268'
 const rawCode = 'FOXKIWI7Q2MK'

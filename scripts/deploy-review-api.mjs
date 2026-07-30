@@ -127,7 +127,7 @@ async function ensureVariables() {
 }
 
 async function deployFunction() {
-  const functionDir = resolve(process.cwd(), 'functions/review-api')
+  const functionDir = resolve(process.cwd(), 'appwrite-functions/review-api')
   const deployment = await createAndUploadArchive({ functionDir, functionId: config.functionId }, {
     upload: (payload) => functions.createDeployment(payload),
   })

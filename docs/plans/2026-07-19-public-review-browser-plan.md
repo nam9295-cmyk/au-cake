@@ -15,8 +15,8 @@
 **Objective:** Return strict cursor pages with public review IDs, thumbnail URLs, full-photo URLs, and `hasMore` without exposing reservation/customer/coupon fields.
 
 **Files:**
-- Modify: `functions/review-api/src/business.js`
-- Modify: `functions/review-api/src/main.js`
+- Modify: `appwrite-functions/review-api/src/business.js`
+- Modify: `appwrite-functions/review-api/src/main.js`
 - Modify: `tests/review-api.test.mjs`
 - Modify: `tests/review-photo-api.test.mjs`
 

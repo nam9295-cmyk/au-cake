@@ -6,13 +6,13 @@ import {
   copyReviewRewardMessage,
   listAdminReviews,
   moderateReview,
-} from '../functions/review-api/src/business.js'
+} from '../appwrite-functions/review-api/src/business.js'
 import {
   handleReviewRequest,
   safeActionForLog,
-} from '../functions/review-api/src/main.js'
-import { digestReviewCouponCode } from '../functions/review-api/src/coupon-digest.js'
-import { encryptReviewCouponCode } from '../functions/review-api/src/coupon-envelope.js'
+} from '../appwrite-functions/review-api/src/main.js'
+import { digestReviewCouponCode } from '../appwrite-functions/review-api/src/coupon-digest.js'
+import { encryptReviewCouponCode } from '../appwrite-functions/review-api/src/coupon-envelope.js'
 
 const now = new Date('2026-07-19T00:00:00.000Z')
 const expiresAt = '2026-09-17T00:00:00.000Z'

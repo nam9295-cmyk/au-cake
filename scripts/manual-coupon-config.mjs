@@ -1,7 +1,7 @@
 import {
   digestReviewCouponCode,
   resolveReviewCouponHmacSecret,
-} from '../functions/reservation-api/src/coupon-digest.js'
+} from '../appwrite-functions/reservation-api/src/coupon-digest.js'
 
 const RESOURCE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const SYDNEY_TIME_ZONE = 'Australia/Sydney'

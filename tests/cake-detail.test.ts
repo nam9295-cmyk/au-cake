@@ -6,7 +6,7 @@ import {
   getCakeDetailSelectionTotal,
   selectCakeDetailProduct,
 } from '../src/lib/cake-detail.js'
-import { buildCakeReservation } from '../functions/reservation-api/src/business.js'
+import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 
 test('five public cake slugs resolve to one reusable detail data contract', () => {
   const details = [

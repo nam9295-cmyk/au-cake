@@ -310,9 +310,9 @@ Expected: all review domain tests pass.
 **Objective:** token, validation, sanitisation, coupon generation을 DB와 분리된 순수 함수로 먼저 구현한다.
 
 **Files:**
-- Create: `functions/review-api/src/business.js`
-- Create: `functions/review-api/src/main.js`
-- Create: `functions/review-api/package.json`
+- Create: `appwrite-functions/review-api/src/business.js`
+- Create: `appwrite-functions/review-api/src/main.js`
+- Create: `appwrite-functions/review-api/package.json`
 - Create: `tests/review-api.test.mjs`
 - Modify: `package.json`
 
@@ -435,8 +435,8 @@ The link is valid for 30 days.
 **Files:**
 - Create: `src/lib/review-photo.ts`
 - Create: `tests/review-photo.test.ts`
-- Modify: `functions/review-api/src/business.js`
-- Modify: `functions/review-api/src/main.js`
+- Modify: `appwrite-functions/review-api/src/business.js`
+- Modify: `appwrite-functions/review-api/src/main.js`
 
 **Requirements:**
 
@@ -458,8 +458,8 @@ The link is valid for 30 days.
 - Modify: `src/lib/repository.ts`
 - Modify: `src/lib/types.ts`
 - Modify: `src/App.tsx`
-- Modify: `functions/reservation-api/src/business.js`
-- Modify: `functions/reservation-api/src/main.js`
+- Modify: `appwrite-functions/reservation-api/src/business.js`
+- Modify: `appwrite-functions/reservation-api/src/main.js`
 - Modify: `tests/cake-options.test.ts`
 - Modify: `tests/reservation-api.test.mjs`
 - Modify: `scripts/setup-appwrite.mjs`

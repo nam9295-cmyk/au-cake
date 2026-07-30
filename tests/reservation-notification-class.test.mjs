@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
-import { buildClassNotificationRows } from '../functions/reservation-notification/src/main.js'
+import { buildClassNotificationRows } from '../appwrite-functions/reservation-notification/src/main.js'
 
 const base = {
   reservationNumber: 'VG-KC-AU-20260722-100000123',

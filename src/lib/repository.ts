@@ -1,7 +1,7 @@
 import { AppwriteException, ExecutionMethod, ID, OAuthProvider, Query, type Models } from 'appwrite'
 import { account, appwriteConfig, databases, functions, isAppwriteConfigured } from './appwrite'
 import { MARKET } from './market'
-import { isActiveCakeOrderProductId } from '../../functions/reservation-api/src/active-cake-products.js'
+import { isActiveCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
 import {
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,

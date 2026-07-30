@@ -19,7 +19,7 @@ import {
   submitReview as submitReviewCore,
   toPublicReview,
   validateReviewInput,
-} from '../functions/review-api/src/business.js'
+} from '../appwrite-functions/review-api/src/business.js'
 import {
   createPublicReviewPhotoUrlBuilder,
   createReviewRepository,
@@ -27,9 +27,9 @@ import {
   parseRequestBody,
   resolveReviewConfig,
   safeActionForLog,
-} from '../functions/review-api/src/main.js'
-import { digestReviewCouponCode, resolveReviewCouponHmacSecret } from '../functions/review-api/src/coupon-digest.js'
-import { decryptReviewCouponCode } from '../functions/review-api/src/coupon-envelope.js'
+} from '../appwrite-functions/review-api/src/main.js'
+import { digestReviewCouponCode, resolveReviewCouponHmacSecret } from '../appwrite-functions/review-api/src/coupon-digest.js'
+import { decryptReviewCouponCode } from '../appwrite-functions/review-api/src/coupon-envelope.js'
 
 const hmacSecret = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
 const encryptionKeyEncoded = 'ERERERERERERERERERERERERERERERERERERERERERE'

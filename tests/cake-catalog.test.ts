@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 // Reservation API business rules are deployed as JavaScript; this contract test imports the runtime module with --allowJs.
-import { buildCakeReservation } from '../functions/reservation-api/src/business.js'
+import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 import {
   getAuCakeCatalog,
   getAuCakeCatalogCards,

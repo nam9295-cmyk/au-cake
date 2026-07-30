@@ -11,8 +11,8 @@ import {
   parseStoredOrderLines,
   publicCakeReservation,
   serializeStoredOrderLines,
-} from '../functions/reservation-api/src/business.js'
-import { calendarLogin, listCalendarEvents, createCake, createClass, lookupCake } from '../functions/reservation-api/src/main.js'
+} from '../appwrite-functions/reservation-api/src/business.js'
+import { calendarLogin, listCalendarEvents, createCake, createClass, lookupCake } from '../appwrite-functions/reservation-api/src/main.js'
 
 const now = new Date('2026-07-10T00:00:00.000Z')
 

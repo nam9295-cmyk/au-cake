@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
-import * as notification from '../functions/reservation-notification/src/main.js'
+import * as notification from '../appwrite-functions/reservation-notification/src/main.js'
 
 function rowsByLabel(reservation) {
   assert.equal(typeof notification.buildCakeNotificationRows, 'function')

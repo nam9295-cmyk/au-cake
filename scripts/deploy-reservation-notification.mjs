@@ -193,11 +193,11 @@ async function ensureVariables() {
 }
 
 async function deployFunction() {
-  const functionDir = resolve(process.cwd(), 'functions/reservation-notification')
+  const functionDir = resolve(process.cwd(), 'appwrite-functions/reservation-notification')
   const parserSourcePaths = [
-    'functions/reservation-api/src/business.js',
-    'functions/reservation-api/src/coupon-digest.js',
-    'functions/reservation-api/src/active-cake-products.js',
+    'appwrite-functions/reservation-api/src/business.js',
+    'appwrite-functions/reservation-api/src/coupon-digest.js',
+    'appwrite-functions/reservation-api/src/active-cake-products.js',
   ]
   const tempDir = await mkdtemp(join(tmpdir(), 'reservation-notification-'))
   const stagingDir = join(tempDir, 'source')

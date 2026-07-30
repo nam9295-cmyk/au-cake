@@ -239,7 +239,7 @@ export function buildDryRunPlan(env = {}) {
     wouldFailApply: REQUIRED_APPLY_ENVIRONMENT.some((key) => !String(env[key] || '').trim()),
     function: {
       id: maskValue(functionId),
-      source: 'functions/review-api/{package.json,package-lock.json,src/**}',
+      source: 'appwrite-functions/review-api/{package.json,package-lock.json,src/**}',
       entrypoint: 'src/main.js',
       installCommand: 'npm ci --omit=dev',
       scopes: [...FUNCTION_SCOPES],

@@ -8,9 +8,9 @@ import {
   cleanupPhotoFiles,
   removeReviewPhoto,
   uploadReviewPhoto,
-} from '../functions/review-api/src/photo.js'
-import { ReviewApiError, hashSecret } from '../functions/review-api/src/business.js'
-import { createReviewPhotoStorage } from '../functions/review-api/src/main.js'
+} from '../appwrite-functions/review-api/src/photo.js'
+import { ReviewApiError, hashSecret } from '../appwrite-functions/review-api/src/business.js'
+import { createReviewPhotoStorage } from '../appwrite-functions/review-api/src/main.js'
 
 const VALID_TOKEN = 'A'.repeat(43)
 const NOW = new Date('2026-07-19T00:00:00.000Z')

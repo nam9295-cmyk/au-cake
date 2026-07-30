@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process'
 import { readFile, readdir } from 'node:fs/promises'
 import { test } from 'node:test'
 
-import { digestReviewCouponCode } from '../functions/reservation-api/src/coupon-digest.js'
+import { digestReviewCouponCode } from '../appwrite-functions/reservation-api/src/coupon-digest.js'
 import {
   REQUIRED_MANUAL_COUPON_APPLY_ENVIRONMENT,
   addSydneyCalendarDays,
@@ -364,7 +364,7 @@ test('outputs expose only last4 and masked identifiers, never the exact code or 
 })
 
 test('source fixtures use synthetic manual codes and exclude the intended date-shaped bearer family without embedding its raw value', async () => {
-  const roots = ['functions', 'scripts', 'src', 'tests', 'docs']
+  const roots = ['appwrite-functions', 'scripts', 'src', 'tests', 'docs']
   const sourceFiles = []
   async function collect(path) {
     for (const entry of await readdir(path, { withFileTypes: true })) {

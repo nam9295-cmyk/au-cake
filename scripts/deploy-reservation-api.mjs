@@ -164,7 +164,7 @@ async function ensureVariables() {
 }
 
 async function deployFunction() {
-  const functionDir = resolve(process.cwd(), 'functions/reservation-api')
+  const functionDir = resolve(process.cwd(), 'appwrite-functions/reservation-api')
   const tempDir = await mkdtemp(join(tmpdir(), 'reservation-api-'))
   const archivePath = join(tempDir, 'code.tar.gz')
 

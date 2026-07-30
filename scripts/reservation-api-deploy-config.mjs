@@ -166,7 +166,7 @@ export function buildDryRunPlan(env = {}) {
     function: {
       id: maskValue(env.APPWRITE_RESERVATION_API_FUNCTION_ID || 'reservation-api'),
       runtime: env.APPWRITE_RESERVATION_API_RUNTIME || 'node-16.0',
-      source: 'functions/reservation-api/{package.json,package-lock.json,src/**}',
+      source: 'appwrite-functions/reservation-api/{package.json,package-lock.json,src/**}',
       scopes: [...FUNCTION_SCOPES],
       variableNames: Object.keys(variableValues),
       maskedVariables: Object.fromEntries(Object.entries(variableValues).map(([key, value]) => [key, maskValue(value)])),

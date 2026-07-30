@@ -2,13 +2,13 @@ import { createCipheriv } from 'node:crypto'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
-import { ReviewApiError } from '../functions/review-api/src/business.js'
+import { ReviewApiError } from '../appwrite-functions/review-api/src/business.js'
 import {
   buildReviewCouponEnvelopeAad,
   decryptReviewCouponCode,
   encryptReviewCouponCode,
   resolveReviewCouponEncryptionKey,
-} from '../functions/review-api/src/coupon-envelope.js'
+} from '../appwrite-functions/review-api/src/coupon-envelope.js'
 
 const encryptionKey = 'ERERERERERERERERERERERERERERERERERERERERERE'
 const otherKey = 'IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI'
