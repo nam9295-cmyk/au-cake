@@ -905,7 +905,7 @@ function sanitizedOrderLine(line) {
 }
 
 export function parseStoredOrderLines(document) {
-  if (!document || !Object.hasOwn(document, 'orderLinesJson')) return null
+  if (!document || !Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) return null
   try {
     if (typeof document.orderLinesJson !== 'string') throw new Error('invalid serialization')
     if (new TextEncoder().encode(document.orderLinesJson).byteLength > STORED_ORDER_MAX_BYTES) throw new Error('oversized serialization')
@@ -944,8 +944,8 @@ export function parseStoredOrderLines(document) {
 
     const discountPercent = document.discountPercent
     if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10) throw new Error('invalid aggregate discount percent')
-    const hasReviewCoupon = Object.hasOwn(document, 'reviewCouponId')
-    const hasPromoLast4 = Object.hasOwn(document, 'appliedPromoCodeLast4')
+    const hasReviewCoupon = document.reviewCouponId != null
+    const hasPromoLast4 = document.appliedPromoCodeLast4 != null
     let eligibleIndexes = []
     if (hasReviewCoupon) {
       if (

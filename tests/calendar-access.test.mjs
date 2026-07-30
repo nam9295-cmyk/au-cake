@@ -141,6 +141,25 @@ test('calendar cupcake events show vanilla cream and party decoration counts wit
   assert.equal(event.label.includes('Extra chocolate'), false)
 })
 
+test('calendar treats Appwrite null order line fields as a legacy single-line reservation', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'legacy-appwrite-null-id',
+    pickupDate: '2026-07-31',
+    pickupTime: '14:00',
+    productId: 'pave-cake',
+    cakeSize: '15cm',
+    chocolateType: 'dark',
+    quantity: 1,
+    status: '예약확정',
+    orderLinesJson: null,
+    orderLineCount: null,
+    orderItemCount: null,
+    discountBasisCents: null,
+  })
+
+  assert.equal(event.label, 'Pave cake · 6" | serves 8 · Dark chocolate ×1')
+})
+
 test('calendar cake event label includes every validated stored order line', () => {
   const lines = [
     { productId: 'pound-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 4500, subtotalCents: 4500, discountPercent: 0, discountCents: 0, totalPriceCents: 4500 },
@@ -151,6 +170,8 @@ test('calendar cake event label includes every validated stored order line', () 
     ...lines[0], subtotalCents: 19500, discountBasisCents: 0, discountPercent: 0, discountCents: 0,
     totalPriceCents: 19500, totalPrice: 195, orderLineCount: 2, orderItemCount: 3,
     orderLinesJson: JSON.stringify({ version: 1, lines }),
+    reviewCouponId: null,
+    appliedPromoCodeLast4: null,
   })
 
   assert.equal(event.label, 'Pound cake · Basic finish ×1 / Pave cake · 6" | serves 8 · Dark chocolate ×2')
