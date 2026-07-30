@@ -559,14 +559,24 @@ test('reservation config requires and maps the server-only shared HMAC secret', 
 })
 
 const auditAttributes = [
-  { key: 'subtotalCents', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807, status: 'available' },
+  { key: 'subtotalCents', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807n, status: 'available' },
   { key: 'discountPercent', type: 'integer', required: false, min: 0, max: 100, status: 'available' },
-  { key: 'discountCents', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807, status: 'available' },
+  { key: 'discountCents', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807n, status: 'available' },
   { key: 'appliedPromoCodeLast4', type: 'string', size: 4, required: false, status: 'available' },
   { key: 'reviewCouponId', type: 'string', size: 64, required: false, status: 'available' },
   { key: 'vanillaCakeSheet', type: 'string', size: 20, required: false, status: 'available' },
   { key: 'vanillaCakeFlavor', type: 'string', size: 40, required: false, status: 'available' },
 ]
+
+const multiLineAttributes = [
+  { key: 'orderLinesJson', type: 'string', size: 65535, required: false, status: 'available' },
+  { key: 'orderLineCount', type: 'integer', required: false, min: 1, max: 9_223_372_036_854_775_807n, status: 'available' },
+  { key: 'orderItemCount', type: 'integer', required: false, min: 1, max: 9_223_372_036_854_775_807n, status: 'available' },
+  { key: 'discountBasisCents', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807n, status: 'available' },
+  { key: 'requestFingerprint', type: 'string', size: 64, required: false, status: 'available' },
+]
+
+const reservationAttributes = [...auditAttributes, ...multiLineAttributes]
 
 const couponAttributes = [
   { key: 'codeHash', type: 'string', size: 64, required: true, status: 'available' },
@@ -609,7 +619,7 @@ function readinessDatabase(overrides = {}) {
     indexes: { total: 1, indexes: [{ key: 'code_hash_unique', type: 'unique', attributes: ['codeHash'], status: 'available' }] },
     manualCouponAttributes: { total: manualCouponAttributes.length, attributes: manualCouponAttributes },
     manualCouponIndexes: { total: manualCouponIndexes.length, indexes: manualCouponIndexes },
-    reservationAttributes: { total: auditAttributes.length, attributes: auditAttributes },
+    reservationAttributes: { total: reservationAttributes.length, attributes: reservationAttributes },
     ...overrides,
   }
   return {
@@ -634,7 +644,10 @@ function readinessDatabase(overrides = {}) {
 
 test('reservation readiness returns only generic ready after complete private compatible schema checks', async () => {
   const databases = readinessDatabase()
-  assert.deepEqual(await checkReservationReadiness(databases, runtimeConfig), { status: 'ready' })
+  assert.deepEqual(await checkReservationReadiness(databases, runtimeConfig), {
+    status: 'ready',
+    capabilities: { cakeOrderLines: 1 },
+  })
   assert.deepEqual(databases.calls.map(([name]) => name), [
     'listDocuments',
     'getCollection', 'listAttributes', 'listIndexes',
@@ -705,15 +718,38 @@ test('reservation readiness requires the exact complete available private manual
 
 test('reservation readiness fails closed for missing, incompatible, or unavailable reservation audit attributes', async () => {
   const cases = [
-    auditAttributes.filter((attribute) => attribute.key !== 'vanillaCakeSheet'),
-    auditAttributes.filter((attribute) => attribute.key !== 'vanillaCakeFlavor'),
-    auditAttributes.map((attribute) => attribute.key === 'vanillaCakeSheet' ? { ...attribute, size: 19 } : attribute),
-    auditAttributes.map((attribute) => attribute.key === 'vanillaCakeFlavor' ? { ...attribute, required: true } : attribute),
-    auditAttributes.map((attribute) => attribute.key === 'vanillaCakeFlavor' ? { ...attribute, status: 'processing' } : attribute),
-    auditAttributes.slice(1),
-    auditAttributes.map((attribute) => attribute.key === 'discountPercent' ? { ...attribute, max: 99 } : attribute),
-    auditAttributes.map((attribute) => attribute.key === 'appliedPromoCodeLast4' ? { ...attribute, required: true } : attribute),
-    auditAttributes.map((attribute) => attribute.key === 'reviewCouponId' ? { ...attribute, status: 'processing' } : attribute),
+    reservationAttributes.filter((attribute) => attribute.key !== 'vanillaCakeSheet'),
+    reservationAttributes.filter((attribute) => attribute.key !== 'vanillaCakeFlavor'),
+    reservationAttributes.map((attribute) => attribute.key === 'vanillaCakeSheet' ? { ...attribute, size: 19 } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'vanillaCakeFlavor' ? { ...attribute, required: true } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'vanillaCakeFlavor' ? { ...attribute, status: 'processing' } : attribute),
+    reservationAttributes.filter((attribute) => attribute.key !== 'subtotalCents'),
+    reservationAttributes.map((attribute) => attribute.key === 'discountPercent' ? { ...attribute, max: 99 } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'appliedPromoCodeLast4' ? { ...attribute, required: true } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'reviewCouponId' ? { ...attribute, status: 'processing' } : attribute),
+  ]
+  for (const attributes of cases) {
+    await assert.rejects(
+      () => checkReservationReadiness(readinessDatabase({ reservationAttributes: { total: attributes.length, attributes } }), runtimeConfig),
+      assertApiCode('FUNCTION_CONFIGURATION_ERROR'),
+    )
+  }
+})
+
+test('reservation readiness requires every exact available multi-line attribute', async () => {
+  const cases = [
+    reservationAttributes.filter((attribute) => attribute.key !== 'orderLinesJson'),
+    reservationAttributes.filter((attribute) => attribute.key !== 'requestFingerprint'),
+    reservationAttributes.map((attribute) => attribute.key === 'orderLinesJson' ? { ...attribute, size: 65534 } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'orderLineCount' ? { ...attribute, min: 0 } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'orderLineCount' ? { ...attribute, max: 1 } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'orderItemCount' ? { ...attribute, required: true } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'orderItemCount' ? { ...attribute, array: true } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'discountBasisCents' ? { ...attribute, status: 'processing' } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'discountBasisCents' ? { ...attribute, default: 0 } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'requestFingerprint' ? { ...attribute, size: 63 } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'requestFingerprint' ? { ...attribute, format: 'url' } : attribute),
+    reservationAttributes.map((attribute) => attribute.key === 'requestFingerprint' ? { ...attribute, encrypt: true } : attribute),
   ]
   for (const attributes of cases) {
     await assert.rejects(
@@ -730,8 +766,8 @@ test('reservation readiness rejects incomplete bounded schema pagination', async
     { indexes: { total: 101, indexes: Array(100).fill({ key: 'other', status: 'available' }) } },
     { manualCouponAttributes: { total: 101, attributes: manualCouponAttributes } },
     { manualCouponIndexes: { total: 101, indexes: manualCouponIndexes } },
-    { reservationAttributes: { total: 101, attributes: auditAttributes } },
-    { reservationAttributes: { total: 0, attributes: auditAttributes } },
+    { reservationAttributes: { total: 101, attributes: reservationAttributes } },
+    { reservationAttributes: { total: 0, attributes: reservationAttributes } },
   ]) {
     await assert.rejects(() => checkReservationReadiness(readinessDatabase(drift), runtimeConfig), assertApiCode('FUNCTION_CONFIGURATION_ERROR'))
   }

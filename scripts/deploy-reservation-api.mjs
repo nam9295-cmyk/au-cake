@@ -9,6 +9,7 @@ import {
   buildDryRunPlan,
   buildHealthFailureDiagnostic,
   buildRuntimeCandidates,
+  isReadyCakeOrderLinesHealth,
   isSecretFunctionVariable,
   redactReservationDeploymentDiagnostic,
   resolveDeployConfig,
@@ -224,7 +225,7 @@ async function verifyHealth() {
   } catch {
     throw new Error(`Reservation API health check returned invalid JSON (HTTP ${execution.responseStatusCode}).`)
   }
-  if (execution.responseStatusCode !== 200 || response.ok !== true || response.result?.status !== 'ready') {
+  if (!isReadyCakeOrderLinesHealth(execution.responseStatusCode, response)) {
     const secrets = [
       apiKey,
       ...Object.entries(runtimeVariables)

@@ -12,6 +12,7 @@ import {
   ensureStrictCollection,
   parseAdminUserIds,
   reviewPhotoBucketMismatches,
+  RESERVATION_MULTI_LINE_ATTRIBUTES,
   RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
   REVIEW_COLLECTIONS,
   REVIEW_COLLECTION_RESOURCE_KEYS,
@@ -311,6 +312,16 @@ test('reservation review audit attributes are optional and bounded', () => {
   ])
 })
 
+test('reservation multi-line attributes are optional, bounded, and rollback compatible', () => {
+  assert.deepEqual(RESERVATION_MULTI_LINE_ATTRIBUTES, [
+    { key: 'orderLinesJson', type: 'string', size: 65535, required: false },
+    { key: 'orderLineCount', type: 'integer', required: false, min: 1 },
+    { key: 'orderItemCount', type: 'integer', required: false, min: 1 },
+    { key: 'discountBasisCents', type: 'integer', required: false, min: 0 },
+    { key: 'requestFingerprint', type: 'string', size: 64, required: false },
+  ])
+})
+
 test('review photo bucket is private and restricted to safe image uploads', () => {
   assert.deepEqual(REVIEW_PHOTO_BUCKET, {
     name: 'review-photos',
@@ -383,6 +394,11 @@ test('dry-run plan exposes review ids, private permissions, admin mapping intent
     },
   )
   assert.equal(plan.reservationAudit.collectionId, 'reservations_test')
+  assert.deepEqual(plan.reservationMultiLine, {
+    collectionId: 'reservations_test',
+    attributeKeys: RESERVATION_MULTI_LINE_ATTRIBUTES.map(({ key }) => key),
+    attributeCount: RESERVATION_MULTI_LINE_ATTRIBUTES.length,
+  })
   assert.equal(plan.permissions.publicPermissionCount, 0)
   assert.deepEqual(plan.permissions.adminMappingIntent, {
     roleKind: 'user',
@@ -636,15 +652,36 @@ test('409 revalidation definition validator rejects every mismatched non-enum at
   )
 })
 
-test('integer attributes without explicit bounds accept Appwrite platform default bounds', () => {
-  assert.doesNotThrow(() => validateAttributeDefinition(
-    'reservations',
-    { key: 'subtotalCents', type: 'integer', required: false },
-    {
-      key: 'subtotalCents', type: 'integer', required: false, array: false,
-      min: -9_223_372_036_854_775_808, max: 9_223_372_036_854_775_807, default: null,
-    },
-  ))
+test('integer attributes without explicit bounds require Appwrite platform default bounds', () => {
+  const expected = { key: 'subtotalCents', type: 'integer', required: false }
+  const current = {
+    key: 'subtotalCents', type: 'integer', required: false, array: false,
+    min: -9_223_372_036_854_775_808n, max: 9_223_372_036_854_775_807n, default: null,
+  }
+  assert.doesNotThrow(() => validateAttributeDefinition('reservations', expected, current))
+  assert.throws(
+    () => validateAttributeDefinition('reservations', expected, { ...current, max: 1 }),
+    /max/,
+  )
+})
+
+test('multi-line attribute validation rejects array, default, format, and encryption drift', () => {
+  const stringExpected = RESERVATION_MULTI_LINE_ATTRIBUTES.find(({ key }) => key === 'orderLinesJson')
+  const stringCurrent = {
+    ...stringExpected,
+    array: false,
+    default: null,
+    format: '',
+    encrypt: false,
+    status: 'available',
+  }
+  assert.doesNotThrow(() => validateAttributeDefinition('reservations', stringExpected, stringCurrent))
+  for (const [field, value] of [['array', true], ['default', '{}'], ['format', 'url'], ['encrypt', true]]) {
+    assert.throws(
+      () => validateAttributeDefinition('reservations', stringExpected, { ...stringCurrent, [field]: value }),
+      new RegExp(field),
+    )
+  }
 })
 
 test('setup --dry-run exits without credentials, dotenv secret output, or network access', () => {

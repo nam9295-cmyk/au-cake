@@ -173,6 +173,14 @@ export const RESERVATION_REVIEW_AUDIT_ATTRIBUTES = Object.freeze([
   { key: 'reviewCouponId', type: 'string', size: 64, required: false },
 ])
 
+export const RESERVATION_MULTI_LINE_ATTRIBUTES = Object.freeze([
+  { key: 'orderLinesJson', type: 'string', size: 65535, required: false },
+  { key: 'orderLineCount', type: 'integer', required: false, min: 1 },
+  { key: 'orderItemCount', type: 'integer', required: false, min: 1 },
+  { key: 'discountBasisCents', type: 'integer', required: false, min: 0 },
+  { key: 'requestFingerprint', type: 'string', size: 64, required: false },
+])
+
 export const REVIEW_PHOTO_BUCKET = Object.freeze({
   name: 'review-photos',
   publicPermissions: Object.freeze([]),
@@ -237,6 +245,11 @@ export function buildReviewSetupPlan(env = {}) {
       collectionId: reservationsCollectionId,
       attributeKeys: RESERVATION_REVIEW_AUDIT_ATTRIBUTES.map((attribute) => attribute.key),
       attributeCount: RESERVATION_REVIEW_AUDIT_ATTRIBUTES.length,
+    },
+    reservationMultiLine: {
+      collectionId: reservationsCollectionId,
+      attributeKeys: RESERVATION_MULTI_LINE_ATTRIBUTES.map((attribute) => attribute.key),
+      attributeCount: RESERVATION_MULTI_LINE_ATTRIBUTES.length,
     },
     permissions: {
       publicPermissionCount: 0,
@@ -383,6 +396,19 @@ export async function ensureStrictCollection({
   return 'existing'
 }
 
+const APPWRITE_INTEGER_MIN = -9_223_372_036_854_775_808n
+const APPWRITE_INTEGER_MAX = 9_223_372_036_854_775_807n
+
+function sameIntegerBound(current, expected) {
+  if ((typeof current !== 'number' && typeof current !== 'bigint') ||
+      (typeof current === 'number' && !Number.isSafeInteger(current))) return false
+  try {
+    return BigInt(current) === BigInt(expected)
+  } catch {
+    return false
+  }
+}
+
 export function validateAttributeDefinition(collectionId, expected, current) {
   const mismatches = []
   const expectedDefault = expected.xdefault ?? expected.default ?? null
@@ -395,7 +421,12 @@ export function validateAttributeDefinition(collectionId, expected, current) {
     if (current.format !== 'enum') mismatches.push(`format=${current.format}`)
   } else {
     if (current.type !== expected.type) mismatches.push(`type=${current.type}`)
-    if (expected.type === 'string' && current.format === 'enum') mismatches.push(`format=${current.format}`)
+    if (expected.type === 'string') {
+      const currentFormat = current.format ?? ''
+      const currentEncrypt = current.encrypt ?? false
+      if (currentFormat !== '') mismatches.push(`format=${currentFormat}`)
+      if (currentEncrypt !== false) mismatches.push(`encrypt=${currentEncrypt}`)
+    }
   }
   if (current.required !== expected.required) mismatches.push(`required=${current.required}`)
   if (currentArray !== expectedArray) mismatches.push(`array=${currentArray}`)
@@ -404,8 +435,10 @@ export function validateAttributeDefinition(collectionId, expected, current) {
     mismatches.push(`elements=[${(current.elements || []).join(', ')}]`)
   }
   if (expected.type === 'integer') {
-    if (expected.min !== undefined && current.min !== expected.min) mismatches.push(`min=${current.min}`)
-    if (expected.max !== undefined && current.max !== expected.max) mismatches.push(`max=${current.max}`)
+    const expectedMin = expected.min ?? APPWRITE_INTEGER_MIN
+    const expectedMax = expected.max ?? APPWRITE_INTEGER_MAX
+    if (!sameIntegerBound(current.min, expectedMin)) mismatches.push(`min=${current.min}`)
+    if (!sameIntegerBound(current.max, expectedMax)) mismatches.push(`max=${current.max}`)
   }
   if (currentDefault !== expectedDefault) mismatches.push(`default=${currentDefault}`)
   if (mismatches.length === 0) return

@@ -129,6 +129,13 @@ export function redactReservationDeploymentDiagnostic(value, secrets = []) {
   return output.slice(0, 1200)
 }
 
+export function isReadyCakeOrderLinesHealth(responseStatusCode, response) {
+  return responseStatusCode === 200 &&
+    response?.ok === true &&
+    response.result?.status === 'ready' &&
+    response.result?.capabilities?.cakeOrderLines === 1
+}
+
 export function buildHealthFailureDiagnostic(execution = {}, secrets = []) {
   return redactReservationDeploymentDiagnostic([
     `status=${String(execution.status || 'unknown')}`,

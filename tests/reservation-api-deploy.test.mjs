@@ -7,6 +7,7 @@ import {
   buildDryRunPlan,
   buildHealthFailureDiagnostic,
   buildRuntimeCandidates,
+  isReadyCakeOrderLinesHealth,
   isSecretFunctionVariable,
   redactReservationDeploymentDiagnostic,
   resolveDeployConfig,
@@ -118,10 +119,27 @@ test('reservation deploy dry-run is redacted and cannot mutate permissions or ne
   assert.equal(JSON.stringify(plan).includes('private_manual_coupons'), false)
 })
 
-test('permission transition health gate matches the current ready response contract', () => {
-  const source = readFileSync('scripts/set-reservation-write-mode.mjs', 'utf8')
-  assert.match(source, /response\.result\?\.status !== 'ready'/)
-  assert.doesNotMatch(source, /response\.result\?\.database !== 'ok'/)
+test('deployment and permission transition health gates require the multi-line capability', () => {
+  assert.equal(isReadyCakeOrderLinesHealth(200, {
+    ok: true,
+    result: { status: 'ready', capabilities: { cakeOrderLines: 1 } },
+  }), true)
+  for (const [statusCode, response] of [
+    [503, { ok: true, result: { status: 'ready', capabilities: { cakeOrderLines: 1 } } }],
+    [200, { ok: false, result: { status: 'ready', capabilities: { cakeOrderLines: 1 } } }],
+    [200, { ok: true, result: { status: 'ready' } }],
+    [200, { ok: true, result: { status: 'ready', capabilities: { cakeOrderLines: 0 } } }],
+  ]) {
+    assert.equal(isReadyCakeOrderLinesHealth(statusCode, response), false)
+  }
+
+  for (const path of ['scripts/deploy-reservation-api.mjs', 'scripts/set-reservation-write-mode.mjs']) {
+    const source = readFileSync(path, 'utf8')
+    assert.match(source, /isReadyCakeOrderLinesHealth\(execution\.responseStatusCode, response\)/)
+  }
+  const permissionSource = readFileSync('scripts/set-reservation-write-mode.mjs', 'utf8')
+  assert.match(permissionSource, /if \(mode === 'function'\) await verifyReservationApiHealth\(\)/)
+  assert.ok(permissionSource.indexOf("if (mode === 'function') await verifyReservationApiHealth()") < permissionSource.indexOf('await updateCollectionPermissions'))
 })
 
 test('actual reservation deploy CLI dry-run exits before credentials, dotenv and network setup', () => {

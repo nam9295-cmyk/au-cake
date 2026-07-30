@@ -48,6 +48,17 @@ export function resolveReservationConfig(env = process.env) {
 }
 
 const config = reservationResourceConfig()
+const APPWRITE_INTEGER_MAX = 9_223_372_036_854_775_807n
+
+function sameIntegerBound(current, expected) {
+  if ((typeof current !== 'number' && typeof current !== 'bigint') ||
+      (typeof current === 'number' && !Number.isSafeInteger(current))) return false
+  try {
+    return BigInt(current) === BigInt(expected)
+  } catch {
+    return false
+  }
+}
 
 function clientForRequest(req) {
   const endpoint = process.env.APPWRITE_FUNCTION_API_ENDPOINT
@@ -771,25 +782,40 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
   }
 
   const expectedAuditAttributes = [
-    { key: 'subtotalCents', type: 'integer', required: false, min: 0, max: null },
+    { key: 'subtotalCents', type: 'integer', required: false, min: 0, max: APPWRITE_INTEGER_MAX },
     { key: 'discountPercent', type: 'integer', required: false, min: 0, max: 100 },
-    { key: 'discountCents', type: 'integer', required: false, min: 0, max: null },
+    { key: 'discountCents', type: 'integer', required: false, min: 0, max: APPWRITE_INTEGER_MAX },
     { key: 'appliedPromoCodeLast4', type: 'string', required: false, size: 4 },
     { key: 'reviewCouponId', type: 'string', required: false, size: 64 },
     { key: 'vanillaCakeSheet', type: 'string', required: false, size: 20 },
     { key: 'vanillaCakeFlavor', type: 'string', required: false, size: 40 },
+    { key: 'orderLinesJson', type: 'string', required: false, size: 65535 },
+    { key: 'orderLineCount', type: 'integer', required: false, min: 1, max: APPWRITE_INTEGER_MAX },
+    { key: 'orderItemCount', type: 'integer', required: false, min: 1, max: APPWRITE_INTEGER_MAX },
+    { key: 'discountBasisCents', type: 'integer', required: false, min: 0, max: APPWRITE_INTEGER_MAX },
+    { key: 'requestFingerprint', type: 'string', required: false, size: 64 },
   ]
   const compatibleAuditAttribute = (expected) => {
     const current = reservationAttributes.find((attribute) => (attribute.key || attribute.$id) === expected.key)
-    if (!current || current.status !== 'available' || current.type !== expected.type || current.required !== expected.required) return false
-    if (expected.type === 'string') return current.size === expected.size
-    if ((current.min ?? null) !== expected.min) return false
-    return expected.max === null || (current.max ?? null) === expected.max
+    if (
+      !current ||
+      current.status !== 'available' ||
+      current.type !== expected.type ||
+      current.required !== expected.required ||
+      (current.array ?? false) !== false ||
+      (current.default ?? null) !== null
+    ) return false
+    if (expected.type === 'string') {
+      return current.size === expected.size &&
+        (current.format ?? '') === '' &&
+        (current.encrypt ?? false) === false
+    }
+    return sameIntegerBound(current.min, expected.min) && sameIntegerBound(current.max, expected.max)
   }
   if (!expectedAuditAttributes.every(compatibleAuditAttribute)) {
     throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
   }
-  return { status: 'ready' }
+  return { status: 'ready', capabilities: { cakeOrderLines: 1 } }
 }
 
 export default async ({ req, res, log, error }) => {

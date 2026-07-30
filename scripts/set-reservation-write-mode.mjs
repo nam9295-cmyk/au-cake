@@ -8,6 +8,7 @@ import {
   Role,
 } from 'node-appwrite'
 import { Client as BrowserClient, ExecutionMethod, Functions as BrowserFunctions } from 'appwrite'
+import { isReadyCakeOrderLinesHealth } from './reservation-api-deploy-config.mjs'
 
 loadDotEnvLocal()
 
@@ -192,7 +193,7 @@ async function verifyReservationApiHealth() {
   } catch {
     throw new Error(`Reservation API health check returned invalid JSON (HTTP ${execution.responseStatusCode}).`)
   }
-  if (execution.responseStatusCode !== 200 || response.ok !== true || response.result?.status !== 'ready') {
+  if (!isReadyCakeOrderLinesHealth(execution.responseStatusCode, response)) {
     throw new Error(`Reservation API health check failed (HTTP ${execution.responseStatusCode}). Permissions were not changed.`)
   }
   console.log('reservation-api health check passed before permission change')

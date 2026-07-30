@@ -16,6 +16,7 @@ import {
   canEnableReviewPhotoTransformations,
   ensureStrictCollection,
   parseAdminUserIds,
+  RESERVATION_MULTI_LINE_ATTRIBUTES,
   RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
   REVIEW_COLLECTIONS,
   REVIEW_COLLECTION_RESOURCE_KEYS,
@@ -103,8 +104,8 @@ const reviewCollectionResources = REVIEW_COLLECTION_RESOURCE_KEYS.map(([key, idK
   definition: REVIEW_COLLECTIONS[key],
   permissions: reviewCollectionPermissions[key],
 }))
-const reservationReviewAuditAttributeKeys = new Set(
-  RESERVATION_REVIEW_AUDIT_ATTRIBUTES.map(({ key }) => key),
+const strictReservationAttributeKeys = new Set(
+  [...RESERVATION_REVIEW_AUDIT_ATTRIBUTES, ...RESERVATION_MULTI_LINE_ATTRIBUTES].map(({ key }) => key),
 )
 
 const reservationPermissions = [
@@ -215,6 +216,7 @@ const reservationAttributes = [
   { key: 'totalPrice', type: 'integer', required: true, min: 0 },
   { key: 'totalPriceCents', type: 'integer', required: false, min: 0 },
   ...RESERVATION_REVIEW_AUDIT_ATTRIBUTES,
+  ...RESERVATION_MULTI_LINE_ATTRIBUTES,
 ]
 
 const settingsAttributes = [
@@ -766,7 +768,7 @@ for (const attribute of reservationAttributes) {
     databaseId,
     reservationsId,
     attribute,
-    { strict: reservationReviewAuditAttributeKeys.has(attribute.key) },
+    { strict: strictReservationAttributeKeys.has(attribute.key) },
   )
 }
 
