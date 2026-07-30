@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const reservationDrawer = await readFile(new URL('../src/ReservationDrawer.tsx', import.meta.url), 'utf8')
 const reserve = await readFile(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const complete = await readFile(new URL('../src/pages/CompletePage.tsx', import.meta.url), 'utf8')
 const classReserve = await readFile(new URL('../src/pages/ClassReservePage.tsx', import.meta.url), 'utf8')
@@ -69,8 +70,8 @@ test('pending review coupon never feeds its estimate into the final summary or b
 })
 
 test('one-time coupon admin drawer disables repricing and uses generic coupon wording', () => {
-  assert.match(app, /const hasOneTimeCoupon = Boolean\(reservation\.reviewCouponId\)/)
-  assert.match(app, /fieldset disabled=\{hasOneTimeCoupon\}/)
-  assert.match(app, /일회용 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다\./)
-  assert.doesNotMatch(app, /리워드 쿠폰 ID/)
+  assert.match(reservationDrawer, /const hasOneTimeCoupon = Boolean\(reservation\.reviewCouponId\)/)
+  assert.match(reservationDrawer, /fieldset disabled=\{hasOneTimeCoupon\}/)
+  assert.match(reservationDrawer, /일회용 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다\./)
+  assert.doesNotMatch(reservationDrawer, /리워드 쿠폰 ID/)
 })
