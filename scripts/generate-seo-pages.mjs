@@ -4,6 +4,51 @@ import { dirname, join } from 'node:path'
 const siteUrl = 'https://au.verygood-chocolate.com'
 const distDir = join(process.cwd(), 'dist')
 
+const cakeDetails = [
+  {
+    slug: 'chocolate-pound-cake-and-cupcakes',
+    name: 'Chocolate Pound Cake & Cupcakes',
+    description: 'Choose a chocolate pound cake or one dozen cupcakes, then select the available finish.',
+  },
+  {
+    slug: 'pave-chocolate-cake',
+    name: 'Pave Chocolate Cake',
+    description: 'A round chocolate cake layered with soft pave ganache and chocolate sponge, available in three sizes.',
+  },
+  {
+    slug: 'chocolatiers-basque-cheesecake',
+    name: "Chocolatier\'s Basque Cheesecake",
+    description: 'Choose a classic, pave chocolate on top, or Eiffel Tower chocolate finish.',
+  },
+  {
+    slug: 'lemon-cake',
+    name: 'Lemon Cake',
+    description: 'Lemon-shaped cakes with fresh lemon cream, available in packs of 6, 8, 12 or 16.',
+  },
+  {
+    slug: 'vanilla-fresh-cream-cake',
+    name: 'Vanilla Fresh Cream Cake',
+    description: 'Choose the size, cake sheet and flavour for a made-to-order vanilla fresh cream cake.',
+  },
+]
+
+const cakeRoutePages = Object.fromEntries(cakeDetails.map((cake) => {
+  const path = `/cakes/${cake.slug}`
+  return [path, {
+    title: `${cake.name} Sydney | Verygood Chocolate`,
+    description: cake.description,
+    robots: 'index, follow',
+    fallbackHtml: `
+      <main class="seo-fallback">
+        <p><a href="/cakes">View all cakes</a></p>
+        <h1>${cake.name}</h1>
+        <p>${cake.description}</p>
+        <p>Made to order for pre-arranged pick-up in Melrose Park, Sydney. Jenny confirms availability and payment details after your request.</p>
+        <p><a href="/reserve" rel="nofollow">Request this cake</a></p>
+      </main>`,
+  }]
+}))
+
 const pages = {
   '/': {
     title: 'Made-to-Order Chocolate Cakes Sydney | Verygood Chocolate',

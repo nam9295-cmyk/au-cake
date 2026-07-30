@@ -1,3 +1,6 @@
+import { getCakeDetailBySlug } from './cake-detail.js'
+import { getProductById } from './constants.js'
+
 const SITE_URL = 'https://au.verygood-chocolate.com'
 
 type SeoConfig = {
@@ -110,6 +113,50 @@ const publicSeo: Record<string, SeoConfig> = {
     canonical: `${SITE_URL}/reviews`,
     structuredData: [organization],
   },
+  '/cakes': {
+    title: 'Made-to-Order Cakes Sydney | Verygood Chocolate',
+    description: 'Explore Verygood Chocolate cakes, pack sizes and finishes for pre-arranged pick-up in Melrose Park, Sydney.',
+    canonical: `${SITE_URL}/cakes`,
+    structuredData: [organization],
+  },
+}
+
+function getCakeDetailSeo(pathname: string): SeoConfig | null {
+  const match = /^\/cakes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(pathname)
+  if (!match) return null
+  const detail = getCakeDetailBySlug(match[1], 'en')
+  if (!detail) return null
+
+  const prices = detail.productIds.flatMap((productId) => {
+    const product = getProductById(productId)
+    const sizePrices = Object.values(product.sizePrices || {}).filter((price): price is number => typeof price === 'number')
+    return sizePrices.length > 0 ? sizePrices : [product.price]
+  })
+  const lowPrice = Math.min(...prices)
+  const highPrice = Math.max(...prices)
+
+  return {
+    title: `${detail.name} Sydney | Verygood Chocolate`,
+    description: detail.description,
+    canonical: `${SITE_URL}${pathname}`,
+    structuredData: [
+      organization,
+      {
+        '@type': 'Product',
+        name: detail.name,
+        description: detail.description,
+        image: `${SITE_URL}/og-image.jpg`,
+        brand: { '@id': `${SITE_URL}/#organization` },
+        offers: {
+          '@type': lowPrice === highPrice ? 'Offer' : 'AggregateOffer',
+          url: `${SITE_URL}${pathname}`,
+          priceCurrency: 'AUD',
+          ...(lowPrice === highPrice ? { price: lowPrice } : { lowPrice, highPrice }),
+          availability: 'https://schema.org/LimitedAvailability',
+        },
+      },
+    ],
+  }
 }
 
 const privateSeo: Record<string, SeoConfig> = {
@@ -163,6 +210,8 @@ function setMeta(selector: string, attribute: string, value: string) {
 
 export function getSeoConfig(pathname: string): SeoConfig {
   if (publicSeo[pathname]) return publicSeo[pathname]
+  const cakeDetailSeo = getCakeDetailSeo(pathname)
+  if (cakeDetailSeo) return cakeDetailSeo
   if (pathname === '/review.html') return privateSeo['/review']
   if (privateSeo[pathname]) return privateSeo[pathname]
   if (pathname.startsWith('/admin')) {

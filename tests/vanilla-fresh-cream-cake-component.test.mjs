@@ -8,7 +8,7 @@ const catalog = readFileSync(new URL('../src/lib/cake-catalog.ts', import.meta.u
 const home = app.slice(app.indexOf('function HomePage'), app.indexOf('function ClassesPage'))
 const reserve = app.slice(app.indexOf('function ReservePage'), app.indexOf('function CompletePage'))
 
-test('photo-less Vanilla Fresh Cream Cake uses only a black SVG silhouette with COMING SOON while Order Now stays active', () => {
+test('photo-less Vanilla Fresh Cream Cake uses only a black SVG silhouette with COMING SOON while details stay active', () => {
   assert.match(app, /function VanillaFreshCreamCakeSilhouette\(/)
   assert.match(app, /className="vanilla-fresh-cream-silhouette"/)
   assert.match(app, />COMING SOON</)
@@ -16,7 +16,7 @@ test('photo-less Vanilla Fresh Cream Cake uses only a black SVG silhouette with 
   assert.match(catalog, /defaultProductId:\s*'vanilla-fresh-cream-cake'/)
   assert.match(catalog, /isPhotoComingSoon:\s*true/)
   assert.match(home, /card\.isPhotoComingSoon\s*\?\s*<VanillaFreshCreamCakeSilhouette/)
-  assert.match(home, /onClick=\{\(\) => onReserveProduct\(card\.productId\)\}/)
+  assert.match(home, /onClick=\{\(\) => navigateToCake\(card\.slug\)\}/)
   assert.match(catalog, /id:\s*'vanilla-fresh-cream'[\s\S]*?defaultProductId:\s*'vanilla-fresh-cream-cake'[\s\S]*?imageKey:\s*'vanilla-fresh-cream-cake'[\s\S]*?isPhotoComingSoon:\s*true/)
   assert.match(app, /'vanilla-fresh-cream-cake':\s*''/)
 })

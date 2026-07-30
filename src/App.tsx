@@ -29,13 +29,16 @@ import kidsClassFinishedImg from './assets/kids-class-finished.webp'
 import tigerImg from './assets/tiger.png'
 import heartLogoImg from './assets/heart_logo.png'
 import ReadOnlyCalendarPage from './ReadOnlyCalendarPage'
+import CakeDetailPage from './CakeDetailPage'
+import CakesPage from './CakesPage'
 import ReviewPage from './ReviewPage'
 import PublicReviewsSection from './PublicReviewsSection'
 import ReviewsArchive from './ReviewsArchive'
 import AdminFrame from './AdminFrame'
 import AdminReviewsPage from './AdminReviewsPage'
 import { PickupDatePicker, WeekendDatePicker } from './components/WeekendDatePicker'
-import { getPageFromPath, pathForPage, type Page } from './lib/app-routes'
+import { getCakeSlugFromPath, getPageFromPath, pathForCake, pathForPage, type Page } from './lib/app-routes'
+import { type CakeDetailSelection } from './lib/cake-detail'
 import { getAuCakeCatalogCards, type CakeCatalogImageKey } from './lib/cake-catalog'
 import {
   CAKE_SIZE_OPTIONS,
@@ -360,6 +363,7 @@ function App() {
 
   const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
   const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
+  const [reservationSelection, setReservationSelection] = useState<CakeDetailSelection | null>(null)
   const [pendingReviewCoupon, setPendingReviewCoupon] = useState('')
   const [pendingReviewRewardPercent, setPendingReviewRewardPercent] = useState<5 | 10 | null>(null)
   const [language, setLanguageState] = useState<Language>(readStoredLanguage)
@@ -395,13 +399,17 @@ function App() {
     window.scrollTo({ top: 0 })
   }, [])
 
-  const reserveProduct = useCallback(
-    (productId: ProductId) => {
-      setReservationProductId(productId)
-      navigate('reserve')
-    },
-    [navigate],
-  )
+  const navigateToCake = useCallback((slug: string) => {
+    window.history.pushState(null, '', pathForCake(slug))
+    setPage('cake-detail')
+    window.scrollTo({ top: 0 })
+  }, [])
+
+  const requestCakeSelection = useCallback((selection: CakeDetailSelection) => {
+    setReservationProductId(selection.productId)
+    setReservationSelection(selection)
+    navigate('reserve')
+  }, [navigate])
 
   const orderCakeFromReview = useCallback((couponCode: string, rewardPercent: 5 | 10) => {
     const normalized = normalizeReviewCouponCode(couponCode)
@@ -420,6 +428,7 @@ function App() {
 
   const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations' || page === 'admin-classes' || page === 'admin-reviews'
   const isPrivatePage = isAdminPage || page === 'calendar'
+  const currentCakeSlug = getCakeSlugFromPath(window.location.pathname) || ''
 
   if (page === 'review') return <ReviewPage onOrderCake={orderCakeFromReview} />
 
@@ -432,7 +441,27 @@ function App() {
       )}
       {!isPrivatePage && <AnnouncementTicker language={language} />}
 
-      {page === 'home' && <HomePage navigate={navigate} settings={settings} onReserveProduct={reserveProduct} language={language} setLanguage={setLanguage} />}
+      {page === 'home' && <HomePage navigate={navigate} settings={settings} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} />}
+      {page === 'cakes' && (
+        <>
+          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+          <CakesPage language={language} onOpenCake={navigateToCake} />
+        </>
+      )}
+      {page === 'cake-detail' && (
+        <>
+          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} />
+          <CakeDetailPage
+            key={currentCakeSlug}
+            slug={currentCakeSlug}
+            language={language}
+            onBack={() => navigate('cakes')}
+            onBrowseCakes={() => navigate('cakes')}
+            onOpenCake={navigateToCake}
+            onRequest={requestCakeSelection}
+          />
+        </>
+      )}
       {page === 'classes' && <ClassesPage navigate={navigate} language={language} setLanguage={setLanguage} />}
       {page === 'reviews' && (
         <>
@@ -452,6 +481,7 @@ function App() {
           navigate={navigate}
           settings={settings}
           initialProductId={reservationProductId}
+          initialSelection={reservationSelection}
           initialPromoCode={pendingReviewCoupon}
           initialRewardPercent={pendingReviewRewardPercent}
           onInitialPromoConsumed={() => setPendingReviewCoupon('')}
@@ -543,13 +573,16 @@ function SiteHeader({
           <img className="brand-mark" src="/favicon.png" alt="Verygood Chocolate" />
         </a>
         <nav>
+          <a className="cakes-nav-button" href="/cakes" onClick={(event) => { event.preventDefault(); navigate('cakes') }}>
+            {language === 'ko' ? '케이크' : 'Cakes'}
+          </a>
           <a className="kids-nav-button" href="/classes" onClick={(event) => { event.preventDefault(); navigate('classes') }}>
             {copy.kidsNav}
           </a>
           <a href="/lookup" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('lookup') }}>
             {copy.lookupNav}
           </a>
-          <a href="/admin/login" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('admin-login') }}>
+          <a className="admin-nav-button" href="/admin/login" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('admin-login') }}>
             {copy.adminNav}
           </a>
         </nav>
@@ -785,18 +818,17 @@ function reservationFinishText(reservation: Reservation) {
 function HomePage({
   navigate,
   settings,
-  onReserveProduct,
+  navigateToCake,
   language,
   setLanguage,
 }: {
   navigate: (page: Page) => void
   settings: StoreSettings
-  onReserveProduct: (productId: ProductId) => void
+  navigateToCake: (slug: string) => void
   language: Language
   setLanguage: (language: Language) => void
 }) {
   const copy = cakeCopy(language)
-  const homeReserveCta = language === 'ko' ? '지금 주문하기' : 'Order Now'
   const [activeHeroCake, setActiveHeroCake] = useState(1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
@@ -947,8 +979,8 @@ function HomePage({
               )}
             </p>
             <div className="hero-actions">
-              <button className="primary-button" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
-                {homeReserveCta}
+              <button className="primary-button" type="button" onClick={() => navigateToCake('pave-chocolate-cake')}>
+                {language === 'ko' ? '파베 케이크 보기' : 'View Pave cake'}
               </button>
             </div>
           </div>
@@ -1056,8 +1088,8 @@ function HomePage({
                     <dd>{card.optionLabel}</dd>
                   </div>
                 </dl>
-                <button className="secondary-button full-width" type="button" onClick={() => onReserveProduct(card.productId)}>
-                  {homeReserveCta}
+                <button className="secondary-button full-width" type="button" onClick={() => navigateToCake(card.slug)}>
+                  {language === 'ko' ? '상세 보기' : 'View details'}
                 </button>
               </article>
             ))}
@@ -1176,8 +1208,8 @@ function HomePage({
 
         {marketConfig.market === 'AU' && <PickupLocationCard language={language} />}
       </main>
-      <button className="sticky-cta" type="button" onClick={() => onReserveProduct(DEFAULT_PRODUCT_ID)}>
-        {homeReserveCta}
+      <button className="sticky-cta" type="button" onClick={() => navigateToCake('pave-chocolate-cake')}>
+        {language === 'ko' ? '케이크 자세히 보기' : 'View cake details'}
       </button>
     </>
   )
@@ -1830,6 +1862,7 @@ function ReservePage({
   navigate,
   settings,
   initialProductId,
+  initialSelection,
   initialPromoCode,
   initialRewardPercent,
   onInitialPromoConsumed,
@@ -1841,6 +1874,7 @@ function ReservePage({
   navigate: (page: Page) => void
   settings: StoreSettings
   initialProductId: ProductId
+  initialSelection: CakeDetailSelection | null
   initialPromoCode: string
   initialRewardPercent: 5 | 10 | null
   onInitialPromoConsumed: () => void
@@ -1852,19 +1886,19 @@ function ReservePage({
   const [requestId] = useState(generateRequestId)
   const copy = cakeCopy(language)
   const [form, setForm] = useState({
-    productId: initialProductId,
+    productId: initialSelection?.productId || initialProductId,
     cacaoPercent: '기본' as CacaoPercent,
-    cakeSize: DEFAULT_CAKE_SIZE as CakeSize,
-    chocolateType: DEFAULT_CHOCOLATE_TYPE as ChocolateType,
-    poundAddon: DEFAULT_POUND_ADDON as PoundAddon,
-    chocolateIcingCount: 0,
-    vanillaCreamCount: 0,
-    partyDecorationCount: 0,
-    vanillaCakeSheet: DEFAULT_VANILLA_CAKE_SHEET as VanillaCakeSheet,
-    vanillaCakeFlavor: DEFAULT_VANILLA_CAKE_FLAVOR as VanillaCakeFlavor,
+    cakeSize: initialSelection?.cakeSize || DEFAULT_CAKE_SIZE as CakeSize,
+    chocolateType: initialSelection?.chocolateType || DEFAULT_CHOCOLATE_TYPE as ChocolateType,
+    poundAddon: initialSelection?.poundAddon || DEFAULT_POUND_ADDON as PoundAddon,
+    chocolateIcingCount: initialSelection?.chocolateIcingCount || 0,
+    vanillaCreamCount: initialSelection?.vanillaCreamCount || 0,
+    partyDecorationCount: initialSelection?.partyDecorationCount || 0,
+    vanillaCakeSheet: initialSelection?.vanillaCakeSheet || DEFAULT_VANILLA_CAKE_SHEET as VanillaCakeSheet,
+    vanillaCakeFlavor: initialSelection?.vanillaCakeFlavor || DEFAULT_VANILLA_CAKE_FLAVOR as VanillaCakeFlavor,
     pickupDate: todayInputValue(),
     pickupTime: '',
-    quantity: 1,
+    quantity: initialSelection?.quantity || 1,
     customerName: '',
     customerPhone: '',
     requestNote: '',
@@ -2245,7 +2279,7 @@ function ReservePage({
       ...normalizeCupcakeFinishCounts(productId, form.vanillaCreamCount, form.partyDecorationCount),
       vanillaCakeSheet: normalizeVanillaCakeSheet(productId, form.vanillaCakeSheet),
       vanillaCakeFlavor: normalizeVanillaCakeFlavor(productId, form.vanillaCakeFlavor),
-      quantity: isFreshLemonCupcakeProduct(productId) ? 1 : form.quantity,
+      quantity: form.quantity,
     })
   }
 
@@ -2336,15 +2370,13 @@ function ReservePage({
                     : `Basic ${basicCupcakeCount} / Vanilla cream ${cupcakeFinishCounts.vanillaCreamCount} / Party decoration ${cupcakeFinishCounts.partyDecorationCount}`}</dd>
                 </div>
               )}
-              {!isFreshLemonCupcakeProduct(selectedProduct.id) && (
-                <div>
-                  <dt>{labels.quantity}</dt>
-                  <dd>
-                    {form.quantity}
-                    {copy.quantityUnit}
-                  </dd>
-                </div>
-              )}
+              <div>
+                <dt>{labels.quantity}</dt>
+                <dd>
+                  {form.quantity}
+                  {copy.quantityUnit}
+                </dd>
+              </div>
               {(selectedProduct.usesSizeOptions || isCheesecakeProduct(selectedProduct.id)) && (
                 <div>
                   <dt>{labels.size}</dt>
@@ -2718,26 +2750,24 @@ function ReservePage({
               </fieldset>
             )}
 
-            {!isFreshLemonCupcakeProduct(selectedProduct.id) && (
-              <fieldset>
-                <legend>{labels.quantity}</legend>
-                <label>
-                  {labels.orderQuantity}
-                  <select
-                    value={form.quantity}
-                    onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
-                  >
-                    {Array.from({ length: MAX_RESERVATION_QUANTITY }, (_, index) => index + 1).map((quantity) => (
-                      <option value={quantity} key={quantity}>
-                        {quantity}
-                        {copy.quantityUnit}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <p className="field-help">{labels.quantityHelp}</p>
-              </fieldset>
-            )}
+            <fieldset>
+              <legend>{labels.quantity}</legend>
+              <label>
+                {labels.orderQuantity}
+                <select
+                  value={form.quantity}
+                  onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
+                >
+                  {Array.from({ length: MAX_RESERVATION_QUANTITY }, (_, index) => index + 1).map((quantity) => (
+                    <option value={quantity} key={quantity}>
+                      {quantity}
+                      {copy.quantityUnit}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="field-help">{labels.quantityHelp}</p>
+            </fieldset>
 
             <div className="field-row">
               <div className="pickup-date-field">

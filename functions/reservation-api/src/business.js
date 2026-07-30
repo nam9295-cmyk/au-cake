@@ -494,7 +494,6 @@ export function buildCakeReservation(input, {
   const customerPhone = validateAustralianMobile(input.customerPhone)
   const quantity = Number(input.quantity)
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
-  if (FRESH_LEMON_CUPCAKE_PRODUCT_IDS.has(input.productId) && quantity !== 1) fail('INVALID_QUANTITY')
   validatePickupDateTime(input.pickupDate, input.pickupTime, now)
 
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })

@@ -305,7 +305,7 @@ test('cake API derives protected fields and cents on the server', () => {
   assert.equal(reservation.cacaoPercent, '기본')
 })
 
-test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and enforces one pack per reservation', () => {
+test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and supports multiple identical packs', () => {
   const prices = {
     'fresh-lemon-cupcakes-6': 36,
     'fresh-lemon-cupcakes-8': 45,
@@ -326,10 +326,14 @@ test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and enforces on
     assert.equal(reservation.requestNote.includes('[Promo'), false)
   }
 
-  assertApiError('INVALID_QUANTITY', () => buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 2 },
+  const twoPacks = buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 2, chocolateIcingCount: 3 },
     { now, reservationNumber: 'VG-C-AU-LEMON-TWO-PACKS' },
-  ))
+  )
+  assert.equal(twoPacks.quantity, 2)
+  assert.equal(twoPacks.chocolateIcingCount, 3)
+  assert.equal(twoPacks.totalPrice, 75)
+  assert.equal(twoPacks.totalPriceCents, 7500)
 })
 
 test('cake API prices Lemon Cake chocolate icing per piece before promo', () => {
