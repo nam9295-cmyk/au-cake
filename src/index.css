@@ -146,7 +146,10 @@ p {
   top: 0;
   z-index: 20;
   width: 100%;
+  max-width: 100vw;
   overflow: hidden;
+  overflow-x: clip;
+  contain: inline-size;
   border-bottom: 0;
   background: var(--forest);
   color: var(--canvas);
@@ -7450,8 +7453,9 @@ td select {
 .cake-detail-purchase h1 {
   margin-bottom: 18px;
   color: var(--forest-deep);
-  font-size: clamp(44px, 5.4vw, 76px);
+  font-size: clamp(40px, 4.4vw, 68px);
   line-height: 0.88;
+  overflow-wrap: anywhere;
 }
 
 .cake-detail-price {
@@ -7837,7 +7841,7 @@ td select {
   }
 
   .cake-detail-purchase h1 {
-    font-size: clamp(42px, 14vw, 58px);
+    font-size: clamp(36px, 10vw, 52px);
   }
 
   .cake-detail-options:not(.is-stacked) {

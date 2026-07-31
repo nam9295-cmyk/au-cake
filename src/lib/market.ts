@@ -373,7 +373,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       },
       'vanilla-fresh-cream-cake': {
         id: 'vanilla-fresh-cream-cake',
-        name: 'vanilla fresh cream cake',
+        name: 'Vanilla Fresh Cream Cake',
         description: 'Choose vanilla or chocolate cake sheet with vanilla fresh cream, then Triple berry or Nutella chocolate chip flavour.',
         price: 75,
         priceNote: 'Choose size, cake sheet and flavour',

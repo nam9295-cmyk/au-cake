@@ -89,7 +89,7 @@ test('Vanilla Fresh Cream Cake keeps its size prices and offers the approved cak
   const vanillaFreshCreamCakeId: ProductId = 'vanilla-fresh-cream-cake'
   const vanillaFreshCreamCake = getProductById(vanillaFreshCreamCakeId)
 
-  assert.equal(vanillaFreshCreamCake.name, 'vanilla fresh cream cake')
+  assert.equal(vanillaFreshCreamCake.name, 'Vanilla Fresh Cream Cake')
   assert.deepEqual(vanillaFreshCreamCake.sizePrices, { '15cm': 75, '19cm': 98, '22cm': 139 })
   assert.equal(vanillaFreshCreamCake.usesSizeOptions, true)
   assert.equal(vanillaFreshCreamCake.usesCacaoOptions, false)

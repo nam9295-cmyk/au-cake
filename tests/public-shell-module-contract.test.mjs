@@ -7,6 +7,8 @@ const readSource = async (path) => readFile(new URL(path, import.meta.url), 'utf
 const appSource = await readSource('../src/App.tsx')
 const chromeSource = await readSource('../src/components/SiteChrome.tsx')
 const homeSource = await readSource('../src/pages/HomePage.tsx')
+const cssSource = await readSource('../src/index.css')
+const indexSource = await readSource('../index.html')
 
 test('App delegates the public shell and home page to explicit modules', () => {
   assert.match(appSource, /from '\.\/components\/SiteChrome'/)
@@ -35,4 +37,12 @@ test('HomePage owns its catalogue and hero asset dependencies', () => {
   assert.match(homeSource, /<SiteHeader/)
   assert.match(homeSource, /<PickupLocationCard/)
   assert.match(homeSource, /<VanillaFreshCreamCakeSilhouette/)
+})
+
+test('fixed public overlays do not overlap or widen the document', () => {
+  assert.match(indexSource, /html:has\(\.analytics-consent\) #vg-chat-launcher\s*\{[^}]*display:\s*none\s*!important/s)
+  assert.match(cssSource, /\.announcement-ticker\s*\{[^}]*max-width:\s*100vw/s)
+  assert.match(cssSource, /\.announcement-ticker\s*\{[^}]*contain:\s*inline-size/s)
+  assert.match(cssSource, /\.announcement-ticker\s*\{[^}]*overflow-x:\s*clip/s)
+  assert.match(cssSource, /\.cake-detail-purchase h1\s*\{[^}]*overflow-wrap:\s*anywhere/s)
 })

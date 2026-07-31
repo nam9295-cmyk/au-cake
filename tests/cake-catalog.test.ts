@@ -100,7 +100,7 @@ test('catalog cards preserve the current English and Korean home content', () =>
       priceLabel: 'From AUD 36',
     },
     {
-      name: 'vanilla fresh cream cake',
+      name: 'Vanilla Fresh Cream Cake',
       description: 'Choose vanilla or chocolate cake sheet with vanilla fresh cream, then Triple berry or Nutella chocolate chip flavour.',
       features: ['Choose vanilla or chocolate cake sheet', 'Triple berry or Nutella chocolate chip', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'],
       optionLabel: 'Choose size, cake sheet and flavour',
