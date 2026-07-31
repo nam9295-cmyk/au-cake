@@ -74,16 +74,27 @@ test('admin Appwrite hydration fails closed when present stored order data is ma
   ]) assert.throws(() => toReservation({ ...document, ...invalid } as never), /INVALID_STORED_ORDER/)
 })
 
-test('admin Appwrite hydration preserves the legacy single-line fallback only when stored JSON is absent', () => {
-  const legacy: Record<string, unknown> = { ...document }
-  delete legacy.orderLinesJson
-  delete legacy.orderLineCount
-  delete legacy.orderItemCount
-  delete legacy.discountBasisCents
-  const reservation = toReservation(legacy as never)
-  assert.equal(reservation.orderLines, undefined)
-  assert.equal(reservation.productId, 'pave-cake')
-  assert.equal(reservation.totalPriceCents, 13000)
+test('admin Appwrite hydration preserves the legacy single-line fallback when stored JSON is absent or nullable', () => {
+  const absent: Record<string, unknown> = { ...document }
+  delete absent.orderLinesJson
+  delete absent.orderLineCount
+  delete absent.orderItemCount
+  delete absent.discountBasisCents
+
+  const nullable = {
+    ...absent,
+    orderLinesJson: null,
+    orderLineCount: null,
+    orderItemCount: null,
+    discountBasisCents: null,
+  }
+
+  for (const legacy of [absent, nullable]) {
+    const reservation = toReservation(legacy as never)
+    assert.equal(reservation.orderLines, undefined)
+    assert.equal(reservation.productId, 'pave-cake')
+    assert.equal(reservation.totalPriceCents, 13000)
+  }
 })
 
 const localReservationsKey = 'verygood-cake-reservations-au'

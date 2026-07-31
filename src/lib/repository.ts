@@ -515,7 +515,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
   Reservation,
   'orderLines' | 'orderLineCount' | 'orderItemCount' | 'subtotalCents' | 'discountBasisCents' | 'discountPercent' | 'discountCents' | 'totalPriceCents'
 > | null {
-  if (!Object.hasOwn(document, 'orderLinesJson')) return null
+  if (!Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) return null
   if (typeof document.orderLinesJson !== 'string'
     || new TextEncoder().encode(document.orderLinesJson).byteLength > STORED_ORDER_MAX_BYTES) invalidStoredOrder()
   let payload: unknown
