@@ -18,11 +18,11 @@ export default defineConfig(({ mode }) => {
     server: appwriteProxyTarget
       ? {
           proxy: {
-            '/appwrite': {
+            '^/appwrite(?:/|$)': {
               target: appwriteProxyTarget,
               changeOrigin: true,
               cookieDomainRewrite: '',
-              rewrite: (path) => path.replace(/^\/appwrite/, ''),
+              rewrite: (path) => path.replace(/^\/appwrite(?=\/|$)/, ''),
               configure: (proxy) => {
                 proxy.on('proxyReq', (proxyRequest) => {
                   // Appwrite only allows configured browser origins. Local Tailscale/IP

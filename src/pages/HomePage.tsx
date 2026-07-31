@@ -9,11 +9,12 @@ import basqueCheesecakeCardImg from '../assets/basquecheesecake-side.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import freshLemonCupcakesHeroImg from '../assets/lemoncake.webp'
 import freshLemonCupcakesCardImg from '../assets/lemoncake-side.webp'
+import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
-import { getAuCakeCatalogCards, type CakeCatalogImageKey } from '../lib/cake-catalog'
+import { getAuCakeCatalogCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
 import { DEFAULT_CAKE_SIZE, PRODUCTS, formatCakeSizeLabel } from '../lib/constants'
 import { cakeCopy, getProductFeatures, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
@@ -48,6 +49,8 @@ export function HomePage({
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
   const [heroPaused, setHeroPaused] = useState(false)
+  const [quickViewCardId, setQuickViewCardId] = useState<string | null>(null)
+  const [quickViewOpener, setQuickViewOpener] = useState<HTMLButtonElement | null>(null)
   const heroCakes = [
     { image: basqueCheesecakeHeroImg, label: "Chocolatier's Basque", tagKey: 'mini', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
@@ -64,7 +67,7 @@ export function HomePage({
 
     return () => window.clearInterval(intervalId)
   }, [heroPaused])
-  const legacyKrCatalogCards = [
+  const legacyKrCatalogCards: CakeCatalogCard[] = [
     {
       id: 'pound-cupcake',
       slug: 'chocolate-pound-cake-and-cupcakes',
@@ -129,6 +132,8 @@ export function HomePage({
   const catalogCards = marketConfig.market === 'AU'
     ? getAuCakeCatalogCards(language)
     : legacyKrCatalogCards
+  const quickViewCard = catalogCards.find((card) => card.id === quickViewCardId) || null
+  const closeQuickView = useCallback(() => setQuickViewCardId(null), [])
 
   const rotateHeroCake = useCallback((direction: 1 | -1) => {
     setActiveHeroCake((current) => (current + direction + heroCakes.length) % heroCakes.length)
@@ -274,37 +279,31 @@ export function HomePage({
           <div className="product-grid">
             {catalogCards.map((card) => (
               <article className="product-card" key={card.id}>
-                <div className="product-image-wrap">
-                  {card.isPhotoComingSoon ? <VanillaFreshCreamCakeSilhouette /> : <img src={catalogImages[card.imageKey]} alt={card.name} />}
-                  {card.id === 'cheesecake' && (
-                    <img
-                      className="gluten-free-stamp"
-                      src={glutenFreeStampImg}
-                      alt={language === 'ko' ? '글루텐 프리' : 'Gluten-free'}
-                    />
-                  )}
-                </div>
-                <div>
-                  <strong>{card.name}</strong>
-                  <p>{card.description}</p>
-                </div>
-                <ul>
-                  {card.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                <dl>
-                  <div>
-                    <dt>{copy.price}</dt>
-                    <dd>{card.priceLabel}</dd>
-                  </div>
-                  <div>
-                    <dt>{copy.options}</dt>
-                    <dd>{card.optionLabel}</dd>
-                  </div>
-                </dl>
+                <button
+                  className="product-card-quick-view"
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-label={language === 'ko' ? `${card.name} 빠른 미리보기` : `Quick view ${card.name}`}
+                  onClick={(event) => {
+                    setQuickViewOpener(event.currentTarget)
+                    setQuickViewCardId(card.id)
+                  }}
+                >
+                  <span className="product-image-wrap">
+                    {card.isPhotoComingSoon ? <VanillaFreshCreamCakeSilhouette /> : <img src={catalogImages[card.imageKey]} alt="" />}
+                    {card.id === 'cheesecake' && (
+                      <img
+                        className="gluten-free-stamp"
+                        src={glutenFreeStampImg}
+                        alt=""
+                      />
+                    )}
+                  </span>
+                  <strong className="product-card-title">{card.name}</strong>
+                  <span className="product-card-price">{card.priceLabel}</span>
+                </button>
                 <button className="secondary-button full-width" type="button" onClick={() => navigateToCake(card.slug)}>
-                  {language === 'ko' ? '상세 보기' : 'View details'}
+                  {language === 'ko' ? '옵션 선택' : 'Choose options'}
                 </button>
               </article>
             ))}
@@ -423,6 +422,19 @@ export function HomePage({
 
         {marketConfig.market === 'AU' && <PickupLocationCard language={language} />}
       </main>
+      {quickViewCard && (
+        <ProductQuickViewDialog
+          card={quickViewCard}
+          imageUrl={catalogImages[quickViewCard.imageKey]}
+          language={language}
+          opener={quickViewOpener}
+          onClose={closeQuickView}
+          onChooseOptions={() => {
+            closeQuickView()
+            navigateToCake(quickViewCard.slug)
+          }}
+        />
+      )}
       <button className="sticky-cta" type="button" onClick={() => navigateToCake('pave-chocolate-cake')}>
         {language === 'ko' ? '케이크 자세히 보기' : 'View cake details'}
       </button>

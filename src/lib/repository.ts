@@ -563,8 +563,8 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
   ) invalidStoredOrder()
 
   const aggregateDiscountPercent = Number(document.discountPercent)
-  const hasReviewCoupon = Object.hasOwn(document, 'reviewCouponId')
-  const hasPromoLast4 = Object.hasOwn(document, 'appliedPromoCodeLast4')
+  const hasReviewCoupon = document.reviewCouponId != null
+  const hasPromoLast4 = document.appliedPromoCodeLast4 != null
   let eligibleIndexes: number[] = []
   if (hasReviewCoupon) {
     if (

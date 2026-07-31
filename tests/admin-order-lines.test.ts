@@ -38,6 +38,18 @@ test('admin Appwrite hydration preserves every validated stored order line and a
   assert.equal(reservation.totalPrice, 130)
 })
 
+test('admin Appwrite hydration treats nullable unused discount fields as absent', () => {
+  const reservation = toReservation({
+    ...document,
+    appliedPromoCodeLast4: null,
+    reviewCouponId: null,
+  } as never)
+
+  assert.equal(reservation.orderLines?.length, 2)
+  assert.equal(reservation.discountPercent, 0)
+  assert.equal(reservation.totalPriceCents, 13000)
+})
+
 test('admin Appwrite hydration fails closed when present stored order data is malformed or inconsistent', () => {
   const forgedDiscountLines = [
     { ...lines[0], discountPercent: 10, discountCents: 1, totalPriceCents: 7499 },
