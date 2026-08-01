@@ -80,7 +80,7 @@ function heifIspeHeader(width: number, height: number): Blob {
   return new Blob([bytes], { type: 'image/heic' })
 }
 
-function installCompressionBrowserMock(outputBlobs: Array<Blob | null>) {
+function installCompressionBrowserMock(outputBlobs: Array<Blob | null>, unsupportedMimeType?: string) {
   const originals = {
     bitmap: Object.getOwnPropertyDescriptor(globalThis, 'createImageBitmap'),
     document: Object.getOwnPropertyDescriptor(globalThis, 'document'),
@@ -91,7 +91,11 @@ function installCompressionBrowserMock(outputBlobs: Array<Blob | null>) {
   const bitmap = { width: 1600, height: 1200, close: () => { closeCount += 1 } }
   Object.defineProperty(globalThis, 'createImageBitmap', {
     configurable: true,
-    value: async (...args: unknown[]) => { bitmapCalls.push(args); return bitmap },
+    value: async (...args: unknown[]) => {
+      bitmapCalls.push(args)
+      if ((args[0] as Blob).type === unsupportedMimeType) throw new Error('unsupported')
+      return bitmap
+    },
   })
   const canvas = {
     width: 0,
@@ -247,26 +251,32 @@ test('compression rejects null and wrong-MIME canvas output and still closes bit
   }
 })
 
-test('HEIC browser decode failure falls back to the original private server upload', async () => {
+test('HEIC browser decode failure lazy-converts to JPEG and follows the existing WebP upload path', async () => {
   const input = heifIspeHeader(3024, 4032) as Blob & { name: string }
   Object.defineProperty(input, 'name', { configurable: true, value: 'IMG_1234.HEIC' })
-  const originalBitmap = Object.getOwnPropertyDescriptor(globalThis, 'createImageBitmap')
+  const output = new Blob(['webp'], { type: 'image/webp' })
+  const browser = installCompressionBrowserMock([output], 'image/heic')
   const originalImage = Object.getOwnPropertyDescriptor(globalThis, 'Image')
   const createDescriptor = Object.getOwnPropertyDescriptor(URL, 'createObjectURL')
   const revokeDescriptor = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL')
+  let conversionCalls = 0
   try {
-    Object.defineProperty(globalThis, 'createImageBitmap', { configurable: true, value: async () => { throw new Error('unsupported') } })
     class MockImage { decoding = ''; src = ''; async decode() { throw new Error('unsupported') } }
     Object.defineProperty(globalThis, 'Image', { configurable: true, value: MockImage })
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:heic' })
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: () => {} })
-    const prepared = await prepareReviewPhotoUpload(input)
-    assert.equal(prepared.uploadBlob, input)
-    assert.equal(prepared.uploadMimeType, 'image/heic')
-    assert.equal(prepared.previewBlob, null)
+    const prepared = await prepareReviewPhotoUpload(input, {
+      convertHeif: async () => {
+        conversionCalls += 1
+        return jpegHeader(1600, 1200)
+      },
+    })
+    assert.equal(conversionCalls, 1)
+    assert.equal(prepared.uploadBlob, output)
+    assert.equal(prepared.uploadMimeType, 'image/webp')
+    assert.equal(prepared.previewBlob, output)
   } finally {
-    if (originalBitmap) Object.defineProperty(globalThis, 'createImageBitmap', originalBitmap)
-    else delete (globalThis as { createImageBitmap?: unknown }).createImageBitmap
+    browser.restore()
     if (originalImage) Object.defineProperty(globalThis, 'Image', originalImage)
     else delete (globalThis as { Image?: unknown }).Image
     if (createDescriptor) Object.defineProperty(URL, 'createObjectURL', createDescriptor)

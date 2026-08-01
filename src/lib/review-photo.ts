@@ -21,7 +21,8 @@ const SUPPORTED_PHOTO_TYPES = new Set<ReviewPhotoMimeType>([
   'image/heif',
   'image/avif',
 ])
-const SERVER_FALLBACK_PHOTO_TYPES = new Set<ReviewPhotoMimeType>(['image/heic', 'image/heif', 'image/avif'])
+const SERVER_FALLBACK_PHOTO_TYPES = new Set<ReviewPhotoMimeType>(['image/avif'])
+const HEIF_CONVERSION_TYPES = new Set<ReviewPhotoMimeType>(['image/heic', 'image/heif'])
 const PHOTO_EXTENSION_TYPES: Readonly<Record<string, ReviewPhotoMimeType>> = {
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
@@ -341,15 +342,43 @@ export type PreparedReviewPhotoUpload = Readonly<{
   previewBlob: Blob | null
 }>
 
-export async function prepareReviewPhotoUpload(file: Blob & { name?: string }): Promise<PreparedReviewPhotoUpload> {
+type PrepareReviewPhotoOptions = Readonly<{
+  convertHeif?: (file: Blob) => Promise<Blob>
+}>
+
+async function convertHeifInBrowser(file: Blob): Promise<Blob> {
+  type Heic2Any = (options: { blob: Blob; toType: string; quality: number }) => Promise<Blob | Blob[]>
+  const module = await import('heic2any')
+  const heic2any = module.default as unknown as Heic2Any
+  const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 })
+  const output = Array.isArray(converted) ? converted[0] : converted
+  if (!(output instanceof Blob) || output.size < 1 || output.type !== 'image/jpeg') {
+    throw new ReviewPhotoError('PHOTO_INVALID')
+  }
+  return output
+}
+
+export async function prepareReviewPhotoUpload(
+  file: Blob & { name?: string },
+  options: PrepareReviewPhotoOptions = {},
+): Promise<PreparedReviewPhotoUpload> {
   const sourceMimeType = validateReviewPhotoFile(file)
   try {
     const compressed = await compressReviewPhoto(file)
     return { uploadBlob: compressed, uploadMimeType: 'image/webp', previewBlob: compressed }
   } catch (error) {
-    if (!(error instanceof ReviewPhotoError) || error.code !== 'PHOTO_INVALID' || !SERVER_FALLBACK_PHOTO_TYPES.has(sourceMimeType)) {
-      throw error
+    if (!(error instanceof ReviewPhotoError) || error.code !== 'PHOTO_INVALID') throw error
+    if (HEIF_CONVERSION_TYPES.has(sourceMimeType)) {
+      try {
+        const converted = await (options.convertHeif ?? convertHeifInBrowser)(file)
+        const compressed = await compressReviewPhoto(converted)
+        return { uploadBlob: compressed, uploadMimeType: 'image/webp', previewBlob: compressed }
+      } catch (conversionError) {
+        if (conversionError instanceof ReviewPhotoError) throw conversionError
+        throw new ReviewPhotoError('PHOTO_INVALID')
+      }
     }
+    if (!SERVER_FALLBACK_PHOTO_TYPES.has(sourceMimeType)) throw error
     if (file.size > MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES) throw new ReviewPhotoError('PHOTO_TOO_LARGE')
     return { uploadBlob: file, uploadMimeType: sourceMimeType, previewBlob: null }
   }
