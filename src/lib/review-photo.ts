@@ -373,9 +373,9 @@ export async function prepareReviewPhotoUpload(
         const converted = await (options.convertHeif ?? convertHeifInBrowser)(file)
         const compressed = await compressReviewPhoto(converted)
         return { uploadBlob: compressed, uploadMimeType: 'image/webp', previewBlob: compressed }
-      } catch (conversionError) {
-        if (conversionError instanceof ReviewPhotoError) throw conversionError
-        throw new ReviewPhotoError('PHOTO_INVALID')
+      } catch {
+        if (file.size > MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES) throw new ReviewPhotoError('PHOTO_TOO_LARGE')
+        return { uploadBlob: file, uploadMimeType: sourceMimeType, previewBlob: null }
       }
     }
     if (!SERVER_FALLBACK_PHOTO_TYPES.has(sourceMimeType)) throw error

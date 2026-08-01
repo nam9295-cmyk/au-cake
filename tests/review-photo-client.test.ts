@@ -284,6 +284,33 @@ test('HEIC browser decode failure lazy-converts to JPEG and follows the existing
   }
 })
 
+test('HEIC browser conversion failure uses the bounded private server fallback', async () => {
+  const input = heifIspeHeader(3024, 4032) as Blob & { name: string }
+  Object.defineProperty(input, 'name', { configurable: true, value: 'IMG_1234.HEIC' })
+  const originalBitmap = Object.getOwnPropertyDescriptor(globalThis, 'createImageBitmap')
+  const originalImage = Object.getOwnPropertyDescriptor(globalThis, 'Image')
+  const createDescriptor = Object.getOwnPropertyDescriptor(URL, 'createObjectURL')
+  const revokeDescriptor = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL')
+  try {
+    Object.defineProperty(globalThis, 'createImageBitmap', { configurable: true, value: async () => { throw new Error('unsupported') } })
+    class MockImage { decoding = ''; src = ''; async decode() { throw new Error('unsupported') } }
+    Object.defineProperty(globalThis, 'Image', { configurable: true, value: MockImage })
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:heic' })
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: () => {} })
+    const prepared = await prepareReviewPhotoUpload(input, { convertHeif: async () => { throw new Error('unsupported HEVC') } })
+    assert.equal(prepared.uploadBlob, input)
+    assert.equal(prepared.uploadMimeType, 'image/heic')
+    assert.equal(prepared.previewBlob, null)
+  } finally {
+    if (originalBitmap) Object.defineProperty(globalThis, 'createImageBitmap', originalBitmap)
+    else delete (globalThis as { createImageBitmap?: unknown }).createImageBitmap
+    if (originalImage) Object.defineProperty(globalThis, 'Image', originalImage)
+    else delete (globalThis as { Image?: unknown }).Image
+    if (createDescriptor) Object.defineProperty(URL, 'createObjectURL', createDescriptor)
+    if (revokeDescriptor) Object.defineProperty(URL, 'revokeObjectURL', revokeDescriptor)
+  }
+})
+
 test('safe Image fallback revokes its object URL after successful compression', async () => {
   const output = new Blob(['ok'], { type: 'image/webp' })
   const mock = installCompressionBrowserMock([output])

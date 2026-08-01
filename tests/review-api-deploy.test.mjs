@@ -164,6 +164,7 @@ test('function payload builders own rollout fields and preserve unrelated update
     entrypoint: 'src/main.js',
     commands: 'npm ci --omit=dev',
     scopes: FUNCTION_SCOPES,
+    timeout: 30,
   }
   assert.deepEqual(buildCreateFunctionPayload('node-20.0', 'any'), owned)
 
@@ -191,7 +192,6 @@ test('function payload builders own rollout fields and preserve unrelated update
     ...owned,
     events: existing.events,
     schedule: existing.schedule,
-    timeout: existing.timeout,
     enabled: existing.enabled,
     logging: existing.logging,
     installationId: existing.installationId,

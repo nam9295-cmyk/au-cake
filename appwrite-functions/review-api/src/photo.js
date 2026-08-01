@@ -1,4 +1,5 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto'
+import libheif from 'libheif-js/wasm-bundle.js'
 import sharp from 'sharp'
 import {
   ReviewApiError,
@@ -79,20 +80,47 @@ export function decodePhotoUpload(input) {
   return buffer
 }
 
+async function decodeHeifPhoto(input) {
+  const decoder = new libheif.HeifDecoder()
+  const images = decoder.decode(input)
+  if (!Array.isArray(images) || images.length < 1) fail('PHOTO_INVALID')
+  const image = images[0]
+  const width = image.get_width()
+  const height = image.get_height()
+  if (!Number.isInteger(width) || width < 1 || !Number.isInteger(height) || height < 1 ||
+    width * height > MAX_REVIEW_PHOTO_INPUT_PIXELS) fail('PHOTO_INVALID')
+  const target = { data: new Uint8ClampedArray(width * height * 4), width, height }
+  const decoded = await new Promise((resolve, reject) => {
+    image.display(target, (result) => result ? resolve(result) : reject(new Error('HEIF decode failed')))
+  })
+  if (!(decoded?.data instanceof Uint8ClampedArray) || decoded.data.length !== width * height * 4) fail('PHOTO_INVALID')
+  return {
+    data: Buffer.from(decoded.data.buffer, decoded.data.byteOffset, decoded.data.byteLength),
+    width,
+    height,
+  }
+}
+
 export async function normalizeReviewPhoto(input, mimeType = 'image/webp') {
   try {
     const expectedFormat = PHOTO_INPUT_FORMAT.get(mimeType)
     if (!expectedFormat) fail('PHOTO_INVALID')
-    const image = sharp(input, {
-      limitInputPixels: MAX_REVIEW_PHOTO_INPUT_PIXELS,
-      animated: expectedFormat === 'webp',
-      failOn: 'warning',
-    })
-    const metadata = await image.metadata()
-    if (metadata.format !== expectedFormat || !Number.isInteger(metadata.width) || metadata.width < 1 ||
-      !Number.isInteger(metadata.height) || metadata.height < 1 ||
-      (expectedFormat === 'webp' && (metadata.pages ?? 1) !== 1) ||
-      metadata.width * metadata.height > MAX_REVIEW_PHOTO_INPUT_PIXELS) fail('PHOTO_INVALID')
+    let image
+    if (mimeType === 'image/heic' || mimeType === 'image/heif') {
+      const decoded = await decodeHeifPhoto(input)
+      image = sharp(decoded.data, { raw: { width: decoded.width, height: decoded.height, channels: 4 } })
+    } else {
+      image = sharp(input, {
+        limitInputPixels: MAX_REVIEW_PHOTO_INPUT_PIXELS,
+        animated: expectedFormat === 'webp',
+        failOn: 'warning',
+      })
+      const metadata = await image.metadata()
+      if (metadata.format !== expectedFormat || !Number.isInteger(metadata.width) || metadata.width < 1 ||
+        !Number.isInteger(metadata.height) || metadata.height < 1 ||
+        (expectedFormat === 'webp' && (metadata.pages ?? 1) !== 1) ||
+        metadata.width * metadata.height > MAX_REVIEW_PHOTO_INPUT_PIXELS) fail('PHOTO_INVALID')
+    }
     const { data, info } = await image.rotate()
       .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 82 }).toBuffer({ resolveWithObject: true })

@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import sharp from 'sharp'
 import {
   MAX_REVIEW_PHOTO_BYTES,
@@ -136,13 +137,23 @@ test('photo normalization accepts actual webp, strips metadata, rotates, and bou
   assert.ok(output.length <= MAX_REVIEW_PHOTO_BYTES)
 })
 
-test('photo normalization accepts a HEIF-family original and outputs bounded metadata-free webp', async () => {
+test('photo normalization accepts an AVIF original and outputs bounded metadata-free webp', async () => {
   const source = await sharp({ create: { width: 1200, height: 900, channels: 3, background: '#d94f70' } }).avif().toBuffer()
-  const output = await normalizeReviewPhoto(source, 'image/heic')
+  const output = await normalizeReviewPhoto(source, 'image/avif')
   const metadata = await sharp(output).metadata()
   assert.equal(metadata.format, 'webp')
   assert.equal(metadata.width, 1200)
   assert.equal(metadata.height, 900)
+  assert.ok(output.length <= MAX_REVIEW_PHOTO_BYTES)
+})
+
+test('photo normalization decodes a real HEIC original through the server fallback', async () => {
+  const source = await readFile(new URL('./fixtures/review-photo-small.heic', import.meta.url))
+  const output = await normalizeReviewPhoto(source, 'image/heic')
+  const metadata = await sharp(output).metadata()
+  assert.equal(metadata.format, 'webp')
+  assert.ok(metadata.width > 0 && metadata.width <= 1600)
+  assert.ok(metadata.height > 0 && metadata.height <= 1600)
   assert.ok(output.length <= MAX_REVIEW_PHOTO_BYTES)
 })
 

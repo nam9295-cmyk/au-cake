@@ -48,7 +48,6 @@ const ID_VARIABLES = Object.freeze({
 const PRESERVED_FUNCTION_FIELDS = Object.freeze([
   'events',
   'schedule',
-  'timeout',
   'enabled',
   'logging',
   'installationId',
@@ -191,6 +190,7 @@ export function buildCreateFunctionPayload(runtime, publicExecuteRole) {
     entrypoint: 'src/main.js',
     commands: 'npm ci --omit=dev',
     scopes: [...FUNCTION_SCOPES],
+    timeout: 30,
   }
 }
 
