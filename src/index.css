@@ -8186,6 +8186,12 @@ td select {
     height: 100%;
     align-content: start;
   }
+
+  /* The coming-soon silhouette needs the same visual floor as the product photos. */
+  .product-card .product-image-wrap:has(.vanilla-fresh-cream-silhouette) {
+    min-height: 420px;
+    align-items: end;
+  }
 }
 
 .product-card-quick-view .product-image-wrap {
