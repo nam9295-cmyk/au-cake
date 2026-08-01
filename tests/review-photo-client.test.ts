@@ -343,6 +343,21 @@ test('bounded HEIF is detected from its header when a mobile picker supplies an 
   }
 })
 
+test('actual HEIF header wins over a supported but incorrect mobile MIME', async () => {
+  const header = heifIspeHeader(3024, 4032)
+  const input = new Blob([header], { type: 'image/jpeg' }) as Blob & { name: string }
+  Object.defineProperty(input, 'name', { configurable: true, value: 'image.jpg' })
+  let conversionCalls = 0
+  const prepared = await prepareReviewPhotoUpload(input, { convertHeif: async () => {
+    conversionCalls += 1
+    throw new Error('browser decoder must not run')
+  } })
+  assert.equal(conversionCalls, 0)
+  assert.equal(prepared.uploadBlob, input)
+  assert.equal(prepared.uploadMimeType, 'image/heic')
+  assert.equal(prepared.previewBlob, null)
+})
+
 test('safe Image fallback revokes its object URL after successful compression', async () => {
   const output = new Blob(['ok'], { type: 'image/webp' })
   const mock = installCompressionBrowserMock([output])

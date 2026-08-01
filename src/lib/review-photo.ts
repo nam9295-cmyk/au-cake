@@ -101,15 +101,8 @@ function detectReviewPhotoMimeType(bytes: Uint8Array): ReviewPhotoMimeType | nul
 }
 
 async function resolveReviewPhotoUploadMimeType(file: ReviewPhotoFile & Blob): Promise<ReviewPhotoMimeType> {
-  try {
-    return resolveReviewPhotoMimeType(file)
-  } catch (error) {
-    if (!(error instanceof ReviewPhotoError) || error.code !== 'PHOTO_INVALID') throw error
-    const bytes = new Uint8Array(await file.slice(0, 64).arrayBuffer())
-    const detected = detectReviewPhotoMimeType(bytes)
-    if (detected) return detected
-    throw error
-  }
+  const bytes = new Uint8Array(await file.slice(0, 64).arrayBuffer())
+  return detectReviewPhotoMimeType(bytes) ?? resolveReviewPhotoMimeType(file)
 }
 
 function probeJpeg(bytes: Uint8Array, view: DataView): PhotoDimensions | null {
