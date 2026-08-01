@@ -84,6 +84,34 @@ function ascii(bytes: Uint8Array, offset: number, length: number): string {
   return String.fromCharCode(...bytes.subarray(offset, offset + length))
 }
 
+function detectReviewPhotoMimeType(bytes: Uint8Array): ReviewPhotoMimeType | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg'
+  if (bytes.length >= 8 && [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((value, index) => bytes[index] === value)) {
+    return 'image/png'
+  }
+  if (bytes.length >= 12 && ascii(bytes, 0, 4) === 'RIFF' && ascii(bytes, 8, 4) === 'WEBP') return 'image/webp'
+  if (bytes.length >= 12 && ascii(bytes, 4, 4) === 'ftyp') {
+    const brands = new Set<string>()
+    for (let offset = 8; offset + 4 <= Math.min(bytes.length, 64); offset += 4) brands.add(ascii(bytes, offset, 4))
+    if (brands.has('avif') || brands.has('avis')) return 'image/avif'
+    if (['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis'].some((brand) => brands.has(brand))) return 'image/heic'
+    if (brands.has('mif1') || brands.has('msf1')) return 'image/heif'
+  }
+  return null
+}
+
+async function resolveReviewPhotoUploadMimeType(file: ReviewPhotoFile & Blob): Promise<ReviewPhotoMimeType> {
+  try {
+    return resolveReviewPhotoMimeType(file)
+  } catch (error) {
+    if (!(error instanceof ReviewPhotoError) || error.code !== 'PHOTO_INVALID') throw error
+    const bytes = new Uint8Array(await file.slice(0, 64).arrayBuffer())
+    const detected = detectReviewPhotoMimeType(bytes)
+    if (detected) return detected
+    throw error
+  }
+}
+
 function probeJpeg(bytes: Uint8Array, view: DataView): PhotoDimensions | null {
   if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return null
   let offset = 2
@@ -314,8 +342,10 @@ function canvasToWebp(canvas: HTMLCanvasElement, quality: number): Promise<Blob>
   })
 }
 
-export async function compressReviewPhoto(file: File | Blob): Promise<Blob> {
-  const mimeType = validateReviewPhotoFile(file)
+export async function compressReviewPhoto(file: File | Blob, suppliedMimeType?: ReviewPhotoMimeType): Promise<Blob> {
+  const mimeType = suppliedMimeType ?? validateReviewPhotoFile(file)
+  if (file.size < 1) throw new ReviewPhotoError('PHOTO_INVALID')
+  if (file.size > MAX_REVIEW_PHOTO_INPUT_BYTES) throw new ReviewPhotoError('PHOTO_TOO_LARGE')
   let decoded: DecodedPhoto | null = null
   try {
     const sourceDimensions = await probeReviewPhotoDimensions(file, mimeType)
@@ -369,12 +399,14 @@ export async function prepareReviewPhotoUpload(
   file: Blob & { name?: string },
   options: PrepareReviewPhotoOptions = {},
 ): Promise<PreparedReviewPhotoUpload> {
-  const sourceMimeType = validateReviewPhotoFile(file)
+  if (file.size < 1) throw new ReviewPhotoError('PHOTO_INVALID')
+  if (file.size > MAX_REVIEW_PHOTO_INPUT_BYTES) throw new ReviewPhotoError('PHOTO_TOO_LARGE')
+  const sourceMimeType = await resolveReviewPhotoUploadMimeType(file)
   if (HEIF_CONVERSION_TYPES.has(sourceMimeType) && file.size <= MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES) {
     return { uploadBlob: file, uploadMimeType: sourceMimeType, previewBlob: null }
   }
   try {
-    const compressed = await compressReviewPhoto(file)
+    const compressed = await compressReviewPhoto(file, sourceMimeType)
     return { uploadBlob: compressed, uploadMimeType: 'image/webp', previewBlob: compressed }
   } catch (error) {
     if (!(error instanceof ReviewPhotoError) || error.code !== 'PHOTO_INVALID') throw error
