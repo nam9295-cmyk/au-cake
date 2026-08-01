@@ -32,6 +32,12 @@ const PHOTO_EXTENSION_TYPES: Readonly<Record<string, ReviewPhotoMimeType>> = {
   heif: 'image/heif',
   avif: 'image/avif',
 }
+const PHOTO_MIME_ALIASES: Readonly<Record<string, ReviewPhotoMimeType>> = {
+  'image/heic-sequence': 'image/heic',
+  'image/x-heic': 'image/heic',
+  'image/heif-sequence': 'image/heif',
+  'image/x-heif': 'image/heif',
+}
 
 export type PhotoErrorCode = 'PHOTO_INVALID' | 'PHOTO_TOO_LARGE' | 'PHOTO_DIMENSIONS_TOO_LARGE'
 
@@ -46,7 +52,8 @@ export class ReviewPhotoError extends Error {
 }
 
 export function resolveReviewPhotoMimeType(file: ReviewPhotoFile): ReviewPhotoMimeType {
-  const suppliedType = file.type.trim().toLowerCase() as ReviewPhotoMimeType
+  const rawType = file.type.trim().toLowerCase()
+  const suppliedType = PHOTO_MIME_ALIASES[rawType] ?? rawType as ReviewPhotoMimeType
   if (SUPPORTED_PHOTO_TYPES.has(suppliedType)) return suppliedType
   const extension = typeof file.name === 'string' ? file.name.trim().toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] : undefined
   const extensionType = extension ? PHOTO_EXTENSION_TYPES[extension] : undefined
@@ -363,6 +370,9 @@ export async function prepareReviewPhotoUpload(
   options: PrepareReviewPhotoOptions = {},
 ): Promise<PreparedReviewPhotoUpload> {
   const sourceMimeType = validateReviewPhotoFile(file)
+  if (HEIF_CONVERSION_TYPES.has(sourceMimeType) && file.size <= MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES) {
+    return { uploadBlob: file, uploadMimeType: sourceMimeType, previewBlob: null }
+  }
   try {
     const compressed = await compressReviewPhoto(file)
     return { uploadBlob: compressed, uploadMimeType: 'image/webp', previewBlob: compressed }

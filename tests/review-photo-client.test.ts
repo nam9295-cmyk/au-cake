@@ -132,11 +132,17 @@ function completed(result: unknown) {
   }
 }
 
-test('source validation accepts supported browser image types, AVIF, and extension-only HEIC', () => {
+test('source validation accepts supported browser image types, mobile aliases, AVIF, and extension-only HEIC', () => {
   for (const type of ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif']) {
     assert.doesNotThrow(() => validateReviewPhotoFile({ type, size: 1 }))
   }
   assert.equal(resolveReviewPhotoMimeType({ type: '', size: 1, name: 'IMG_1234.HEIC' }), 'image/heic')
+  for (const type of ['image/heic-sequence', 'image/x-heic']) {
+    assert.equal(resolveReviewPhotoMimeType({ type, size: 1 }), 'image/heic')
+  }
+  for (const type of ['image/heif-sequence', 'image/x-heif']) {
+    assert.equal(resolveReviewPhotoMimeType({ type, size: 1 }), 'image/heif')
+  }
   assert.doesNotThrow(() => validateReviewPhotoFile({ type: '', size: 1, name: 'IMG_1234.HEIC' }))
   assert.throws(() => validateReviewPhotoFile({ type: 'image/gif', size: 1 }), /PHOTO_INVALID/)
   assert.throws(() => validateReviewPhotoFile({ type: '', size: 1 }), /PHOTO_INVALID/)
@@ -251,8 +257,12 @@ test('compression rejects null and wrong-MIME canvas output and still closes bit
   }
 })
 
-test('HEIC browser decode failure lazy-converts to JPEG and follows the existing WebP upload path', async () => {
-  const input = heifIspeHeader(3024, 4032) as Blob & { name: string }
+test('HEIC above the private Function request bound uses browser conversion', async () => {
+  const header = heifIspeHeader(3024, 4032)
+  const input = new Blob([
+    header,
+    new Uint8Array(MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES - header.size + 1),
+  ], { type: 'image/heic' }) as Blob & { name: string }
   Object.defineProperty(input, 'name', { configurable: true, value: 'IMG_1234.HEIC' })
   const output = new Blob(['webp'], { type: 'image/webp' })
   const browser = installCompressionBrowserMock([output], 'image/heic')
@@ -284,20 +294,25 @@ test('HEIC browser decode failure lazy-converts to JPEG and follows the existing
   }
 })
 
-test('HEIC browser conversion failure uses the bounded private server fallback', async () => {
+test('bounded mobile HEIC uses the private server before any browser decoder', async () => {
   const input = heifIspeHeader(3024, 4032) as Blob & { name: string }
   Object.defineProperty(input, 'name', { configurable: true, value: 'IMG_1234.HEIC' })
   const originalBitmap = Object.getOwnPropertyDescriptor(globalThis, 'createImageBitmap')
   const originalImage = Object.getOwnPropertyDescriptor(globalThis, 'Image')
   const createDescriptor = Object.getOwnPropertyDescriptor(URL, 'createObjectURL')
   const revokeDescriptor = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL')
+  let conversionCalls = 0
   try {
     Object.defineProperty(globalThis, 'createImageBitmap', { configurable: true, value: async () => { throw new Error('unsupported') } })
     class MockImage { decoding = ''; src = ''; async decode() { throw new Error('unsupported') } }
     Object.defineProperty(globalThis, 'Image', { configurable: true, value: MockImage })
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:heic' })
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: () => {} })
-    const prepared = await prepareReviewPhotoUpload(input, { convertHeif: async () => { throw new Error('unsupported HEVC') } })
+    const prepared = await prepareReviewPhotoUpload(input, { convertHeif: async () => {
+      conversionCalls += 1
+      throw new Error('browser decoder must not run')
+    } })
+    assert.equal(conversionCalls, 0)
     assert.equal(prepared.uploadBlob, input)
     assert.equal(prepared.uploadMimeType, 'image/heic')
     assert.equal(prepared.previewBlob, null)
