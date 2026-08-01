@@ -7,8 +7,8 @@ const cssPath = new URL('../src/index.css', import.meta.url)
 
 test('review page wires accessible private photo selection and processing guards', async () => {
   const source = await readFile(pagePath, 'utf8')
-  assert.match(source, /accept="image\/jpeg,image\/png,image\/webp,image\/heic,image\/heif"/)
-  assert.match(source, /compressReviewPhoto/)
+  assert.match(source, /accept="image\/jpeg,image\/png,image\/webp,image\/heic,image\/heif,image\/avif,\.heic,\.heif,\.avif"/)
+  assert.match(source, /prepareReviewPhotoUpload/)
   assert.match(source, /uploadReviewPhoto/)
   assert.match(source, /removeReviewPhoto/)
   assert.match(source, /aria-live="polite"/)

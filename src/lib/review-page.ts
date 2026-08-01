@@ -1,4 +1,5 @@
 import { normalizeReviewCouponCode } from './review-coupon-client.js'
+import type { ReviewPhotoMimeType } from './review-photo.js'
 
 export type ReviewLanguage = 'en' | 'ko'
 export type ReviewSourceType = 'cake' | 'class'
@@ -130,7 +131,7 @@ export const REVIEW_COPY = {
     photoRemoving: 'Removing photo…',
     photoPrivate: 'Your photo stays private until approved. Photos showing children’s faces may not be published.',
     photoPublishConsent: 'You may publish my attached photo with this review. I understand photos showing children’s faces may not be published.',
-    photoInvalid: 'Choose a JPG, PNG, WebP, HEIC or HEIF image.',
+    photoInvalid: 'Choose a JPG, PNG, WebP, HEIC, HEIF or AVIF image.',
     photoTooLarge: 'That photo is too large to prepare. Please choose a smaller image.',
     photoDimensionsTooLarge: 'That photo has too many pixels for safe mobile processing. Please choose a photo at 25 megapixels or smaller.',
     photoUploadFailed: 'Photo upload failed. Your photo was not attached. Try again before submitting, or submit without a photo for the 5% reward.',
@@ -176,7 +177,7 @@ export const REVIEW_COPY = {
     photoRemoving: '사진 삭제 중…',
     photoPrivate: '사진은 승인 전까지 비공개로 보관됩니다. 어린이 얼굴이 나온 사진은 공개되지 않을 수 있습니다.',
     photoPublishConsent: '첨부한 사진을 이 후기와 함께 공개해도 됩니다. 어린이 얼굴이 나온 사진은 공개되지 않을 수 있음을 이해합니다.',
-    photoInvalid: 'JPG, PNG, WebP, HEIC 또는 HEIF 사진을 선택해 주세요.',
+    photoInvalid: 'JPG, PNG, WebP, HEIC, HEIF 또는 AVIF 사진을 선택해 주세요.',
     photoTooLarge: '사진을 준비하기에 너무 큽니다. 더 작은 사진을 선택해 주세요.',
     photoDimensionsTooLarge: '모바일에서 안전하게 처리하기에는 사진 해상도가 너무 큽니다. 2천5백만 화소 이하 사진을 선택해 주세요.',
     photoUploadFailed: '사진 업로드에 실패했습니다. 사진이 첨부되지 않았습니다. 제출 전에 다시 시도하거나, 사진 없이 제출하면 5% 혜택이 적용됩니다.',
@@ -245,8 +246,13 @@ export function buildSubmitReviewPayload(input: ReviewSubmissionInput) {
   }
 }
 
-export function buildUploadReviewPhotoPayload(token: string, base64: string, byteLength: number) {
-  return { action: 'upload-photo' as const, token, mimeType: 'image/webp' as const, base64, byteLength }
+export function buildUploadReviewPhotoPayload(
+  token: string,
+  base64: string,
+  byteLength: number,
+  mimeType: ReviewPhotoMimeType = 'image/webp',
+) {
+  return { action: 'upload-photo' as const, token, mimeType, base64, byteLength }
 }
 
 export function buildRemoveReviewPhotoPayload(token: string) {

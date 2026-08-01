@@ -4,13 +4,16 @@ import {
   MAX_REVIEW_PHOTO_HEADER_BYTES,
   MAX_REVIEW_PHOTO_INPUT_BYTES,
   MAX_REVIEW_PHOTO_OUTPUT_BYTES,
+  MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES,
   MAX_REVIEW_PHOTO_SOURCE_PIXELS,
   blobToBase64,
   buildPhotoCompressionPlan,
   calculateContainDimensions,
   compressReviewPhoto,
   createPreviewUrlController,
+  prepareReviewPhotoUpload,
   probeReviewPhotoDimensions,
+  resolveReviewPhotoMimeType,
   validateReviewPhotoFile,
 } from '../src/lib/review-photo.js'
 import {
@@ -125,10 +128,12 @@ function completed(result: unknown) {
   }
 }
 
-test('source validation accepts supported browser image types and caps input before decode', () => {
-  for (const type of ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']) {
+test('source validation accepts supported browser image types, AVIF, and extension-only HEIC', () => {
+  for (const type of ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif']) {
     assert.doesNotThrow(() => validateReviewPhotoFile({ type, size: 1 }))
   }
+  assert.equal(resolveReviewPhotoMimeType({ type: '', size: 1, name: 'IMG_1234.HEIC' }), 'image/heic')
+  assert.doesNotThrow(() => validateReviewPhotoFile({ type: '', size: 1, name: 'IMG_1234.HEIC' }))
   assert.throws(() => validateReviewPhotoFile({ type: 'image/gif', size: 1 }), /PHOTO_INVALID/)
   assert.throws(() => validateReviewPhotoFile({ type: '', size: 1 }), /PHOTO_INVALID/)
   assert.throws(() => validateReviewPhotoFile({ type: 'image/png', size: 0 }), /PHOTO_INVALID/)
@@ -202,6 +207,17 @@ test('maximum canonical photo upload JSON stays below the 2.4MB Function request
   assert.ok(Buffer.byteLength(JSON.stringify(payload), 'utf8') < 2_400_000)
 })
 
+test('maximum HEIC server fallback JSON stays below the measured 9.4MB Function cap', () => {
+  const maximumBase64Length = 4 * Math.ceil(MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES / 3)
+  const payload = buildUploadReviewPhotoPayload(
+    TOKEN,
+    'A'.repeat(maximumBase64Length),
+    MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES,
+    'image/heic',
+  )
+  assert.ok(Buffer.byteLength(JSON.stringify(payload), 'utf8') < 9_400_000)
+})
+
 test('compression passes exact decoder resize hints, retries oversize output, and closes bitmap', async () => {
   const tooLarge = new Blob([new Uint8Array(MAX_REVIEW_PHOTO_OUTPUT_BYTES + 1)], { type: 'image/webp' })
   const accepted = new Blob([Uint8Array.of(1, 2, 3)], { type: 'image/webp' })
@@ -228,6 +244,33 @@ test('compression rejects null and wrong-MIME canvas output and still closes bit
     } finally {
       mock.restore()
     }
+  }
+})
+
+test('HEIC browser decode failure falls back to the original private server upload', async () => {
+  const input = heifIspeHeader(3024, 4032) as Blob & { name: string }
+  Object.defineProperty(input, 'name', { configurable: true, value: 'IMG_1234.HEIC' })
+  const originalBitmap = Object.getOwnPropertyDescriptor(globalThis, 'createImageBitmap')
+  const originalImage = Object.getOwnPropertyDescriptor(globalThis, 'Image')
+  const createDescriptor = Object.getOwnPropertyDescriptor(URL, 'createObjectURL')
+  const revokeDescriptor = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL')
+  try {
+    Object.defineProperty(globalThis, 'createImageBitmap', { configurable: true, value: async () => { throw new Error('unsupported') } })
+    class MockImage { decoding = ''; src = ''; async decode() { throw new Error('unsupported') } }
+    Object.defineProperty(globalThis, 'Image', { configurable: true, value: MockImage })
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:heic' })
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: () => {} })
+    const prepared = await prepareReviewPhotoUpload(input)
+    assert.equal(prepared.uploadBlob, input)
+    assert.equal(prepared.uploadMimeType, 'image/heic')
+    assert.equal(prepared.previewBlob, null)
+  } finally {
+    if (originalBitmap) Object.defineProperty(globalThis, 'createImageBitmap', originalBitmap)
+    else delete (globalThis as { createImageBitmap?: unknown }).createImageBitmap
+    if (originalImage) Object.defineProperty(globalThis, 'Image', originalImage)
+    else delete (globalThis as { Image?: unknown }).Image
+    if (createDescriptor) Object.defineProperty(URL, 'createObjectURL', createDescriptor)
+    if (revokeDescriptor) Object.defineProperty(URL, 'revokeObjectURL', revokeDescriptor)
   }
 })
 
@@ -343,7 +386,7 @@ test('load requires a server boolean hasPhoto and demo reward follows in-memory 
   assert.equal(reviewDemoSubmission(true).rewardPercent, 10)
 })
 
-test('repository uploads base64 webp and parses only boolean attachment state', async () => {
+test('repository uploads canonical WebP and HEIC fallback payloads and parses only attachment state', async () => {
   const bodies: unknown[] = []
   const executor = {
     async createExecution(input: { body: string }) {
@@ -351,9 +394,14 @@ test('repository uploads base64 webp and parses only boolean attachment state', 
       return completed({ uploaded: true, hasPhoto: true, fileId: 'private-server-id' })
     },
   }
-  const blob = new Blob([Uint8Array.of(1, 2, 3)], { type: 'image/webp' })
-  assert.deepEqual(await uploadReviewPhoto(executor, 'review-api', TOKEN, blob), { uploaded: true, hasPhoto: true })
-  assert.deepEqual(bodies, [buildUploadReviewPhotoPayload(TOKEN, 'AQID', 3)])
+  const webp = new Blob([Uint8Array.of(1, 2, 3)], { type: 'image/webp' })
+  assert.deepEqual(await uploadReviewPhoto(executor, 'review-api', TOKEN, webp), { uploaded: true, hasPhoto: true })
+  const heic = new Blob([Uint8Array.of(4, 5, 6)], { type: 'image/heic' })
+  assert.deepEqual(await uploadReviewPhoto(executor, 'review-api', TOKEN, heic, 'image/heic'), { uploaded: true, hasPhoto: true })
+  assert.deepEqual(bodies, [
+    buildUploadReviewPhotoPayload(TOKEN, 'AQID', 3),
+    buildUploadReviewPhotoPayload(TOKEN, 'BAUG', 3, 'image/heic'),
+  ])
   assert.equal(JSON.stringify(bodies).includes('fileId'), false)
 })
 

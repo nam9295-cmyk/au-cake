@@ -953,12 +953,14 @@ test('review lists and moderation use allowlisted DTOs and enforce consent guard
   assert.deepEqual(photoCalls.at(-1), ['private', 'private-photo'])
 })
 
-test('request parsing gives only an exact valid photo upload the 2.4MB cap and keeps all other actions at 20KB', () => {
+test('request parsing gives exact WebP and HEIF photo uploads the measured 9.4MB cap and keeps all other actions at 20KB', () => {
   assertReviewError('REQUEST_TOO_LARGE', () => parseRequestBody({ bodyText: 'x'.repeat(20_001), bodyJson: {} }))
   const upload = {
     action: 'upload-photo', token: VALID_TOKEN, mimeType: 'image/webp', base64: 'A'.repeat(21_000),
   }
   assert.deepEqual(parseRequestBody({ bodyText: JSON.stringify(upload), bodyJson: upload }), upload)
+  const heicUpload = { ...upload, mimeType: 'image/heic', base64: 'A'.repeat(4_000_000) }
+  assert.deepEqual(parseRequestBody({ bodyText: JSON.stringify(heicUpload), bodyJson: heicUpload }), heicUpload)
   assertReviewError('REQUEST_TOO_LARGE', () => parseRequestBody({
     bodyText: JSON.stringify({ ...upload, action: 'unknown' }),
     bodyJson: { ...upload, action: 'unknown' },
@@ -966,7 +968,7 @@ test('request parsing gives only an exact valid photo upload the 2.4MB cap and k
   assertReviewError('INVALID_REQUEST', () => parseRequestBody({
     bodyText: 'x'.repeat(21_000), bodyJson: { action: 'upload-photo' },
   }))
-  const oversizedUpload = { ...upload, base64: 'A'.repeat(2_400_000) }
+  const oversizedUpload = { ...upload, base64: 'A'.repeat(9_400_000) }
   assertReviewError('REQUEST_TOO_LARGE', () => parseRequestBody({
     bodyText: JSON.stringify(oversizedUpload), bodyJson: oversizedUpload,
   }))

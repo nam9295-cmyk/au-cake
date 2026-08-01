@@ -3,6 +3,7 @@ import * as assert from 'node:assert/strict'
 import sharp from 'sharp'
 import {
   MAX_REVIEW_PHOTO_BYTES,
+  MAX_REVIEW_PHOTO_SERVER_INPUT_BYTES,
   decodePhotoUpload,
   normalizeReviewPhoto,
   cleanupPhotoFiles,
@@ -95,13 +96,17 @@ function makePhotoStorage(overrides = {}) {
   }
 }
 
-test('photo upload decoder accepts canonical nonempty webp base64 and exact optional byte length', async () => {
+test('photo upload decoder accepts canonical webp and HEIC base64 with exact optional byte length', async () => {
   const image = await tinyWebp()
   assert.deepEqual(decodePhotoUpload({
     mimeType: 'image/webp',
     base64: image.toString('base64'),
     byteLength: image.length,
   }), image)
+  const heic = Buffer.from('private heic bytes')
+  assert.deepEqual(decodePhotoUpload({
+    mimeType: 'image/heic', base64: heic.toString('base64'), byteLength: heic.length,
+  }), heic)
 })
 
 test('photo upload decoder rejects MIME, malformed/noncanonical base64, empty input, length mismatch, and oversize', () => {
@@ -113,6 +118,7 @@ test('photo upload decoder rejects MIME, malformed/noncanonical base64, empty in
     [{ mimeType: 'image/webp', base64: 'YR==' }, 'PHOTO_INVALID'],
     [{ mimeType: 'image/webp', base64: 'YQ==', byteLength: 2 }, 'PHOTO_INVALID'],
     [{ mimeType: 'image/webp', base64: Buffer.alloc(MAX_REVIEW_PHOTO_BYTES + 1).toString('base64') }, 'PHOTO_TOO_LARGE'],
+    [{ mimeType: 'image/heic', base64: Buffer.alloc(MAX_REVIEW_PHOTO_SERVER_INPUT_BYTES + 1).toString('base64') }, 'PHOTO_TOO_LARGE'],
   ]
   for (const [input, code] of cases) assert.throws(() => decodePhotoUpload(input), reviewError(code))
 })
@@ -127,6 +133,16 @@ test('photo normalization accepts actual webp, strips metadata, rotates, and bou
   assert.equal(metadata.width, 800)
   assert.equal(metadata.height, 1600)
   assert.equal(metadata.orientation, undefined)
+  assert.ok(output.length <= MAX_REVIEW_PHOTO_BYTES)
+})
+
+test('photo normalization accepts a HEIF-family original and outputs bounded metadata-free webp', async () => {
+  const source = await sharp({ create: { width: 1200, height: 900, channels: 3, background: '#d94f70' } }).avif().toBuffer()
+  const output = await normalizeReviewPhoto(source, 'image/heic')
+  const metadata = await sharp(output).metadata()
+  assert.equal(metadata.format, 'webp')
+  assert.equal(metadata.width, 1200)
+  assert.equal(metadata.height, 900)
   assert.ok(output.length <= MAX_REVIEW_PHOTO_BYTES)
 })
 

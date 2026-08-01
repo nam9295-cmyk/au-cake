@@ -5,17 +5,32 @@ export const MAX_REVIEW_PHOTO_DIMENSION = 1600
 // rejecting 48MP/RAW originals that can require roughly 192MB when decoded.
 export const MAX_REVIEW_PHOTO_SOURCE_PIXELS = 25_000_000
 export const MAX_REVIEW_PHOTO_HEADER_BYTES = 512 * 1024
+export const MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES = 7_000_000
 
 const MAX_FALLBACK_PHOTO_BYTES = MAX_REVIEW_PHOTO_INPUT_BYTES
 const MAX_FALLBACK_PHOTO_PIXELS = MAX_REVIEW_PHOTO_SOURCE_PIXELS
 
-const SUPPORTED_PHOTO_TYPES = new Set([
+export type ReviewPhotoMimeType = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | 'image/heif' | 'image/avif'
+type ReviewPhotoFile = Pick<Blob, 'type' | 'size'> & { name?: string }
+
+const SUPPORTED_PHOTO_TYPES = new Set<ReviewPhotoMimeType>([
   'image/jpeg',
   'image/png',
   'image/webp',
   'image/heic',
   'image/heif',
+  'image/avif',
 ])
+const SERVER_FALLBACK_PHOTO_TYPES = new Set<ReviewPhotoMimeType>(['image/heic', 'image/heif', 'image/avif'])
+const PHOTO_EXTENSION_TYPES: Readonly<Record<string, ReviewPhotoMimeType>> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  avif: 'image/avif',
+}
 
 export type PhotoErrorCode = 'PHOTO_INVALID' | 'PHOTO_TOO_LARGE' | 'PHOTO_DIMENSIONS_TOO_LARGE'
 
@@ -29,11 +44,20 @@ export class ReviewPhotoError extends Error {
   }
 }
 
-export function validateReviewPhotoFile(file: Pick<Blob, 'type' | 'size'>): void {
-  if (!SUPPORTED_PHOTO_TYPES.has(file.type.toLowerCase()) || file.size < 1) {
-    throw new ReviewPhotoError('PHOTO_INVALID')
-  }
+export function resolveReviewPhotoMimeType(file: ReviewPhotoFile): ReviewPhotoMimeType {
+  const suppliedType = file.type.trim().toLowerCase() as ReviewPhotoMimeType
+  if (SUPPORTED_PHOTO_TYPES.has(suppliedType)) return suppliedType
+  const extension = typeof file.name === 'string' ? file.name.trim().toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] : undefined
+  const extensionType = extension ? PHOTO_EXTENSION_TYPES[extension] : undefined
+  if (extensionType) return extensionType
+  throw new ReviewPhotoError('PHOTO_INVALID')
+}
+
+export function validateReviewPhotoFile(file: ReviewPhotoFile): ReviewPhotoMimeType {
+  if (file.size < 1) throw new ReviewPhotoError('PHOTO_INVALID')
+  const mimeType = resolveReviewPhotoMimeType(file)
   if (file.size > MAX_REVIEW_PHOTO_INPUT_BYTES) throw new ReviewPhotoError('PHOTO_TOO_LARGE')
+  return mimeType
 }
 
 type PhotoDimensions = Readonly<{ width: number; height: number }>
@@ -115,7 +139,7 @@ function probeWebp(bytes: Uint8Array, view: DataView): PhotoDimensions | null {
 
 function probeHeif(bytes: Uint8Array, view: DataView): PhotoDimensions | null {
   if (bytes.length < 16 || ascii(bytes, 4, 4) !== 'ftyp') return null
-  const knownBrand = ['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'mif1', 'msf1'].some((brand) => {
+  const knownBrand = ['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'mif1', 'msf1', 'avif', 'avis'].some((brand) => {
     for (let offset = 8; offset + 4 <= Math.min(bytes.length, 64); offset += 4) {
       if (ascii(bytes, offset, 4) === brand) return true
     }
@@ -133,14 +157,15 @@ function probeHeif(bytes: Uint8Array, view: DataView): PhotoDimensions | null {
   return null
 }
 
-export async function probeReviewPhotoDimensions(file: Blob): Promise<PhotoDimensions> {
+export async function probeReviewPhotoDimensions(file: Blob, suppliedMimeType?: ReviewPhotoMimeType): Promise<PhotoDimensions> {
+  const mimeType = suppliedMimeType ?? resolveReviewPhotoMimeType(file)
   const bytes = new Uint8Array(await file.slice(0, MAX_REVIEW_PHOTO_HEADER_BYTES).arrayBuffer())
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   let dimensions: PhotoDimensions | null = null
-  if (file.type === 'image/jpeg') dimensions = probeJpeg(bytes, view)
-  else if (file.type === 'image/png') dimensions = probePng(bytes, view)
-  else if (file.type === 'image/webp') dimensions = probeWebp(bytes, view)
-  else if (file.type === 'image/heic' || file.type === 'image/heif') dimensions = probeHeif(bytes, view)
+  if (mimeType === 'image/jpeg') dimensions = probeJpeg(bytes, view)
+  else if (mimeType === 'image/png') dimensions = probePng(bytes, view)
+  else if (mimeType === 'image/webp') dimensions = probeWebp(bytes, view)
+  else if (mimeType === 'image/heic' || mimeType === 'image/heif' || mimeType === 'image/avif') dimensions = probeHeif(bytes, view)
   if (!dimensions) throw new ReviewPhotoError('PHOTO_INVALID')
   return dimensions
 }
@@ -282,10 +307,10 @@ function canvasToWebp(canvas: HTMLCanvasElement, quality: number): Promise<Blob>
 }
 
 export async function compressReviewPhoto(file: File | Blob): Promise<Blob> {
-  validateReviewPhotoFile(file)
+  const mimeType = validateReviewPhotoFile(file)
   let decoded: DecodedPhoto | null = null
   try {
-    const sourceDimensions = await probeReviewPhotoDimensions(file)
+    const sourceDimensions = await probeReviewPhotoDimensions(file, mimeType)
     const target = calculateContainDimensions(sourceDimensions.width, sourceDimensions.height)
     decoded = await decodeWithImageBitmap(file, target) ?? await decodeWithImage(file, sourceDimensions)
     const canvas = document.createElement('canvas')
@@ -307,5 +332,25 @@ export async function compressReviewPhoto(file: File | Blob): Promise<Blob> {
     throw new ReviewPhotoError('PHOTO_INVALID')
   } finally {
     decoded?.cleanup()
+  }
+}
+
+export type PreparedReviewPhotoUpload = Readonly<{
+  uploadBlob: Blob
+  uploadMimeType: ReviewPhotoMimeType
+  previewBlob: Blob | null
+}>
+
+export async function prepareReviewPhotoUpload(file: Blob & { name?: string }): Promise<PreparedReviewPhotoUpload> {
+  const sourceMimeType = validateReviewPhotoFile(file)
+  try {
+    const compressed = await compressReviewPhoto(file)
+    return { uploadBlob: compressed, uploadMimeType: 'image/webp', previewBlob: compressed }
+  } catch (error) {
+    if (!(error instanceof ReviewPhotoError) || error.code !== 'PHOTO_INVALID' || !SERVER_FALLBACK_PHOTO_TYPES.has(sourceMimeType)) {
+      throw error
+    }
+    if (file.size > MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES) throw new ReviewPhotoError('PHOTO_TOO_LARGE')
+    return { uploadBlob: file, uploadMimeType: sourceMimeType, previewBlob: null }
   }
 }

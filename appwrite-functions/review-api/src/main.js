@@ -358,9 +358,10 @@ export function safeActionForLog(action) {
 }
 
 const STANDARD_REQUEST_BYTES = 20_000
-const PHOTO_UPLOAD_REQUEST_BYTES = 2_400_000
+const PHOTO_UPLOAD_REQUEST_BYTES = 9_400_000
 const REVIEW_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/
 const PHOTO_UPLOAD_KEYS = new Set(['action', 'token', 'mimeType', 'base64', 'byteLength'])
+const PHOTO_UPLOAD_MIME_TYPES = new Set(['image/webp', 'image/heic', 'image/heif', 'image/avif'])
 
 function parseLargePhotoUpload(bodyText, parsedBody) {
   let body
@@ -375,7 +376,7 @@ function parseLargePhotoUpload(bodyText, parsedBody) {
   if (
     Object.keys(body).some((key) => !PHOTO_UPLOAD_KEYS.has(key)) ||
     typeof body.token !== 'string' || !REVIEW_TOKEN_PATTERN.test(body.token) ||
-    body.mimeType !== 'image/webp' ||
+    !PHOTO_UPLOAD_MIME_TYPES.has(body.mimeType) ||
     typeof body.base64 !== 'string' || !body.base64 ||
     (body.byteLength !== undefined && (!Number.isInteger(body.byteLength) || body.byteLength < 1))
   ) throw new ReviewApiError('INVALID_REQUEST')

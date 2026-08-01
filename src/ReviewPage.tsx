@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type MouseEvent } from 'react'
 import { appwriteConfig, functions } from './lib/appwrite'
 import { loadReviewInvite, removeReviewPhoto, submitCustomerReview, uploadReviewPhoto } from './lib/review-repository'
-import { compressReviewPhoto, createPreviewUrlController, ReviewPhotoError } from './lib/review-photo'
+import { createPreviewUrlController, prepareReviewPhotoUpload, ReviewPhotoError } from './lib/review-photo'
 import {
   REVIEW_COPY,
   copyReviewCoupon,
@@ -204,12 +204,21 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
     setPhotoErrorCode(null)
     try {
       setPhotoStatus('compressing')
-      const blob = await compressReviewPhoto(file)
+      const prepared = await prepareReviewPhotoUpload(file)
       if (!generationController.isCurrent(binding)) return
       setPhotoStatus('uploading')
-      if (!demoMode) await uploadReviewPhoto(functions, appwriteConfig.reviewApiFunctionId, binding.token, blob)
+      if (!demoMode) {
+        await uploadReviewPhoto(
+          functions,
+          appwriteConfig.reviewApiFunctionId,
+          binding.token,
+          prepared.uploadBlob,
+          prepared.uploadMimeType,
+        )
+      }
       if (!generationController.isCurrent(binding)) return
-      const nextPreview = previewController.replace(blob)
+      const nextPreview = prepared.previewBlob ? previewController.replace(prepared.previewBlob) : null
+      if (!prepared.previewBlob) previewController.clear()
       generationController.commit(binding, () => {
         setPhotoPreviewUrl(nextPreview)
         photoFocusTargetRef.current = 'status'
@@ -397,7 +406,7 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
                 ref={photoInputRef}
                 className="review-photo-input"
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,.heic,.heif,.avif"
                 tabIndex={-1}
                 aria-hidden="true"
                 disabled={submitting || processingPhoto}

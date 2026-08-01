@@ -8,13 +8,37 @@ import {
 } from './business.js'
 
 export const MAX_REVIEW_PHOTO_BYTES = 1_572_864
-export const MAX_REVIEW_PHOTO_INPUT_PIXELS = 8_000_000
+export const MAX_REVIEW_PHOTO_SERVER_INPUT_BYTES = 7_000_000
+export const MAX_REVIEW_PHOTO_INPUT_PIXELS = 25_000_000
 export const MAX_REVIEW_PHOTO_UPLOADS = 10
 const REVIEW_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/
-const CANONICAL_BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
+const PHOTO_INPUT_FORMAT = new Map([
+  ['image/webp', 'webp'],
+  ['image/heic', 'heif'],
+  ['image/heif', 'heif'],
+  ['image/avif', 'heif'],
+])
 
 function fail(code, status = 400) {
   throw new ReviewApiError(code, status)
+}
+
+function isBase64Character(code) {
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122) ||
+    (code >= 48 && code <= 57) || code === 43 || code === 47
+}
+
+function hasCanonicalBase64Characters(value) {
+  if (!value || value.length % 4 !== 0) return false
+  const padding = value.endsWith('==') ? 2 : value.endsWith('=') ? 1 : 0
+  const bodyEnd = value.length - padding
+  for (let index = 0; index < bodyEnd; index += 1) {
+    if (!isBase64Character(value.charCodeAt(index))) return false
+  }
+  for (let index = bodyEnd; index < value.length; index += 1) {
+    if (value.charCodeAt(index) !== 61) return false
+  }
+  return true
 }
 
 function secureEqual(left, right) {
@@ -42,22 +66,32 @@ function uploadCount(invite) {
 }
 
 export function decodePhotoUpload(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input) || input.mimeType !== 'image/webp') fail('PHOTO_INVALID')
-  if (typeof input.base64 !== 'string' || !input.base64 || !CANONICAL_BASE64_PATTERN.test(input.base64)) fail('PHOTO_INVALID')
+  if (!input || typeof input !== 'object' || Array.isArray(input) || !PHOTO_INPUT_FORMAT.has(input.mimeType)) fail('PHOTO_INVALID')
+  const maximumBytes = input.mimeType === 'image/webp' ? MAX_REVIEW_PHOTO_BYTES : MAX_REVIEW_PHOTO_SERVER_INPUT_BYTES
+  if (typeof input.base64 !== 'string') fail('PHOTO_INVALID')
+  if (input.base64.length > 4 * Math.ceil(maximumBytes / 3)) fail('PHOTO_TOO_LARGE', 413)
+  if (!hasCanonicalBase64Characters(input.base64)) fail('PHOTO_INVALID')
   if (input.byteLength !== undefined && (!Number.isInteger(input.byteLength) || input.byteLength < 1)) fail('PHOTO_INVALID')
   const buffer = Buffer.from(input.base64, 'base64')
   if (!buffer.length || buffer.toString('base64') !== input.base64) fail('PHOTO_INVALID')
-  if (buffer.length > MAX_REVIEW_PHOTO_BYTES) fail('PHOTO_TOO_LARGE', 413)
+  if (buffer.length > maximumBytes) fail('PHOTO_TOO_LARGE', 413)
   if (input.byteLength !== undefined && input.byteLength !== buffer.length) fail('PHOTO_INVALID')
   return buffer
 }
 
-export async function normalizeReviewPhoto(input) {
+export async function normalizeReviewPhoto(input, mimeType = 'image/webp') {
   try {
-    const image = sharp(input, { limitInputPixels: MAX_REVIEW_PHOTO_INPUT_PIXELS, animated: true, failOn: 'warning' })
+    const expectedFormat = PHOTO_INPUT_FORMAT.get(mimeType)
+    if (!expectedFormat) fail('PHOTO_INVALID')
+    const image = sharp(input, {
+      limitInputPixels: MAX_REVIEW_PHOTO_INPUT_PIXELS,
+      animated: expectedFormat === 'webp',
+      failOn: 'warning',
+    })
     const metadata = await image.metadata()
-    if (metadata.format !== 'webp' || !Number.isInteger(metadata.width) || metadata.width < 1 ||
-      !Number.isInteger(metadata.height) || metadata.height < 1 || (metadata.pages ?? 1) !== 1 ||
+    if (metadata.format !== expectedFormat || !Number.isInteger(metadata.width) || metadata.width < 1 ||
+      !Number.isInteger(metadata.height) || metadata.height < 1 ||
+      (expectedFormat === 'webp' && (metadata.pages ?? 1) !== 1) ||
       metadata.width * metadata.height > MAX_REVIEW_PHOTO_INPUT_PIXELS) fail('PHOTO_INVALID')
     const { data, info } = await image.rotate()
       .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
@@ -163,7 +197,7 @@ export async function uploadReviewPhoto(repository, storage, token, input, {
   const tokenHash = validateToken(token)
   const preflightInvite = await validateInviteAndSource(repository, tokenHash, now)
   if (uploadCount(preflightInvite) >= MAX_REVIEW_PHOTO_UPLOADS) fail('PHOTO_UPLOAD_LIMIT_REACHED', 429)
-  const normalized = await normalizeReviewPhoto(decodePhotoUpload(input))
+  const normalized = await normalizeReviewPhoto(decodePhotoUpload(input), input.mimeType)
   const fileId = idFactory()
   let inviteId = preflightInvite.$id || preflightInvite.id
 
