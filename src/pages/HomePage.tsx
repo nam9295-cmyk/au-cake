@@ -340,9 +340,6 @@ export function HomePage({
                   </span>
                   <strong className="product-card-title">{card.name}</strong>
                   <span className="product-card-price">{card.priceLabel}</span>
-                  <ul className="product-card-price-details">
-                    {card.features.slice(0, 2).map((feature) => <li key={feature}>{feature}</li>)}
-                  </ul>
                 </button>
                 <a
                   className="secondary-button full-width"
