@@ -8176,6 +8176,18 @@ td select {
   text-align: left;
 }
 
+@media (min-width: 1100px) {
+  /* Keep the catalogue row clean: all product actions share one baseline. */
+  .product-card {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .product-card-quick-view {
+    height: 100%;
+    align-content: start;
+  }
+}
+
 .product-card-quick-view .product-image-wrap {
   width: 100%;
   cursor: pointer;
