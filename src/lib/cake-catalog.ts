@@ -96,13 +96,13 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
       en: {
         name: "Chocolatier's Basque Cheesecake",
         description: 'Choose classic, pave chocolate on top, or a full pave chocolate finish with one Eiffel Tower chocolate.',
-        features: ['Gluten-free', '6" | serves 8', 'Classic AUD 55', 'Pave chocolate on top +AUD 10', 'Eiffel Tower finish +AUD 20'],
+        features: ['Gluten-free', '6" | serves 8', 'Classic AUD 55', 'Pave chocolate on top +AUD 10', 'Eiffel Tower finish +AUD 15'],
         optionLabel: 'Three finishing options',
       },
       ko: {
         name: '쇼콜라티에 바스크 치즈케이크',
         description: '기본, 파베 초콜릿 on top, 에펠탑 초콜릿 마감 중에서 선택할 수 있는 6" | serves 8 치즈케이크예요.',
-        features: ['글루텐 프리', '6" | serves 8', '기본 AUD 55', '파베 on top +AUD 10', '에펠탑 마감 +AUD 20'],
+        features: ['글루텐 프리', '6" | serves 8', '기본 AUD 55', '파베 on top +AUD 10', '에펠탑 마감 +AUD 15'],
         optionLabel: '세 가지 마감 선택',
       },
     },

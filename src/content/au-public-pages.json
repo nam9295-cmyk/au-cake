@@ -63,7 +63,7 @@
       "searchGoal": "Chocolate Basque Cheesecake Sydney",
       "schema": "product-offer",
       "startingPrice": 55,
-      "priceSummary": "From AUD 55. Classic AUD 55, pave chocolate on top AUD 65, or full pave chocolate finish AUD 75.",
+      "priceSummary": "From AUD 55. Classic AUD 55, pave chocolate on top +AUD 10 (AUD 65 total), or Eiffel Tower finish +AUD 15 (AUD 70 total).",
       "optionSummary": "One gluten-free 6 inch cake serving about 8, with three finishing options.",
       "imagePath": "/products/chocolatiers-basque-cheesecake-sydney.webp",
       "imageAlt": "Chocolate Basque cheesecake made to order for Sydney pickup"

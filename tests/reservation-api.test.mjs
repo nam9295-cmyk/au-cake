@@ -252,7 +252,7 @@ test('cake API prices cheesecake variants and cupcake per-piece finishes', () =>
   )
   const eiffelBasque = buildCakeReservation(
     { ...cakeInput, productId: 'eiffel-tower-basque-cheesecake' },
-    { now, reservationNumber: 'VG-C-AU-CHEESE-75' },
+    { now, reservationNumber: 'VG-C-AU-CHEESE-70' },
   )
   const cupcakes = buildCakeReservation(
     {
@@ -270,8 +270,8 @@ test('cake API prices cheesecake variants and cupcake per-piece finishes', () =>
   assert.equal(chocoBasque.cakeSize, '15cm')
   assert.equal(chocoBasque.poundAddon, 'none')
   assert.equal(paveBasque.totalPrice, 65)
-  assert.equal(eiffelBasque.totalPrice, 75)
-  assert.equal(eiffelBasque.totalPriceCents, 7500)
+  assert.equal(eiffelBasque.totalPrice, 70)
+  assert.equal(eiffelBasque.totalPriceCents, 7000)
   assert.equal(cupcakes.poundAddon, 'none')
   assert.equal(cupcakes.chocolateType, 'dark')
   assert.equal(cupcakes.vanillaCreamCount, 4)
@@ -975,11 +975,11 @@ test('public cake projection exposes sanitized multi-lines and synthesizes sanit
   assert.deepEqual(response.orderLines.map((line) => [line.productId, line.quantity]), [['pave-cake', 2], ['pound-cake', 1]])
   assert.deepEqual(response.orderLines.map((line) => [
     line.unitPriceCents, line.subtotalCents, line.discountPercent, line.discountCents, line.totalPriceCents,
-  ]), [[9500, 19000, 0, 0, 19000], [5000, 5000, 0, 0, 5000]])
+  ]), [[9500, 19000, 0, 0, 19000], [5500, 5500, 0, 0, 5500]])
   assert.deepEqual([
     response.subtotalCents, response.discountBasisCents, response.discountPercent,
     response.discountCents, response.totalPriceCents,
-  ], [24000, 0, 0, 0, 24000])
+  ], [24500, 0, 0, 0, 24500])
   assert.equal(JSON.stringify(response.orderLines).includes('Private'), false)
 
   const legacy = publicCakeReservation({

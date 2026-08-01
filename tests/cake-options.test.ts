@@ -177,7 +177,7 @@ test('AU cheesecake variants keep fixed prices and show the fixed shared size la
   assert.equal(paveBasque.price, 65)
   assert.equal(paveBasque.description.includes('pave chocolate on top'), true)
   assert.equal(eiffelBasque.name, 'Cake finishing with Eiffel Tower')
-  assert.equal(eiffelBasque.price, 75)
+  assert.equal(eiffelBasque.price, 70)
   assert.equal(eiffelBasque.description.includes('Eiffel Tower chocolate'), true)
   assert.equal(eiffelBasque.description.includes('covered with pave chocolate'), true)
   for (const product of [chocoBasque, paveBasque, eiffelBasque]) {
@@ -194,7 +194,7 @@ test('AU cheesecake variants keep fixed prices and show the fixed shared size la
   }
   assert.equal(getReservationUnitPrice('choco-basque-cheesecake'), 55)
   assert.equal(getReservationUnitPrice('pave-choco-basque-cheesecake'), 65)
-  assert.equal(getReservationUnitPrice('eiffel-tower-basque-cheesecake' as ProductId), 75)
+  assert.equal(getReservationUnitPrice('eiffel-tower-basque-cheesecake' as ProductId), 70)
 })
 
 test('cupcakes replace chocolate finish with per-piece vanilla cream and party decoration', () => {
@@ -267,7 +267,7 @@ test('pound cake pricing ignores size and chocolate, and uses confirmed finish p
   assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none' }), 45)
   assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'none' }), 45)
   assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'extra-chocolate' }), 52)
-  assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 50)
+  assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 55)
 })
 
 test('pound cake only asks dark or milk chocolate when extra chocolate is selected', () => {
@@ -691,7 +691,7 @@ test('AU cheesecake confirmations include the selected finish and fixed shared s
   const eiffelMessage = buildSmsMessage({
     ...reservation,
     productId: 'eiffel-tower-basque-cheesecake',
-    totalPrice: 75,
+    totalPrice: 70,
   })
 
   assert.match(paveMessage, /Product: Pave chocolate on top/)

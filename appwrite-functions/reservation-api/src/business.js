@@ -100,7 +100,7 @@ const PRODUCTS = {
     usesFinish: false,
   },
   'eiffel-tower-basque-cheesecake': {
-    basePrice: 75,
+    basePrice: 70,
     sizePrices: {},
     usesSize: false,
     usesFinish: false,
@@ -123,7 +123,7 @@ export function formatCakeSizeLabel(cakeSize) {
 const FINISH_PRICES = {
   none: 0,
   'extra-chocolate': 7,
-  'vanilla-cream': 5,
+  'vanilla-cream': 10,
 }
 
 const CLASS_PRICES = {

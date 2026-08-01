@@ -140,8 +140,8 @@ test('admin reservation edits normalise irrelevant options for selected product'
   assert.equal(update.cakeSize, '15cm')
   assert.equal(update.chocolateType, 'dark')
   assert.equal(update.poundAddon, 'vanilla-cream')
-  assert.equal(update.totalPrice, 50)
-  assert.equal(update.totalPriceCents, 5000)
+  assert.equal(update.totalPrice, 55)
+      assert.equal(update.totalPriceCents, 5500)
 })
 
 test('admin Fresh Lemon Cupcake edits keep one selected pack and ignore irrelevant options', () => {

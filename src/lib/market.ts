@@ -435,7 +435,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         id: 'eiffel-tower-basque-cheesecake',
         name: 'Cake finishing with Eiffel Tower',
         description: `Our ${AU_CAKE_SIZE_LABELS['15cm']} Chocolatier’s Basque cheesecake covered with pave chocolate and finished with one Eiffel Tower chocolate.`,
-        price: 75,
+        price: 70,
         priceNote: AU_CAKE_SIZE_LABELS['15cm'],
         usesCacaoOptions: false,
         usesSizeOptions: false,
@@ -492,7 +492,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     poundAddonOptions: [
       { value: 'none', label: 'Basic finish', description: 'Classic finish', extraPrice: 0 },
       { value: 'extra-chocolate', label: 'Extra chocolate', description: 'Add extra chocolate finish', extraPrice: 7 },
-      { value: 'vanilla-cream', label: 'Vanilla cream', description: 'Add vanilla cream finish', extraPrice: 5 },
+      { value: 'vanilla-cream', label: 'Vanilla cream', description: 'Add vanilla cream finish', extraPrice: 10 },
     ],
     defaultSettings: AU_SETTINGS,
     copy: {
@@ -530,8 +530,8 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'pound-cake': ['Rectangular gateau chocolat', 'Fixed pound cake size', 'Basic, extra chocolate, or vanilla cream finish'],
       'cupcake-dozen': ['12 cupcakes in one dozen', 'Vanilla cream +AUD 0.50 each', 'Party decoration +AUD 1.00 each'],
       'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], "Chocolatier's Basque cheesecake", 'Smooth, rich centre'],
-      'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Pave chocolate on top', 'AUD 10 finish upgrade'],
-      'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Fully covered with pave chocolate', 'One Eiffel Tower chocolate on top'],
+      'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Pave chocolate on top', '+AUD 10 finish upgrade'],
+      'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Fully covered with pave chocolate', '+AUD 15 finish upgrade'],
       'fresh-lemon-cupcakes-4': ['4 pieces', 'Fresh lemon cream', 'Floral decoration included'],
       'fresh-lemon-cupcakes-6': ['6 pieces', 'Fresh lemon cream', 'Floral decoration included'],
       'fresh-lemon-cupcakes-8': ['8 pieces', 'Fresh lemon cream', 'Floral decoration included'],
