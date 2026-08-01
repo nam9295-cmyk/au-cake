@@ -196,9 +196,12 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
   }
 
   async function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file || loadState.kind !== 'valid' || !tryBeginReviewOperation('photo', submittingRef, photoOperationRef)) return
+    const photoInput = event.currentTarget
+    const file = photoInput.files?.[0]
+    if (!file || loadState.kind !== 'valid' || !tryBeginReviewOperation('photo', submittingRef, photoOperationRef)) {
+      photoInput.value = ''
+      return
+    }
     const binding = loadState.binding
     setPhotoStatus('selecting')
     setPhotoErrorCode(null)
@@ -236,6 +239,7 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
           : 'request')
       })
     } finally {
+      photoInput.value = ''
       if (generationController.isCurrent(binding)) finishReviewOperation('photo', submittingRef, photoOperationRef)
     }
   }

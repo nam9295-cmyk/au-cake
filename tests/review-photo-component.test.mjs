@@ -31,6 +31,17 @@ test('review page wires accessible private photo selection and processing guards
   assert.doesNotMatch(source, /photoFileId/)
 })
 
+test('mobile picker input stays attached until its lazy file has been prepared and uploaded', async () => {
+  const source = await readFile(pagePath, 'utf8')
+  const handler = source.slice(source.indexOf('async function selectPhoto'), source.indexOf('async function removePhoto'))
+  const prepareIndex = handler.indexOf('prepareReviewPhotoUpload(file)')
+  const uploadIndex = handler.indexOf('uploadReviewPhoto(')
+  const resetIndex = handler.lastIndexOf("photoInput.value = ''")
+  assert.ok(prepareIndex >= 0 && uploadIndex > prepareIndex)
+  assert.ok(resetIndex > uploadIndex)
+  assert.match(handler, /finally\s*\{[\s\S]*photoInput\.value = ''/)
+})
+
 test('review photo and success transitions manage focus without focusing on initial load', async () => {
   const source = await readFile(pagePath, 'utf8')
   assert.match(source, /choosePhotoButtonRef/)
