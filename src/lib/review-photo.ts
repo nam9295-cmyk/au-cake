@@ -395,6 +395,9 @@ export async function prepareReviewPhotoUpload(
 ): Promise<PreparedReviewPhotoUpload> {
   if (file.size < 1) throw new ReviewPhotoError('PHOTO_INVALID')
   if (file.size > MAX_REVIEW_PHOTO_INPUT_BYTES) throw new ReviewPhotoError('PHOTO_TOO_LARGE')
+  if (file.size <= MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES) {
+    return { uploadBlob: file, uploadMimeType: 'application/octet-stream', previewBlob: null }
+  }
   let sourceMimeType: ReviewPhotoMimeType
   try {
     sourceMimeType = await resolveReviewPhotoUploadMimeType(file)

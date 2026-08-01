@@ -314,7 +314,7 @@ test('bounded mobile HEIC uses the private server before any browser decoder', a
     } })
     assert.equal(conversionCalls, 0)
     assert.equal(prepared.uploadBlob, input)
-    assert.equal(prepared.uploadMimeType, 'image/heic')
+    assert.equal(prepared.uploadMimeType, 'application/octet-stream')
     assert.equal(prepared.previewBlob, null)
   } finally {
     if (originalBitmap) Object.defineProperty(globalThis, 'createImageBitmap', originalBitmap)
@@ -326,7 +326,7 @@ test('bounded mobile HEIC uses the private server before any browser decoder', a
   }
 })
 
-test('bounded HEIF is detected from its header when a mobile picker supplies an unhelpful MIME', async () => {
+test('bounded HEIF with unhelpful mobile MIME bypasses client detection', async () => {
   const header = heifIspeHeader(3024, 4032)
   for (const suppliedType of ['', 'application/octet-stream', 'image/*', 'image/heif; codecs=hevc']) {
     const input = new Blob([header], { type: suppliedType }) as Blob & { name: string }
@@ -338,12 +338,12 @@ test('bounded HEIF is detected from its header when a mobile picker supplies an 
     } })
     assert.equal(conversionCalls, 0, suppliedType)
     assert.equal(prepared.uploadBlob, input, suppliedType)
-    assert.equal(prepared.uploadMimeType, 'image/heic', suppliedType)
+    assert.equal(prepared.uploadMimeType, 'application/octet-stream', suppliedType)
     assert.equal(prepared.previewBlob, null, suppliedType)
   }
 })
 
-test('actual HEIF header wins over a supported but incorrect mobile MIME', async () => {
+test('bounded HEIF with incorrect supported mobile MIME bypasses client detection', async () => {
   const header = heifIspeHeader(3024, 4032)
   const input = new Blob([header], { type: 'image/jpeg' }) as Blob & { name: string }
   Object.defineProperty(input, 'name', { configurable: true, value: 'image.jpg' })
@@ -354,13 +354,22 @@ test('actual HEIF header wins over a supported but incorrect mobile MIME', async
   } })
   assert.equal(conversionCalls, 0)
   assert.equal(prepared.uploadBlob, input)
-  assert.equal(prepared.uploadMimeType, 'image/heic')
+  assert.equal(prepared.uploadMimeType, 'application/octet-stream')
   assert.equal(prepared.previewBlob, null)
 })
 
 test('bounded mobile file with opaque picker metadata is delegated to private server validation', async () => {
   const input = new Blob([new Uint8Array(128)], { type: 'application/octet-stream' }) as Blob & { name: string }
   Object.defineProperty(input, 'name', { configurable: true, value: 'image' })
+  const prepared = await prepareReviewPhotoUpload(input)
+  assert.equal(prepared.uploadBlob, input)
+  assert.equal(prepared.uploadMimeType, 'application/octet-stream')
+  assert.equal(prepared.previewBlob, null)
+})
+
+test('bounded mobile file with misleading supported MIME bypasses all client decoding', async () => {
+  const input = new Blob([new Uint8Array(128)], { type: 'image/jpeg' }) as Blob & { name: string }
+  Object.defineProperty(input, 'name', { configurable: true, value: 'IMG_mobile.jpg' })
   const prepared = await prepareReviewPhotoUpload(input)
   assert.equal(prepared.uploadBlob, input)
   assert.equal(prepared.uploadMimeType, 'application/octet-stream')
