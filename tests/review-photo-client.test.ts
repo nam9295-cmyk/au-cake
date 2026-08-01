@@ -168,8 +168,9 @@ test('WebP probe reads dimensions from a large declared image chunk without buff
   )
 })
 
-test('source probe rejects invalid, zero, unknown HEIF, and 48MP dimensions before decode', async () => {
-  assert.equal(MAX_REVIEW_PHOTO_SOURCE_PIXELS, 20_000_000)
+test('source probe accepts modern 24MP phone photos and rejects 48MP originals before decode', async () => {
+  assert.equal(MAX_REVIEW_PHOTO_SOURCE_PIXELS, 25_000_000)
+  assert.deepEqual(await probeReviewPhotoDimensions(pngHeader(5712, 4284)), { width: 5712, height: 4284 })
   await assert.rejects(() => probeReviewPhotoDimensions(pngHeader(8000, 6000)), /PHOTO_DIMENSIONS_TOO_LARGE/)
   await assert.rejects(() => probeReviewPhotoDimensions(pngHeader(0, 100)), /PHOTO_INVALID/)
   await assert.rejects(() => probeReviewPhotoDimensions(new Blob([new Uint8Array(64)], { type: 'image/jpeg' })), /PHOTO_INVALID/)
@@ -251,6 +252,34 @@ test('safe Image fallback revokes its object URL after successful compression', 
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: (url: string) => revoked.push(url) })
     assert.equal(await compressReviewPhoto(pngHeader(800, 600)), output)
     assert.deepEqual(revoked, ['blob:fallback'])
+  } finally {
+    mock.restore()
+    if (originalImage) Object.defineProperty(globalThis, 'Image', originalImage)
+    else delete (globalThis as { Image?: unknown }).Image
+    if (createDescriptor) Object.defineProperty(URL, 'createObjectURL', createDescriptor)
+    if (revokeDescriptor) Object.defineProperty(URL, 'revokeObjectURL', revokeDescriptor)
+  }
+})
+
+test('safe Image fallback accepts a modern 24MP phone photo when bitmap decoding is unavailable', async () => {
+  const output = new Blob(['ok'], { type: 'image/webp' })
+  const mock = installCompressionBrowserMock([output])
+  const originalImage = Object.getOwnPropertyDescriptor(globalThis, 'Image')
+  const createDescriptor = Object.getOwnPropertyDescriptor(URL, 'createObjectURL')
+  const revokeDescriptor = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL')
+  try {
+    Object.defineProperty(globalThis, 'createImageBitmap', { configurable: true, value: undefined })
+    class MockImage {
+      decoding = ''
+      src = ''
+      naturalWidth = 5712
+      naturalHeight = 4284
+      async decode() {}
+    }
+    Object.defineProperty(globalThis, 'Image', { configurable: true, value: MockImage })
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:24mp-fallback' })
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: () => {} })
+    assert.equal(await compressReviewPhoto(pngHeader(5712, 4284)), output)
   } finally {
     mock.restore()
     if (originalImage) Object.defineProperty(globalThis, 'Image', originalImage)

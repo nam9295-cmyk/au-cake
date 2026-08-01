@@ -1,13 +1,13 @@
 export const MAX_REVIEW_PHOTO_INPUT_BYTES = 15 * 1024 * 1024
 export const MAX_REVIEW_PHOTO_OUTPUT_BYTES = 1_350_000
 export const MAX_REVIEW_PHOTO_DIMENSION = 1600
-// A 20MP source can require roughly 80MB when decoded to RGBA. Reject larger
-// camera originals before decode to keep the private review flow mobile-safe.
-export const MAX_REVIEW_PHOTO_SOURCE_PIXELS = 20_000_000
+// Modern phone cameras commonly produce 24MP photos. Allow those while still
+// rejecting 48MP/RAW originals that can require roughly 192MB when decoded.
+export const MAX_REVIEW_PHOTO_SOURCE_PIXELS = 25_000_000
 export const MAX_REVIEW_PHOTO_HEADER_BYTES = 512 * 1024
 
-const MAX_FALLBACK_PHOTO_BYTES = 8 * 1024 * 1024
-const MAX_FALLBACK_PHOTO_PIXELS = 12_000_000
+const MAX_FALLBACK_PHOTO_BYTES = MAX_REVIEW_PHOTO_INPUT_BYTES
+const MAX_FALLBACK_PHOTO_PIXELS = MAX_REVIEW_PHOTO_SOURCE_PIXELS
 
 const SUPPORTED_PHOTO_TYPES = new Set([
   'image/jpeg',
