@@ -11,6 +11,7 @@ const MAX_FALLBACK_PHOTO_BYTES = MAX_REVIEW_PHOTO_INPUT_BYTES
 const MAX_FALLBACK_PHOTO_PIXELS = MAX_REVIEW_PHOTO_SOURCE_PIXELS
 
 export type ReviewPhotoMimeType = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | 'image/heif' | 'image/avif'
+export type ReviewPhotoUploadMimeType = ReviewPhotoMimeType | 'application/octet-stream'
 type ReviewPhotoFile = Pick<Blob, 'type' | 'size'> & { name?: string }
 
 const SUPPORTED_PHOTO_TYPES = new Set<ReviewPhotoMimeType>([
@@ -368,7 +369,7 @@ export async function compressReviewPhoto(file: File | Blob, suppliedMimeType?: 
 
 export type PreparedReviewPhotoUpload = Readonly<{
   uploadBlob: Blob
-  uploadMimeType: ReviewPhotoMimeType
+  uploadMimeType: ReviewPhotoUploadMimeType
   previewBlob: Blob | null
 }>
 
@@ -394,7 +395,15 @@ export async function prepareReviewPhotoUpload(
 ): Promise<PreparedReviewPhotoUpload> {
   if (file.size < 1) throw new ReviewPhotoError('PHOTO_INVALID')
   if (file.size > MAX_REVIEW_PHOTO_INPUT_BYTES) throw new ReviewPhotoError('PHOTO_TOO_LARGE')
-  const sourceMimeType = await resolveReviewPhotoUploadMimeType(file)
+  let sourceMimeType: ReviewPhotoMimeType
+  try {
+    sourceMimeType = await resolveReviewPhotoUploadMimeType(file)
+  } catch (error) {
+    if (error instanceof ReviewPhotoError && error.code === 'PHOTO_INVALID' && file.size <= MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES) {
+      return { uploadBlob: file, uploadMimeType: 'application/octet-stream', previewBlob: null }
+    }
+    throw error
+  }
   if (HEIF_CONVERSION_TYPES.has(sourceMimeType) && file.size <= MAX_REVIEW_PHOTO_SERVER_FALLBACK_BYTES) {
     return { uploadBlob: file, uploadMimeType: sourceMimeType, previewBlob: null }
   }

@@ -18,6 +18,7 @@ const PHOTO_INPUT_FORMAT = new Map([
   ['image/heic', 'heif'],
   ['image/heif', 'heif'],
   ['image/avif', 'heif'],
+  ['application/octet-stream', 'unknown'],
 ])
 
 function fail(code, status = 400) {
@@ -109,6 +110,24 @@ export async function normalizeReviewPhoto(input, mimeType = 'image/webp') {
     if (mimeType === 'image/heic' || mimeType === 'image/heif') {
       const decoded = await decodeHeifPhoto(input)
       image = sharp(decoded.data, { raw: { width: decoded.width, height: decoded.height, channels: 4 } })
+    } else if (mimeType === 'application/octet-stream') {
+      try {
+        const decoded = await decodeHeifPhoto(input)
+        image = sharp(decoded.data, { raw: { width: decoded.width, height: decoded.height, channels: 4 } })
+      } catch (heifError) {
+        if (!(heifError instanceof ReviewApiError) || heifError.code !== 'PHOTO_INVALID') throw heifError
+        image = sharp(input, {
+          limitInputPixels: MAX_REVIEW_PHOTO_INPUT_PIXELS,
+          animated: true,
+          failOn: 'warning',
+        })
+        const metadata = await image.metadata()
+        if (!['jpeg', 'png', 'webp', 'heif'].includes(metadata.format) ||
+          !Number.isInteger(metadata.width) || metadata.width < 1 ||
+          !Number.isInteger(metadata.height) || metadata.height < 1 ||
+          (metadata.pages ?? 1) !== 1 ||
+          metadata.width * metadata.height > MAX_REVIEW_PHOTO_INPUT_PIXELS) fail('PHOTO_INVALID')
+      }
     } else {
       image = sharp(input, {
         limitInputPixels: MAX_REVIEW_PHOTO_INPUT_PIXELS,

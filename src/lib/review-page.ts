@@ -1,5 +1,5 @@
 import { normalizeReviewCouponCode } from './review-coupon-client.js'
-import type { ReviewPhotoMimeType } from './review-photo.js'
+import type { ReviewPhotoUploadMimeType } from './review-photo.js'
 
 export type ReviewLanguage = 'en' | 'ko'
 export type ReviewSourceType = 'cake' | 'class'
@@ -250,7 +250,7 @@ export function buildUploadReviewPhotoPayload(
   token: string,
   base64: string,
   byteLength: number,
-  mimeType: ReviewPhotoMimeType = 'image/webp',
+  mimeType: ReviewPhotoUploadMimeType = 'image/webp',
 ) {
   return { action: 'upload-photo' as const, token, mimeType, base64, byteLength }
 }

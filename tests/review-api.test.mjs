@@ -961,6 +961,8 @@ test('request parsing gives exact WebP and HEIF photo uploads the measured 9.4MB
   assert.deepEqual(parseRequestBody({ bodyText: JSON.stringify(upload), bodyJson: upload }), upload)
   const heicUpload = { ...upload, mimeType: 'image/heic', base64: 'A'.repeat(4_000_000) }
   assert.deepEqual(parseRequestBody({ bodyText: JSON.stringify(heicUpload), bodyJson: heicUpload }), heicUpload)
+  const opaqueUpload = { ...upload, mimeType: 'application/octet-stream', base64: 'A'.repeat(4_000_000) }
+  assert.deepEqual(parseRequestBody({ bodyText: JSON.stringify(opaqueUpload), bodyJson: opaqueUpload }), opaqueUpload)
   assertReviewError('REQUEST_TOO_LARGE', () => parseRequestBody({
     bodyText: JSON.stringify({ ...upload, action: 'unknown' }),
     bodyJson: { ...upload, action: 'unknown' },

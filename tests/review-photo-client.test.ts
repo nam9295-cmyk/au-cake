@@ -358,6 +358,15 @@ test('actual HEIF header wins over a supported but incorrect mobile MIME', async
   assert.equal(prepared.previewBlob, null)
 })
 
+test('bounded mobile file with opaque picker metadata is delegated to private server validation', async () => {
+  const input = new Blob([new Uint8Array(128)], { type: 'application/octet-stream' }) as Blob & { name: string }
+  Object.defineProperty(input, 'name', { configurable: true, value: 'image' })
+  const prepared = await prepareReviewPhotoUpload(input)
+  assert.equal(prepared.uploadBlob, input)
+  assert.equal(prepared.uploadMimeType, 'application/octet-stream')
+  assert.equal(prepared.previewBlob, null)
+})
+
 test('safe Image fallback revokes its object URL after successful compression', async () => {
   const output = new Blob(['ok'], { type: 'image/webp' })
   const mock = installCompressionBrowserMock([output])
@@ -470,7 +479,7 @@ test('load requires a server boolean hasPhoto and demo reward follows in-memory 
   assert.equal(reviewDemoSubmission(true).rewardPercent, 10)
 })
 
-test('repository uploads canonical WebP and HEIC fallback payloads and parses only attachment state', async () => {
+test('repository uploads canonical WebP, HEIC, and opaque server-validation payloads and parses only attachment state', async () => {
   const bodies: unknown[] = []
   const executor = {
     async createExecution(input: { body: string }) {
@@ -482,9 +491,12 @@ test('repository uploads canonical WebP and HEIC fallback payloads and parses on
   assert.deepEqual(await uploadReviewPhoto(executor, 'review-api', TOKEN, webp), { uploaded: true, hasPhoto: true })
   const heic = new Blob([Uint8Array.of(4, 5, 6)], { type: 'image/heic' })
   assert.deepEqual(await uploadReviewPhoto(executor, 'review-api', TOKEN, heic, 'image/heic'), { uploaded: true, hasPhoto: true })
+  const opaque = new Blob([Uint8Array.of(7, 8, 9)], { type: 'application/octet-stream' })
+  assert.deepEqual(await uploadReviewPhoto(executor, 'review-api', TOKEN, opaque, 'application/octet-stream'), { uploaded: true, hasPhoto: true })
   assert.deepEqual(bodies, [
     buildUploadReviewPhotoPayload(TOKEN, 'AQID', 3),
     buildUploadReviewPhotoPayload(TOKEN, 'BAUG', 3, 'image/heic'),
+    buildUploadReviewPhotoPayload(TOKEN, 'BwgJ', 3, 'application/octet-stream'),
   ])
   assert.equal(JSON.stringify(bodies).includes('fileId'), false)
 })

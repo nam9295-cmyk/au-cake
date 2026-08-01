@@ -10,7 +10,7 @@ import {
   type ReviewSubmissionInput,
   type ReviewSubmissionResult,
 } from './review-page.js'
-import { blobToBase64, type ReviewPhotoMimeType } from './review-photo.js'
+import { blobToBase64, type ReviewPhotoUploadMimeType } from './review-photo.js'
 
 export const REVIEW_INVITE_REQUEST_FAILED = 'REVIEW_INVITE_REQUEST_FAILED'
 
@@ -178,10 +178,11 @@ export async function uploadReviewPhoto(
   functionId: string,
   token: string,
   blob: Blob,
-  mimeType: ReviewPhotoMimeType = 'image/webp',
+  mimeType: ReviewPhotoUploadMimeType = 'image/webp',
 ): Promise<ReviewPhotoUploadResult> {
-  const uploadTypes = new Set<ReviewPhotoMimeType>(['image/webp', 'image/heic', 'image/heif', 'image/avif'])
-  if (!uploadTypes.has(mimeType) || blob.size < 1 || (blob.type && blob.type.toLowerCase() !== mimeType)) {
+  const uploadTypes = new Set<ReviewPhotoUploadMimeType>(['image/webp', 'image/heic', 'image/heif', 'image/avif', 'application/octet-stream'])
+  if (!uploadTypes.has(mimeType) || blob.size < 1 ||
+    (mimeType !== 'application/octet-stream' && blob.type && blob.type.toLowerCase() !== mimeType)) {
     throw new ReviewInviteApiError(REVIEW_INVITE_REQUEST_FAILED)
   }
   const base64 = await blobToBase64(blob)

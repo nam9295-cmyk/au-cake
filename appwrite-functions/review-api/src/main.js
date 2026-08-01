@@ -361,7 +361,7 @@ const STANDARD_REQUEST_BYTES = 20_000
 const PHOTO_UPLOAD_REQUEST_BYTES = 9_400_000
 const REVIEW_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/
 const PHOTO_UPLOAD_KEYS = new Set(['action', 'token', 'mimeType', 'base64', 'byteLength'])
-const PHOTO_UPLOAD_MIME_TYPES = new Set(['image/webp', 'image/heic', 'image/heif', 'image/avif'])
+const PHOTO_UPLOAD_MIME_TYPES = new Set(['image/webp', 'image/heic', 'image/heif', 'image/avif', 'application/octet-stream'])
 
 function parseLargePhotoUpload(bodyText, parsedBody) {
   let body

@@ -97,7 +97,7 @@ function makePhotoStorage(overrides = {}) {
   }
 }
 
-test('photo upload decoder accepts canonical webp and HEIC base64 with exact optional byte length', async () => {
+test('photo upload decoder accepts canonical webp, HEIC, and bounded opaque base64 with exact optional byte length', async () => {
   const image = await tinyWebp()
   assert.deepEqual(decodePhotoUpload({
     mimeType: 'image/webp',
@@ -107,6 +107,9 @@ test('photo upload decoder accepts canonical webp and HEIC base64 with exact opt
   const heic = Buffer.from('private heic bytes')
   assert.deepEqual(decodePhotoUpload({
     mimeType: 'image/heic', base64: heic.toString('base64'), byteLength: heic.length,
+  }), heic)
+  assert.deepEqual(decodePhotoUpload({
+    mimeType: 'application/octet-stream', base64: heic.toString('base64'), byteLength: heic.length,
   }), heic)
 })
 
@@ -155,12 +158,15 @@ test('photo normalization decodes a real HEIC original through the server fallba
   assert.ok(metadata.width > 0 && metadata.width <= 1600)
   assert.ok(metadata.height > 0 && metadata.height <= 1600)
   assert.ok(output.length <= MAX_REVIEW_PHOTO_BYTES)
+  const opaqueOutput = await normalizeReviewPhoto(source, 'application/octet-stream')
+  assert.equal((await sharp(opaqueOutput).metadata()).format, 'webp')
 })
 
 test('photo normalization rejects MIME/actual format mismatch, animation, pixel bombs, and invalid bytes stably', async () => {
   const png = await sharp({ create: { width: 2, height: 2, channels: 3, background: '#fff' } }).png().toBuffer()
   await assert.rejects(() => normalizeReviewPhoto(png), reviewError('PHOTO_INVALID'))
   await assert.rejects(() => normalizeReviewPhoto(Buffer.from('not an image')), reviewError('PHOTO_INVALID'))
+  await assert.rejects(() => normalizeReviewPhoto(Buffer.from('not an image'), 'application/octet-stream'), reviewError('PHOTO_INVALID'))
 
   const red = await sharp({ create: { width: 2, height: 2, channels: 4, background: 'red' } }).png().toBuffer()
   const blue = await sharp({ create: { width: 2, height: 2, channels: 4, background: 'blue' } }).png().toBuffer()
