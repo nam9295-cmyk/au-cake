@@ -1,0 +1,131 @@
+{
+  "site": {
+    "url": "https://au.verygood-chocolate.com",
+    "brand": "Very Good Chocolate",
+    "brandDisplay": "Very Good Chocolate",
+    "language": "en-AU",
+    "pickupArea": "Melrose Park, Sydney"
+  },
+  "home": {
+    "title": "Chocolate Cakes Sydney | Melrose Park Pickup | Very Good",
+    "h1": "Made-to-Order Chocolate Cakes in Sydney",
+    "description": "Order small-batch chocolate cakes for pre-arranged pickup in Melrose Park, Sydney. Pave cake, chocolate Basque cheesecake, pound cake and cupcakes from AUD 45.",
+    "hero": "Small-batch chocolate cakes made to order for birthdays, parties and gifting.",
+    "pickup": "Pre-order only. Pickup in Melrose Park, Sydney. No walk-in shop or delivery.",
+    "ctas": [
+      { "label": "Browse Chocolate Cakes", "href": "/cakes" },
+      { "label": "How Ordering Works", "href": "#how-ordering-works" }
+    ],
+    "orderingSteps": [
+      "Choose a cake and options.",
+      "Send a request so availability can be checked.",
+      "Receive payment details after availability is confirmed.",
+      "Collect by pre-arranged pickup in Melrose Park after final confirmation."
+    ],
+    "faq": [
+      {
+        "question": "Where do I pick up my cake?",
+        "answer": "Pickup is arranged in Melrose Park, Sydney. There is no walk-in shop, so the exact meeting details are shared after the order is confirmed."
+      },
+      {
+        "question": "Is submitting a request a confirmed order?",
+        "answer": "No. Availability is checked first, payment details are sent, and the order is confirmed after payment is received."
+      },
+      {
+        "question": "Do you offer Sydney delivery or walk-in sales?",
+        "answer": "Not currently. Cakes are made for pre-arranged pickup in Melrose Park only."
+      }
+    ]
+  },
+  "cakePages": {
+    "chocolate-pound-cake-and-cupcakes": {
+      "name": "Chocolate Pound Cake & Cupcakes",
+      "searchGoal": "Chocolate Pound Cake Sydney; Chocolate Cupcakes Sydney",
+      "schema": "webpage-only",
+      "startingPrice": null,
+      "priceSummary": "Chocolate Pound Cake AUD 45; Chocolate Cupcakes (1 dozen) AUD 55.",
+      "optionSummary": "Choose the pound cake or one dozen cupcakes, then choose the available finish.",
+      "imagePath": "/products/chocolate-pound-cake-sydney.webp",
+      "imageAlt": "Chocolate pound cake prepared for pre-arranged pickup in Sydney"
+    },
+    "pave-chocolate-cake": {
+      "name": "Pave Chocolate Cake",
+      "searchGoal": "Pave Chocolate Cake Sydney",
+      "schema": "product-offer",
+      "startingPrice": 75,
+      "priceSummary": "From AUD 75. 6 inch serves 8, 7.5 inch serves 14, and 9 inch serves 22.",
+      "optionSummary": "Choose a size and dark or milk chocolate.",
+      "imagePath": "/products/pave-chocolate-cake-sydney.webp",
+      "imageAlt": "Pave chocolate cake made to order for Sydney pickup"
+    },
+    "chocolatiers-basque-cheesecake": {
+      "name": "Chocolatier's Basque Cheesecake",
+      "searchGoal": "Chocolate Basque Cheesecake Sydney",
+      "schema": "product-offer",
+      "startingPrice": 55,
+      "priceSummary": "From AUD 55. Classic AUD 55, pave chocolate on top AUD 65, or full pave chocolate finish AUD 75.",
+      "optionSummary": "One gluten-free 6 inch cake serving about 8, with three finishing options.",
+      "imagePath": "/products/chocolatiers-basque-cheesecake-sydney.webp",
+      "imageAlt": "Chocolate Basque cheesecake made to order for Sydney pickup"
+    },
+    "lemon-cake": {
+      "name": "Lemon Cake",
+      "searchGoal": "Lemon Cake Sydney",
+      "schema": "product-offer",
+      "startingPrice": 36,
+      "priceSummary": "From AUD 36. Boxes of 6, 8, 12 or 16.",
+      "optionSummary": "Choose a pack size and finishing mix. The 12-piece box is Most Popular.",
+      "imagePath": "/products/lemon-cake-sydney.webp",
+      "imageAlt": "Lemon cake prepared for pre-arranged pickup in Sydney"
+    },
+    "vanilla-fresh-cream-cake": {
+      "name": "Vanilla Fresh Cream Cake",
+      "searchGoal": "Fresh Cream Cake Sydney",
+      "schema": "product-offer",
+      "startingPrice": 75,
+      "priceSummary": "From AUD 75. 6 inch serves 8, 7.5 inch serves 14, and 9 inch serves 22.",
+      "optionSummary": "Choose a size, cake sheet, and flavour. Product photo coming soon.",
+      "imagePath": null,
+      "imageAlt": null
+    }
+  },
+  "knownDirectAccessRoutes": [
+    "/",
+    "/cakes",
+    "/cakes/chocolate-pound-cake-and-cupcakes",
+    "/cakes/pave-chocolate-cake",
+    "/cakes/chocolatiers-basque-cheesecake",
+    "/cakes/lemon-cake",
+    "/cakes/vanilla-fresh-cream-cake",
+    "/classes",
+    "/reviews",
+    "/cart",
+    "/reserve",
+    "/complete",
+    "/lookup",
+    "/class-reserve",
+    "/class-complete",
+    "/calendar",
+    "/review",
+    "/admin",
+    "/admin/login",
+    "/admin/reservations",
+    "/admin/classes",
+    "/admin/reviews"
+  ],
+  "noindexOperationalRoutes": [
+    "/cart",
+    "/reserve",
+    "/complete",
+    "/lookup",
+    "/class-reserve",
+    "/class-complete",
+    "/calendar",
+    "/review",
+    "/admin",
+    "/admin/login",
+    "/admin/reservations",
+    "/admin/classes",
+    "/admin/reviews"
+  ]
+}

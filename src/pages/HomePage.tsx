@@ -2,13 +2,9 @@ import { useCallback, useEffect, useState, type CSSProperties, type PointerEvent
 import { CalendarDays, ChevronLeft, ChevronRight, Clipboard, MessageCircleCheck, Wallet } from 'lucide-react'
 import heroCake2Img from '../assets/hero-cake-2.webp'
 import heroCake3Img from '../assets/hero-cake-3.webp'
-import paveCakeCardImg from '../assets/pave-side.webp'
-import poundCakeCardImg from '../assets/pound-side.webp'
 import basqueCheesecakeHeroImg from '../assets/basquecheesecake.webp'
-import basqueCheesecakeCardImg from '../assets/basquecheesecake-side.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import freshLemonCupcakesHeroImg from '../assets/lemoncake.webp'
-import freshLemonCupcakesCardImg from '../assets/lemoncake-side.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
@@ -20,12 +16,15 @@ import { cakeCopy, getProductFeatures, getProductText, type Language } from '../
 import { marketConfig } from '../lib/market'
 import type { ProductId, StoreSettings } from '../lib/types'
 import { formatCurrency } from '../lib/utils'
+import { getAuPublicContent } from '../lib/public-content'
+
+const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().home : null
 
 const catalogImages: Record<CakeCatalogImageKey, string> = {
-  'pound-cake': poundCakeCardImg,
-  'pave-cake': paveCakeCardImg,
-  'basque-cheesecake': basqueCheesecakeCardImg,
-  'lemon-cake': freshLemonCupcakesCardImg,
+  'pound-cake': '/products/chocolate-pound-cake-sydney.webp',
+  'pave-cake': '/products/pave-chocolate-cake-sydney.webp',
+  'basque-cheesecake': '/products/chocolatiers-basque-cheesecake-sydney.webp',
+  'lemon-cake': '/products/lemon-cake-sydney.webp',
   'vanilla-fresh-cream-cake': '',
 }
 
@@ -45,6 +44,7 @@ export function HomePage({
   cartItemCount: number
 }) {
   const copy = cakeCopy(language)
+  const orderingSteps = publicHomeContent?.orderingSteps ?? null
   const [activeHeroCake, setActiveHeroCake] = useState(1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
@@ -190,18 +190,39 @@ export function HomePage({
             <span>chocolat</span>
           </div>
           <div className="hero-copy">
-            <h1 className="hero-title">{copy.homeTitle}</h1>
+            <h1 className="hero-title">{language === 'en' && publicHomeContent ? publicHomeContent.h1 : copy.homeTitle}</h1>
             <p className="hero-description">
               {language === 'ko' ? (
                 <><strong>Very Good Chocolate</strong>이 만드는 소량 생산 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
+              ) : publicHomeContent ? (
+                <>{publicHomeContent.hero}<br /><span>{publicHomeContent.pickup}</span></>
               ) : (
                 <>Small-batch cakes made by <strong>Very Good Chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
               )}
             </p>
             <div className="hero-actions">
-              <button className="primary-button" type="button" onClick={() => navigateToCake('pave-chocolate-cake')}>
-                {language === 'ko' ? '파베 케이크 보기' : 'View Pave cake'}
-              </button>
+              {publicHomeContent ? publicHomeContent.ctas.map((cta, index) => (
+                <a
+                  className={index === 0 ? 'primary-button' : 'secondary-button'}
+                  href={cta.href}
+                  key={cta.href}
+                  onClick={(event) => {
+                    if (cta.href === '/cakes') {
+                      event.preventDefault()
+                      navigate('cakes')
+                    }
+                  }}
+                >
+                  {cta.label}
+                </a>
+              )) : (
+                <a className="primary-button" href="/cakes/pave-chocolate-cake" onClick={(event) => {
+                  event.preventDefault()
+                  navigateToCake('pave-chocolate-cake')
+                }}>
+                  {language === 'ko' ? '파베 케이크 보기' : 'View Pave cake'}
+                </a>
+              )}
             </div>
           </div>
           <div
@@ -233,7 +254,16 @@ export function HomePage({
                     data-position={position}
                     key={cake.label}
                   >
-                    <img src={cake.image} alt="" className={`hero-cake ${cake.className}`} draggable="false" />
+                    <img
+                      src={cake.image}
+                      alt=""
+                      width={1080}
+                      height={1012}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      className={`hero-cake ${cake.className}`}
+                      draggable="false"
+                    />
                     <span className={`hero-size-tag hero-size-tag-${cake.tagKey}`}>
                       {cake.label}
                     </span>
@@ -290,7 +320,16 @@ export function HomePage({
                   }}
                 >
                   <span className="product-image-wrap">
-                    {card.isPhotoComingSoon ? <VanillaFreshCreamCakeSilhouette /> : <img src={catalogImages[card.imageKey]} alt="" />}
+                    {card.isPhotoComingSoon ? <VanillaFreshCreamCakeSilhouette /> : (
+                      <img
+                        src={catalogImages[card.imageKey]}
+                        alt={card.name}
+                        width={1080}
+                        height={1012}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )}
                     {card.id === 'cheesecake' && (
                       <img
                         className="gluten-free-stamp"
@@ -301,16 +340,26 @@ export function HomePage({
                   </span>
                   <strong className="product-card-title">{card.name}</strong>
                   <span className="product-card-price">{card.priceLabel}</span>
+                  <ul className="product-card-price-details">
+                    {card.features.slice(0, 2).map((feature) => <li key={feature}>{feature}</li>)}
+                  </ul>
                 </button>
-                <button className="secondary-button full-width" type="button" onClick={() => navigateToCake(card.slug)}>
+                <a
+                  className="secondary-button full-width"
+                  href={`/cakes/${card.slug}`}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    navigateToCake(card.slug)
+                  }}
+                >
                   {language === 'ko' ? '옵션 선택' : 'Choose options'}
-                </button>
+                </a>
               </article>
             ))}
           </div>
         </section>
 
-        <section className="content-section policy-section" id="reservation-guide">
+        <section className="content-section policy-section" id={publicHomeContent ? 'how-ordering-works' : 'reservation-guide'}>
           <h2>{copy.reservationGuideTitle}</h2>
           <div className="policy-manual">
             <article className="policy-step">
@@ -319,8 +368,8 @@ export function HomePage({
                 <Clipboard size={28} strokeWidth={1.7} />
               </div>
               <div>
-                <strong>{copy.guideSteps[0].title}</strong>
-                <p>{copy.guideSteps[0].text}</p>
+                <strong>{orderingSteps ? 'Choose a cake and options' : copy.guideSteps[0].title}</strong>
+                <p>{orderingSteps ? orderingSteps[0] : copy.guideSteps[0].text}</p>
               </div>
             </article>
             <article className="policy-step">
@@ -329,8 +378,8 @@ export function HomePage({
                 <MessageCircleCheck size={28} strokeWidth={1.7} />
               </div>
               <div>
-                <strong>{copy.guideSteps[1].title}</strong>
-                <p>{copy.guideSteps[1].text}</p>
+                <strong>{orderingSteps ? 'Send a request' : copy.guideSteps[1].title}</strong>
+                <p>{orderingSteps ? orderingSteps[1] : copy.guideSteps[1].text}</p>
               </div>
             </article>
             <article className="policy-step">
@@ -339,8 +388,8 @@ export function HomePage({
                 <Wallet size={28} strokeWidth={1.7} />
               </div>
               <div>
-                <strong>{copy.guideSteps[2].title}</strong>
-                <p>{copy.guideSteps[2].text}</p>
+                <strong>{orderingSteps ? 'Receive payment details' : copy.guideSteps[2].title}</strong>
+                <p>{orderingSteps ? orderingSteps[2] : copy.guideSteps[2].text}</p>
               </div>
             </article>
             <article className="policy-step">
@@ -349,8 +398,10 @@ export function HomePage({
                 <CalendarDays size={28} strokeWidth={1.7} />
               </div>
               <div>
-                <strong>{copy.guideSteps[3].title}</strong>
-                {marketConfig.market === 'AU' ? (
+                <strong>{orderingSteps ? 'Pre-arranged pickup' : copy.guideSteps[3].title}</strong>
+                {orderingSteps ? (
+                  <p>{orderingSteps[3]}</p>
+                ) : marketConfig.market === 'AU' ? (
                   <p>
                     {copy.pickupHours[0]}
                     <br />
@@ -391,22 +442,31 @@ export function HomePage({
         <section className="content-section cake-faq-section" aria-labelledby="cake-faq-title">
           <h2 id="cake-faq-title">{language === 'ko' ? '시드니 케이크 주문 FAQ' : 'Sydney cake order FAQ'}</h2>
           <div className="cake-faq-list">
-            <details>
-              <summary>{language === 'ko' ? '케이크는 어디서 픽업하나요?' : 'Where do I pick up my cake?'}</summary>
-              <p>{language === 'ko' ? 'Sydney Melrose Park에서 사전 약속 픽업으로 진행됩니다. 방문 매장은 없으며 주문 확정 후 Jenny가 정확한 전달 방법을 안내해 드려요.' : 'Pick-up is arranged in Melrose Park, Sydney. There is no walk-in shop, so Jenny sends the exact meeting details after confirming your order.'}</p>
-            </details>
-            <details>
-              <summary>{language === 'ko' ? '신청서를 보내면 바로 주문이 확정되나요?' : 'Is submitting the form a confirmed order?'}</summary>
-              <p>{language === 'ko' ? '아니요. Jenny가 먼저 가능 여부를 확인하고 결제 정보를 보내드립니다. 입금이 확인되면 주문이 최종 확정됩니다.' : 'No. Jenny first checks availability and sends payment details. Your order is confirmed after payment is received.'}</p>
-            </details>
-            <details>
-              <summary>{language === 'ko' ? '어떤 초콜릿 케이크를 주문할 수 있나요?' : 'Which chocolate cakes can I order?'}</summary>
-              <p>{language === 'ko' ? '파베 초콜릿 케이크, 파운드케이크 또는 컵케이크 1다스, 초코 바스크와 파베초코 바스크 치즈케이크를 신청할 수 있습니다.' : 'You can request pave chocolate cake, pound cake or a dozen cupcakes, and chocolate Basque cheesecake with either a classic or pave chocolate finish.'}</p>
-            </details>
-            <details>
-              <summary>{language === 'ko' ? '시드니 배송이나 방문 구매가 가능한가요?' : 'Do you offer Sydney delivery or walk-in sales?'}</summary>
-              <p>{language === 'ko' ? '현재는 제공하지 않습니다. Melrose Park 사전 약속 픽업 주문만 받고 있습니다.' : 'Not currently. Orders are made for pre-arranged pick-up in Melrose Park only.'}</p>
-            </details>
+            {publicHomeContent ? publicHomeContent.faq.map((item) => (
+              <details key={item.question}>
+                <summary>{item.question}</summary>
+                <p>{item.answer}</p>
+              </details>
+            )) : (
+              <>
+                <details>
+                  <summary>{language === 'ko' ? '케이크는 어디서 픽업하나요?' : 'Where do I pick up my cake?'}</summary>
+                  <p>{language === 'ko' ? 'Sydney Melrose Park에서 사전 약속 픽업으로 진행됩니다. 방문 매장은 없으며 주문 확정 후 Jenny가 정확한 전달 방법을 안내해 드려요.' : 'Pick-up is arranged in Melrose Park, Sydney. There is no walk-in shop, so Jenny sends the exact meeting details after confirming your order.'}</p>
+                </details>
+                <details>
+                  <summary>{language === 'ko' ? '신청서를 보내면 바로 주문이 확정되나요?' : 'Is submitting the form a confirmed order?'}</summary>
+                  <p>{language === 'ko' ? '아니요. Jenny가 먼저 가능 여부를 확인하고 결제 정보를 보내드립니다. 입금이 확인되면 주문이 최종 확정됩니다.' : 'No. Jenny first checks availability and sends payment details. Your order is confirmed after payment is received.'}</p>
+                </details>
+                <details>
+                  <summary>{language === 'ko' ? '어떤 초콜릿 케이크를 주문할 수 있나요?' : 'Which chocolate cakes can I order?'}</summary>
+                  <p>{language === 'ko' ? '파베 초콜릿 케이크, 파운드케이크 또는 컵케이크 1다스, 초코 바스크와 파베초코 바스크 치즈케이크를 신청할 수 있습니다.' : 'You can request pave chocolate cake, pound cake or a dozen cupcakes, and chocolate Basque cheesecake with either a classic or pave chocolate finish.'}</p>
+                </details>
+                <details>
+                  <summary>{language === 'ko' ? '시드니 배송이나 방문 구매가 가능한가요?' : 'Do you offer Sydney delivery or walk-in sales?'}</summary>
+                  <p>{language === 'ko' ? '현재는 제공하지 않습니다. Melrose Park 사전 약속 픽업 주문만 받고 있습니다.' : 'Not currently. Orders are made for pre-arranged pick-up in Melrose Park only.'}</p>
+                </details>
+              </>
+            )}
           </div>
         </section>
 
@@ -435,9 +495,16 @@ export function HomePage({
           }}
         />
       )}
-      <button className="sticky-cta" type="button" onClick={() => navigateToCake('pave-chocolate-cake')}>
+      <a
+        className="sticky-cta"
+        href="/cakes/pave-chocolate-cake"
+        onClick={(event) => {
+          event.preventDefault()
+          navigateToCake('pave-chocolate-cake')
+        }}
+      >
         {language === 'ko' ? '케이크 자세히 보기' : 'View cake details'}
-      </button>
+      </a>
     </>
   )
 }

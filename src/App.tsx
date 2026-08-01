@@ -18,6 +18,7 @@ import { ClassesPage } from './pages/ClassesPage'
 import { CompletePage } from './pages/CompletePage'
 import { HomePage } from './pages/HomePage'
 import { LookupPage } from './pages/LookupPage'
+import { NotFoundPage } from './pages/NotFoundPage'
 import { ReservePage } from './pages/ReservePage'
 import { getCakeSlugFromPath, getPageFromPath, pathForCake, pathForPage, type Page } from './lib/app-routes'
 import { type CakeDetailSelection } from './lib/cake-detail'
@@ -194,6 +195,12 @@ function App() {
       {!isPrivatePage && <AnnouncementTicker language={language} />}
 
       {page === 'home' && <HomePage navigate={navigate} settings={settings} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
+      {page === 'not-found' && (
+        <>
+          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
+          <NotFoundPage language={language} />
+        </>
+      )}
       {page === 'cakes' && (
         <>
           <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />

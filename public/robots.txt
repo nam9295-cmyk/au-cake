@@ -1,9 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /complete
-Disallow: /class-complete
-Disallow: /lookup
 
 User-agent: OAI-SearchBot
 Allow: /

@@ -1,15 +1,11 @@
-import poundImg from './assets/pound-side.webp'
-import paveImg from './assets/pave-side.webp'
-import cheesecakeImg from './assets/basquecheesecake-side.webp'
-import lemonImg from './assets/lemoncake-side.webp'
 import { getAuCakeCatalogCards, type CakeCatalogImageKey } from './lib/cake-catalog'
 import type { Language } from './lib/i18n'
 
 const cakeListImages: Record<CakeCatalogImageKey, string> = {
-  'pound-cake': poundImg,
-  'pave-cake': paveImg,
-  'basque-cheesecake': cheesecakeImg,
-  'lemon-cake': lemonImg,
+  'pound-cake': '/products/chocolate-pound-cake-sydney.webp',
+  'pave-cake': '/products/pave-chocolate-cake-sydney.webp',
+  'basque-cheesecake': '/products/chocolatiers-basque-cheesecake-sydney.webp',
+  'lemon-cake': '/products/lemon-cake-sydney.webp',
   'vanilla-fresh-cream-cake': '',
 }
 
@@ -34,17 +30,31 @@ export default function CakesPage({
       <section className="cakes-index-grid" aria-label={language === 'ko' ? '케이크 목록' : 'Cake catalogue'}>
         {cards.map((card, index) => (
           <article className="cakes-index-card" key={card.slug}>
-            <button type="button" className="cakes-index-image" onClick={() => onOpenCake(card.slug)}>
+            <a
+              href={`/cakes/${card.slug}`}
+              className="cakes-index-image"
+              onClick={(event) => {
+                event.preventDefault()
+                onOpenCake(card.slug)
+              }}
+            >
               {card.isPhotoComingSoon ? (
                 <span className="cakes-index-coming-soon">
                   <b>COMING SOON</b>
                   <small>{language === 'ko' ? '사진 준비 중 · 주문 가능' : 'Photo pending · Available to request'}</small>
                 </span>
               ) : (
-                <img src={cakeListImages[card.imageKey]} alt={card.name} />
+                <img
+                  src={cakeListImages[card.imageKey]}
+                  alt={card.name}
+                  width={1080}
+                  height={1012}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
               )}
               <span className="cakes-index-number">0{index + 1}</span>
-            </button>
+            </a>
             <div className="cakes-index-copy">
               <h2>{card.name}</h2>
               <p>{card.description}</p>
@@ -52,9 +62,16 @@ export default function CakesPage({
                 <strong>{card.priceLabel}</strong>
                 <span>{card.optionLabel}</span>
               </div>
-              <button type="button" className="secondary-button" onClick={() => onOpenCake(card.slug)}>
+              <a
+                href={`/cakes/${card.slug}`}
+                className="secondary-button"
+                onClick={(event) => {
+                  event.preventDefault()
+                  onOpenCake(card.slug)
+                }}
+              >
                 {language === 'ko' ? '상세 보기' : 'View details'}
-              </button>
+              </a>
             </div>
           </article>
         ))}

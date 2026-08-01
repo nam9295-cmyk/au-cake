@@ -1,14 +1,11 @@
 import { getCakeDetailBySlug } from './cake-detail.js'
 import { getAuCakeCatalog } from './cake-catalog.js'
 import {
-  CUPCAKE_PACK_SIZE,
-  getFreshLemonCupcakePackSize,
-  getProductById,
-  getReservationUnitPrice,
-} from './constants.js'
-import type { ProductId } from './types.js'
-
-const SITE_URL = 'https://au.verygood-chocolate.com'
+  getPublicCakePage,
+  getAuPublicContent,
+  SITE_URL,
+} from './public-content.js'
+import type { PublicCakePage } from './public-content.js'
 
 type SeoConfig = {
   title: string
@@ -23,7 +20,7 @@ type SeoConfig = {
 const organization: Record<string, unknown> = {
   '@type': 'Organization',
   '@id': `${SITE_URL}/#organization`,
-  name: 'Verygood Chocolate',
+  name: 'Very Good Chocolate',
   alternateName: 'Very Good Chocolate Sydney',
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.png`,
@@ -32,13 +29,6 @@ const organization: Record<string, unknown> = {
     '@type': 'City',
     name: 'Sydney',
   },
-}
-
-const PRODUCT_IMAGES: Record<string, string> = {
-  'chocolate-pound-cake-and-cupcakes': `${SITE_URL}/products/chocolate-pound-cake.jpg`,
-  'pave-chocolate-cake': `${SITE_URL}/products/pave-chocolate-cake.jpg`,
-  'chocolatiers-basque-cheesecake': `${SITE_URL}/products/chocolatiers-basque-cheesecake.jpg`,
-  'lemon-cake': `${SITE_URL}/products/lemon-cake.jpg`,
 }
 
 const cakeListItems = getAuCakeCatalog().map((entry, index) => {
@@ -73,8 +63,8 @@ function getBreadcrumbList(pathname: string, name: string): Record<string, unkno
 
 const publicSeo: Record<string, SeoConfig> = {
   '/': {
-    title: 'Made-to-Order Chocolate Cakes Sydney | Verygood Chocolate',
-    description: 'Order small-batch chocolate, Basque, lemon and fresh cream cakes for pre-arranged pick-up in Melrose Park, Sydney.',
+    title: getAuPublicContent().home.title,
+    description: getAuPublicContent().home.description,
     canonical: SITE_URL,
     structuredData: [
       organization,
@@ -139,69 +129,62 @@ const publicSeo: Record<string, SeoConfig> = {
   },
 }
 
-function getProductSeoPrices(productId: ProductId) {
-  const product = getProductById(productId)
-  const sizePrices = Object.values(product.sizePrices || {}).filter((price): price is number => typeof price === 'number')
-  const prices = sizePrices.length > 0 ? [...sizePrices] : [product.price]
+function productFromPublicPage(pathname: string, page: PublicCakePage): SeoConfig {
+  const image = page.imagePath ? `${SITE_URL}${page.imagePath}` : undefined
+  const breadcrumb = getBreadcrumbList(pathname, page.name)
 
-  if (productId === 'pound-cake') {
-    prices.push(getReservationUnitPrice(productId, { poundAddon: 'extra-chocolate' }))
-  } else if (productId === 'cupcake-dozen') {
-    prices.push(getReservationUnitPrice(productId, {
-      vanillaCreamCount: 0,
-      partyDecorationCount: CUPCAKE_PACK_SIZE,
-    }))
-  } else {
-    const packSize = getFreshLemonCupcakePackSize(productId)
-    if (packSize) prices.push(getReservationUnitPrice(productId, { chocolateIcingCount: packSize }))
+  if (page.schema === 'webpage-only') {
+    return {
+      title: `${page.name} Sydney | Very Good Chocolate`,
+      description: page.priceSummary,
+      canonical: `${SITE_URL}${pathname}`,
+      ogType: 'website',
+      ...(image ? { image } : {}),
+      structuredData: [
+        {
+          '@type': 'WebPage',
+          '@id': `${SITE_URL}${pathname}#webpage`,
+          name: page.name,
+          description: page.priceSummary,
+          url: `${SITE_URL}${pathname}`,
+        },
+        breadcrumb,
+      ],
+    }
   }
 
-  return prices
+  const product: Record<string, unknown> = {
+    '@type': 'Product',
+    '@id': `${SITE_URL}${pathname}#product`,
+    name: page.name,
+    description: page.priceSummary,
+    ...(image ? { image } : {}),
+    brand: { '@type': 'Brand', name: 'Very Good Chocolate' },
+    category: 'Made-to-order cake',
+    offers: {
+      '@type': 'Offer',
+      url: `${SITE_URL}${pathname}`,
+      priceCurrency: 'AUD',
+      price: page.startingPrice,
+      seller: { '@type': 'Organization', name: 'Very Good Chocolate', url: SITE_URL },
+    },
+  }
+
+  return {
+    title: `${page.name} Sydney | Very Good Chocolate`,
+    description: page.priceSummary,
+    canonical: `${SITE_URL}${pathname}`,
+    ogType: 'product',
+    ...(image ? { image } : {}),
+    structuredData: [product, breadcrumb],
+  }
 }
 
 function getCakeDetailSeo(pathname: string): SeoConfig | null {
   const match = /^\/cakes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(pathname)
   if (!match) return null
-  const slug = match[1]
-  const detail = getCakeDetailBySlug(slug, 'en')
-  if (!detail) return null
-
-  const prices = detail.productIds.flatMap(getProductSeoPrices)
-  const uniquePrices = [...new Set(prices)]
-  const lowPrice = Math.min(...uniquePrices)
-  const highPrice = Math.max(...uniquePrices)
-  const image = PRODUCT_IMAGES[slug]
-  const product: Record<string, unknown> = {
-    '@type': 'Product',
-    '@id': `${SITE_URL}${pathname}#product`,
-    name: detail.name,
-    description: detail.description,
-    ...(image ? { image } : {}),
-    brand: { '@id': `${SITE_URL}/#organization` },
-    category: 'Made-to-order cake',
-    offers: {
-      '@type': lowPrice === highPrice ? 'Offer' : 'AggregateOffer',
-      url: `${SITE_URL}${pathname}`,
-      priceCurrency: 'AUD',
-      ...(lowPrice === highPrice
-        ? { price: lowPrice }
-        : { lowPrice, highPrice }),
-      seller: { '@id': `${SITE_URL}/#organization` },
-    },
-  }
-
-  return {
-    title: `${detail.name} Sydney | Verygood Chocolate`,
-    description: detail.description,
-    canonical: `${SITE_URL}${pathname}`,
-    ogType: 'product',
-    ...(image ? { image } : {}),
-    structuredData: [
-      organization,
-      product,
-      getBreadcrumbList(pathname, detail.name),
-    ],
-  }
+  const page = getPublicCakePage(match[1])
+  return page ? productFromPublicPage(pathname, page) : null
 }
 
 const privateSeo: Record<string, SeoConfig> = {

@@ -1,18 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
-import poundSideImg from './assets/pound-side.webp'
 import poundHeroImg from './assets/hero-cake-3.webp'
-import cupcakeSideImg from './assets/cupcake-side.webp'
 import cupcakeHeroImg from './assets/cupcake-hero.webp'
-import paveSideImg from './assets/pave-side.webp'
 import paveHeroImg from './assets/hero-cake-2.webp'
 import paveCardImg from './assets/pave-cake-card.jpg'
 import paveSliceImg from './assets/chocolate-cake-slice.jpg'
 import paveSlicesImg from './assets/chocolate-cake-eight-slices.jpg'
 import cheesecakeHeroImg from './assets/basquecheesecake.webp'
-import cheesecakeSideImg from './assets/basquecheesecake-side.webp'
 import lemonHeroImg from './assets/lemoncake.webp'
-import lemonSideImg from './assets/lemoncake-side.webp'
 import {
   CAKE_SIZE_OPTIONS,
   CHOCOLATE_TYPE_OPTIONS,
@@ -42,19 +37,35 @@ import { formatCurrency } from './lib/utils'
 import type { ProductId } from './lib/types'
 
 const detailImages: Record<CakeDetailImageKey, string> = {
-  'pound-side': poundSideImg,
+  'pound-side': '/products/chocolate-pound-cake-sydney.webp',
   'pound-hero': poundHeroImg,
-  'cupcake-side': cupcakeSideImg,
+  'cupcake-side': '/products/chocolate-cupcakes-sydney.webp',
   'cupcake-hero': cupcakeHeroImg,
-  'pave-side': paveSideImg,
+  'pave-side': '/products/pave-chocolate-cake-sydney.webp',
   'pave-hero': paveHeroImg,
   'pave-card': paveCardImg,
   'pave-slice': paveSliceImg,
   'pave-slices': paveSlicesImg,
   'cheesecake-hero': cheesecakeHeroImg,
-  'cheesecake-side': cheesecakeSideImg,
+  'cheesecake-side': '/products/chocolatiers-basque-cheesecake-sydney.webp',
   'lemon-hero': lemonHeroImg,
-  'lemon-side': lemonSideImg,
+  'lemon-side': '/products/lemon-cake-sydney.webp',
+}
+
+const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height: number }> = {
+  'pound-side': { width: 1080, height: 1012 },
+  'pound-hero': { width: 1080, height: 1012 },
+  'cupcake-side': { width: 1080, height: 1012 },
+  'cupcake-hero': { width: 1448, height: 1086 },
+  'pave-side': { width: 1080, height: 1012 },
+  'pave-hero': { width: 1080, height: 1012 },
+  'pave-card': { width: 560, height: 520 },
+  'pave-slice': { width: 1122, height: 1402 },
+  'pave-slices': { width: 1000, height: 1000 },
+  'cheesecake-hero': { width: 1080, height: 1012 },
+  'cheesecake-side': { width: 1080, height: 1012 },
+  'lemon-hero': { width: 1080, height: 1012 },
+  'lemon-side': { width: 1080, height: 1012 },
 }
 
 type CakeDetailPageProps = {
@@ -163,7 +174,14 @@ export default function CakeDetailPage({
         <div className="cake-detail-gallery">
           <div className="cake-detail-main-image">
             {currentImageKey ? (
-              <img src={detailImages[currentImageKey]} alt={`${detail.name} · ${activeImage + 1} of ${galleryCount}`} />
+              <img
+                src={detailImages[currentImageKey]}
+                alt={`${detail.name} · ${activeImage + 1} of ${galleryCount}`}
+                width={detailImageDimensions[currentImageKey].width}
+                height={detailImageDimensions[currentImageKey].height}
+                loading="eager"
+                decoding="async"
+              />
             ) : (
               <div className="cake-detail-photo-coming" role="img" aria-label={`${detail.name} photo coming soon`}>
                 <span>COMING SOON</span>
@@ -204,7 +222,14 @@ export default function CakeDetailPage({
                   onClick={() => setActiveImage(index)}
                   key={`${imageKey}-${index}`}
                 >
-                  <img src={detailImages[imageKey]} alt="" />
+                  <img
+                    src={detailImages[imageKey]}
+                    alt=""
+                    width={detailImageDimensions[imageKey].width}
+                    height={detailImageDimensions[imageKey].height}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </button>
               ))}
             </div>

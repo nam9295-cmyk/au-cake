@@ -1,144 +1,213 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
 
-const siteUrl = 'https://au.verygood-chocolate.com'
+const siteUrl = auPublicPages.site.url
 const distDir = join(process.cwd(), 'dist')
 const defaultSocialImage = `${siteUrl}/og-image.jpg`
 
 const organization = {
   '@type': 'Organization',
   '@id': `${siteUrl}/#organization`,
-  name: 'Verygood Chocolate',
+  name: auPublicPages.site.brandDisplay,
   alternateName: 'Very Good Chocolate Sydney',
   url: siteUrl,
   logo: `${siteUrl}/favicon.png`,
-  description: 'Small-batch, made-to-order cakes for pre-arranged pick-up in Melrose Park, Sydney.',
+  description: 'Small-batch, made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.',
   areaServed: { '@type': 'City', name: 'Sydney' },
 }
 
-const cakeDetails = [
-  {
-    slug: 'chocolate-pound-cake-and-cupcakes',
-    name: 'Chocolate Pound Cake & Cupcakes',
-    description: 'Choose the pound cake, or make it a dozen cupcakes for AUD 10 more.',
-    image: `${siteUrl}/products/chocolate-pound-cake.jpg`,
-    prices: [45, 55, 67],
-    priceSummary: 'Chocolate Pound Cake AUD 45; Chocolate Cupcakes (1 dozen) AUD 55.',
-    optionSummary: 'Choose a pound cake or one dozen cupcakes, then choose the available finish. Paid finishes can increase the final price.',
-  },
-  {
-    slug: 'pave-chocolate-cake',
-    name: 'Pave Chocolate Cake',
-    description: 'A round chocolate cake layered with soft pave ganache and chocolate sponge. Dense, smooth and made for serious chocolate flavour.',
-    image: `${siteUrl}/products/pave-chocolate-cake.jpg`,
-    prices: [75, 95, 115],
-    priceSummary: '6 inch, serves 8: AUD 75; 7.5 inch, serves 14: AUD 95; 9 inch, serves 22: AUD 115.',
-    optionSummary: 'Choose a size and dark or milk chocolate.',
-  },
-  {
-    slug: 'chocolatiers-basque-cheesecake',
-    name: "Chocolatier's Basque Cheesecake",
-    description: 'Choose classic, pave chocolate on top, or a full pave chocolate finish with one Eiffel Tower chocolate.',
-    image: `${siteUrl}/products/chocolatiers-basque-cheesecake.jpg`,
-    prices: [55, 65, 75],
-    priceSummary: 'Classic AUD 55; pave chocolate on top AUD 65; full pave chocolate finish with one Eiffel Tower chocolate AUD 75.',
-    optionSummary: 'One gluten-free 6 inch cake serving about 8, with three finishing options.',
-  },
-  {
-    slug: 'lemon-cake',
-    name: 'Lemon Cake',
-    description: 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
-    image: `${siteUrl}/products/lemon-cake.jpg`,
-    prices: [36, 45, 65, 85, 93],
-    priceSummary: '6 pieces AUD 36; 8 pieces AUD 45; 12 pieces AUD 65; 16 pieces AUD 85.',
-    optionSummary: 'Boxes of 6, 8, 12 or 16. The 12-piece box is Most Popular. Choose the finishing mix.',
-  },
-  {
-    slug: 'vanilla-fresh-cream-cake',
-    name: 'Vanilla Fresh Cream Cake',
-    description: 'Choose vanilla or chocolate cake sheet with vanilla fresh cream, then Triple berry or Nutella chocolate chip flavour.',
-    prices: [75, 98, 139],
-    priceSummary: '6 inch, serves 8: AUD 75; 7.5 inch, serves 14: AUD 98; 9 inch, serves 22: AUD 139.',
-    optionSummary: 'Choose a size, vanilla or chocolate cake sheet, and Triple berry or Nutella chocolate chip flavour. Product photo is coming soon.',
-  },
-]
-
-const cakeListItems = cakeDetails.map((cake, index) => ({
+const cakeEntries = Object.entries(auPublicPages.cakePages).map(([slug, page]) => ({ slug, ...page }))
+const cakeListItems = cakeEntries.map((cake, index) => ({
   '@type': 'ListItem',
   position: index + 1,
   name: cake.name,
   url: `${siteUrl}/cakes/${cake.slug}`,
 }))
-
 const cakeItemList = {
   '@type': 'ItemList',
   '@id': `${siteUrl}/cakes#item-list`,
-  name: 'Verygood Chocolate Sydney cake catalogue',
+  name: 'Very Good Chocolate Sydney cake catalogue',
   numberOfItems: cakeListItems.length,
   itemListElement: cakeListItems,
+}
+
+function canonicalFor(path) {
+  return path === '/' ? siteUrl : `${siteUrl}${path}`
+}
+
+function imageFor(page) {
+  return page.imagePath ? `${siteUrl}${page.imagePath}` : undefined
 }
 
 function breadcrumb(path, name) {
   return {
     '@type': 'BreadcrumbList',
-    '@id': `${siteUrl}${path}#breadcrumb`,
+    '@id': `${canonicalFor(path)}#breadcrumb`,
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
       { '@type': 'ListItem', position: 2, name: 'Cakes', item: `${siteUrl}/cakes` },
-      { '@type': 'ListItem', position: 3, name, item: `${siteUrl}${path}` },
+      { '@type': 'ListItem', position: 3, name, item: canonicalFor(path) },
     ],
   }
 }
 
 function productSchema(cake, path) {
-  const lowPrice = Math.min(...cake.prices)
-  const highPrice = Math.max(...cake.prices)
   return {
     '@type': 'Product',
-    '@id': `${siteUrl}${path}#product`,
+    '@id': `${canonicalFor(path)}#product`,
     name: cake.name,
-    description: cake.description,
-    ...(cake.image ? { image: cake.image } : {}),
-    brand: { '@id': `${siteUrl}/#organization` },
+    description: cake.priceSummary,
+    ...(imageFor(cake) ? { image: imageFor(cake) } : {}),
+    brand: { '@type': 'Brand', name: auPublicPages.site.brandDisplay },
     category: 'Made-to-order cake',
     offers: {
-      '@type': lowPrice === highPrice ? 'Offer' : 'AggregateOffer',
-      url: `${siteUrl}${path}`,
+      '@type': 'Offer',
+      url: canonicalFor(path),
       priceCurrency: 'AUD',
-      ...(lowPrice === highPrice
-        ? { price: lowPrice }
-        : { lowPrice, highPrice }),
-      seller: { '@id': `${siteUrl}/#organization` },
+      price: cake.startingPrice,
+      seller: { '@type': 'Organization', name: auPublicPages.site.brandDisplay, url: siteUrl },
     },
   }
 }
 
-const cakeRoutePages = Object.fromEntries(cakeDetails.map((cake) => {
-  const path = `/cakes/${cake.slug}`
-  return [path, {
-    title: `${cake.name} Sydney | Verygood Chocolate`,
-    description: cake.description,
-    robots: 'index, follow',
-    ogType: 'product',
-    image: cake.image,
-    structuredData: [organization, productSchema(cake, path), breadcrumb(path, cake.name)],
-    fallbackHtml: `
+function cakeFallback(cake, path) {
+  const image = imageFor(cake)
+  return `
       <main class="seo-fallback">
         <p><a href="/cakes">View all cakes</a></p>
-        <h1>${cake.name}</h1>
-        <p>${cake.description}</p>
-        <p><strong>Price guide:</strong> ${cake.priceSummary}</p>
-        <p><strong>Options:</strong> ${cake.optionSummary}</p>
-        <p>Made to order for pre-arranged pick-up in Melrose Park, Sydney. Jenny confirms availability and payment details after your request.</p>
-        <p><a href="/reserve" rel="nofollow">Request this cake</a></p>
-      </main>`,
-  }]
-}))
+        <h1>${escapeHtml(cake.name)}</h1>
+        ${image ? `<p><img src="${image}" alt="${escapeHtml(cake.imageAlt)}" width="1080" height="1012" loading="eager" decoding="async" /></p>` : ''}
+        <p><strong>Price guide:</strong> ${escapeHtml(cake.priceSummary)}</p>
+        <p><strong>Options:</strong> ${escapeHtml(cake.optionSummary)}</p>
+        <p>Made to order for pre-arranged pickup in Melrose Park, Sydney. Availability is checked after your request and payment is confirmed separately.</p>
+        <p><a href="/reserve">Request this cake</a></p>
+      </main>`
+}
+
+function cakePageConfig(cake) {
+  const path = `/cakes/${cake.slug}`
+  const image = imageFor(cake)
+  const isWebPageOnly = cake.schema === 'webpage-only'
+  return {
+    title: `${cake.name} Sydney | Very Good Chocolate`,
+    description: cake.priceSummary,
+    robots: 'index, follow',
+    ogType: isWebPageOnly ? 'website' : 'product',
+    ...(image ? { image, imageWidth: 1080, imageHeight: 1012 } : {}),
+    structuredData: isWebPageOnly
+      ? [
+          {
+            '@type': 'WebPage',
+            '@id': `${canonicalFor(path)}#webpage`,
+            name: cake.name,
+            description: cake.priceSummary,
+            url: canonicalFor(path),
+          },
+          breadcrumb(path, cake.name),
+        ]
+      : [productSchema(cake, path), breadcrumb(path, cake.name)],
+    fallbackHtml: cakeFallback(cake, path),
+  }
+}
+
+const privatePages = {
+  '/cart': {
+    title: 'Your Cart | Very Good Chocolate',
+    description: 'Review your selected cakes before sending one cake request to Very Good Chocolate Sydney.',
+  },
+  '/reserve': {
+    title: 'Request a Chocolate Cake | Very Good Chocolate',
+    description: 'Submit a cake booking request to Very Good Chocolate Sydney.',
+  },
+  '/complete': {
+    title: 'Cake Request Received | Very Good Chocolate',
+    description: 'Your cake request has been received.',
+  },
+  '/lookup': {
+    title: 'Find Your Booking | Very Good Chocolate',
+    description: 'Look up an existing Very Good Chocolate booking.',
+  },
+  '/class-reserve': {
+    title: 'Request a Kids Cake Class | Very Good Chocolate',
+    description: 'Submit a private kids cake class booking request.',
+  },
+  '/class-complete': {
+    title: 'Class Request Received | Very Good Chocolate',
+    description: 'Your kids cake class request has been received.',
+  },
+  '/calendar': {
+    title: 'Private Schedule | Very Good Chocolate',
+    description: 'Private read-only booking schedule.',
+  },
+  '/review': {
+    title: 'Share Your Review | Very Good Chocolate',
+    description: 'Share private feedback about your Very Good Chocolate experience.',
+  },
+  '/admin': {
+    title: 'Admin | Very Good Chocolate',
+    description: 'Very Good Chocolate administration.',
+  },
+  '/admin/login': {
+    title: 'Admin Login | Very Good Chocolate',
+    description: 'Very Good Chocolate administration login.',
+  },
+  '/admin/reservations': {
+    title: 'Cake Reservations Admin | Very Good Chocolate',
+    description: 'Very Good Chocolate cake reservation administration.',
+  },
+  '/admin/classes': {
+    title: 'Class Reservations Admin | Very Good Chocolate',
+    description: 'Very Good Chocolate class reservation administration.',
+  },
+  '/admin/reviews': {
+    title: 'Review Moderation Admin | Very Good Chocolate',
+    description: 'Private review moderation administration.',
+  },
+}
+
+const homeFallback = `
+      <main class="seo-fallback">
+        <h1>${escapeHtml(auPublicPages.home.h1)}</h1>
+        <p>${escapeHtml(auPublicPages.home.hero)}</p>
+        <p><strong>${escapeHtml(auPublicPages.home.pickup)}</strong></p>
+        <p><a href="/cakes">Browse Chocolate Cakes</a></p>
+        <section id="how-ordering-works">
+          <h2>How ordering works</h2>
+          <ol>${auPublicPages.home.orderingSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>
+        </section>
+        <section>
+          <h2>Chocolate cakes available to request</h2>
+          <ul>${cakeEntries.map((cake) => `<li><a href="/cakes/${cake.slug}">${escapeHtml(cake.name)}</a> — ${escapeHtml(cake.priceSummary)}</li>`).join('')}</ul>
+        </section>
+        <section>
+          <h2>Sydney cake order FAQ</h2>
+          ${auPublicPages.home.faq.map((item) => `<article><h3>${escapeHtml(item.question)}</h3><p>${escapeHtml(item.answer)}</p></article>`).join('')}
+        </section>
+      </main>`
 
 const pages = {
+  '/': {
+    title: auPublicPages.home.title,
+    description: auPublicPages.home.description,
+    robots: 'index, follow',
+    structuredData: [
+      organization,
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: siteUrl,
+        name: 'Very Good Chocolate Sydney',
+        publisher: { '@id': `${siteUrl}/#organization` },
+        inLanguage: auPublicPages.site.language,
+      },
+      cakeItemList,
+    ],
+    fallbackHtml: homeFallback,
+  },
   '/cakes': {
-    title: 'Made-to-Order Cakes Sydney | Verygood Chocolate',
-    description: 'Browse five small-batch cakes and request confirmed pick-up in Melrose Park, Sydney.',
+    title: 'Made-to-Order Cakes Sydney | Very Good Chocolate',
+    description: 'Browse five small-batch cakes and request confirmed pickup in Melrose Park, Sydney.',
     robots: 'index, follow',
     structuredData: [
       organization,
@@ -146,7 +215,7 @@ const pages = {
         '@type': 'CollectionPage',
         '@id': `${siteUrl}/cakes#collection`,
         name: 'Made-to-Order Cakes Sydney',
-        description: 'Browse five small-batch cakes and request confirmed pick-up in Melrose Park, Sydney.',
+        description: 'Browse five small-batch cakes and request confirmed pickup in Melrose Park, Sydney.',
         url: `${siteUrl}/cakes`,
         mainEntity: `${siteUrl}/cakes#item-list`,
       },
@@ -155,48 +224,12 @@ const pages = {
     fallbackHtml: `
       <main class="seo-fallback">
         <h1>Choose Your Cake</h1>
-        <p>Browse five made-to-order cakes for pre-arranged pick-up in Melrose Park, Sydney.</p>
-        <ul>
-          ${cakeDetails.map((cake) => `<li><a href="/cakes/${cake.slug}">${cake.name}</a> — ${cake.priceSummary}</li>`).join('\n          ')}
-        </ul>
-      </main>`,
-  },
-  ...cakeRoutePages,
-  '/': {
-    title: 'Made-to-Order Chocolate Cakes Sydney | Verygood Chocolate',
-    description: 'Order small-batch chocolate, Basque, lemon and fresh cream cakes for pre-arranged pick-up in Melrose Park, Sydney.',
-    robots: 'index, follow',
-    structuredData: [
-      organization,
-      {
-        '@type': 'WebSite',
-        '@id': `${siteUrl}/#website`,
-        url: siteUrl,
-        name: 'Verygood Chocolate Sydney',
-        publisher: { '@id': `${siteUrl}/#organization` },
-        inLanguage: 'en-AU',
-      },
-      cakeItemList,
-    ],
-    fallbackHtml: `
-      <main class="seo-fallback">
-        <h1>Sydney Made-to-Order Cakes</h1>
-        <p>Verygood Chocolate makes small-batch cakes for confirmed, pre-arranged pick-up in Melrose Park, Sydney. This is a home-baking service without a walk-in shop or delivery.</p>
-        <section>
-          <h2>Cakes available to request</h2>
-          <ul>
-            ${cakeDetails.map((cake) => `<li><a href="/cakes/${cake.slug}">${cake.name}</a> — ${cake.priceSummary}</li>`).join('\n            ')}
-          </ul>
-        </section>
-        <section>
-          <h2>How Sydney cake pick-up works</h2>
-          <p>Choose a cake and request a pick-up time. Jenny checks availability and sends payment details. The order is confirmed after payment, and the exact Melrose Park meeting point is shared with the confirmation.</p>
-          <p><a href="/cakes">Browse cakes</a> or view the <a href="/classes">kids cake decorating classes</a>.</p>
-        </section>
+        <p>Browse five made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.</p>
+        <ul>${cakeEntries.map((cake) => `<li><a href="/cakes/${cake.slug}">${escapeHtml(cake.name)}</a> — ${escapeHtml(cake.priceSummary)}</li>`).join('')}</ul>
       </main>`,
   },
   '/classes': {
-    title: 'Kids Cake Decorating Classes Sydney | Verygood Chocolate',
+    title: 'Kids Cake Decorating Classes Sydney | Very Good Chocolate',
     description: 'Private weekend cake decorating classes in Melrose Park, Sydney: Basic from Kindy to Year 6 and Advanced for Years 2–6.',
     robots: 'index, follow',
     structuredData: [
@@ -210,13 +243,7 @@ const pages = {
         provider: { '@id': `${siteUrl}/#organization` },
         educationalLevel: 'Basic: Kindy–Year 6; Advanced: Years 2–6',
         inLanguage: 'en-AU',
-        offers: {
-          '@type': 'AggregateOffer',
-          url: `${siteUrl}/class-reserve`,
-          priceCurrency: 'AUD',
-          lowPrice: 99,
-          highPrice: 198,
-        },
+        offers: { '@type': 'AggregateOffer', url: `${siteUrl}/class-reserve`, priceCurrency: 'AUD', lowPrice: 99, highPrice: 198 },
       },
     ],
     fallbackHtml: `
@@ -238,86 +265,23 @@ const pages = {
       </main>`,
   },
   '/reviews': {
-    title: 'Customer Reviews | Verygood Chocolate Sydney',
-    description: 'Read verified customer reviews from Verygood Chocolate cake orders and kids cake class bookings in Sydney.',
+    title: 'Customer Reviews | Very Good Chocolate Sydney',
+    description: 'Read verified customer reviews from Very Good Chocolate cake orders and kids cake class bookings in Sydney.',
     robots: 'index, follow',
     structuredData: [organization],
     fallbackHtml: `
       <main class="seo-fallback">
         <h1>Verified Customer Reviews</h1>
-        <p>Read reviews shared with permission after verified Verygood Chocolate cake orders and kids cake class bookings in Sydney.</p>
+        <p>Read reviews shared with permission after verified Very Good Chocolate cake orders and kids cake class bookings in Sydney.</p>
         <p><a href="/cakes">View our cakes</a> or learn about <a href="/classes">kids cake decorating classes</a>.</p>
       </main>`,
   },
-  '/cart': {
-    title: 'Your Cart | Verygood Chocolate',
-    description: 'Review your selected cakes before sending one cake request to Verygood Chocolate Sydney.',
-    robots: 'noindex, nofollow',
-  },
-  '/reserve': {
-    title: 'Request a Chocolate Cake | Verygood Chocolate',
-    description: 'Submit a cake booking request to Verygood Chocolate Sydney.',
-    robots: 'noindex, nofollow',
-  },
-  '/complete': {
-    title: 'Cake Request Received | Verygood Chocolate',
-    description: 'Your cake request has been received.',
-    robots: 'noindex, nofollow',
-  },
-  '/lookup': {
-    title: 'Find Your Booking | Verygood Chocolate',
-    description: 'Look up an existing Verygood Chocolate booking.',
-    robots: 'noindex, nofollow',
-  },
-  '/class-reserve': {
-    title: 'Request a Kids Cake Class | Verygood Chocolate',
-    description: 'Submit a private kids cake class booking request.',
-    robots: 'noindex, nofollow',
-  },
-  '/class-complete': {
-    title: 'Class Request Received | Verygood Chocolate',
-    description: 'Your kids cake class request has been received.',
-    robots: 'noindex, nofollow',
-  },
-  '/calendar': {
-    title: 'Private Schedule | Verygood Chocolate',
-    description: 'Private read-only booking schedule.',
-    robots: 'noindex, nofollow',
-  },
-  '/review': {
-    title: 'Share Your Review | Verygood Chocolate',
-    description: 'Share private feedback about your Verygood Chocolate experience.',
-    robots: 'noindex, nofollow',
-  },
-  '/admin': {
-    title: 'Admin | Verygood Chocolate',
-    description: 'Verygood Chocolate administration.',
-    robots: 'noindex, nofollow',
-  },
-  '/admin/login': {
-    title: 'Admin Login | Verygood Chocolate',
-    description: 'Verygood Chocolate administration login.',
-    robots: 'noindex, nofollow',
-  },
-  '/admin/reservations': {
-    title: 'Cake Reservations Admin | Verygood Chocolate',
-    description: 'Verygood Chocolate cake reservation administration.',
-    robots: 'noindex, nofollow',
-  },
-  '/admin/classes': {
-    title: 'Class Reservations Admin | Verygood Chocolate',
-    description: 'Verygood Chocolate class reservation administration.',
-    robots: 'noindex, nofollow',
-  },
-  '/admin/reviews': {
-    title: 'Review Moderation Admin | Verygood Chocolate',
-    description: 'Private review moderation administration.',
-    robots: 'noindex, nofollow',
-  },
+  ...Object.fromEntries(cakeEntries.map(cake => [`/cakes/${cake.slug}`, cakePageConfig(cake)])),
+  ...Object.fromEntries(Object.entries(privatePages).map(([path, page]) => [path, { ...page, robots: 'noindex, nofollow' }])),
 }
 
 function escapeHtml(value) {
-  return value
+  return String(value)
     .replaceAll('&', '&amp;')
     .replaceAll('"', '&quot;')
     .replaceAll('<', '&lt;')
@@ -325,34 +289,35 @@ function escapeHtml(value) {
 }
 
 function upsertHeadTag(html, pattern, tag) {
-  return pattern.test(html)
-    ? html.replace(pattern, tag)
-    : html.replace('</head>', `    ${tag}\n  </head>`)
+  return pattern.test(html) ? html.replace(pattern, tag) : html.replace('</head>', `    ${tag}\n  </head>`)
 }
 
 function renderPage(template, path, config) {
-  const canonical = `${siteUrl}${path}`
+  const canonical = canonicalFor(path)
   const title = escapeHtml(config.title)
   const description = escapeHtml(config.description)
   const image = config.image || defaultSocialImage
+  const imageType = config.image?.endsWith('.webp') ? 'image/webp' : 'image/jpeg'
+  const imageWidth = config.imageWidth || 1200
+  const imageHeight = config.imageHeight || 630
 
   let rendered = template
-    .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-    .replace(/<meta\s+name="description"\s+content="[^"]*"\s*\/>/, `<meta name="description" content="${description}" />`)
-    .replace(/<meta name="robots" content="[^"]*"\s*\/>/, `<meta name="robots" content="${config.robots}" />`)
-    .replace(/<link rel="canonical" href="[^"]*"\s*\/>/, `<link rel="canonical" href="${canonical}" />`)
-    .replace(/<meta property="og:title" content="[^"]*"\s*\/>/, `<meta property="og:title" content="${title}" />`)
-    .replace(/<meta\s+property="og:description"\s+content="[^"]*"\s*\/>/, `<meta property="og:description" content="${description}" />`)
-    .replace(/<meta property="og:url" content="[^"]*"\s*\/>/, `<meta property="og:url" content="${canonical}" />`)
-    .replace(/<meta name="twitter:title" content="[^"]*"\s*\/>/, `<meta name="twitter:title" content="${title}" />`)
-    .replace(/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/>/, `<meta name="twitter:description" content="${description}" />`)
+    .replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
+    .replace(/<meta\s+name="description"[\s\S]*?\/>/, `<meta name="description" content="${description}" />`)
+    .replace(/<meta\s+name="robots"[\s\S]*?\/>/, `<meta name="robots" content="${config.robots}" />`)
+    .replace(/<link\s+rel="canonical"[\s\S]*?\/>/, `<link rel="canonical" href="${canonical}" />`)
+    .replace(/<meta\s+property="og:title"[\s\S]*?\/>/, `<meta property="og:title" content="${title}" />`)
+    .replace(/<meta\s+property="og:description"[\s\S]*?\/>/, `<meta property="og:description" content="${description}" />`)
+    .replace(/<meta\s+property="og:url"[\s\S]*?\/>/, `<meta property="og:url" content="${canonical}" />`)
+    .replace(/<meta\s+name="twitter:title"[\s\S]*?\/>/, `<meta name="twitter:title" content="${title}" />`)
+    .replace(/<meta\s+name="twitter:description"[\s\S]*?\/>/, `<meta name="twitter:description" content="${description}" />`)
 
-  rendered = upsertHeadTag(rendered, /<meta property="og:type" content="[^"]*"\s*\/>/, `<meta property="og:type" content="${config.ogType || 'website'}" />`)
-  rendered = upsertHeadTag(rendered, /<meta property="og:image" content="[^"]*"\s*\/>/, `<meta property="og:image" content="${image}" />`)
-  rendered = upsertHeadTag(rendered, /<meta property="og:image:type" content="[^"]*"\s*\/>/, '<meta property="og:image:type" content="image/jpeg" />')
-  rendered = upsertHeadTag(rendered, /<meta property="og:image:width" content="[^"]*"\s*\/>/, '<meta property="og:image:width" content="1200" />')
-  rendered = upsertHeadTag(rendered, /<meta property="og:image:height" content="[^"]*"\s*\/>/, '<meta property="og:image:height" content="630" />')
-  rendered = upsertHeadTag(rendered, /<meta name="twitter:image" content="[^"]*"\s*\/>/, `<meta name="twitter:image" content="${image}" />`)
+  rendered = upsertHeadTag(rendered, /<meta\s+property="og:type"[\s\S]*?\/>/, `<meta property="og:type" content="${config.ogType || 'website'}" />`)
+  rendered = upsertHeadTag(rendered, /<meta\s+property="og:image"[\s\S]*?\/>/, `<meta property="og:image" content="${image}" />`)
+  rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:type"[\s\S]*?\/>/, `<meta property="og:image:type" content="${imageType}" />`)
+  rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:width"[\s\S]*?\/>/, `<meta property="og:image:width" content="${imageWidth}" />`)
+  rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:height"[\s\S]*?\/>/, `<meta property="og:image:height" content="${imageHeight}" />`)
+  rendered = upsertHeadTag(rendered, /<meta\s+name="twitter:image"[\s\S]*?\/>/, `<meta name="twitter:image" content="${image}" />`)
 
   if (config.structuredData?.length) {
     const scripts = config.structuredData
@@ -366,25 +331,23 @@ function renderPage(template, path, config) {
 }
 
 const template = await readFile(join(distDir, 'index.html'), 'utf8')
-
 for (const [path, config] of Object.entries(pages)) {
   const outputPath = path === '/' ? join(distDir, 'index.html') : join(distDir, `${path.slice(1)}.html`)
   await mkdir(dirname(outputPath), { recursive: true })
   await writeFile(outputPath, renderPage(template, path, config))
 }
 
-const indexablePaths = [
-  '/',
-  '/cakes',
-  ...cakeDetails.map((cake) => `/cakes/${cake.slug}`),
-  '/classes',
-  '/reviews',
-]
+const indexablePaths = ['/', '/cakes', ...cakeEntries.map((cake) => `/cakes/${cake.slug}`), '/classes', '/reviews']
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${indexablePaths.map((path) => `  <url><loc>${siteUrl}${path}</loc></url>`).join('\n')}
+${indexablePaths.map((path) => `  <url><loc>${canonicalFor(path)}</loc></url>`).join('\n')}
 </urlset>
 `
 await writeFile(join(distDir, 'sitemap.xml'), sitemap)
+try {
+  await writeFile(join(process.cwd(), 'public', 'sitemap.xml'), sitemap)
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error
+}
 
 console.log(`Generated ${Object.keys(pages).length} route-specific SEO pages and ${indexablePaths.length} sitemap URLs.`)

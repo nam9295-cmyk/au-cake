@@ -47,7 +47,7 @@ test('App owns total quantity once and passes it to every customer-facing header
   assert.match(appSource, /<LookupPage[^>]*cartItemCount=\{cartItemCount\}/)
 
   const directPublicHeaders = appSource.match(/<SiteHeader navigate=\{navigate\} language=\{language\} setLanguage=\{setLanguage\} cartItemCount=\{cartItemCount\} \/>/g) || []
-  assert.equal(directPublicHeaders.length, 4)
+  assert.equal(directPublicHeaders.length, 5)
 })
 
 test('page-owned customer headers require and forward total quantity while admin login stays cart-free', () => {

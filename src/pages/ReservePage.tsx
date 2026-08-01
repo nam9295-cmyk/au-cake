@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
-import paveCakeCardImg from '../assets/pave-side.webp'
-import poundCakeCardImg from '../assets/pound-side.webp'
-import cupcakeCardImg from '../assets/cupcake-side.webp'
-import basqueCheesecakeCardImg from '../assets/basquecheesecake-side.webp'
-import freshLemonCupcakesCardImg from '../assets/lemoncake-side.webp'
 import { PickupDatePicker } from '../components/WeekendDatePicker'
 import { BankAccountBox } from '../components/BankAccountBox'
 import { SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
@@ -96,6 +91,14 @@ import {
   normalizePhone,
   todayInputValue,
 } from '../lib/utils'
+
+const productCardImages = {
+  pave: '/products/pave-chocolate-cake-sydney.webp',
+  pound: '/products/chocolate-pound-cake-sydney.webp',
+  cupcakes: '/products/chocolate-cupcakes-sydney.webp',
+  basque: '/products/chocolatiers-basque-cheesecake-sydney.webp',
+  lemon: '/products/lemon-cake-sydney.webp',
+} as const
 
 function useCurrentTime() {
   const [now, setNow] = useState(() => new Date())
@@ -476,14 +479,14 @@ export function ReservePage({
   const selectedProduct = getProductById(form.productId)
   const selectedProductText = getProductText(selectedProduct.id, language)
   const selectedProductImage = selectedProduct.id === 'pound-cake'
-    ? poundCakeCardImg
+    ? productCardImages.pound
     : selectedProduct.id === 'cupcake-dozen'
-      ? cupcakeCardImg
+      ? productCardImages.cupcakes
       : isCheesecakeProduct(selectedProduct.id)
-        ? basqueCheesecakeCardImg
+        ? productCardImages.basque
         : isFreshLemonCupcakeProduct(selectedProduct.id)
-          ? freshLemonCupcakesCardImg
-          : paveCakeCardImg
+          ? productCardImages.lemon
+          : productCardImages.pave
   const priceOptions = {
     cacaoPercent: form.cacaoPercent,
     cakeSize: form.cakeSize,
@@ -625,7 +628,7 @@ export function ReservePage({
         <section className="reservation-layout">
           <aside className="summary-panel">
             <div className="summary-product-photo">
-              {isVanillaFreshCreamCakeProduct(selectedProduct.id) ? <VanillaFreshCreamCakeSilhouette /> : <img src={selectedProductImage} alt={selectedProductText.name} />}
+              {isVanillaFreshCreamCakeProduct(selectedProduct.id) ? <VanillaFreshCreamCakeSilhouette /> : <img src={selectedProductImage} alt={selectedProductText.name} width={1080} height={1012} loading="eager" decoding="async" />}
             </div>
             <p className="summary-kicker">{copy.productSectionTitle}</p>
             <h1>{labels.title}</h1>
@@ -774,12 +777,12 @@ export function ReservePage({
                           ? language === 'ko' ? '쇼콜라티에 바스크 치즈케이크' : "Chocolatier's Basque Cheesecake"
                           : language === 'ko' ? '레몬 케이크' : 'Lemon Cake'
                     const groupImage = group.id === 'pave'
-                      ? paveCakeCardImg
+                      ? productCardImages.pave
                       : group.id === 'vanilla-fresh-cream'
                         ? ''
                         : group.id === 'pound-cupcake'
-                        ? poundCakeCardImg
-                        : group.id === 'cheesecake' ? basqueCheesecakeCardImg : freshLemonCupcakesCardImg
+                        ? productCardImages.pound
+                        : group.id === 'cheesecake' ? productCardImages.basque : productCardImages.lemon
                     const groupPrice = group.id === 'pave'
                       ? formatCurrency(75)
                       : group.id === 'vanilla-fresh-cream'
@@ -800,7 +803,7 @@ export function ReservePage({
                           onChange={() => selectProduct(group.defaultProductId)}
                         />
                         <span className="product-choice-thumb" aria-hidden="true">
-                          {group.id === 'vanilla-fresh-cream' ? <VanillaFreshCreamCakeSilhouette /> : <img src={groupImage} alt="" />}
+                          {group.id === 'vanilla-fresh-cream' ? <VanillaFreshCreamCakeSilhouette /> : <img src={groupImage} alt="" width={1080} height={1012} loading="lazy" decoding="async" />}
                         </span>
                         <span className="product-choice-copy">
                           <span className="product-choice-topline">

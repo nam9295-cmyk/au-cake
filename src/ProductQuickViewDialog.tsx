@@ -102,7 +102,7 @@ export function ProductQuickViewDialog({
                 </span>
               </>
             ) : (
-              <img src={imageUrl} alt={card.name} />
+              <img src={imageUrl} alt={card.name} width={1080} height={1012} loading="lazy" decoding="async" />
             )}
           </figure>
 

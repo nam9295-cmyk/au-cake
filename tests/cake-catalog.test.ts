@@ -74,7 +74,7 @@ test('catalog cards preserve the current English and Korean home content', () =>
     {
       name: 'Chocolate Pound Cake & Cupcakes',
       description: 'Choose the pound cake, or make it a dozen cupcakes for AUD 10 more.',
-      features: ['Pound cake AUD 45', 'Cupcakes · 1 dozen +AUD 10', 'Keep your choice of finish'],
+      features: ['Chocolate Pound Cake · AUD 45', 'Chocolate Cupcakes · 1 dozen · AUD 55', 'Keep your choice of finish'],
       optionLabel: 'Choose pound or cupcakes, then a finish',
       priceLabel: 'From AUD 45',
     },

@@ -1,5 +1,8 @@
+import { getCakeDetailBySlug } from './cake-detail.js'
+
 export type Page =
   | 'home'
+  | 'not-found'
   | 'cart'
   | 'cakes'
   | 'cake-detail'
@@ -20,7 +23,8 @@ export type Page =
 
 export function getCakeSlugFromPath(path: string): string | null {
   const match = /^\/cakes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(path)
-  return match?.[1] || null
+  if (!match?.[1] || !getCakeDetailBySlug(match[1], 'en')) return null
+  return match[1]
 }
 
 export function pathForCake(slug: string): string {
@@ -29,6 +33,7 @@ export function pathForCake(slug: string): string {
 }
 
 export function getPageFromPath(path: string): Page {
+  if (path === '/') return 'home'
   if (path === '/cart') return 'cart'
   if (path === '/cakes') return 'cakes'
   if (getCakeSlugFromPath(path)) return 'cake-detail'
@@ -46,12 +51,13 @@ export function getPageFromPath(path: string): Page {
   if (path === '/admin/classes') return 'admin-classes'
   if (path === '/admin/reviews') return 'admin-reviews'
   if (path === '/admin') return 'admin'
-  return 'home'
+  return 'not-found'
 }
 
 export function pathForPage(page: Page): string {
   const paths: Record<Page, string> = {
     home: '/',
+    'not-found': '/404',
     cart: '/cart',
     cakes: '/cakes',
     'cake-detail': '/cakes',
