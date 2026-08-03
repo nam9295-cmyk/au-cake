@@ -21,6 +21,7 @@ test-results
 ._*
 .hermes/
 .understand-anything/
+review-source/
 docs/AU_CAKE_CODEBASE_DECK.html
 *.suo
 *.ntvs*

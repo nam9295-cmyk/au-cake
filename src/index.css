@@ -7764,6 +7764,215 @@ td select {
   line-height: 1.45;
 }
 
+.korean-cake-reviews {
+  width: 100%;
+  max-width: 1040px;
+  min-width: 0;
+  margin: 110px auto 0;
+}
+
+.korean-cake-reviews-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 24px;
+}
+
+.korean-cake-reviews-heading h2 {
+  max-width: 700px;
+  scroll-margin-top: 52px;
+  margin-bottom: 12px;
+  color: var(--forest-deep);
+  font-size: clamp(34px, 5vw, 54px);
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.korean-cake-reviews-heading p {
+  max-width: 700px;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.korean-cake-reviews-header-controls,
+.korean-cake-reviews-mobile-controls {
+  align-items: center;
+  gap: 8px;
+}
+
+.korean-cake-reviews-header-controls {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.korean-cake-reviews-header-controls.is-static {
+  display: none;
+}
+
+.korean-cake-reviews-mobile-controls {
+  display: none;
+}
+
+.korean-cake-reviews-counter {
+  min-width: 76px;
+  color: var(--forest-deep);
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.korean-cake-reviews-control {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--forest-deep);
+  border-radius: 0;
+  background: var(--forest-deep);
+  color: var(--canvas);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.korean-cake-reviews-control:hover:not(:disabled) {
+  background: var(--berry-emphasis);
+  border-color: var(--berry-emphasis);
+}
+
+.korean-cake-reviews-control:active:not(:disabled) {
+  transform: translate(1px, 1px);
+}
+
+.korean-cake-reviews-control:disabled {
+  border-color: var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.korean-cake-reviews-control:focus-visible {
+  outline: 3px solid var(--berry-emphasis);
+  outline-offset: 2px;
+}
+
+.korean-cake-reviews-viewport {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.korean-cake-reviews-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 32px) / 3);
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+.korean-cake-reviews-track::-webkit-scrollbar {
+  display: none;
+}
+
+.korean-cake-review {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.74), rgba(237, 197, 196, 0.12)),
+    var(--surface-soft);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.korean-cake-review-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-height: 46px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--forest-deep);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.korean-cake-review-context span[lang='en-AU'] {
+  color: var(--berry-emphasis);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.korean-cake-review blockquote {
+  margin: 0;
+  padding: 16px 14px;
+  color: var(--forest-deep);
+  text-wrap: pretty;
+}
+
+.korean-cake-review blockquote[lang='ko'] {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.korean-cake-review-divider {
+  width: calc(100% - 28px);
+  height: 1px;
+  margin: 0 auto;
+  background: var(--soft-pink);
+}
+
+.korean-cake-review blockquote[lang='en-AU'] {
+  flex: 1;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.36;
+}
+
+.korean-cake-review-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.korean-cake-review-footer time {
+  color: var(--forest-deep);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .korean-cake-reviews-track {
+    scroll-behavior: auto;
+  }
+}
+
 .cake-detail-accordion>div {
   border-top: 1px solid var(--border);
 }
@@ -7893,7 +8102,8 @@ td select {
 
   .cake-detail-story,
   .cake-detail-accordion,
-  .cake-detail-other {
+  .cake-detail-other,
+  .korean-cake-reviews {
     margin-top: 78px;
   }
 
@@ -7903,6 +8113,38 @@ td select {
 
   .cake-detail-story article {
     min-height: 126px;
+  }
+
+  .korean-cake-reviews-heading {
+    display: block;
+    margin-bottom: 20px;
+  }
+
+  .korean-cake-reviews-heading h2 {
+    font-size: clamp(32px, 10vw, 44px);
+  }
+
+  .korean-cake-reviews {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .korean-cake-reviews-track {
+    grid-auto-columns: 100%;
+  }
+
+  .korean-cake-reviews-header-controls {
+    display: none;
+  }
+
+  .korean-cake-reviews-mobile-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  .korean-cake-review-context {
+    min-height: auto;
   }
 
   .cake-detail-accordion summary {

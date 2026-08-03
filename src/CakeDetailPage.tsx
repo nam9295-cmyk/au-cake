@@ -8,6 +8,7 @@ import paveSliceImg from './assets/chocolate-cake-slice.jpg'
 import paveSlicesImg from './assets/chocolate-cake-eight-slices.jpg'
 import cheesecakeHeroImg from './assets/basquecheesecake.webp'
 import lemonHeroImg from './assets/lemoncake.webp'
+import KoreanCakeReviewsSection from './KoreanCakeReviewsSection'
 import {
   CAKE_SIZE_OPTIONS,
   CHOCOLATE_TYPE_OPTIONS,
@@ -477,6 +478,8 @@ export default function CakeDetailPage({
           ))}
         </div>
       </section>
+
+      <KoreanCakeReviewsSection slug={slug} language={language} />
 
       <section className="cake-detail-accordion" aria-labelledby="cake-detail-info-title">
         <p className="summary-kicker">{language === 'ko' ? '주문 전 확인' : 'Good to know'}</p>
