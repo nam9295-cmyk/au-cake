@@ -139,9 +139,9 @@ function couponEncryptionKey(env, hmacSecret) {
 }
 
 function sharpCompatibleRuntime(env) {
-  const value = String(env.APPWRITE_REVIEW_API_RUNTIME || 'node-16.0').trim()
-  if (value !== 'node-16.0') {
-    throw new Error('APPWRITE_REVIEW_API_RUNTIME must be node-16.0 for this self-hosted Appwrite deployment.')
+  const value = String(env.APPWRITE_REVIEW_API_RUNTIME || 'node-20.0').trim()
+  if (value !== 'node-20.0') {
+    throw new Error('APPWRITE_REVIEW_API_RUNTIME must be node-20.0 for sharp 0.35.x compatibility.')
   }
   return value
 }

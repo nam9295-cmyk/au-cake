@@ -130,19 +130,21 @@ test('function variables map exact server-only IDs without VITE fallbacks', () =
   assert.equal(Object.keys(config.runtimeVariables).some((key) => key.startsWith('VITE_')), false)
 })
 
-test('default runtime matches the self-hosted Appwrite Node 16 runtime and compatible sharp line', () => {
-  assert.equal(resolveDeployConfig(validEnv).runtime, 'node-16.0')
+test('default runtime matches the self-hosted Appwrite Node 20 runtime required by the patched sharp line', () => {
+  assert.equal(resolveDeployConfig(validEnv).runtime, 'node-20.0')
   assert.equal(
-    resolveDeployConfig({ ...validEnv, APPWRITE_REVIEW_API_RUNTIME: 'node-16.0' }).runtime,
-    'node-16.0',
+    resolveDeployConfig({ ...validEnv, APPWRITE_REVIEW_API_RUNTIME: 'node-20.0' }).runtime,
+    'node-20.0',
   )
-  assert.throws(
-    () => resolveDeployConfig({ ...validEnv, APPWRITE_REVIEW_API_RUNTIME: 'node-14.0' }),
-    /APPWRITE_REVIEW_API_RUNTIME/,
-  )
-  assert.deepEqual(buildRuntimeCandidates('node-16.0', {
-    Node200: 'node-20.0', Node180: 'node-18.0', Node160: 'node-16.0',
-  }), ['node-16.0'])
+  for (const incompatibleRuntime of ['node-14.0', 'node-16.0', 'node-18.0', 'node-22']) {
+    assert.throws(
+      () => resolveDeployConfig({ ...validEnv, APPWRITE_REVIEW_API_RUNTIME: incompatibleRuntime }),
+      /APPWRITE_REVIEW_API_RUNTIME/,
+    )
+  }
+  assert.deepEqual(buildRuntimeCandidates('node-20.0', {
+    Node220: 'node-22', Node200: 'node-20.0', Node180: 'node-18.0', Node160: 'node-16.0',
+  }), ['node-20.0'])
 })
 
 test('dynamic function key scopes cover only required database/document and file operations', () => {
