@@ -249,7 +249,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     website: '',
     orderLines: [
       {
-        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none',
+        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
         lineKey: 'private-key', unitPriceCents: 1, customerName: 'Private', promoCode: 'forged', cacaoPercent: '100',
@@ -269,7 +269,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     requestId: '11111111-1111-4111-8111-111111111111', website: '',
     orderLines: [
       {
-        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none',
+        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
       },
