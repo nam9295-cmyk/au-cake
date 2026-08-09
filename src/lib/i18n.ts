@@ -27,7 +27,7 @@ const koProducts: Record<ProductId, ProductText> = {
   'pave-cake': {
     name: '파베 초콜릿 케이크',
     description: '초콜릿 시트 사이에 부드러운 파베 가나슈를 겹겹이 넣은 원형 케이크예요. 크림보다 초콜릿 맛이 먼저 오는 스타일입니다.',
-    priceNote: '사이즈와 다크/밀크 선택 가능',
+    priceNote: '사이즈 선택 · 다크 초콜릿만 사용',
   },
   'vanilla-fresh-cream-cake': {
     name: '바닐라 생크림 케이크',
@@ -77,7 +77,7 @@ const koProducts: Record<ProductId, ProductText> = {
 }
 
 const koProductFeatures: Record<ProductId, string[]> = {
-  'pave-cake': ['초콜릿 시트와 파베 가나슈', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), '다크 또는 밀크 선택'],
+  'pave-cake': ['초콜릿 시트와 파베 가나슈', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), '다크 초콜릿만 사용'],
   'vanilla-fresh-cream-cake': ['바닐라 또는 초코 케이크 시트', '트리플베리 또는 누텔라 초코칩', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
   'pound-cake': ['직사각형 갸또 쇼콜라', '고정 사이즈', '기본, 초콜릿 추가, 바닐라 크림 마감'],
   'cupcake-dozen': ['12개 1다스 구성', '파운드케이크에서 10달러 추가', '기본, 초콜릿 추가, 바닐라 크림 마감'],
