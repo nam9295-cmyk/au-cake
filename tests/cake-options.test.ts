@@ -8,6 +8,7 @@ import {
   DEFAULT_VANILLA_CAKE_SHEET,
   DEFAULT_SETTINGS,
   CAKE_SIZE_OPTIONS,
+  CHOCOLATE_TYPE_OPTIONS,
   VANILLA_CAKE_FLAVOR_OPTIONS,
   VANILLA_CAKE_SHEET_OPTIONS,
   applyPromoDiscount,
@@ -270,11 +271,15 @@ test('pound cake pricing ignores size and chocolate, and uses confirmed finish p
   assert.equal(getReservationUnitPrice('pound-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 55)
 })
 
-test('pound cake only asks dark or milk chocolate when extra chocolate is selected', () => {
+test('pound and pave cakes only offer dark chocolate', () => {
+  assert.deepEqual(CHOCOLATE_TYPE_OPTIONS, [
+    { value: 'dark', label: 'Dark chocolate', description: 'Deep and balanced chocolate profile', extraPrice: 0 },
+  ])
   assert.equal(usesReservationChocolateType('pound-cake', 'none'), false)
   assert.equal(usesReservationChocolateType('pound-cake', 'vanilla-cream'), false)
   assert.equal(usesReservationChocolateType('pound-cake', 'extra-chocolate'), true)
-  assert.equal(normalizeReservationChocolateType('pound-cake', 'milk', 'extra-chocolate'), 'milk')
+  assert.equal(normalizeReservationChocolateType('pound-cake', 'milk', 'extra-chocolate'), 'dark')
+  assert.equal(normalizeReservationChocolateType('pave-cake', 'milk', 'none'), 'dark')
   assert.equal(normalizeReservationChocolateType('pound-cake', 'milk', 'vanilla-cream'), 'dark')
 })
 
@@ -292,7 +297,7 @@ test('cupcakes are sold by the dozen with per-piece finishing instead of pound c
   assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), false)
 })
 
-test('pave cake keeps its approved prices behind the new customer size labels', () => {
+test('pave cake keeps its approved prices behind the size labels and dark-only finish', () => {
   const paveCake = getProductById('pave-cake')
 
   assert.equal(paveCake.usesSizeOptions, true)
@@ -302,7 +307,7 @@ test('pave cake keeps its approved prices behind the new customer size labels', 
   assert.equal(getProductFeatures('pave-cake', 'en')[1], '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22')
   assert.equal(getProductFeatures('pave-cake', 'ko')[1], '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22')
   assert.equal(formatChocolateTypeLabel('dark'), 'Dark chocolate')
-  assert.equal(formatChocolateTypeLabel('milk'), 'Milk chocolate')
+  assert.equal(formatChocolateTypeLabel('milk'), 'Dark chocolate')
   assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none' }), 75)
   assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '19cm', chocolateType: 'milk', poundAddon: 'extra-chocolate' }), 95)
   assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '19cm', chocolateType: 'dark', poundAddon: 'vanilla-cream' }), 95)

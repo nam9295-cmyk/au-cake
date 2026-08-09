@@ -81,8 +81,8 @@ test('catalog cards preserve the current English and Korean home content', () =>
     {
       name: 'Pave Chocolate Cake',
       description: 'A round chocolate cake layered with soft pave ganache and chocolate sponge. Dense, smooth and made for serious chocolate flavour.',
-      features: ['Layered chocolate sponge and pave ganache', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22', 'Dark or milk chocolate'],
-      optionLabel: 'Size and dark/milk chocolate options available',
+      features: ['Layered chocolate sponge and pave ganache', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22', 'Dark chocolate only'],
+      optionLabel: 'Choose a size · dark chocolate only',
       priceLabel: 'AUD 75.00',
     },
     {
@@ -119,8 +119,8 @@ test('catalog cards preserve the current English and Korean home content', () =>
     {
       name: '파베 초콜릿 케이크',
       description: '초콜릿 시트 사이에 부드러운 파베 가나슈를 겹겹이 넣은 원형 케이크예요. 크림보다 초콜릿 맛이 먼저 오는 스타일입니다.',
-      features: ['초콜릿 시트와 파베 가나슈', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22', '다크 또는 밀크 선택'],
-      optionLabel: '사이즈와 다크/밀크 선택 가능',
+      features: ['초콜릿 시트와 파베 가나슈', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22', '다크 초콜릿만 사용'],
+      optionLabel: '사이즈 선택 · 다크 초콜릿만 사용',
       priceLabel: 'AUD 75.00',
     },
     {

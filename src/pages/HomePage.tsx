@@ -427,7 +427,7 @@ export function HomePage({
             </article>
             <article>
               <h3>{language === 'ko' ? '원하는 옵션 선택' : 'Choose your finish'}</h3>
-              <p>{language === 'ko' ? '케이크에 따라 사이즈, 다크 또는 밀크 초콜릿, 초콜릿 추가, 바닐라 크림 마감을 선택할 수 있어요.' : 'Available options vary by cake and include multiple sizes, dark or milk chocolate, extra chocolate, and vanilla cream finishes.'}</p>
+              <p>{language === 'ko' ? '케이크에 따라 사이즈, 다크 초콜릿, 초콜릿 추가, 바닐라 크림 마감을 선택할 수 있어요.' : 'Available options vary by cake and include multiple sizes, dark chocolate, extra chocolate, and vanilla cream finishes.'}</p>
             </article>
             <article>
               <h3>{language === 'ko' ? 'Melrose Park 사전 약속 픽업' : 'Pre-arranged Melrose Park pick-up'}</h3>

@@ -364,7 +364,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         name: 'Pave Chocolate Cake',
         description: 'A round chocolate cake layered with soft pave ganache and chocolate sponge. Dense, smooth and made for serious chocolate flavour.',
         price: 75,
-        priceNote: 'Size and dark/milk chocolate options available',
+        priceNote: 'Choose a size · dark chocolate only',
         usesCacaoOptions: false,
         usesSizeOptions: true,
         usesChocolateTypeOptions: true,
@@ -487,7 +487,6 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     ],
     chocolateTypeOptions: [
       { value: 'dark', label: 'Dark chocolate', description: 'Deep and balanced chocolate profile', extraPrice: 0 },
-      { value: 'milk', label: 'Milk chocolate', description: 'Softer and creamier chocolate profile', extraPrice: 0 },
     ],
     poundAddonOptions: [
       { value: 'none', label: 'Basic finish', description: 'Classic finish', extraPrice: 0 },
@@ -525,7 +524,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       smsFooter: 'Verygood Chocolate',
     },
     productCardFeatures: {
-      'pave-cake': ['Layered chocolate sponge and pave ganache', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), 'Dark or milk chocolate'],
+      'pave-cake': ['Layered chocolate sponge and pave ganache', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), 'Dark chocolate only'],
       'vanilla-fresh-cream-cake': ['Choose vanilla or chocolate cake sheet', 'Triple berry or Nutella chocolate chip', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
       'pound-cake': ['Rectangular gateau chocolat', 'Fixed pound cake size', 'Basic, extra chocolate, or vanilla cream finish'],
       'cupcake-dozen': ['12 cupcakes in one dozen', 'Vanilla cream +AUD 0.50 each', 'Party decoration +AUD 1.00 each'],
