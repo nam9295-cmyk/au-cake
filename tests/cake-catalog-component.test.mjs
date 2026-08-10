@@ -80,3 +80,13 @@ test('cake quick view floats as a compact animated product card on desktop and m
   assert.ok(Number(desktopContent[1]) <= 40, 'floating card needs compact desktop top padding')
   assert.ok(Number(desktopContent[2]) <= 28, 'floating card needs compact desktop bottom padding')
 })
+
+test('quick view photography fills its frame and mobile copy stays compact', async () => {
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+
+  assert.match(css, /\.product-quick-view-image-wrap > img\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*max-height:\s*none[^}]*object-fit:\s*cover/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-image-wrap\s*\{[^}]*height:\s*min\(42dvh,\s*320px\)[^}]*min-height:\s*240px[^}]*max-height:\s*320px/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-content\s*\{[^}]*padding:\s*16px 14px calc\(16px \+ env\(safe-area-inset-bottom\)\)/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-description\s*\{[^}]*font-size:\s*12px[^}]*line-height:\s*1\.35/s)
+  assert.doesNotMatch(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-image-wrap > img\s*\{[^}]*width:\s*min\(76%,\s*280px\)/s)
+})

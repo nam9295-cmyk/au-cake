@@ -8566,11 +8566,14 @@ td select {
 }
 
 .product-quick-view-image-wrap > img {
+  position: absolute;
+  inset: 0;
   display: block;
-  width: min(92%, 320px);
-  max-height: 370px;
-  object-fit: contain;
-  filter: drop-shadow(0 20px 24px rgba(3, 85, 66, 0.16));
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
 }
 
 .product-quick-view-image-wrap .vanilla-fresh-cream-silhouette {
@@ -8700,15 +8703,11 @@ td select {
   }
 
   .product-quick-view-image-wrap {
-    min-height: 170px;
-    max-height: 31dvh;
+    height: min(42dvh, 320px);
+    min-height: 240px;
+    max-height: 320px;
     border-right: 0;
     border-bottom: 1px solid var(--border);
-  }
-
-  .product-quick-view-image-wrap > img {
-    width: min(76%, 280px);
-    max-height: 190px;
   }
 
   .product-quick-view-image-wrap .vanilla-fresh-cream-silhouette {
@@ -8717,12 +8716,17 @@ td select {
   }
 
   .product-quick-view-content {
-    padding: 22px 18px calc(20px + env(safe-area-inset-bottom));
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
   }
 
   .product-quick-view-content h2 {
     padding-right: 0;
-    font-size: clamp(27px, 8vw, 34px);
+    font-size: clamp(24px, 7.5vw, 30px);
+  }
+
+  .product-quick-view-description {
+    font-size: 12px;
+    line-height: 1.35;
   }
 
   .product-quick-view-close {
