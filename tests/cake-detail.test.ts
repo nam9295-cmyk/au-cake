@@ -24,7 +24,11 @@ test('five public cake slugs resolve to one reusable detail data contract', () =
     'lemon-cake',
     'vanilla-fresh-cream-cake',
   ])
-  assert.deepEqual(details.map((detail) => detail?.gallery.length), [4, 5, 2, 2, 0])
+  assert.deepEqual(details.map((detail) => detail?.gallery.length), [6, 7, 4, 4, 0])
+  assert.deepEqual(details[0]?.gallery.slice(0, 4), ['pound-side', 'pound-quick-view', 'pound-previous', 'pound-hero'])
+  assert.deepEqual(details[1]?.gallery.slice(0, 4), ['pave-side', 'pave-quick-view', 'pave-previous', 'pave-hero'])
+  assert.deepEqual(details[2]?.gallery, ['cheesecake-side', 'cheesecake-quick-view', 'cheesecake-previous', 'cheesecake-hero'])
+  assert.deepEqual(details[3]?.gallery, ['lemon-side', 'lemon-quick-view', 'lemon-previous', 'lemon-hero'])
   assert.equal(details[4]?.isPhotoComingSoon, true)
   assert.equal(getCakeDetailBySlug('not-a-cake', 'en'), null)
 })

@@ -14,6 +14,19 @@ test('home catalogue keeps image selection outside customer product copy data', 
   assert.match(homeSource, /card\.isPhotoComingSoon/)
 })
 
+test('new Lemon Cake catalogue photo is also used in the home hero', () => {
+  assert.match(homeSource, /image:\s*catalogImages\['lemon-cake'\]/)
+  assert.doesNotMatch(homeSource, /import freshLemonCupcakesHeroImg/)
+})
+
+test('quick view uses dedicated replaceable detail-shot files', () => {
+  assert.match(homeSource, /'pound-cake':\s*'\/products\/details\/chocolate-pound-cake-quick-view\.webp'/)
+  assert.match(homeSource, /'pave-cake':\s*'\/products\/details\/pave-chocolate-cake-quick-view\.webp'/)
+  assert.match(homeSource, /'basque-cheesecake':\s*'\/products\/details\/chocolatiers-basque-cheesecake-quick-view\.webp'/)
+  assert.match(homeSource, /'lemon-cake':\s*'\/products\/details\/lemon-cake-quick-view\.webp'/)
+  assert.match(homeSource, /imageUrl=\{quickViewImages\[quickViewCard\.imageKey\]\}/)
+})
+
 test('home catalogue cards show only image, title, price, and one action', async () => {
   assert.match(homeSource, /className="product-card-quick-view"/)
   assert.match(homeSource, /aria-haspopup="dialog"/)

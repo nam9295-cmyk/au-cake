@@ -31,18 +31,26 @@ import type {
 
 export type CakeDetailImageKey =
   | 'pound-side'
+  | 'pound-quick-view'
+  | 'pound-previous'
   | 'pound-hero'
   | 'cupcake-side'
   | 'cupcake-hero'
   | 'pave-side'
+  | 'pave-quick-view'
+  | 'pave-previous'
   | 'pave-hero'
   | 'pave-card'
   | 'pave-slice'
   | 'pave-slices'
   | 'cheesecake-hero'
   | 'cheesecake-side'
+  | 'cheesecake-quick-view'
+  | 'cheesecake-previous'
   | 'lemon-hero'
   | 'lemon-side'
+  | 'lemon-quick-view'
+  | 'lemon-previous'
 
 export type CakeDetailSelection = {
   productId: ProductId
@@ -74,10 +82,10 @@ export type CakeDetailData = {
 }
 
 const DETAIL_GALLERIES: Record<CakeCatalogId, readonly CakeDetailImageKey[]> = {
-  'pound-cupcake': ['pound-side', 'pound-hero', 'cupcake-side', 'cupcake-hero'],
-  pave: ['pave-side', 'pave-hero', 'pave-card', 'pave-slice', 'pave-slices'],
-  cheesecake: ['cheesecake-hero', 'cheesecake-side'],
-  'fresh-lemon-cupcakes': ['lemon-hero', 'lemon-side'],
+  'pound-cupcake': ['pound-side', 'pound-quick-view', 'pound-previous', 'pound-hero', 'cupcake-side', 'cupcake-hero'],
+  pave: ['pave-side', 'pave-quick-view', 'pave-previous', 'pave-hero', 'pave-card', 'pave-slice', 'pave-slices'],
+  cheesecake: ['cheesecake-side', 'cheesecake-quick-view', 'cheesecake-previous', 'cheesecake-hero'],
+  'fresh-lemon-cupcakes': ['lemon-side', 'lemon-quick-view', 'lemon-previous', 'lemon-hero'],
   'vanilla-fresh-cream': [],
 }
 

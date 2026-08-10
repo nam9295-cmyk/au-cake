@@ -4,7 +4,6 @@ import heroCake2Img from '../assets/hero-cake-2.webp'
 import heroCake3Img from '../assets/hero-cake-3.webp'
 import basqueCheesecakeHeroImg from '../assets/basquecheesecake.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
-import freshLemonCupcakesHeroImg from '../assets/lemoncake.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
@@ -25,6 +24,14 @@ const catalogImages: Record<CakeCatalogImageKey, string> = {
   'pave-cake': '/products/pave-chocolate-cake-sydney.webp',
   'basque-cheesecake': '/products/chocolatiers-basque-cheesecake-sydney.webp',
   'lemon-cake': '/products/lemon-cake-sydney.webp',
+  'vanilla-fresh-cream-cake': '',
+}
+
+const quickViewImages: Record<CakeCatalogImageKey, string> = {
+  'pound-cake': '/products/details/chocolate-pound-cake-quick-view.webp',
+  'pave-cake': '/products/details/pave-chocolate-cake-quick-view.webp',
+  'basque-cheesecake': '/products/details/chocolatiers-basque-cheesecake-quick-view.webp',
+  'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
   'vanilla-fresh-cream-cake': '',
 }
 
@@ -55,7 +62,7 @@ export function HomePage({
     { image: basqueCheesecakeHeroImg, label: "Chocolatier's Basque", tagKey: 'mini', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'Chocolate Pound Cake', tagKey: 'pound', className: 'hero-cake-three' },
-    { image: freshLemonCupcakesHeroImg, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
+    { image: catalogImages['lemon-cake'], label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
   ]
 
   useEffect(() => {
@@ -482,7 +489,7 @@ export function HomePage({
       {quickViewCard && (
         <ProductQuickViewDialog
           card={quickViewCard}
-          imageUrl={catalogImages[quickViewCard.imageKey]}
+          imageUrl={quickViewImages[quickViewCard.imageKey]}
           language={language}
           opener={quickViewOpener}
           onClose={closeQuickView}
