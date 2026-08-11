@@ -116,6 +116,8 @@ export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 export const PICKUP_TIME_TOO_SOON_ERROR = 'PICKUP_TIME_TOO_SOON'
 export const PICKUP_TIME_UNAVAILABLE_ERROR = 'PICKUP_TIME_UNAVAILABLE'
+const AU_CAKE_PICKUP_OPEN_MINUTES = 10 * 60
+const AU_CAKE_PICKUP_CLOSE_MINUTES = 17 * 60
 const SCHOOL_PICKUP_START_MINUTES = 15 * 60
 const SHORT_SCHOOL_PICKUP_END_MINUTES = 15 * 60 + 30
 const LONG_SCHOOL_PICKUP_END_MINUTES = 17 * 60 + 30
@@ -204,8 +206,22 @@ export function isSchoolPickupWindowClosed(dateValue: string, timeValue: string)
     && pickupMinutes <= endMinutes
 }
 
+export function isCakePickupServiceTime(dateValue: string, timeValue: string) {
+  if (marketConfig.market !== 'AU') return zonedPickupTimestamp(dateValue, timeValue) !== null
+  if (zonedPickupTimestamp(dateValue, timeValue) === null) return false
+
+  const [year, month, day] = dateValue.split('-').map(Number)
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  const [hour, minute] = timeValue.split(':').map(Number)
+  const pickupMinutes = hour * 60 + minute
+  return (weekday === 0 || weekday === 6)
+    && pickupMinutes >= AU_CAKE_PICKUP_OPEN_MINUTES
+    && pickupMinutes <= AU_CAKE_PICKUP_CLOSE_MINUTES
+}
+
 export function isPickupTimeAllowed(dateValue: string, timeValue: string, now = new Date()) {
   if (zonedPickupTimestamp(dateValue, timeValue) === null) return false
+  if (!isCakePickupServiceTime(dateValue, timeValue)) return false
   if (isSchoolPickupWindowClosed(dateValue, timeValue)) return false
 
   const today = dateInputValue(now)
@@ -222,6 +238,15 @@ export function isPickupTimeAllowed(dateValue: string, timeValue: string, now = 
 
 export function customerTimeOptionsForDate(dateValue: string, settings: StoreSettings, now = new Date()) {
   return timeOptionsForDate(dateValue, settings).filter((time) => isPickupTimeAllowed(dateValue, time, now))
+}
+
+export function firstCustomerPickupDate(settings: StoreSettings, now = new Date()) {
+  const today = dateInputValue(now)
+  for (let offset = 0; offset <= 7; offset += 1) {
+    const candidate = addDaysToInputValue(today, offset)
+    if (customerTimeOptionsForDate(candidate, settings, now).length > 0) return candidate
+  }
+  return addDaysToInputValue(today, 1)
 }
 
 export function maskPhone(phone: string) {

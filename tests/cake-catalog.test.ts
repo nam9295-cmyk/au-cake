@@ -187,7 +187,7 @@ test('catalog base, size and paid option prices stay equal to the Reservation AP
       vanillaCakeSheet: 'vanilla',
       vanillaCakeFlavor: 'triple-berry',
       quantity: 1,
-      pickupDate: '2026-07-28',
+      pickupDate: '2026-08-01',
       pickupTime: '10:00',
       requestNote: '',
       privacyConsent: true,

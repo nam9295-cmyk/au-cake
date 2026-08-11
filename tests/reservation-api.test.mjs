@@ -5,6 +5,7 @@ import {
   ReservationApiError,
   buildCakeReservation,
   buildClassReservation,
+  isCakePickupServiceTime,
   isCakePickupBlocked,
   isSchoolPickupWindowClosed,
   matchesLookupPhone,
@@ -444,11 +445,11 @@ test('cake API applies Lemoni promo only to Fresh Lemon Cupcakes and records an 
 
 test('cake API expires Chocolate after 15 July and Lemoni after 16 July in Sydney', () => {
   const chocolateValid = buildCakeReservation(
-    { ...cakeInput, productId: 'choco-basque-cheesecake', pickupDate: '2026-07-17', promoCode: 'chocolate' },
+    { ...cakeInput, productId: 'choco-basque-cheesecake', pickupDate: '2026-07-18', promoCode: 'chocolate' },
     { now: new Date('2026-07-15T13:59:59.000Z'), reservationNumber: 'VG-C-AU-CHOCOLATE-VALID' },
   )
   const chocolateExpired = buildCakeReservation(
-    { ...cakeInput, productId: 'choco-basque-cheesecake', pickupDate: '2026-07-17', promoCode: 'chocolate' },
+    { ...cakeInput, productId: 'choco-basque-cheesecake', pickupDate: '2026-07-18', promoCode: 'chocolate' },
     { now: new Date('2026-07-15T14:00:00.000Z'), reservationNumber: 'VG-C-AU-CHOCOLATE-EXPIRED' },
   )
   const lemoniValid = buildCakeReservation(
@@ -494,41 +495,29 @@ test('cake API applies the Sydney 20:00 next-day pickup cutoff', () => {
   ))
 })
 
-test('cake API rejects the inclusive weekday school-run pickup windows', () => {
-  for (const date of ['2026-08-03', '2026-08-05', '2026-08-07']) {
-    assert.equal(isSchoolPickupWindowClosed(date, '15:00'), true)
-    assert.equal(isSchoolPickupWindowClosed(date, '15:30'), true)
-    assertApiError('PICKUP_TIME_UNAVAILABLE', () => buildCakeReservation(
-      { ...cakeInput, pickupDate: date, pickupTime: '15:00' },
-      { now, reservationNumber: 'SCHOOL-RUN-SHORT' },
-    ))
-    assert.doesNotThrow(() => buildCakeReservation(
-      { ...cakeInput, pickupDate: date, pickupTime: '16:00' },
-      { now, reservationNumber: 'AFTER-SCHOOL-RUN-SHORT' },
-    ))
-  }
-
-  for (const date of ['2026-08-04', '2026-08-06']) {
-    for (const pickupTime of ['15:00', '15:30', '16:00', '16:30', '17:00', '17:30']) {
-      assert.equal(isSchoolPickupWindowClosed(date, pickupTime), true)
-      assertApiError('PICKUP_TIME_UNAVAILABLE', () => buildCakeReservation(
-        { ...cakeInput, pickupDate: date, pickupTime },
-        { now, reservationNumber: 'SCHOOL-RUN-LONG' },
-      ))
-    }
-    assert.doesNotThrow(() => buildCakeReservation(
-      { ...cakeInput, pickupDate: date, pickupTime: '18:00' },
-      { now, reservationNumber: 'AFTER-SCHOOL-RUN-LONG' },
-    ))
-  }
-
-  assert.equal(isSchoolPickupWindowClosed('2026-08-08', '15:00'), false)
+test('cake API accepts only Saturday and Sunday pick-ups from 10:00 through 17:00', () => {
+  assert.equal(isCakePickupServiceTime('2026-08-08', '10:00'), true)
+  assert.equal(isCakePickupServiceTime('2026-08-09', '17:00'), true)
   assert.doesNotThrow(() => buildCakeReservation(
-    { ...cakeInput, pickupDate: '2026-08-08', pickupTime: '15:00' },
-    { now, reservationNumber: 'WEEKEND-PICKUP' },
+    { ...cakeInput, pickupDate: '2026-08-08', pickupTime: '10:00' },
+    { now, reservationNumber: 'WEEKEND-OPEN' },
   ))
-  assert.equal(isSchoolPickupWindowClosed('2026-08-04', '15:99'), false)
-  assert.equal(isSchoolPickupWindowClosed('not-a-date', '15:00'), false)
+  assert.doesNotThrow(() => buildCakeReservation(
+    { ...cakeInput, pickupDate: '2026-08-09', pickupTime: '17:00' },
+    { now, reservationNumber: 'WEEKEND-CLOSE' },
+  ))
+
+  for (const [pickupDate, pickupTime] of [
+    ['2026-08-07', '10:00'],
+    ['2026-08-08', '09:30'],
+    ['2026-08-08', '17:30'],
+  ]) {
+    assert.equal(isCakePickupServiceTime(pickupDate, pickupTime), false)
+    assertApiError('PICKUP_TIME_UNAVAILABLE', () => buildCakeReservation(
+      { ...cakeInput, pickupDate, pickupTime },
+      { now, reservationNumber: 'PICKUP-CLOSED' },
+    ))
+  }
 })
 
 test('class API derives price and protected fields and validates the second child', () => {

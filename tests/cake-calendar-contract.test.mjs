@@ -13,6 +13,7 @@ test('cake reserve uses the shared compact calendar and keeps class conflict fil
   assert.match(reserve, /listClassBookedSlots\(\)/)
   assert.match(reserve, /listCakePickupOpenings\(\)/)
   assert.match(calendar, /weekendsOnly/)
+  assert.match(calendar, /PickupDatePicker[\s\S]*weekendsOnly/)
   assert.match(calendar, /isDateDisabled/)
   assert.match(calendar, /Unavailable dates are shown in grey/)
 })
