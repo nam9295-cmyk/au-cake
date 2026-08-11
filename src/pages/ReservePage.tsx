@@ -78,11 +78,11 @@ import {
   type ClassBookedSlot,
 } from '../lib/class-utils'
 import {
-  addDaysToInputValue,
   customerTimeOptionsForDate,
-  dateInputValue,
+  firstCustomerPickupDate,
   formatCurrency,
   generateRequestId,
+  isCakePickupServiceTime,
   isPickupTimeAllowed,
   isSchoolPickupWindowClosed,
   PICKUP_TIME_TOO_SOON_ERROR,
@@ -209,9 +209,7 @@ export function ReservePage({
     if (initialPromoCode) onInitialPromoConsumed()
   }, [initialPromoCode, onInitialPromoConsumed])
   const now = useCurrentTime()
-  const today = dateInputValue(now)
-  const todayTimes = useMemo(() => customerTimeOptionsForDate(today, settings, now), [today, settings, now])
-  const minPickupDate = todayTimes.length > 0 ? today : addDaysToInputValue(today, 1)
+  const minPickupDate = useMemo(() => firstCustomerPickupDate(settings, now), [settings, now])
   const pickupDate = form.pickupDate && form.pickupDate >= minPickupDate ? form.pickupDate : minPickupDate
   const baseTimes = useMemo(() => customerTimeOptionsForDate(pickupDate, settings, now), [pickupDate, settings, now])
   const pickupAvailabilityIsCurrent = pickupAvailability.dataDate === pickupDate
@@ -334,7 +332,7 @@ export function ReservePage({
       setError(copy.errors.pickupTime)
       return
     }
-    if (isSchoolPickupWindowClosed(pickupDate, selectedPickupTime)) {
+    if (!isCakePickupServiceTime(pickupDate, selectedPickupTime) || isSchoolPickupWindowClosed(pickupDate, selectedPickupTime)) {
       setError(copy.errors.pickupTimeUnavailable)
       return
     }

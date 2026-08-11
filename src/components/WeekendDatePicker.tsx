@@ -163,5 +163,5 @@ export function WeekendDatePicker(props: SharedDatePickerProps) {
 }
 
 export function PickupDatePicker(props: SharedDatePickerProps) {
-  return <BookingDatePicker {...props} weekendsOnly={false} />
+  return <BookingDatePicker {...props} weekendsOnly />
 }

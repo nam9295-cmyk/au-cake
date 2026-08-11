@@ -38,9 +38,10 @@ import {
   customerTimeOptionsForDate,
   dateInputValue,
   formatCurrency,
+  firstCustomerPickupDate,
   generateRequestId,
+  isCakePickupServiceTime,
   isPickupTimeAllowed,
-  isSchoolPickupWindowClosed,
   isValidPhone,
   normalizePhone,
   timeOptionsForDate,
@@ -340,50 +341,42 @@ test('Lemoni promo is case-insensitive, lemon-only, and valid through 16 July Sy
   assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'lemoni', validAt), 55)
 })
 
-test('AU pick-up time options run until 20:00 every day', () => {
+test('AU cake pick-up is available only on weekends from 10:00 through 17:00', () => {
   const weekdayTimes = timeOptionsForDate('2026-07-06', DEFAULT_SETTINGS)
   const weekendTimes = timeOptionsForDate('2026-07-05', DEFAULT_SETTINGS)
+  const customerWeekdayTimes = customerTimeOptionsForDate(
+    '2026-07-06',
+    DEFAULT_SETTINGS,
+    new Date('2026-07-04T00:00:00.000Z'),
+  )
+  const customerWeekendTimes = customerTimeOptionsForDate(
+    '2026-07-05',
+    { ...DEFAULT_SETTINGS, weekendClose: '20:00' },
+    new Date('2026-07-03T00:00:00.000Z'),
+  )
 
   assert.equal(weekdayTimes.at(-1), '20:00')
-  assert.equal(weekendTimes.at(-1), '20:00')
+  assert.equal(weekendTimes.at(-1), '17:00')
   assert.ok(weekdayTimes.includes('19:30'))
-  assert.ok(weekendTimes.includes('19:30'))
+  assert.deepEqual(customerWeekdayTimes, [])
+  assert.equal(customerWeekendTimes[0], '10:00')
+  assert.equal(customerWeekendTimes.at(-1), '17:00')
+  assert.equal(customerWeekendTimes.includes('17:30'), false)
+  assert.equal(isCakePickupServiceTime('2026-07-05', '10:00'), true)
+  assert.equal(isCakePickupServiceTime('2026-07-05', '17:00'), true)
+  assert.equal(isCakePickupServiceTime('2026-07-05', '17:30'), false)
+  assert.equal(isCakePickupServiceTime('2026-07-06', '10:00'), false)
 })
 
-test('AU weekday cake pick-ups close during the inclusive school run windows', () => {
+test('AU customer calendar skips weekdays and selects the next eligible weekend date', () => {
   const now = new Date('2026-07-10T00:00:00.000Z')
-  const shortClosureDates = ['2026-08-03', '2026-08-05', '2026-08-07']
-  const longClosureDates = ['2026-08-04', '2026-08-06']
 
-  for (const date of shortClosureDates) {
-    assert.equal(isSchoolPickupWindowClosed(date, '14:30'), false, `${date} 14:30`)
-    assert.equal(isSchoolPickupWindowClosed(date, '15:00'), true, `${date} 15:00`)
-    assert.equal(isSchoolPickupWindowClosed(date, '15:30'), true, `${date} 15:30`)
-    assert.equal(isSchoolPickupWindowClosed(date, '16:00'), false, `${date} 16:00`)
-    const times = customerTimeOptionsForDate(date, DEFAULT_SETTINGS, now)
-    assert.equal(times.includes('15:00'), false, `${date} 15:00 option`)
-    assert.equal(times.includes('15:30'), false, `${date} 15:30 option`)
-    assert.equal(times.includes('16:00'), true, `${date} 16:00 option`)
-  }
-
-  for (const date of longClosureDates) {
-    for (const time of ['15:00', '15:30', '16:00', '16:30', '17:00', '17:30']) {
-      assert.equal(isSchoolPickupWindowClosed(date, time), true, `${date} ${time}`)
-    }
-    assert.equal(isSchoolPickupWindowClosed(date, '14:30'), false, `${date} 14:30`)
-    assert.equal(isSchoolPickupWindowClosed(date, '18:00'), false, `${date} 18:00`)
-    const times = customerTimeOptionsForDate(date, DEFAULT_SETTINGS, now)
-    assert.equal(times.includes('15:00'), false, `${date} 15:00 option`)
-    assert.equal(times.includes('17:30'), false, `${date} 17:30 option`)
-    assert.equal(times.includes('18:00'), true, `${date} 18:00 option`)
-  }
-
-  for (const weekendDate of ['2026-08-08', '2026-08-09']) {
-    assert.equal(isSchoolPickupWindowClosed(weekendDate, '15:00'), false)
-    assert.equal(customerTimeOptionsForDate(weekendDate, DEFAULT_SETTINGS, now).includes('15:00'), true)
-  }
-  assert.equal(isSchoolPickupWindowClosed('2026-08-04', '15:99'), false)
-  assert.equal(isSchoolPickupWindowClosed('not-a-date', '15:00'), false)
+  assert.deepEqual(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, now), [])
+  assert.equal(firstCustomerPickupDate(DEFAULT_SETTINGS, now), '2026-07-11')
+  assert.equal(
+    firstCustomerPickupDate(DEFAULT_SETTINGS, new Date('2026-07-12T00:00:00.000Z')),
+    '2026-07-18',
+  )
 })
 
 test('10:00 class blocks every half-hour pick-up boundary through 12:00 inclusive', () => {

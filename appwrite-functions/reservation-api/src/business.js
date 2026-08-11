@@ -53,6 +53,8 @@ export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 const SCHOOL_PICKUP_START_MINUTES = 15 * 60
 const SHORT_SCHOOL_PICKUP_END_MINUTES = 15 * 60 + 30
 const LONG_SCHOOL_PICKUP_END_MINUTES = 17 * 60 + 30
+const CAKE_PICKUP_OPEN_MINUTES = 10 * 60
+const CAKE_PICKUP_CLOSE_MINUTES = 17 * 60
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const CLASS_SESSION_DURATION_MINUTES = 120
 export const CLASS_BASIC_DURATION_MINUTES = 90
@@ -328,6 +330,21 @@ export function isSchoolPickupWindowClosed(dateValue, timeValue) {
     && pickupMinutes <= endMinutes
 }
 
+export function isCakePickupServiceTime(dateValue, timeValue) {
+  if (!isValidDateValue(dateValue)) return false
+  const match = /^(\d{2}):(\d{2})$/.exec(timeValue || '')
+  if (!match) return false
+
+  const hour = Number(match[1])
+  const minute = Number(match[2])
+  if (hour > 23 || minute > 59) return false
+  const weekday = new Date(`${dateValue}T00:00:00.000Z`).getUTCDay()
+  const pickupMinutes = hour * 60 + minute
+  return (weekday === 0 || weekday === 6)
+    && pickupMinutes >= CAKE_PICKUP_OPEN_MINUTES
+    && pickupMinutes <= CAKE_PICKUP_CLOSE_MINUTES
+}
+
 function validatePickupDateTime(dateValue, timeValue, now) {
   if (!isValidDateValue(dateValue)) fail('INVALID_PICKUP_DATE')
   const match = /^(\d{2}):(\d{2})$/.exec(timeValue || '')
@@ -335,11 +352,10 @@ function validatePickupDateTime(dateValue, timeValue, now) {
   const hour = Number(match[1])
   const minute = Number(match[2])
   const totalMinutes = hour * 60 + minute
-  if ((minute !== 0 && minute !== 30) || totalMinutes < 10 * 60 || totalMinutes > 20 * 60) {
+  if ((minute !== 0 && minute !== 30) || hour > 23) {
     fail('INVALID_PICKUP_TIME')
   }
   if (zonedTimestamp(dateValue, timeValue) === null) fail('INVALID_PICKUP_DATE')
-  if (isSchoolPickupWindowClosed(dateValue, timeValue)) fail('PICKUP_TIME_UNAVAILABLE', 409)
 
   const today = sydneyDateValue(now)
   const tomorrow = addDaysToDateValue(today, 1)
@@ -350,6 +366,8 @@ function validatePickupDateTime(dateValue, timeValue, now) {
     totalMinutes < LATE_ORDER_NEXT_DAY_START_MINUTES
   )
   if (isTooSoon) fail('PICKUP_TIME_TOO_SOON')
+  if (!isCakePickupServiceTime(dateValue, timeValue)) fail('PICKUP_TIME_UNAVAILABLE', 409)
+  if (isSchoolPickupWindowClosed(dateValue, timeValue)) fail('PICKUP_TIME_UNAVAILABLE', 409)
 }
 
 function normalizeChocolateIcingCount(productId, value) {

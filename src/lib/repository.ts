@@ -62,6 +62,7 @@ import type {
 } from './types'
 import {
   generateReservationNumber,
+  isCakePickupServiceTime,
   isPickupTimeAllowed,
   isSchoolPickupWindowClosed,
   isValidPhone,
@@ -905,6 +906,9 @@ export async function getSettings(): Promise<StoreSettings> {
 
 export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrderReservation> {
   if (!await supportsCakeOrderLines()) throw new Error(CAKE_ORDER_LINES_UNAVAILABLE_ERROR)
+  if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
+    throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
+  }
   if (isSchoolPickupWindowClosed(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
   }
@@ -922,6 +926,9 @@ export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrde
 }
 
 export async function createReservation(input: ReservationInput): Promise<Reservation> {
+  if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
+    throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
+  }
   if (isSchoolPickupWindowClosed(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
   }
