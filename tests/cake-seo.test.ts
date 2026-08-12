@@ -91,12 +91,13 @@ test('cake catalogue exposes five canonical detail pages', () => {
   ])
 })
 
-test('Vanilla Product does not invent a product image', () => {
+test('Vanilla Product publishes its supplied product image', () => {
   const config = getSeoConfig('/cakes/vanilla-fresh-cream-cake')
   const product = config.structuredData?.find((entry) => entry['@type'] === 'Product')
   assert.ok(product)
-  assert.equal(config.image, undefined)
-  assert.equal(Object.hasOwn(product, 'image'), false)
+  const image = `${SITE_URL}/products/vanilla-cake-sydney.webp`
+  assert.equal(config.image, image)
+  assert.equal(product.image, image)
 })
 
 test('all noindex operational routes remain directly loadable metadata pages', () => {

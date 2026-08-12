@@ -55,6 +55,8 @@ export type CakeDetailImageKey =
   | 'lemon-side'
   | 'lemon-quick-view'
   | 'lemon-previous'
+  | 'vanilla-side'
+  | 'vanilla-quick-view'
 
 export type CakeDetailSelection = {
   productId: ProductId
@@ -91,7 +93,7 @@ const DETAIL_GALLERIES: Record<CakeCatalogId, readonly CakeDetailImageKey[]> = {
   pave: ['pave-side', 'pave-quick-view', 'pave-previous', 'pave-hero', 'pave-card', 'pave-slice', 'pave-slices'],
   cheesecake: ['cheesecake-side', 'cheesecake-quick-view', 'cheesecake-previous', 'cheesecake-hero'],
   'fresh-lemon-cupcakes': ['lemon-side', 'lemon-quick-view', 'lemon-previous', 'lemon-hero'],
-  'vanilla-fresh-cream': [],
+  'vanilla-fresh-cream': ['vanilla-side', 'vanilla-quick-view'],
 }
 
 const DETAIL_OPERATION_COPY: Record<Language, {

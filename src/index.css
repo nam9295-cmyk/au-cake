@@ -549,7 +549,8 @@ main {
   display: contents;
 }
 
-.hero-cake-slide-lemon {
+.hero-cake-slide-lemon,
+.hero-cake-slide-vanilla {
   display: none;
 }
 
@@ -3811,7 +3812,8 @@ td select {
   }
 
   .hero-cake-slide,
-  .hero-cake-slide-lemon {
+  .hero-cake-slide-lemon,
+  .hero-cake-slide-vanilla {
     position: absolute;
     inset: 0;
     display: block;
@@ -3858,7 +3860,8 @@ td select {
   .hero-cake-one,
   .hero-cake-two,
   .hero-cake-three,
-  .hero-cake-four {
+  .hero-cake-four,
+  .hero-cake-five {
     width: min(58vw, 820px);
     transform: translateX(-50%) rotate(0deg);
   }
