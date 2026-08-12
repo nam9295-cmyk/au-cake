@@ -7581,15 +7581,16 @@ td select {
 
 .vanilla-point-color-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px 9px;
+  grid-template-columns: repeat(4, 40px);
+  gap: 14px 16px;
+  justify-content: start;
 }
 
 .vanilla-point-color-card {
   display: grid;
   place-items: center;
   gap: 6px;
-  min-width: 0;
+  width: 40px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -7635,8 +7636,8 @@ label.vanilla-point-color-card {
 
 .vanilla-point-color-swatch {
   display: block;
-  width: 100%;
-  aspect-ratio: 1;
+  width: 40px;
+  height: 40px;
   border: 1px solid rgba(31, 45, 39, 0.2);
   border-radius: 2px;
 }
@@ -8150,10 +8151,6 @@ label.vanilla-point-color-card {
 
   .cake-detail-option {
     min-height: 56px;
-  }
-
-  .vanilla-point-color-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .cake-detail-trust {
