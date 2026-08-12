@@ -227,7 +227,7 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
     { ...cakeInput, productId: 'vanilla-fresh-cream-cake' },
     { now, reservationNumber: 'VG-C-AU-VANILLA-LEGACY' },
   )
-  assert.equal(legacy.vanillaCakeSheet, 'vanilla')
+  assert.equal(legacy.vanillaCakeSheet, 'chocolate')
   assert.equal(legacy.vanillaCakeFlavor, 'triple-berry')
   for (const invalid of [
     { vanillaCakeSheet: 'red-velvet' },

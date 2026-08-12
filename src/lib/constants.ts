@@ -8,6 +8,7 @@ export const DEFAULT_CAKE_SIZE: CakeSize = '15cm'
 export const DEFAULT_CHOCOLATE_TYPE: ChocolateType = 'dark'
 export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
 export const DEFAULT_VANILLA_CAKE_SHEET: VanillaCakeSheet = 'vanilla'
+export const VANILLA_FRESH_CREAM_CAKE_SHEET: VanillaCakeSheet = 'chocolate'
 export const DEFAULT_VANILLA_CAKE_FLAVOR: VanillaCakeFlavor = 'triple-berry'
 export const MAX_RESERVATION_QUANTITY = 5
 export const PROMO_CODE = 'chocolate'
@@ -117,7 +118,6 @@ export function isVanillaFreshCreamCakeProduct(productId: ProductId) {
 }
 
 export const VANILLA_CAKE_SHEET_OPTIONS: Array<{ value: VanillaCakeSheet; label: string }> = [
-  { value: 'vanilla', label: 'Vanilla cake sheet' },
   { value: 'chocolate', label: 'Chocolate cake sheet' },
 ]
 
@@ -128,7 +128,8 @@ export const VANILLA_CAKE_FLAVOR_OPTIONS: Array<{ value: VanillaCakeFlavor; labe
 
 export function normalizeVanillaCakeSheet(productId: ProductId, value?: VanillaCakeSheet | string) {
   if (!isVanillaFreshCreamCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_SHEET
-  return VANILLA_CAKE_SHEET_OPTIONS.some((option) => option.value === value) ? value as VanillaCakeSheet : DEFAULT_VANILLA_CAKE_SHEET
+  void value
+  return VANILLA_FRESH_CREAM_CAKE_SHEET
 }
 
 export function normalizeVanillaCakeFlavor(productId: ProductId, value?: VanillaCakeFlavor | string) {

@@ -23,7 +23,7 @@ export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
 export const CUPCAKE_PACK_SIZE = 12
 export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
-export const VANILLA_CAKE_SHEETS = new Set(['vanilla', 'chocolate'])
+export const VANILLA_CAKE_SHEETS = new Set(['chocolate'])
 export const VANILLA_CAKE_FLAVORS = new Set(['triple-berry', 'nutella-chocolate-chip'])
 export const CAKE_SIZE_LABELS = {
   '15cm': '6" | serves 8',
@@ -397,7 +397,7 @@ function normalizeVanillaCakeOptions(productId, cakeSheet, flavor) {
   if (productId !== 'vanilla-fresh-cream-cake') {
     return { vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry' }
   }
-  const vanillaCakeSheet = cakeSheet === undefined ? 'vanilla' : cakeSheet
+  const vanillaCakeSheet = cakeSheet === undefined ? 'chocolate' : cakeSheet
   const vanillaCakeFlavor = flavor === undefined ? 'triple-berry' : flavor
   if (!VANILLA_CAKE_SHEETS.has(vanillaCakeSheet) || !VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)) {
     fail('INVALID_VANILLA_CAKE_OPTION')
@@ -1044,7 +1044,7 @@ export function publicCakeReservation(document) {
     chocolateIcingCount: Number(document.chocolateIcingCount || 0),
     vanillaCreamCount: Number(document.vanillaCreamCount || 0),
     partyDecorationCount: Number(document.partyDecorationCount || 0),
-    vanillaCakeSheet: document.vanillaCakeSheet || 'vanilla',
+    vanillaCakeSheet: document.vanillaCakeSheet || (document.productId === 'vanilla-fresh-cream-cake' ? 'chocolate' : 'vanilla'),
     vanillaCakeFlavor: document.vanillaCakeFlavor || 'triple-berry',
     quantity: Number(document.quantity || 1),
   }

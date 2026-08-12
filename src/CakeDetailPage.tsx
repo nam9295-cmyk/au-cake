@@ -16,7 +16,7 @@ import {
   MAX_RESERVATION_QUANTITY,
   POUND_ADDON_OPTIONS,
   VANILLA_CAKE_FLAVOR_OPTIONS,
-  VANILLA_CAKE_SHEET_OPTIONS,
+
   formatCakeSizeLabel,
   getFreshLemonCupcakePackSize,
   getProductById,
@@ -342,20 +342,6 @@ export default function CakeDetailPage({
 
           {isVanillaFreshCreamCakeProduct(product.id) && (
             <>
-              <fieldset className="cake-detail-fieldset">
-                <legend>{language === 'ko' ? '케이크 시트' : 'Cake sheet'}</legend>
-                <div className="cake-detail-options">
-                  {VANILLA_CAKE_SHEET_OPTIONS.map((option) => (
-                    <OptionButton
-                      active={selection.vanillaCakeSheet === option.value}
-                      onClick={() => updateSelection({ vanillaCakeSheet: option.value })}
-                      key={option.value}
-                    >
-                      <strong>{option.label}</strong>
-                    </OptionButton>
-                  ))}
-                </div>
-              </fieldset>
               <fieldset className="cake-detail-fieldset">
                 <legend>{language === 'ko' ? '맛 선택' : 'Choose a flavour'}</legend>
                 <div className="cake-detail-options">

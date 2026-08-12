@@ -374,9 +374,9 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'vanilla-fresh-cream-cake': {
         id: 'vanilla-fresh-cream-cake',
         name: 'Vanilla Fresh Cream Cake',
-        description: 'Choose vanilla or chocolate cake sheet with vanilla fresh cream, then Triple berry or Nutella chocolate chip flavour.',
+        description: 'Made with a chocolate cake sheet and vanilla fresh cream, then Triple berry or Nutella chocolate chip flavour.',
         price: 75,
-        priceNote: 'Choose size, cake sheet and flavour',
+        priceNote: 'Choose size and flavour · Chocolate cake sheet included',
         usesCacaoOptions: false,
         usesSizeOptions: true,
         usesChocolateTypeOptions: false,
@@ -525,7 +525,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     },
     productCardFeatures: {
       'pave-cake': ['Layered chocolate sponge and pave ganache', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), 'Dark chocolate only'],
-      'vanilla-fresh-cream-cake': ['Choose vanilla or chocolate cake sheet', 'Triple berry or Nutella chocolate chip', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
+      'vanilla-fresh-cream-cake': ['Chocolate cake sheet only', 'Triple berry or Nutella chocolate chip', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
       'pound-cake': ['Rectangular gateau chocolat', 'Fixed pound cake size', 'Basic, extra chocolate, or vanilla cream finish'],
       'cupcake-dozen': ['12 cupcakes in one dozen', 'Vanilla cream +AUD 0.50 each', 'Party decoration +AUD 1.00 each'],
       'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], "Chocolatier's Basque cheesecake", 'Smooth, rich centre'],

@@ -101,9 +101,9 @@ test('catalog cards preserve the current English and Korean home content', () =>
     },
     {
       name: 'Vanilla Fresh Cream Cake',
-      description: 'Choose vanilla or chocolate cake sheet with vanilla fresh cream, then Triple berry or Nutella chocolate chip flavour.',
-      features: ['Choose vanilla or chocolate cake sheet', 'Triple berry or Nutella chocolate chip', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'],
-      optionLabel: 'Choose size, cake sheet and flavour',
+      description: 'Made with a chocolate cake sheet and vanilla fresh cream, then Triple berry or Nutella chocolate chip flavour.',
+      features: ['Chocolate cake sheet only', 'Triple berry or Nutella chocolate chip', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'],
+      optionLabel: 'Choose size and flavour · Chocolate cake sheet included',
       priceLabel: 'From AUD 75',
     },
   ])
@@ -139,9 +139,9 @@ test('catalog cards preserve the current English and Korean home content', () =>
     },
     {
       name: '바닐라 생크림 케이크',
-      description: '바닐라 또는 초코 케이크 시트에 바닐라 생크림을 채우고, 트리플베리 또는 누텔라 초코칩 맛을 선택할 수 있어요.',
-      features: ['바닐라 또는 초코 케이크 시트', '트리플베리 또는 누텔라 초코칩', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'],
-      optionLabel: '사이즈, 케이크 시트, 맛 선택',
+      description: '초코 케이크 시트에 바닐라 생크림을 채우고, 트리플베리 또는 누텔라 초코칩 맛을 선택할 수 있어요.',
+      features: ['초코 케이크 시트만 사용', '트리플베리 또는 누텔라 초코칩', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'],
+      optionLabel: '사이즈와 맛 선택 · 초코 케이크 시트 고정',
       priceLabel: 'AUD 75부터',
     },
   ])
@@ -184,7 +184,7 @@ test('catalog base, size and paid option prices stay equal to the Reservation AP
       chocolateIcingCount: options.chocolateIcingCount || 0,
       vanillaCreamCount: options.vanillaCreamCount || 0,
       partyDecorationCount: options.partyDecorationCount || 0,
-      vanillaCakeSheet: 'vanilla',
+      vanillaCakeSheet: 'chocolate',
       vanillaCakeFlavor: 'triple-berry',
       quantity: 1,
       pickupDate: '2026-08-01',

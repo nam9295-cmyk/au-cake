@@ -4,7 +4,7 @@ import {
   MAX_RESERVATION_QUANTITY,
   formatCakeSizeLabel,
   formatVanillaCakeFlavor,
-  formatVanillaCakeSheet,
+
   getFreshLemonCupcakePackSize,
   getLemonIcingCount,
   getProductById,
@@ -71,12 +71,6 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
       )}
       {isVanillaFreshCreamCakeProduct(product.id) && (
         <>
-          <div>
-            <dt>{language === 'ko' ? '케이크 시트' : 'Cake sheet'}</dt>
-            <dd>{language === 'ko'
-              ? selection.vanillaCakeSheet === 'chocolate' ? '초코 케이크 시트' : '바닐라 케이크 시트'
-              : formatVanillaCakeSheet(selection.vanillaCakeSheet)}</dd>
-          </div>
           <div>
             <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
             <dd>{language === 'ko'

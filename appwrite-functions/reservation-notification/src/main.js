@@ -234,10 +234,9 @@ function getCakeSizeText(reservation, config) {
 
 function getVanillaCakeSheetText(reservation, config) {
   if (reservation.productId !== 'vanilla-fresh-cream-cake') return null
-  const chocolate = reservation.vanillaCakeSheet === 'chocolate'
   return config.currency === 'AUD'
-    ? chocolate ? 'Chocolate cake sheet' : 'Vanilla cake sheet'
-    : chocolate ? '초코 케이크 시트' : '바닐라 케이크 시트'
+    ? 'Chocolate cake sheet'
+    : '초코 케이크 시트'
 }
 
 function getVanillaCakeFlavorText(reservation, config) {
