@@ -94,14 +94,11 @@ test('adding an identical normalized configuration merges quantity into one capp
   assert.equal(merged[0].selection.quantity, 5)
 })
 
-test('meaningful Vanilla and Lemon options stay separate with no total line cap', () => {
+test('meaningful Vanilla flavour and Lemon options stay separate with no total line cap', () => {
   const selections: CakeDetailSelection[] = [
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm' }),
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '19cm' }),
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '22cm' }),
-    baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm', vanillaCakeSheet: 'chocolate' }),
-    baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '19cm', vanillaCakeSheet: 'chocolate' }),
-    baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '22cm', vanillaCakeSheet: 'chocolate' }),
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm', vanillaCakeFlavor: 'nutella-chocolate-chip' }),
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '19cm', vanillaCakeFlavor: 'nutella-chocolate-chip' }),
     baseSelection({ productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 0 }),
@@ -109,11 +106,11 @@ test('meaningful Vanilla and Lemon options stay separate with no total line cap'
   ]
   const lines = selections.reduce(addCartLine, [])
 
-  assert.equal(lines.length, 10)
-  assert.equal(new Set(lines.map((line) => line.lineKey)).size, 10)
-  assert.notEqual(lines[0].lineKey, lines[6].lineKey)
-  assert.notEqual(lines[8].lineKey, lines[9].lineKey)
-  assert.equal(getCartTotalQuantity(lines), 10)
+  assert.equal(lines.length, 7)
+  assert.equal(new Set(lines.map((line) => line.lineKey)).size, 7)
+  assert.notEqual(lines[0].lineKey, lines[3].lineKey)
+  assert.notEqual(lines[5].lineKey, lines[6].lineKey)
+  assert.equal(getCartTotalQuantity(lines), 7)
 })
 
 test('updating one line clamps its quantity without changing other lines', () => {
@@ -224,6 +221,7 @@ test('parsing fails soft for malformed JSON or a wrong version and preserves val
   assert.deepEqual(parsed[0].selection, baseSelection({
     productId: 'vanilla-fresh-cream-cake',
     cakeSize: '19cm',
+    vanillaCakeSheet: 'chocolate',
     quantity: 2,
   }))
   assert.equal(parsed[0].lineKey, getCartLineKey(parsed[0].selection))

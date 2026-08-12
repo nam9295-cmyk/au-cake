@@ -6,6 +6,7 @@ import {
   DEFAULT_POUND_ADDON,
   DEFAULT_VANILLA_CAKE_FLAVOR,
   DEFAULT_VANILLA_CAKE_SHEET,
+  VANILLA_FRESH_CREAM_CAKE_SHEET,
   DEFAULT_SETTINGS,
   CAKE_SIZE_OPTIONS,
   CHOCOLATE_TYPE_OPTIONS,
@@ -87,7 +88,7 @@ test('cheesecake product detection is shared by customer and admin presentation'
   assert.equal(isCheesecakeProduct('pave-cake'), false)
 })
 
-test('Vanilla Fresh Cream Cake keeps its size prices and offers the approved cake-sheet and flavour choices', () => {
+test('Vanilla Fresh Cream Cake keeps its size prices and fixes the chocolate cake sheet while retaining flavour choices', () => {
   const vanillaFreshCreamCakeId: ProductId = 'vanilla-fresh-cream-cake'
   const vanillaFreshCreamCake = getProductById(vanillaFreshCreamCakeId)
 
@@ -98,15 +99,14 @@ test('Vanilla Fresh Cream Cake keeps its size prices and offers the approved cak
   assert.equal(vanillaFreshCreamCake.usesChocolateTypeOptions, false)
   assert.equal(vanillaFreshCreamCake.usesPoundAddonOptions, false)
   assert.equal(DEFAULT_VANILLA_CAKE_SHEET, 'vanilla')
+  assert.equal(VANILLA_FRESH_CREAM_CAKE_SHEET, 'chocolate')
   assert.equal(DEFAULT_VANILLA_CAKE_FLAVOR, 'triple-berry')
-  assert.deepEqual(VANILLA_CAKE_SHEET_OPTIONS, [
-    { value: 'vanilla', label: 'Vanilla cake sheet' },
-    { value: 'chocolate', label: 'Chocolate cake sheet' },
-  ])
+  assert.deepEqual(VANILLA_CAKE_SHEET_OPTIONS, [{ value: 'chocolate', label: 'Chocolate cake sheet' }])
   assert.deepEqual(VANILLA_CAKE_FLAVOR_OPTIONS, [
     { value: 'triple-berry', label: 'Triple berry' },
     { value: 'nutella-chocolate-chip', label: 'Nutella chocolate chip' },
   ])
+  assert.equal(normalizeVanillaCakeSheet(vanillaFreshCreamCakeId, 'vanilla'), 'chocolate')
   assert.equal(normalizeVanillaCakeSheet(vanillaFreshCreamCakeId, 'chocolate'), 'chocolate')
   assert.equal(normalizeVanillaCakeFlavor(vanillaFreshCreamCakeId, 'nutella-chocolate-chip'), 'nutella-chocolate-chip')
   assert.equal(normalizeVanillaCakeSheet('pave-cake', 'chocolate'), 'vanilla')
@@ -123,8 +123,8 @@ test('Vanilla Fresh Cream Cake keeps its size prices and offers the approved cak
     assert.equal(text.description.includes('cm'), false)
     assert.equal(text.priceNote.includes('cm'), false)
     assert.deepEqual(features, language === 'en'
-      ? ['Choose vanilla or chocolate cake sheet', 'Triple berry or Nutella chocolate chip', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
-      : ['바닐라 또는 초코 케이크 시트', '트리플베리 또는 누텔라 초코칩', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
+      ? ['Chocolate cake sheet only', 'Triple berry or Nutella chocolate chip', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
+      : ['초코 케이크 시트만 사용', '트리플베리 또는 누텔라 초코칩', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
   }
 })
 

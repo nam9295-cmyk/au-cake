@@ -14,7 +14,6 @@ import {
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
   DEFAULT_VANILLA_CAKE_FLAVOR,
-  DEFAULT_VANILLA_CAKE_SHEET,
   MAX_RESERVATION_QUANTITY,
   formatCakeSizeLabel,
   isPromoEligibleProduct,
@@ -39,7 +38,7 @@ import {
   POUND_ADDON_OPTIONS,
   PRODUCT_GROUPS,
   VANILLA_CAKE_FLAVOR_OPTIONS,
-  VANILLA_CAKE_SHEET_OPTIONS,
+
   usesReservationChocolateType,
 } from '../lib/constants'
 import {
@@ -161,7 +160,7 @@ export function ReservePage({
     chocolateIcingCount: initialSelection?.chocolateIcingCount || 0,
     vanillaCreamCount: initialSelection?.vanillaCreamCount || 0,
     partyDecorationCount: initialSelection?.partyDecorationCount || 0,
-    vanillaCakeSheet: initialSelection?.vanillaCakeSheet || DEFAULT_VANILLA_CAKE_SHEET as VanillaCakeSheet,
+    vanillaCakeSheet: normalizeVanillaCakeSheet(initialSelection?.productId || initialProductId, initialSelection?.vanillaCakeSheet) as VanillaCakeSheet,
     vanillaCakeFlavor: initialSelection?.vanillaCakeFlavor || DEFAULT_VANILLA_CAKE_FLAVOR as VanillaCakeFlavor,
     pickupDate: todayInputValue(),
     pickupTime: '',
@@ -961,24 +960,6 @@ export function ReservePage({
 
             {isVanillaFreshCreamCakeProduct(selectedProduct.id) && (
               <>
-                <fieldset>
-                  <legend>{language === 'ko' ? '케이크 시트 선택' : 'Choose cake sheet'}</legend>
-                  <div className="choice-list">
-                    {VANILLA_CAKE_SHEET_OPTIONS.map((option) => (
-                      <label className="choice-item" key={option.value}>
-                        <input
-                          type="radio"
-                          name="vanillaCakeSheet"
-                          checked={form.vanillaCakeSheet === option.value}
-                          onChange={() => setForm({ ...form, vanillaCakeSheet: option.value })}
-                        />
-                        <span className="choice-copy">
-                          <strong>{language === 'ko' ? option.value === 'chocolate' ? '초코 케이크 시트' : '바닐라 케이크 시트' : option.label}</strong>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
                 <fieldset>
                   <legend>{language === 'ko' ? '맛 선택' : 'Choose flavour'}</legend>
                   <div className="choice-list">

@@ -659,7 +659,7 @@ export function parseCakeReservationResult(value: unknown): Reservation {
   const vanillaCreamCount = row.vanillaCreamCount === undefined ? 0 : nonnegativeInteger(row.vanillaCreamCount)
   const partyDecorationCount = row.partyDecorationCount === undefined ? 0 : nonnegativeInteger(row.partyDecorationCount)
   const vanillaCakeSheet = row.vanillaCakeSheet === undefined
-    ? 'vanilla'
+    ? productId === 'vanilla-fresh-cream-cake' ? 'chocolate' : 'vanilla'
     : requiredSetValue(row, 'vanillaCakeSheet', VALID_VANILLA_CAKE_SHEETS)
   const vanillaCakeFlavor = row.vanillaCakeFlavor === undefined
     ? 'triple-berry'
@@ -673,6 +673,8 @@ export function parseCakeReservationResult(value: unknown): Reservation {
     chocolateIcingCount !== normalizeChocolateIcingCount(productId, chocolateIcingCount) ||
     vanillaCreamCount !== normalizedFinishes.vanillaCreamCount ||
     partyDecorationCount !== normalizedFinishes.partyDecorationCount ||
+    vanillaCakeSheet !== normalizeVanillaCakeSheet(productId, vanillaCakeSheet) ||
+    vanillaCakeFlavor !== normalizeVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
     quantity < 1 || quantity > MAX_RESERVATION_QUANTITY
   ) invalidResponse()
 

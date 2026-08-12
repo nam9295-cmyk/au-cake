@@ -60,7 +60,7 @@ export function formatOrderLineSummary(line: ReservationOrderLine) {
   const details: string[] = [product.name]
   if (product.usesSizeOptions || isCheesecakeProduct(product.id)) details.push(formatCakeSizeLabel(line.cakeSize))
   if (product.id === 'vanilla-fresh-cream-cake') {
-    details.push(line.vanillaCakeSheet === 'chocolate' ? 'Chocolate sheet' : 'Vanilla sheet')
+    details.push('Chocolate sheet')
     details.push(line.vanillaCakeFlavor === 'nutella-chocolate-chip' ? 'Nutella chocolate chip' : 'Triple berry')
   }
   if (usesReservationChocolateType(product.id, line.poundAddon)) details.push(formatChocolateTypeLabel(line.chocolateType))

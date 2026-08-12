@@ -3,7 +3,7 @@ import {
   formatCacaoLabel,
   formatCakeSizeLabel,
   formatVanillaCakeFlavor,
-  formatVanillaCakeSheet,
+
   getFreshLemonCupcakePackSize,
   getLemonIcingCount,
   getProductById,
@@ -83,12 +83,6 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
       )}
       {isVanillaFreshCreamCakeProduct(product.id) && (
         <>
-          <div>
-            <dt>{language === 'ko' ? '케이크 시트' : 'Cake sheet'}</dt>
-            <dd>{language === 'ko'
-              ? reservation.vanillaCakeSheet === 'chocolate' ? '초코 케이크 시트' : '바닐라 케이크 시트'
-              : formatVanillaCakeSheet(reservation.vanillaCakeSheet)}</dd>
-          </div>
           <div>
             <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
             <dd>{language === 'ko'

@@ -191,7 +191,7 @@ export function cakeReservationResponse(document) {
     chocolateIcingCount: Number(document.chocolateIcingCount || 0),
     vanillaCreamCount: Number(document.vanillaCreamCount || 0),
     partyDecorationCount: Number(document.partyDecorationCount || 0),
-    vanillaCakeSheet: document.vanillaCakeSheet || 'vanilla',
+    vanillaCakeSheet: document.vanillaCakeSheet || (document.productId === 'vanilla-fresh-cream-cake' ? 'chocolate' : 'vanilla'),
     vanillaCakeFlavor: document.vanillaCakeFlavor || 'triple-berry',
     quantity: document.quantity,
     pickupDate: document.pickupDate,
