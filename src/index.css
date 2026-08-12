@@ -7582,23 +7582,26 @@ td select {
 .vanilla-point-color-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 14px 9px;
 }
 
 .vanilla-point-color-card {
   display: grid;
   place-items: center;
-  gap: 7px;
-  min-height: 84px;
-  padding: 10px 6px;
-  border: 1px solid rgba(31, 90, 70, 0.26);
-  background: rgba(255, 255, 255, 0.5);
-  color: var(--text);
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
   font: inherit;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
   text-align: center;
-  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  text-transform: lowercase;
+  transition: color 160ms ease, opacity 160ms ease;
 }
 
 button.vanilla-point-color-card,
@@ -7607,8 +7610,7 @@ label.vanilla-point-color-card {
 }
 
 .vanilla-point-color-card:hover {
-  border-color: var(--forest);
-  transform: translateY(-1px);
+  opacity: 0.72;
 }
 
 .vanilla-point-color-card:focus-within,
@@ -7618,10 +7620,7 @@ label.vanilla-point-color-card {
 }
 
 .vanilla-point-color-card.is-selected {
-  border-color: var(--forest-deep);
-  background: var(--forest-deep);
-  color: white;
-  box-shadow: 0 0 0 2px rgba(31, 90, 70, 0.2);
+  color: var(--forest-deep);
 }
 
 .vanilla-point-color-card input {
@@ -7635,15 +7634,15 @@ label.vanilla-point-color-card {
 }
 
 .vanilla-point-color-swatch {
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(31, 45, 39, 0.28);
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(31, 45, 39, 0.2);
+  border-radius: 2px;
 }
 
 .vanilla-point-color-card.is-selected .vanilla-point-color-swatch {
-  outline: 3px solid currentColor;
+  outline: 2px solid var(--forest-deep);
   outline-offset: 2px;
 }
 

@@ -1007,7 +1007,7 @@ export function ReservePage({
                           onChange={() => setForm({ ...form, vanillaCakePointColor: option.value })}
                         />
                         <span className="vanilla-point-color-swatch" style={{ backgroundColor: option.hex }} aria-hidden="true" />
-                        <strong>{language === 'ko' ? option.labelKo : option.label}</strong>
+                        <strong>{option.value}</strong>
                       </label>
                     ))}
                   </div>
