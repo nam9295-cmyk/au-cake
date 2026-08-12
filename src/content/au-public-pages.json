@@ -84,9 +84,9 @@
       "schema": "product-offer",
       "startingPrice": 75,
       "priceSummary": "From AUD 75. 6 inch serves 8, 7.5 inch serves 14, and 9 inch serves 22.",
-      "optionSummary": "Choose a size and flavour. Made with a chocolate cake sheet only. Product photo coming soon.",
-      "imagePath": null,
-      "imageAlt": null
+      "optionSummary": "Choose a size, flavour and point colour. Made with a chocolate cake sheet only.",
+      "imagePath": "/products/vanilla-cake-sydney.webp",
+      "imageAlt": "Vanilla Fresh Cream Cake prepared for pre-arranged pickup in Sydney"
     }
   },
   "knownDirectAccessRoutes": [

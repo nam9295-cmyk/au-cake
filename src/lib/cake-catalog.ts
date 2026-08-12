@@ -137,7 +137,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     defaultProductId: 'vanilla-fresh-cream-cake',
     productIds: ['vanilla-fresh-cream-cake'],
     imageKey: 'vanilla-fresh-cream-cake',
-    isPhotoComingSoon: true,
+    isPhotoComingSoon: false,
     priceMode: 'from',
     priceDisplay: 'whole-aud',
   },

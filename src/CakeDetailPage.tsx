@@ -60,6 +60,8 @@ const detailImages: Record<CakeDetailImageKey, string> = {
   'lemon-side': '/products/lemon-cake-sydney.webp',
   'lemon-quick-view': '/products/details/lemon-cake-quick-view.webp',
   'lemon-previous': '/products/details/lemon-cake-previous.webp',
+  'vanilla-side': '/products/vanilla-cake-sydney.webp',
+  'vanilla-quick-view': '/products/details/vanillacake-quickview.webp',
 }
 
 const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height: number }> = {
@@ -84,6 +86,8 @@ const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height:
   'lemon-side': { width: 1080, height: 1012 },
   'lemon-quick-view': { width: 1080, height: 1012 },
   'lemon-previous': { width: 1080, height: 1012 },
+  'vanilla-side': { width: 1080, height: 1012 },
+  'vanilla-quick-view': { width: 1080, height: 1012 },
 }
 
 type CakeDetailPageProps = {

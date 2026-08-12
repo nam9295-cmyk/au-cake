@@ -6,7 +6,7 @@ import basqueCheesecakeHeroImg from '../assets/basquecheesecake.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
-import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
+import { PickupLocationCard, SiteHeader } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
 import { getAuCakeCatalogCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
@@ -24,7 +24,7 @@ const catalogImages: Record<CakeCatalogImageKey, string> = {
   'pave-cake': '/products/pave-chocolate-cake-sydney.webp',
   'basque-cheesecake': '/products/chocolatiers-basque-cheesecake-sydney.webp',
   'lemon-cake': '/products/lemon-cake-sydney.webp',
-  'vanilla-fresh-cream-cake': '',
+  'vanilla-fresh-cream-cake': '/products/vanilla-cake-sydney.webp',
 }
 
 const quickViewImages: Record<CakeCatalogImageKey, string> = {
@@ -32,7 +32,7 @@ const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'pave-cake': '/products/details/pave-chocolate-cake-quick-view.webp',
   'basque-cheesecake': '/products/details/chocolatiers-basque-cheesecake-quick-view.webp',
   'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
-  'vanilla-fresh-cream-cake': '',
+  'vanilla-fresh-cream-cake': '/products/details/vanillacake-quickview.webp',
 }
 
 export function HomePage({
@@ -63,17 +63,18 @@ export function HomePage({
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'Chocolate Pound Cake', tagKey: 'pound', className: 'hero-cake-three' },
     { image: catalogImages['lemon-cake'], label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
+    { image: catalogImages['vanilla-fresh-cream-cake'], label: 'Vanilla Fresh Cream Cake', tagKey: 'vanilla', className: 'hero-cake-five' },
   ]
 
   useEffect(() => {
     if (heroPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const intervalId = window.setInterval(() => {
-      setActiveHeroCake((current) => (current + 1) % 4)
+      setActiveHeroCake((current) => (current + 1) % heroCakes.length)
     }, 3000)
 
     return () => window.clearInterval(intervalId)
-  }, [heroPaused])
+  }, [heroCakes.length, heroPaused])
   const legacyKrCatalogCards: CakeCatalogCard[] = [
     {
       id: 'pound-cupcake',
@@ -257,7 +258,7 @@ export function HomePage({
                 const position = heroCakePosition(index)
                 return (
                   <div
-                    className={`hero-cake-slide${cake.className === 'hero-cake-four' ? ' hero-cake-slide-lemon' : ''}`}
+                    className={`hero-cake-slide${cake.className === 'hero-cake-four' ? ' hero-cake-slide-lemon' : ''}${cake.className === 'hero-cake-five' ? ' hero-cake-slide-vanilla' : ''}`}
                     data-position={position}
                     key={cake.label}
                   >
@@ -327,7 +328,7 @@ export function HomePage({
                   }}
                 >
                   <span className="product-image-wrap">
-                    {card.isPhotoComingSoon ? <VanillaFreshCreamCakeSilhouette /> : (
+                    {card.isPhotoComingSoon ? null : (
                       <img
                         src={catalogImages[card.imageKey]}
                         alt={card.name}

@@ -7,20 +7,27 @@ const home = readFileSync(new URL('../src/pages/HomePage.tsx', import.meta.url),
 const reserve = readFileSync(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 const catalog = readFileSync(new URL('../src/lib/cake-catalog.ts', import.meta.url), 'utf8')
+const detail = readFileSync(new URL('../src/lib/cake-detail.ts', import.meta.url), 'utf8')
+const detailPage = readFileSync(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
 
 
-test('photo-less Vanilla Fresh Cream Cake uses only a black SVG silhouette with COMING SOON while details stay active', () => {
-  assert.match(chrome, /export function VanillaFreshCreamCakeSilhouette\(/)
-  assert.match(chrome, /className="vanilla-fresh-cream-silhouette"/)
-  assert.match(chrome, />COMING SOON</)
-  assert.match(css, /\.vanilla-fresh-cream-silhouette\s*\{[\s\S]*color:\s*#000/)
+test('Vanilla Fresh Cream Cake uses its supplied photos across hero, catalogue and Quick View', () => {
   assert.match(catalog, /defaultProductId:\s*'vanilla-fresh-cream-cake'/)
-  assert.match(catalog, /isPhotoComingSoon:\s*true/)
-  assert.match(home, /card\.isPhotoComingSoon\s*\?\s*<VanillaFreshCreamCakeSilhouette/)
+  assert.match(catalog, /id:\s*'vanilla-fresh-cream'[\s\S]*?isPhotoComingSoon:\s*false/)
+  assert.match(home, /'vanilla-fresh-cream-cake':\s*'\/products\/vanilla-cake-sydney\.webp'/)
+  assert.match(home, /'vanilla-fresh-cream-cake':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
+  assert.match(home, /image:\s*catalogImages\['vanilla-fresh-cream-cake'\]/)
+  assert.match(home, /label:\s*'Vanilla Fresh Cream Cake'/)
   assert.match(home, /href=\{`\/cakes\/\$\{card\.slug\}`\}/)
   assert.match(home, /navigateToCake\(card\.slug\)/)
-  assert.match(catalog, /id:\s*'vanilla-fresh-cream'[\s\S]*?defaultProductId:\s*'vanilla-fresh-cream-cake'[\s\S]*?imageKey:\s*'vanilla-fresh-cream-cake'[\s\S]*?isPhotoComingSoon:\s*true/)
-  assert.match(home, /'vanilla-fresh-cream-cake':\s*''/)
+})
+
+test('Vanilla Fresh Cream Cake detail gallery shows the full cake followed by its detail photo', () => {
+  assert.match(detail, /'vanilla-side'/)
+  assert.match(detail, /'vanilla-quick-view'/)
+  assert.match(detail, /'vanilla-fresh-cream':\s*\['vanilla-side',\s*'vanilla-quick-view'\]/)
+  assert.match(detailPage, /'vanilla-side':\s*'\/products\/vanilla-cake-sydney\.webp'/)
+  assert.match(detailPage, /'vanilla-quick-view':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
 })
 
 test('reservation selection renders the Vanilla Fresh Cream Cake silhouette rather than another product image', () => {
