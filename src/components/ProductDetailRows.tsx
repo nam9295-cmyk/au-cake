@@ -15,7 +15,7 @@ import {
   normalizeCupcakeFinishCounts,
   usesReservationChocolateType,
 } from '../lib/constants'
-import { cakeCopy, formatChocolateTypeText, formatPoundAddonText, getProductText, type Language } from '../lib/i18n'
+import { cakeCopy, formatChocolateTypeText, formatPoundAddonText, formatVanillaCakePointColorText, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 import { formatCurrency } from '../lib/utils'
 import type { CakeOrderLineRequest, CakeOrderLineResult, PublicReservation, Reservation } from '../lib/types'
@@ -25,7 +25,7 @@ type OrderAwareReservation = (Reservation | PublicReservation) & {
 }
 
 export function ProductDetailRows({ reservation, language = 'ko' }: {
-  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor'>
+  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor'>
   language?: Language
 }) {
   const product = getProductById(reservation.productId)
@@ -88,6 +88,10 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
             <dd>{language === 'ko'
               ? reservation.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
               : formatVanillaCakeFlavor(reservation.vanillaCakeFlavor)}</dd>
+          </div>
+          <div>
+            <dt>{language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
+            <dd>{formatVanillaCakePointColorText(reservation.vanillaCakePointColor, language)}</dd>
           </div>
         </>
       )}

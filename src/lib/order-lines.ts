@@ -3,13 +3,16 @@ import {
   formatCakeSizeLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
+  formatVanillaCakePointColor,
   getLemonIcingCount,
   getProductById,
   isCheesecakeProduct,
   isCupcakeDozenProduct,
   isFreshLemonCupcakeProduct,
+  isVanillaFreshCreamCakeProduct,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
+  normalizeVanillaCakePointColor,
   usesReservationChocolateType,
 } from './constants.js'
 import { marketConfig } from './market.js'
@@ -32,6 +35,9 @@ export function getReservationOrderLines(reservation: Reservation): ReservationO
     partyDecorationCount: reservation.partyDecorationCount || 0,
     vanillaCakeSheet: reservation.vanillaCakeSheet || 'vanilla',
     vanillaCakeFlavor: reservation.vanillaCakeFlavor || 'triple-berry',
+    ...(isVanillaFreshCreamCakeProduct(reservation.productId)
+      ? { vanillaCakePointColor: normalizeVanillaCakePointColor(reservation.productId, reservation.vanillaCakePointColor) }
+      : {}),
     quantity: reservation.quantity,
     ...(reservation.totalPriceCents !== undefined ? { totalPriceCents: reservation.totalPriceCents } : {}),
   }]
@@ -62,6 +68,7 @@ export function formatOrderLineSummary(line: ReservationOrderLine) {
   if (product.id === 'vanilla-fresh-cream-cake') {
     details.push('Chocolate sheet')
     details.push(line.vanillaCakeFlavor === 'nutella-chocolate-chip' ? 'Nutella chocolate chip' : 'Triple berry')
+    details.push(`Point colour: ${formatVanillaCakePointColor(line.vanillaCakePointColor)}`)
   }
   if (usesReservationChocolateType(product.id, line.poundAddon)) details.push(formatChocolateTypeLabel(line.chocolateType))
   if (product.usesPoundAddonOptions) details.push(formatPoundAddonLabel(line.poundAddon))

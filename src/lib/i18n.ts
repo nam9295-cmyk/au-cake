@@ -1,4 +1,5 @@
-import type { CakeSize, ChocolateType, PoundAddon, ProductId } from './types.js'
+import { VANILLA_CAKE_POINT_COLOR_OPTIONS } from './constants.js'
+import type { CakeSize, ChocolateType, PoundAddon, ProductId, VanillaCakePointColor } from './types.js'
 import { AU_CAKE_SIZE_LABELS, marketConfig } from './market.js'
 
 export type Language = 'en' | 'ko'
@@ -146,6 +147,11 @@ export function formatChocolateTypeText(chocolateType: ChocolateType | undefined
 export function formatPoundAddonText(poundAddon: PoundAddon | undefined, language: Language) {
   const option = marketConfig.poundAddonOptions.find((item) => item.value === poundAddon) || marketConfig.poundAddonOptions[0]
   return getPoundAddonText(option, language).label
+}
+
+export function formatVanillaCakePointColorText(value: VanillaCakePointColor | undefined, language: Language) {
+  const option = VANILLA_CAKE_POINT_COLOR_OPTIONS.find((item) => item.value === value) || VANILLA_CAKE_POINT_COLOR_OPTIONS[0]
+  return language === 'ko' ? option.labelKo : option.label
 }
 
 export function cakeCopy(language: Language) {

@@ -1,16 +1,18 @@
-import { MAX_RESERVATION_QUANTITY } from './constants.js'
+import { DEFAULT_VANILLA_CAKE_POINT_COLOR, MAX_RESERVATION_QUANTITY } from './constants.js'
 import { getCakeCatalogEntryByProductId } from './cake-catalog.js'
 import {
   getCakeDetailSelectionTotal,
   selectCakeDetailProduct,
   type CakeDetailSelection,
 } from './cake-detail.js'
+import { isVanillaFreshCreamCakeProduct } from './constants.js'
 import type {
   CakeSize,
   ChocolateType,
   PoundAddon,
   ProductId,
   VanillaCakeFlavor,
+  VanillaCakePointColor,
   VanillaCakeSheet,
 } from './types.js'
 
@@ -41,7 +43,7 @@ export function normalizeCartSelection(selection: CakeDetailSelection): CakeDeta
 export function getCartLineKey(selection: CakeDetailSelection) {
   const normalized = normalizeCartSelection(selection)
   if (!normalized) return null
-  return JSON.stringify([
+  const identity: unknown[] = [
     normalized.productId,
     normalized.cakeSize,
     normalized.chocolateType,
@@ -51,7 +53,11 @@ export function getCartLineKey(selection: CakeDetailSelection) {
     normalized.partyDecorationCount,
     normalized.vanillaCakeSheet,
     normalized.vanillaCakeFlavor,
-  ])
+  ]
+  if (isVanillaFreshCreamCakeProduct(normalized.productId)) {
+    identity.push(normalized.vanillaCakePointColor || DEFAULT_VANILLA_CAKE_POINT_COLOR)
+  }
+  return JSON.stringify(identity)
 }
 
 export function addCartLine(lines: readonly CartLine[], selection: CakeDetailSelection): CartLine[] {
@@ -139,6 +145,9 @@ function toPersistedSelection(selection: CakeDetailSelection): CakeDetailSelecti
     partyDecorationCount: normalized.partyDecorationCount,
     vanillaCakeSheet: normalized.vanillaCakeSheet,
     vanillaCakeFlavor: normalized.vanillaCakeFlavor,
+    ...(isVanillaFreshCreamCakeProduct(normalized.productId)
+      ? { vanillaCakePointColor: normalized.vanillaCakePointColor }
+      : {}),
     quantity: normalized.quantity,
   }
 }
@@ -170,6 +179,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     partyDecorationCount,
     vanillaCakeSheet,
     vanillaCakeFlavor,
+    vanillaCakePointColor,
     quantity,
   } = value
 
@@ -183,6 +193,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     typeof partyDecorationCount !== 'number' || !Number.isFinite(partyDecorationCount) ||
     typeof vanillaCakeSheet !== 'string' ||
     typeof vanillaCakeFlavor !== 'string' ||
+    (vanillaCakePointColor !== undefined && typeof vanillaCakePointColor !== 'string') ||
     typeof quantity !== 'number' || !Number.isFinite(quantity)
   ) return null
 
@@ -199,6 +210,9 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     partyDecorationCount,
     vanillaCakeSheet: vanillaCakeSheet as VanillaCakeSheet,
     vanillaCakeFlavor: vanillaCakeFlavor as VanillaCakeFlavor,
+    ...(vanillaCakePointColor === undefined ? {} : {
+      vanillaCakePointColor: vanillaCakePointColor as VanillaCakePointColor,
+    }),
     quantity,
   })
 }

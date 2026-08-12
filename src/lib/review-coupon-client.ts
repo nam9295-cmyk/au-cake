@@ -9,12 +9,13 @@ import {
   normalizePoundAddon,
   normalizeReservationChocolateType,
   normalizeVanillaCakeFlavor,
+  normalizeVanillaCakePointColor,
   normalizeVanillaCakeSheet,
   PRODUCTS,
 } from './constants.js'
 import { isValidPhone } from './utils.js'
 import { isActiveCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
-import type { CakeOrderLineRequest, CakeOrderLineResult, CakeOrderRequest, CakeOrderReservation, CakeSize, CacaoPercent, ChocolateType, PoundAddon, ProductId, Reservation, ReservationApiCapabilities, ReservationInput, VanillaCakeFlavor, VanillaCakeSheet } from './types.js'
+import type { CakeOrderLineRequest, CakeOrderLineResult, CakeOrderRequest, CakeOrderReservation, CakeSize, CacaoPercent, ChocolateType, PoundAddon, ProductId, Reservation, ReservationApiCapabilities, ReservationInput, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
 
 const REVIEW_COUPON_ANIMALS = ['FOX', 'CAT', 'DOG', 'OWL', 'PIG', 'BEE', 'COW', 'CUB', 'EMU', 'HEN', 'KOI', 'PUP', 'RAM', 'YAK', 'APE']
 const REVIEW_COUPON_FRUITS = ['KIWI', 'FIG', 'LIME', 'PEAR', 'PLUM', 'APPLE', 'GRAPE', 'GUAVA', 'LEMON', 'MANGO', 'MELON', 'PEACH']
@@ -28,6 +29,7 @@ const VALID_CHOCOLATE_TYPES = new Set<ChocolateType>(['dark', 'milk'])
 const VALID_POUND_ADDONS = new Set<PoundAddon>(['none', 'extra-chocolate', 'vanilla-cream'])
 const VALID_VANILLA_CAKE_SHEETS = new Set<VanillaCakeSheet>(['vanilla', 'chocolate'])
 const VALID_VANILLA_CAKE_FLAVORS = new Set<VanillaCakeFlavor>(['triple-berry', 'nutella-chocolate-chip'])
+const VALID_VANILLA_CAKE_POINT_COLORS = new Set<VanillaCakePointColor>(['pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'])
 const VALID_CACAO = new Set<CacaoPercent>(['기본', '70', '80.5', '100'])
 const VALID_STATUSES = new Set<Reservation['status']>(['예약신청', '예약확정', '픽업완료', '취소'])
 const VALID_PAYMENT_STATUSES = new Set<Reservation['paymentStatus']>(['입금대기', '입금확인', '현장결제', '환불필요'])
@@ -262,6 +264,9 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     partyDecorationCount: input.partyDecorationCount,
     vanillaCakeSheet: input.vanillaCakeSheet,
     vanillaCakeFlavor: input.vanillaCakeFlavor,
+    ...(input.vanillaCakePointColor ? {
+      vanillaCakePointColor: normalizeVanillaCakePointColor(input.productId, input.vanillaCakePointColor),
+    } : {}),
     quantity: input.quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -298,6 +303,9 @@ function projectCakeOrderLine(line: CakeOrderLineRequest): CakeOrderLineRequest 
     partyDecorationCount: line.partyDecorationCount,
     vanillaCakeSheet: line.vanillaCakeSheet,
     vanillaCakeFlavor: line.vanillaCakeFlavor,
+    ...(line.vanillaCakePointColor ? {
+      vanillaCakePointColor: normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
+    } : {}),
     quantity: line.quantity,
   }
 }
@@ -321,6 +329,10 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
     typeof line.poundAddon !== 'string' || !VALID_POUND_ADDONS.has(line.poundAddon as PoundAddon) ||
     typeof line.vanillaCakeSheet !== 'string' || !VALID_VANILLA_CAKE_SHEETS.has(line.vanillaCakeSheet as VanillaCakeSheet) ||
     typeof line.vanillaCakeFlavor !== 'string' || !VALID_VANILLA_CAKE_FLAVORS.has(line.vanillaCakeFlavor as VanillaCakeFlavor) ||
+    (line.vanillaCakePointColor !== undefined && (
+      typeof line.vanillaCakePointColor !== 'string' ||
+      !VALID_VANILLA_CAKE_POINT_COLORS.has(line.vanillaCakePointColor as VanillaCakePointColor)
+    )) ||
     !Number.isSafeInteger(line.chocolateIcingCount) || Number(line.chocolateIcingCount) < 0 ||
     !Number.isSafeInteger(line.vanillaCreamCount) || Number(line.vanillaCreamCount) < 0 ||
     !Number.isSafeInteger(line.partyDecorationCount) || Number(line.partyDecorationCount) < 0 ||
@@ -336,7 +348,9 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
     line.vanillaCreamCount === finishes.vanillaCreamCount &&
     line.partyDecorationCount === finishes.partyDecorationCount &&
     line.vanillaCakeSheet === normalizeVanillaCakeSheet(productId, line.vanillaCakeSheet as VanillaCakeSheet) &&
-    line.vanillaCakeFlavor === normalizeVanillaCakeFlavor(productId, line.vanillaCakeFlavor as VanillaCakeFlavor)
+    line.vanillaCakeFlavor === normalizeVanillaCakeFlavor(productId, line.vanillaCakeFlavor as VanillaCakeFlavor) &&
+    (line.vanillaCakePointColor === undefined ||
+      line.vanillaCakePointColor === normalizeVanillaCakePointColor(productId, line.vanillaCakePointColor as VanillaCakePointColor))
   )
 }
 
@@ -430,6 +444,7 @@ function canonicalOrderLineKey(line: CakeOrderLineRequest): string {
   return JSON.stringify([
     line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.chocolateIcingCount,
     line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
+    normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
   ])
 }
 
@@ -477,14 +492,16 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
 
   const lineKeys = new Set([
     'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount',
-    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity', 'unitPriceCents',
+    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'quantity', 'unitPriceCents',
     'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
   ])
+  const legacyLineKeys = new Set([...lineKeys].filter((key) => key !== 'vanillaCakePointColor'))
   const orderLines = rawOrderLines.map((value): CakeOrderLineResult => {
     const line = readPlainDataRecordSnapshot(value)
     if (!line) invalidResponse()
     const keys = Object.keys(line)
-    if (keys.length !== lineKeys.size || !keys.every((key) => typeof key === 'string' && lineKeys.has(key))) invalidResponse()
+    const allowedLineKeys = keys.length === legacyLineKeys.size ? legacyLineKeys : lineKeys
+    if (keys.length !== allowedLineKeys.size || !keys.every((key) => typeof key === 'string' && allowedLineKeys.has(key))) invalidResponse()
     const productId = requiredProductId(line)
     const cakeSize = requiredSetValue(line, 'cakeSize', VALID_CAKE_SIZES)
     const chocolateType = requiredSetValue(line, 'chocolateType', VALID_CHOCOLATE_TYPES)
@@ -494,6 +511,9 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     const partyDecorationCount = nonnegativeInteger(line.partyDecorationCount)
     const vanillaCakeSheet = requiredSetValue(line, 'vanillaCakeSheet', VALID_VANILLA_CAKE_SHEETS)
     const vanillaCakeFlavor = requiredSetValue(line, 'vanillaCakeFlavor', VALID_VANILLA_CAKE_FLAVORS)
+    const vanillaCakePointColor = line.vanillaCakePointColor === undefined
+      ? 'pink'
+      : requiredSetValue(line, 'vanillaCakePointColor', VALID_VANILLA_CAKE_POINT_COLORS)
     const quantity = nonnegativeInteger(line.quantity)
     const normalizedFinishes = normalizeCupcakeFinishCounts(productId, vanillaCreamCount, partyDecorationCount)
     if (
@@ -505,6 +525,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
       partyDecorationCount !== normalizedFinishes.partyDecorationCount ||
       vanillaCakeSheet !== normalizeVanillaCakeSheet(productId, vanillaCakeSheet) ||
       vanillaCakeFlavor !== normalizeVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
+      vanillaCakePointColor !== normalizeVanillaCakePointColor(productId, vanillaCakePointColor) ||
       quantity < 1 || quantity > MAX_RESERVATION_QUANTITY
     ) invalidResponse()
     const unitPriceCents = nonnegativeInteger(line.unitPriceCents)
@@ -527,7 +548,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     if (discountPercent === 0 && discountCents !== 0) invalidResponse()
     return {
       productId, cakeSize, chocolateType, poundAddon, chocolateIcingCount, vanillaCreamCount,
-      partyDecorationCount, vanillaCakeSheet, vanillaCakeFlavor, quantity,
+      partyDecorationCount, vanillaCakeSheet, vanillaCakeFlavor, vanillaCakePointColor, quantity,
       unitPriceCents, subtotalCents, discountPercent, discountCents, totalPriceCents,
     }
   })
@@ -595,6 +616,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
   for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity'] as const) {
     if (row[key] !== first[key]) invalidResponse()
   }
+  if (row.vanillaCakePointColor !== undefined && row.vanillaCakePointColor !== first.vanillaCakePointColor) invalidResponse()
   const totalPrice = requiredFiniteNumber(row, 'totalPrice')
   if (!Number.isSafeInteger(totalPriceCents) || totalPrice !== totalPriceCents / 100) invalidResponse()
   const customerName = requiredString(row, 'customerName')
@@ -615,6 +637,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     partyDecorationCount: first.partyDecorationCount,
     vanillaCakeSheet: first.vanillaCakeSheet,
     vanillaCakeFlavor: first.vanillaCakeFlavor,
+    vanillaCakePointColor: first.vanillaCakePointColor,
     quantity: first.quantity,
     pickupDate: requiredDateOnly(row, 'pickupDate'),
     pickupTime: requiredTime(row, 'pickupTime'),
@@ -664,6 +687,9 @@ export function parseCakeReservationResult(value: unknown): Reservation {
   const vanillaCakeFlavor = row.vanillaCakeFlavor === undefined
     ? 'triple-berry'
     : requiredSetValue(row, 'vanillaCakeFlavor', VALID_VANILLA_CAKE_FLAVORS)
+  const vanillaCakePointColor = row.vanillaCakePointColor === undefined
+    ? 'pink'
+    : requiredSetValue(row, 'vanillaCakePointColor', VALID_VANILLA_CAKE_POINT_COLORS)
   const quantity = nonnegativeInteger(row.quantity)
   const normalizedFinishes = normalizeCupcakeFinishCounts(productId, vanillaCreamCount, partyDecorationCount)
   if (
@@ -675,6 +701,7 @@ export function parseCakeReservationResult(value: unknown): Reservation {
     partyDecorationCount !== normalizedFinishes.partyDecorationCount ||
     vanillaCakeSheet !== normalizeVanillaCakeSheet(productId, vanillaCakeSheet) ||
     vanillaCakeFlavor !== normalizeVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
+    vanillaCakePointColor !== normalizeVanillaCakePointColor(productId, vanillaCakePointColor) ||
     quantity < 1 || quantity > MAX_RESERVATION_QUANTITY
   ) invalidResponse()
 
@@ -696,6 +723,7 @@ export function parseCakeReservationResult(value: unknown): Reservation {
     partyDecorationCount,
     vanillaCakeSheet,
     vanillaCakeFlavor,
+    vanillaCakePointColor,
     quantity,
     pickupDate: requiredDateOnly(row, 'pickupDate'),
     pickupTime: requiredTime(row, 'pickupTime'),

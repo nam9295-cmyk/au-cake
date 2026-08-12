@@ -5,12 +5,14 @@ import {
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
   DEFAULT_VANILLA_CAKE_FLAVOR,
+  DEFAULT_VANILLA_CAKE_POINT_COLOR,
   DEFAULT_VANILLA_CAKE_SHEET,
   VANILLA_FRESH_CREAM_CAKE_SHEET,
   DEFAULT_SETTINGS,
   CAKE_SIZE_OPTIONS,
   CHOCOLATE_TYPE_OPTIONS,
   VANILLA_CAKE_FLAVOR_OPTIONS,
+  VANILLA_CAKE_POINT_COLOR_OPTIONS,
   VANILLA_CAKE_SHEET_OPTIONS,
   applyPromoDiscount,
   formatCakeSizeLabel,
@@ -26,6 +28,7 @@ import {
   normalizePoundAddon,
   normalizeReservationChocolateType,
   normalizeVanillaCakeFlavor,
+  normalizeVanillaCakePointColor,
   normalizeVanillaCakeSheet,
   isCheesecakeProduct,
   usesReservationChocolateType,
@@ -101,16 +104,30 @@ test('Vanilla Fresh Cream Cake keeps its size prices and fixes the chocolate cak
   assert.equal(DEFAULT_VANILLA_CAKE_SHEET, 'vanilla')
   assert.equal(VANILLA_FRESH_CREAM_CAKE_SHEET, 'chocolate')
   assert.equal(DEFAULT_VANILLA_CAKE_FLAVOR, 'triple-berry')
+  assert.equal(DEFAULT_VANILLA_CAKE_POINT_COLOR, 'pink')
   assert.deepEqual(VANILLA_CAKE_SHEET_OPTIONS, [{ value: 'chocolate', label: 'Chocolate cake sheet' }])
   assert.deepEqual(VANILLA_CAKE_FLAVOR_OPTIONS, [
     { value: 'triple-berry', label: 'Triple berry' },
     { value: 'nutella-chocolate-chip', label: 'Nutella chocolate chip' },
   ])
+  assert.deepEqual(VANILLA_CAKE_POINT_COLOR_OPTIONS, [
+    { value: 'pink', label: 'Pink', labelKo: '핑크', hex: '#ec4899' },
+    { value: 'red', label: 'Red', labelKo: '레드', hex: '#ef4444' },
+    { value: 'green', label: 'Green', labelKo: '그린', hex: '#22c55e' },
+    { value: 'yellow', label: 'Yellow', labelKo: '옐로우', hex: '#eab308' },
+    { value: 'blue', label: 'Blue', labelKo: '블루', hex: '#3b82f6' },
+    { value: 'purple', label: 'Purple', labelKo: '퍼플', hex: '#a855f7' },
+    { value: 'orange', label: 'Orange', labelKo: '오렌지', hex: '#f97316' },
+    { value: 'white', label: 'White', labelKo: '화이트', hex: '#ffffff' },
+  ])
   assert.equal(normalizeVanillaCakeSheet(vanillaFreshCreamCakeId, 'vanilla'), 'chocolate')
   assert.equal(normalizeVanillaCakeSheet(vanillaFreshCreamCakeId, 'chocolate'), 'chocolate')
   assert.equal(normalizeVanillaCakeFlavor(vanillaFreshCreamCakeId, 'nutella-chocolate-chip'), 'nutella-chocolate-chip')
+  assert.equal(normalizeVanillaCakePointColor(vanillaFreshCreamCakeId, 'blue'), 'blue')
+  assert.equal(normalizeVanillaCakePointColor(vanillaFreshCreamCakeId, 'unknown'), 'pink')
   assert.equal(normalizeVanillaCakeSheet('pave-cake', 'chocolate'), 'vanilla')
   assert.equal(normalizeVanillaCakeFlavor('pave-cake', 'nutella-chocolate-chip'), 'triple-berry')
+  assert.equal(normalizeVanillaCakePointColor('pave-cake', 'blue'), 'pink')
   assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '15cm', cacaoPercent: '100', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 75)
   assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '19cm', cacaoPercent: '70', chocolateType: 'dark', poundAddon: 'extra-chocolate' }), 98)
   assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '22cm', cacaoPercent: '80.5', chocolateType: 'milk', poundAddon: 'none' }), 139)

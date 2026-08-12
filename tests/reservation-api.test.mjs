@@ -205,6 +205,7 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
         poundAddon: 'vanilla-cream',
         vanillaCakeSheet: 'chocolate',
         vanillaCakeFlavor: 'nutella-chocolate-chip',
+        vanillaCakePointColor: 'blue',
         quantity: 2,
         totalPrice: 1,
         totalPriceCents: 1,
@@ -221,6 +222,7 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
     assert.equal(reservation.poundAddon, 'none')
     assert.equal(reservation.vanillaCakeSheet, 'chocolate')
     assert.equal(reservation.vanillaCakeFlavor, 'nutella-chocolate-chip')
+    assert.equal(JSON.parse(reservation.orderLinesJson).lines[0].vanillaCakePointColor, 'blue')
   }
 
   const legacy = buildCakeReservation(
@@ -229,6 +231,12 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
   )
   assert.equal(legacy.vanillaCakeSheet, 'chocolate')
   assert.equal(legacy.vanillaCakeFlavor, 'triple-berry')
+  assert.equal(JSON.parse(legacy.orderLinesJson).lines[0].vanillaCakePointColor, 'pink')
+  const invalidPointColor = buildCakeReservation(
+    { ...cakeInput, productId: 'vanilla-fresh-cream-cake', vanillaCakePointColor: 'black' },
+    { now, reservationNumber: 'VG-C-AU-VANILLA-INVALID-COLOR' },
+  )
+  assert.equal(JSON.parse(invalidPointColor.orderLinesJson).lines[0].vanillaCakePointColor, 'pink')
   for (const invalid of [
     { vanillaCakeSheet: 'red-velvet' },
     { vanillaCakeFlavor: 'strawberry' },
@@ -823,7 +831,7 @@ test('stored order line JSON contains only canonical order and authoritative pri
   const payload = JSON.parse(reservation.orderLinesJson)
   const allowed = [
     'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount',
-    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity', 'unitPriceCents',
+    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'quantity', 'unitPriceCents',
     'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
   ].sort()
 
@@ -979,7 +987,7 @@ test('public cake projection exposes sanitized multi-lines and synthesizes sanit
   assert.equal('totalPriceCents' in legacy, false)
   assert.deepEqual(legacy.orderLines, [{
     productId: 'pave-cake', cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'none', chocolateIcingCount: 0,
-    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink', quantity: 2,
   }])
 })
 
