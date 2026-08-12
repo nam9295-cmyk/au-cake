@@ -14,6 +14,7 @@ import {
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
   DEFAULT_VANILLA_CAKE_FLAVOR,
+  DEFAULT_VANILLA_CAKE_POINT_COLOR,
   MAX_RESERVATION_QUANTITY,
   formatCakeSizeLabel,
   isPromoEligibleProduct,
@@ -34,10 +35,12 @@ import {
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
   normalizeVanillaCakeFlavor,
+  normalizeVanillaCakePointColor,
   normalizeVanillaCakeSheet,
   POUND_ADDON_OPTIONS,
   PRODUCT_GROUPS,
   VANILLA_CAKE_FLAVOR_OPTIONS,
+  VANILLA_CAKE_POINT_COLOR_OPTIONS,
 
   usesReservationChocolateType,
 } from '../lib/constants'
@@ -56,6 +59,7 @@ import {
   getCakeSizeText,
   getChocolateTypeText,
   getPoundAddonText,
+  formatVanillaCakePointColorText,
   getProductText,
   type Language,
 } from '../lib/i18n'
@@ -68,7 +72,7 @@ import {
   listClassBookedSlots,
 } from '../lib/repository'
 import { trackEvent } from '../lib/analytics'
-import type { CacaoPercent, CakeSize, ChocolateType, PoundAddon, ProductId, Reservation, StoreSettings, VanillaCakeFlavor, VanillaCakeSheet } from '../lib/types'
+import type { CacaoPercent, CakeSize, ChocolateType, PoundAddon, ProductId, Reservation, StoreSettings, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from '../lib/types'
 import {
   filterCakePickupTimesForClass,
   isCakePickupBlockedByClass,
@@ -162,6 +166,7 @@ export function ReservePage({
     partyDecorationCount: initialSelection?.partyDecorationCount || 0,
     vanillaCakeSheet: normalizeVanillaCakeSheet(initialSelection?.productId || initialProductId, initialSelection?.vanillaCakeSheet) as VanillaCakeSheet,
     vanillaCakeFlavor: initialSelection?.vanillaCakeFlavor || DEFAULT_VANILLA_CAKE_FLAVOR as VanillaCakeFlavor,
+    vanillaCakePointColor: normalizeVanillaCakePointColor(initialSelection?.productId || initialProductId, initialSelection?.vanillaCakePointColor || DEFAULT_VANILLA_CAKE_POINT_COLOR) as VanillaCakePointColor,
     pickupDate: todayInputValue(),
     pickupTime: '',
     quantity: initialSelection?.quantity || 1,
@@ -376,6 +381,7 @@ export function ReservePage({
         partyDecorationCount: form.partyDecorationCount,
         vanillaCakeSheet: form.vanillaCakeSheet,
         vanillaCakeFlavor: form.vanillaCakeFlavor,
+        vanillaCakePointColor: form.vanillaCakePointColor,
         quantity: form.quantity,
         pickupDate,
         pickupTime: selectedPickupTime,
@@ -402,6 +408,7 @@ export function ReservePage({
             partyDecorationCount: form.partyDecorationCount,
             vanillaCakeSheet: form.vanillaCakeSheet,
             vanillaCakeFlavor: form.vanillaCakeFlavor,
+            vanillaCakePointColor: form.vanillaCakePointColor,
             quantity: form.quantity,
             pickupDate,
             pickupTime: selectedPickupTime,
@@ -437,6 +444,7 @@ export function ReservePage({
                 partyDecorationCount: selection.partyDecorationCount,
                 vanillaCakeSheet: selection.vanillaCakeSheet,
                 vanillaCakeFlavor: selection.vanillaCakeFlavor,
+                vanillaCakePointColor: selection.vanillaCakePointColor,
                 quantity: selection.quantity,
               })),
             })
@@ -587,6 +595,7 @@ export function ReservePage({
       ...normalizeCupcakeFinishCounts(productId, form.vanillaCreamCount, form.partyDecorationCount),
       vanillaCakeSheet: normalizeVanillaCakeSheet(productId, form.vanillaCakeSheet),
       vanillaCakeFlavor: normalizeVanillaCakeFlavor(productId, form.vanillaCakeFlavor),
+      vanillaCakePointColor: normalizeVanillaCakePointColor(productId, form.vanillaCakePointColor),
       quantity: form.quantity,
     })
   }
@@ -707,6 +716,10 @@ export function ReservePage({
                     <dd>{language === 'ko'
                       ? form.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
                       : formatVanillaCakeFlavor(form.vanillaCakeFlavor)}</dd>
+                  </div>
+                  <div>
+                    <dt>{language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
+                    <dd>{formatVanillaCakePointColorText(form.vanillaCakePointColor, language)}</dd>
                   </div>
                 </>
               )}
@@ -974,6 +987,27 @@ export function ReservePage({
                         <span className="choice-copy">
                           <strong>{language === 'ko' ? option.value === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리' : option.label}</strong>
                         </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset>
+                  <legend>{language === 'ko' ? '포인트 컬러 선택' : 'Choose point colour'}</legend>
+                  <div className="vanilla-point-color-grid">
+                    {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => (
+                      <label
+                        className={`vanilla-point-color-card${form.vanillaCakePointColor === option.value ? ' is-selected' : ''}`}
+                        key={option.value}
+                      >
+                        <input
+                          type="radio"
+                          name="vanillaCakePointColor"
+                          value={option.value}
+                          checked={form.vanillaCakePointColor === option.value}
+                          onChange={() => setForm({ ...form, vanillaCakePointColor: option.value })}
+                        />
+                        <span className="vanilla-point-color-swatch" style={{ backgroundColor: option.hex }} aria-hidden="true" />
+                        <strong>{language === 'ko' ? option.labelKo : option.label}</strong>
                       </label>
                     ))}
                   </div>

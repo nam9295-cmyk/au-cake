@@ -3,6 +3,7 @@ import {
   DEFAULT_CHOCOLATE_TYPE,
   DEFAULT_POUND_ADDON,
   DEFAULT_VANILLA_CAKE_FLAVOR,
+  DEFAULT_VANILLA_CAKE_POINT_COLOR,
   DEFAULT_VANILLA_CAKE_SHEET,
   getProductById,
   getReservationPrice,
@@ -12,7 +13,9 @@ import {
   normalizePoundAddon,
   normalizeReservationChocolateType,
   normalizeVanillaCakeFlavor,
+  normalizeVanillaCakePointColor,
   normalizeVanillaCakeSheet,
+  isVanillaFreshCreamCakeProduct,
 } from './constants.js'
 import {
   getAuCakeCatalogCards,
@@ -26,6 +29,7 @@ import type {
   PoundAddon,
   ProductId,
   VanillaCakeFlavor,
+  VanillaCakePointColor,
   VanillaCakeSheet,
 } from './types.js'
 
@@ -62,6 +66,7 @@ export type CakeDetailSelection = {
   partyDecorationCount: number
   vanillaCakeSheet: VanillaCakeSheet
   vanillaCakeFlavor: VanillaCakeFlavor
+  vanillaCakePointColor?: VanillaCakePointColor
   quantity: number
 }
 
@@ -171,6 +176,7 @@ export function createCakeDetailSelection(slug: string): CakeDetailSelection | n
     partyDecorationCount: 0,
     vanillaCakeSheet: DEFAULT_VANILLA_CAKE_SHEET,
     vanillaCakeFlavor: DEFAULT_VANILLA_CAKE_FLAVOR,
+    vanillaCakePointColor: DEFAULT_VANILLA_CAKE_POINT_COLOR,
     quantity: 1,
   }, entry.defaultProductId)
 }
@@ -188,7 +194,6 @@ export function selectCakeDetailProduct(
   )
 
   return {
-    ...selection,
     productId: product.id,
     cakeSize: normalizeCakeSize(product.id, selection.cakeSize),
     poundAddon,
@@ -197,6 +202,9 @@ export function selectCakeDetailProduct(
     ...cupcakeCounts,
     vanillaCakeSheet: normalizeVanillaCakeSheet(product.id, selection.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeVanillaCakeFlavor(product.id, selection.vanillaCakeFlavor),
+    ...(isVanillaFreshCreamCakeProduct(product.id)
+      ? { vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, selection.vanillaCakePointColor) }
+      : {}),
     quantity: normalizeQuantity(selection.quantity),
   }
 }

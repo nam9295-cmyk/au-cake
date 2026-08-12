@@ -16,6 +16,7 @@ import {
   MAX_RESERVATION_QUANTITY,
   POUND_ADDON_OPTIONS,
   VANILLA_CAKE_FLAVOR_OPTIONS,
+  VANILLA_CAKE_POINT_COLOR_OPTIONS,
 
   formatCakeSizeLabel,
   getFreshLemonCupcakePackSize,
@@ -354,6 +355,27 @@ export default function CakeDetailPage({
                       <strong>{option.label}</strong>
                     </OptionButton>
                   ))}
+                </div>
+              </fieldset>
+              <fieldset className="cake-detail-fieldset">
+                <legend>{language === 'ko' ? '포인트 컬러 선택' : 'Choose a point colour'}</legend>
+                <div className="vanilla-point-color-grid">
+                  {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => {
+                    const isSelected = selection.vanillaCakePointColor === option.value
+                    return (
+                      <button
+                        type="button"
+                        className={`vanilla-point-color-card${isSelected ? ' is-selected' : ''}`}
+                        aria-label={language === 'ko' ? `${option.labelKo} 포인트 컬러` : `${option.label} point colour`}
+                        aria-pressed={isSelected}
+                        onClick={() => updateSelection({ vanillaCakePointColor: option.value })}
+                        key={option.value}
+                      >
+                        <span className="vanilla-point-color-swatch" style={{ backgroundColor: option.hex }} aria-hidden="true" />
+                        <strong>{language === 'ko' ? option.labelKo : option.label}</strong>
+                      </button>
+                    )
+                  })}
                 </div>
               </fieldset>
             </>

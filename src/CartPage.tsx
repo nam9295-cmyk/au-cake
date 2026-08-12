@@ -22,6 +22,7 @@ import {
   cakeCopy,
   formatChocolateTypeText,
   formatPoundAddonText,
+  formatVanillaCakePointColorText,
   getProductText,
   type Language,
 } from './lib/i18n'
@@ -76,6 +77,10 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
             <dd>{language === 'ko'
               ? selection.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
               : formatVanillaCakeFlavor(selection.vanillaCakeFlavor)}</dd>
+          </div>
+          <div>
+            <dt>{language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
+            <dd>{formatVanillaCakePointColorText(selection.vanillaCakePointColor, language)}</dd>
           </div>
         </>
       )}

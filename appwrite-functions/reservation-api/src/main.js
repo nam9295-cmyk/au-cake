@@ -193,6 +193,7 @@ export function cakeReservationResponse(document) {
     partyDecorationCount: Number(document.partyDecorationCount || 0),
     vanillaCakeSheet: document.vanillaCakeSheet || (document.productId === 'vanilla-fresh-cream-cake' ? 'chocolate' : 'vanilla'),
     vanillaCakeFlavor: document.vanillaCakeFlavor || 'triple-berry',
+    vanillaCakePointColor: storedOrder?.lines[0]?.vanillaCakePointColor || 'pink',
     quantity: document.quantity,
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,

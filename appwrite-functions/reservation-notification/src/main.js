@@ -247,6 +247,14 @@ function getVanillaCakeFlavorText(reservation, config) {
     : nutellaChocolateChip ? '누텔라 초코칩' : '트리플베리'
 }
 
+function getVanillaCakePointColorText(reservation, config) {
+  if (reservation.productId !== 'vanilla-fresh-cream-cake') return null
+  const labels = config.currency === 'AUD'
+    ? { pink: 'Pink', red: 'Red', green: 'Green', yellow: 'Yellow', blue: 'Blue', purple: 'Purple', orange: 'Orange', white: 'White' }
+    : { pink: '핑크', red: '레드', green: '그린', yellow: '옐로우', blue: '블루', purple: '퍼플', orange: '오렌지', white: '화이트' }
+  return labels[reservation.vanillaCakePointColor] || labels.pink
+}
+
 function normalizeOptionKey(value = '') {
   return String(value).trim().toLowerCase().replace(/[_\s]+/g, '-')
 }
@@ -426,6 +434,7 @@ function cakeDetailRows(reservation, config, suffix = '') {
     ...(reservation.productId === 'vanilla-fresh-cream-cake' ? [
       [label(config.labels.cakeSheet), getVanillaCakeSheetText(reservation, config)],
       [label(config.labels.flavour), getVanillaCakeFlavorText(reservation, config)],
+      [label(config.currency === 'AUD' ? 'Point colour' : '포인트 컬러'), getVanillaCakePointColorText(reservation, config)],
     ] : []),
     [label(config.labels.chocolate), getChocolateText(reservation, config)],
     [label(config.labels.finish), getPoundAddonText(reservation, config)],

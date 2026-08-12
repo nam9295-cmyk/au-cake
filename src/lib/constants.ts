@@ -1,5 +1,5 @@
 import { marketConfig, PAYMENT_STATUSES, RESERVATION_STATUSES } from './market.js'
-import type { CacaoPercent, CakeSize, ChocolateType, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakeSheet } from './types.js'
+import type { CacaoPercent, CakeSize, ChocolateType, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
 
 export const PRODUCT_NAME = marketConfig.copy.productName
 
@@ -10,6 +10,7 @@ export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
 export const DEFAULT_VANILLA_CAKE_SHEET: VanillaCakeSheet = 'vanilla'
 export const VANILLA_FRESH_CREAM_CAKE_SHEET: VanillaCakeSheet = 'chocolate'
 export const DEFAULT_VANILLA_CAKE_FLAVOR: VanillaCakeFlavor = 'triple-berry'
+export const DEFAULT_VANILLA_CAKE_POINT_COLOR: VanillaCakePointColor = 'pink'
 export const MAX_RESERVATION_QUANTITY = 5
 export const PROMO_CODE = 'chocolate'
 export const LEMON_PROMO_CODE = 'lemoni'
@@ -126,6 +127,22 @@ export const VANILLA_CAKE_FLAVOR_OPTIONS: Array<{ value: VanillaCakeFlavor; labe
   { value: 'nutella-chocolate-chip', label: 'Nutella chocolate chip' },
 ]
 
+export const VANILLA_CAKE_POINT_COLOR_OPTIONS: Array<{
+  value: VanillaCakePointColor
+  label: string
+  labelKo: string
+  hex: string
+}> = [
+  { value: 'pink', label: 'Pink', labelKo: '핑크', hex: '#ec4899' },
+  { value: 'red', label: 'Red', labelKo: '레드', hex: '#ef4444' },
+  { value: 'green', label: 'Green', labelKo: '그린', hex: '#22c55e' },
+  { value: 'yellow', label: 'Yellow', labelKo: '옐로우', hex: '#eab308' },
+  { value: 'blue', label: 'Blue', labelKo: '블루', hex: '#3b82f6' },
+  { value: 'purple', label: 'Purple', labelKo: '퍼플', hex: '#a855f7' },
+  { value: 'orange', label: 'Orange', labelKo: '오렌지', hex: '#f97316' },
+  { value: 'white', label: 'White', labelKo: '화이트', hex: '#ffffff' },
+]
+
 export function normalizeVanillaCakeSheet(productId: ProductId, value?: VanillaCakeSheet | string) {
   if (!isVanillaFreshCreamCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_SHEET
   void value
@@ -137,12 +154,21 @@ export function normalizeVanillaCakeFlavor(productId: ProductId, value?: Vanilla
   return VANILLA_CAKE_FLAVOR_OPTIONS.some((option) => option.value === value) ? value as VanillaCakeFlavor : DEFAULT_VANILLA_CAKE_FLAVOR
 }
 
+export function normalizeVanillaCakePointColor(productId: ProductId, value?: VanillaCakePointColor | string) {
+  if (!isVanillaFreshCreamCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_POINT_COLOR
+  return VANILLA_CAKE_POINT_COLOR_OPTIONS.some((option) => option.value === value) ? value as VanillaCakePointColor : DEFAULT_VANILLA_CAKE_POINT_COLOR
+}
+
 export function formatVanillaCakeSheet(value?: VanillaCakeSheet | string) {
   return VANILLA_CAKE_SHEET_OPTIONS.find((option) => option.value === value)?.label || VANILLA_CAKE_SHEET_OPTIONS[0].label
 }
 
 export function formatVanillaCakeFlavor(value?: VanillaCakeFlavor | string) {
   return VANILLA_CAKE_FLAVOR_OPTIONS.find((option) => option.value === value)?.label || VANILLA_CAKE_FLAVOR_OPTIONS[0].label
+}
+
+export function formatVanillaCakePointColor(value?: VanillaCakePointColor | string) {
+  return VANILLA_CAKE_POINT_COLOR_OPTIONS.find((option) => option.value === value)?.label || VANILLA_CAKE_POINT_COLOR_OPTIONS[0].label
 }
 
 export function isFreshLemonCupcakeProduct(productId: ProductId) {

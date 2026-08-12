@@ -10,6 +10,8 @@ export type VanillaCakeSheet = 'vanilla' | 'chocolate'
 
 export type VanillaCakeFlavor = 'triple-berry' | 'nutella-chocolate-chip'
 
+export type VanillaCakePointColor = 'pink' | 'red' | 'green' | 'yellow' | 'blue' | 'purple' | 'orange' | 'white'
+
 export type ProductId =
   | 'pave-cake'
   | 'vanilla-fresh-cream-cake'
@@ -42,6 +44,7 @@ export type Reservation = {
   partyDecorationCount?: number
   vanillaCakeSheet?: VanillaCakeSheet
   vanillaCakeFlavor?: VanillaCakeFlavor
+  vanillaCakePointColor?: VanillaCakePointColor
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -78,6 +81,7 @@ export type ReservationInput = {
   partyDecorationCount?: number
   vanillaCakeSheet?: VanillaCakeSheet
   vanillaCakeFlavor?: VanillaCakeFlavor
+  vanillaCakePointColor?: VanillaCakePointColor
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -99,6 +103,7 @@ export type CakeOrderLineRequest = Pick<ReservationInput,
   | 'partyDecorationCount'
   | 'vanillaCakeSheet'
   | 'vanillaCakeFlavor'
+  | 'vanillaCakePointColor'
   | 'quantity'
 >
 
@@ -147,6 +152,7 @@ export type PublicReservation = Pick<
   | 'partyDecorationCount'
   | 'vanillaCakeSheet'
   | 'vanillaCakeFlavor'
+  | 'vanillaCakePointColor'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'

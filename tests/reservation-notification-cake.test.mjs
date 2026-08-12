@@ -86,6 +86,7 @@ test('AU operator notification gives Vanilla Fresh Cream Cake its size, cake she
     poundAddon: 'vanilla-cream',
     vanillaCakeSheet: 'chocolate',
     vanillaCakeFlavor: 'nutella-chocolate-chip',
+    vanillaCakePointColor: 'blue',
     quantity: 1,
   })
 
@@ -95,6 +96,7 @@ test('AU operator notification gives Vanilla Fresh Cream Cake its size, cake she
   assert.equal(rows.Finish, '-')
   assert.equal(rows['Cake sheet'], 'Chocolate cake sheet')
   assert.equal(rows.Flavour, 'Nutella chocolate chip')
+  assert.equal(rows['Point colour'], 'Blue')
 })
 
 test('AU operator notification renders every validated stored order line and one aggregate total', () => {

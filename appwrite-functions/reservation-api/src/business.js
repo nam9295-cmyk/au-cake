@@ -25,6 +25,7 @@ export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 export const VANILLA_CAKE_SHEETS = new Set(['chocolate'])
 export const VANILLA_CAKE_FLAVORS = new Set(['triple-berry', 'nutella-chocolate-chip'])
+export const VANILLA_CAKE_POINT_COLORS = new Set(['pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'])
 export const CAKE_SIZE_LABELS = {
   '15cm': '6" | serves 8',
   '19cm': '7.5" | serves 14',
@@ -393,16 +394,17 @@ function normalizeCupcakeFinishCounts(productId, vanillaValue, partyValue) {
   return { vanillaCreamCount, partyDecorationCount }
 }
 
-function normalizeVanillaCakeOptions(productId, cakeSheet, flavor) {
+function normalizeVanillaCakeOptions(productId, cakeSheet, flavor, pointColor) {
   if (productId !== 'vanilla-fresh-cream-cake') {
-    return { vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry' }
+    return { vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink' }
   }
-  const vanillaCakeSheet = cakeSheet === undefined ? 'chocolate' : cakeSheet
+  const vanillaCakeSheet = cakeSheet === undefined || cakeSheet === 'vanilla' ? 'chocolate' : cakeSheet
   const vanillaCakeFlavor = flavor === undefined ? 'triple-berry' : flavor
+  const vanillaCakePointColor = VANILLA_CAKE_POINT_COLORS.has(pointColor) ? pointColor : 'pink'
   if (!VANILLA_CAKE_SHEETS.has(vanillaCakeSheet) || !VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)) {
     fail('INVALID_VANILLA_CAKE_OPTION')
   }
-  return { vanillaCakeSheet, vanillaCakeFlavor }
+  return { vanillaCakeSheet, vanillaCakeFlavor, vanillaCakePointColor }
 }
 
 function normalizeCakeOptions(input) {
@@ -425,7 +427,12 @@ function normalizeCakeOptions(input) {
     input.vanillaCreamCount,
     input.partyDecorationCount,
   )
-  const vanillaCakeOptions = normalizeVanillaCakeOptions(input.productId, input.vanillaCakeSheet, input.vanillaCakeFlavor)
+  const vanillaCakeOptions = normalizeVanillaCakeOptions(
+    input.productId,
+    input.vanillaCakeSheet,
+    input.vanillaCakeFlavor,
+    input.vanillaCakePointColor,
+  )
 
   return { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount, ...cupcakeFinishCounts, ...vanillaCakeOptions }
 }
@@ -440,6 +447,7 @@ const ORDER_LINE_IDENTITY_KEYS = [
   'partyDecorationCount',
   'vanillaCakeSheet',
   'vanillaCakeFlavor',
+  'vanillaCakePointColor',
 ]
 const ORDER_LINE_INPUT_KEYS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity'])
 const LEGACY_ORDER_LINE_FIELDS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity', 'cacaoPercent'])
@@ -452,9 +460,10 @@ const STORED_ORDER_LINE_KEYS = new Set([
   'discountCents',
   'totalPriceCents',
 ])
+const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
 const STORED_ORDER_MAX_BYTES = 65535
 const REQUIRED_STORED_ORDER_DOCUMENT_KEYS = new Set([
-  ...ORDER_LINE_IDENTITY_KEYS,
+  ...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor'),
   'quantity',
   'subtotalCents',
   'discountBasisCents',
@@ -482,6 +491,7 @@ function normalizedCakeLine(input, quantity) {
     partyDecorationCount,
     vanillaCakeSheet,
     vanillaCakeFlavor,
+    vanillaCakePointColor,
   } = normalizeCakeOptions(input)
   return {
     productId: input.productId,
@@ -493,6 +503,7 @@ function normalizedCakeLine(input, quantity) {
     partyDecorationCount,
     vanillaCakeSheet,
     vanillaCakeFlavor,
+    vanillaCakePointColor,
     quantity,
   }
 }
@@ -918,6 +929,7 @@ function sanitizedOrderLine(line) {
     partyDecorationCount: line.partyDecorationCount,
     vanillaCakeSheet: line.vanillaCakeSheet,
     vanillaCakeFlavor: line.vanillaCakeFlavor,
+    vanillaCakePointColor: line.vanillaCakePointColor || 'pink',
     quantity: line.quantity,
   }
 }
@@ -937,7 +949,8 @@ export function parseStoredOrderLines(document) {
 
     const canonicalKeys = new Set()
     for (const line of payload.lines) {
-      if (!hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)) throw new Error('invalid line keys')
+      const legacyStoredLine = hasExactOwnKeys(line, LEGACY_STORED_ORDER_LINE_KEYS)
+      if (!legacyStoredLine && !hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)) throw new Error('invalid line keys')
       if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('invalid quantity')
       for (const key of ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount']) {
         if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid option count')
@@ -946,7 +959,12 @@ export function parseStoredOrderLines(document) {
         if (typeof line[key] !== 'string') throw new Error('invalid option')
       }
       const normalized = normalizedCakeLine(line, line.quantity)
-      if (ORDER_LINE_IDENTITY_KEYS.some((key) => normalized[key] !== line[key])) throw new Error('noncanonical line')
+      if (ORDER_LINE_IDENTITY_KEYS.some((key) => key !== 'vanillaCakePointColor' && normalized[key] !== line[key])) {
+        throw new Error('noncanonical line')
+      }
+      if (!legacyStoredLine && normalized.vanillaCakePointColor !== line.vanillaCakePointColor) {
+        throw new Error('noncanonical point color')
+      }
       const canonicalKey = canonicalOrderLineKey(line)
       if (canonicalKeys.has(canonicalKey)) throw new Error('duplicate line')
       canonicalKeys.add(canonicalKey)
@@ -1025,7 +1043,7 @@ export function parseStoredOrderLines(document) {
       throw new Error('inconsistent totalPrice')
     }
     const firstLine = payload.lines[0]
-    for (const key of [...ORDER_LINE_IDENTITY_KEYS, 'quantity']) {
+    for (const key of [...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor'), 'quantity']) {
       if (document[key] !== firstLine[key]) throw new Error(`inconsistent ${key}`)
     }
     return payload
@@ -1046,6 +1064,7 @@ export function publicCakeReservation(document) {
     partyDecorationCount: Number(document.partyDecorationCount || 0),
     vanillaCakeSheet: document.vanillaCakeSheet || (document.productId === 'vanilla-fresh-cream-cake' ? 'chocolate' : 'vanilla'),
     vanillaCakeFlavor: document.vanillaCakeFlavor || 'triple-berry',
+    vanillaCakePointColor: 'pink',
     quantity: Number(document.quantity || 1),
   }
   const orderLines = stored

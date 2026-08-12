@@ -21,6 +21,7 @@ import {
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
   normalizeVanillaCakeFlavor,
+  normalizeVanillaCakePointColor,
   normalizeVanillaCakeSheet,
   normalizeReservationChocolateType,
   normalizePoundAddon,
@@ -58,6 +59,7 @@ import type {
   ReservationStatus,
   StoreSettings,
   VanillaCakeFlavor,
+  VanillaCakePointColor,
   VanillaCakeSheet,
 } from './types'
 import {
@@ -91,7 +93,7 @@ const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 export const CAKE_ORDER_LINES_UNAVAILABLE_ERROR = 'CAKE_ORDER_LINES_UNAVAILABLE'
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'discountBasisCents' | 'orderLines' | 'orderLineCount' | 'orderItemCount' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'discountBasisCents' | 'orderLines' | 'orderLineCount' | 'orderItemCount' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
@@ -104,6 +106,7 @@ type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeS
   partyDecorationCount?: number
   vanillaCakeSheet?: VanillaCakeSheet
   vanillaCakeFlavor?: VanillaCakeFlavor
+  vanillaCakePointColor?: VanillaCakePointColor
   quantity?: number
   totalPriceCents?: number
   subtotalCents?: number
@@ -258,6 +261,7 @@ function normalizeReservation(reservation: Reservation): Reservation {
     ),
     vanillaCakeSheet: normalizeVanillaCakeSheet(getProductById(reservation.productId).id, reservation.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeVanillaCakeFlavor(getProductById(reservation.productId).id, reservation.vanillaCakeFlavor),
+    vanillaCakePointColor: normalizeVanillaCakePointColor(getProductById(reservation.productId).id, reservation.vanillaCakePointColor),
     quantity: normalizeQuantity(reservation.quantity),
     totalPrice: reservation.totalPriceCents === undefined || reservation.totalPriceCents === null
       ? reservation.totalPrice
@@ -296,11 +300,15 @@ function normalizePublicOrderLine(line: CakeOrderLineRequest | CakeOrderLineResu
     ...normalizeCupcakeFinishCounts(product.id, line.vanillaCreamCount, line.partyDecorationCount),
     vanillaCakeSheet: normalizeVanillaCakeSheet(product.id, line.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeVanillaCakeFlavor(product.id, line.vanillaCakeFlavor),
+    vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, line.vanillaCakePointColor),
     quantity: line.quantity,
   }
   if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('INVALID_RESERVATION_RESPONSE')
   for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity'] as const) {
     if (line[key] !== normalized[key]) throw new Error('INVALID_RESERVATION_RESPONSE')
+  }
+  if (line.vanillaCakePointColor !== undefined && line.vanillaCakePointColor !== normalized.vanillaCakePointColor) {
+    throw new Error('INVALID_RESERVATION_RESPONSE')
   }
   const priced = line as Partial<CakeOrderLineResult>
   const priceKeys = ['unitPriceCents', 'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents'] as const
@@ -324,6 +332,7 @@ function orderLineIdentityKey(line: CakeOrderLineRequest) {
   return JSON.stringify([
     line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.chocolateIcingCount,
     line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
+    normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
   ])
 }
 
@@ -394,6 +403,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     ...normalizeCupcakeFinishCounts(product.id, reservation.vanillaCreamCount, reservation.partyDecorationCount),
     vanillaCakeSheet: normalizeVanillaCakeSheet(product.id, reservation.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeVanillaCakeFlavor(product.id, reservation.vanillaCakeFlavor),
+    vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, reservation.vanillaCakePointColor),
     quantity: normalizeQuantity(reservation.quantity),
   }
   const orderLines = payload.orderLines?.map(normalizePublicOrderLine)
@@ -404,7 +414,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
   }
   if (orderLines) {
     const first = orderLines[0]
-    for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity'] as const) {
+    for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'quantity'] as const) {
       if (topProjection[key] !== first[key]) throw new Error('INVALID_RESERVATION_RESPONSE')
     }
   }
@@ -502,9 +512,10 @@ function normalizeSettings(settings?: Partial<StoreSettings> | null): StoreSetti
 const STORED_ORDER_MAX_BYTES = 65_535
 const STORED_ORDER_LINE_KEYS = new Set([
   'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount',
-  'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity', 'unitPriceCents',
+  'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'quantity', 'unitPriceCents',
   'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
 ])
+const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
 const SAFE_PROMO_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 const MANUAL_REVIEW_COUPON_ID_PATTERN = /^manual:[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 
@@ -533,8 +544,11 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
   const orderLines = rawLines.map((rawLine): CakeOrderLineResult => {
     if (!rawLine || typeof rawLine !== 'object' || Array.isArray(rawLine)) invalidStoredOrder()
     const keys = Reflect.ownKeys(rawLine)
-    if (keys.length !== STORED_ORDER_LINE_KEYS.size
-      || !keys.every((key) => typeof key === 'string' && STORED_ORDER_LINE_KEYS.has(key))) invalidStoredOrder()
+    const allowedKeys = keys.length === LEGACY_STORED_ORDER_LINE_KEYS.size
+      ? LEGACY_STORED_ORDER_LINE_KEYS
+      : STORED_ORDER_LINE_KEYS
+    if (keys.length !== allowedKeys.size
+      || !keys.every((key) => typeof key === 'string' && allowedKeys.has(key))) invalidStoredOrder()
     try {
       const normalized = normalizePublicOrderLine(rawLine as CakeOrderLineResult)
       if (!Object.hasOwn(normalized, 'unitPriceCents')) invalidStoredOrder()
@@ -645,6 +659,7 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
     ),
     vanillaCakeSheet: normalizeVanillaCakeSheet(getProductById(document.productId).id, document.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeVanillaCakeFlavor(getProductById(document.productId).id, document.vanillaCakeFlavor),
+    vanillaCakePointColor: normalizeVanillaCakePointColor(getProductById(document.productId).id, document.vanillaCakePointColor),
     quantity: normalizeQuantity(document.quantity),
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
@@ -966,6 +981,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   )
   const vanillaCakeSheet = normalizeVanillaCakeSheet(product.id, input.vanillaCakeSheet)
   const vanillaCakeFlavor = normalizeVanillaCakeFlavor(product.id, input.vanillaCakeFlavor)
+  const vanillaCakePointColor = normalizeVanillaCakePointColor(product.id, input.vanillaCakePointColor)
   const quantity = normalizeQuantity(input.quantity)
   const originalTotalPrice = getReservationPrice(
     product.id,
@@ -989,6 +1005,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     ...cupcakeFinishCounts,
     vanillaCakeSheet,
     vanillaCakeFlavor,
+    vanillaCakePointColor,
     quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
