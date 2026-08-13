@@ -323,7 +323,7 @@ test('product runtime metadata carries descriptive copy and complete image attri
 })
 ~~~
 
-In tests/class-utils.test.ts, import getAuPublicContent and add the authoritative pricing comparison at the pricing-module boundary:
+In tests/class-utils.test.ts, import getAuPublicContent and add `CLASS_EXTENSION_PRICE_PER_PARTICIPANT_CENTS` to the existing class-utils import, then add the authoritative pricing comparison at the pricing-module boundary:
 
 ~~~ts
 test('canonical public class prices match valid base bookings and keep extensions separate', () => {
@@ -366,6 +366,15 @@ import auPublicPages from '../src/content/au-public-pages.json' with { type: 'js
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
+~~~
+
+Replace the existing hard-coded homepage title assertion with canonical artifact parity:
+
+~~~js
+assert.match(
+  home,
+  new RegExp('<title>' + escapeRegExp(auPublicPages.home.title) + '</title>'),
+)
 ~~~
 
 Extend the generated-page checks to assert:
@@ -412,13 +421,14 @@ test('kids class public content stays canonical while writes remain server-autho
   assert.match(landing, /publicClassContent\.baseHighPrice/)
   assert.match(landing, /publicClassContent\.packageSummary/)
   assert.match(landing, /publicClassContent\.extensionSummary/)
-  assert.match(generatedSeo, /auPublicPages\.classes/)
   assert.match(repository, /export async function createClassReservation[\s\S]*if \(isAppwriteConfigured\)[\s\S]*executeReservationApi<ClassReservation>\('create-class'/)
   assert.match(setup, /APPWRITE_RESERVATION_WRITE_MODE === 'direct' \? 'direct' : 'function'/)
   assert.match(repository, /Query\.equal\('advancedClassDate', filters\.classDate\)/)
   assert.match(repository, /documentGroups\.flat\(\)\.map[\s\S]*document\.\$id/)
 })
 ~~~
+
+Remove the now-unused `generatedSeo` source read from this contract test. Generated `classes.html` parity is already verified above; keep source contracts only for React wiring and the existing server-authoritative booking boundary.
 
 Add source-contract assertions for all three other English route consumers:
 
@@ -611,13 +621,12 @@ git commit -m "fix: unify AU public SEO metadata and schema"
 
 - [ ] **Step 1: Change the llms test to require generated output**
 
-Import renderAuLlms from scripts/render-au-llms.mjs. Update the existing llms test so it calls generate(), reads dist/llms.txt, and checks the canonical renderer output:
+Do not import the not-yet-created renderer during the RED phase. Update the existing llms test so it calls generate(), reads dist/llms.txt, and checks the canonical generated artifact:
 
 ~~~js
 const { dist } = await generate()
 const llms = await readFile(join(dist, 'llms.txt'), 'utf8')
 const checkedInLlms = await readFile(llmsPath, 'utf8')
-assert.equal(checkedInLlms, renderAuLlms(auPublicPages))
 assert.equal(llms, checkedInLlms)
 assert.match(llms, /^# verygood chocolate Sydney/m)
 assert.match(llms, /Choose a size · dark chocolate only/)
@@ -630,8 +639,6 @@ assert.match(llms, /AUD 20 per participant, per class/)
 assert.doesNotMatch(llms, /\/admin|customer name|mobile number/i)
 ~~~
 
-Also assert that checked-in public/llms.txt equals renderAuLlms(auPublicPages), byte for byte.
-
 - [ ] **Step 2: Run the generator test and verify RED**
 
 Run:
@@ -640,7 +647,7 @@ Run:
 node --test tests/cake-seo-generator.test.mjs
 ~~~
 
-Expected: dist/llms.txt does not exist and the checked-in file still contains stale Vanilla and brand facts.
+Expected: the read of dist/llms.txt fails because the generator does not create the artifact yet. This is the intended behavioral RED, not a missing-module failure.
 
 - [ ] **Step 3: Add the pure renderer**
 
@@ -652,6 +659,15 @@ Create scripts/render-au-llms.mjs with one exported pure function. It must:
 - derive the class base range and extension statement from classes;
 - append a final newline;
 - emit no operational or private fields.
+
+Once the module exists, import `renderAuLlms` in the generator test and add pure-renderer parity assertions before completing GREEN:
+
+~~~js
+assert.equal(checkedInLlms, renderAuLlms(auPublicPages))
+assert.equal(llms, renderAuLlms(auPublicPages))
+~~~
+
+This makes checked-in public/llms.txt, generated dist/llms.txt, and the canonical renderer byte-identical without turning the initial RED into `ERR_MODULE_NOT_FOUND`.
 
 Use this implementation shape:
 
@@ -892,11 +908,11 @@ Run:
 
 ~~~bash
 node --test tests/cake-seo-generator.test.mjs
-rg -n "Very Good Chocolate|Verygood Chocolate|dark or milk|photo is coming soon|highPrice.:198" dist/index.html dist/cakes.html dist/cakes/*.html dist/classes.html dist/reviews.html dist/llms.txt
+! rg -n "Very Good Chocolate|Verygood Chocolate|dark or milk|photo is coming soon|highPrice.:198" dist/index.html dist/cakes.html dist/cakes/*.html dist/classes.html dist/reviews.html dist/llms.txt
 rg -n "verygood chocolate|highPrice.:254.6|og:image:type|og:image:width|og:image:height" dist/index.html dist/cakes.html dist/cakes/*.html dist/classes.html dist/reviews.html dist/llms.txt
 ~~~
 
-Expected: the first rg exits 1 with no matches; the second prints the canonical lowercase brand, corrected Course price, and complete social-image attributes. Review every JSON-LD parse assertion from the generator test.
+Expected: the negated first rg succeeds only when it finds no stale matches; the second prints the canonical lowercase brand, corrected Course price, and complete social-image attributes. Review every JSON-LD parse assertion from the generator test.
 
 - [ ] **Step 5: Confirm scope and clean integration state**
 
