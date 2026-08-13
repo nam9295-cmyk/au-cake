@@ -197,11 +197,11 @@ export function HomePage({
             <h1 className="hero-title">{language === 'en' && publicHomeContent ? publicHomeContent.h1 : copy.homeTitle}</h1>
             <p className="hero-description">
               {language === 'ko' ? (
-                <><strong>Very Good Chocolate</strong>이 만드는 소량 생산 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
+                <><strong>verygood chocolate</strong>이 만드는 소량 생산 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
               ) : publicHomeContent ? (
                 <>{publicHomeContent.hero}<br /><span>{publicHomeContent.pickup}</span></>
               ) : (
-                <>Small-batch cakes made by <strong>Very Good Chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
+                <>Small-batch cakes made by <strong>verygood chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
               )}
             </p>
             <div className="hero-actions">
