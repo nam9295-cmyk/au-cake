@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getReservationByNumber, toReservation, updateReservation } from '../src/lib/repository.js'
+import { getReservationByNumber, toReservation, toReservationList, updateReservation } from '../src/lib/repository.js'
 
 const lines = [
   {
@@ -48,6 +48,25 @@ test('admin Appwrite hydration treats nullable unused discount fields as absent'
   assert.equal(reservation.orderLines?.length, 2)
   assert.equal(reservation.discountPercent, 0)
   assert.equal(reservation.totalPriceCents, 13000)
+})
+
+test('admin reservation list isolates a malformed historical order instead of hiding valid bookings', () => {
+  const validLatest = {
+    ...document,
+    $id: 'reservation-latest',
+    reservationNumber: 'VG-C-AU-20260813-154142875',
+    pickupDate: '2026-08-15',
+  }
+  const malformedHistorical = {
+    ...document,
+    $id: 'reservation-malformed',
+    reservationNumber: 'VG-C-AU-20260805-235053264',
+    orderLinesJson: '{',
+  }
+
+  const reservations = toReservationList([validLatest, malformedHistorical] as never)
+
+  assert.deepEqual(reservations.map((reservation) => reservation.reservationNumber), [validLatest.reservationNumber])
 })
 
 test('admin Appwrite hydration fails closed when present stored order data is malformed or inconsistent', () => {

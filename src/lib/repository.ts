@@ -1050,6 +1050,18 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   return { ...reservation, promotionKind: discountCents > 0 ? 'static' : 'none' }
 }
 
+export function toReservationList(documents: AppwriteReservationDocument[]): Reservation[] {
+  const reservations: Reservation[] = []
+  for (const document of documents) {
+    try {
+      reservations.push(toReservation(document))
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== 'INVALID_STORED_ORDER') throw error
+    }
+  }
+  return reservations
+}
+
 export async function listReservations(filters?: ReservationFilters): Promise<Reservation[]> {
   if (!isAppwriteConfigured) {
     return applyLocalFilters(readLocalReservations(), filters).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -1066,7 +1078,7 @@ export async function listReservations(filters?: ReservationFilters): Promise<Re
     appwriteConfig.reservationsCollectionId,
     queries,
   )
-  return applyLocalFilters(documents.map((doc) => toReservation(doc as unknown as AppwriteReservationDocument)), {
+  return applyLocalFilters(toReservationList(documents as unknown as AppwriteReservationDocument[]), {
     pickupDate: '',
     status: '',
     paymentStatus: '',
