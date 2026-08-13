@@ -171,9 +171,25 @@ test('all indexable artifacts keep canonical brand, schema, canonical URLs, and 
 
 test('normal operational routes are generated noindex pages while unknown guides are not generated', async () => {
   const { dist } = await generate()
-  for (const path of ['cart', 'reserve', 'complete', 'lookup', 'admin', 'admin/login', 'admin/reservations']) {
+  for (const path of [
+    'cart',
+    'reserve',
+    'complete',
+    'lookup',
+    'class-reserve',
+    'class-complete',
+    'calendar',
+    'review',
+    'admin',
+    'admin/login',
+    'admin/reservations',
+    'admin/classes',
+    'admin/reviews',
+  ]) {
     const html = await readFile(join(dist, `${path}.html`), 'utf8')
     assert.match(html, /<meta name="robots" content="noindex, nofollow"/)
+    assert.match(html, /verygood chocolate/)
+    assert.doesNotMatch(html, /Very Good Chocolate|Verygood Chocolate/)
   }
   await assert.rejects(stat(join(dist, 'guides.html')))
   await assert.rejects(stat(join(dist, 'guides', 'chocolate-cake-size-guide-sydney.html')))

@@ -9,6 +9,7 @@ import {
 import type { PublicCakePage } from './public-content.js'
 
 const publicContent = getAuPublicContent()
+const brand = publicContent.site.brand
 
 type SeoConfig = {
   title: string
@@ -197,48 +198,48 @@ function getCakeDetailSeo(pathname: string): SeoConfig | null {
 
 const privateSeo: Record<string, SeoConfig> = {
   '/cart': {
-    title: 'Your Cart | Verygood Chocolate',
-    description: 'Review your selected cakes before sending one cake request to Verygood Chocolate Sydney.',
+    title: `Your Cart | ${brand}`,
+    description: `Review your selected cakes before sending one cake request to ${brand} Sydney.`,
     noindex: true,
   },
   '/admin/reviews': {
-    title: 'Review Moderation Admin | Verygood Chocolate',
+    title: `Review Moderation Admin | ${brand}`,
     description: 'Private review moderation administration.',
     noindex: true,
   },
   '/reserve': {
-    title: 'Request a Chocolate Cake | Verygood Chocolate',
-    description: 'Submit a cake booking request to Verygood Chocolate Sydney.',
+    title: `Request a Chocolate Cake | ${brand}`,
+    description: `Submit a cake booking request to ${brand} Sydney.`,
     noindex: true,
   },
   '/complete': {
-    title: 'Cake Request Received | Verygood Chocolate',
+    title: `Cake Request Received | ${brand}`,
     description: 'Your cake request has been received.',
     noindex: true,
   },
   '/lookup': {
-    title: 'Find Your Booking | Verygood Chocolate',
-    description: 'Look up an existing Verygood Chocolate booking.',
+    title: `Find Your Booking | ${brand}`,
+    description: `Look up an existing ${brand} booking.`,
     noindex: true,
   },
   '/class-reserve': {
-    title: 'Request a Kids Cake Class | Verygood Chocolate',
+    title: `Request a Kids Cake Class | ${brand}`,
     description: 'Submit a private kids cake class booking request.',
     noindex: true,
   },
   '/class-complete': {
-    title: 'Class Request Received | Verygood Chocolate',
+    title: `Class Request Received | ${brand}`,
     description: 'Your kids cake class request has been received.',
     noindex: true,
   },
   '/calendar': {
-    title: 'Private Schedule | Verygood Chocolate',
+    title: `Private Schedule | ${brand}`,
     description: 'Private read-only booking schedule.',
     noindex: true,
   },
   '/review': {
-    title: 'Share Your Review | Verygood Chocolate',
-    description: 'Share private feedback about your Verygood Chocolate experience.',
+    title: `Share Your Review | ${brand}`,
+    description: `Share private feedback about your ${brand} experience.`,
     canonical: `${SITE_URL}/review`,
     noindex: true,
   },
@@ -257,13 +258,13 @@ export function getSeoConfig(pathname: string): SeoConfig {
   if (privateSeo[pathname]) return privateSeo[pathname]
   if (pathname.startsWith('/admin')) {
     return {
-      title: 'Admin | Verygood Chocolate',
-      description: 'Verygood Chocolate administration.',
+      title: `Admin | ${brand}`,
+      description: `${brand} administration.`,
       noindex: true,
     }
   }
   return {
-    title: 'Page Not Found | Verygood Chocolate',
+    title: `Page Not Found | ${brand}`,
     description: 'The requested page could not be found.',
     noindex: true,
   }

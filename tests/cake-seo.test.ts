@@ -57,6 +57,31 @@ test('all indexable runtime SEO uses the canonical lowercase brand', () => {
   }
 })
 
+test('all noindex runtime SEO uses the canonical lowercase brand', () => {
+  for (const path of [
+    '/cart',
+    '/reserve',
+    '/complete',
+    '/lookup',
+    '/class-reserve',
+    '/class-complete',
+    '/calendar',
+    '/review',
+    '/review.html',
+    '/admin',
+    '/admin/login',
+    '/admin/reservations',
+    '/admin/classes',
+    '/admin/reviews',
+    '/not-found',
+  ]) {
+    const config = getSeoConfig(path)
+    assert.equal(config.noindex, true, path)
+    assert.match(config.title, /verygood chocolate/, path)
+    assert.doesNotMatch(JSON.stringify(config), /Very Good Chocolate|Verygood Chocolate/, path)
+  }
+})
+
 test('runtime route metadata comes from the typed public-content adapter', () => {
   for (const path of ['/', '/cakes', '/classes', '/reviews'] as const) {
     const page = getPublicRoutePage(path)

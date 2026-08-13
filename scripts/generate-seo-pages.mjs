@@ -116,55 +116,55 @@ function cakePageConfig(cake) {
 
 const privatePages = {
   '/cart': {
-    title: 'Your Cart | Very Good Chocolate',
-    description: 'Review your selected cakes before sending one cake request to Very Good Chocolate Sydney.',
+    title: `Your Cart | ${brand}`,
+    description: `Review your selected cakes before sending one cake request to ${brand} Sydney.`,
   },
   '/reserve': {
-    title: 'Request a Chocolate Cake | Very Good Chocolate',
-    description: 'Submit a cake booking request to Very Good Chocolate Sydney.',
+    title: `Request a Chocolate Cake | ${brand}`,
+    description: `Submit a cake booking request to ${brand} Sydney.`,
   },
   '/complete': {
-    title: 'Cake Request Received | Very Good Chocolate',
+    title: `Cake Request Received | ${brand}`,
     description: 'Your cake request has been received.',
   },
   '/lookup': {
-    title: 'Find Your Booking | Very Good Chocolate',
-    description: 'Look up an existing Very Good Chocolate booking.',
+    title: `Find Your Booking | ${brand}`,
+    description: `Look up an existing ${brand} booking.`,
   },
   '/class-reserve': {
-    title: 'Request a Kids Cake Class | Very Good Chocolate',
+    title: `Request a Kids Cake Class | ${brand}`,
     description: 'Submit a private kids cake class booking request.',
   },
   '/class-complete': {
-    title: 'Class Request Received | Very Good Chocolate',
+    title: `Class Request Received | ${brand}`,
     description: 'Your kids cake class request has been received.',
   },
   '/calendar': {
-    title: 'Private Schedule | Very Good Chocolate',
+    title: `Private Schedule | ${brand}`,
     description: 'Private read-only booking schedule.',
   },
   '/review': {
-    title: 'Share Your Review | Very Good Chocolate',
-    description: 'Share private feedback about your Very Good Chocolate experience.',
+    title: `Share Your Review | ${brand}`,
+    description: `Share private feedback about your ${brand} experience.`,
   },
   '/admin': {
-    title: 'Admin | Very Good Chocolate',
-    description: 'Very Good Chocolate administration.',
+    title: `Admin | ${brand}`,
+    description: `${brand} administration.`,
   },
   '/admin/login': {
-    title: 'Admin Login | Very Good Chocolate',
-    description: 'Very Good Chocolate administration login.',
+    title: `Admin Login | ${brand}`,
+    description: `${brand} administration login.`,
   },
   '/admin/reservations': {
-    title: 'Cake Reservations Admin | Very Good Chocolate',
-    description: 'Very Good Chocolate cake reservation administration.',
+    title: `Cake Reservations Admin | ${brand}`,
+    description: `${brand} cake reservation administration.`,
   },
   '/admin/classes': {
-    title: 'Class Reservations Admin | Very Good Chocolate',
-    description: 'Very Good Chocolate class reservation administration.',
+    title: `Class Reservations Admin | ${brand}`,
+    description: `${brand} class reservation administration.`,
   },
   '/admin/reviews': {
-    title: 'Review Moderation Admin | Very Good Chocolate',
+    title: `Review Moderation Admin | ${brand}`,
     description: 'Private review moderation administration.',
   },
 }

@@ -276,7 +276,7 @@ test('demo mode is explicit only and fixture remains in memory', () => {
 test('review SEO is noindex and nofollow', () => {
   const seo = getSeoConfig('/review')
   assert.equal(seo.noindex, true)
-  assert.equal(seo.title, 'Share Your Review | Verygood Chocolate')
+  assert.equal(seo.title, 'Share Your Review | verygood chocolate')
   const aliasSeo = getSeoConfig('/review.html')
   assert.equal(aliasSeo.noindex, true)
   assert.equal(aliasSeo.canonical, 'https://au.verygood-chocolate.com/review')
