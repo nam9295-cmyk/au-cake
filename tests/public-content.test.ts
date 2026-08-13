@@ -11,7 +11,7 @@ import {
 
 test('typed AU public content exposes the approved home contract', () => {
   assert.equal(AU_SITE_ORIGIN, 'https://au.verygood-chocolate.com')
-  assert.equal(AU_PUBLIC_CONTENT.home.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | Very Good')
+  assert.equal(AU_PUBLIC_CONTENT.home.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(AU_PUBLIC_CONTENT.home.h1, 'Made-to-Order Chocolate Cakes in Sydney')
   assert.equal(AU_PUBLIC_CONTENT.home.ctas[0].href, '/cakes')
   assert.equal(AU_PUBLIC_CONTENT.home.ctas[1].href, '#how-ordering-works')
