@@ -82,6 +82,7 @@ The other four cake descriptions must reuse the existing English catalogue copy 
 - Modify: src/lib/cake-catalog.ts
 - Modify: src/pages/HomePage.tsx
 - Modify: src/CakesPage.tsx
+- Modify: scripts/generate-seo-pages.mjs
 
 **Interfaces:**
 
@@ -224,6 +225,7 @@ Return imagePath with the existing card fields. Add imagePath values to the lega
 - Resolve the Lemon and Vanilla hero images with getPublicCakePage('lemon-cake')?.imagePath and getPublicCakePage('vanilla-fresh-cream-cake')?.imagePath.
 - Keep quickViewImages unchanged because those are different detail-shot assets.
 - In CakesPage.tsx, remove cakeListImages and CakeCatalogImageKey, then render src={card.imagePath}.
+- In scripts/generate-seo-pages.mjs, include cake.description in the static cake fallback before the price guide. Keep the broader metadata/schema refactor in Task 2; this small bridge lets Task 1's generated product-fact regression turn GREEN as soon as the canonical record is corrected.
 
 - [ ] **Step 6: Run GREEN and commit**
 
@@ -238,7 +240,7 @@ Expected: all cake tests pass, including a non-empty canonical Vanilla image and
 Commit:
 
 ~~~bash
-git add src/content/au-public-pages.json src/lib/cake-catalog.ts src/pages/HomePage.tsx src/CakesPage.tsx tests/cake-catalog.test.ts tests/cake-catalog-component.test.mjs tests/vanilla-fresh-cream-cake-component.test.mjs tests/cake-seo-generator.test.mjs
+git add src/content/au-public-pages.json src/lib/cake-catalog.ts src/pages/HomePage.tsx src/CakesPage.tsx scripts/generate-seo-pages.mjs tests/cake-catalog.test.ts tests/cake-catalog-component.test.mjs tests/vanilla-fresh-cream-cake-component.test.mjs tests/cake-seo-generator.test.mjs
 git commit -m "fix: align AU cake facts and catalogue images"
 ~~~
 
