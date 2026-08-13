@@ -1,31 +1,26 @@
-# Very Good Chocolate Sydney
+# verygood chocolate Sydney
 
-> Small-batch, made-to-order cakes and private kids cake decorating classes for pre-arranged pick-up in Melrose Park, Sydney.
+> Small-batch chocolate cakes made to order for birthdays, parties and gifting. Pre-order only. Pickup in Melrose Park, Sydney. No walk-in shop or delivery.
 
-Official website: https://au.verygood-chocolate.com/
-Cake catalogue: https://au.verygood-chocolate.com/cakes
-Kids classes: https://au.verygood-chocolate.com/classes
-Customer reviews: https://au.verygood-chocolate.com/reviews
-Sitemap: https://au.verygood-chocolate.com/sitemap.xml
+Official AU website: https://au.verygood-chocolate.com
+Primary service area: Melrose Park, Sydney
 
-## Ordering facts
-
-- Orders are made to order and collected by pre-arranged pick-up in Melrose Park, Sydney.
-- This is not a walk-in shop, and delivery is not offered.
-- Submitting a request does not confirm an order. Jenny checks availability, sends payment details, and confirms the order after payment is received.
-- Prices are in Australian dollars (AUD).
+## Ordering
+- Choose a cake and options.
+- Send a request so availability can be checked.
+- Receive payment details after availability is confirmed.
+- Collect by pre-arranged pickup in Melrose Park after final confirmation.
 
 ## Cakes
+- Chocolate Pound Cake & Cupcakes: Choose the pound cake, or make it a dozen cupcakes for AUD 10 more. Chocolate Pound Cake AUD 45; Chocolate Cupcakes (1 dozen) AUD 55. Choose the pound cake or one dozen cupcakes, then choose the available finish. https://au.verygood-chocolate.com/cakes/chocolate-pound-cake-and-cupcakes
+- Pave Chocolate Cake: A round chocolate cake layered with soft pave ganache and chocolate sponge. Dense, smooth and made for serious chocolate flavour. From AUD 75. 6 inch serves 8, 7.5 inch serves 14, and 9 inch serves 22. Choose a size · dark chocolate only https://au.verygood-chocolate.com/cakes/pave-chocolate-cake
+- Chocolatier's Basque Cheesecake: Choose classic, pave chocolate on top, or a full pave chocolate finish with one Eiffel Tower chocolate. From AUD 55. Classic AUD 55, pave chocolate on top +AUD 10 (AUD 65 total), or Eiffel Tower finish +AUD 15 (AUD 70 total). One gluten-free 6 inch cake serving about 8, with three finishing options. https://au.verygood-chocolate.com/cakes/chocolatiers-basque-cheesecake
+- Lemon Cake: Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration. From AUD 36. Boxes of 6, 8, 12 or 16. Choose a pack size and finishing mix. The 12-piece box is Most Popular. https://au.verygood-chocolate.com/cakes/lemon-cake
+- Vanilla Fresh Cream Cake: Made with a chocolate cake sheet and vanilla fresh cream, then Triple berry or Nutella chocolate chip flavour. From AUD 75. 6 inch serves 8, 7.5 inch serves 14, and 9 inch serves 22. Choose size and flavour · Chocolate cake sheet included https://au.verygood-chocolate.com/cakes/vanilla-fresh-cream-cake
 
-- Chocolate Pound Cake & Cupcakes: pound cake AUD 45 or one dozen cupcakes AUD 55. Finish choices may increase the price. https://au.verygood-chocolate.com/cakes/chocolate-pound-cake-and-cupcakes
-- Pave Chocolate Cake: 6 inch, serves 8, AUD 75; 7.5 inch, serves 14, AUD 95; 9 inch, serves 22, AUD 115. https://au.verygood-chocolate.com/cakes/pave-chocolate-cake
-- Chocolatier's Basque Cheesecake: classic AUD 55; pave chocolate on top +AUD 10 (AUD 65 total); Eiffel Tower finish +AUD 15 (AUD 70 total). One gluten-free 6 inch cake serving about 8. https://au.verygood-chocolate.com/cakes/chocolatiers-basque-cheesecake
-- Lemon Cake: 6 pieces AUD 36; 8 pieces AUD 45; 12 pieces AUD 65; 16 pieces AUD 85. The 12-piece box is Most Popular. https://au.verygood-chocolate.com/cakes/lemon-cake
-- Vanilla Fresh Cream Cake: 6 inch, serves 8, AUD 75; 7.5 inch, serves 14, AUD 98; 9 inch, serves 22, AUD 139. Choose vanilla or chocolate cake sheet and Triple berry or Nutella chocolate chip flavour. Product photo is coming soon. https://au.verygood-chocolate.com/cakes/vanilla-fresh-cream-cake
-
-## Kids cake decorating classes
-
-- Classes are private weekend sessions in Melrose Park, Sydney.
-- Basic welcomes Kindy through Year 6, with Kindy–Year 2 and Year 3–6 groups.
-- Advanced and Basic + Advanced packages are for Year 2 through Year 6.
-- Current details and request flow: https://au.verygood-chocolate.com/classes
+## Kids cake classes
+- Private, hands-on cake classes held in Melrose Park, Sydney on Saturdays and Sundays. Basic welcomes children from Kindy to Year 6; Advanced starts from Year 2.
+- Base course/package prices: AUD 99–254.60.
+- A Basic + Advanced package covers two separate weekend sessions and receives 5% off the base class fees.
+- A 30-minute extension is AUD 20 per participant, per class and is not discounted.
+- https://au.verygood-chocolate.com/classes

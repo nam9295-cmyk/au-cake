@@ -1,19 +1,21 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
+import { renderAuLlms } from './render-au-llms.mjs'
 
 const siteUrl = auPublicPages.site.url
 const distDir = join(process.cwd(), 'dist')
-const defaultSocialImage = `${siteUrl}/og-image.jpg`
+const brand = auPublicPages.site.brand
+const defaultSocialImage = auPublicPages.site.defaultSocialImage
+const defaultSocialImageUrl = `${siteUrl}${defaultSocialImage.path}`
 
 const organization = {
   '@type': 'Organization',
   '@id': `${siteUrl}/#organization`,
-  name: auPublicPages.site.brandDisplay,
-  alternateName: 'Very Good Chocolate Sydney',
+  name: brand,
   url: siteUrl,
   logo: `${siteUrl}/favicon.png`,
-  description: 'Small-batch, made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.',
+  description: auPublicPages.site.organizationDescription,
   areaServed: { '@type': 'City', name: 'Sydney' },
 }
 
@@ -27,7 +29,7 @@ const cakeListItems = cakeEntries.map((cake, index) => ({
 const cakeItemList = {
   '@type': 'ItemList',
   '@id': `${siteUrl}/cakes#item-list`,
-  name: 'Very Good Chocolate Sydney cake catalogue',
+  name: `${brand} Sydney cake catalogue`,
   numberOfItems: cakeListItems.length,
   itemListElement: cakeListItems,
 }
@@ -57,16 +59,16 @@ function productSchema(cake, path) {
     '@type': 'Product',
     '@id': `${canonicalFor(path)}#product`,
     name: cake.name,
-    description: cake.priceSummary,
+    description: cake.description,
     ...(imageFor(cake) ? { image: imageFor(cake) } : {}),
-    brand: { '@type': 'Brand', name: auPublicPages.site.brandDisplay },
+    brand: { '@type': 'Brand', name: brand },
     category: 'Made-to-order cake',
     offers: {
       '@type': 'Offer',
       url: canonicalFor(path),
       priceCurrency: 'AUD',
       price: cake.startingPrice,
-      seller: { '@type': 'Organization', name: auPublicPages.site.brandDisplay, url: siteUrl },
+      seller: { '@type': 'Organization', name: brand, url: siteUrl },
     },
   }
 }
@@ -77,7 +79,8 @@ function cakeFallback(cake, path) {
       <main class="seo-fallback">
         <p><a href="/cakes">View all cakes</a></p>
         <h1>${escapeHtml(cake.name)}</h1>
-        ${image ? `<p><img src="${image}" alt="${escapeHtml(cake.imageAlt)}" width="1080" height="1012" loading="eager" decoding="async" /></p>` : ''}
+        ${image ? `<p><img src="${image}" alt="${escapeHtml(cake.imageAlt)}" width="${cake.imageWidth}" height="${cake.imageHeight}" loading="eager" decoding="async" /></p>` : ''}
+        <p>${escapeHtml(cake.description)}</p>
         <p><strong>Price guide:</strong> ${escapeHtml(cake.priceSummary)}</p>
         <p><strong>Options:</strong> ${escapeHtml(cake.optionSummary)}</p>
         <p>Made to order for pre-arranged pickup in Melrose Park, Sydney. Availability is checked after your request and payment is confirmed separately.</p>
@@ -90,18 +93,18 @@ function cakePageConfig(cake) {
   const image = imageFor(cake)
   const isWebPageOnly = cake.schema === 'webpage-only'
   return {
-    title: `${cake.name} Sydney | Very Good Chocolate`,
-    description: cake.priceSummary,
+    title: cake.title,
+    description: cake.description,
     robots: 'index, follow',
     ogType: isWebPageOnly ? 'website' : 'product',
-    ...(image ? { image, imageWidth: 1080, imageHeight: 1012 } : {}),
+    ...(image ? { image, imageType: cake.imageType, imageWidth: cake.imageWidth, imageHeight: cake.imageHeight } : {}),
     structuredData: isWebPageOnly
       ? [
           {
             '@type': 'WebPage',
             '@id': `${canonicalFor(path)}#webpage`,
             name: cake.name,
-            description: cake.priceSummary,
+            description: cake.description,
             url: canonicalFor(path),
           },
           breadcrumb(path, cake.name),
@@ -197,7 +200,7 @@ const pages = {
         '@type': 'WebSite',
         '@id': `${siteUrl}/#website`,
         url: siteUrl,
-        name: 'Very Good Chocolate Sydney',
+        name: `${brand} Sydney`,
         publisher: { '@id': `${siteUrl}/#organization` },
         inLanguage: auPublicPages.site.language,
       },
@@ -206,16 +209,16 @@ const pages = {
     fallbackHtml: homeFallback,
   },
   '/cakes': {
-    title: 'Made-to-Order Cakes Sydney | Very Good Chocolate',
-    description: 'Browse five small-batch cakes and request confirmed pickup in Melrose Park, Sydney.',
+    title: auPublicPages.catalogue.title,
+    description: auPublicPages.catalogue.description,
     robots: 'index, follow',
     structuredData: [
       organization,
       {
         '@type': 'CollectionPage',
         '@id': `${siteUrl}/cakes#collection`,
-        name: 'Made-to-Order Cakes Sydney',
-        description: 'Browse five small-batch cakes and request confirmed pickup in Melrose Park, Sydney.',
+        name: auPublicPages.catalogue.collectionName,
+        description: auPublicPages.catalogue.description,
         url: `${siteUrl}/cakes`,
         mainEntity: `${siteUrl}/cakes#item-list`,
       },
@@ -223,56 +226,62 @@ const pages = {
     ],
     fallbackHtml: `
       <main class="seo-fallback">
-        <h1>Choose Your Cake</h1>
-        <p>Browse five made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.</p>
+        <h1>${escapeHtml(auPublicPages.catalogue.h1)}</h1>
+        <p>${escapeHtml(auPublicPages.catalogue.intro)}</p>
         <ul>${cakeEntries.map((cake) => `<li><a href="/cakes/${cake.slug}">${escapeHtml(cake.name)}</a> — ${escapeHtml(cake.priceSummary)}</li>`).join('')}</ul>
       </main>`,
   },
   '/classes': {
-    title: 'Kids Cake Decorating Classes Sydney | Very Good Chocolate',
-    description: 'Private weekend cake decorating classes in Melrose Park, Sydney: Basic from Kindy to Year 6 and Advanced for Years 2–6.',
+    title: auPublicPages.classes.title,
+    description: auPublicPages.classes.description,
     robots: 'index, follow',
     structuredData: [
       organization,
       {
         '@type': 'Course',
         '@id': `${siteUrl}/classes#course`,
-        name: 'Kids Professional Chocolate Cake Course',
-        description: 'Private weekend cake courses with Basic classes from Kindy to Year 6 and Advanced 2-Tier classes for Years 2–6.',
+        name: auPublicPages.classes.courseName,
+        description: auPublicPages.classes.courseDescription,
         url: `${siteUrl}/classes`,
         provider: { '@id': `${siteUrl}/#organization` },
-        educationalLevel: 'Basic: Kindy–Year 6; Advanced: Years 2–6',
-        inLanguage: 'en-AU',
-        offers: { '@type': 'AggregateOffer', url: `${siteUrl}/class-reserve`, priceCurrency: 'AUD', lowPrice: 99, highPrice: 198 },
+        educationalLevel: auPublicPages.classes.educationalLevel,
+        inLanguage: auPublicPages.site.language,
+        offers: {
+          '@type': 'AggregateOffer',
+          url: `${siteUrl}/class-reserve`,
+          priceCurrency: 'AUD',
+          lowPrice: auPublicPages.classes.baseLowPrice,
+          highPrice: auPublicPages.classes.baseHighPrice,
+        },
       },
     ],
     fallbackHtml: `
       <main class="seo-fallback">
-        <h1>Kids Cake Decorating Classes Sydney</h1>
-        <p>Private, hands-on cake classes held in Melrose Park, Sydney on Saturdays and Sundays. Basic welcomes children from Kindy to Year 6; Advanced starts from Year 2.</p>
+        <h1>${escapeHtml(auPublicPages.classes.h1)}</h1>
+        <p>${escapeHtml(auPublicPages.classes.intro)}</p>
         <section>
           <h2>Basic and Advanced weekend classes</h2>
-          <article><h3>Basic Cake Class</h3><p>A 90-minute private session for Kindy–Year 6 where children decorate one 15cm chocolate cake. A Basic Cupcakes &amp; Chocolate Class is also available.</p></article>
-          <article><h3>Advanced 2-Tier Cake Class</h3><p>A 120-minute one-child class for Years 2–6, focused on building and finishing a two-tier cake.</p></article>
-          <p>Each class may be extended by 30 minutes. Basic and Advanced can also be requested as two separate weekend sessions in one package.</p>
+          <p>${escapeHtml(auPublicPages.classes.courseDescription)}</p>
         </section>
         <section>
           <h2>Price Guide</h2>
-          <p>Basic is AUD 99 for Kindy–Year 2, AUD 109 for Years 3–6, or AUD 198 for two children. Advanced is AUD 159 for one child. A Basic + Advanced package receives 5% off the base class fees. A 30-minute extension is AUD 20 per participant per class and is not discounted.</p>
+          <p>Base course/package range: AUD ${auPublicPages.classes.baseLowPrice}–${auPublicPages.classes.baseHighPrice.toFixed(2)}.</p>
+          <p>${escapeHtml(auPublicPages.classes.packageSummary)}</p>
+          <p>${escapeHtml(auPublicPages.classes.extensionSummary)}</p>
           <p>Availability and full payment must be confirmed before the booking is complete. Parents must declare allergies and dietary requirements before confirmation.</p>
           <p><a href="/class-reserve" rel="nofollow">Request a kids cake class</a> or return to <a href="/">Sydney cake orders</a>.</p>
         </section>
       </main>`,
   },
   '/reviews': {
-    title: 'Customer Reviews | Very Good Chocolate Sydney',
-    description: 'Read verified customer reviews from Very Good Chocolate cake orders and kids cake class bookings in Sydney.',
+    title: auPublicPages.reviews.title,
+    description: auPublicPages.reviews.description,
     robots: 'index, follow',
     structuredData: [organization],
     fallbackHtml: `
       <main class="seo-fallback">
-        <h1>Verified Customer Reviews</h1>
-        <p>Read reviews shared with permission after verified Very Good Chocolate cake orders and kids cake class bookings in Sydney.</p>
+        <h1>${escapeHtml(auPublicPages.reviews.h1)}</h1>
+        <p>${escapeHtml(auPublicPages.reviews.intro)}</p>
         <p><a href="/cakes">View our cakes</a> or learn about <a href="/classes">kids cake decorating classes</a>.</p>
       </main>`,
   },
@@ -296,10 +305,10 @@ function renderPage(template, path, config) {
   const canonical = canonicalFor(path)
   const title = escapeHtml(config.title)
   const description = escapeHtml(config.description)
-  const image = config.image || defaultSocialImage
-  const imageType = config.image?.endsWith('.webp') ? 'image/webp' : 'image/jpeg'
-  const imageWidth = config.imageWidth || 1200
-  const imageHeight = config.imageHeight || 630
+  const image = config.image || defaultSocialImageUrl
+  const imageType = config.imageType || defaultSocialImage.type
+  const imageWidth = config.imageWidth || defaultSocialImage.width
+  const imageHeight = config.imageHeight || defaultSocialImage.height
 
   let rendered = template
     .replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
@@ -346,6 +355,14 @@ ${indexablePaths.map((path) => `  <url><loc>${canonicalFor(path)}</loc></url>`).
 await writeFile(join(distDir, 'sitemap.xml'), sitemap)
 try {
   await writeFile(join(process.cwd(), 'public', 'sitemap.xml'), sitemap)
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error
+}
+
+const llms = renderAuLlms(auPublicPages)
+await writeFile(join(distDir, 'llms.txt'), llms)
+try {
+  await writeFile(join(process.cwd(), 'public', 'llms.txt'), llms)
 } catch (error) {
   if (error?.code !== 'ENOENT') throw error
 }

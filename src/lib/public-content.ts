@@ -6,10 +6,25 @@ export const SITE_URL = AU_SITE_ORIGIN
 export type AuPublicContent = typeof auPublicPages
 export type PublicCakeSlug = keyof AuPublicContent['cakePages']
 export type PublicCakePage = AuPublicContent['cakePages'][PublicCakeSlug]
+export type IndexablePublicPath = '/' | '/cakes' | '/classes' | '/reviews'
+
+export type PublicRoutePage = {
+  title: string
+  h1: string
+  description: string
+  intro?: string
+}
 
 export const AU_PUBLIC_CONTENT = auPublicPages
 export const KNOWN_DIRECT_ACCESS_ROUTES = auPublicPages.knownDirectAccessRoutes
 export const NOINDEX_OPERATIONAL_ROUTES = auPublicPages.noindexOperationalRoutes
+
+const PUBLIC_ROUTE_PAGES: Record<IndexablePublicPath, PublicRoutePage> = {
+  '/': AU_PUBLIC_CONTENT.home,
+  '/cakes': AU_PUBLIC_CONTENT.catalogue,
+  '/classes': AU_PUBLIC_CONTENT.classes,
+  '/reviews': AU_PUBLIC_CONTENT.reviews,
+}
 
 export function getAuPublicContent(): AuPublicContent {
   return AU_PUBLIC_CONTENT
@@ -18,6 +33,12 @@ export function getAuPublicContent(): AuPublicContent {
 export function getCakePublicPage(slug: string): PublicCakePage | undefined {
   if (!Object.hasOwn(AU_PUBLIC_CONTENT.cakePages, slug)) return undefined
   return AU_PUBLIC_CONTENT.cakePages[slug as PublicCakeSlug]
+}
+
+export function getPublicRoutePage(path: string): PublicRoutePage | undefined {
+  return Object.hasOwn(PUBLIC_ROUTE_PAGES, path)
+    ? PUBLIC_ROUTE_PAGES[path as IndexablePublicPath]
+    : undefined
 }
 
 export function getStartingPrice(slug: string): number | null {

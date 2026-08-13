@@ -13,7 +13,7 @@ const productStartingPrices = Object.fromEntries(
 )
 
 test('AU public content owns the approved homepage contract', () => {
-  assert.equal(content.home.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | Very Good')
+  assert.equal(content.home.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(content.home.h1, 'Made-to-Order Chocolate Cakes in Sydney')
   assert.equal(content.home.description, 'Order small-batch chocolate cakes for pre-arranged pickup in Melrose Park, Sydney. Pave cake, chocolate Basque cheesecake, pound cake and cupcakes from AUD 45.')
   assert.equal(content.home.pickup, 'Pre-order only. Pickup in Melrose Park, Sydney. No walk-in shop or delivery.')

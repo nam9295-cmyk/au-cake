@@ -21,6 +21,8 @@ test('public routes mount a responsive branded footer with the supplied cutout a
   assert.match(footer, /쇼콜라티에가 주문에 맞춰 만드는 케이크/)
   assert.doesNotMatch(footer, /Pre-arranged Melrose Park pick-up|settings\.storeAddress/)
   assert.match(footer, /navigate\('reserve'\)/)
+  assert.match(footer, /<a href="\/reviews"[\s\S]*navigate\('reviews'\)/)
+  assert.match(footer, /© \{new Date\(\)\.getFullYear\(\)\} verygood chocolate/)
 })
 
 test('mobile footer raises small side illustrations beside the lower information', () => {

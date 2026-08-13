@@ -35,6 +35,7 @@ import {
   storeLanguage,
   type Language,
 } from './lib/i18n'
+import { getAuPublicContent } from './lib/public-content'
 import { getSettings, supportsCakeOrderLines } from './lib/repository'
 import { applySeo } from './lib/seo'
 import {
@@ -89,6 +90,13 @@ function App() {
     setLanguageState(nextLanguage)
     storeLanguage(nextLanguage)
   }, [])
+
+  useEffect(() => {
+    if (page === 'review') return
+    document.documentElement.lang = language === 'ko'
+      ? 'ko'
+      : getAuPublicContent().site.language
+  }, [language, page])
 
   useEffect(() => {
     if (!shouldLoadStoreSettings(page) || hasLoadedSettings.current) return

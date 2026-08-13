@@ -26,6 +26,11 @@ test('shared detail template contains gallery, purchase panel and verified infor
   assert.doesNotMatch(detailSource, /Free delivery|Delivery tomorrow|Look & taste guarantee/)
 })
 
+test('English cake service notes use the canonical lowercase brand', () => {
+  assert.match(detailSource, /aria-label=\{language === 'ko' \? '베리굿 제작 방식' : 'verygood chocolate service notes'\}/)
+  assert.doesNotMatch(detailSource, /Verygood service notes/)
+})
+
 test('matching cake details place the Korean review carousel between story and ordering information', () => {
   assert.match(detailSource, /import KoreanCakeReviewsSection from '.\/KoreanCakeReviewsSection'/)
   assert.match(detailSource, /cake-detail-story[\s\S]*<KoreanCakeReviewsSection[\s\S]*cake-detail-accordion/)

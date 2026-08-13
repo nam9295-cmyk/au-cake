@@ -18,3 +18,12 @@ test('SEO and analytics effects react to pathname changes, not only page categor
   assert.match(appSource, /trackPageView\(pathname\)/)
   assert.match(appSource, /\}, \[page, pathname\]\)/)
 })
+
+test('the UI language toggle updates only the document language', () => {
+  assert.match(
+    appSource,
+    /if \(page === 'review'\) return[\s\S]*document\.documentElement\.lang = language\s*===\s*'ko'\s*\?\s*'ko'\s*:\s*getAuPublicContent\(\)\.site\.language/,
+  )
+  assert.match(appSource, /\}, \[language, page\]\)/)
+  assert.doesNotMatch(appSource, /hreflang|\/ko\//)
+})

@@ -485,7 +485,7 @@ export default function CakeDetailPage({
         </aside>
       </section>
 
-      <section className="cake-detail-trust" aria-label={language === 'ko' ? '베리굿 제작 방식' : 'Verygood service notes'}>
+      <section className="cake-detail-trust" aria-label={language === 'ko' ? '베리굿 제작 방식' : 'verygood chocolate service notes'}>
         {detail.trustPoints.map((point, index) => (
           <article key={point}>
             <span>0{index + 1}</span>

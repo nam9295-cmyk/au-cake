@@ -15,17 +15,9 @@ import { cakeCopy, getProductFeatures, getProductText, type Language } from '../
 import { marketConfig } from '../lib/market'
 import type { ProductId, StoreSettings } from '../lib/types'
 import { formatCurrency } from '../lib/utils'
-import { getAuPublicContent } from '../lib/public-content'
+import { getAuPublicContent, getPublicCakePage } from '../lib/public-content'
 
 const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().home : null
-
-const catalogImages: Record<CakeCatalogImageKey, string> = {
-  'pound-cake': '/products/chocolate-pound-cake-sydney.webp',
-  'pave-cake': '/products/pave-chocolate-cake-sydney.webp',
-  'basque-cheesecake': '/products/chocolatiers-basque-cheesecake-sydney.webp',
-  'lemon-cake': '/products/lemon-cake-sydney.webp',
-  'vanilla-fresh-cream-cake': '/products/vanilla-cake-sydney.webp',
-}
 
 const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'pound-cake': '/products/details/chocolate-pound-cake-quick-view.webp',
@@ -62,8 +54,8 @@ export function HomePage({
     { image: basqueCheesecakeHeroImg, label: "Chocolatier's Basque", tagKey: 'mini', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'Chocolate Pound Cake', tagKey: 'pound', className: 'hero-cake-three' },
-    { image: catalogImages['lemon-cake'], label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
-    { image: catalogImages['vanilla-fresh-cream-cake'], label: 'Vanilla Fresh Cream Cake', tagKey: 'vanilla', className: 'hero-cake-five' },
+    { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
+    { image: getPublicCakePage('vanilla-fresh-cream-cake')?.imagePath, label: 'Vanilla Fresh Cream Cake', tagKey: 'vanilla', className: 'hero-cake-five' },
   ]
 
   useEffect(() => {
@@ -81,6 +73,7 @@ export function HomePage({
       slug: 'chocolate-pound-cake-and-cupcakes',
       productId: 'pound-cake' as ProductId,
       imageKey: 'pound-cake' as const,
+      imagePath: '/products/chocolate-pound-cake-sydney.webp',
       isPhotoComingSoon: false,
       name: language === 'ko' ? '초코 파운드케이크 & 컵케이크' : 'Chocolate Pound Cake & Cupcakes',
       description: language === 'ko'
@@ -97,6 +90,7 @@ export function HomePage({
       slug: 'pave-chocolate-cake',
       productId: 'pave-cake' as ProductId,
       imageKey: 'pave-cake' as const,
+      imagePath: '/products/pave-chocolate-cake-sydney.webp',
       isPhotoComingSoon: false,
       name: getProductText('pave-cake', language).name,
       description: getProductText('pave-cake', language).description,
@@ -109,6 +103,7 @@ export function HomePage({
       slug: 'chocolatiers-basque-cheesecake',
       productId: 'choco-basque-cheesecake' as ProductId,
       imageKey: 'basque-cheesecake' as const,
+      imagePath: '/products/chocolatiers-basque-cheesecake-sydney.webp',
       isPhotoComingSoon: false,
       name: language === 'ko' ? '쇼콜라티에 바스크 치즈케이크' : "Chocolatier's Basque Cheesecake",
       description: language === 'ko'
@@ -125,6 +120,7 @@ export function HomePage({
       slug: 'lemon-cake',
       productId: 'fresh-lemon-cupcakes-12' as ProductId,
       imageKey: 'lemon-cake' as const,
+      imagePath: '/products/lemon-cake-sydney.webp',
       isPhotoComingSoon: false,
       name: language === 'ko' ? '레몬 케이크' : 'Lemon Cake',
       description: language === 'ko'
@@ -201,11 +197,11 @@ export function HomePage({
             <h1 className="hero-title">{language === 'en' && publicHomeContent ? publicHomeContent.h1 : copy.homeTitle}</h1>
             <p className="hero-description">
               {language === 'ko' ? (
-                <><strong>Very Good Chocolate</strong>이 만드는 소량 생산 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
+                <><strong>verygood chocolate</strong>이 만드는 소량 생산 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
               ) : publicHomeContent ? (
                 <>{publicHomeContent.hero}<br /><span>{publicHomeContent.pickup}</span></>
               ) : (
-                <>Small-batch cakes made by <strong>Very Good Chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
+                <>Small-batch cakes made by <strong>verygood chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
               )}
             </p>
             <div className="hero-actions">
@@ -330,7 +326,7 @@ export function HomePage({
                   <span className="product-image-wrap">
                     {card.isPhotoComingSoon ? null : (
                       <img
-                        src={catalogImages[card.imageKey]}
+                        src={card.imagePath}
                         alt={card.name}
                         width={1080}
                         height={1012}

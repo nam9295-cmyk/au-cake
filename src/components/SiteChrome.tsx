@@ -122,7 +122,7 @@ export function SiteHeader({
     <>
       <header className="site-header">
         <a className="brand-button" href="/" onClick={(event) => { event.preventDefault(); navigate('home') }}>
-          <img className="brand-mark" src="/favicon.png" alt="Verygood Chocolate" />
+          <img className="brand-mark" src="/favicon.png" alt="verygood chocolate" />
         </a>
         <nav>
           <a className="cakes-nav-button" href="/cakes" onClick={(event) => { event.preventDefault(); navigate('cakes') }}>
@@ -194,6 +194,7 @@ export function SiteFooter({
         service: '케이크 주문 & 키즈 클래스',
         order: '케이크 주문',
         classes: '키즈 클래스',
+        reviews: '후기',
         lookup: '주문 조회',
         location: '쇼콜라티에가 주문에 맞춰 만드는 케이크',
         description: '초콜릿을 중심으로 소량씩 만들고, 멜로즈 파크에서 손으로 정성껏 완성합니다.',
@@ -202,6 +203,7 @@ export function SiteFooter({
         service: 'Cake orders & kids classes',
         order: 'Order cakes',
         classes: 'Kids classes',
+        reviews: 'Reviews',
         lookup: 'Find my order',
         location: 'Made to order by our chocolatier',
         description: 'Chocolate-first cakes, prepared in small batches and finished by hand in Melrose Park.',
@@ -210,7 +212,7 @@ export function SiteFooter({
   return (
     <footer className="site-footer">
       <img className="site-footer-tiger" src={tigerImg} alt="" aria-hidden="true" />
-      <img className="site-footer-heart" src={heartLogoImg} alt="Very good" />
+      <img className="site-footer-heart" src={heartLogoImg} alt="verygood chocolate" />
       <div className="site-footer-content">
         <p className="site-footer-service">{copy.service}</p>
         <p className="site-footer-location">{copy.location}</p>
@@ -218,9 +220,17 @@ export function SiteFooter({
         <nav className="site-footer-nav" aria-label={language === 'ko' ? '푸터 메뉴' : 'Footer navigation'}>
           <a href="/reserve" onClick={(event) => { event.preventDefault(); navigate('reserve') }}>{copy.order}</a>
           <a href="/classes" onClick={(event) => { event.preventDefault(); navigate('classes') }}>{copy.classes}</a>
+          <a href="/reviews"
+            onClick={(event) => {
+              event.preventDefault()
+              navigate('reviews')
+            }}
+          >
+            {copy.reviews}
+          </a>
           <a href="/lookup" onClick={(event) => { event.preventDefault(); navigate('lookup') }}>{copy.lookup}</a>
         </nav>
-        <small>© {new Date().getFullYear()} Very Good</small>
+        <small>© {new Date().getFullYear()} verygood chocolate</small>
       </div>
     </footer>
   )

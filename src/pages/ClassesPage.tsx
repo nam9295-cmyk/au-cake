@@ -6,9 +6,12 @@ import { SiteHeader } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
 import { type Language } from '../lib/i18n'
+import { getAuPublicContent, getPublicRoutePage } from '../lib/public-content'
 import { formatCurrency } from '../lib/utils'
 
 export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: { navigate: (page: Page) => void; language: Language; setLanguage: (language: Language) => void; cartItemCount: number }) {
+  const publicPage = getPublicRoutePage('/classes')!
+  const publicClassContent = getAuPublicContent().classes
   const essentials = [
     ['Basic from Kindy', 'Kindy–Year 2 and Year 3–6 school groups'],
     ['Professional-style course', 'Real studio guidance from planning to finishing'],
@@ -29,10 +32,10 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
       <main className="kids-class-page">
         <section className="kids-class-hero" aria-labelledby="kids-class-title">
           <div className="kids-hero-copy reveal-up">
-            <h1 id="kids-class-title">Kids Professional Cake Course</h1>
+            <h1 id="kids-class-title">{publicPage.h1}</h1>
             <p className="kids-location">Melrose Park, Sydney</p>
             <p className="kids-hero-text">
-              Basic classes from Kindy and Advanced classes from Year 2, available on Saturdays and Sundays.
+              {publicPage.intro}
             </p>
             <div className="kids-hero-actions">
               <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
@@ -109,11 +112,15 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
         <section className="kids-bottom-grid reveal-up" aria-label="Pricing and safety information">
           <article className="kids-price-card">
             <h2>Price Guide</h2>
+            <p className="kids-price-line">
+              Base course/package range · AUD {publicClassContent.baseLowPrice}–
+              {publicClassContent.baseHighPrice.toFixed(2)}
+            </p>
             <strong>Basic · Kindy–Year 2 {formatCurrency(99)}</strong>
             <p className="kids-price-line">Basic · Year 3–6 {formatCurrency(109)}</p>
             <p className="kids-price-line">Advanced {formatCurrency(159)} · one child</p>
-            <p className="kids-price-line">Basic + Advanced package · 5% off base fees</p>
-            <p className="kids-small-note">Optional 30-minute extension: {formatCurrency(20)} per participant, per class</p>
+            <p className="kids-price-line">{publicClassContent.packageSummary}</p>
+            <p className="kids-small-note">{publicClassContent.extensionSummary}</p>
             <p className="kids-small-note">
               * Booking is completed after availability and full payment are confirmed by Jenny.
             </p>

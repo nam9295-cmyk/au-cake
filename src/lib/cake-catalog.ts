@@ -1,6 +1,7 @@
 import { getProductById, getReservationUnitPrice, type ReservationPriceOptions } from './constants.js'
 import { getProductFeatures, getProductText, type Language } from './i18n.js'
 import { marketConfig } from './market.js'
+import { getPublicCakePage } from './public-content.js'
 import { formatCurrency } from './utils.js'
 import type { ProductId } from './types.js'
 
@@ -44,6 +45,7 @@ export type CakeCatalogCard = LocalizedCatalogCopy & {
   slug: string
   productId: ProductId
   imageKey: CakeCatalogImageKey
+  imagePath: string
   isPhotoComingSoon: boolean
   priceLabel: string
 }
@@ -161,11 +163,25 @@ export function getCakeCatalogStartingPrice(entry: CakeCatalogEntry) {
 
 function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCatalogCard {
   const productText = getProductText(entry.defaultProductId, language)
-  const copy = entry.copy?.[language] || {
+  const publicPage = getPublicCakePage(entry.slug)
+  const localizedCopy = entry.copy?.[language] || {
     name: productText.name,
     description: productText.description,
     features: getProductFeatures(entry.defaultProductId, language),
     optionLabel: productText.priceNote,
+  }
+  const copy = language === 'en' && publicPage
+    ? {
+        ...localizedCopy,
+        name: publicPage.name,
+        description: publicPage.description,
+        optionLabel: publicPage.cardOptionLabel,
+      }
+    : localizedCopy
+  const imagePath = publicPage?.imagePath || ''
+
+  if (!entry.isPhotoComingSoon && !imagePath) {
+    throw new Error('Missing public cake image: ' + entry.slug)
   }
   const startingPrice = getCakeCatalogStartingPrice(entry)
   const price = entry.priceDisplay === 'whole-aud' ? `AUD ${startingPrice}` : formatCurrency(startingPrice)
@@ -178,6 +194,7 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
     slug: entry.slug,
     productId: entry.defaultProductId,
     imageKey: entry.imageKey,
+    imagePath,
     isPhotoComingSoon: entry.isPhotoComingSoon,
     priceLabel,
     ...copy,

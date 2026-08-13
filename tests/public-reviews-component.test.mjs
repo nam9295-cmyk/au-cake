@@ -58,6 +58,9 @@ test('archive requests six reviews at a time, appends cursor pages, and reuses c
   assert.match(archive, /deepLinkedReview/)
   assert.match(archive, /addEventListener\('popstate'/)
   assert.match(archive, /setHistoryRevision/)
+  assert.match(archive, /getPublicRoutePage\('\/reviews'\)/)
+  assert.match(archive, /publicPage\.h1/)
+  assert.match(archive, /publicPage\.intro/)
 })
 
 test('home and classes hand off to one indexable reviews route with generated SEO and sitemap coverage', () => {

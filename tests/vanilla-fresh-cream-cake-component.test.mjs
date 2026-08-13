@@ -14,9 +14,9 @@ const detailPage = readFileSync(new URL('../src/CakeDetailPage.tsx', import.meta
 test('Vanilla Fresh Cream Cake uses its supplied photos across hero, catalogue and Quick View', () => {
   assert.match(catalog, /defaultProductId:\s*'vanilla-fresh-cream-cake'/)
   assert.match(catalog, /id:\s*'vanilla-fresh-cream'[\s\S]*?isPhotoComingSoon:\s*false/)
-  assert.match(home, /'vanilla-fresh-cream-cake':\s*'\/products\/vanilla-cake-sydney\.webp'/)
+  assert.match(home, /import \{ getAuPublicContent, getPublicCakePage \} from '\.\.\/lib\/public-content'/)
   assert.match(home, /'vanilla-fresh-cream-cake':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
-  assert.match(home, /image:\s*catalogImages\['vanilla-fresh-cream-cake'\]/)
+  assert.match(home, /image:\s*getPublicCakePage\('vanilla-fresh-cream-cake'\)\?\.imagePath/)
   assert.match(home, /label:\s*'Vanilla Fresh Cream Cake'/)
   assert.match(home, /href=\{`\/cakes\/\$\{card\.slug\}`\}/)
   assert.match(home, /navigateToCake\(card\.slug\)/)

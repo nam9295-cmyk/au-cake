@@ -7,11 +7,12 @@ const classReservationDrawer = readFileSync(new URL('../src/ClassReservationDraw
 const landing = readFileSync(new URL('../src/pages/ClassesPage.tsx', import.meta.url), 'utf8')
 const reserve = readFileSync(new URL('../src/pages/ClassReservePage.tsx', import.meta.url), 'utf8')
 const setup = readFileSync(new URL('../scripts/setup-appwrite.mjs', import.meta.url), 'utf8')
-const seo = readFileSync(new URL('../src/lib/seo.ts', import.meta.url), 'utf8')
-const generatedSeo = readFileSync(new URL('../scripts/generate-seo-pages.mjs', import.meta.url), 'utf8')
 const repository = readFileSync(new URL('../src/lib/repository.ts', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 const calendar = readFileSync(new URL('../src/components/WeekendDatePicker.tsx', import.meta.url), 'utf8')
+const publicContent = JSON.parse(
+  readFileSync(new URL('../src/content/au-public-pages.json', import.meta.url), 'utf8'),
+)
 
 test('kids class landing presents Basic, Advanced and weekend-only wording without visible Holiday copy', () => {
   assert.match(landing, /Basic Cake Class/)
@@ -56,24 +57,24 @@ test('class Appwrite definitions include optional program audit fields and booke
   assert.match(setup, /advancedClassDate_idx/)
 })
 
-test('kids class SEO distinguishes Basic Kindy–Year 6 from Advanced Year 2–6 and keeps writes server-authoritative', () => {
-  const classesSeo = seo.slice(seo.indexOf("'/classes':"), seo.indexOf("'/reviews':"))
-  assert.doesNotMatch(classesSeo, /school holiday|Holiday/)
-  assert.match(classesSeo, /weekend/i)
-  assert.match(classesSeo, /Kindy/)
-  assert.match(classesSeo, /Years 2[–-]6/)
+test('kids class public content stays canonical while writes remain server-authoritative', () => {
+  const classes = publicContent.classes
+  assert.match(classes.description, /weekend/i)
+  assert.match(classes.description, /Kindy/)
+  assert.match(classes.description, /Years 2[–-]6/)
+  assert.equal(classes.baseLowPrice, 99)
+  assert.equal(classes.baseHighPrice, 254.6)
+  assert.match(landing, /getPublicRoutePage\('\/classes'\)/)
+  assert.match(landing, /publicPage\.h1/)
+  assert.match(landing, /publicPage\.intro/)
+  assert.match(landing, /publicClassContent\.baseLowPrice/)
+  assert.match(landing, /publicClassContent\.baseHighPrice/)
+  assert.match(landing, /publicClassContent\.packageSummary/)
+  assert.match(landing, /publicClassContent\.extensionSummary/)
   assert.match(repository, /export async function createClassReservation[\s\S]*if \(isAppwriteConfigured\)[\s\S]*executeReservationApi<ClassReservation>\('create-class'/)
   assert.match(setup, /APPWRITE_RESERVATION_WRITE_MODE === 'direct' \? 'direct' : 'function'/)
   assert.match(repository, /Query\.equal\('advancedClassDate', filters\.classDate\)/)
   assert.match(repository, /documentGroups\.flat\(\)\.map[\s\S]*document\.\$id/)
-  const generatedClasses = generatedSeo.slice(generatedSeo.indexOf("'/classes':"), generatedSeo.indexOf("'/reviews':"))
-  assert.doesNotMatch(generatedClasses, /school holiday|Holiday|Launch prices/i)
-  assert.match(generatedClasses, /weekend/i)
-  assert.match(generatedClasses, /Kindy/)
-  assert.match(generatedClasses, /Years 2[–-]6/)
-  assert.match(generatedClasses, /Basic Cake Class/)
-  assert.match(generatedClasses, /Advanced 2-Tier Cake Class/)
-  assert.match(generatedClasses, /Price Guide/)
 })
 
 test('class admin surfaces plan, both sessions, extensions and cent pricing audit', () => {
