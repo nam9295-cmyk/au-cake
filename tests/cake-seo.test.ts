@@ -1,8 +1,10 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
+import { getAuPublicContent, getPublicRoutePage } from '../src/lib/public-content.js'
 import { getSeoConfig } from '../src/lib/seo.js'
 
 const SITE_URL = 'https://au.verygood-chocolate.com'
+const publicContent = getAuPublicContent()
 
 function structuredTypes(path: string) {
   return getSeoConfig(path).structuredData?.map((entry) => entry['@type']) || []
@@ -36,9 +38,54 @@ test('home and five cake detail routes use AU self canonicals', () => {
 
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
-  assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | Very Good')
+  assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(config.description, 'Order small-batch chocolate cakes for pre-arranged pickup in Melrose Park, Sydney. Pave cake, chocolate Basque cheesecake, pound cake and cupcakes from AUD 45.')
   assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList'])
+})
+
+test('all indexable runtime SEO uses the canonical lowercase brand', () => {
+  for (const path of [
+    '/',
+    '/cakes',
+    '/classes',
+    '/reviews',
+    ...Object.keys(publicContent.cakePages).map((slug) => '/cakes/' + slug),
+  ]) {
+    const serialized = JSON.stringify(getSeoConfig(path))
+    assert.match(getSeoConfig(path).title, /verygood chocolate/)
+    assert.doesNotMatch(serialized, /Very Good Chocolate|Verygood Chocolate/)
+  }
+})
+
+test('runtime route metadata comes from the typed public-content adapter', () => {
+  for (const path of ['/', '/cakes', '/classes', '/reviews'] as const) {
+    const page = getPublicRoutePage(path)
+    assert.ok(page)
+    assert.equal(getSeoConfig(path).title, page.title)
+    assert.equal(getSeoConfig(path).description, page.description)
+  }
+})
+
+test('Course AggregateOffer uses the canonical base range and excludes extensions', () => {
+  const course = getSeoConfig('/classes').structuredData
+    ?.find((entry) => entry['@type'] === 'Course')
+  assert.ok(course)
+  const offers = course.offers as Record<string, unknown>
+  assert.equal(offers.lowPrice, publicContent.classes.baseLowPrice)
+  assert.equal(offers.highPrice, publicContent.classes.baseHighPrice)
+})
+
+test('product runtime metadata carries descriptive copy and complete image attributes', () => {
+  for (const [slug, page] of Object.entries(publicContent.cakePages)) {
+    const config = getSeoConfig('/cakes/' + slug)
+    assert.equal(config.title, page.title)
+    assert.equal(config.description, page.description)
+    assert.equal(config.imageType, page.imageType)
+    assert.equal(config.imageWidth, page.imageWidth)
+    assert.equal(config.imageHeight, page.imageHeight)
+    const entity = config.structuredData?.[0]
+    assert.equal(entity?.description, page.description)
+  }
 })
 
 test('Pave, Basque, Lemon and Vanilla use one Offer at the visible starting price', () => {

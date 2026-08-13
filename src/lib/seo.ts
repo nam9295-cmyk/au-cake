@@ -3,9 +3,12 @@ import { getAuCakeCatalog } from './cake-catalog.js'
 import {
   getPublicCakePage,
   getAuPublicContent,
+  getPublicRoutePage,
   SITE_URL,
 } from './public-content.js'
 import type { PublicCakePage } from './public-content.js'
+
+const publicContent = getAuPublicContent()
 
 type SeoConfig = {
   title: string
@@ -14,17 +17,19 @@ type SeoConfig = {
   noindex?: boolean
   ogType?: 'website' | 'product'
   image?: string
+  imageType?: string
+  imageWidth?: number
+  imageHeight?: number
   structuredData?: Array<Record<string, unknown>>
 }
 
 const organization: Record<string, unknown> = {
   '@type': 'Organization',
   '@id': `${SITE_URL}/#organization`,
-  name: 'Very Good Chocolate',
-  alternateName: 'Very Good Chocolate Sydney',
+  name: publicContent.site.brand,
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.png`,
-  description: 'Small-batch, made-to-order cakes for pre-arranged pick-up in Melrose Park, Sydney.',
+  description: publicContent.site.organizationDescription,
   areaServed: {
     '@type': 'City',
     name: 'Sydney',
@@ -44,7 +49,7 @@ const cakeListItems = getAuCakeCatalog().map((entry, index) => {
 const cakeItemList: Record<string, unknown> = {
   '@type': 'ItemList',
   '@id': `${SITE_URL}/cakes#item-list`,
-  name: 'Verygood Chocolate Sydney cake catalogue',
+  name: `${publicContent.site.brand} Sydney cake catalogue`,
   numberOfItems: cakeListItems.length,
   itemListElement: cakeListItems,
 }
@@ -63,8 +68,8 @@ function getBreadcrumbList(pathname: string, name: string): Record<string, unkno
 
 const publicSeo: Record<string, SeoConfig> = {
   '/': {
-    title: getAuPublicContent().home.title,
-    description: getAuPublicContent().home.description,
+    title: getPublicRoutePage('/')!.title,
+    description: getPublicRoutePage('/')!.description,
     canonical: SITE_URL,
     structuredData: [
       organization,
@@ -72,7 +77,7 @@ const publicSeo: Record<string, SeoConfig> = {
         '@type': 'WebSite',
         '@id': `${SITE_URL}/#website`,
         url: SITE_URL,
-        name: 'Verygood Chocolate Sydney',
+        name: `${publicContent.site.brand} Sydney`,
         publisher: { '@id': `${SITE_URL}/#organization` },
         inLanguage: 'en-AU',
       },
@@ -80,47 +85,47 @@ const publicSeo: Record<string, SeoConfig> = {
     ],
   },
   '/classes': {
-    title: 'Kids Cake Decorating Classes Sydney | Verygood Chocolate',
-    description: 'Private weekend cake decorating classes in Melrose Park, Sydney: Basic from Kindy to Year 6 and Advanced for Years 2–6.',
+    title: getPublicRoutePage('/classes')!.title,
+    description: getPublicRoutePage('/classes')!.description,
     canonical: `${SITE_URL}/classes`,
     structuredData: [
       organization,
       {
         '@type': 'Course',
         '@id': `${SITE_URL}/classes#course`,
-        name: 'Kids Professional Chocolate Cake Course',
-        description: 'Private weekend cake courses with Basic classes from Kindy to Year 6 and Advanced 2-Tier classes for Years 2–6.',
+        name: publicContent.classes.courseName,
+        description: publicContent.classes.courseDescription,
         url: `${SITE_URL}/classes`,
         provider: { '@id': `${SITE_URL}/#organization` },
-        educationalLevel: 'Basic: Kindy–Year 6; Advanced: Years 2–6',
-        inLanguage: 'en-AU',
+        educationalLevel: publicContent.classes.educationalLevel,
+        inLanguage: publicContent.site.language,
         offers: {
           '@type': 'AggregateOffer',
           url: `${SITE_URL}/class-reserve`,
           priceCurrency: 'AUD',
-          lowPrice: 99,
-          highPrice: 198,
+          lowPrice: publicContent.classes.baseLowPrice,
+          highPrice: publicContent.classes.baseHighPrice,
         },
       },
     ],
   },
   '/reviews': {
-    title: 'Customer Reviews | Verygood Chocolate Sydney',
-    description: 'Read verified customer reviews from Verygood Chocolate cake orders and kids cake class bookings in Sydney.',
+    title: getPublicRoutePage('/reviews')!.title,
+    description: getPublicRoutePage('/reviews')!.description,
     canonical: `${SITE_URL}/reviews`,
     structuredData: [organization],
   },
   '/cakes': {
-    title: 'Made-to-Order Cakes Sydney | Verygood Chocolate',
-    description: 'Browse five small-batch cakes and request confirmed pick-up in Melrose Park, Sydney.',
+    title: getPublicRoutePage('/cakes')!.title,
+    description: getPublicRoutePage('/cakes')!.description,
     canonical: `${SITE_URL}/cakes`,
     structuredData: [
       organization,
       {
         '@type': 'CollectionPage',
         '@id': `${SITE_URL}/cakes#collection`,
-        name: 'Made-to-Order Cakes Sydney',
-        description: 'Browse five small-batch cakes and request confirmed pick-up in Melrose Park, Sydney.',
+        name: publicContent.catalogue.collectionName,
+        description: publicContent.catalogue.description,
         url: `${SITE_URL}/cakes`,
         mainEntity: `${SITE_URL}/cakes#item-list`,
       },
@@ -131,21 +136,24 @@ const publicSeo: Record<string, SeoConfig> = {
 
 function productFromPublicPage(pathname: string, page: PublicCakePage): SeoConfig {
   const image = page.imagePath ? `${SITE_URL}${page.imagePath}` : undefined
+  const imageAttributes = image
+    ? { image, imageType: page.imageType, imageWidth: page.imageWidth, imageHeight: page.imageHeight }
+    : {}
   const breadcrumb = getBreadcrumbList(pathname, page.name)
 
   if (page.schema === 'webpage-only') {
     return {
-      title: `${page.name} Sydney | Very Good Chocolate`,
-      description: page.priceSummary,
+      title: page.title,
+      description: page.description,
       canonical: `${SITE_URL}${pathname}`,
       ogType: 'website',
-      ...(image ? { image } : {}),
+      ...imageAttributes,
       structuredData: [
         {
           '@type': 'WebPage',
           '@id': `${SITE_URL}${pathname}#webpage`,
           name: page.name,
-          description: page.priceSummary,
+          description: page.description,
           url: `${SITE_URL}${pathname}`,
         },
         breadcrumb,
@@ -157,25 +165,25 @@ function productFromPublicPage(pathname: string, page: PublicCakePage): SeoConfi
     '@type': 'Product',
     '@id': `${SITE_URL}${pathname}#product`,
     name: page.name,
-    description: page.priceSummary,
+    description: page.description,
     ...(image ? { image } : {}),
-    brand: { '@type': 'Brand', name: 'Very Good Chocolate' },
+    brand: { '@type': 'Brand', name: publicContent.site.brand },
     category: 'Made-to-order cake',
     offers: {
       '@type': 'Offer',
       url: `${SITE_URL}${pathname}`,
       priceCurrency: 'AUD',
       price: page.startingPrice,
-      seller: { '@type': 'Organization', name: 'Very Good Chocolate', url: SITE_URL },
+      seller: { '@type': 'Organization', name: publicContent.site.brand, url: SITE_URL },
     },
   }
 
   return {
-    title: `${page.name} Sydney | Very Good Chocolate`,
-    description: page.priceSummary,
+    title: page.title,
+    description: page.description,
     canonical: `${SITE_URL}${pathname}`,
     ogType: 'product',
-    ...(image ? { image } : {}),
+    ...imageAttributes,
     structuredData: [product, breadcrumb],
   }
 }
@@ -264,7 +272,11 @@ export function getSeoConfig(pathname: string): SeoConfig {
 export function applySeo(pathname: string) {
   const config = getSeoConfig(pathname)
   const canonical = config.canonical || `${SITE_URL}${pathname}`
-  const image = config.image || `${SITE_URL}/og-image.jpg`
+  const defaultImage = publicContent.site.defaultSocialImage
+  const image = config.image || SITE_URL + defaultImage.path
+  const imageType = config.imageType || defaultImage.type
+  const imageWidth = config.imageWidth || defaultImage.width
+  const imageHeight = config.imageHeight || defaultImage.height
 
   document.title = config.title
   setMeta('meta[name="description"]', 'content', config.description)
@@ -274,6 +286,9 @@ export function applySeo(pathname: string) {
   setMeta('meta[property="og:description"]', 'content', config.description)
   setMeta('meta[property="og:url"]', 'content', canonical)
   setMeta('meta[property="og:image"]', 'content', image)
+  setMeta('meta[property="og:image:type"]', 'content', imageType)
+  setMeta('meta[property="og:image:width"]', 'content', String(imageWidth))
+  setMeta('meta[property="og:image:height"]', 'content', String(imageHeight))
   setMeta('meta[name="twitter:title"]', 'content', config.title)
   setMeta('meta[name="twitter:description"]', 'content', config.description)
   setMeta('meta[name="twitter:image"]', 'content', image)

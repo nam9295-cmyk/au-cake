@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import {
+  CLASS_EXTENSION_PRICE_PER_PARTICIPANT_CENTS,
   CLASS_EXTENSION_WARNING,
   CLASS_SESSION_DURATION_MINUTES,
   CLASS_SESSION_TIMES,
@@ -31,6 +32,7 @@ import {
   formatClassBookingType,
   filterClassReservationsForAdmin,
 } from '../src/lib/class-utils.js'
+import { getAuPublicContent } from '../src/lib/public-content.js'
 import type { ClassReservation } from '../src/lib/types.js'
 
 const sampleReservation: ClassReservation = {
@@ -88,6 +90,27 @@ test('basic, advanced and package pricing use cents and discount only package ba
   }), {
     subtotalCents: 29800, discountPercent: 5, discountCents: 1290, totalPriceCents: 28510,
   })
+})
+
+test('canonical public class prices match valid base bookings and keep extensions separate', () => {
+  const classes = getAuPublicContent().classes
+  const low = calculateClassPricing({
+    coursePlan: 'basic',
+    bookingType: 'year-1-2',
+  }).totalPriceCents / 100
+  const high = calculateClassPricing({
+    coursePlan: 'basic-advanced-package',
+    bookingType: '1-child',
+  }).totalPriceCents / 100
+
+  assert.equal(classes.baseLowPrice, low)
+  assert.equal(classes.baseHighPrice, high)
+  assert.equal(
+    classes.extensionPricePerParticipant,
+    CLASS_EXTENSION_PRICE_PER_PARTICIPANT_CENTS / 100,
+  )
+  assert.equal(classes.baseLowPrice, 99)
+  assert.equal(classes.baseHighPrice, 254.6)
 })
 
 test('class durations and exact extension warning match the approved weekend offering', () => {

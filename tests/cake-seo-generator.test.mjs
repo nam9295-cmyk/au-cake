@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
+import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
 
 const generatorPath = fileURLToPath(new URL('../scripts/generate-seo-pages.mjs', import.meta.url))
 const llmsPath = fileURLToPath(new URL('../public/llms.txt', import.meta.url))
@@ -44,6 +45,10 @@ function jsonLd(html) {
     .map((match) => JSON.parse(match[1]))
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 async function generate() {
   const workdir = await mkdtemp(join(tmpdir(), 'au-cake-seo-generator-'))
   const dist = join(workdir, 'dist')
@@ -57,7 +62,10 @@ async function generate() {
 test('SEO generator writes shared homepage content, cake pages, and AU sitemap', async () => {
   const { dist } = await generate()
   const home = await readFile(join(dist, 'index.html'), 'utf8')
-  assert.match(home, /<title>Chocolate Cakes Sydney \| Melrose Park Pickup \| Very Good<\/title>/)
+  assert.match(
+    home,
+    new RegExp('<title>' + escapeRegExp(auPublicPages.home.title) + '</title>'),
+  )
   assert.match(home, /<h1>Made-to-Order Chocolate Cakes in Sydney<\/h1>/)
   assert.match(home, /Pave cake, chocolate Basque cheesecake, pound cake and cupcakes from AUD 45/)
   assert.match(home, /Chocolate Pound Cake &amp; Cupcakes/)
@@ -91,7 +99,14 @@ test('cake generator uses the final per-page schema contract and real product We
     const html = await readFile(join(dist, 'cakes', `${slug}.html`), 'utf8')
     const data = jsonLd(html)
     const product = data.find((entry) => entry['@type'] === 'Product')
+    const page = auPublicPages.cakePages[slug]
     assert.ok(product, slug)
+    assert.match(html, new RegExp('<title>' + escapeRegExp(page.title) + '</title>'))
+    assert.equal(product?.description, page.description)
+    assert.match(html, new RegExp(escapeRegExp(page.description)))
+    assert.match(html, new RegExp('<meta property="og:image:type" content="' + page.imageType + '"'))
+    assert.match(html, new RegExp('<meta property="og:image:width" content="' + page.imageWidth + '"'))
+    assert.match(html, new RegExp('<meta property="og:image:height" content="' + page.imageHeight + '"'))
     assert.equal(product.offers['@type'], 'Offer', slug)
     assert.equal(product.offers.price, expected.price, slug)
     assert.equal(data.some((entry) => entry['@type'] === 'AggregateOffer' || entry['@type'] === 'ProductGroup'), false, slug)
@@ -112,6 +127,45 @@ test('cake generator uses the final per-page schema contract and real product We
   assert.doesNotMatch(paveHtml, /milk chocolate/i)
   assert.match(vanillaHtml, /chocolate cake sheet/)
   assert.match(vanillaHtml, /products\/vanilla-cake-sydney\.webp/)
+})
+
+test('all indexable artifacts keep canonical brand, schema, canonical URLs, and English-only indexing', async () => {
+  const { dist } = await generate()
+  const paths = ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']
+
+  for (const path of paths) {
+    const file = path === '/' ? 'index.html' : `${path.slice(1)}.html`
+    const html = await readFile(join(dist, file), 'utf8')
+    const canonical = path === '/' ? site : site + path
+    const canonicals = [...html.matchAll(/<link rel="canonical" href="([^"]+)" \/>/g)]
+    assert.equal(canonicals.length, 1, path)
+    assert.equal(canonicals[0][1], canonical, path)
+    assert.doesNotMatch(html, /Very Good Chocolate|Verygood Chocolate/, path)
+    assert.doesNotMatch(html, /hreflang=/i, path)
+
+    const data = jsonLd(html)
+    for (const entity of data) {
+      const serialized = JSON.stringify(entity)
+      assert.notEqual(entity['@type'], 'LocalBusiness', path)
+      assert.doesNotMatch(serialized, /PostalAddress|streetAddress|aggregateRating|"review"\s*:/, path)
+    }
+  }
+
+  const classes = await readFile(join(dist, 'classes.html'), 'utf8')
+  const course = jsonLd(classes).find((entry) => entry['@type'] === 'Course')
+  assert.ok(course)
+  assert.equal(course.offers.lowPrice, 99)
+  assert.equal(course.offers.highPrice, 254.6)
+  assert.match(classes, new RegExp(escapeRegExp(auPublicPages.classes.extensionSummary)))
+
+  const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
+  assert.doesNotMatch(sitemap, /\/ko(?:\/|<)/)
+
+  const runtimeSeo = await readFile(new URL('../src/lib/seo.ts', import.meta.url), 'utf8')
+  assert.match(runtimeSeo, /setMeta\('meta\[property="og:image"\]', 'content', image\)/)
+  assert.match(runtimeSeo, /setMeta\('meta\[property="og:image:type"\]', 'content', imageType\)/)
+  assert.match(runtimeSeo, /setMeta\('meta\[property="og:image:width"\]', 'content', String\(imageWidth\)\)/)
+  assert.match(runtimeSeo, /setMeta\('meta\[property="og:image:height"\]', 'content', String\(imageHeight\)\)/)
 })
 
 test('normal operational routes are generated noindex pages while unknown guides are not generated', async () => {

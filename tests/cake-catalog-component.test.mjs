@@ -17,6 +17,12 @@ test('catalogue cards render their canonical image paths', () => {
   assert.match(homeSource, /card\.isPhotoComingSoon/)
 })
 
+test('cake catalogue renders canonical English route copy', () => {
+  assert.match(cakesSource, /getPublicRoutePage\('\/cakes'\)/)
+  assert.match(cakesSource, /publicPage\.h1/)
+  assert.match(cakesSource, /publicPage\.intro/)
+})
+
 test('new Lemon Cake catalogue photo is also used in the home hero', () => {
   assert.match(homeSource, /image:\s*getPublicCakePage\('lemon-cake'\)\?\.imagePath/)
   assert.doesNotMatch(homeSource, /import freshLemonCupcakesHeroImg/)

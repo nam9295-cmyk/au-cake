@@ -1,13 +1,19 @@
 {
   "site": {
     "url": "https://au.verygood-chocolate.com",
-    "brand": "Very Good Chocolate",
-    "brandDisplay": "Very Good Chocolate",
+    "brand": "verygood chocolate",
     "language": "en-AU",
-    "pickupArea": "Melrose Park, Sydney"
+    "pickupArea": "Melrose Park, Sydney",
+    "organizationDescription": "Small-batch, made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.",
+    "defaultSocialImage": {
+      "path": "/og-image.jpg",
+      "type": "image/jpeg",
+      "width": 1200,
+      "height": 630
+    }
   },
   "home": {
-    "title": "Chocolate Cakes Sydney | Melrose Park Pickup | Very Good",
+    "title": "Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate",
     "h1": "Made-to-Order Chocolate Cakes in Sydney",
     "description": "Order small-batch chocolate cakes for pre-arranged pickup in Melrose Park, Sydney. Pave cake, chocolate Basque cheesecake, pound cake and cupcakes from AUD 45.",
     "hero": "Small-batch chocolate cakes made to order for birthdays, parties and gifting.",
@@ -36,6 +42,33 @@
         "answer": "Not currently. Cakes are made for pre-arranged pickup in Melrose Park only."
       }
     ]
+  },
+  "catalogue": {
+    "title": "Made-to-Order Cakes Sydney | verygood chocolate",
+    "h1": "Choose Your Cake",
+    "description": "Browse five small-batch cakes and request confirmed pickup in Melrose Park, Sydney.",
+    "intro": "Browse five made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.",
+    "collectionName": "Made-to-Order Cakes Sydney"
+  },
+  "classes": {
+    "title": "Kids Cake Decorating Classes Sydney | verygood chocolate",
+    "h1": "Kids Cake Decorating Classes Sydney",
+    "description": "Private weekend cake decorating classes in Melrose Park, Sydney: Basic from Kindy to Year 6 and Advanced for Years 2–6.",
+    "intro": "Private, hands-on cake classes held in Melrose Park, Sydney on Saturdays and Sundays. Basic welcomes children from Kindy to Year 6; Advanced starts from Year 2.",
+    "courseName": "Kids Professional Chocolate Cake Course",
+    "courseDescription": "Private weekend cake courses with Basic classes from Kindy to Year 6 and Advanced 2-Tier classes for Years 2–6.",
+    "educationalLevel": "Basic: Kindy–Year 6; Advanced: Years 2–6",
+    "baseLowPrice": 99,
+    "baseHighPrice": 254.6,
+    "packageSummary": "A Basic + Advanced package covers two separate weekend sessions and receives 5% off the base class fees.",
+    "extensionPricePerParticipant": 20,
+    "extensionSummary": "A 30-minute extension is AUD 20 per participant, per class and is not discounted."
+  },
+  "reviews": {
+    "title": "Customer Reviews | verygood chocolate Sydney",
+    "h1": "Verified Customer Reviews",
+    "description": "Read verified customer reviews from verygood chocolate cake orders and kids cake class bookings in Sydney.",
+    "intro": "Read reviews shared with permission after verified verygood chocolate cake orders and kids cake class bookings in Sydney."
   },
   "cakePages": {
     "chocolate-pound-cake-and-cupcakes": {

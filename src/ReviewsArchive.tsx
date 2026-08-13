@@ -8,6 +8,7 @@ import {
   type PublicReviewExecutor,
 } from './lib/public-reviews'
 import { reviewIdFromHash } from './lib/public-review-dialog'
+import { getPublicRoutePage } from './lib/public-content'
 import { PublicReviewCard } from './PublicReviewCard'
 import { PublicReviewDialog } from './PublicReviewDialog'
 import { usePublicReviewDialog } from './usePublicReviewDialog'
@@ -25,6 +26,7 @@ export default function ReviewsArchive({
   functionId: string
   functionEndpoint: string
 }) {
+  const publicPage = getPublicRoutePage('/reviews')!
   const [page, setPage] = useState<PublicReviewsPage>(EMPTY_PAGE)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -108,8 +110,8 @@ export default function ReviewsArchive({
       }
     : {
         kicker: 'Verified customer reviews',
-        title: 'Stories from our customers',
-        support: 'Reviews shared with permission after verified cake orders and kids class bookings.',
+        title: publicPage.h1,
+        support: publicPage.intro,
         empty: 'There are no published reviews yet.',
         error: 'Reviews could not be loaded. Please try again.',
         retry: 'Try again',

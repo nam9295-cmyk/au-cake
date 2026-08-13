@@ -1,5 +1,6 @@
 import { getAuCakeCatalogCards } from './lib/cake-catalog'
 import type { Language } from './lib/i18n'
+import { getPublicRoutePage } from './lib/public-content'
 
 export default function CakesPage({
   language,
@@ -9,15 +10,16 @@ export default function CakesPage({
   onOpenCake: (slug: string) => void
 }) {
   const cards = getAuCakeCatalogCards(language)
+  const publicPage = getPublicRoutePage('/cakes')!
 
   return (
     <main className="cakes-index-page">
       <header className="cakes-index-header">
         <p className="summary-kicker">{language === 'ko' ? 'Sydney · 주문 제작' : 'Sydney · Made to order'}</p>
-        <h1>{language === 'ko' ? '케이크를 골라보세요' : 'Choose your cake'}</h1>
+        <h1>{language === 'ko' ? '케이크를 골라보세요' : publicPage.h1}</h1>
         <p>{language === 'ko'
           ? '사진과 옵션, 가격을 확인한 뒤 원하는 케이크를 요청할 수 있어요.'
-          : 'Explore the photos, options and prices before sending your cake request.'}</p>
+          : publicPage.intro}</p>
       </header>
       <section className="cakes-index-grid" aria-label={language === 'ko' ? '케이크 목록' : 'Cake catalogue'}>
         {cards.map((card, index) => (
