@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
+import { renderAuLlms } from './render-au-llms.mjs'
 
 const siteUrl = auPublicPages.site.url
 const distDir = join(process.cwd(), 'dist')
@@ -354,6 +355,14 @@ ${indexablePaths.map((path) => `  <url><loc>${canonicalFor(path)}</loc></url>`).
 await writeFile(join(distDir, 'sitemap.xml'), sitemap)
 try {
   await writeFile(join(process.cwd(), 'public', 'sitemap.xml'), sitemap)
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error
+}
+
+const llms = renderAuLlms(auPublicPages)
+await writeFile(join(distDir, 'llms.txt'), llms)
+try {
+  await writeFile(join(process.cwd(), 'public', 'llms.txt'), llms)
 } catch (error) {
   if (error?.code !== 'ENOENT') throw error
 }

@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
+import { renderAuLlms } from '../scripts/render-au-llms.mjs'
 
 const generatorPath = fileURLToPath(new URL('../scripts/generate-seo-pages.mjs', import.meta.url))
 const llmsPath = fileURLToPath(new URL('../public/llms.txt', import.meta.url))
@@ -179,11 +180,19 @@ test('normal operational routes are generated noindex pages while unknown guides
 })
 
 test('llms text exposes only grounded public catalogue and ordering facts', async () => {
-  const llms = await readFile(llmsPath, 'utf8')
-  assert.match(llms, /^# Very Good Chocolate Sydney/m)
-  assert.match(llms, /Melrose Park/)
-  assert.match(llms, /Lemon Cake: 6 pieces AUD 36; 8 pieces AUD 45; 12 pieces AUD 65; 16 pieces AUD 85\./)
-  assert.match(llms, /Submitting a request does not confirm an order/)
-  assert.match(llms, /https:\/\/au\.verygood-chocolate\.com\/cakes\/lemon-cake/)
+  const { dist } = await generate()
+  const llms = await readFile(join(dist, 'llms.txt'), 'utf8')
+  const checkedInLlms = await readFile(llmsPath, 'utf8')
+  assert.equal(checkedInLlms, renderAuLlms(auPublicPages))
+  assert.equal(llms, renderAuLlms(auPublicPages))
+  assert.equal(llms, checkedInLlms)
+  assert.match(llms, /^# verygood chocolate Sydney/m)
+  assert.match(llms, /Choose a size · dark chocolate only/)
+  assert.doesNotMatch(llms, /dark or milk|milk chocolate/i)
+  assert.match(llms, /Made with a chocolate cake sheet and vanilla fresh cream/)
+  assert.match(llms, /Triple berry or Nutella chocolate chip/)
+  assert.doesNotMatch(llms, /vanilla or chocolate cake sheet|photo is coming soon/i)
+  assert.match(llms, /AUD 99–254\.60/)
+  assert.match(llms, /AUD 20 per participant, per class/)
   assert.doesNotMatch(llms, /\/admin|customer name|mobile number/i)
 })
