@@ -3,19 +3,22 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
+const cakesSource = await readFile(new URL('../src/CakesPage.tsx', import.meta.url), 'utf8')
 
 test('home catalogue renders its five cards from the shared AU cake catalog', () => {
   assert.match(homeSource, /getAuCakeCatalogCards\(language\)/)
   assert.doesNotMatch(homeSource, /const catalogCards = \[/)
 })
 
-test('home catalogue keeps image selection outside customer product copy data', () => {
-  assert.match(homeSource, /catalogImages\[card\.imageKey\]/)
+test('catalogue cards render their canonical image paths', () => {
+  assert.match(homeSource, /src=\{card\.imagePath\}/)
+  assert.match(cakesSource, /src=\{card\.imagePath\}/)
+  assert.doesNotMatch(cakesSource, /cakeListImages/)
   assert.match(homeSource, /card\.isPhotoComingSoon/)
 })
 
 test('new Lemon Cake catalogue photo is also used in the home hero', () => {
-  assert.match(homeSource, /image:\s*catalogImages\['lemon-cake'\]/)
+  assert.match(homeSource, /image:\s*getPublicCakePage\('lemon-cake'\)\?\.imagePath/)
   assert.doesNotMatch(homeSource, /import freshLemonCupcakesHeroImg/)
 })
 

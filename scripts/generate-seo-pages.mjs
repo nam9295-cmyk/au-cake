@@ -78,6 +78,7 @@ function cakeFallback(cake, path) {
         <p><a href="/cakes">View all cakes</a></p>
         <h1>${escapeHtml(cake.name)}</h1>
         ${image ? `<p><img src="${image}" alt="${escapeHtml(cake.imageAlt)}" width="1080" height="1012" loading="eager" decoding="async" /></p>` : ''}
+        <p>${escapeHtml(cake.description)}</p>
         <p><strong>Price guide:</strong> ${escapeHtml(cake.priceSummary)}</p>
         <p><strong>Options:</strong> ${escapeHtml(cake.optionSummary)}</p>
         <p>Made to order for pre-arranged pickup in Melrose Park, Sydney. Availability is checked after your request and payment is confirmed separately.</p>

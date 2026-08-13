@@ -1,13 +1,5 @@
-import { getAuCakeCatalogCards, type CakeCatalogImageKey } from './lib/cake-catalog'
+import { getAuCakeCatalogCards } from './lib/cake-catalog'
 import type { Language } from './lib/i18n'
-
-const cakeListImages: Record<CakeCatalogImageKey, string> = {
-  'pound-cake': '/products/chocolate-pound-cake-sydney.webp',
-  'pave-cake': '/products/pave-chocolate-cake-sydney.webp',
-  'basque-cheesecake': '/products/chocolatiers-basque-cheesecake-sydney.webp',
-  'lemon-cake': '/products/lemon-cake-sydney.webp',
-  'vanilla-fresh-cream-cake': '',
-}
 
 export default function CakesPage({
   language,
@@ -45,7 +37,7 @@ export default function CakesPage({
                 </span>
               ) : (
                 <img
-                  src={cakeListImages[card.imageKey]}
+                  src={card.imagePath}
                   alt={card.name}
                   width={1080}
                   height={1012}

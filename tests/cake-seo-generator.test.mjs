@@ -105,6 +105,13 @@ test('cake generator uses the final per-page schema contract and real product We
   assert.match(combined, /Chocolate Pound Cake AUD 45; Chocolate Cupcakes \(1 dozen\) AUD 55\./)
   assert.match(combined, /products\/chocolate-pound-cake-sydney\.webp/)
   assert.match(combined, /<meta property="og:type" content="website"/)
+
+  const paveHtml = await readFile(join(dist, 'cakes', 'pave-chocolate-cake.html'), 'utf8')
+  const vanillaHtml = await readFile(join(dist, 'cakes', 'vanilla-fresh-cream-cake.html'), 'utf8')
+  assert.match(paveHtml, /Choose a size · dark chocolate only/)
+  assert.doesNotMatch(paveHtml, /milk chocolate/i)
+  assert.match(vanillaHtml, /chocolate cake sheet/)
+  assert.match(vanillaHtml, /products\/vanilla-cake-sydney\.webp/)
 })
 
 test('normal operational routes are generated noindex pages while unknown guides are not generated', async () => {

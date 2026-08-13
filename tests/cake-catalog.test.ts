@@ -9,7 +9,13 @@ import {
   getCakeCatalogEntryBySlug,
   getCakeCatalogUnitPrice,
 } from '../src/lib/cake-catalog.js'
-import type { ReservationPriceOptions } from '../src/lib/constants.js'
+import {
+  VANILLA_CAKE_FLAVOR_OPTIONS,
+  VANILLA_CAKE_SHEET_OPTIONS,
+  type ReservationPriceOptions,
+} from '../src/lib/constants.js'
+import { marketConfig } from '../src/lib/market.js'
+import { getPublicCakePage } from '../src/lib/public-content.js'
 import type { ProductId } from '../src/lib/types.js'
 
 const expectedCatalog = [
@@ -145,6 +151,38 @@ test('catalog cards preserve the current English and Korean home content', () =>
       priceLabel: 'AUD 75부터',
     },
   ])
+})
+
+test('AU catalogue cards use the canonical public image for every available photo', () => {
+  for (const card of getAuCakeCatalogCards('en')) {
+    const page = getPublicCakePage(card.slug)
+    assert.ok(page, card.slug)
+    assert.equal(card.imagePath, page.imagePath, card.slug)
+    assert.equal(card.optionLabel, page.cardOptionLabel, card.slug)
+    if (!card.isPhotoComingSoon) assert.notEqual(card.imagePath, '', card.slug)
+  }
+})
+
+test('canonical Pave and Vanilla statements match the selectable AU products', () => {
+  const pave = getPublicCakePage('pave-chocolate-cake')
+  const vanilla = getPublicCakePage('vanilla-fresh-cream-cake')
+  assert.equal(pave?.optionSummary, 'Choose a size · dark chocolate only')
+  assert.doesNotMatch(pave?.optionSummary || '', /milk/i)
+  assert.deepEqual(
+    marketConfig.chocolateTypeOptions.map((option) => option.value),
+    ['dark'],
+  )
+  assert.match(vanilla?.description || '', /chocolate cake sheet/)
+  assert.match(vanilla?.description || '', /Triple berry or Nutella chocolate chip/)
+  assert.deepEqual(
+    VANILLA_CAKE_SHEET_OPTIONS.map((option) => option.value),
+    ['chocolate'],
+  )
+  assert.deepEqual(
+    VANILLA_CAKE_FLAVOR_OPTIONS.map((option) => option.value),
+    ['triple-berry', 'nutella-chocolate-chip'],
+  )
+  assert.equal(vanilla?.imagePath, '/products/vanilla-cake-sydney.webp')
 })
 
 const serverPriceCases: Array<{ productId: ProductId; options?: ReservationPriceOptions }> = [
