@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-13
 
-**Status:** Approved design, awaiting written-spec review
+**Status:** Approved for implementation
 
 **Scope:** Public AU SEO/GEO content and its generated metadata only
 
@@ -82,6 +82,7 @@ The generator and runtime may format the shared values differently for HTML, but
 - No `/ko` routes, Korean sitemap entries, or `hreflang` tags are introduced.
 - Selecting Korean updates `document.documentElement.lang` to `ko`; selecting English restores `en-AU`.
 - Route title, description, canonical, and structured data remain the English indexable version for both UI states.
+- The existing private `/review` flow keeps its own `ko-KR`/`en-AU` document-language contract and is excluded from the global public-page language effect.
 
 ## Reviews and Local Entity Signals
 
