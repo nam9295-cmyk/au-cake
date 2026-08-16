@@ -1,6 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Work+Sans:wght@400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap');
 
 :root {
+  --font-sans: 'Work Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   --canvas: #f0eee9;
   --forest: #1f5a46;
   --forest-deep: #164334;
@@ -24,7 +25,7 @@
   --ok: var(--forest);
   --radius: 0px;
   --page-max: 1400px;
-  font-family: 'Work Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: var(--font-sans);
   color: var(--text);
   background: var(--canvas);
   font-synthesis: none;
@@ -41,6 +42,7 @@ body {
   margin: 0;
   overflow-x: hidden;
   background: var(--canvas);
+  font-weight: 400;
 }
 
 button,
@@ -71,15 +73,18 @@ p {
 
 h1,
 h2,
-h3 {
-  font-family: 'Playfair Display', Georgia, serif;
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sans);
+  font-weight: 700;
   letter-spacing: 0;
 }
 
 h1 {
   margin-bottom: 18px;
   font-size: clamp(48px, 8vw, 96px);
-  font-weight: 900;
   line-height: 0.88;
   text-transform: uppercase;
 }
@@ -87,9 +92,16 @@ h1 {
 h2 {
   margin-bottom: 22px;
   font-size: clamp(34px, 5vw, 72px);
-  font-weight: 900;
   line-height: 0.92;
   text-transform: uppercase;
+}
+
+p,
+li,
+dd,
+blockquote,
+figcaption {
+  font-weight: 400;
 }
 
 p {
@@ -165,7 +177,7 @@ p {
   flex: 0 0 auto;
   padding: 9px 28px 8px;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.1em;
   line-height: 1;
   text-transform: uppercase;
@@ -231,7 +243,7 @@ p {
   display: inline-flex;
   align-items: center;
   color: inherit;
-  font-weight: 900;
+  font-weight: 700;
   text-decoration: none;
   text-transform: uppercase;
 }
@@ -275,7 +287,7 @@ p {
   border-radius: 999px;
   color: var(--forest);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   text-decoration: none;
 }
 
@@ -289,7 +301,7 @@ p {
   border-color: #3c2f2f;
   background: #f6c945;
   color: #3c2f2f;
-  font-weight: 900;
+  font-weight: 700;
   box-shadow: 0 8px 18px rgba(184, 132, 0, 0.22);
 }
 
@@ -311,7 +323,7 @@ p {
   gap: 10px;
   color: var(--muted);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .language-strip>span {
@@ -362,7 +374,7 @@ main {
 
 .billboard-word {
   font-size: 96px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 0.72;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -391,7 +403,7 @@ main {
   white-space: normal;
   transform: translateX(-50%);
   z-index: 1;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: clamp(72px, 18vw, 150px);
   font-weight: 700;
   letter-spacing: -0.035em;
@@ -424,7 +436,7 @@ main {
 .featured-seal span,
 .featured-seal b {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1;
 }
 
@@ -443,7 +455,7 @@ main {
 .hero-title {
   margin: 0 0 20px;
   color: var(--forest);
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: clamp(28px, 8.5vw, 34px);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -520,7 +532,7 @@ main {
   background: rgba(249, 233, 169, 0.56);
   color: var(--forest);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1.15;
   text-transform: uppercase;
@@ -604,7 +616,7 @@ main {
   background: transparent;
   color: var(--forest);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.035em;
   text-align: center;
@@ -647,7 +659,7 @@ main {
   background: var(--cream-teal);
   color: var(--forest);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.05;
   text-align: center;
   text-transform: uppercase;
@@ -745,7 +757,7 @@ main {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .full-width {
@@ -830,7 +842,7 @@ main {
   background: var(--canvas);
   color: #000;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.1em;
   line-height: 1;
   transform: translate(-50%, -50%);
@@ -920,7 +932,7 @@ main {
   margin-bottom: 8px;
   color: var(--forest);
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.05;
   text-transform: uppercase;
 }
@@ -984,7 +996,7 @@ dt {
 dd {
   margin: 0;
   text-align: right;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .product-card dd {
@@ -1018,7 +1030,7 @@ dd {
 
 .policy-step-figure span {
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -1026,7 +1038,7 @@ dd {
   display: block;
   margin-bottom: 4px;
   color: var(--forest);
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -1074,7 +1086,7 @@ dd {
   border: 1px solid var(--border);
   color: var(--forest);
   font-style: normal;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.45;
   text-transform: uppercase;
 }
@@ -1084,7 +1096,7 @@ dd {
   margin-top: 6px;
   color: var(--muted);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   text-transform: none;
 }
 
@@ -1137,7 +1149,7 @@ dd {
   color: var(--forest);
   cursor: pointer;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .cake-faq-list details p {
@@ -1254,7 +1266,7 @@ dd {
   margin-bottom: 24px;
   color: var(--charcoal);
   font-size: 17px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.5;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -1288,7 +1300,7 @@ dd {
   background: var(--butter-yellow);
   color: var(--forest);
   font-size: 9px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1.2;
   text-transform: uppercase;
@@ -1372,7 +1384,7 @@ dd {
   border-bottom: 1px solid var(--forest);
   color: var(--forest);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1436,7 +1448,7 @@ dd {
   margin-bottom: 30px;
   color: var(--charcoal);
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.7;
   white-space: pre-wrap;
 }
@@ -1455,7 +1467,7 @@ dd {
   border: 1px solid var(--forest);
   background: var(--butter-yellow);
   color: var(--forest);
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -1650,7 +1662,7 @@ dd {
   background: var(--canvas);
   color: var(--forest);
   text-decoration: none;
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -1681,7 +1693,7 @@ dd {
   padding: 8px 0;
   margin-bottom: 18px;
   color: var(--forest);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .reservation-layout {
@@ -1715,7 +1727,7 @@ dd {
   margin-bottom: 10px;
   color: var(--billboard-blue);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -1758,7 +1770,7 @@ dd {
   background: transparent;
   color: var(--forest);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   transition: transform 160ms ease, background 160ms ease;
@@ -1834,7 +1846,7 @@ fieldset {
 
 legend,
 label {
-  font-weight: 500;
+  font-weight: 400;
 }
 
 legend {
@@ -1997,7 +2009,7 @@ legend {
   border-radius: 999px;
   color: var(--forest);
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -2010,7 +2022,7 @@ legend {
   background: var(--forest);
   color: var(--canvas);
   font-size: 9px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.05em;
   vertical-align: 2px;
   text-transform: uppercase;
@@ -2033,7 +2045,7 @@ legend {
   margin-top: 3px;
   color: var(--muted);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.35;
 }
 
@@ -2243,14 +2255,14 @@ textarea {
   color: #b88400;
   padding: 0;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .class-reserve-title-block h1 {
   margin: 0;
   color: #3c2f2f;
   font-size: clamp(32px, 6vw, 48px);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.08;
   text-transform: none;
 }
@@ -2272,7 +2284,7 @@ textarea {
   margin: 0;
   color: #b88400;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
   text-transform: none;
 }
@@ -2300,7 +2312,7 @@ textarea {
   margin: 8px 0 0;
   color: #6f5c4b;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.35;
 }
 
@@ -2352,14 +2364,14 @@ textarea {
 .class-time-option span {
   color: #3c2f2f;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.2;
 }
 
 .class-option-card strong {
   color: #3c2f2f;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -2387,7 +2399,7 @@ textarea {
   margin: 0;
   color: #3c2f2f;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
   text-transform: none;
 }
@@ -2526,7 +2538,7 @@ textarea {
   color: #3c2f2f;
   font: inherit;
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -2542,7 +2554,7 @@ textarea {
 .weekend-calendar-day:disabled {
   background: transparent;
   color: #c9c3bd;
-  font-weight: 500;
+  font-weight: 400;
   cursor: not-allowed;
 }
 
@@ -2575,7 +2587,7 @@ textarea {
   align-items: start;
   color: #3c2f2f;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.25;
 }
 
@@ -2594,7 +2606,7 @@ textarea {
   align-items: center;
   color: #3c2f2f;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .class-photo-options input {
@@ -2636,7 +2648,7 @@ textarea {
   background: #f6c945;
   color: #3c2f2f;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .class-submit-button:disabled {
@@ -2684,7 +2696,7 @@ textarea {
   margin: 0 0 20px;
   color: #b88400;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
   text-transform: none;
 }
@@ -2704,7 +2716,7 @@ textarea {
 
 .class-complete-message strong {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
 }
 
@@ -2712,14 +2724,14 @@ textarea {
   max-width: 295px;
   margin: 0 auto;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.35;
 }
 
 .class-complete-message span {
   margin-top: 4px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
 }
 
@@ -2731,7 +2743,7 @@ textarea {
   background: #ffffff;
   color: #3c2f2f;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @media (hover: hover) {
@@ -2788,7 +2800,7 @@ textarea {
   margin-bottom: 8px;
   color: var(--muted);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .bank-account-body {
@@ -2807,7 +2819,7 @@ textarea {
 .bank-number {
   color: var(--text);
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .bank-holder {
@@ -2970,7 +2982,7 @@ textarea {
   background: var(--surface-soft);
   color: var(--muted);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -3008,7 +3020,7 @@ textarea {
   align-items: center;
   justify-content: center;
   color: var(--ink);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .admin-month-calendar-day.is-today .admin-month-calendar-day-number {
@@ -3019,7 +3031,7 @@ textarea {
 .admin-month-calendar-summary {
   color: #6c5a4b;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.25;
   text-align: right;
 }
@@ -3070,7 +3082,7 @@ textarea {
   grid-row: span 2;
   color: inherit;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -3084,7 +3096,7 @@ textarea {
 
 .admin-calendar-event-title {
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -3146,7 +3158,7 @@ td {
 
 th {
   color: var(--muted);
-  font-weight: 900;
+  font-weight: 700;
   background: var(--surface-soft);
 }
 
@@ -3228,7 +3240,7 @@ td select {
 .sms-preview pre {
   white-space: pre-wrap;
   margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -3258,7 +3270,7 @@ td select {
   margin: 0 auto;
   padding: 2px 0 36px;
   color: #3c2f2f;
-  font-family: 'Work Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: var(--font-sans);
 }
 
 .class-admin-topline {
@@ -3269,7 +3281,7 @@ td select {
   gap: 34px;
   color: #3c2f2f;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .class-admin-topline span {
@@ -3304,14 +3316,14 @@ td select {
   margin-bottom: 4px;
   color: #888888;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.25;
 }
 
 .class-admin-stat strong {
   color: #3c2f2f;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -3335,7 +3347,7 @@ td select {
   background: #ffffff;
   color: #b88400;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -3351,7 +3363,7 @@ td select {
   gap: 5px;
   color: #3c2f2f;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .class-admin-filters input,
@@ -3409,7 +3421,7 @@ td select {
 
 .class-admin-table td strong {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.2;
 }
 
@@ -3430,7 +3442,7 @@ td select {
 
 .class-allergy-cell.warning {
   color: #d9534f;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .class-status-select,
@@ -3443,7 +3455,7 @@ td select {
   border-radius: 999px;
   color: #3c2f2f;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .class-status-select.requested,
@@ -3480,7 +3492,7 @@ td select {
   background: #ffffff;
   color: #b88400;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .admin-edit-card {
@@ -3537,7 +3549,7 @@ td select {
   gap: 5px;
   color: #3c2f2f;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .admin-edit-grid input,
@@ -3581,7 +3593,7 @@ td select {
   margin: 0 0 14px;
   color: #3c2f2f;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
   text-transform: none;
 }
@@ -3623,7 +3635,7 @@ td select {
   background: #ffffff;
   color: #b88400;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .class-copy-card pre {
@@ -3632,7 +3644,7 @@ td select {
   overflow: auto;
   white-space: pre-wrap;
   color: #3c2f2f;
-  font-family: 'Work Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 400;
   line-height: 1.2;
@@ -4356,7 +4368,7 @@ td select {
   margin-bottom: 24px;
   color: var(--kids-yellow-deep);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -4378,7 +4390,7 @@ td select {
 .kids-hero-actions span {
   color: var(--kids-brown);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .kids-primary-button {
@@ -4390,7 +4402,7 @@ td select {
   background: var(--kids-yellow);
   color: var(--kids-brown);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
   box-shadow: 0 16px 34px rgba(184, 132, 0, 0.22);
   transition:
@@ -4449,7 +4461,7 @@ td select {
   margin-top: 106px;
   color: var(--kids-brown);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
 }
 
@@ -4542,7 +4554,7 @@ td select {
   margin-bottom: 20px;
   color: var(--kids-brown);
   font-size: clamp(20px, 2.1vw, 24px);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.015em;
 }
@@ -4583,7 +4595,7 @@ td select {
 .kids-step-card strong {
   color: var(--kids-brown);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .kids-mini-card p {
@@ -4663,7 +4675,7 @@ td select {
 
 .kids-gallery-card figcaption span {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.35;
 }
 
@@ -4697,7 +4709,7 @@ td select {
 .kids-price-line {
   margin-bottom: 10px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.35;
 }
 
@@ -4715,7 +4727,7 @@ td select {
 .kids-safety-card p {
   margin-bottom: 18px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.45;
 }
 
@@ -4730,7 +4742,7 @@ td select {
   padding-left: 18px;
   color: var(--kids-yellow-deep);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.5;
 }
 
@@ -5106,7 +5118,7 @@ td select {
     padding: 0;
     color: #3c2f2f;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: lowercase;
   }
 
@@ -5125,7 +5137,7 @@ td select {
     border: 0;
     color: #b88400;
     font-size: 0;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .app-shell:has(.kids-class-page) .site-header nav :is(button, a):first-child::after {
@@ -5332,7 +5344,7 @@ td select {
     max-width: 335px;
     margin-bottom: 3px;
     font-size: 22px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.27;
     letter-spacing: 0;
   }
@@ -5378,7 +5390,7 @@ td select {
   .kids-safety-card h2 {
     margin-bottom: 13px;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0;
   }
@@ -5419,7 +5431,7 @@ td select {
 
   .kids-mini-card strong {
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .kids-mini-card strong::before {
@@ -5448,7 +5460,7 @@ td select {
 
   .kids-step-card strong {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .kids-step-card strong::before {
@@ -5511,13 +5523,13 @@ td select {
   .kids-price-card>strong {
     margin-bottom: 10px;
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .kids-price-line {
     margin-bottom: 8px;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .kids-small-note {
@@ -5539,14 +5551,14 @@ td select {
   .kids-safety-card p {
     margin-bottom: 20px;
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1.2;
   }
 
   .kids-safety-card li {
     padding-left: 0;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 400;
     line-height: 1.2;
   }
 
@@ -5849,7 +5861,7 @@ td select {
   color: #fff;
   font-size: 7px;
   font-style: normal;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   text-align: center;
   text-overflow: clip;
@@ -5932,7 +5944,7 @@ td select {
 
 .readonly-calendar-event-list time {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .readonly-calendar-event-list article div {
@@ -6000,7 +6012,7 @@ td select {
 .review-wordmark {
   color: #035542;
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.04em;
   text-decoration: none;
 }
@@ -6016,7 +6028,7 @@ td select {
   padding: 4px 7px;
   border: 1px solid #035542;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
 }
 
@@ -6048,7 +6060,7 @@ td select {
   margin-bottom: 10px;
   color: #537068;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -6078,7 +6090,7 @@ td select {
 .review-rating legend,
 .review-field>span {
   margin-bottom: 9px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .review-stars {
@@ -6223,7 +6235,7 @@ td select {
   border: 1px solid #035542;
   background: #fff;
   color: #035542;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .review-photo-actions button:only-child {
@@ -6250,7 +6262,7 @@ td select {
 .review-photo-attached {
   margin: 0;
   color: #035542;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .review-photo-reward {
@@ -6277,7 +6289,7 @@ td select {
   padding: 12px 16px;
   border: 1px solid #035542;
   color: #035542;
-  font-weight: 900;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -6327,7 +6339,7 @@ td select {
   border: 1px solid #035542;
   background: #fff;
   color: #035542;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .review-ticket-actions {
@@ -6474,7 +6486,7 @@ td select {
   background: #eef2ef;
   color: var(--forest);
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -6554,7 +6566,7 @@ td select {
 
 .admin-review-reward dd {
   margin: 4px 0 0;
-  font-weight: 800;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
@@ -6707,7 +6719,7 @@ td select {
 
 .site-footer-service {
   margin-bottom: 8px !important;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: clamp(28px, 3.4vw, 42px);
   font-weight: 700;
   line-height: 1.06;
@@ -6751,7 +6763,7 @@ td select {
 .site-footer-content small {
   color: rgba(240, 238, 233, 0.64);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .site-footer-tiger,
@@ -6883,7 +6895,7 @@ td select {
 .cart-summary-total span {
   color: var(--muted);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -6966,7 +6978,7 @@ td select {
 
 .cart-quantity output {
   text-align: center;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .cart-summary {
@@ -7064,7 +7076,7 @@ td select {
   margin: 0;
   color: var(--forest-deep);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 400;
 }
 
 .cake-detail-added .secondary-button {
@@ -7256,7 +7268,7 @@ td select {
   left: 20px;
   color: var(--forest);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.16em;
 }
 
@@ -7271,7 +7283,7 @@ td select {
 }
 
 .cakes-index-coming-soon b {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: clamp(34px, 5vw, 64px);
   line-height: 0.9;
 }
@@ -7384,12 +7396,12 @@ td select {
 
 .cake-detail-photo-coming span {
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.18em;
 }
 
 .cake-detail-photo-coming strong {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: clamp(30px, 5vw, 54px);
   line-height: 0.92;
   text-transform: uppercase;
@@ -7472,7 +7484,7 @@ td select {
   margin-bottom: 14px;
   color: var(--forest);
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -7489,7 +7501,7 @@ td select {
   margin-bottom: 20px;
   color: var(--forest-deep);
   font-size: 25px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .cake-detail-description {
@@ -7512,7 +7524,7 @@ td select {
   background: rgba(255, 255, 255, 0.44);
   color: var(--forest-deep);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -7529,7 +7541,7 @@ td select {
   margin-bottom: 12px;
   color: var(--forest-deep);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .cake-detail-options {
@@ -7713,7 +7725,7 @@ label.vanilla-point-color-card {
 
 .cake-detail-quantity output {
   text-align: center;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .cake-detail-order-summary {
@@ -7734,7 +7746,7 @@ label.vanilla-point-color-card {
 .cake-detail-order-summary span {
   color: var(--muted);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -7751,7 +7763,7 @@ label.vanilla-point-color-card {
 .cake-detail-request {
   width: 100%;
   min-height: 58px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .cake-detail-confirmation-note {
@@ -7786,13 +7798,13 @@ label.vanilla-point-color-card {
 .cake-detail-story article span {
   color: var(--forest);
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.14em;
 }
 
 .cake-detail-trust strong {
   color: var(--forest-deep);
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: clamp(22px, 3vw, 34px);
   line-height: 1;
   text-transform: uppercase;
@@ -7831,7 +7843,7 @@ label.vanilla-point-color-card {
 .cake-detail-story article p {
   margin-top: 28px;
   color: var(--text);
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.45;
 }
 
@@ -7892,7 +7904,7 @@ label.vanilla-point-color-card {
   min-width: 76px;
   color: var(--forest-deep);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: center;
   white-space: nowrap;
@@ -7980,7 +7992,7 @@ label.vanilla-point-color-card {
   border-bottom: 1px solid var(--border);
   color: var(--forest-deep);
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.35;
 }
 
@@ -8000,7 +8012,7 @@ label.vanilla-point-color-card {
 
 .korean-cake-review blockquote[lang='ko'] {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.55;
   word-break: keep-all;
 }
@@ -8014,9 +8026,9 @@ label.vanilla-point-color-card {
 
 .korean-cake-review blockquote[lang='en-AU'] {
   flex: 1;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.36;
 }
 
@@ -8033,7 +8045,7 @@ label.vanilla-point-color-card {
 
 .korean-cake-review-footer time {
   color: var(--forest-deep);
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -8055,7 +8067,7 @@ label.vanilla-point-color-card {
 .cake-detail-accordion summary {
   padding: 24px 0;
   color: var(--forest-deep);
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-sans);
   font-size: 24px;
   font-weight: 700;
   cursor: pointer;
@@ -8304,7 +8316,7 @@ label.vanilla-point-color-card {
   background: var(--forest);
   color: var(--canvas);
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -8522,7 +8534,7 @@ label.vanilla-point-color-card {
 .product-card-price {
   color: var(--berry-emphasis);
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -8660,7 +8672,7 @@ label.vanilla-point-color-card {
   background: var(--canvas);
   color: var(--charcoal);
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -8676,7 +8688,7 @@ label.vanilla-point-color-card {
   margin: 0 0 7px;
   color: var(--berry-emphasis);
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.12em;
   line-height: 1;
   text-transform: uppercase;
@@ -8695,7 +8707,7 @@ label.vanilla-point-color-card {
   margin: 0 0 11px;
   color: var(--berry-emphasis);
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -8721,7 +8733,7 @@ label.vanilla-point-color-card {
   border-bottom: 1px solid var(--border);
   color: var(--forest-deep);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.3;
 }
 

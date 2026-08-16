@@ -28,20 +28,28 @@ test('hero keeps centered typography and transparent text and image layers', () 
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.hero-copy\s*\{[\s\S]*?width:\s*100%/)
 })
 
-test('all public heading levels use Playfair Display', () => {
-  const headings = css.match(/h1,\s*h2,\s*h3\s*\{([^}]*)\}/)
-  assert.ok(headings, 'missing shared h1/h2/h3 rule')
-  assert.match(headings[1], /font-family:\s*'Playfair Display', Georgia, serif/)
+test('all public heading levels use Work Sans Bold', () => {
+  const headings = css.match(/h1,\s*h2,\s*h3,\s*h4,\s*h5,\s*h6\s*\{([^}]*)\}/)
+  assert.ok(headings, 'missing shared h1-h6 rule')
+  assert.match(headings[1], /font-family:\s*var\(--font-sans\)/)
+  assert.match(headings[1], /font-weight:\s*700/)
 })
 
-test('home hero uses Playfair Display with restrained display tracking', () => {
-  assert.match(css, /family=Playfair\+Display:wght@700/)
+test('the site uses Work Sans regular and bold without alternate English font families', () => {
+  assert.match(css, /family=Work\+Sans:wght@400;700/)
+  assert.doesNotMatch(css, /Playfair Display|Georgia, serif|ui-monospace|SFMono-Regular|Menlo|Consolas/)
 
   const title = rule('.hero-title')
   const displayWord = rule('.hero-display-word')
+  const smsPreview = rule('.sms-preview pre')
+  const englishReview = rule(".korean-cake-review blockquote[lang='en-AU']")
 
-  assert.match(title, /font-family:\s*'Playfair Display', Georgia, serif/)
+  assert.match(title, /font-family:\s*var\(--font-sans\)/)
+  assert.match(title, /font-weight:\s*700/)
   assert.match(title, /letter-spacing:\s*-0\.02em/)
-  assert.match(displayWord, /font-family:\s*'Playfair Display', Georgia, serif/)
+  assert.match(displayWord, /font-family:\s*var\(--font-sans\)/)
+  assert.match(displayWord, /font-weight:\s*700/)
   assert.match(displayWord, /letter-spacing:\s*-0\.035em/)
+  assert.match(smsPreview, /font-family:\s*var\(--font-sans\)/)
+  assert.match(englishReview, /font-weight:\s*400/)
 })
