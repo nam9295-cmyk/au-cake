@@ -50,6 +50,7 @@ test('quick view uses dedicated replaceable detail-shot files', () => {
   assert.match(homeSource, /'basque-cheesecake':\s*'\/products\/details\/chocolatiers-basque-cheesecake-quick-view\.webp'/)
   assert.match(homeSource, /'lemon-cake':\s*'\/products\/details\/lemon-cake-quick-view\.webp'/)
   assert.match(homeSource, /'vanilla-fresh-cream-cake':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
+  assert.match(homeSource, /'chocolate-cupcakes':\s*'\/products\/details\/chocolate-cupcakes2-sydney\.webp'/)
   assert.match(homeSource, /'brownie-cheesecake':\s*'\/products\/details\/brownie-cheese-quick-view\.webp'/)
   assert.match(homeSource, /imageUrl=\{quickViewImages\[quickViewCard\.imageKey\]\}/)
 })
@@ -70,6 +71,7 @@ test('Brownie uses only the supplied product and Quick View files while Buttercr
 test('supplied Cupcake and Brownie WebPs are present in this worktree', async () => {
   for (const path of [
     '../public/products/chocolate-cupcakes-sydney.webp',
+    '../public/products/details/chocolate-cupcakes2-sydney.webp',
     '../public/products/brownie-cheese-sydney.webp',
     '../public/products/details/brownie-cheese-quick-view.webp',
   ]) {
