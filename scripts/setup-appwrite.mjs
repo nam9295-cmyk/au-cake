@@ -188,6 +188,7 @@ const reservationAttributes = [
   { key: 'cakeSize', type: 'string', size: 20, required: false },
   { key: 'chocolateType', type: 'string', size: 20, required: false },
   { key: 'poundAddon', type: 'string', size: 40, required: false },
+  { key: 'cupcakeFinish', type: 'string', size: 40, required: false },
   { key: 'chocolateIcingCount', type: 'integer', required: false, min: 0, max: 12 },
   { key: 'vanillaCreamCount', type: 'integer', required: false, min: 0, max: 12 },
   { key: 'partyDecorationCount', type: 'integer', required: false, min: 0, max: 12 },

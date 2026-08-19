@@ -30,6 +30,7 @@
     "test:csv-security": "TMP_DIR=/tmp/au-cake-csv-test-$(date +%s); VITE_MARKET=AU npx tsc tests/csv-security.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && VITE_MARKET=AU node --test $TMP_DIR/tests/csv-security.test.js",
     "preview": "vite preview",
     "setup:appwrite": "node scripts/setup-appwrite.mjs",
+    "ensure:cupcake-finish-schema": "node scripts/ensure-cupcake-finish-attribute.mjs",
     "deploy:reservation-notification": "node scripts/deploy-reservation-notification.mjs",
     "deploy:reservation-api": "node scripts/deploy-reservation-api.mjs",
     "deploy:review-api": "node scripts/deploy-review-api.mjs",

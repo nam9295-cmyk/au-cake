@@ -236,15 +236,15 @@ export function SiteFooter({
   )
 }
 
-export function VanillaFreshCreamCakeSilhouette() {
+export function VanillaFreshCreamCakeSilhouette({ productName }: { productName: string }) {
   return (
-    <div className="vanilla-fresh-cream-silhouette" role="img" aria-label="vanilla fresh cream cake photo coming soon">
+    <div className="vanilla-fresh-cream-silhouette" role="img" aria-label={`${productName} photo coming soon`}>
       <svg viewBox="0 0 240 180" aria-hidden="true">
         <path d="M48 68h144l-14 73H62z" />
         <path d="M38 58c0-15 18-25 40-25h84c22 0 40 10 40 25v11H38z" />
         <path d="M65 84h110v12H65zm-7 27h124v12H58z" fill="var(--canvas)" />
       </svg>
-      <span>COMING SOON</span>
+      <span>PHOTO COMING SOON</span>
     </div>
   )
 }

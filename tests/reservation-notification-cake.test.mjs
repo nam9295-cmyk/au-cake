@@ -99,14 +99,28 @@ test('AU operator notification gives Vanilla Fresh Cream Cake its size, cake she
   assert.equal(rows['Point colour'], 'Blue')
 })
 
+test('AU operator notification shows current Cupcake pack and whole-box finish', () => {
+  const rows = rowsByLabel({
+    reservationNumber: 'VG-C-AU-CUPCAKE-HALF', productId: 'cupcake-half-dozen', cupcakeFinish: 'chocolate-buttercream',
+    cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', quantity: 1,
+  })
+
+  assert.equal(rows.Product, 'Chocolate Cupcakes')
+  assert.equal(rows.Size, '-')
+  assert.equal(rows['Finishing mix'], 'Pack: Half Dozen · 6 cupcakes / Finish: Chocolate Buttercream')
+})
+
 test('AU operator notification renders every validated stored order line and one aggregate total', () => {
   const rows = notification.buildCakeNotificationRows(validStoredReservation())
 
   assert.deepEqual(rows.filter(([label]) => label.startsWith('Product')), [
-    ['Product 1', 'Chocolate Pound Cake'], ['Product 2', 'Pave Chocolate Cake'],
+    ['Product 1', 'Signature Gâteau au Chocolat'], ['Product 2', 'Pave Chocolate Cake'],
   ])
   assert.deepEqual(rows.filter(([label]) => label.startsWith('Quantity')), [
     ['Quantity 1', '1ea'], ['Quantity 2', '1ea'],
+  ])
+  assert.deepEqual(rows.filter(([label]) => label.startsWith('Finish ')), [
+    ['Finish 1', 'Basic finish'], ['Finish 2', '-'],
   ])
   assert.equal(rows.filter(([label]) => label === 'Total').length, 1)
   assert.match(rows.find(([label]) => label === 'Total')[1], /120\.00/)

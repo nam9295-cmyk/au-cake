@@ -20,6 +20,7 @@ const organization = {
 }
 
 const cakeEntries = Object.entries(auPublicPages.cakePages).map(([slug, page]) => ({ slug, ...page }))
+const legacyCakeEntries = Object.entries(auPublicPages.legacyCakePages).map(([slug, page]) => ({ slug, ...page }))
 const cakeListItems = cakeEntries.map((cake, index) => ({
   '@type': 'ListItem',
   position: index + 1,
@@ -75,6 +76,11 @@ function productSchema(cake, path) {
 
 function cakeFallback(cake, path) {
   const image = imageFor(cake)
+  const legacyActions = cake.slug === 'chocolate-pound-cake-and-cupcakes'
+    ? '<p><a href="/cakes/signature-gateau-au-chocolat">Signature Gâteau au Chocolat</a> · <a href="/cakes/chocolate-cupcakes">Chocolate Cupcakes</a></p>'
+    : cake.slug === 'chocolatiers-basque-cheesecake'
+      ? '<p><a href="/cakes">View current cakes</a></p>'
+      : '<p><a href="/reserve">Request this cake</a></p>'
   return `
       <main class="seo-fallback">
         <p><a href="/cakes">View all cakes</a></p>
@@ -84,18 +90,18 @@ function cakeFallback(cake, path) {
         <p><strong>Price guide:</strong> ${escapeHtml(cake.priceSummary)}</p>
         <p><strong>Options:</strong> ${escapeHtml(cake.optionSummary)}</p>
         <p>Made to order for pre-arranged pickup in Melrose Park, Sydney. Availability is checked after your request and payment is confirmed separately.</p>
-        <p><a href="/reserve">Request this cake</a></p>
+        ${legacyActions}
       </main>`
 }
 
-function cakePageConfig(cake) {
+function cakePageConfig(cake, robots = 'index, follow') {
   const path = `/cakes/${cake.slug}`
   const image = imageFor(cake)
   const isWebPageOnly = cake.schema === 'webpage-only'
   return {
     title: cake.title,
     description: cake.description,
-    robots: 'index, follow',
+    robots,
     ogType: isWebPageOnly ? 'website' : 'product',
     ...(image ? { image, imageType: cake.imageType, imageWidth: cake.imageWidth, imageHeight: cake.imageHeight } : {}),
     structuredData: isWebPageOnly
@@ -286,6 +292,7 @@ const pages = {
       </main>`,
   },
   ...Object.fromEntries(cakeEntries.map(cake => [`/cakes/${cake.slug}`, cakePageConfig(cake)])),
+  ...Object.fromEntries(legacyCakeEntries.map(cake => [`/cakes/${cake.slug}`, cakePageConfig(cake, 'noindex, nofollow')])),
   ...Object.fromEntries(Object.entries(privatePages).map(([path, page]) => [path, { ...page, robots: 'noindex, nofollow' }])),
 }
 

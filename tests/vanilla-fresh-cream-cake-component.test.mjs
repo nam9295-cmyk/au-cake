@@ -30,9 +30,9 @@ test('Vanilla Fresh Cream Cake detail gallery shows the full cake followed by it
   assert.match(detailPage, /'vanilla-quick-view':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
 })
 
-test('reservation selection renders the Vanilla Fresh Cream Cake silhouette rather than another product image', () => {
-  assert.match(reserve, /isVanillaFreshCreamCakeProduct\(selectedProduct\.id\)\s*\?\s*<VanillaFreshCreamCakeSilhouette/)
-  assert.match(reserve, /group\.id === 'vanilla-fresh-cream'[\s\S]*?<VanillaFreshCreamCakeSilhouette/)
+test('reservation selection uses the safe photo-coming silhouette for Vanilla and photo-pending products', () => {
+  assert.match(reserve, /isVanillaFreshCreamCakeProduct\(selectedProduct\.id\) \|\| !selectedProductImage/)
+  assert.match(reserve, /catalogCard\?\.isPhotoComingSoon[\s\S]*?<VanillaFreshCreamCakeSilhouette/)
 })
 
 test('Vanilla Fresh Cream Cake selects its size and flavour while keeping the chocolate sheet fixed', () => {
@@ -52,14 +52,14 @@ test('Vanilla Fresh Cream Cake catalogue card exists only for the AU market', ()
   assert.match(home, /marketConfig\.market === 'AU'[\s\S]*?getAuCakeCatalogCards\(language\)/)
 })
 
-test('AU catalogue cards follow the approved pound, pave, basque, lemon, vanilla order', () => {
-  const order = ['pound-cupcake', 'pave', 'cheesecake', 'fresh-lemon-cupcakes', 'vanilla-fresh-cream']
+test('AU catalogue cards follow the final seven-product order', () => {
+  const order = ['pave', 'vanilla-fresh-cream', 'buttercream', 'cupcake', 'signature-gateau', 'fresh-lemon-cupcakes', 'brownie-cheesecake']
   const positions = order.map((id) => catalog.indexOf(`id: '${id}'`))
   assert.equal(positions.every((position) => position >= 0), true)
   assert.deepEqual([...positions].sort((left, right) => left - right), positions)
 })
 
-test('catalogue stacks on mobile, uses two columns on tablet, and shows all five cakes across at desktop width', () => {
+test('catalogue stacks on mobile and uses the existing responsive product grid', () => {
   const tabletStart = css.indexOf('@media (min-width: 768px) {')
   const desktopStart = css.indexOf('@media (min-width: 1100px)')
   const tabletCss = css.slice(tabletStart, desktopStart)

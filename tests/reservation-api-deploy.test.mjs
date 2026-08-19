@@ -154,3 +154,61 @@ test('actual reservation deploy CLI dry-run exits before credentials, dotenv and
   assert.equal(plan.dotenvLoaded, false)
   assert.equal(plan.collectionPermissionChanges, false)
 })
+
+test('dedicated cupcakeFinish migration creates only a missing optional string attribute and waits for availability', async () => {
+  const { ensureCupcakeFinishAttribute } = await import('../scripts/ensure-cupcake-finish-attribute.mjs')
+  const calls = []
+  const attributes = [
+    Object.assign(new Error('missing'), { code: 404 }),
+    { key: 'cupcakeFinish', type: 'string', size: 40, required: false, status: 'processing' },
+    { key: 'cupcakeFinish', type: 'string', size: 40, required: false, status: 'available' },
+  ]
+  const databases = {
+    async getAttribute(params) {
+      calls.push(['get', params])
+      const next = attributes.shift()
+      if (next instanceof Error) throw next
+      return next
+    },
+    async createStringAttribute(params) {
+      calls.push(['create', params])
+    },
+  }
+
+  const result = await ensureCupcakeFinishAttribute({
+    databases,
+    databaseId: 'cake_db',
+    collectionId: 'reservations',
+    sleep: async () => calls.push(['sleep']),
+  })
+
+  assert.equal(result.created, true)
+  assert.equal(result.attribute.status, 'available')
+  assert.deepEqual(calls, [
+    ['get', { databaseId: 'cake_db', collectionId: 'reservations', key: 'cupcakeFinish' }],
+    ['create', { databaseId: 'cake_db', collectionId: 'reservations', key: 'cupcakeFinish', size: 40, required: false }],
+    ['get', { databaseId: 'cake_db', collectionId: 'reservations', key: 'cupcakeFinish' }],
+    ['sleep'],
+    ['get', { databaseId: 'cake_db', collectionId: 'reservations', key: 'cupcakeFinish' }],
+  ])
+})
+
+test('dedicated cupcakeFinish migration leaves an available compatible attribute unchanged', async () => {
+  const { ensureCupcakeFinishAttribute } = await import('../scripts/ensure-cupcake-finish-attribute.mjs')
+  let created = false
+  const result = await ensureCupcakeFinishAttribute({
+    databases: {
+      async getAttribute() {
+        return { key: 'cupcakeFinish', type: 'string', size: 40, required: false, status: 'available' }
+      },
+      async createStringAttribute() {
+        created = true
+      },
+    },
+    databaseId: 'cake_db',
+    collectionId: 'reservations',
+  })
+
+  assert.equal(result.created, false)
+  assert.equal(created, false)
+})

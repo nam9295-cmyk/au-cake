@@ -1,11 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const cakesSource = await readFile(new URL('../src/CakesPage.tsx', import.meta.url), 'utf8')
 
-test('home catalogue renders its five cards from the shared AU cake catalog', () => {
+test('home catalogue renders its seven cards from the shared AU cake catalog', () => {
   assert.match(homeSource, /getAuCakeCatalogCards\(language\)/)
   assert.doesNotMatch(homeSource, /const catalogCards = \[/)
 })
@@ -15,6 +15,22 @@ test('catalogue cards render their canonical image paths', () => {
   assert.match(cakesSource, /src=\{card\.imagePath\}/)
   assert.doesNotMatch(cakesSource, /cakeListImages/)
   assert.match(homeSource, /card\.isPhotoComingSoon/)
+})
+
+test('Home photo-pending catalogue cards render a visible placeholder without an image request', () => {
+  assert.match(homeSource, /card\.isPhotoComingSoon \? \([\s\S]*<VanillaFreshCreamCakeSilhouette productName=\{card\.name\} \/>/s)
+  assert.doesNotMatch(homeSource, /card\.isPhotoComingSoon \? null/)
+})
+
+test('photo-pending silhouettes use the actual product name in their accessible label', async () => {
+  const chromeSource = await readFile(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
+  const dialogSource = await readFile(new URL('../src/ProductQuickViewDialog.tsx', import.meta.url), 'utf8')
+  const reserveSource = await readFile(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
+
+  assert.match(chromeSource, /function VanillaFreshCreamCakeSilhouette\(\{ productName \}/)
+  assert.match(chromeSource, /aria-label=\{`\$\{productName\} photo coming soon`\}/)
+  assert.match(dialogSource, /<VanillaFreshCreamCakeSilhouette productName=\{card\.name\} \/>/)
+  assert.match(reserveSource, /<VanillaFreshCreamCakeSilhouette productName=\{selectedProductText\.name\} \/>/)
 })
 
 test('cake catalogue renders canonical English route copy', () => {
@@ -34,7 +50,32 @@ test('quick view uses dedicated replaceable detail-shot files', () => {
   assert.match(homeSource, /'basque-cheesecake':\s*'\/products\/details\/chocolatiers-basque-cheesecake-quick-view\.webp'/)
   assert.match(homeSource, /'lemon-cake':\s*'\/products\/details\/lemon-cake-quick-view\.webp'/)
   assert.match(homeSource, /'vanilla-fresh-cream-cake':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
+  assert.match(homeSource, /'brownie-cheesecake':\s*'\/products\/details\/brownie-cheese-quick-view\.webp'/)
   assert.match(homeSource, /imageUrl=\{quickViewImages\[quickViewCard\.imageKey\]\}/)
+})
+
+test('Brownie uses only the supplied product and Quick View files while Buttercream remains photo-pending', async () => {
+  const catalogSource = await readFile(new URL('../src/lib/cake-catalog.ts', import.meta.url), 'utf8')
+  const detailSource = await readFile(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
+
+  assert.match(catalogSource, /id: 'brownie-cheesecake',[\s\S]*?isPhotoComingSoon: false/)
+  assert.match(catalogSource, /id: 'buttercream',[\s\S]*?isPhotoComingSoon: true/)
+  assert.match(detailSource, /'brownie-side': '\/products\/brownie-cheese-sydney\.webp'/)
+  assert.match(detailSource, /'brownie-quick-view': '\/products\/details\/brownie-cheese-quick-view\.webp'/)
+  assert.match(detailSource, /'brownie-side': \{ width: 1080, height: 1012 \}/)
+  assert.match(detailSource, /'brownie-quick-view': \{ width: 1080, height: 1012 \}/)
+  assert.doesNotMatch(`${catalogSource}\n${detailSource}\n${homeSource}`, /brownie-cheesecake-sydney\.webp/)
+})
+
+test('supplied Cupcake and Brownie WebPs are present in this worktree', async () => {
+  for (const path of [
+    '../public/products/chocolate-cupcakes-sydney.webp',
+    '../public/products/brownie-cheese-sydney.webp',
+    '../public/products/details/brownie-cheese-quick-view.webp',
+  ]) {
+    const image = await stat(new URL(path, import.meta.url))
+    assert.ok(image.size > 0, path)
+  }
 })
 
 test('home catalogue cards show only image, title, price, and one action', async () => {

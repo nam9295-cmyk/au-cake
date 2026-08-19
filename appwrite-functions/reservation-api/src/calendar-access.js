@@ -46,11 +46,16 @@ function cakeLineLabel(document) {
   const labels = {
     'pave-cake': 'Pave cake',
     'vanilla-fresh-cream-cake': 'vanilla fresh cream cake',
-    'pound-cake': 'Pound cake',
+    'buttercream-cake': 'Buttercream Cake',
+    'pound-cake': 'Signature Gâteau au Chocolat',
+    'cupcake-half-dozen': 'Chocolate Cupcakes',
     'cupcake-dozen': 'Cupcakes',
     'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
     'pave-choco-basque-cheesecake': 'Pave chocolate on top',
     'eiffel-tower-basque-cheesecake': 'Cake finishing with Eiffel Tower',
+    'brownie-cheesecake': 'Brownie Cheesecake',
+    'pave-brownie-cheesecake': 'Brownie Cheesecake · Pave chocolate on top',
+    'eiffel-tower-brownie-cheesecake': 'Brownie Cheesecake · Eiffel Tower finish',
     'fresh-lemon-cupcakes-4': 'Lemon Cake · 4 pieces',
     'fresh-lemon-cupcakes-6': 'Lemon Cake · 6 pieces',
     'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
@@ -64,10 +69,10 @@ function cakeLineLabel(document) {
   const chocolateLabels = { dark: 'Dark chocolate', milk: 'Milk chocolate' }
   const label = labels[document.productId] || 'Cake'
   const options = []
-  if (document.productId === 'pave-cake' || document.productId === 'vanilla-fresh-cream-cake') {
+  if (document.productId === 'pave-cake' || document.productId === 'vanilla-fresh-cream-cake' || document.productId === 'buttercream-cake') {
     options.push(formatCakeSizeLabel(document.cakeSize))
     if (document.productId === 'pave-cake' && chocolateLabels[document.chocolateType]) options.push(chocolateLabels[document.chocolateType])
-  } else if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(document.productId)) {
+  } else if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake', 'brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'].includes(document.productId)) {
     options.push(formatCakeSizeLabel('15cm'))
   } else if (document.productId?.startsWith('fresh-lemon-cupcakes-')) {
     const packSize = Number(document.productId.split('-').at(-1))
@@ -76,12 +81,23 @@ function cakeLineLabel(document) {
       ? Math.min(packSize, Math.max(0, rawChocolateCount))
       : 0
     options.push(`Finishing: Fresh lemon zest icing ${packSize - chocolateCount} / Dark couverture chocolate ${chocolateCount}`)
-  } else if (document.productId === 'cupcake-dozen') {
+  } else if (document.productId === 'cupcake-half-dozen' || document.productId === 'cupcake-dozen') {
+    if (['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'].includes(document.cupcakeFinish)) {
+      const packSize = document.productId === 'cupcake-half-dozen' ? 6 : 12
+      const finishLabels = {
+        basic: 'Basic',
+        'vanilla-fresh-cream': 'Vanilla Fresh Cream',
+        'chocolate-buttercream': 'Chocolate Buttercream',
+      }
+      options.push(`Pack: ${packSize === 6 ? 'Half Dozen' : 'Dozen'} · ${packSize} cupcakes`)
+      options.push(`Finish: ${finishLabels[document.cupcakeFinish]}`)
+    } else {
     const rawVanilla = Number(document.vanillaCreamCount || 0)
     const rawParty = Number(document.partyDecorationCount || 0)
     const vanilla = Number.isInteger(rawVanilla) ? Math.min(12, Math.max(0, rawVanilla)) : 0
     const party = Number.isInteger(rawParty) ? Math.min(12 - vanilla, Math.max(0, rawParty)) : 0
     options.push(`Finishing: Basic ${12 - vanilla - party} / Vanilla cream ${vanilla} / Party decoration ${party}`)
+    }
   } else if (finishLabels[document.poundAddon]) {
     options.push(finishLabels[document.poundAddon])
   } else {

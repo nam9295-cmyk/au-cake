@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const detailSource = await readFile(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
+const reserveSource = await readFile(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const reviewSource = await readFile(new URL('../src/KoreanCakeReviewsSection.tsx', import.meta.url), 'utf8')
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
@@ -24,6 +25,15 @@ test('shared detail template contains gallery, purchase panel and verified infor
   assert.match(detailSource, /cake-detail-trust/)
   assert.match(detailSource, /cake-detail-accordion/)
   assert.doesNotMatch(detailSource, /Free delivery|Delivery tomorrow|Look & taste guarantee/)
+})
+
+test('Chocolate Cupcakes use Pack Size then one whole-box Finish without per-cupcake count controls', () => {
+  assert.match(detailSource, /language === 'ko' \? '구성' : 'Pack Size'/)
+  assert.match(detailSource, /language === 'ko' \? '마감' : 'Finish'/)
+  assert.match(detailSource, /CUPCAKE_FINISH_OPTIONS\.map/)
+  assert.doesNotMatch(detailSource, /vanillaCreamCount|partyDecorationCount|Party decoration/)
+  assert.match(reserveSource, /name="cupcakeFinish"/)
+  assert.doesNotMatch(reserveSource, /Remove one vanilla cream finish|Party decoration is \+AUD 1\.00 each/)
 })
 
 test('English cake service notes use the canonical lowercase brand', () => {

@@ -65,7 +65,7 @@ test('cake CSV neutralises spreadsheet formulas including leading control charac
   assert.match(csv, /"'@IMPORTDATA\(""https:\/\/example\.test""\)"/)
 })
 
-test('cake CSV exports cupcake per-piece finishing and omits retired chocolate finish', () => {
+test('cake CSV preserves legacy cupcake count finishing and omits retired chocolate finish', () => {
   const csv = reservationsToCsv([{
     ...cakeReservation,
     productId: 'cupcake-dozen',
@@ -78,6 +78,17 @@ test('cake CSV exports cupcake per-piece finishing and omits retired chocolate f
 
   assert.match(csv, /Basic 5 \/ Vanilla cream 4 \/ Party decoration 3/)
   assert.equal(csv.includes('Extra chocolate'), false)
+})
+
+test('cake CSV exports current Cupcake pack and whole-box finish', () => {
+  const csv = reservationsToCsv([{
+    ...cakeReservation,
+    productId: 'cupcake-half-dozen', cupcakeFinish: 'chocolate-buttercream',
+    totalPrice: 41, totalPriceCents: 4100,
+  }])
+
+  assert.match(csv, /Pack: Half Dozen · 6 cupcakes/)
+  assert.match(csv, /Finish: Chocolate Buttercream/)
 })
 
 test('cake CSV preserves legacy columns and appends every multi-line item with authoritative counts', () => {

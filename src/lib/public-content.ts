@@ -5,7 +5,7 @@ export const SITE_URL = AU_SITE_ORIGIN
 
 export type AuPublicContent = typeof auPublicPages
 export type PublicCakeSlug = keyof AuPublicContent['cakePages']
-export type PublicCakePage = AuPublicContent['cakePages'][PublicCakeSlug]
+export type PublicCakePage = AuPublicContent['cakePages'][PublicCakeSlug] | AuPublicContent['legacyCakePages'][keyof AuPublicContent['legacyCakePages']]
 export type IndexablePublicPath = '/' | '/cakes' | '/classes' | '/reviews'
 
 export type PublicRoutePage = {
@@ -31,8 +31,15 @@ export function getAuPublicContent(): AuPublicContent {
 }
 
 export function getCakePublicPage(slug: string): PublicCakePage | undefined {
-  if (!Object.hasOwn(AU_PUBLIC_CONTENT.cakePages, slug)) return undefined
-  return AU_PUBLIC_CONTENT.cakePages[slug as PublicCakeSlug]
+  if (Object.hasOwn(AU_PUBLIC_CONTENT.cakePages, slug)) return AU_PUBLIC_CONTENT.cakePages[slug as PublicCakeSlug]
+  if (Object.hasOwn(AU_PUBLIC_CONTENT.legacyCakePages, slug)) {
+    return AU_PUBLIC_CONTENT.legacyCakePages[slug as keyof AuPublicContent['legacyCakePages']]
+  }
+  return undefined
+}
+
+export function isLegacyCakePublicPage(slug: string): boolean {
+  return Object.hasOwn(AU_PUBLIC_CONTENT.legacyCakePages, slug)
 }
 
 export function getPublicRoutePage(path: string): PublicRoutePage | undefined {

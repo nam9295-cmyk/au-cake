@@ -5,14 +5,17 @@ import {
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
   getLemonIcingCount,
+  getCupcakePackSize,
   getProductById,
-  isCupcakeDozenProduct,
+  isCheesecakeProduct,
+  isCupcakeProduct,
   isFreshLemonCupcakeProduct,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
   usesReservationChocolateType,
 } from './constants.js'
 import { marketConfig } from './market.js'
+import { formatCupcakeFinishText } from './i18n.js'
 import { formatOrderLineSummary, getReservationItemCount, getReservationLineCount, getReservationOrderLines } from './order-lines.js'
 import type { Reservation, StoreSettings } from './types.js'
 import { escapeCsvCell } from './csv.js'
@@ -286,6 +289,12 @@ function formatLemonIcingMix(reservation: Reservation, korean = false) {
 }
 
 function formatCupcakeFinishMix(reservation: Reservation, korean = false) {
+  if (reservation.cupcakeFinish !== undefined) {
+    const packSize = getCupcakePackSize(reservation.productId)
+    return korean
+      ? `구성: ${packSize === 6 ? '하프 더즌' : '더즌'} · ${packSize}개\n마감: ${formatCupcakeFinishText(reservation.cupcakeFinish, 'ko')}\n`
+      : `Pack: ${packSize === 6 ? 'Half Dozen' : 'Dozen'} · ${packSize} cupcakes\nFinish: ${formatCupcakeFinishText(reservation.cupcakeFinish, 'en')}\n`
+  }
   const counts = normalizeCupcakeFinishCounts(
     reservation.productId,
     reservation.vanillaCreamCount,
@@ -327,8 +336,8 @@ Thank you for your order ${reservation.customerName}. (${reservation.customerPho
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${(product.usesSizeOptions || ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(product.id)) ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
-${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeDozenProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${(product.usesSizeOptions || isCheesecakeProduct(product.id)) ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
+${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 Pick-up location: https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw
 
@@ -344,7 +353,7 @@ ${labels.body}
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${(product.usesSizeOptions || ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(product.id)) ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeDozenProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${(product.usesSizeOptions || isCheesecakeProduct(product.id)) ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 ${labels.customerName}: ${reservation.customerName}
@@ -365,13 +374,13 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.customerName,
     reservation.customerPhone,
     getProductById(reservation.productId).name,
-    (getProductById(reservation.productId).usesSizeOptions || ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(reservation.productId)) ? formatCakeSizeLabel(reservation.cakeSize) : '-',
+    (getProductById(reservation.productId).usesSizeOptions || isCheesecakeProduct(reservation.productId)) ? formatCakeSizeLabel(reservation.cakeSize) : '-',
     getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
     usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
     getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',
     isFreshLemonCupcakeProduct(reservation.productId)
       ? `Fresh lemon zest icing ${getLemonIcingCount(reservation.productId, reservation.chocolateIcingCount)} / Dark couverture chocolate ${normalizeChocolateIcingCount(reservation.productId, reservation.chocolateIcingCount)}`
-      : isCupcakeDozenProduct(reservation.productId)
+      : isCupcakeProduct(reservation.productId)
         ? formatCupcakeFinishMix(reservation).replace(/^Finishing mix: /, '').trim()
         : '-',
     String(reservation.quantity),

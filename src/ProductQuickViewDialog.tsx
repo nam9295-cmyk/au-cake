@@ -96,7 +96,7 @@ export function ProductQuickViewDialog({
           <figure className="product-quick-view-image-wrap">
             {card.isPhotoComingSoon ? (
               <>
-                <VanillaFreshCreamCakeSilhouette />
+                <VanillaFreshCreamCakeSilhouette productName={card.name} />
                 <span className="product-quick-view-coming-soon">
                   {language === 'ko' ? '사진 준비 중' : 'Photo coming soon'}
                 </span>

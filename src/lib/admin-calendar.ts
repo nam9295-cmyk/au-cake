@@ -1,4 +1,5 @@
-import { getProductById } from './constants.js'
+import { getCupcakePackSize, getProductById, isCupcakeProduct } from './constants.js'
+import { formatCupcakeFinishText } from './i18n.js'
 import { getReservationItemCount, getReservationOrderLines } from './order-lines.js'
 import { formatClassBookingType, getClassCoursePlanLabel, getClassTypeLabel } from './class-utils.js'
 import type { ClassReservation, Reservation } from './types.js'
@@ -84,8 +85,8 @@ export function getCalendarGridDays(month: string, today = toInputDate(new Date(
 
 function shortProductName(productId: Reservation['productId']) {
   if (productId === 'pave-cake') return 'Pave'
-  if (productId === 'pound-cake') return 'Pound'
-  if (productId === 'cupcake-dozen') return 'Cupcake'
+  if (productId === 'pound-cake') return 'Gâteau'
+  if (productId === 'cupcake-half-dozen' || productId === 'cupcake-dozen') return 'Cupcake'
   return getProductById(productId).name
 }
 
@@ -93,6 +94,9 @@ function mapCakeReservation(reservation: Reservation): AdminCalendarEvent {
   const product = getProductById(reservation.productId)
   const orderLines = getReservationOrderLines(reservation)
   const isMultiLine = orderLines.length > 1
+  const cupcakeSummary = isCupcakeProduct(reservation.productId) && reservation.cupcakeFinish !== undefined
+    ? `${getCupcakePackSize(reservation.productId) === 6 ? 'Half Dozen' : 'Dozen'} · ${formatCupcakeFinishText(reservation.cupcakeFinish, 'en')}`
+    : null
   return {
     kind: 'cake',
     id: reservation.id,
@@ -103,7 +107,7 @@ function mapCakeReservation(reservation: Reservation): AdminCalendarEvent {
       : `${reservation.customerName} · ${product.name}`,
     subtitle: isMultiLine
       ? `${orderLines.map((line) => `${shortProductName(line.productId)} x${line.quantity}`).join(' + ')} · ${reservation.paymentStatus}`
-      : `${shortProductName(reservation.productId)} x${reservation.quantity} · ${reservation.paymentStatus}`,
+      : `${shortProductName(reservation.productId)}${cupcakeSummary ? ` · ${cupcakeSummary}` : ''} x${reservation.quantity} · ${reservation.paymentStatus}`,
     isCancelled: reservation.status === '취소',
     reservation,
   }

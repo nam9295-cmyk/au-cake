@@ -12,16 +12,18 @@ import KoreanCakeReviewsSection from './KoreanCakeReviewsSection'
 import {
   CAKE_SIZE_OPTIONS,
   CHOCOLATE_TYPE_OPTIONS,
-  CUPCAKE_PACK_SIZE,
+  CUPCAKE_FINISH_OPTIONS,
   MAX_RESERVATION_QUANTITY,
   POUND_ADDON_OPTIONS,
   VANILLA_CAKE_FLAVOR_OPTIONS,
   VANILLA_CAKE_POINT_COLOR_OPTIONS,
 
   formatCakeSizeLabel,
+  getCupcakeFinishPrice,
+  getCupcakePackSize,
   getFreshLemonCupcakePackSize,
   getProductById,
-  isCupcakeDozenProduct,
+  isCupcakeProduct,
   isFreshLemonCupcakeProduct,
   isVanillaFreshCreamCakeProduct,
   usesReservationChocolateType,
@@ -34,6 +36,7 @@ import {
   type CakeDetailImageKey,
   type CakeDetailSelection,
 } from './lib/cake-detail'
+import { getAuCakeCatalogCards } from './lib/cake-catalog'
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
 import type { ProductId } from './lib/types'
@@ -62,6 +65,12 @@ const detailImages: Record<CakeDetailImageKey, string> = {
   'lemon-previous': '/products/details/lemon-cake-previous.webp',
   'vanilla-side': '/products/vanilla-cake-sydney.webp',
   'vanilla-quick-view': '/products/details/vanillacake-quickview.webp',
+  'signature-gateau-side': '/products/chocolate-pound-cake-sydney.webp',
+  'signature-gateau-quick-view': '/products/details/chocolate-pound-cake-quick-view.webp',
+  'signature-gateau-previous': '/products/details/chocolate-pound-cake-previous.webp',
+  'signature-gateau-hero': poundHeroImg,
+  'brownie-side': '/products/brownie-cheese-sydney.webp',
+  'brownie-quick-view': '/products/details/brownie-cheese-quick-view.webp',
 }
 
 const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height: number }> = {
@@ -88,6 +97,12 @@ const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height:
   'lemon-previous': { width: 1080, height: 1012 },
   'vanilla-side': { width: 1080, height: 1012 },
   'vanilla-quick-view': { width: 1080, height: 1012 },
+  'signature-gateau-side': { width: 1080, height: 1012 },
+  'signature-gateau-quick-view': { width: 1080, height: 1012 },
+  'signature-gateau-previous': { width: 1080, height: 1012 },
+  'signature-gateau-hero': { width: 1080, height: 1012 },
+  'brownie-side': { width: 1080, height: 1012 },
+  'brownie-quick-view': { width: 1080, height: 1012 },
 }
 
 type CakeDetailPageProps = {
@@ -135,7 +150,39 @@ export default function CakeDetailPage({
   const [activeImage, setActiveImage] = useState(0)
   const [addedToOrder, setAddedToOrder] = useState(false)
 
-  if (!detail || !selection) {
+  if (!detail) {
+    return (
+      <main className="cake-detail-not-found">
+        <p className="summary-kicker">404</p>
+        <h1>{language === 'ko' ? '케이크를 찾을 수 없어요' : 'We could not find that cake'}</h1>
+        <button type="button" className="primary-button" onClick={onBrowseCakes}>
+          {language === 'ko' ? '케이크 보기' : 'View cakes'}
+        </button>
+      </main>
+    )
+  }
+
+  if (detail.isLegacy) {
+    return (
+      <main className="cake-detail-not-found">
+        <p className="summary-kicker">{language === 'ko' ? '이전 컬렉션' : 'Previous collection'}</p>
+        <h1>{detail.name}</h1>
+        <p>{detail.description}</p>
+        <div className="cake-detail-legacy-actions">
+          {detail.legacyLinks?.map((link) => (
+            <button type="button" className="primary-button" onClick={() => onOpenCake(link.slug)} key={link.slug}>
+              {link.name}
+            </button>
+          ))}
+        </div>
+        <button type="button" className="secondary-button" onClick={onBrowseCakes}>
+          {language === 'ko' ? '현재 케이크 보기' : 'View current cakes'}
+        </button>
+      </main>
+    )
+  }
+
+  if (!selection) {
     return (
       <main className="cake-detail-not-found">
         <p className="summary-kicker">404</p>
@@ -179,9 +226,11 @@ export default function CakeDetailPage({
 
   const sizeOptions = CAKE_SIZE_OPTIONS.filter((option) => Object.hasOwn(product.sizePrices, option.value))
   const packSize = getFreshLemonCupcakePackSize(product.id) || 0
-  const vanillaCreamCount = selection.vanillaCreamCount
-  const partyDecorationCount = selection.partyDecorationCount
-  const basicCupcakeCount = CUPCAKE_PACK_SIZE - vanillaCreamCount - partyDecorationCount
+  const productChoiceLabel = detail.id === 'cupcake'
+    ? language === 'ko' ? '구성' : 'Pack Size'
+    : detail.id === 'brownie-cheesecake'
+    ? language === 'ko' ? '마감 선택' : 'Choose a finish'
+    : language === 'ko' ? '종류 선택' : 'Choose a style'
 
   return (
     <main className="cake-detail-page">
@@ -273,18 +322,21 @@ export default function CakeDetailPage({
 
           {detail.productIds.length > 1 && (
             <fieldset className="cake-detail-fieldset">
-              <legend>{language === 'ko' ? '종류 선택' : 'Choose a style'}</legend>
+              <legend>{productChoiceLabel}</legend>
               <div className="cake-detail-options is-stacked">
                 {detail.productIds.map((productId) => {
                   const optionText = getProductText(productId, language)
+                  const cupcakePackSize = getCupcakePackSize(productId)
                   return (
                     <OptionButton
                       active={selection.productId === productId}
                       onClick={() => chooseProduct(productId)}
                       key={productId}
                     >
-                      <strong>{optionText.name}</strong>
-                      <span>{formatCurrency(getProductById(productId).price)}</span>
+                      <strong>{cupcakePackSize
+                        ? language === 'ko' ? `${cupcakePackSize === 6 ? '하프 더즌' : '더즌'} · ${cupcakePackSize}개` : `${cupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${cupcakePackSize} cupcakes`
+                        : optionText.name}</strong>
+                      <span>{formatCurrency(cupcakePackSize ? getCupcakeFinishPrice(productId, 'basic') || 0 : getProductById(productId).price)}</span>
                     </OptionButton>
                   )
                 })}
@@ -402,33 +454,20 @@ export default function CakeDetailPage({
             </fieldset>
           )}
 
-          {isCupcakeDozenProduct(product.id) && (
-            <fieldset className="cake-detail-fieldset cake-detail-mix-fieldset">
-              <legend>{language === 'ko' ? '컵케이크 마감 구성' : 'Cupcake finishing mix'}</legend>
-              <p>{language === 'ko'
-                ? `기본 ${basicCupcakeCount}개 · 바닐라 크림 ${vanillaCreamCount}개 · 파티 데코 ${partyDecorationCount}개`
-                : `Basic ${basicCupcakeCount} · Vanilla cream ${vanillaCreamCount} · Party decoration ${partyDecorationCount}`}</p>
-              <div className="cake-detail-number-fields">
-                <label>
-                  <span>{language === 'ko' ? '바닐라 크림' : 'Vanilla cream'}</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max={CUPCAKE_PACK_SIZE}
-                    value={vanillaCreamCount}
-                    onChange={(event) => updateSelection({ vanillaCreamCount: Number(event.target.value) })}
-                  />
-                </label>
-                <label>
-                  <span>{language === 'ko' ? '파티 데코' : 'Party decoration'}</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max={CUPCAKE_PACK_SIZE - vanillaCreamCount}
-                    value={partyDecorationCount}
-                    onChange={(event) => updateSelection({ partyDecorationCount: Number(event.target.value) })}
-                  />
-                </label>
+          {isCupcakeProduct(product.id) && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '마감' : 'Finish'}</legend>
+              <div className="cake-detail-options">
+                {CUPCAKE_FINISH_OPTIONS.map((option) => (
+                  <OptionButton
+                    active={selection.cupcakeFinish === option.value}
+                    onClick={() => updateSelection({ cupcakeFinish: option.value })}
+                    key={option.value}
+                  >
+                    <strong>{language === 'ko' ? option.labelKo : option.label}</strong>
+                    <span>{formatCurrency(getCupcakeFinishPrice(product.id, option.value) || 0)}</span>
+                  </OptionButton>
+                ))}
               </div>
             </fieldset>
           )}
@@ -528,17 +567,14 @@ export default function CakeDetailPage({
           {language === 'ko' ? '전체 케이크' : 'View all cakes'}
         </button>
         <div className="cake-detail-other-links">
-          {['pave-chocolate-cake', 'chocolatiers-basque-cheesecake', 'lemon-cake']
-            .filter((candidate) => candidate !== slug)
+          {getAuCakeCatalogCards(language)
+            .filter((candidate) => candidate.slug !== slug)
             .slice(0, 2)
-            .map((candidate) => {
-              const candidateDetail = getCakeDetailBySlug(candidate, language)
-              return candidateDetail ? (
-                <button type="button" onClick={() => onOpenCake(candidate)} key={candidate}>
-                  {candidateDetail.name}
-                </button>
-              ) : null
-            })}
+            .map((candidate) => (
+              <button type="button" onClick={() => onOpenCake(candidate.slug)} key={candidate.slug}>
+                {candidate.name}
+              </button>
+            ))}
         </div>
       </section>
     </main>

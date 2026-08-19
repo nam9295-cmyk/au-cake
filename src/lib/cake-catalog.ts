@@ -6,18 +6,28 @@ import { formatCurrency } from './utils.js'
 import type { ProductId } from './types.js'
 
 export type CakeCatalogId =
-  | 'pound-cupcake'
   | 'pave'
-  | 'cheesecake'
-  | 'fresh-lemon-cupcakes'
   | 'vanilla-fresh-cream'
+  | 'buttercream'
+  | 'cupcake'
+  | 'signature-gateau'
+  | 'fresh-lemon-cupcakes'
+  | 'brownie-cheesecake'
+  // Retained only by the Korean catalogue and AU legacy route views.
+  | 'pound-cupcake'
+  | 'cheesecake'
 
 export type CakeCatalogImageKey =
-  | 'pound-cake'
   | 'pave-cake'
-  | 'basque-cheesecake'
-  | 'lemon-cake'
   | 'vanilla-fresh-cream-cake'
+  | 'buttercream-cake'
+  | 'chocolate-cupcakes'
+  | 'signature-gateau-au-chocolat'
+  | 'lemon-cake'
+  | 'brownie-cheesecake'
+  // Legacy image keys are deliberately kept so historic route views remain typed.
+  | 'pound-cake'
+  | 'basque-cheesecake'
 
 type LocalizedCatalogCopy = {
   name: string
@@ -52,30 +62,6 @@ export type CakeCatalogCard = LocalizedCatalogCopy & {
 
 const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
   {
-    id: 'pound-cupcake',
-    slug: 'chocolate-pound-cake-and-cupcakes',
-    defaultProductId: 'pound-cake',
-    productIds: ['pound-cake', 'cupcake-dozen'],
-    imageKey: 'pound-cake',
-    isPhotoComingSoon: false,
-    priceMode: 'from',
-    priceDisplay: 'whole-aud',
-    copy: {
-      en: {
-        name: 'Chocolate Pound Cake & Cupcakes',
-        description: 'Choose the pound cake, or make it a dozen cupcakes for AUD 10 more.',
-        features: ['Chocolate Pound Cake · AUD 45', 'Chocolate Cupcakes · 1 dozen · AUD 55', 'Keep your choice of finish'],
-        optionLabel: 'Choose pound or cupcakes, then a finish',
-      },
-      ko: {
-        name: '초코 파운드케이크 & 컵케이크',
-        description: '파운드케이크를 기본으로 선택하고 10달러를 추가하면 컵케이크 1다스로 변경할 수 있어요.',
-        features: ['파운드케이크 AUD 45', '컵케이크 1다스 +AUD 10', '기존 마감 옵션 선택 가능'],
-        optionLabel: '파운드 / 컵케이크와 마감 선택',
-      },
-    },
-  },
-  {
     id: 'pave',
     slug: 'pave-chocolate-cake',
     defaultProductId: 'pave-cake',
@@ -86,28 +72,44 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     priceDisplay: 'currency',
   },
   {
-    id: 'cheesecake',
-    slug: 'chocolatiers-basque-cheesecake',
-    defaultProductId: 'choco-basque-cheesecake',
-    productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'],
-    imageKey: 'basque-cheesecake',
+    id: 'vanilla-fresh-cream',
+    slug: 'vanilla-fresh-cream-cake',
+    defaultProductId: 'vanilla-fresh-cream-cake',
+    productIds: ['vanilla-fresh-cream-cake'],
+    imageKey: 'vanilla-fresh-cream-cake',
     isPhotoComingSoon: false,
     priceMode: 'from',
     priceDisplay: 'whole-aud',
-    copy: {
-      en: {
-        name: "Chocolatier's Basque Cheesecake",
-        description: 'Choose classic, pave chocolate on top, or a full pave chocolate finish with one Eiffel Tower chocolate.',
-        features: ['Gluten-free', '6" | serves 8', 'Classic AUD 55', 'Pave chocolate on top +AUD 10', 'Eiffel Tower finish +AUD 15'],
-        optionLabel: 'Three finishing options',
-      },
-      ko: {
-        name: '쇼콜라티에 바스크 치즈케이크',
-        description: '기본, 파베 초콜릿 on top, 에펠탑 초콜릿 마감 중에서 선택할 수 있는 6" | serves 8 치즈케이크예요.',
-        features: ['글루텐 프리', '6" | serves 8', '기본 AUD 55', '파베 on top +AUD 10', '에펠탑 마감 +AUD 15'],
-        optionLabel: '세 가지 마감 선택',
-      },
-    },
+  },
+  {
+    id: 'buttercream',
+    slug: 'buttercream-cake',
+    defaultProductId: 'buttercream-cake',
+    productIds: ['buttercream-cake'],
+    imageKey: 'buttercream-cake',
+    isPhotoComingSoon: true,
+    priceMode: 'from',
+    priceDisplay: 'whole-aud',
+  },
+  {
+    id: 'cupcake',
+    slug: 'chocolate-cupcakes',
+    defaultProductId: 'cupcake-dozen',
+    productIds: ['cupcake-half-dozen', 'cupcake-dozen'],
+    imageKey: 'chocolate-cupcakes',
+    isPhotoComingSoon: false,
+    priceMode: 'from',
+    priceDisplay: 'whole-aud',
+  },
+  {
+    id: 'signature-gateau',
+    slug: 'signature-gateau-au-chocolat',
+    defaultProductId: 'pound-cake',
+    productIds: ['pound-cake'],
+    imageKey: 'signature-gateau-au-chocolat',
+    isPhotoComingSoon: false,
+    priceMode: 'fixed',
+    priceDisplay: 'currency',
   },
   {
     id: 'fresh-lemon-cupcakes',
@@ -134,11 +136,11 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     },
   },
   {
-    id: 'vanilla-fresh-cream',
-    slug: 'vanilla-fresh-cream-cake',
-    defaultProductId: 'vanilla-fresh-cream-cake',
-    productIds: ['vanilla-fresh-cream-cake'],
-    imageKey: 'vanilla-fresh-cream-cake',
+    id: 'brownie-cheesecake',
+    slug: 'brownie-cheesecake',
+    defaultProductId: 'brownie-cheesecake',
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+    imageKey: 'brownie-cheesecake',
     isPhotoComingSoon: false,
     priceMode: 'from',
     priceDisplay: 'whole-aud',

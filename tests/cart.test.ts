@@ -22,6 +22,7 @@ const baseSelection = (overrides: Partial<CakeDetailSelection> = {}): CakeDetail
   cakeSize: '15cm',
   chocolateType: 'dark',
   poundAddon: 'none',
+  cupcakeFinish: 'basic',
   chocolateIcingCount: 0,
   vanillaCreamCount: 0,
   partyDecorationCount: 0,
@@ -66,6 +67,7 @@ test('cart normalizes hidden options before deriving the fixed-order quantity-fr
 test('direct cart entry points reject retired and unknown products without reviving defaults', () => {
   const invalidSelections = [
     baseSelection({ productId: 'fresh-lemon-cupcakes-4' }),
+    baseSelection({ productId: 'choco-basque-cheesecake' }),
     baseSelection({ productId: 'unknown-cake' as CakeDetailSelection['productId'] }),
   ]
 
@@ -92,6 +94,38 @@ test('adding an identical normalized configuration merges quantity into one capp
   assert.equal(merged.length, 1)
   assert.equal(merged[0].lineKey, getCartLineKey(baseSelection()))
   assert.equal(merged[0].selection.quantity, 5)
+})
+
+test('Buttercream and Brownie Cheesecake cart lines add, update, and remove independently', () => {
+  const buttercream = baseSelection({ productId: 'buttercream-cake', cakeSize: '19cm', quantity: 1 })
+  const brownie = baseSelection({ productId: 'pave-brownie-cheesecake', quantity: 1 })
+  const added = addCartLine(addCartLine([], buttercream), brownie)
+
+  assert.equal(added.length, 2)
+  assert.equal(getCartEstimatedSubtotal(added), 163)
+  const updated = updateCartLineQuantity(added, added[0].lineKey, 2)
+  assert.equal(updated[0].selection.quantity, 2)
+  assert.equal(getCartEstimatedSubtotal(updated), 261)
+  assert.deepEqual(removeCartLine(updated, updated[1].lineKey), [updated[0]])
+})
+
+test('Cupcake cart lines keep pack size and whole-box finish as separate priced selections', () => {
+  const halfVanilla = {
+    ...baseSelection({ productId: 'cupcake-half-dozen' as CakeDetailSelection['productId'] }),
+    cupcakeFinish: 'vanilla-fresh-cream',
+  } as CakeDetailSelection
+  const dozenButtercream = {
+    ...baseSelection({ productId: 'cupcake-dozen' }),
+    cupcakeFinish: 'chocolate-buttercream',
+  } as CakeDetailSelection
+  const lines = addCartLine(addCartLine([], halfVanilla), dozenButtercream)
+
+  assert.equal(lines.length, 2)
+  assert.notEqual(lines[0].lineKey, lines[1].lineKey)
+  assert.equal(getCartEstimatedSubtotal(lines), 109)
+  assert.equal((lines[0].selection as CakeDetailSelection & { cupcakeFinish?: string }).cupcakeFinish, 'vanilla-fresh-cream')
+  assert.equal(lines[0].selection.vanillaCreamCount, 0)
+  assert.equal(lines[0].selection.partyDecorationCount, 0)
 })
 
 test('meaningful Vanilla flavour and Lemon options stay separate with no total line cap', () => {

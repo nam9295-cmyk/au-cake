@@ -96,7 +96,7 @@ test('multi-line create responses expose only authoritative stored line pricing 
     privacyConsent: true,
     orderLines: [
       { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 2 },
-      { productId: 'choco-basque-cheesecake', quantity: 1 },
+      { productId: 'brownie-cheesecake', quantity: 1 },
     ],
   }, { now, reservationNumber: 'VG-C-AU-MULTI' })
   const response = cakeReservationResponse({ $id: 'private', ...document, requestFingerprint: 'f'.repeat(64) })
@@ -111,7 +111,7 @@ test('multi-line create responses expose only authoritative stored line pricing 
     totalPriceCents: line.totalPriceCents,
   })), [
     { productId: 'pave-cake', quantity: 2, unitPriceCents: 7500, subtotalCents: 15000, totalPriceCents: 15000 },
-    { productId: 'choco-basque-cheesecake', quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, totalPriceCents: 5500 },
+    { productId: 'brownie-cheesecake', quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, totalPriceCents: 5500 },
   ])
   assert.equal('requestFingerprint' in response, false)
   assert.equal(JSON.stringify(response).includes('private'), false)
@@ -128,7 +128,7 @@ test('create response rejects any present malformed or inconsistent stored order
     privacyConsent: true,
     orderLines: [
       { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
-      { productId: 'choco-basque-cheesecake', quantity: 1 },
+      { productId: 'brownie-cheesecake', quantity: 1 },
     ],
   }, { now, reservationNumber: 'VG-C-AU-CORRUPT' })
   for (const corrupted of [
@@ -421,9 +421,8 @@ test('review coupon pricing rounds discount cents and persists only safe audit f
   assert.equal(five.requestNote, 'Happy birthday')
 })
 
-test('static Chocolate/Lemoni pricing and audit remain local without review lookup', async () => {
+test('static Lemoni pricing and audit remain local without review lookup', async () => {
   for (const [productId, promoCode, expected] of [
-    ['choco-basque-cheesecake', 'Chocolate', 4950],
     ['fresh-lemon-cupcakes-8', 'Lemoni', 4050],
   ]) {
     const db = createDatabaseDouble({ couponDocument: null })
@@ -597,7 +596,7 @@ test('new multi-line request IDs reject a different canonical payload', async ()
     privacyConsent: true,
     orderLines: [
       { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
-      { productId: 'choco-basque-cheesecake', quantity: 1 },
+      { productId: 'brownie-cheesecake', quantity: 1 },
     ],
   }
   await createCake(db, input, { now, runtimeConfig })
@@ -623,7 +622,7 @@ test('multi-line retries canonicalize line order before fingerprint comparison',
     privacyConsent: true,
     orderLines: [
       { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
-      { productId: 'choco-basque-cheesecake', quantity: 1 },
+      { productId: 'brownie-cheesecake', quantity: 1 },
     ],
   }
   const first = await createCake(db, input, { now, runtimeConfig })
@@ -850,6 +849,7 @@ const auditAttributes = [
   { key: 'reviewCouponId', type: 'string', size: 64, required: false, status: 'available' },
   { key: 'vanillaCakeSheet', type: 'string', size: 20, required: false, status: 'available' },
   { key: 'vanillaCakeFlavor', type: 'string', size: 40, required: false, status: 'available' },
+  { key: 'cupcakeFinish', type: 'string', size: 40, required: false, status: 'available' },
 ]
 
 const multiLineAttributes = [

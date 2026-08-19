@@ -1,14 +1,17 @@
 import {
   DEFAULT_CAKE_SIZE,
   DEFAULT_CHOCOLATE_TYPE,
+  DEFAULT_CUPCAKE_FINISH,
   DEFAULT_POUND_ADDON,
   MAX_RESERVATION_QUANTITY,
   LEMON_PROMO_CODE,
   PROMO_CODE,
   getReservationPrice,
+  getCupcakeFinishSurcharge,
   isFreshLemonCupcakeProduct,
   normalizeCakeSize,
   normalizeChocolateIcingCount,
+  normalizeCupcakeFinish,
   normalizeCupcakeFinishCounts,
   normalizePoundAddon,
   normalizeReservationChocolateType,
@@ -30,6 +33,7 @@ export type AdminReservationEditInput = Partial<Pick<Reservation,
   | 'cakeSize'
   | 'chocolateType'
   | 'poundAddon'
+  | 'cupcakeFinish'
   | 'chocolateIcingCount'
   | 'vanillaCreamCount'
   | 'partyDecorationCount'
@@ -47,6 +51,7 @@ export type AdminReservationUpdate = Pick<Reservation,
   | 'cakeSize'
   | 'chocolateType'
   | 'poundAddon'
+  | 'cupcakeFinish'
   | 'chocolateIcingCount'
   | 'vanillaCreamCount'
   | 'partyDecorationCount'
@@ -66,6 +71,7 @@ const REVIEW_COUPON_PRICE_FIELDS = [
   'cakeSize',
   'chocolateType',
   'poundAddon',
+  'cupcakeFinish',
   'chocolateIcingCount',
   'vanillaCreamCount',
   'partyDecorationCount',
@@ -147,6 +153,7 @@ function reservationPromoKind(reservation: Reservation): ReservationPromoKind | 
       cakeSize: reservation.cakeSize,
       chocolateType: reservation.chocolateType,
       poundAddon: reservation.poundAddon,
+      ...(reservation.cupcakeFinish === undefined ? {} : { cupcakeFinish: reservation.cupcakeFinish }),
       chocolateIcingCount: reservation.chocolateIcingCount || 0,
       vanillaCreamCount: reservation.vanillaCreamCount || 0,
       partyDecorationCount: reservation.partyDecorationCount || 0,
@@ -204,17 +211,24 @@ export function buildAdminReservationUpdate(
     productId,
     edits.chocolateIcingCount ?? reservation.chocolateIcingCount ?? 0,
   )
+  const isLegacyCupcake = productId === reservation.productId
+    && productId === 'cupcake-dozen'
+    && reservation.cupcakeFinish === undefined
   const cupcakeFinishCounts = normalizeCupcakeFinishCounts(
     productId,
-    edits.vanillaCreamCount ?? reservation.vanillaCreamCount ?? 0,
-    edits.partyDecorationCount ?? reservation.partyDecorationCount ?? 0,
+    isLegacyCupcake ? edits.vanillaCreamCount ?? reservation.vanillaCreamCount ?? 0 : 0,
+    isLegacyCupcake ? edits.partyDecorationCount ?? reservation.partyDecorationCount ?? 0 : 0,
+  )
+  const cupcakeFinish = normalizeCupcakeFinish(
+    productId,
+    edits.cupcakeFinish ?? reservation.cupcakeFinish ?? DEFAULT_CUPCAKE_FINISH,
   )
   const cacaoPercent = (edits.cacaoPercent || reservation.cacaoPercent || '기본') as CacaoPercent
   const originalTotalPrice = getReservationPrice(
     productId,
-    { cacaoPercent, cakeSize, chocolateType, poundAddon, chocolateIcingCount, ...cupcakeFinishCounts },
+    { cacaoPercent, cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, ...cupcakeFinishCounts },
     quantity,
-  )
+  ) + (isLegacyCupcake ? getCupcakeFinishSurcharge(productId, cupcakeFinishCounts.vanillaCreamCount, cupcakeFinishCounts.partyDecorationCount) * quantity : 0)
   const promoKind = reservationPromoKind(reservation)
   const totalPrice = reservation.reviewCouponId
     ? reservation.totalPrice
@@ -227,6 +241,7 @@ export function buildAdminReservationUpdate(
     cakeSize,
     chocolateType,
     poundAddon,
+    ...(isLegacyCupcake ? {} : { cupcakeFinish }),
     chocolateIcingCount,
     ...cupcakeFinishCounts,
     quantity,

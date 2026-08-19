@@ -1,4 +1,4 @@
-import { DEFAULT_VANILLA_CAKE_POINT_COLOR, MAX_RESERVATION_QUANTITY } from './constants.js'
+import { DEFAULT_CUPCAKE_FINISH, DEFAULT_VANILLA_CAKE_POINT_COLOR, MAX_RESERVATION_QUANTITY, isCupcakeProduct } from './constants.js'
 import { getCakeCatalogEntryByProductId } from './cake-catalog.js'
 import {
   getCakeDetailSelectionTotal,
@@ -57,6 +57,7 @@ export function getCartLineKey(selection: CakeDetailSelection) {
   if (isVanillaFreshCreamCakeProduct(normalized.productId)) {
     identity.push(normalized.vanillaCakePointColor || DEFAULT_VANILLA_CAKE_POINT_COLOR)
   }
+  if (isCupcakeProduct(normalized.productId)) identity.push(normalized.cupcakeFinish)
   return JSON.stringify(identity)
 }
 
@@ -140,6 +141,7 @@ function toPersistedSelection(selection: CakeDetailSelection): CakeDetailSelecti
     cakeSize: normalized.cakeSize,
     chocolateType: normalized.chocolateType,
     poundAddon: normalized.poundAddon,
+    cupcakeFinish: normalized.cupcakeFinish,
     chocolateIcingCount: normalized.chocolateIcingCount,
     vanillaCreamCount: normalized.vanillaCreamCount,
     partyDecorationCount: normalized.partyDecorationCount,
@@ -174,6 +176,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     cakeSize,
     chocolateType,
     poundAddon,
+    cupcakeFinish,
     chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,
@@ -188,6 +191,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     typeof cakeSize !== 'string' ||
     typeof chocolateType !== 'string' ||
     typeof poundAddon !== 'string' ||
+    (cupcakeFinish !== undefined && typeof cupcakeFinish !== 'string') ||
     typeof chocolateIcingCount !== 'number' || !Number.isFinite(chocolateIcingCount) ||
     typeof vanillaCreamCount !== 'number' || !Number.isFinite(vanillaCreamCount) ||
     typeof partyDecorationCount !== 'number' || !Number.isFinite(partyDecorationCount) ||
@@ -205,6 +209,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     cakeSize: cakeSize as CakeSize,
     chocolateType: chocolateType as ChocolateType,
     poundAddon: poundAddon as PoundAddon,
+    cupcakeFinish: (typeof cupcakeFinish === 'string' ? cupcakeFinish : DEFAULT_CUPCAKE_FINISH) as CakeDetailSelection['cupcakeFinish'],
     chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,

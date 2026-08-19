@@ -1,5 +1,5 @@
 import { marketConfig, PAYMENT_STATUSES, RESERVATION_STATUSES } from './market.js'
-import type { CacaoPercent, CakeSize, ChocolateType, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
+import type { CacaoPercent, CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
 
 export const PRODUCT_NAME = marketConfig.copy.productName
 
@@ -7,6 +7,7 @@ export const DEFAULT_PRODUCT_ID: ProductId = 'pave-cake'
 export const DEFAULT_CAKE_SIZE: CakeSize = '15cm'
 export const DEFAULT_CHOCOLATE_TYPE: ChocolateType = 'dark'
 export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
+export const DEFAULT_CUPCAKE_FINISH: CupcakeFinish = 'basic'
 export const DEFAULT_VANILLA_CAKE_SHEET: VanillaCakeSheet = 'vanilla'
 export const VANILLA_FRESH_CREAM_CAKE_SHEET: VanillaCakeSheet = 'chocolate'
 export const DEFAULT_VANILLA_CAKE_FLAVOR: VanillaCakeFlavor = 'triple-berry'
@@ -22,10 +23,39 @@ export const CUPCAKE_PACK_SIZE = 12
 export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 
+const CUPCAKE_PRODUCT_IDS: ProductId[] = ['cupcake-half-dozen', 'cupcake-dozen']
+const CUPCAKE_PACK_SIZES: Partial<Record<ProductId, 6 | 12>> = {
+  'cupcake-half-dozen': 6,
+  'cupcake-dozen': 12,
+}
+const CUPCAKE_FINISH_PRICES: Partial<Record<ProductId, Record<CupcakeFinish, number>>> = {
+  'cupcake-half-dozen': {
+    basic: 31,
+    'vanilla-fresh-cream': 36,
+    'chocolate-buttercream': 41,
+  },
+  'cupcake-dozen': {
+    basic: 55,
+    'vanilla-fresh-cream': 64,
+    'chocolate-buttercream': 73,
+  },
+}
+
+export const CUPCAKE_FINISH_OPTIONS: Array<{ value: CupcakeFinish; label: string; labelKo: string }> = [
+  { value: 'basic', label: 'Basic', labelKo: '기본' },
+  { value: 'vanilla-fresh-cream', label: 'Vanilla Fresh Cream', labelKo: '바닐라 생크림' },
+  { value: 'chocolate-buttercream', label: 'Chocolate Buttercream', labelKo: '초콜릿 버터크림' },
+]
+
 const CHEESECAKE_PROMO_PRODUCT_IDS: ProductId[] = [
   'choco-basque-cheesecake',
   'pave-choco-basque-cheesecake',
   'eiffel-tower-basque-cheesecake',
+]
+const BROWNIE_CHEESECAKE_PRODUCT_IDS: ProductId[] = [
+  'brownie-cheesecake',
+  'pave-brownie-cheesecake',
+  'eiffel-tower-brownie-cheesecake',
 ]
 const LEMON_PROMO_PRODUCT_IDS: ProductId[] = [
   'fresh-lemon-cupcakes-6',
@@ -65,7 +95,7 @@ export function isPromoEligibleProduct(productId: ProductId) {
 }
 
 export function isCheesecakeProduct(productId: ProductId) {
-  return CHEESECAKE_PROMO_PRODUCT_IDS.includes(productId)
+  return CHEESECAKE_PROMO_PRODUCT_IDS.includes(productId) || BROWNIE_CHEESECAKE_PRODUCT_IDS.includes(productId)
 }
 
 export function getValidPromoCode(productId: ProductId, code?: string, now = new Date()) {
@@ -88,14 +118,23 @@ export function applyPromoDiscount(total: number, productId: ProductId, code?: s
 
 export const PRODUCTS = marketConfig.products
 
-export type ProductGroupId = 'pave' | 'vanilla-fresh-cream' | 'pound-cupcake' | 'cheesecake' | 'fresh-lemon-cupcakes'
+export type ProductGroupId =
+  | 'pave'
+  | 'vanilla-fresh-cream'
+  | 'buttercream'
+  | 'cupcake'
+  | 'signature-gateau'
+  | 'fresh-lemon-cupcakes'
+  | 'brownie-cheesecake'
+  | 'pound-cupcake'
+  | 'cheesecake'
 export type ProductGroup = {
   id: ProductGroupId
   defaultProductId: ProductId
   productIds: ProductId[]
 }
 
-export const PRODUCT_GROUPS: ProductGroup[] = [
+const KR_PRODUCT_GROUPS: ProductGroup[] = [
   { id: 'pound-cupcake', defaultProductId: 'pound-cake', productIds: ['pound-cake', 'cupcake-dozen'] },
   { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
   {
@@ -103,15 +142,32 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
     defaultProductId: 'choco-basque-cheesecake',
     productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'],
   },
-  ...(marketConfig.market === 'AU' ? [{
-    id: 'fresh-lemon-cupcakes' as const,
-    defaultProductId: 'fresh-lemon-cupcakes-12' as const,
-    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'] as ProductId[],
-  }, {
-    id: 'vanilla-fresh-cream' as const,
-    defaultProductId: 'vanilla-fresh-cream-cake' as const,
-    productIds: ['vanilla-fresh-cream-cake'] as ProductId[],
-  }] : []),
+]
+
+export const PRODUCT_GROUPS: ProductGroup[] = marketConfig.market === 'AU' ? [
+  { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
+  { id: 'vanilla-fresh-cream', defaultProductId: 'vanilla-fresh-cream-cake', productIds: ['vanilla-fresh-cream-cake'] },
+  { id: 'buttercream', defaultProductId: 'buttercream-cake', productIds: ['buttercream-cake'] },
+  { id: 'cupcake', defaultProductId: 'cupcake-dozen', productIds: ['cupcake-half-dozen', 'cupcake-dozen'] },
+  { id: 'signature-gateau', defaultProductId: 'pound-cake', productIds: ['pound-cake'] },
+  {
+    id: 'fresh-lemon-cupcakes',
+    defaultProductId: 'fresh-lemon-cupcakes-12',
+    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'],
+  },
+  {
+    id: 'brownie-cheesecake',
+    defaultProductId: 'brownie-cheesecake',
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+  },
+] : KR_PRODUCT_GROUPS
+
+const LEGACY_AU_PRODUCT_GROUPS: ProductGroup[] = [
+  {
+    id: 'cheesecake',
+    defaultProductId: 'choco-basque-cheesecake',
+    productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'],
+  },
 ]
 
 export function isVanillaFreshCreamCakeProduct(productId: ProductId) {
@@ -204,6 +260,27 @@ export function isCupcakeDozenProduct(productId: ProductId) {
   return productId === 'cupcake-dozen'
 }
 
+export function isCupcakeProduct(productId: ProductId) {
+  return CUPCAKE_PRODUCT_IDS.includes(productId)
+}
+
+export function getCupcakePackSize(productId: ProductId) {
+  return CUPCAKE_PACK_SIZES[productId] || null
+}
+
+export function normalizeCupcakeFinish(productId: ProductId, value?: CupcakeFinish | string) {
+  if (!isCupcakeProduct(productId)) return DEFAULT_CUPCAKE_FINISH
+  return CUPCAKE_FINISH_OPTIONS.some((option) => option.value === value)
+    ? value as CupcakeFinish
+    : DEFAULT_CUPCAKE_FINISH
+}
+
+export function getCupcakeFinishPrice(productId: ProductId, cupcakeFinish?: CupcakeFinish | string) {
+  const prices = CUPCAKE_FINISH_PRICES[productId]
+  if (!prices) return null
+  return prices[normalizeCupcakeFinish(productId, cupcakeFinish)]
+}
+
 export function normalizeCupcakeFinishCounts(
   productId: ProductId,
   vanillaCreamCount?: number | null,
@@ -233,7 +310,9 @@ export function getCupcakeFinishSurcharge(
 }
 
 export function getProductGroupByProductId(productId: ProductId) {
-  return PRODUCT_GROUPS.find((group) => group.productIds.includes(productId)) || PRODUCT_GROUPS[0]
+  return PRODUCT_GROUPS.find((group) => group.productIds.includes(productId))
+    || LEGACY_AU_PRODUCT_GROUPS.find((group) => group.productIds.includes(productId))
+    || PRODUCT_GROUPS[0]
 }
 
 export type ReservationPriceOptions = {
@@ -241,6 +320,7 @@ export type ReservationPriceOptions = {
   cakeSize?: CakeSize
   chocolateType?: ChocolateType
   poundAddon?: PoundAddon
+  cupcakeFinish?: CupcakeFinish
   chocolateIcingCount?: number
   vanillaCreamCount?: number
   partyDecorationCount?: number
@@ -335,6 +415,7 @@ function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoP
       cakeSize: cakeSize || DEFAULT_CAKE_SIZE,
       chocolateType: DEFAULT_CHOCOLATE_TYPE,
       poundAddon: DEFAULT_POUND_ADDON,
+      cupcakeFinish: DEFAULT_CUPCAKE_FINISH,
       chocolateIcingCount: 0,
       vanillaCreamCount: 0,
       partyDecorationCount: 0,
@@ -345,6 +426,7 @@ function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoP
     cakeSize: optionsOrCacao?.cakeSize || DEFAULT_CAKE_SIZE,
     chocolateType: optionsOrCacao?.chocolateType || DEFAULT_CHOCOLATE_TYPE,
     poundAddon: optionsOrCacao?.poundAddon || DEFAULT_POUND_ADDON,
+    cupcakeFinish: optionsOrCacao?.cupcakeFinish || DEFAULT_CUPCAKE_FINISH,
     chocolateIcingCount: optionsOrCacao?.chocolateIcingCount || 0,
     vanillaCreamCount: optionsOrCacao?.vanillaCreamCount || 0,
     partyDecorationCount: optionsOrCacao?.partyDecorationCount || 0,
@@ -361,7 +443,8 @@ export function getReservationUnitPrice(
   const cakeSize = normalizeCakeSize(product.id, options.cakeSize)
   const chocolateType = normalizeChocolateType(product.id, options.chocolateType)
   const poundAddon = normalizePoundAddon(product.id, options.poundAddon)
-  const sizePrice = product.usesSizeOptions ? product.sizePrices[cakeSize] || getCakeSizeOption(cakeSize).price : product.price
+  const cupcakePrice = getCupcakeFinishPrice(product.id, options.cupcakeFinish)
+  const sizePrice = cupcakePrice ?? (product.usesSizeOptions ? product.sizePrices[cakeSize] || getCakeSizeOption(cakeSize).price : product.price)
   const cacaoOption = CACAO_OPTIONS.find((item) => item.value === options.cacaoPercent)
   const chocolateOption = getChocolateTypeOption(chocolateType)
   const addonOption = getPoundAddonOption(poundAddon)
@@ -371,8 +454,7 @@ export function getReservationUnitPrice(
     (product.usesCacaoOptions ? cacaoOption?.extraPrice || 0 : 0) +
     (product.usesChocolateTypeOptions ? chocolateOption.extraPrice : 0) +
     (product.usesPoundAddonOptions ? addonOption.extraPrice : 0) +
-    getChocolateIcingSurcharge(product.id, options.chocolateIcingCount) +
-    getCupcakeFinishSurcharge(product.id, options.vanillaCreamCount, options.partyDecorationCount)
+    getChocolateIcingSurcharge(product.id, options.chocolateIcingCount)
   )
 }
 

@@ -11,11 +11,16 @@ const MARKET_CONFIG = {
     productLabels: {
       'pave-cake': '생초콜릿 파베 케이크',
       'vanilla-fresh-cream-cake': '바닐라 생크림 케이크',
-      'pound-cake': '초코 파운드 케이크',
-      'cupcake-dozen': '초코 컵케이크 1다스',
+      'buttercream-cake': '버터크림 케이크',
+      'pound-cake': '시그니처 갸또 쇼콜라',
+      'cupcake-half-dozen': '초콜릿 컵케이크',
+      'cupcake-dozen': '초콜릿 컵케이크',
       'choco-basque-cheesecake': '초코 바스크 치즈케이크',
       'pave-choco-basque-cheesecake': '파베초코 바스크 치즈케이크',
       'eiffel-tower-basque-cheesecake': '에펠탑 초콜릿 바스크 치즈케이크',
+      'brownie-cheesecake': '브라우니 치즈케이크',
+      'pave-brownie-cheesecake': '브라우니 치즈케이크 · 파베 초콜릿 on top',
+      'eiffel-tower-brownie-cheesecake': '브라우니 치즈케이크 · 에펠탑 마감',
       'fresh-lemon-cupcakes-4': '레몬 케이크 · 4개',
       'fresh-lemon-cupcakes-6': '레몬 케이크 · 6개',
       'fresh-lemon-cupcakes-8': '레몬 케이크 · 8개',
@@ -35,7 +40,7 @@ const MARKET_CONFIG = {
       milk: 'Milk chocolate',
     },
     poundAddonLabels: {
-      none: 'Basic pound cake',
+      none: 'Basic finish',
       'extra-chocolate': 'Extra chocolate',
       'vanilla-cream': 'Vanilla cream',
     },
@@ -111,11 +116,16 @@ const MARKET_CONFIG = {
     productLabels: {
       'pave-cake': 'Pave Chocolate Cake',
       'vanilla-fresh-cream-cake': 'vanilla fresh cream cake',
-      'pound-cake': 'Chocolate Pound Cake',
-      'cupcake-dozen': 'Chocolate Cupcakes (1 dozen)',
+      'buttercream-cake': 'Buttercream Cake',
+      'pound-cake': 'Signature Gâteau au Chocolat',
+      'cupcake-half-dozen': 'Chocolate Cupcakes',
+      'cupcake-dozen': 'Chocolate Cupcakes',
       'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
       'pave-choco-basque-cheesecake': 'Pave chocolate on top',
       'eiffel-tower-basque-cheesecake': 'Cake finishing with Eiffel Tower',
+      'brownie-cheesecake': 'Brownie Cheesecake',
+      'pave-brownie-cheesecake': 'Brownie Cheesecake · Pave chocolate on top',
+      'eiffel-tower-brownie-cheesecake': 'Brownie Cheesecake · Eiffel Tower finish',
       'fresh-lemon-cupcakes-4': 'Lemon Cake · 4 pieces',
       'fresh-lemon-cupcakes-6': 'Lemon Cake · 6 pieces',
       'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
@@ -134,7 +144,7 @@ const MARKET_CONFIG = {
       milk: 'Milk chocolate',
     },
     poundAddonLabels: {
-      none: 'Basic pound cake',
+      none: 'Basic finish',
       'extra-chocolate': 'Extra chocolate',
       'vanilla-cream': 'Vanilla cream',
     },
@@ -226,9 +236,9 @@ function getProductName(reservation, config) {
 }
 
 function getCakeSizeText(reservation, config) {
-  if (['pound-cake', 'cupcake-dozen'].includes(reservation.productId)) return '-'
+  if (['pound-cake', 'cupcake-half-dozen', 'cupcake-dozen'].includes(reservation.productId)) return '-'
   if (reservation.productId === 'vanilla-fresh-cream-cake') return config.sizeLabels[reservation.cakeSize] || config.sizeLabels['15cm']
-  if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'].includes(reservation.productId)) return config.sizeLabels['15cm']
+  if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake', 'brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'].includes(reservation.productId)) return config.sizeLabels['15cm']
   return config.sizeLabels[reservation.cakeSize] || reservation.cakeSize || '-'
 }
 
@@ -280,7 +290,16 @@ function getPoundAddonText(reservation, config) {
 }
 
 function getIcingMixText(reservation, config) {
-  if (reservation.productId === 'cupcake-dozen') {
+  if (reservation.productId === 'cupcake-half-dozen' || reservation.productId === 'cupcake-dozen') {
+    if (['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'].includes(reservation.cupcakeFinish)) {
+      const packSize = reservation.productId === 'cupcake-half-dozen' ? 6 : 12
+      const finishLabels = config.currency === 'AUD'
+        ? { basic: 'Basic', 'vanilla-fresh-cream': 'Vanilla Fresh Cream', 'chocolate-buttercream': 'Chocolate Buttercream' }
+        : { basic: '기본', 'vanilla-fresh-cream': '바닐라 생크림', 'chocolate-buttercream': '초콜릿 버터크림' }
+      return config.currency === 'AUD'
+        ? `Pack: ${packSize === 6 ? 'Half Dozen' : 'Dozen'} · ${packSize} cupcakes / Finish: ${finishLabels[reservation.cupcakeFinish]}`
+        : `구성: ${packSize === 6 ? '하프 더즌' : '더즌'} · ${packSize}개 / 마감: ${finishLabels[reservation.cupcakeFinish]}`
+    }
     const rawVanilla = Number(reservation.vanillaCreamCount || 0)
     const rawParty = Number(reservation.partyDecorationCount || 0)
     const vanilla = Number.isInteger(rawVanilla) ? Math.min(12, Math.max(0, rawVanilla)) : 0

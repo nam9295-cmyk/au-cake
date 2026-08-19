@@ -6,7 +6,7 @@ import basqueCheesecakeHeroImg from '../assets/basquecheesecake.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
-import { PickupLocationCard, SiteHeader } from '../components/SiteChrome'
+import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
 import { getAuCakeCatalogCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
@@ -25,6 +25,10 @@ const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'basque-cheesecake': '/products/details/chocolatiers-basque-cheesecake-quick-view.webp',
   'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
   'vanilla-fresh-cream-cake': '/products/details/vanillacake-quickview.webp',
+  'buttercream-cake': '',
+  'chocolate-cupcakes': '/products/chocolate-cupcakes-sydney.webp',
+  'signature-gateau-au-chocolat': '/products/details/chocolate-pound-cake-quick-view.webp',
+  'brownie-cheesecake': '/products/details/brownie-cheese-quick-view.webp',
 }
 
 export function HomePage({
@@ -53,7 +57,7 @@ export function HomePage({
   const heroCakes = [
     { image: basqueCheesecakeHeroImg, label: "Chocolatier's Basque", tagKey: 'mini', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
-    { image: heroCake3Img, label: 'Chocolate Pound Cake', tagKey: 'pound', className: 'hero-cake-three' },
+    { image: heroCake3Img, label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
     { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
     { image: getPublicCakePage('vanilla-fresh-cream-cake')?.imagePath, label: 'Vanilla Fresh Cream Cake', tagKey: 'vanilla', className: 'hero-cake-five' },
   ]
@@ -95,7 +99,7 @@ export function HomePage({
       name: getProductText('pave-cake', language).name,
       description: getProductText('pave-cake', language).description,
       features: getProductFeatures('pave-cake', language),
-      priceLabel: formatCurrency(PRODUCTS['pave-cake'].price),
+      priceLabel: formatCurrency(PRODUCTS['pave-cake']!.price),
       optionLabel: getProductText('pave-cake', language).priceNote,
     },
     {
@@ -324,7 +328,9 @@ export function HomePage({
                   }}
                 >
                   <span className="product-image-wrap">
-                    {card.isPhotoComingSoon ? null : (
+                    {card.isPhotoComingSoon ? (
+                      <VanillaFreshCreamCakeSilhouette productName={card.name} />
+                    ) : (
                       <img
                         src={card.imagePath}
                         alt={card.name}
@@ -427,7 +433,7 @@ export function HomePage({
           <div className="cake-information-grid">
             <article>
               <h3>{language === 'ko' ? '초콜릿이 중심인 레시피' : 'Chocolate-first recipes'}</h3>
-              <p>{language === 'ko' ? '파베 초콜릿 케이크, 파운드케이크와 컵케이크, 두 가지 초코 바스크 치즈케이크 중 선택할 수 있어요. 확정된 주문에 맞춰 소량으로 준비합니다.' : 'Choose from pave chocolate cake, pound cake or cupcakes, and two chocolate Basque cheesecake finishes. Each order is made in a small batch.'}</p>
+              <p>{language === 'ko' ? '파베, 바닐라 생크림, 버터크림, 초콜릿 컵케이크, 시그니처 갸또 쇼콜라, 레몬 케이크, 브라우니 치즈케이크를 주문할 수 있어요. 확정된 주문에 맞춰 소량으로 준비합니다.' : 'Choose from Pave, Vanilla Fresh Cream, Buttercream, Chocolate Cupcakes, Signature Gâteau au Chocolat, Lemon Cake and Brownie Cheesecake. Each order is made in a small batch.'}</p>
             </article>
             <article>
               <h3>{language === 'ko' ? '원하는 옵션 선택' : 'Choose your finish'}</h3>
@@ -460,7 +466,7 @@ export function HomePage({
                 </details>
                 <details>
                   <summary>{language === 'ko' ? '어떤 초콜릿 케이크를 주문할 수 있나요?' : 'Which chocolate cakes can I order?'}</summary>
-                  <p>{language === 'ko' ? '파베 초콜릿 케이크, 파운드케이크 또는 컵케이크 1다스, 초코 바스크와 파베초코 바스크 치즈케이크를 신청할 수 있습니다.' : 'You can request pave chocolate cake, pound cake or a dozen cupcakes, and chocolate Basque cheesecake with either a classic or pave chocolate finish.'}</p>
+                  <p>{language === 'ko' ? '파베 초콜릿 케이크, 바닐라 생크림 케이크, 버터크림 케이크, 초콜릿 컵케이크, 시그니처 갸또 쇼콜라, 레몬 케이크, 브라우니 치즈케이크를 신청할 수 있습니다.' : 'You can request Pave Chocolate Cake, Vanilla Fresh Cream Cake, Buttercream Cake, Chocolate Cupcakes, Signature Gâteau au Chocolat, Lemon Cake or Brownie Cheesecake.'}</p>
                 </details>
                 <details>
                   <summary>{language === 'ko' ? '시드니 배송이나 방문 구매가 가능한가요?' : 'Do you offer Sydney delivery or walk-in sales?'}</summary>

@@ -1,6 +1,7 @@
 import {
   DEFAULT_CAKE_SIZE,
   DEFAULT_CHOCOLATE_TYPE,
+  DEFAULT_CUPCAKE_FINISH,
   DEFAULT_POUND_ADDON,
   DEFAULT_VANILLA_CAKE_FLAVOR,
   DEFAULT_VANILLA_CAKE_POINT_COLOR,
@@ -9,6 +10,7 @@ import {
   getReservationPrice,
   normalizeCakeSize,
   normalizeChocolateIcingCount,
+  normalizeCupcakeFinish,
   normalizeCupcakeFinishCounts,
   normalizePoundAddon,
   normalizeReservationChocolateType,
@@ -16,6 +18,7 @@ import {
   normalizeVanillaCakePointColor,
   normalizeVanillaCakeSheet,
   isVanillaFreshCreamCakeProduct,
+  isCupcakeProduct,
 } from './constants.js'
 import {
   getAuCakeCatalogCards,
@@ -23,9 +26,11 @@ import {
   type CakeCatalogId,
 } from './cake-catalog.js'
 import type { Language } from './i18n.js'
+import { getPublicCakePage } from './public-content.js'
 import type {
   CakeSize,
   ChocolateType,
+  CupcakeFinish,
   PoundAddon,
   ProductId,
   VanillaCakeFlavor,
@@ -57,12 +62,19 @@ export type CakeDetailImageKey =
   | 'lemon-previous'
   | 'vanilla-side'
   | 'vanilla-quick-view'
+  | 'signature-gateau-side'
+  | 'signature-gateau-quick-view'
+  | 'signature-gateau-previous'
+  | 'signature-gateau-hero'
+  | 'brownie-side'
+  | 'brownie-quick-view'
 
 export type CakeDetailSelection = {
   productId: ProductId
   cakeSize: CakeSize
   chocolateType: ChocolateType
   poundAddon: PoundAddon
+  cupcakeFinish: CupcakeFinish
   chocolateIcingCount: number
   vanillaCreamCount: number
   partyDecorationCount: number
@@ -84,6 +96,8 @@ export type CakeDetailData = {
   defaultProductId: ProductId
   gallery: readonly CakeDetailImageKey[]
   isPhotoComingSoon: boolean
+  isLegacy?: boolean
+  legacyLinks?: readonly { slug: string; name: string }[]
   trustPoints: readonly string[]
   accordions: readonly { title: string; body: string }[]
 }
@@ -94,7 +108,34 @@ const DETAIL_GALLERIES: Record<CakeCatalogId, readonly CakeDetailImageKey[]> = {
   cheesecake: ['cheesecake-side', 'cheesecake-quick-view', 'cheesecake-previous', 'cheesecake-hero'],
   'fresh-lemon-cupcakes': ['lemon-side', 'lemon-quick-view', 'lemon-previous', 'lemon-hero'],
   'vanilla-fresh-cream': ['vanilla-side', 'vanilla-quick-view'],
+  buttercream: [],
+  cupcake: ['cupcake-side', 'cupcake-hero'],
+  'signature-gateau': ['signature-gateau-side', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'],
+  'brownie-cheesecake': ['brownie-side', 'brownie-quick-view'],
 }
+
+const LEGACY_CAKE_DETAILS = {
+  'chocolate-pound-cake-and-cupcakes': {
+    id: 'pound-cupcake' as const,
+    links: {
+      en: [
+        { slug: 'signature-gateau-au-chocolat', name: 'Signature Gâteau au Chocolat' },
+        { slug: 'chocolate-cupcakes', name: 'Chocolate Cupcakes' },
+      ],
+      ko: [
+        { slug: 'signature-gateau-au-chocolat', name: '시그니처 갸또 쇼콜라' },
+        { slug: 'chocolate-cupcakes', name: '초콜릿 컵케이크' },
+      ],
+    },
+  },
+  'chocolatiers-basque-cheesecake': {
+    id: 'cheesecake' as const,
+    links: {
+      en: [{ slug: 'brownie-cheesecake', name: 'Brownie Cheesecake' }],
+      ko: [{ slug: 'brownie-cheesecake', name: '브라우니 치즈케이크' }],
+    },
+  },
+} as const
 
 const DETAIL_OPERATION_COPY: Record<Language, {
   trustPoints: readonly string[]
@@ -143,7 +184,36 @@ function normalizeQuantity(value: number) {
 
 export function getCakeDetailBySlug(slug: string, language: Language): CakeDetailData | null {
   const entry = getCakeCatalogEntryBySlug(slug)
-  if (!entry) return null
+  if (!entry) {
+    const legacy = LEGACY_CAKE_DETAILS[slug as keyof typeof LEGACY_CAKE_DETAILS]
+    const publicPage = getPublicCakePage(slug)
+    if (!legacy || !publicPage) return null
+    const isGroupedCollection = legacy.id === 'pound-cupcake'
+    const operations = DETAIL_OPERATION_COPY[language]
+    return {
+      id: legacy.id,
+      slug,
+      name: language === 'ko'
+        ? isGroupedCollection ? '초코 파운드케이크 & 컵케이크' : '쇼콜라티에 바스크 치즈케이크'
+        : publicPage.name,
+      description: language === 'ko'
+        ? isGroupedCollection
+          ? '이 상품은 두 개의 독립 상품으로 나뉘었습니다.'
+          : '이 상품은 현재 케이크 카탈로그에서 판매하지 않습니다.'
+        : publicPage.description,
+      features: [],
+      optionLabel: '',
+      priceLabel: '',
+      productIds: [],
+      defaultProductId: isGroupedCollection ? 'pound-cake' : 'choco-basque-cheesecake',
+      gallery: DETAIL_GALLERIES[legacy.id],
+      isPhotoComingSoon: false,
+      isLegacy: true,
+      legacyLinks: legacy.links[language],
+      trustPoints: operations.trustPoints,
+      accordions: operations.accordions,
+    }
+  }
   const card = getAuCakeCatalogCards(language).find((candidate) => candidate.slug === slug)
   if (!card) return null
   const operations = DETAIL_OPERATION_COPY[language]
@@ -173,6 +243,7 @@ export function createCakeDetailSelection(slug: string): CakeDetailSelection | n
     cakeSize: DEFAULT_CAKE_SIZE,
     chocolateType: DEFAULT_CHOCOLATE_TYPE,
     poundAddon: DEFAULT_POUND_ADDON,
+    cupcakeFinish: DEFAULT_CUPCAKE_FINISH,
     chocolateIcingCount: 0,
     vanillaCreamCount: 0,
     partyDecorationCount: 0,
@@ -201,7 +272,10 @@ export function selectCakeDetailProduct(
     poundAddon,
     chocolateType: normalizeReservationChocolateType(product.id, selection.chocolateType, poundAddon),
     chocolateIcingCount: normalizeChocolateIcingCount(product.id, selection.chocolateIcingCount),
-    ...cupcakeCounts,
+    ...(isCupcakeProduct(product.id)
+      ? { vanillaCreamCount: 0, partyDecorationCount: 0 }
+      : cupcakeCounts),
+    cupcakeFinish: normalizeCupcakeFinish(product.id, selection.cupcakeFinish),
     vanillaCakeSheet: normalizeVanillaCakeSheet(product.id, selection.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeVanillaCakeFlavor(product.id, selection.vanillaCakeFlavor),
     ...(isVanillaFreshCreamCakeProduct(product.id)
@@ -216,6 +290,7 @@ export function getCakeDetailSelectionTotal(selection: CakeDetailSelection) {
     cakeSize: selection.cakeSize,
     chocolateType: selection.chocolateType,
     poundAddon: selection.poundAddon,
+    cupcakeFinish: selection.cupcakeFinish,
     chocolateIcingCount: selection.chocolateIcingCount,
     vanillaCreamCount: selection.vanillaCreamCount,
     partyDecorationCount: selection.partyDecorationCount,

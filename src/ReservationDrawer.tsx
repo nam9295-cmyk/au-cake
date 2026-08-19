@@ -8,6 +8,7 @@ import {
   CACAO_OPTIONS,
   CHOCOLATE_TYPE_OPTIONS,
   CUPCAKE_PACK_SIZE,
+  CUPCAKE_FINISH_OPTIONS,
   MAX_RESERVATION_QUANTITY,
   PAYMENT_STATUSES,
   POUND_ADDON_OPTIONS,
@@ -15,16 +16,19 @@ import {
   RESERVATION_STATUSES,
   getFreshLemonCupcakePackSize,
   getProductById,
-  isCupcakeDozenProduct,
+  isCupcakeProduct,
   isFreshLemonCupcakeProduct,
   usesReservationChocolateType,
 } from './lib/constants'
+import { isActiveCakeOrderProductId } from '../appwrite-functions/reservation-api/src/active-cake-products.js'
+import { marketConfig } from './lib/market'
 import { getOptionalReservationPricingAudit } from './lib/review-coupon-client'
 import { updateReservation } from './lib/repository'
 import type {
   CacaoPercent,
   CakeSize,
   ChocolateType,
+  CupcakeFinish,
   PoundAddon,
   ProductId,
   Reservation,
@@ -49,6 +53,7 @@ export function ReservationDrawer({
   const [cakeSize, setCakeSize] = useState<CakeSize>(reservation.cakeSize)
   const [chocolateType, setChocolateType] = useState<ChocolateType>(reservation.chocolateType)
   const [poundAddon, setPoundAddon] = useState<PoundAddon>(reservation.poundAddon)
+  const [cupcakeFinish, setCupcakeFinish] = useState<CupcakeFinish>(reservation.cupcakeFinish || 'basic')
   const [chocolateIcingCount, setChocolateIcingCount] = useState(reservation.chocolateIcingCount || 0)
   const [vanillaCreamCount, setVanillaCreamCount] = useState(reservation.vanillaCreamCount || 0)
   const [partyDecorationCount, setPartyDecorationCount] = useState(reservation.partyDecorationCount || 0)
@@ -62,6 +67,7 @@ export function ReservationDrawer({
   const hasOneTimeCoupon = Boolean(reservation.reviewCouponId)
   const isVersionedOrder = Array.isArray(reservation.orderLines)
   const isMultiLineOrder = (reservation.orderLines?.length || 0) > 1
+  const isLegacyCupcake = reservation.productId === 'cupcake-dozen' && reservation.cupcakeFinish === undefined
   const reservationPricingAudit = getOptionalReservationPricingAudit(reservation)
 
   const draftUpdate = buildAdminReservationUpdate(reservation, {
@@ -69,6 +75,7 @@ export function ReservationDrawer({
     cakeSize,
     chocolateType,
     poundAddon,
+    cupcakeFinish,
     chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,
@@ -152,7 +159,9 @@ export function ReservationDrawer({
             <label>
               제품
               <select value={productId} onChange={(event) => setProductId(event.target.value as ProductId)}>
-                {Object.values(PRODUCTS).filter((product) => product.id !== 'fresh-lemon-cupcakes-4' || product.id === reservation.productId).map((product) => (
+                {Object.values(PRODUCTS).filter((product) => (
+                  marketConfig.market !== 'AU' || isActiveCakeOrderProductId(product.id) || product.id === reservation.productId
+                )).map((product) => (
                   <option value={product.id} key={product.id}>{product.name}</option>
                 ))}
               </select>
@@ -201,7 +210,15 @@ export function ReservationDrawer({
                 />
               </label>
             )}
-            {isCupcakeDozenProduct(draftUpdate.productId) && (
+            {isCupcakeProduct(draftUpdate.productId) && !isLegacyCupcake && (
+              <label>
+                컵케이크 마감
+                <select value={cupcakeFinish} onChange={(event) => setCupcakeFinish(event.target.value as CupcakeFinish)}>
+                  {CUPCAKE_FINISH_OPTIONS.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
+                </select>
+              </label>
+            )}
+            {draftUpdate.productId === 'cupcake-dozen' && isLegacyCupcake && (
               <>
                 <label>
                   바닐라 크림 개수 (+AUD 0.50)

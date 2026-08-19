@@ -5,17 +5,18 @@ import {
   formatVanillaCakeFlavor,
 
   getFreshLemonCupcakePackSize,
+  getCupcakePackSize,
   getLemonIcingCount,
   getProductById,
   isCheesecakeProduct,
-  isCupcakeDozenProduct,
+  isCupcakeProduct,
   isFreshLemonCupcakeProduct,
   isVanillaFreshCreamCakeProduct,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
   usesReservationChocolateType,
 } from '../lib/constants'
-import { cakeCopy, formatChocolateTypeText, formatPoundAddonText, formatVanillaCakePointColorText, getProductText, type Language } from '../lib/i18n'
+import { cakeCopy, formatChocolateTypeText, formatCupcakeFinishText, formatPoundAddonText, formatVanillaCakePointColorText, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 import { formatCurrency } from '../lib/utils'
 import type { CakeOrderLineRequest, CakeOrderLineResult, PublicReservation, Reservation } from '../lib/types'
@@ -25,7 +26,7 @@ type OrderAwareReservation = (Reservation | PublicReservation) & {
 }
 
 export function ProductDetailRows({ reservation, language = 'ko' }: {
-  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor'>
+  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'cupcakeFinish' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor'>
   language?: Language
 }) {
   const product = getProductById(reservation.productId)
@@ -67,14 +68,27 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
           </dd>
         </div>
       )}
-      {isCupcakeDozenProduct(product.id) && (
+      {isCupcakeProduct(product.id) && (reservation.cupcakeFinish !== undefined ? (
+        <>
+          <div>
+            <dt>{language === 'ko' ? '구성' : 'Pack'}</dt>
+            <dd>{language === 'ko'
+              ? `${getCupcakePackSize(product.id) === 6 ? '하프 더즌' : '더즌'} · ${getCupcakePackSize(product.id)}개`
+              : `${getCupcakePackSize(product.id) === 6 ? 'Half Dozen' : 'Dozen'} · ${getCupcakePackSize(product.id)} cupcakes`}</dd>
+          </div>
+          <div>
+            <dt>{language === 'ko' ? '마감' : 'Finish'}</dt>
+            <dd>{formatCupcakeFinishText(reservation.cupcakeFinish, language)}</dd>
+          </div>
+        </>
+      ) : (
         <div>
           <dt>{language === 'ko' ? '마감 구성' : 'Finishing mix'}</dt>
           <dd>{language === 'ko'
             ? `기본 ${basicCupcakeCount}개 / 바닐라 크림 ${cupcakeFinishCounts.vanillaCreamCount}개 / 파티용 데코 ${cupcakeFinishCounts.partyDecorationCount}개`
             : `Basic ${basicCupcakeCount} / Vanilla cream ${cupcakeFinishCounts.vanillaCreamCount} / Party decoration ${cupcakeFinishCounts.partyDecorationCount}`}</dd>
         </div>
-      )}
+      ))}
       {(product.usesSizeOptions || isCheesecakeProduct(product.id)) && (
         <div>
           <dt>{copy.size}</dt>

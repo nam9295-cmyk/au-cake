@@ -250,12 +250,14 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     orderLines: [
       {
         productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
         lineKey: 'private-key', unitPriceCents: 1, customerName: 'Private', promoCode: 'forged', cacaoPercent: '100',
       },
       {
-        productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1,
         totalPriceCents: 1, pickupDate: 'private', requestNote: 'private',
@@ -270,11 +272,13 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     orderLines: [
       {
         productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
       },
       {
-        productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1,
       },
@@ -378,12 +382,12 @@ test('multi-line request projection requires a UUID and strips all cart metadata
 function multiOrderResponse(overrides: Record<string, unknown> = {}) {
   const orderLines = [
     {
-      productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+      productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
       vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
       quantity: 2, unitPriceCents: 7500, subtotalCents: 15000, discountPercent: 0, discountCents: 0, totalPriceCents: 15000,
     },
     {
-      productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+      productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
       vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
       quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, discountPercent: 0, discountCents: 0, totalPriceCents: 5500,
     },
@@ -391,6 +395,7 @@ function multiOrderResponse(overrides: Record<string, unknown> = {}) {
   return {
     ...reservation({
       productId: 'pave-cake', quantity: 2, chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+      cupcakeFinish: 'basic',
       vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
       totalPrice: 205, totalPriceCents: 20500, subtotalCents: 20500,
       discountPercent: 0, discountCents: 0, appliedPromoCodeLast4: undefined, promotionKind: 'none',
@@ -493,12 +498,12 @@ test('multi-line response parser allowlists authoritative lines and validates ev
 
 test('multi-line response accepts exact cents represented by authoritative division', () => {
   const pound = {
-    productId: 'pound-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+    productId: 'pound-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
     vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
     quantity: 1, unitPriceCents: 4500, subtotalCents: 4500, discountPercent: 5, discountCents: 225, totalPriceCents: 4275,
   }
   const lemon = {
-    productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 2,
+    productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 2,
     vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
     quantity: 1, unitPriceCents: 3700, subtotalCents: 3700, discountPercent: 5, discountCents: 185, totalPriceCents: 3515,
   }
@@ -554,12 +559,12 @@ test('multi-line response rejects duplicate canonical lines and shifted discount
 
 test('multi-line response validates static discount against eligible basis rather than whole subtotal', () => {
   const lemon = {
-    productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+    productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
     vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
     quantity: 1, unitPriceCents: 3600, subtotalCents: 3600, discountPercent: 10, discountCents: 360, totalPriceCents: 3240,
   }
   const pave = {
-    productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0,
+    productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
     vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
     quantity: 1, unitPriceCents: 7500, subtotalCents: 7500, discountPercent: 0, discountCents: 0, totalPriceCents: 7500,
   }

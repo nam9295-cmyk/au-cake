@@ -1,6 +1,6 @@
 import { Minus, Plus, Trash2 } from 'lucide-react'
 import {
-  CUPCAKE_PACK_SIZE,
+  CUPCAKE_FINISH_OPTIONS,
   MAX_RESERVATION_QUANTITY,
   formatCakeSizeLabel,
   formatVanillaCakeFlavor,
@@ -9,11 +9,11 @@ import {
   getLemonIcingCount,
   getProductById,
   isCheesecakeProduct,
-  isCupcakeDozenProduct,
+  getCupcakePackSize,
+  isCupcakeProduct,
   isFreshLemonCupcakeProduct,
   isVanillaFreshCreamCakeProduct,
   normalizeChocolateIcingCount,
-  normalizeCupcakeFinishCounts,
   usesReservationChocolateType,
 } from './lib/constants'
 import { getCakeDetailSelectionTotal } from './lib/cake-detail'
@@ -42,12 +42,8 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
   const selection = line.selection
   const product = getProductById(selection.productId)
   const copy = cakeCopy(language)
-  const cupcakeFinishes = normalizeCupcakeFinishCounts(
-    product.id,
-    selection.vanillaCreamCount,
-    selection.partyDecorationCount,
-  )
-  const basicCupcakeCount = CUPCAKE_PACK_SIZE - cupcakeFinishes.vanillaCreamCount - cupcakeFinishes.partyDecorationCount
+  const cupcakePackSize = getCupcakePackSize(product.id)
+  const cupcakeFinish = CUPCAKE_FINISH_OPTIONS.find((option) => option.value === selection.cupcakeFinish) || CUPCAKE_FINISH_OPTIONS[0]
   const chocolateIcingCount = normalizeChocolateIcingCount(product.id, selection.chocolateIcingCount)
 
   return (
@@ -98,13 +94,19 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
           </div>
         </>
       )}
-      {isCupcakeDozenProduct(product.id) && (
-        <div>
-          <dt>{language === 'ko' ? '마감 구성' : 'Finishing mix'}</dt>
-          <dd>{language === 'ko'
-            ? `기본 ${basicCupcakeCount}개 / 바닐라 크림 ${cupcakeFinishes.vanillaCreamCount}개 / 파티용 데코 ${cupcakeFinishes.partyDecorationCount}개`
-            : `Basic ${basicCupcakeCount} / Vanilla cream ${cupcakeFinishes.vanillaCreamCount} / Party decoration ${cupcakeFinishes.partyDecorationCount}`}</dd>
-        </div>
+      {isCupcakeProduct(product.id) && cupcakePackSize && (
+        <>
+          <div>
+            <dt>{language === 'ko' ? '구성' : 'Pack Size'}</dt>
+            <dd>{language === 'ko'
+              ? `${cupcakePackSize === 6 ? '하프 더즌' : '더즌'} · ${cupcakePackSize}개`
+              : `${cupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${cupcakePackSize} cupcakes`}</dd>
+          </div>
+          <div>
+            <dt>{language === 'ko' ? '마감' : 'Finish'}</dt>
+            <dd>{language === 'ko' ? cupcakeFinish.labelKo : cupcakeFinish.label}</dd>
+          </div>
+        </>
       )}
     </dl>
   )

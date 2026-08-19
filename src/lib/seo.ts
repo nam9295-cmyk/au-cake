@@ -3,6 +3,7 @@ import { getAuCakeCatalog } from './cake-catalog.js'
 import {
   getPublicCakePage,
   getAuPublicContent,
+  isLegacyCakePublicPage,
   getPublicRoutePage,
   SITE_URL,
 } from './public-content.js'
@@ -135,7 +136,7 @@ const publicSeo: Record<string, SeoConfig> = {
   },
 }
 
-function productFromPublicPage(pathname: string, page: PublicCakePage): SeoConfig {
+function productFromPublicPage(pathname: string, page: PublicCakePage, noindex = false): SeoConfig {
   const image = page.imagePath ? `${SITE_URL}${page.imagePath}` : undefined
   const imageAttributes = image
     ? { image, imageType: page.imageType, imageWidth: page.imageWidth, imageHeight: page.imageHeight }
@@ -147,6 +148,7 @@ function productFromPublicPage(pathname: string, page: PublicCakePage): SeoConfi
       title: page.title,
       description: page.description,
       canonical: `${SITE_URL}${pathname}`,
+      ...(noindex ? { noindex: true } : {}),
       ogType: 'website',
       ...imageAttributes,
       structuredData: [
@@ -183,6 +185,7 @@ function productFromPublicPage(pathname: string, page: PublicCakePage): SeoConfi
     title: page.title,
     description: page.description,
     canonical: `${SITE_URL}${pathname}`,
+    ...(noindex ? { noindex: true } : {}),
     ogType: 'product',
     ...imageAttributes,
     structuredData: [product, breadcrumb],
@@ -193,7 +196,7 @@ function getCakeDetailSeo(pathname: string): SeoConfig | null {
   const match = /^\/cakes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(pathname)
   if (!match) return null
   const page = getPublicCakePage(match[1])
-  return page ? productFromPublicPage(pathname, page) : null
+  return page ? productFromPublicPage(pathname, page, isLegacyCakePublicPage(match[1])) : null
 }
 
 const privateSeo: Record<string, SeoConfig> = {

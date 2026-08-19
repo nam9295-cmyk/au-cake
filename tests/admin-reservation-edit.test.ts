@@ -80,11 +80,12 @@ test('admin versioned single-line orders preserve authoritative pricing and reje
   assert.equal(scheduleOnly.pickupDate, '2026-07-24')
 })
 
-test('admin reservation edits recalculate cupcake per-piece finishes and clear retired chocolate options', () => {
+test('admin reservation edits use whole-box Cupcake finish prices and clear retired count options', () => {
   const update = buildAdminReservationUpdate(baseReservation, {
     productId: 'cupcake-dozen',
     poundAddon: 'extra-chocolate',
     chocolateType: 'milk',
+    cupcakeFinish: 'chocolate-buttercream',
     vanillaCreamCount: 4,
     partyDecorationCount: 3,
     quantity: 2,
@@ -100,32 +101,51 @@ test('admin reservation edits recalculate cupcake per-piece finishes and clear r
     cakeSize: '15cm',
     chocolateType: 'dark',
     poundAddon: 'none',
+    cupcakeFinish: 'chocolate-buttercream',
     chocolateIcingCount: 0,
-    vanillaCreamCount: 4,
-    partyDecorationCount: 3,
+    vanillaCreamCount: 0,
+    partyDecorationCount: 0,
     quantity: 2,
     pickupDate: '2026-07-22',
     pickupTime: '13:30',
     cacaoPercent: '기본',
     status: '예약확정',
     paymentStatus: '입금대기',
-    totalPrice: 120,
-    totalPriceCents: 12000,
+    totalPrice: 146,
+    totalPriceCents: 14600,
     adminMemo: 'Changed by Jenny request',
   })
 })
 
-test('admin cupcake finish counts clamp to twelve pieces and recalculate', () => {
+test('admin Cupcake Half Dozen price comes from the selected whole-box finish', () => {
   const update = buildAdminReservationUpdate(baseReservation, {
-    productId: 'cupcake-dozen',
-    vanillaCreamCount: 9,
-    partyDecorationCount: 8,
+    productId: 'cupcake-half-dozen',
+    cupcakeFinish: 'vanilla-fresh-cream',
   })
 
-  assert.equal(update.vanillaCreamCount, 9)
+  assert.equal(update.cupcakeFinish, 'vanilla-fresh-cream')
+  assert.equal(update.vanillaCreamCount, 0)
+  assert.equal(update.partyDecorationCount, 0)
+  assert.equal(update.totalPrice, 36)
+  assert.equal(update.totalPriceCents, 3600)
+})
+
+test('admin preserves legacy cupcake count pricing for historical reservations', () => {
+  const legacy = {
+    ...baseReservation,
+    productId: 'cupcake-dozen' as const,
+    vanillaCreamCount: 4,
+    partyDecorationCount: 3,
+    totalPrice: 60,
+    totalPriceCents: 6000,
+  }
+  const update = buildAdminReservationUpdate(legacy, { pickupTime: '13:30' })
+
+  assert.equal(update.cupcakeFinish, undefined)
+  assert.equal(update.vanillaCreamCount, 4)
   assert.equal(update.partyDecorationCount, 3)
-  assert.equal(update.totalPrice, 62.5)
-  assert.equal(update.totalPriceCents, 6250)
+  assert.equal(update.totalPrice, 60)
+  assert.equal(update.totalPriceCents, 6000)
 })
 
 test('admin reservation edits normalise irrelevant options for selected product', () => {

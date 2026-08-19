@@ -40,7 +40,7 @@ test('calendar cake events expose schedule details without customer PII or inter
     kind: 'cake',
     date: '2026-07-25',
     time: '10:00',
-    label: 'Pound cake · Extra chocolate ×2',
+    label: 'Signature Gâteau au Chocolat · Extra chocolate ×2',
     status: 'Confirmed',
     isCancelled: false,
   })
@@ -124,7 +124,7 @@ test('calendar treats legacy Lemon Cake reservations without icing count as all 
   assert.equal(event.label, 'Lemon Cake · 4 pieces · Finishing: Fresh lemon zest icing 4 / Dark couverture chocolate 0 ×1')
 })
 
-test('calendar cupcake events show vanilla cream and party decoration counts without chocolate finish', () => {
+test('calendar retains vanilla cream and party decoration counts for legacy cupcake events', () => {
   const event = sanitizeCakeCalendarEvent({
     $id: 'cupcake-dozen-id',
     pickupDate: '2026-08-03',
@@ -139,6 +139,15 @@ test('calendar cupcake events show vanilla cream and party decoration counts wit
 
   assert.equal(event.label, 'Cupcakes · Finishing: Basic 5 / Vanilla cream 4 / Party decoration 3 ×2')
   assert.equal(event.label.includes('Extra chocolate'), false)
+})
+
+test('calendar cupcake events show current pack and whole-box finish', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'cupcake-half-id', pickupDate: '2026-08-03', pickupTime: '14:00',
+    productId: 'cupcake-half-dozen', cupcakeFinish: 'vanilla-fresh-cream', quantity: 2, status: '예약확정',
+  })
+
+  assert.equal(event.label, 'Chocolate Cupcakes · Pack: Half Dozen · 6 cupcakes · Finish: Vanilla Fresh Cream ×2')
 })
 
 test('calendar treats Appwrite null order line fields as a legacy single-line reservation', () => {
@@ -174,7 +183,7 @@ test('calendar cake event label includes every validated stored order line', () 
     appliedPromoCodeLast4: null,
   })
 
-  assert.equal(event.label, 'Pound cake · Basic finish ×1 / Pave cake · 6" | serves 8 · Dark chocolate ×2')
+  assert.equal(event.label, 'Signature Gâteau au Chocolat · Basic finish ×1 / Pave cake · 6" | serves 8 · Dark chocolate ×2')
   assert.equal(JSON.stringify(event).includes('orderLinesJson'), false)
 })
 

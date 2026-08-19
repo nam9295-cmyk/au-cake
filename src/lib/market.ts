@@ -88,14 +88,14 @@ type MarketConfig = {
   currencyOptions: Intl.NumberFormatOptions
   phoneRegex: RegExp
   reservationCodePrefix: string
-  products: Record<Exclude<ProductId, 'vanilla-fresh-cream-cake'>, ProductConfig> & Partial<Record<ProductId, ProductConfig>>
+  products: Partial<Record<ProductId, ProductConfig>>
   cakeSizeOptions: CakeSizeConfig[]
   cacaoOptions: CacaoConfig[]
   chocolateTypeOptions: ChocolateTypeConfig[]
   poundAddonOptions: PoundAddonConfig[]
   defaultSettings: StoreSettings
   copy: MarketCopy
-  productCardFeatures: Record<Exclude<ProductId, 'vanilla-fresh-cream-cake'>, string[]> & Partial<Record<ProductId, string[]>>
+  productCardFeatures: Partial<Record<ProductId, string[]>>
   guideSteps: Array<{ title: string; text: string }>
   csvHeaders: string[]
   smsLabels: {
@@ -383,9 +383,21 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         usesPoundAddonOptions: false,
         sizePrices: { '15cm': 75, '19cm': 98, '22cm': 139 },
       },
+      'buttercream-cake': {
+        id: 'buttercream-cake',
+        name: 'Buttercream Cake',
+        description: 'A Buttercream Cake finished with Chocolate Buttercream.',
+        price: 75,
+        priceNote: 'Choose a size · Chocolate Buttercream included',
+        usesCacaoOptions: false,
+        usesSizeOptions: true,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: { '15cm': 75, '19cm': 98, '22cm': 139 },
+      },
       'pound-cake': {
         id: 'pound-cake',
-        name: 'Chocolate Pound Cake',
+        name: 'Signature Gâteau au Chocolat',
         description: 'A rich rectangular gateau chocolat finished with dark chocolate. Simple, compact and easy to share or gift.',
         price: 45,
         priceNote: 'Choose one finish option',
@@ -397,10 +409,22 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       },
       'cupcake-dozen': {
         id: 'cupcake-dozen',
-        name: 'Chocolate Cupcakes (1 dozen)',
-        description: 'A dozen small-batch chocolate cupcakes for sharing, parties and easy gifting.',
+        name: 'Chocolate Cupcakes',
+        description: 'Chocolate cupcakes with one finish across the whole box.',
         price: 55,
-        priceNote: 'Vanilla cream +AUD 0.50 each · Party decoration +AUD 1.00 each',
+        priceNote: 'Choose a dozen and one finish for the whole box',
+        usesCacaoOptions: false,
+        usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: {},
+      },
+      'cupcake-half-dozen': {
+        id: 'cupcake-half-dozen',
+        name: 'Chocolate Cupcakes',
+        description: 'Chocolate cupcakes with one finish across the whole box.',
+        price: 31,
+        priceNote: 'Choose a half dozen and one finish for the whole box',
         usesCacaoOptions: false,
         usesSizeOptions: false,
         usesChocolateTypeOptions: false,
@@ -435,6 +459,42 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         id: 'eiffel-tower-basque-cheesecake',
         name: 'Cake finishing with Eiffel Tower',
         description: `Our ${AU_CAKE_SIZE_LABELS['15cm']} Chocolatier’s Basque cheesecake covered with pave chocolate and finished with one Eiffel Tower chocolate.`,
+        price: 70,
+        priceNote: AU_CAKE_SIZE_LABELS['15cm'],
+        usesCacaoOptions: false,
+        usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: {},
+      },
+      'brownie-cheesecake': {
+        id: 'brownie-cheesecake',
+        name: 'Brownie Cheesecake',
+        description: `A ${AU_CAKE_SIZE_LABELS['15cm']} Brownie Cheesecake.`,
+        price: 55,
+        priceNote: AU_CAKE_SIZE_LABELS['15cm'],
+        usesCacaoOptions: false,
+        usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: {},
+      },
+      'pave-brownie-cheesecake': {
+        id: 'pave-brownie-cheesecake',
+        name: 'Brownie Cheesecake · Pave chocolate on top',
+        description: `A ${AU_CAKE_SIZE_LABELS['15cm']} Brownie Cheesecake with pave chocolate on top.`,
+        price: 65,
+        priceNote: AU_CAKE_SIZE_LABELS['15cm'],
+        usesCacaoOptions: false,
+        usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: {},
+      },
+      'eiffel-tower-brownie-cheesecake': {
+        id: 'eiffel-tower-brownie-cheesecake',
+        name: 'Brownie Cheesecake · Eiffel Tower finish',
+        description: `A ${AU_CAKE_SIZE_LABELS['15cm']} Brownie Cheesecake with a full pave chocolate finish and one Eiffel Tower chocolate.`,
         price: 70,
         priceNote: AU_CAKE_SIZE_LABELS['15cm'],
         usesCacaoOptions: false,
@@ -526,11 +586,16 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     productCardFeatures: {
       'pave-cake': ['Layered chocolate sponge and pave ganache', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), 'Dark chocolate only'],
       'vanilla-fresh-cream-cake': ['Chocolate cake sheet only', 'Triple berry or Nutella chocolate chip', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
-      'pound-cake': ['Rectangular gateau chocolat', 'Fixed pound cake size', 'Basic, extra chocolate, or vanilla cream finish'],
-      'cupcake-dozen': ['12 cupcakes in one dozen', 'Vanilla cream +AUD 0.50 each', 'Party decoration +AUD 1.00 each'],
+      'buttercream-cake': ['Chocolate Buttercream included', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), 'Choose a size'],
+      'pound-cake': ['Rectangular gâteau au chocolat', 'Fixed gâteau size', 'Basic, extra chocolate, or vanilla cream finish'],
+      'cupcake-half-dozen': ['Half dozen · 6 cupcakes', 'One finish for the whole box', 'Basic, Vanilla Fresh Cream, or Chocolate Buttercream'],
+      'cupcake-dozen': ['Dozen · 12 cupcakes', 'One finish for the whole box', 'Basic, Vanilla Fresh Cream, or Chocolate Buttercream'],
       'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], "Chocolatier's Basque cheesecake", 'Smooth, rich centre'],
       'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Pave chocolate on top', '+AUD 10 finish upgrade'],
       'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Fully covered with pave chocolate', '+AUD 15 finish upgrade'],
+      'brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Basic finish · AUD 55', 'Three finishing options'],
+      'pave-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Pave chocolate on top', '+AUD 10 finish upgrade'],
+      'eiffel-tower-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Fully covered with pave chocolate', '+AUD 15 finish upgrade'],
       'fresh-lemon-cupcakes-4': ['4 pieces', 'Fresh lemon cream', 'Floral decoration included'],
       'fresh-lemon-cupcakes-6': ['6 pieces', 'Fresh lemon cream', 'Floral decoration included'],
       'fresh-lemon-cupcakes-8': ['8 pieces', 'Fresh lemon cream', 'Floral decoration included'],

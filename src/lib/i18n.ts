@@ -1,5 +1,5 @@
 import { VANILLA_CAKE_POINT_COLOR_OPTIONS } from './constants.js'
-import type { CakeSize, ChocolateType, PoundAddon, ProductId, VanillaCakePointColor } from './types.js'
+import type { CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, VanillaCakePointColor } from './types.js'
 import { AU_CAKE_SIZE_LABELS, marketConfig } from './market.js'
 
 export type Language = 'en' | 'ko'
@@ -35,15 +35,25 @@ const koProducts: Record<ProductId, ProductText> = {
     description: '초코 케이크 시트에 바닐라 생크림을 채우고, 트리플베리 또는 누텔라 초코칩 맛을 선택할 수 있어요.',
     priceNote: '사이즈와 맛 선택 · 초코 케이크 시트 고정',
   },
+  'buttercream-cake': {
+    name: '버터크림 케이크',
+    description: '초콜릿 버터크림으로 완성한 케이크예요.',
+    priceNote: '사이즈 선택 · 초콜릿 버터크림 포함',
+  },
   'pound-cake': {
-    name: '초코 파운드 케이크',
+    name: '시그니처 갸또 쇼콜라',
     description: '묵직하게 구운 직사각형 초코 케이크에 다크초콜릿을 올렸어요. 작게 나눠 먹기 좋고 선물용으로도 편합니다.',
     priceNote: '마감 옵션 선택 가능',
   },
   'cupcake-dozen': {
-    name: '초코 컵케이크 1다스',
-    description: '나눠 먹기 편한 초콜릿 컵케이크 12개 세트예요. 파티, 모임, 아이들 선물용으로 준비하기 좋습니다.',
-    priceNote: '파운드케이크에서 10달러 추가, 마감 옵션 선택 가능',
+    name: '초콜릿 컵케이크',
+    description: '박스 전체를 같은 마감으로 완성하는 초콜릿 컵케이크예요.',
+    priceNote: '더즌 · 12개와 박스 전체 마감 선택',
+  },
+  'cupcake-half-dozen': {
+    name: '초콜릿 컵케이크',
+    description: '박스 전체를 같은 마감으로 완성하는 초콜릿 컵케이크예요.',
+    priceNote: '하프 더즌 · 6개와 박스 전체 마감 선택',
   },
   'choco-basque-cheesecake': {
     name: '쇼콜라티에 바스크 치즈케이크',
@@ -58,6 +68,21 @@ const koProducts: Record<ProductId, ProductText> = {
   'eiffel-tower-basque-cheesecake': {
     name: '에펠탑 초콜릿 케이크 마감',
     description: `파베 초콜릿으로 케이크 전체를 덮고 에펠탑 초콜릿 하나를 올린 ${AU_CAKE_SIZE_LABELS['15cm']} 케이크예요.`,
+    priceNote: AU_CAKE_SIZE_LABELS['15cm'],
+  },
+  'brownie-cheesecake': {
+    name: '브라우니 치즈케이크',
+    description: `${AU_CAKE_SIZE_LABELS['15cm']} 브라우니 치즈케이크예요.`,
+    priceNote: AU_CAKE_SIZE_LABELS['15cm'],
+  },
+  'pave-brownie-cheesecake': {
+    name: '브라우니 치즈케이크 · 파베 초콜릿 on top',
+    description: `파베 초콜릿을 올린 ${AU_CAKE_SIZE_LABELS['15cm']} 브라우니 치즈케이크예요.`,
+    priceNote: AU_CAKE_SIZE_LABELS['15cm'],
+  },
+  'eiffel-tower-brownie-cheesecake': {
+    name: '브라우니 치즈케이크 · 에펠탑 마감',
+    description: `전체 파베 초콜릿과 에펠탑 초콜릿으로 마감한 ${AU_CAKE_SIZE_LABELS['15cm']} 브라우니 치즈케이크예요.`,
     priceNote: AU_CAKE_SIZE_LABELS['15cm'],
   },
   'fresh-lemon-cupcakes-4': {
@@ -80,11 +105,16 @@ const koProducts: Record<ProductId, ProductText> = {
 const koProductFeatures: Record<ProductId, string[]> = {
   'pave-cake': ['초콜릿 시트와 파베 가나슈', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), '다크 초콜릿만 사용'],
   'vanilla-fresh-cream-cake': ['초코 케이크 시트만 사용', '트리플베리 또는 누텔라 초코칩', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
+  'buttercream-cake': ['초콜릿 버터크림 포함', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), '사이즈 선택'],
   'pound-cake': ['직사각형 갸또 쇼콜라', '고정 사이즈', '기본, 초콜릿 추가, 바닐라 크림 마감'],
-  'cupcake-dozen': ['12개 1다스 구성', '파운드케이크에서 10달러 추가', '기본, 초콜릿 추가, 바닐라 크림 마감'],
+  'cupcake-half-dozen': ['하프 더즌 · 6개', '박스 전체 동일 마감', '기본, 바닐라 생크림 또는 초콜릿 버터크림'],
+  'cupcake-dozen': ['더즌 · 12개', '박스 전체 동일 마감', '기본, 바닐라 생크림 또는 초콜릿 버터크림'],
   'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '쇼콜라티에 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 마감', '+AUD 10 마감 추가'],
   'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15 마감 추가'],
+  'brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '기본 마감 · AUD 55', '세 가지 마감 선택'],
+  'pave-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 on top', '+AUD 10 마감 추가'],
+  'eiffel-tower-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15 마감 추가'],
   'fresh-lemon-cupcakes-4': ['4개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
   'fresh-lemon-cupcakes-6': ['6개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
   'fresh-lemon-cupcakes-8': ['8개 구성', '상큼한 레몬 크림', '꽃무늬 장식 포함'],
@@ -93,7 +123,7 @@ const koProductFeatures: Record<ProductId, string[]> = {
 }
 
 export function getProductText(productId: ProductId, language: Language): ProductText {
-  const product = marketConfig.products[productId] || marketConfig.products['pave-cake']
+  const product = marketConfig.products[productId] || marketConfig.products['pave-cake']!
   if (language === 'ko' && marketConfig.market === 'AU') return koProducts[productId]
   return {
     name: product.name,
@@ -104,7 +134,7 @@ export function getProductText(productId: ProductId, language: Language): Produc
 
 export function getProductFeatures(productId: ProductId, language: Language) {
   if (language === 'ko' && marketConfig.market === 'AU') return koProductFeatures[productId]
-  return marketConfig.productCardFeatures[productId] || marketConfig.productCardFeatures['pave-cake']
+  return marketConfig.productCardFeatures[productId] || marketConfig.productCardFeatures['pave-cake'] || []
 }
 
 const koCakeSizeDescriptions: Partial<Record<CakeSize, string>> = {
@@ -147,6 +177,18 @@ export function formatChocolateTypeText(chocolateType: ChocolateType | undefined
 export function formatPoundAddonText(poundAddon: PoundAddon | undefined, language: Language) {
   const option = marketConfig.poundAddonOptions.find((item) => item.value === poundAddon) || marketConfig.poundAddonOptions[0]
   return getPoundAddonText(option, language).label
+}
+
+export function formatCupcakeFinishText(cupcakeFinish: CupcakeFinish | undefined, language: Language) {
+  const finish = cupcakeFinish || 'basic'
+  if (language === 'ko') {
+    if (finish === 'vanilla-fresh-cream') return '바닐라 생크림'
+    if (finish === 'chocolate-buttercream') return '초콜릿 버터크림'
+    return '기본'
+  }
+  if (finish === 'vanilla-fresh-cream') return 'Vanilla Fresh Cream'
+  if (finish === 'chocolate-buttercream') return 'Chocolate Buttercream'
+  return 'Basic'
 }
 
 export function formatVanillaCakePointColorText(value: VanillaCakePointColor | undefined, language: Language) {

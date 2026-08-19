@@ -6,6 +6,8 @@ export type ChocolateType = 'dark' | 'milk'
 
 export type PoundAddon = 'none' | 'extra-chocolate' | 'vanilla-cream'
 
+export type CupcakeFinish = 'basic' | 'vanilla-fresh-cream' | 'chocolate-buttercream'
+
 export type VanillaCakeSheet = 'vanilla' | 'chocolate'
 
 export type VanillaCakeFlavor = 'triple-berry' | 'nutella-chocolate-chip'
@@ -15,8 +17,13 @@ export type VanillaCakePointColor = 'pink' | 'red' | 'green' | 'yellow' | 'blue'
 export type ProductId =
   | 'pave-cake'
   | 'vanilla-fresh-cream-cake'
+  | 'buttercream-cake'
   | 'pound-cake'
+  | 'cupcake-half-dozen'
   | 'cupcake-dozen'
+  | 'brownie-cheesecake'
+  | 'pave-brownie-cheesecake'
+  | 'eiffel-tower-brownie-cheesecake'
   | 'choco-basque-cheesecake'
   | 'pave-choco-basque-cheesecake'
   | 'eiffel-tower-basque-cheesecake'
@@ -39,6 +46,7 @@ export type Reservation = {
   cakeSize: CakeSize
   chocolateType: ChocolateType
   poundAddon: PoundAddon
+  cupcakeFinish?: CupcakeFinish
   chocolateIcingCount?: number
   vanillaCreamCount?: number
   partyDecorationCount?: number
@@ -76,6 +84,7 @@ export type ReservationInput = {
   cakeSize: CakeSize
   chocolateType: ChocolateType
   poundAddon: PoundAddon
+  cupcakeFinish?: CupcakeFinish
   chocolateIcingCount: number
   vanillaCreamCount?: number
   partyDecorationCount?: number
@@ -98,6 +107,7 @@ export type CakeOrderLineRequest = Pick<ReservationInput,
   | 'cakeSize'
   | 'chocolateType'
   | 'poundAddon'
+  | 'cupcakeFinish'
   | 'chocolateIcingCount'
   | 'vanillaCreamCount'
   | 'partyDecorationCount'
@@ -147,6 +157,7 @@ export type PublicReservation = Pick<
   | 'cakeSize'
   | 'chocolateType'
   | 'poundAddon'
+  | 'cupcakeFinish'
   | 'chocolateIcingCount'
   | 'vanillaCreamCount'
   | 'partyDecorationCount'

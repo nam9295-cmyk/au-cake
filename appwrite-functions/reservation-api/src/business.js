@@ -1,5 +1,9 @@
 import { digestReviewCouponCode } from './coupon-digest.js'
-import { ACTIVE_CAKE_ORDER_PRODUCT_IDS, isActiveCakeOrderProductId } from './active-cake-products.js'
+import {
+  ACTIVE_CAKE_ORDER_PRODUCT_IDS,
+  isActiveCakeOrderProductId,
+  isStoredCakeOrderProductId,
+} from './active-cake-products.js'
 
 const MARKET_TIMEZONE = 'Australia/Sydney'
 const GENERATED_REVIEW_COUPON_ANIMALS = [
@@ -23,6 +27,20 @@ export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
 export const CUPCAKE_PACK_SIZE = 12
 export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
+const CUPCAKE_PRODUCT_IDS = new Set(['cupcake-half-dozen', 'cupcake-dozen'])
+const CUPCAKE_FINISH_PRICES_CENTS = {
+  'cupcake-half-dozen': {
+    basic: 3100,
+    'vanilla-fresh-cream': 3600,
+    'chocolate-buttercream': 4100,
+  },
+  'cupcake-dozen': {
+    basic: 5500,
+    'vanilla-fresh-cream': 6400,
+    'chocolate-buttercream': 7300,
+  },
+}
+const CUPCAKE_FINISHES = new Set(['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'])
 export const VANILLA_CAKE_SHEETS = new Set(['chocolate'])
 export const VANILLA_CAKE_FLAVORS = new Set(['triple-berry', 'nutella-chocolate-chip'])
 export const VANILLA_CAKE_POINT_COLORS = new Set(['pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'])
@@ -78,11 +96,23 @@ const PRODUCTS = {
     usesSize: true,
     usesFinish: false,
   },
+  'buttercream-cake': {
+    basePrice: 75,
+    sizePrices: { '15cm': 75, '19cm': 98, '22cm': 139 },
+    usesSize: true,
+    usesFinish: false,
+  },
   'pound-cake': {
     basePrice: 45,
     sizePrices: {},
     usesSize: false,
     usesFinish: true,
+  },
+  'cupcake-half-dozen': {
+    basePrice: 31,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
   },
   'cupcake-dozen': {
     basePrice: 55,
@@ -108,14 +138,31 @@ const PRODUCTS = {
     usesSize: false,
     usesFinish: false,
   },
+  'brownie-cheesecake': {
+    basePrice: 55,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
+  'pave-brownie-cheesecake': {
+    basePrice: 65,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
+  'eiffel-tower-brownie-cheesecake': {
+    basePrice: 70,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
   'fresh-lemon-cupcakes-6': { basePrice: 36, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-8': { basePrice: 45, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-12': { basePrice: 65, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-16': { basePrice: 85, sizePrices: {}, usesSize: false, usesFinish: false },
 }
 
-if (ACTIVE_CAKE_ORDER_PRODUCT_IDS.length !== Object.keys(PRODUCTS).length
-  || ACTIVE_CAKE_ORDER_PRODUCT_IDS.some((productId) => !Object.hasOwn(PRODUCTS, productId))) {
+if (ACTIVE_CAKE_ORDER_PRODUCT_IDS.some((productId) => !Object.hasOwn(PRODUCTS, productId))) {
   throw new Error('ACTIVE_CAKE_ORDER_PRODUCT_CATALOG_MISMATCH')
 }
 
@@ -379,8 +426,8 @@ function normalizeChocolateIcingCount(productId, value) {
   return count
 }
 
-function normalizeCupcakeFinishCounts(productId, vanillaValue, partyValue) {
-  if (productId !== 'cupcake-dozen') return { vanillaCreamCount: 0, partyDecorationCount: 0 }
+function normalizeCupcakeFinishCounts(productId, vanillaValue, partyValue, { allowLegacyCupcakeCounts = false } = {}) {
+  if (productId !== 'cupcake-dozen' || !allowLegacyCupcakeCounts) return { vanillaCreamCount: 0, partyDecorationCount: 0 }
   const normalize = (value) => value === undefined || value === null || value === '' ? 0 : value
   const vanillaCreamCount = normalize(vanillaValue)
   const partyDecorationCount = normalize(partyValue)
@@ -392,6 +439,13 @@ function normalizeCupcakeFinishCounts(productId, vanillaValue, partyValue) {
     vanillaCreamCount + partyDecorationCount > CUPCAKE_PACK_SIZE
   ) fail('INVALID_CUPCAKE_FINISH_COUNT')
   return { vanillaCreamCount, partyDecorationCount }
+}
+
+function normalizeCupcakeFinish(productId, value, { allowLegacyCupcakeCounts = false } = {}) {
+  if (!CUPCAKE_PRODUCT_IDS.has(productId)) return 'basic'
+  if (allowLegacyCupcakeCounts && value === undefined) return undefined
+  if (!CUPCAKE_FINISHES.has(value)) fail('INVALID_CUPCAKE_FINISH')
+  return value
 }
 
 function normalizeVanillaCakeOptions(productId, cakeSheet, flavor, pointColor) {
@@ -407,8 +461,11 @@ function normalizeVanillaCakeOptions(productId, cakeSheet, flavor, pointColor) {
   return { vanillaCakeSheet, vanillaCakeFlavor, vanillaCakePointColor }
 }
 
-function normalizeCakeOptions(input) {
-  if (!isActiveCakeOrderProductId(input.productId) || !Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
+function normalizeCakeOptions(input, { allowStoredProduct = false, allowLegacyCupcakeCounts = false } = {}) {
+  const isAllowedProduct = allowStoredProduct
+    ? isStoredCakeOrderProductId(input.productId)
+    : isActiveCakeOrderProductId(input.productId)
+  if (!isAllowedProduct || !Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
   const product = PRODUCTS[input.productId]
 
   const cakeSize = product.usesSize && Object.hasOwn(product.sizePrices, input.cakeSize)
@@ -422,10 +479,16 @@ function normalizeCakeOptions(input) {
     ? input.chocolateType
     : 'dark'
   const chocolateIcingCount = normalizeChocolateIcingCount(input.productId, input.chocolateIcingCount)
+  const cupcakeFinish = normalizeCupcakeFinish(
+    input.productId,
+    input.cupcakeFinish,
+    { allowLegacyCupcakeCounts },
+  )
   const cupcakeFinishCounts = normalizeCupcakeFinishCounts(
     input.productId,
     input.vanillaCreamCount,
     input.partyDecorationCount,
+    { allowLegacyCupcakeCounts },
   )
   const vanillaCakeOptions = normalizeVanillaCakeOptions(
     input.productId,
@@ -434,7 +497,7 @@ function normalizeCakeOptions(input) {
     input.vanillaCakePointColor,
   )
 
-  return { product, cakeSize, poundAddon, chocolateType, chocolateIcingCount, ...cupcakeFinishCounts, ...vanillaCakeOptions }
+  return { product, cakeSize, poundAddon, chocolateType, cupcakeFinish, chocolateIcingCount, ...cupcakeFinishCounts, ...vanillaCakeOptions }
 }
 
 const ORDER_LINE_IDENTITY_KEYS = [
@@ -442,6 +505,7 @@ const ORDER_LINE_IDENTITY_KEYS = [
   'cakeSize',
   'chocolateType',
   'poundAddon',
+  'cupcakeFinish',
   'chocolateIcingCount',
   'vanillaCreamCount',
   'partyDecorationCount',
@@ -460,10 +524,11 @@ const STORED_ORDER_LINE_KEYS = new Set([
   'discountCents',
   'totalPriceCents',
 ])
-const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
+const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
+const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
 const STORED_ORDER_MAX_BYTES = 65535
 const REQUIRED_STORED_ORDER_DOCUMENT_KEYS = new Set([
-  ...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor'),
+  ...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor' && key !== 'cupcakeFinish'),
   'quantity',
   'subtotalCents',
   'discountBasisCents',
@@ -481,23 +546,25 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null
 }
 
-function normalizedCakeLine(input, quantity) {
+function normalizedCakeLine(input, quantity, options) {
   const {
     cakeSize,
     poundAddon,
     chocolateType,
+    cupcakeFinish,
     chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,
     vanillaCakeSheet,
     vanillaCakeFlavor,
     vanillaCakePointColor,
-  } = normalizeCakeOptions(input)
+  } = normalizeCakeOptions(input, options)
   return {
     productId: input.productId,
     cakeSize,
     chocolateType,
     poundAddon,
+    cupcakeFinish,
     chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,
@@ -577,7 +644,7 @@ export function canonicalCakeRequestPayload(input) {
   }
 }
 
-function getValidPromoCode(productId, promoCode, now) {
+export function getValidPromoCode(productId, promoCode, now) {
   if (typeof promoCode !== 'string') return null
   const normalizedCode = promoCode.trim().toLowerCase()
   const promo = PROMOTIONS.find((candidate) => candidate.code === normalizedCode && candidate.productIds.has(productId))
@@ -587,6 +654,9 @@ function getValidPromoCode(productId, promoCode, now) {
 
 function unitPriceForCakeLine(line) {
   const product = PRODUCTS[line.productId]
+  if (CUPCAKE_PRODUCT_IDS.has(line.productId) && Object.hasOwn(line, 'cupcakeFinish')) {
+    return CUPCAKE_FINISH_PRICES_CENTS[line.productId][line.cupcakeFinish]
+  }
   return Math.round((product.usesSize ? product.sizePrices[line.cakeSize] : product.basePrice) * 100)
     + Math.round((product.usesFinish ? FINISH_PRICES[line.poundAddon] : 0) * 100)
     + line.chocolateIcingCount * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS
@@ -726,6 +796,7 @@ export function buildCakeReservation(input, {
     cakeSize: firstLine.cakeSize,
     chocolateType: firstLine.chocolateType,
     poundAddon: firstLine.poundAddon,
+    cupcakeFinish: firstLine.cupcakeFinish,
     chocolateIcingCount: firstLine.chocolateIcingCount,
     vanillaCreamCount: firstLine.vanillaCreamCount,
     partyDecorationCount: firstLine.partyDecorationCount,
@@ -924,6 +995,7 @@ function sanitizedOrderLine(line) {
     cakeSize: line.cakeSize,
     chocolateType: line.chocolateType,
     poundAddon: line.poundAddon,
+    ...(Object.hasOwn(line, 'cupcakeFinish') ? { cupcakeFinish: line.cupcakeFinish } : {}),
     chocolateIcingCount: line.chocolateIcingCount,
     vanillaCreamCount: line.vanillaCreamCount,
     partyDecorationCount: line.partyDecorationCount,
@@ -949,8 +1021,10 @@ export function parseStoredOrderLines(document) {
 
     const canonicalKeys = new Set()
     for (const line of payload.lines) {
+      const preCupcakeFinishStoredLine = hasExactOwnKeys(line, PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS)
       const legacyStoredLine = hasExactOwnKeys(line, LEGACY_STORED_ORDER_LINE_KEYS)
-      if (!legacyStoredLine && !hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)) throw new Error('invalid line keys')
+      const hasCupcakeFinish = hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)
+      if (!preCupcakeFinishStoredLine && !legacyStoredLine && !hasCupcakeFinish) throw new Error('invalid line keys')
       if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('invalid quantity')
       for (const key of ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount']) {
         if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid option count')
@@ -958,8 +1032,11 @@ export function parseStoredOrderLines(document) {
       for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'vanillaCakeSheet', 'vanillaCakeFlavor']) {
         if (typeof line[key] !== 'string') throw new Error('invalid option')
       }
-      const normalized = normalizedCakeLine(line, line.quantity)
-      if (ORDER_LINE_IDENTITY_KEYS.some((key) => key !== 'vanillaCakePointColor' && normalized[key] !== line[key])) {
+      const normalized = normalizedCakeLine(line, line.quantity, {
+        allowStoredProduct: true,
+        allowLegacyCupcakeCounts: !hasCupcakeFinish,
+      })
+      if (ORDER_LINE_IDENTITY_KEYS.some((key) => key !== 'vanillaCakePointColor' && (key !== 'cupcakeFinish' || hasCupcakeFinish) && normalized[key] !== line[key])) {
         throw new Error('noncanonical line')
       }
       if (!legacyStoredLine && normalized.vanillaCakePointColor !== line.vanillaCakePointColor) {
@@ -1043,7 +1120,9 @@ export function parseStoredOrderLines(document) {
       throw new Error('inconsistent totalPrice')
     }
     const firstLine = payload.lines[0]
-    for (const key of [...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor'), 'quantity']) {
+    const firstLineHasCupcakeFinish = Object.hasOwn(firstLine, 'cupcakeFinish')
+    if (firstLineHasCupcakeFinish !== Object.hasOwn(document, 'cupcakeFinish')) throw new Error('inconsistent cupcakeFinish projection')
+    for (const key of [...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor' && (key !== 'cupcakeFinish' || firstLineHasCupcakeFinish)), 'quantity']) {
       if (document[key] !== firstLine[key]) throw new Error(`inconsistent ${key}`)
     }
     return payload
@@ -1059,6 +1138,7 @@ export function publicCakeReservation(document) {
     cakeSize: document.cakeSize || '15cm',
     chocolateType: document.chocolateType || 'dark',
     poundAddon: document.poundAddon || 'none',
+    ...(Object.hasOwn(document, 'cupcakeFinish') ? { cupcakeFinish: document.cupcakeFinish } : {}),
     chocolateIcingCount: Number(document.chocolateIcingCount || 0),
     vanillaCreamCount: Number(document.vanillaCreamCount || 0),
     partyDecorationCount: Number(document.partyDecorationCount || 0),

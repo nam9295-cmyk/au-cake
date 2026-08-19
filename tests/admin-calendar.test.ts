@@ -87,7 +87,7 @@ test('calendar month label and navigation use local date-safe yyyy-mm strings', 
 
 test('cake and class reservations become time-sorted colored calendar events', () => {
   const events = buildAdminCalendarEvents([
-    cake({ id: 'cake-late', pickupTime: '14:00', customerName: 'Mina', productId: 'cupcake-dozen', quantity: 2 }),
+    cake({ id: 'cake-late', pickupTime: '14:00', customerName: 'Mina', productId: 'cupcake-dozen', cupcakeFinish: 'basic', quantity: 2 }),
     cake({ id: 'cake-early', pickupTime: '10:00', customerName: 'Jenny', productId: 'pave-cake', quantity: 1 }),
   ], [
     classBooking({ id: 'class-first', classTime: '09:30', childName: 'Emma' }),
@@ -96,7 +96,7 @@ test('cake and class reservations become time-sorted colored calendar events', (
   assert.deepEqual(events.map((event) => `${event.kind}:${event.time}:${event.title}:${event.subtitle}`), [
     'class:09:30:Basic Cake Class · Emma:Year 3–6 · Payment pending',
     'cake:10:00:Jenny · Pave Chocolate Cake:Pave x1 · 입금대기',
-    'cake:14:00:Mina · Chocolate Cupcakes (1 dozen):Cupcake x2 · 입금대기',
+    'cake:14:00:Mina · Chocolate Cupcakes:Cupcake · Dozen · Basic x2 · 입금대기',
   ])
 })
 

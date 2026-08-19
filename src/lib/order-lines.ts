@@ -7,7 +7,8 @@ import {
   getLemonIcingCount,
   getProductById,
   isCheesecakeProduct,
-  isCupcakeDozenProduct,
+  getCupcakePackSize,
+  isCupcakeProduct,
   isFreshLemonCupcakeProduct,
   isVanillaFreshCreamCakeProduct,
   normalizeChocolateIcingCount,
@@ -17,6 +18,12 @@ import {
 } from './constants.js'
 import { marketConfig } from './market.js'
 import type { CakeOrderLineRequest, CakeOrderLineResult, Reservation } from './types.js'
+
+function cupcakeFinishLabel(value: CakeOrderLineRequest['cupcakeFinish']) {
+  if (value === 'vanilla-fresh-cream') return 'Vanilla Fresh Cream'
+  if (value === 'chocolate-buttercream') return 'Chocolate Buttercream'
+  return 'Basic'
+}
 
 export type ReservationOrderLine = CakeOrderLineRequest & Partial<Pick<
   CakeOrderLineResult,
@@ -30,6 +37,7 @@ export function getReservationOrderLines(reservation: Reservation): ReservationO
     cakeSize: reservation.cakeSize,
     chocolateType: reservation.chocolateType,
     poundAddon: reservation.poundAddon,
+    ...(reservation.cupcakeFinish === undefined ? {} : { cupcakeFinish: reservation.cupcakeFinish }),
     chocolateIcingCount: reservation.chocolateIcingCount || 0,
     vanillaCreamCount: reservation.vanillaCreamCount || 0,
     partyDecorationCount: reservation.partyDecorationCount || 0,
@@ -75,9 +83,15 @@ export function formatOrderLineSummary(line: ReservationOrderLine) {
   if (isFreshLemonCupcakeProduct(product.id)) {
     details.push(`Fresh lemon zest icing ${getLemonIcingCount(product.id, line.chocolateIcingCount)} / Dark couverture chocolate ${normalizeChocolateIcingCount(product.id, line.chocolateIcingCount)}`)
   }
-  if (isCupcakeDozenProduct(product.id)) {
-    const counts = normalizeCupcakeFinishCounts(product.id, line.vanillaCreamCount, line.partyDecorationCount)
-    details.push(`Basic ${CUPCAKE_PACK_SIZE - counts.vanillaCreamCount - counts.partyDecorationCount} / Vanilla cream ${counts.vanillaCreamCount} / Party decoration ${counts.partyDecorationCount}`)
+  if (isCupcakeProduct(product.id)) {
+    const packSize = getCupcakePackSize(product.id)
+    if (line.cupcakeFinish !== undefined) {
+      details.push(`${packSize === 6 ? 'Half Dozen' : 'Dozen'} · ${packSize} cupcakes`)
+      details.push(cupcakeFinishLabel(line.cupcakeFinish))
+    } else {
+      const counts = normalizeCupcakeFinishCounts(product.id, line.vanillaCreamCount, line.partyDecorationCount)
+      details.push(`Basic ${CUPCAKE_PACK_SIZE - counts.vanillaCreamCount - counts.partyDecorationCount} / Vanilla cream ${counts.vanillaCreamCount} / Party decoration ${counts.partyDecorationCount}`)
+    }
   }
   details.push(`x${line.quantity}`)
   if (Number.isSafeInteger(line.totalPriceCents)) details.push(formatLinePrice(line.totalPriceCents as number))
