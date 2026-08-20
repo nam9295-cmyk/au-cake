@@ -355,7 +355,7 @@ function normalizePublicOrderLine(
 
 function orderLineIdentityKey(line: CakeOrderLineRequest) {
   return JSON.stringify([
-    line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.chocolateIcingCount,
+    line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.cupcakeFinish || '', line.chocolateIcingCount,
     line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
     normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
   ])

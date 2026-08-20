@@ -38,6 +38,49 @@ test('admin Appwrite hydration preserves every validated stored order line and a
   assert.equal(reservation.totalPrice, 130)
 })
 
+test('admin Appwrite hydration retains mixed cupcake finishes with the same pack product', () => {
+  const mixedFinishLines = [
+    {
+      productId: 'cupcake-half-dozen', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+      cupcakeFinish: 'chocolate-buttercream', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+      vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink', quantity: 1,
+      unitPriceCents: 4100, subtotalCents: 4100, discountPercent: 0, discountCents: 0, totalPriceCents: 4100,
+    },
+    {
+      productId: 'cupcake-half-dozen', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+      cupcakeFinish: 'vanilla-fresh-cream', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+      vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink', quantity: 1,
+      unitPriceCents: 3600, subtotalCents: 3600, discountPercent: 0, discountCents: 0, totalPriceCents: 3600,
+    },
+  ]
+  const mixedFinishDocument = {
+    ...document,
+    $id: 'reservation-mixed-cupcakes',
+    reservationNumber: 'VG-C-AU-20260822-160000001',
+    productId: 'cupcake-half-dozen',
+    cupcakeFinish: 'chocolate-buttercream',
+    pickupDate: '2026-08-22',
+    pickupTime: '16:00',
+    totalPrice: 77,
+    totalPriceCents: 7700,
+    subtotalCents: 7700,
+    discountBasisCents: 0,
+    discountPercent: 0,
+    discountCents: 0,
+    orderLinesJson: JSON.stringify({ version: 1, lines: mixedFinishLines }),
+    orderLineCount: 2,
+    orderItemCount: 2,
+  }
+
+  const reservations = toReservationList([mixedFinishDocument] as never)
+
+  assert.equal(reservations.length, 1)
+  assert.deepEqual(reservations[0].orderLines?.map((line) => [line.productId, line.cupcakeFinish, line.totalPriceCents]), [
+    ['cupcake-half-dozen', 'chocolate-buttercream', 4100],
+    ['cupcake-half-dozen', 'vanilla-fresh-cream', 3600],
+  ])
+})
+
 test('admin Appwrite hydration treats nullable unused discount fields as absent', () => {
   const reservation = toReservation({
     ...document,
