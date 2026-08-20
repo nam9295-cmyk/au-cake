@@ -187,6 +187,45 @@ test('calendar cake event label includes every validated stored order line', () 
   assert.equal(JSON.stringify(event).includes('orderLinesJson'), false)
 })
 
+test('calendar reads pre-cupcake-finish stored orders when Appwrite returns a null cupcakeFinish field', () => {
+  const line = {
+    productId: 'pave-cake',
+    cakeSize: '15cm',
+    chocolateType: 'dark',
+    poundAddon: 'none',
+    chocolateIcingCount: 0,
+    vanillaCreamCount: 0,
+    partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla',
+    vanillaCakeFlavor: 'triple-berry',
+    quantity: 1,
+    unitPriceCents: 7500,
+    subtotalCents: 7500,
+    discountPercent: 0,
+    discountCents: 0,
+    totalPriceCents: 7500,
+  }
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'legacy-cupcake-finish-null-id',
+    pickupDate: '2026-08-03',
+    pickupTime: '14:00',
+    status: '예약확정',
+    ...line,
+    cupcakeFinish: null,
+    subtotalCents: 7500,
+    discountBasisCents: 0,
+    totalPriceCents: 7500,
+    totalPrice: 75,
+    orderLineCount: 1,
+    orderItemCount: 1,
+    reviewCouponId: null,
+    appliedPromoCodeLast4: null,
+    orderLinesJson: JSON.stringify({ version: 1, lines: [line] }),
+  })
+
+  assert.equal(event.label, 'Pave cake · 6" | serves 8 · Dark chocolate ×1')
+})
+
 test('calendar cake event fails closed when stored order lines are present but malformed', () => {
   assert.throws(() => sanitizeCakeCalendarEvent({
     $id: 'broken-id', pickupDate: '2026-08-03', pickupTime: '14:00', status: '예약신청',

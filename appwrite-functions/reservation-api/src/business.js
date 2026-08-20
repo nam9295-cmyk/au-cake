@@ -1150,7 +1150,8 @@ export function parseStoredOrderLines(document) {
     }
     const firstLine = payload.lines[0]
     const firstLineHasCupcakeFinish = Object.hasOwn(firstLine, 'cupcakeFinish')
-    if (firstLineHasCupcakeFinish !== Object.hasOwn(document, 'cupcakeFinish')) throw new Error('inconsistent cupcakeFinish projection')
+    const documentHasCupcakeFinish = typeof document.cupcakeFinish === 'string'
+    if (firstLineHasCupcakeFinish !== documentHasCupcakeFinish) throw new Error('inconsistent cupcakeFinish projection')
     for (const key of [...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor' && (key !== 'cupcakeFinish' || firstLineHasCupcakeFinish)), 'quantity']) {
       if (document[key] !== firstLine[key]) throw new Error(`inconsistent ${key}`)
     }
