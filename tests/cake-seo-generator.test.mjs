@@ -95,9 +95,9 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
 test('cake generator uses the final per-page schema contract and real product WebPs', async () => {
   const { dist } = await generate()
   const expectations = new Map([
-    ['pave-chocolate-cake', { type: 'Product', price: 75, og: 'product', image: 'pave-chocolate-cake-sydney.webp' }],
-    ['vanilla-fresh-cream-cake', { type: 'Product', price: 75, og: 'product', image: 'vanilla-cake-sydney.webp' }],
-    ['buttercream-cake', { type: 'Product', price: 75, og: 'product', image: 'og-image.jpg' }],
+    ['pave-chocolate-cake', { type: 'Product', price: 79, og: 'product', image: 'pave-chocolate-cake-sydney.webp' }],
+    ['vanilla-fresh-cream-cake', { type: 'Product', price: 69, og: 'product', image: 'vanilla-cake-sydney.webp' }],
+    ['buttercream-cake', { type: 'Product', price: 74, og: 'product', image: 'og-image.jpg' }],
     ['chocolate-cupcakes', { type: 'Product', price: 31, og: 'product', image: 'chocolate-cupcakes-sydney.webp' }],
     ['signature-gateau-au-chocolat', { type: 'Product', price: 45, og: 'product', image: 'chocolate-pound-cake-sydney.webp' }],
     ['lemon-cake', { type: 'Product', price: 36, og: 'product', image: 'lemon-cake-sydney.webp' }],

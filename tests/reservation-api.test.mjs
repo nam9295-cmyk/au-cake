@@ -183,9 +183,9 @@ test('package class creation reserves both slots in the same transaction with ac
 })
 
 test('cake API preserves Pave CakeSize IDs and approved prices', () => {
-  for (const [cakeSize, expectedPrice] of [['15cm', 75], ['19cm', 95], ['22cm', 115]]) {
+  for (const [cakeSize, expectedPrice] of [['15cm', 79], ['19cm', 99], ['22cm', 137]]) {
     const reservation = buildCakeReservation(
-      { ...cakeInput, cakeSize },
+      { ...cakeInput, cakeSize, totalPrice: 1, totalPriceCents: 1 },
       { now, reservationNumber: `VG-C-AU-PAVE-${cakeSize}` },
     )
     assert.equal(reservation.cakeSize, cakeSize)
@@ -195,7 +195,7 @@ test('cake API preserves Pave CakeSize IDs and approved prices', () => {
 })
 
 test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and flavour choices at the size price', () => {
-  for (const [cakeSize, expectedPrice] of [['15cm', 75], ['19cm', 98], ['22cm', 139]]) {
+  for (const [cakeSize, expectedPrice] of [['15cm', 69], ['19cm', 89], ['22cm', 119]]) {
     const reservation = buildCakeReservation(
       {
         ...cakeInput,
@@ -252,7 +252,7 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
 })
 
 test('cake API sells Buttercream Cake by size and strips every unsupported customer option', () => {
-  for (const [cakeSize, totalPrice] of [['15cm', 75], ['19cm', 98], ['22cm', 139]]) {
+  for (const [cakeSize, totalPrice] of [['15cm', 74], ['19cm', 94], ['22cm', 128]]) {
     const reservation = buildCakeReservation({
       ...cakeInput,
       productId: 'buttercream-cake',
@@ -262,6 +262,8 @@ test('cake API sells Buttercream Cake by size and strips every unsupported custo
       vanillaCakeSheet: 'chocolate',
       vanillaCakeFlavor: 'nutella-chocolate-chip',
       vanillaCakePointColor: 'blue',
+      totalPrice: 1,
+      totalPriceCents: 1,
     }, { now, reservationNumber: `VG-C-AU-BUTTERCREAM-${cakeSize}` })
 
     assert.deepEqual(
@@ -416,8 +418,8 @@ test('cake API derives protected fields and cents on the server', () => {
   assert.equal(reservation.status, '예약신청')
   assert.equal(reservation.paymentStatus, '입금대기')
   assert.equal(reservation.adminMemo, '')
-  assert.equal(reservation.totalPrice, 150)
-  assert.equal(reservation.totalPriceCents, 15000)
+  assert.equal(reservation.totalPrice, 158)
+  assert.equal(reservation.totalPriceCents, 15800)
   assert.equal(reservation.cacaoPercent, '기본')
 })
 
@@ -488,7 +490,7 @@ test('cake API validates Lemon Cake chocolate icing count and clears it for othe
     { now, reservationNumber: 'VG-C-AU-PAVE-NO-ICING-MIX' },
   )
   assert.equal(pave.chocolateIcingCount, 0)
-  assert.equal(pave.totalPrice, 75)
+  assert.equal(pave.totalPrice, 79)
 })
 
 test('Chocolate promo policy remains scoped to retired Basque IDs and cannot create a new order', () => {
@@ -710,7 +712,7 @@ test('public lookup response excludes customer PII, notes and raw dollar totals'
   assert.equal('requestNote' in response, false)
   assert.equal('adminMemo' in response, false)
   assert.equal('totalPrice' in response, false)
-  assert.equal(response.totalPriceCents, 7500)
+  assert.equal(response.totalPriceCents, 7900)
 })
 
 test('cake API preserves one-line Lemoni pricing and promo note while storing a versioned line', () => {
@@ -752,11 +754,11 @@ test('cake API normalizes, authoritatively prices and aggregates two distinct se
   )
   assert.deepEqual(
     [reservation.subtotalCents, reservation.discountBasisCents, reservation.discountPercent, reservation.discountCents, reservation.totalPriceCents, reservation.totalPrice],
-    [24200, 0, 0, 0, 24200, 242],
+    [25000, 0, 0, 0, 25000, 250],
   )
   assert.deepEqual([reservation.orderLineCount, reservation.orderItemCount], [2, 3])
   assert.deepEqual(lines.map((line) => [line.productId, line.unitPriceCents, line.subtotalCents, line.totalPriceCents]), [
-    ['pave-cake', 9500, 19000, 19000],
+    ['pave-cake', 9900, 19800, 19800],
     ['pound-cake', 5200, 5200, 5200],
   ])
 })
@@ -839,7 +841,7 @@ test('static promo discounts only eligible lines from one aggregate basis and wr
 
   assert.deepEqual(
     [reservation.subtotalCents, reservation.discountBasisCents, reservation.discountPercent, reservation.discountCents, reservation.totalPriceCents],
-    [15650, 8150, 10, 815, 14835],
+    [16050, 8150, 10, 815, 15235],
   )
   assert.deepEqual(lines.map((line) => [line.productId, line.discountPercent, line.discountCents]), [
     ['fresh-lemon-cupcakes-6', 10, 365],
@@ -870,7 +872,7 @@ test('aggregate discount allocation breaks equal fractional ties by canonical ke
 })
 
 test('review and manual coupon percentages apply once across every normalized line', () => {
-  for (const [rewardPercent, expectedDiscount, expectedTotal] of [[5, 558, 10592], [10, 1115, 10035]]) {
+  for (const [rewardPercent, expectedDiscount, expectedTotal] of [[5, 578, 10972], [10, 1155, 10395]]) {
     const reservation = buildCakeReservation(multiCakeInput([
       { productId: 'pave-cake', quantity: 1 },
       { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
@@ -880,7 +882,7 @@ test('review and manual coupon percentages apply once across every normalized li
       reviewCoupon: { id: `coupon-${rewardPercent}`, rewardPercent, codeLast4: 'Q2MK' },
     })
     const { lines } = parseStoredOrderLines(reservation)
-    assert.equal(reservation.discountBasisCents, 11150)
+    assert.equal(reservation.discountBasisCents, 11550)
     assert.equal(reservation.discountPercent, rewardPercent)
     assert.equal(reservation.discountCents, expectedDiscount)
     assert.equal(reservation.totalPriceCents, expectedTotal)
@@ -937,6 +939,55 @@ test('stored order line parser fails closed on malformed, unsupported, empty, ex
     assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(document), 500)
   }
   assertApiError('INVALID_STORED_ORDER', () => publicCakeReservation({ ...reservation, orderLinesJson: '{' }), 500)
+})
+
+test('stored order parser keeps approved pre-price-update Pave, Vanilla and Buttercream lines readable', () => {
+  const legacyCases = [
+    ['pave-cake', '15cm', 7500],
+    ['pave-cake', '19cm', 9500],
+    ['pave-cake', '22cm', 11500],
+    ['vanilla-fresh-cream-cake', '15cm', 7500],
+    ['vanilla-fresh-cream-cake', '19cm', 9800],
+    ['vanilla-fresh-cream-cake', '22cm', 13900],
+    ['buttercream-cake', '15cm', 7500],
+    ['buttercream-cake', '19cm', 9800],
+    ['buttercream-cake', '22cm', 13900],
+  ]
+
+  for (const [productId, cakeSize, legacyUnitPriceCents] of legacyCases) {
+    const current = buildCakeReservation({
+      ...cakeInput,
+      productId,
+      cakeSize,
+      totalPrice: 1,
+      totalPriceCents: 1,
+    }, { now, reservationNumber: `VG-C-AU-LEGACY-PRICE-${productId}-${cakeSize}` })
+    const historical = structuredClone(current)
+    const payload = JSON.parse(historical.orderLinesJson)
+    payload.lines[0].unitPriceCents = legacyUnitPriceCents
+    payload.lines[0].subtotalCents = legacyUnitPriceCents
+    payload.lines[0].totalPriceCents = legacyUnitPriceCents
+    historical.orderLinesJson = JSON.stringify(payload)
+    historical.subtotalCents = legacyUnitPriceCents
+    historical.totalPriceCents = legacyUnitPriceCents
+    historical.totalPrice = legacyUnitPriceCents / 100
+
+    assert.equal(parseStoredOrderLines(historical).lines[0].unitPriceCents, legacyUnitPriceCents)
+  }
+
+  const forged = buildCakeReservation({ ...cakeInput, totalPrice: 1, totalPriceCents: 1 }, {
+    now,
+    reservationNumber: 'VG-C-AU-LEGACY-PRICE-FORGED',
+  })
+  const forgedPayload = JSON.parse(forged.orderLinesJson)
+  forgedPayload.lines[0].unitPriceCents = 7800
+  forgedPayload.lines[0].subtotalCents = 7800
+  forgedPayload.lines[0].totalPriceCents = 7800
+  forged.orderLinesJson = JSON.stringify(forgedPayload)
+  forged.subtotalCents = 7800
+  forged.totalPriceCents = 7800
+  forged.totalPrice = 78
+  assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(forged), 500)
 })
 
 test('stored order parser requires aggregate and first-line projections for versioned documents', () => {
@@ -1038,11 +1089,11 @@ test('public cake projection exposes sanitized multi-lines and synthesizes sanit
   assert.deepEqual(response.orderLines.map((line) => [line.productId, line.quantity]), [['pave-cake', 2], ['pound-cake', 1]])
   assert.deepEqual(response.orderLines.map((line) => [
     line.unitPriceCents, line.subtotalCents, line.discountPercent, line.discountCents, line.totalPriceCents,
-  ]), [[9500, 19000, 0, 0, 19000], [5500, 5500, 0, 0, 5500]])
+  ]), [[9900, 19800, 0, 0, 19800], [5500, 5500, 0, 0, 5500]])
   assert.deepEqual([
     response.subtotalCents, response.discountBasisCents, response.discountPercent,
     response.discountCents, response.totalPriceCents,
-  ], [24500, 0, 0, 0, 24500])
+  ], [25300, 0, 0, 0, 25300])
   assert.equal(JSON.stringify(response.orderLines).includes('Private'), false)
 
   const legacy = publicCakeReservation({

@@ -102,10 +102,10 @@ test('Buttercream and Brownie Cheesecake cart lines add, update, and remove inde
   const added = addCartLine(addCartLine([], buttercream), brownie)
 
   assert.equal(added.length, 2)
-  assert.equal(getCartEstimatedSubtotal(added), 163)
+  assert.equal(getCartEstimatedSubtotal(added), 159)
   const updated = updateCartLineQuantity(added, added[0].lineKey, 2)
   assert.equal(updated[0].selection.quantity, 2)
-  assert.equal(getCartEstimatedSubtotal(updated), 261)
+  assert.equal(getCartEstimatedSubtotal(updated), 253)
   assert.deepEqual(removeCartLine(updated, updated[1].lineKey), [updated[0]])
 })
 
@@ -366,6 +366,6 @@ test('estimated subtotal reprices every current cart selection without mutating 
   const snapshot = structuredClone(lines)
 
   assert.equal(getCartEstimatedSubtotal([]), 0)
-  assert.equal(getCartEstimatedSubtotal(lines), 398)
+  assert.equal(getCartEstimatedSubtotal(lines), 371)
   assert.deepEqual(lines, snapshot)
 })

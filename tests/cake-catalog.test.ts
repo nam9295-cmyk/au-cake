@@ -137,6 +137,10 @@ test('catalog cards expose separated Cupcake and Signature names in English and 
   assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.isPhotoComingSoon, false)
   assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.imagePath, '/products/brownie-cheese-sydney.webp')
   assert.equal(english.find((card) => card.id === 'cupcake')?.imagePath, '/products/chocolate-cupcakes-sydney.webp')
+  assert.deepEqual(
+    english.filter((card) => ['pave', 'vanilla-fresh-cream', 'buttercream'].includes(card.id)).map((card) => [card.id, card.priceLabel]),
+    [['pave', 'AUD 79.00'], ['vanilla-fresh-cream', 'From AUD 69'], ['buttercream', 'From AUD 74']],
+  )
 })
 
 test('AU catalogue cards use the canonical public image for every available photo', () => {
@@ -153,6 +157,8 @@ test('canonical Pave and Vanilla statements match the selectable AU products', (
   const pave = getPublicCakePage('pave-chocolate-cake')
   const vanilla = getPublicCakePage('vanilla-fresh-cream-cake')
   assert.equal(pave?.optionSummary, 'Choose a size · dark chocolate only')
+  assert.equal(pave?.startingPrice, 79)
+  assert.equal(pave?.description, 'A rich four-layer chocolate cake built for a dense, chocolate-forward bite. Instead of a light sponge-and-cream style, each layer is filled with smooth pave chocolate ganache, creating a substantial cake with deep chocolate flavour from the first slice to the last.')
   assert.doesNotMatch(pave?.optionSummary || '', /milk/i)
   assert.deepEqual(
     marketConfig.chocolateTypeOptions.map((option) => option.value),

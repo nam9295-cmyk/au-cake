@@ -19,12 +19,12 @@ test('typed AU public content exposes the approved home contract', () => {
 })
 
 test('typed cake page helpers expose seven sale pages and noindex legacy pages', () => {
-  assert.equal(getStartingPrice('pave-chocolate-cake'), 75)
-  assert.equal(getStartingPrice('buttercream-cake'), 75)
+  assert.equal(getStartingPrice('pave-chocolate-cake'), 79)
+  assert.equal(getStartingPrice('buttercream-cake'), 74)
   assert.equal(getStartingPrice('chocolate-cupcakes'), 31)
   assert.equal(getStartingPrice('signature-gateau-au-chocolat'), 45)
   assert.equal(getStartingPrice('lemon-cake'), 36)
-  assert.equal(getStartingPrice('vanilla-fresh-cream-cake'), 75)
+  assert.equal(getStartingPrice('vanilla-fresh-cream-cake'), 69)
   assert.equal(getStartingPrice('brownie-cheesecake'), 55)
   assert.equal(getStartingPrice('chocolatiers-basque-cheesecake'), null)
   assert.equal(getStartingPrice('chocolate-pound-cake-and-cupcakes'), null)

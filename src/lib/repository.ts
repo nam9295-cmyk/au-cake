@@ -304,9 +304,29 @@ function normalizedLineUnitPriceCents(
     : currentPrice
 }
 
+const LEGACY_STORED_UNIT_PRICE_CENTS: Partial<Record<ProductId, Partial<Record<CakeSize, readonly number[]>>>> = {
+  'pave-cake': { '15cm': [7500], '19cm': [9500], '22cm': [11500] },
+  'vanilla-fresh-cream-cake': { '15cm': [7500], '19cm': [9800], '22cm': [13900] },
+  'buttercream-cake': { '15cm': [7500], '19cm': [9800], '22cm': [13900] },
+}
+
+function isApprovedStoredUnitPriceCents(
+  productId: ProductId,
+  cakeSize: CakeSize,
+  currentUnitPriceCents: number,
+  storedUnitPriceCents: number,
+  allowHistoricalUnitPrice: boolean,
+) {
+  return storedUnitPriceCents === currentUnitPriceCents
+    || (allowHistoricalUnitPrice && (LEGACY_STORED_UNIT_PRICE_CENTS[productId]?.[cakeSize]?.includes(storedUnitPriceCents) ?? false))
+}
+
 function normalizePublicOrderLine(
   line: CakeOrderLineRequest | CakeOrderLineResult,
-  { legacyCupcakeCounts = false }: { legacyCupcakeCounts?: boolean } = {},
+  {
+    legacyCupcakeCounts = false,
+    allowHistoricalUnitPrice = false,
+  }: { legacyCupcakeCounts?: boolean; allowHistoricalUnitPrice?: boolean } = {},
 ) {
   if (!line || typeof line !== 'object' || Array.isArray(line)
     || typeof line.productId !== 'string' || !isStoredCakeOrderProductId(line.productId) || !Object.hasOwn(PRODUCTS, line.productId)) throw new Error('INVALID_RESERVATION_RESPONSE')
@@ -346,8 +366,9 @@ function normalizePublicOrderLine(
   const subtotalCents = priced.subtotalCents as number
   const discountCents = priced.discountCents as number
   const totalPriceCents = priced.totalPriceCents as number
-  if (priced.unitPriceCents !== unitPriceCents
-    || priced.subtotalCents !== unitPriceCents * line.quantity
+  const approvedUnitPriceCents = priced.unitPriceCents as number
+  if (!isApprovedStoredUnitPriceCents(product.id, normalized.cakeSize, unitPriceCents, approvedUnitPriceCents, allowHistoricalUnitPrice)
+    || priced.subtotalCents !== approvedUnitPriceCents * line.quantity
     || totalPriceCents !== subtotalCents - discountCents
     || ![0, 5, 10].includes(priced.discountPercent!)) throw new Error('INVALID_RESERVATION_RESPONSE')
   return { ...normalized, ...Object.fromEntries(priceKeys.map((key) => [key, priced[key]])) }
@@ -434,7 +455,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, reservation.vanillaCakePointColor),
     quantity: normalizeQuantity(reservation.quantity),
   }
-  const orderLines = payload.orderLines?.map((line) => normalizePublicOrderLine(line))
+  const orderLines = payload.orderLines?.map((line) => normalizePublicOrderLine(line, { allowHistoricalUnitPrice: true }))
   if (payload.orderLines && (!orderLines?.length
     || payload.orderLineCount !== orderLines.length
     || payload.orderItemCount !== safeOrderSum(orderLines.map((line) => line.quantity), () => { throw new Error('INVALID_RESERVATION_RESPONSE') }))) {
@@ -582,7 +603,10 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
     if (keys.length !== allowedKeys.size
       || !keys.every((key) => typeof key === 'string' && allowedKeys.has(key))) invalidStoredOrder()
     try {
-      const normalized = normalizePublicOrderLine(rawLine as CakeOrderLineResult, { legacyCupcakeCounts: !hasCupcakeFinish })
+      const normalized = normalizePublicOrderLine(rawLine as CakeOrderLineResult, {
+        legacyCupcakeCounts: !hasCupcakeFinish,
+        allowHistoricalUnitPrice: true,
+      })
       if (!Object.hasOwn(normalized, 'unitPriceCents')) invalidStoredOrder()
       return normalized as CakeOrderLineResult
     } catch {

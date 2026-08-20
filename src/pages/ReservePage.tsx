@@ -798,9 +798,9 @@ export function ReservePage({
                         ? productCardImages.pound
                         : group.id === 'cheesecake' ? productCardImages.basque : productCardImages.lemon)
                     const groupPrice = catalogCard?.priceLabel || (group.id === 'pave'
-                      ? formatCurrency(75)
+                      ? formatCurrency(79)
                       : group.id === 'vanilla-fresh-cream'
-                        ? 'From AUD 75'
+                        ? 'From AUD 69'
                         : group.id === 'pound-cupcake'
                         ? 'From AUD 45'
                         : group.id === 'cheesecake' ? 'From AUD 55' : 'From AUD 36')

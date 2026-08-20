@@ -110,7 +110,7 @@ test('multi-line create responses expose only authoritative stored line pricing 
     subtotalCents: line.subtotalCents,
     totalPriceCents: line.totalPriceCents,
   })), [
-    { productId: 'pave-cake', quantity: 2, unitPriceCents: 7500, subtotalCents: 15000, totalPriceCents: 15000 },
+    { productId: 'pave-cake', quantity: 2, unitPriceCents: 7900, subtotalCents: 15800, totalPriceCents: 15800 },
     { productId: 'brownie-cheesecake', quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, totalPriceCents: 5500 },
   ])
   assert.equal('requestFingerprint' in response, false)
@@ -345,7 +345,7 @@ test('malformed JENNIE lookalikes fail closed while unrelated promo text stays o
     { ...cakeInput, requestId: randomUUID(), promoCode: 'summer-special' },
     { now, runtimeConfig },
   )
-  assert.equal(result.totalPriceCents, 7500)
+  assert.equal(result.totalPriceCents, 7900)
   assert.equal(unrelated.calls.some(([, args]) => args?.collectionId === 'review_coupons'), false)
   assert.equal(unrelated.calls.some(([, args]) => args?.collectionId === 'manual_coupons'), false)
 })
@@ -437,7 +437,7 @@ test('review coupon creation uses one transaction, exact audit, and never persis
   const result = await createCake(db, { ...cakeInput, promoCode: '  foxkiwi7q2mk  ' }, { now, runtimeConfig })
   assert.equal('id' in result, false)
   assert.equal(result.reservationNumber.startsWith('VG-C-AU-'), true)
-  assert.equal(result.totalPriceCents, 7125)
+  assert.equal(result.totalPriceCents, 7505)
   assert.equal('reviewCouponId' in result, false)
   assert.equal(JSON.stringify(result).includes(rawCode), false)
   const couponRead = db.calls.find(([name, args]) => name === 'listDocuments' && args.collectionId === 'review_coupons')
@@ -454,7 +454,7 @@ test('review coupon creation uses one transaction, exact audit, and never persis
       appliedPromoCodeLast4: reservationCreate[1].data.appliedPromoCodeLast4,
       reviewCouponId: reservationCreate[1].data.reviewCouponId,
     },
-    { subtotalCents: 7500, discountPercent: 5, discountCents: 375, appliedPromoCodeLast4: 'Q2MK', reviewCouponId: 'coupon-1' },
+    { subtotalCents: 7900, discountPercent: 5, discountCents: 395, appliedPromoCodeLast4: 'Q2MK', reviewCouponId: 'coupon-1' },
   )
   assert.deepEqual(couponUpdate[1].data, {
     status: 'redeemed',
@@ -477,7 +477,7 @@ test('manual JENNIE-family coupon is redeemed atomically with a safe alphanumeri
     { ...cakeInput, requestId: manualRequestId, promoCode: '  jennietest7  ' },
     { now, runtimeConfig },
   )
-  assert.equal(result.totalPriceCents, 7125)
+  assert.equal(result.totalPriceCents, 7505)
   assert.equal(result.discountPercent, 5)
   assert.equal(result.appliedPromoCodeLast4, 'EST7')
   assert.equal(result.promotionKind, 'manual-coupon')

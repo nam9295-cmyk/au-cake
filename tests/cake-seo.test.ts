@@ -117,9 +117,9 @@ test('product runtime metadata carries descriptive copy and complete image attri
 
 test('seven sale cakes use one Offer at the visible starting price', () => {
   const expectations = new Map([
-    ['/cakes/pave-chocolate-cake', { name: 'Pave Chocolate Cake', price: 75 }],
-    ['/cakes/vanilla-fresh-cream-cake', { name: 'Vanilla Fresh Cream Cake', price: 75 }],
-    ['/cakes/buttercream-cake', { name: 'Buttercream Cake', price: 75 }],
+    ['/cakes/pave-chocolate-cake', { name: 'Pave Chocolate Cake', price: 79 }],
+    ['/cakes/vanilla-fresh-cream-cake', { name: 'Vanilla Fresh Cream Cake', price: 69 }],
+    ['/cakes/buttercream-cake', { name: 'Buttercream Cake', price: 74 }],
     ['/cakes/chocolate-cupcakes', { name: 'Chocolate Cupcakes', price: 31 }],
     ['/cakes/signature-gateau-au-chocolat', { name: 'Signature Gâteau au Chocolat', price: 45 }],
     ['/cakes/lemon-cake', { name: 'Lemon Cake', price: 36 }],

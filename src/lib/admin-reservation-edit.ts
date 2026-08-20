@@ -115,6 +115,12 @@ function normalizeQuantity(quantity: number) {
 
 type ReservationPromoKind = typeof PROMO_CODE | typeof LEMON_PROMO_CODE | 'legacy'
 
+const LEGACY_PROMO_UNIT_PRICE_CENTS: Partial<Record<ProductId, Partial<Record<CakeSize, number>>>> = {
+  'pave-cake': { '15cm': 7500, '19cm': 9500, '22cm': 11500 },
+  'vanilla-fresh-cream-cake': { '15cm': 7500, '19cm': 9800, '22cm': 13900 },
+  'buttercream-cake': { '15cm': 7500, '19cm': 9800, '22cm': 13900 },
+}
+
 function discountedByTenPercent(total: number) {
   return Math.round(toCurrencyCents(total) * 0.9) / 100
 }
@@ -162,7 +168,14 @@ function reservationPromoKind(reservation: Reservation): ReservationPromoKind | 
   )
   const storedCents = reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice)
   const expectedTotal = discountedByTenPercent(originalTotal)
-  return storedCents === toCurrencyCents(expectedTotal) ? kind : null
+  if (storedCents === toCurrencyCents(expectedTotal)) return kind
+  const historicalUnitPriceCents = kind === 'legacy'
+    ? LEGACY_PROMO_UNIT_PRICE_CENTS[reservation.productId]?.[reservation.cakeSize]
+    : undefined
+  const historicalTotal = historicalUnitPriceCents === undefined
+    ? null
+    : discountedByTenPercent(historicalUnitPriceCents * normalizeQuantity(reservation.quantity) / 100)
+  return historicalTotal !== null && storedCents === toCurrencyCents(historicalTotal) ? kind : null
 }
 
 export function buildAdminReservationUpdate(
@@ -230,7 +243,10 @@ export function buildAdminReservationUpdate(
     quantity,
   ) + (isLegacyCupcake ? getCupcakeFinishSurcharge(productId, cupcakeFinishCounts.vanillaCreamCount, cupcakeFinishCounts.partyDecorationCount) * quantity : 0)
   const promoKind = reservationPromoKind(reservation)
-  const totalPrice = reservation.reviewCouponId
+  const hasPriceAffectingEdit = REVIEW_COUPON_PRICE_FIELDS
+    .filter((field) => field !== 'totalPrice' && field !== 'totalPriceCents')
+    .some((field) => Object.hasOwn(edits, field) && (edits as Partial<Reservation>)[field] !== reservation[field])
+  const totalPrice = !hasPriceAffectingEdit || reservation.reviewCouponId
     ? reservation.totalPrice
     : promoKind && promoAppliesToProduct(promoKind, productId)
       ? discountedByTenPercent(originalTotalPrice)

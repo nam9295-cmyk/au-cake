@@ -85,20 +85,20 @@ const ADVANCED_CLASS_SCHOOL_YEARS = new Set(['Year 2', 'Year 3', 'Year 4', 'Year
 
 const PRODUCTS = {
   'pave-cake': {
-    basePrice: 75,
-    sizePrices: { '15cm': 75, '19cm': 95, '22cm': 115 },
+    basePrice: 79,
+    sizePrices: { '15cm': 79, '19cm': 99, '22cm': 137 },
     usesSize: true,
     usesFinish: false,
   },
   'vanilla-fresh-cream-cake': {
-    basePrice: 75,
-    sizePrices: { '15cm': 75, '19cm': 98, '22cm': 139 },
+    basePrice: 69,
+    sizePrices: { '15cm': 69, '19cm': 89, '22cm': 119 },
     usesSize: true,
     usesFinish: false,
   },
   'buttercream-cake': {
-    basePrice: 75,
-    sizePrices: { '15cm': 75, '19cm': 98, '22cm': 139 },
+    basePrice: 74,
+    sizePrices: { '15cm': 74, '19cm': 94, '22cm': 128 },
     usesSize: true,
     usesFinish: false,
   },
@@ -664,6 +664,17 @@ function unitPriceForCakeLine(line) {
     + line.partyDecorationCount * CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS
 }
 
+const LEGACY_STORED_UNIT_PRICE_CENTS = Object.freeze({
+  'pave-cake': Object.freeze({ '15cm': [7500], '19cm': [9500], '22cm': [11500] }),
+  'vanilla-fresh-cream-cake': Object.freeze({ '15cm': [7500], '19cm': [9800], '22cm': [13900] }),
+  'buttercream-cake': Object.freeze({ '15cm': [7500], '19cm': [9800], '22cm': [13900] }),
+})
+
+function isApprovedStoredUnitPrice(line) {
+  if (line.unitPriceCents === unitPriceForCakeLine(line)) return true
+  return LEGACY_STORED_UNIT_PRICE_CENTS[line.productId]?.[line.cakeSize]?.includes(line.unitPriceCents) || false
+}
+
 function validatePricingCoupon(promoCode, reviewCoupon) {
   if (reviewCoupon && typeof promoCode === 'string' && promoCode.trim()) fail('PROMO_CODE_INVALID')
   if (reviewCoupon && (
@@ -1048,7 +1059,7 @@ export function parseStoredOrderLines(document) {
       for (const key of ['unitPriceCents', 'subtotalCents', 'discountCents', 'totalPriceCents']) {
         if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid price')
       }
-      if (line.unitPriceCents !== unitPriceForCakeLine(line)) throw new Error('invalid unit price')
+      if (!isApprovedStoredUnitPrice(line)) throw new Error('invalid unit price')
       if (line.subtotalCents !== line.unitPriceCents * line.quantity) throw new Error('invalid subtotal')
       if (line.discountPercent !== 0 && line.discountPercent !== 5 && line.discountPercent !== 10) throw new Error('invalid discount percent')
       if (line.totalPriceCents !== line.subtotalCents - line.discountCents) throw new Error('invalid total')

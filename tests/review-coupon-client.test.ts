@@ -384,7 +384,7 @@ function multiOrderResponse(overrides: Record<string, unknown> = {}) {
     {
       productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
       vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
-      quantity: 2, unitPriceCents: 7500, subtotalCents: 15000, discountPercent: 0, discountCents: 0, totalPriceCents: 15000,
+      quantity: 2, unitPriceCents: 7900, subtotalCents: 15800, discountPercent: 0, discountCents: 0, totalPriceCents: 15800,
     },
     {
       productId: 'choco-basque-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
@@ -397,7 +397,7 @@ function multiOrderResponse(overrides: Record<string, unknown> = {}) {
       productId: 'pave-cake', quantity: 2, chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
       cupcakeFinish: 'basic',
       vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
-      totalPrice: 205, totalPriceCents: 20500, subtotalCents: 20500,
+      totalPrice: 213, totalPriceCents: 21300, subtotalCents: 21300,
       discountPercent: 0, discountCents: 0, appliedPromoCodeLast4: undefined, promotionKind: 'none',
     }),
     orderLines,
@@ -414,7 +414,7 @@ test('multi-line response parser allowlists authoritative lines and validates ev
   assert.equal(parsed.orderLines.length, 2)
   assert.equal(parsed.orderLineCount, 2)
   assert.equal(parsed.orderItemCount, 3)
-  assert.equal(parsed.totalPriceCents, 20500)
+  assert.equal(parsed.totalPriceCents, 21300)
   assert.equal('privateFingerprint' in parsed, false)
   assert.equal('reviewCouponId' in parsed, false)
 
@@ -444,7 +444,7 @@ test('multi-line response parser allowlists authoritative lines and validates ev
   const responseProxy = new Proxy({ ...base, subtotalCents: 1 }, {
     get(target, key, receiver) {
       responseProxyGets += 1
-      if (key === 'subtotalCents') return 20500
+      if (key === 'subtotalCents') return 21300
       return Reflect.get(target, key, receiver)
     },
   })
@@ -541,19 +541,19 @@ test('multi-line response rejects duplicate canonical lines and shifted discount
   }), /RESERVATION_API_INVALID_RESPONSE/)
 
   const shifted = [
-    { ...rows[0], discountPercent: 5, discountCents: 749, totalPriceCents: 14251 },
+    { ...rows[0], discountPercent: 5, discountCents: 789, totalPriceCents: 15011 },
     { ...rows[1], discountPercent: 5, discountCents: 276, totalPriceCents: 5224 },
   ]
   assert.throws(() => parseCakeOrderResult({
     ...base,
-    totalPrice: 194.75,
-    totalPriceCents: 19475,
+    totalPrice: 202.35,
+    totalPriceCents: 20235,
     discountPercent: 5,
-    discountCents: 1025,
+    discountCents: 1065,
     appliedPromoCodeLast4: 'Q2MK',
     promotionKind: 'review-reward',
     orderLines: shifted,
-    discountBasisCents: 20500,
+    discountBasisCents: 21300,
   }), /RESERVATION_API_INVALID_RESPONSE/)
 })
 
@@ -566,14 +566,14 @@ test('multi-line response validates static discount against eligible basis rathe
   const pave = {
     productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
     vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
-    quantity: 1, unitPriceCents: 7500, subtotalCents: 7500, discountPercent: 0, discountCents: 0, totalPriceCents: 7500,
+    quantity: 1, unitPriceCents: 7900, subtotalCents: 7900, discountPercent: 0, discountCents: 0, totalPriceCents: 7900,
   }
   const parsed = parseCakeOrderResult(multiOrderResponse({
     productId: lemon.productId,
     quantity: 1,
-    totalPrice: 107.4,
-    totalPriceCents: 10740,
-    subtotalCents: 11100,
+    totalPrice: 111.4,
+    totalPriceCents: 11140,
+    subtotalCents: 11500,
     discountPercent: 10,
     discountCents: 360,
     appliedPromoCodeLast4: 'MONI',
@@ -588,9 +588,9 @@ test('multi-line response validates static discount against eligible basis rathe
     ...multiOrderResponse({
       productId: lemon.productId,
       quantity: 1,
-      totalPrice: 107.4,
-      totalPriceCents: 10740,
-      subtotalCents: 11100,
+      totalPrice: 111.4,
+      totalPriceCents: 11140,
+      subtotalCents: 11500,
       discountPercent: 10,
       discountCents: 360,
       appliedPromoCodeLast4: 'ABCD',
@@ -604,9 +604,9 @@ test('multi-line response validates static discount against eligible basis rathe
     ...multiOrderResponse({
       productId: lemon.productId,
       quantity: 1,
-      totalPrice: 107.4,
-      totalPriceCents: 10740,
-      subtotalCents: 11100,
+      totalPrice: 111.4,
+      totalPriceCents: 11140,
+      subtotalCents: 11500,
       discountPercent: 10,
       discountCents: 360,
       appliedPromoCodeLast4: 'Q2MK',

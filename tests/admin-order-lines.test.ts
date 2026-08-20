@@ -38,6 +38,51 @@ test('admin Appwrite hydration preserves every validated stored order line and a
   assert.equal(reservation.totalPrice, 130)
 })
 
+test('admin Appwrite hydration keeps only the approved pre-price-update Pave, Vanilla and Buttercream lines readable', () => {
+  const historicalPrices = [
+    ['pave-cake', '15cm', 7500], ['pave-cake', '19cm', 9500], ['pave-cake', '22cm', 11500],
+    ['vanilla-fresh-cream-cake', '15cm', 7500], ['vanilla-fresh-cream-cake', '19cm', 9800], ['vanilla-fresh-cream-cake', '22cm', 13900],
+    ['buttercream-cake', '15cm', 7500], ['buttercream-cake', '19cm', 9800], ['buttercream-cake', '22cm', 13900],
+  ] as const
+
+  for (const [productId, cakeSize, unitPriceCents] of historicalPrices) {
+    const historicalLine = {
+      ...lines[0], productId, cakeSize,
+      vanillaCakeSheet: productId === 'vanilla-fresh-cream-cake' ? 'chocolate' : 'vanilla',
+      unitPriceCents, subtotalCents: unitPriceCents, totalPriceCents: unitPriceCents,
+    }
+    const historicalDocument = {
+      ...document,
+      productId,
+      cakeSize,
+      vanillaCakeSheet: historicalLine.vanillaCakeSheet,
+      quantity: 1,
+      totalPrice: unitPriceCents / 100,
+      totalPriceCents: unitPriceCents,
+      subtotalCents: unitPriceCents,
+      discountBasisCents: 0,
+      discountPercent: 0,
+      discountCents: 0,
+      orderLinesJson: JSON.stringify({ version: 1, lines: [historicalLine] }),
+      orderLineCount: 1,
+      orderItemCount: 1,
+    }
+    const reservation = toReservation(historicalDocument as never)
+    assert.equal(reservation.orderLines?.[0]?.unitPriceCents, unitPriceCents)
+  }
+
+  const forgedLine = { ...lines[0], unitPriceCents: 7800, subtotalCents: 7800, totalPriceCents: 7800 }
+  assert.throws(() => toReservation({
+    ...document,
+    totalPrice: 78,
+    totalPriceCents: 7800,
+    subtotalCents: 7800,
+    orderLinesJson: JSON.stringify({ version: 1, lines: [forgedLine] }),
+    orderLineCount: 1,
+    orderItemCount: 1,
+  } as never), /INVALID_STORED_ORDER/)
+})
+
 test('admin Appwrite hydration retains mixed cupcake finishes with the same pack product', () => {
   const mixedFinishLines = [
     {

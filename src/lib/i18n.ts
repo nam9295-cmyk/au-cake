@@ -27,7 +27,7 @@ type ProductText = {
 const koProducts: Record<ProductId, ProductText> = {
   'pave-cake': {
     name: '파베 초콜릿 케이크',
-    description: '초콜릿 시트 사이에 부드러운 파베 가나슈를 겹겹이 넣은 원형 케이크예요. 크림보다 초콜릿 맛이 먼저 오는 스타일입니다.',
+    description: '가벼운 스펀지와 크림 중심의 케이크가 아니라, 묵직한 초콜릿 케이크 시트를 4단으로 쌓고 각 층을 부드러운 파베 초콜릿 가나슈로 채웠습니다. 처음부터 끝까지 진한 초콜릿의 밀도와 묵직한 식감을 느낄 수 있는 베리굿의 시그니처 초콜릿 케이크입니다.',
     priceNote: '사이즈 선택 · 다크 초콜릿만 사용',
   },
   'vanilla-fresh-cream-cake': {
@@ -103,7 +103,7 @@ const koProducts: Record<ProductId, ProductText> = {
 }
 
 const koProductFeatures: Record<ProductId, string[]> = {
-  'pave-cake': ['초콜릿 시트와 파베 가나슈', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), '다크 초콜릿만 사용'],
+  'pave-cake': ['묵직한 초콜릿 케이크 4단', '각 층을 채운 파베 초콜릿 가나슈', '크림보다 초콜릿이 중심인 진한 맛', '6" · 7.5" · 9" 사이즈'],
   'vanilla-fresh-cream-cake': ['초코 케이크 시트만 사용', '트리플베리 또는 누텔라 초코칩', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
   'buttercream-cake': ['초콜릿 버터크림 포함', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), '사이즈 선택'],
   'pound-cake': ['직사각형 갸또 쇼콜라', '고정 사이즈', '기본, 초콜릿 추가, 바닐라 크림 마감'],

@@ -105,7 +105,7 @@ test('Vanilla Fresh Cream Cake keeps its size prices and fixes the chocolate cak
   const vanillaFreshCreamCake = getProductById(vanillaFreshCreamCakeId)
 
   assert.equal(vanillaFreshCreamCake.name, 'Vanilla Fresh Cream Cake')
-  assert.deepEqual(vanillaFreshCreamCake.sizePrices, { '15cm': 75, '19cm': 98, '22cm': 139 })
+  assert.deepEqual(vanillaFreshCreamCake.sizePrices, { '15cm': 69, '19cm': 89, '22cm': 119 })
   assert.equal(vanillaFreshCreamCake.usesSizeOptions, true)
   assert.equal(vanillaFreshCreamCake.usesCacaoOptions, false)
   assert.equal(vanillaFreshCreamCake.usesChocolateTypeOptions, false)
@@ -137,9 +137,9 @@ test('Vanilla Fresh Cream Cake keeps its size prices and fixes the chocolate cak
   assert.equal(normalizeVanillaCakeSheet('pave-cake', 'chocolate'), 'vanilla')
   assert.equal(normalizeVanillaCakeFlavor('pave-cake', 'nutella-chocolate-chip'), 'triple-berry')
   assert.equal(normalizeVanillaCakePointColor('pave-cake', 'blue'), 'pink')
-  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '15cm', cacaoPercent: '100', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 75)
-  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '19cm', cacaoPercent: '70', chocolateType: 'dark', poundAddon: 'extra-chocolate' }), 98)
-  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '22cm', cacaoPercent: '80.5', chocolateType: 'milk', poundAddon: 'none' }), 139)
+  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '15cm', cacaoPercent: '100', chocolateType: 'milk', poundAddon: 'vanilla-cream' }), 69)
+  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '19cm', cacaoPercent: '70', chocolateType: 'dark', poundAddon: 'extra-chocolate' }), 89)
+  assert.equal(getReservationUnitPrice(vanillaFreshCreamCakeId, { cakeSize: '22cm', cacaoPercent: '80.5', chocolateType: 'milk', poundAddon: 'none' }), 119)
 
   for (const language of ['en', 'ko'] as const) {
     const text = getProductText(vanillaFreshCreamCakeId, language)
@@ -158,19 +158,19 @@ test('Buttercream Cake uses the Vanilla size price ladder with no customer-selec
   const buttercream = getProductById('buttercream-cake')
 
   assert.equal(buttercream.name, 'Buttercream Cake')
-  assert.deepEqual(buttercream.sizePrices, { '15cm': 75, '19cm': 98, '22cm': 139 })
+  assert.deepEqual(buttercream.sizePrices, { '15cm': 74, '19cm': 94, '22cm': 128 })
   assert.equal(buttercream.usesSizeOptions, true)
   assert.equal(buttercream.usesCacaoOptions, false)
   assert.equal(buttercream.usesChocolateTypeOptions, false)
   assert.equal(buttercream.usesPoundAddonOptions, false)
-  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '15cm' }), 75)
-  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '19cm' }), 98)
-  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '22cm' }), 139)
+  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '15cm' }), 74)
+  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '19cm' }), 94)
+  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '22cm' }), 128)
   assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, {
     cakeSize: '22cm',
     chocolateType: 'milk',
     poundAddon: 'vanilla-cream',
-  }), 139)
+  }), 128)
 })
 
 test('Brownie Cheesecake keeps the three approved fixed finishing prices', () => {
@@ -358,21 +358,23 @@ test('cupcakes default to a Basic dozen while allowing the Half Dozen product wi
   assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), false)
 })
 
-test('pave cake keeps its approved prices behind the size labels and dark-only finish', () => {
+test('Pave Chocolate Cake keeps its approved prices, dense four-layer copy and dark-only finish', () => {
   const paveCake = getProductById('pave-cake')
 
   assert.equal(paveCake.usesSizeOptions, true)
   assert.equal(paveCake.usesChocolateTypeOptions, true)
   assert.equal(paveCake.usesPoundAddonOptions, false)
-  assert.deepEqual(paveCake.sizePrices, { '15cm': 75, '19cm': 95, '22cm': 115 })
-  assert.equal(getProductFeatures('pave-cake', 'en')[1], '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22')
-  assert.equal(getProductFeatures('pave-cake', 'ko')[1], '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22')
+  assert.deepEqual(paveCake.sizePrices, { '15cm': 79, '19cm': 99, '22cm': 137 })
+  assert.equal(getProductText('pave-cake', 'en').description, 'A rich four-layer chocolate cake built for a dense, chocolate-forward bite. Instead of a light sponge-and-cream style, each layer is filled with smooth pave chocolate ganache, creating a substantial cake with deep chocolate flavour from the first slice to the last.')
+  assert.equal(getProductText('pave-cake', 'ko').description, '가벼운 스펀지와 크림 중심의 케이크가 아니라, 묵직한 초콜릿 케이크 시트를 4단으로 쌓고 각 층을 부드러운 파베 초콜릿 가나슈로 채웠습니다. 처음부터 끝까지 진한 초콜릿의 밀도와 묵직한 식감을 느낄 수 있는 베리굿의 시그니처 초콜릿 케이크입니다.')
+  assert.deepEqual(getProductFeatures('pave-cake', 'en'), ['Four layers of rich chocolate cake', 'Filled with smooth pave chocolate ganache', 'Dense, chocolate-forward finish', '6" · 7.5" · 9"'])
+  assert.deepEqual(getProductFeatures('pave-cake', 'ko'), ['묵직한 초콜릿 케이크 4단', '각 층을 채운 파베 초콜릿 가나슈', '크림보다 초콜릿이 중심인 진한 맛', '6" · 7.5" · 9" 사이즈'])
   assert.equal(formatChocolateTypeLabel('dark'), 'Dark chocolate')
   assert.equal(formatChocolateTypeLabel('milk'), 'Dark chocolate')
-  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none' }), 75)
-  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '19cm', chocolateType: 'milk', poundAddon: 'extra-chocolate' }), 95)
-  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '19cm', chocolateType: 'dark', poundAddon: 'vanilla-cream' }), 95)
-  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'none' }), 115)
+  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none' }), 79)
+  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '19cm', chocolateType: 'milk', poundAddon: 'extra-chocolate' }), 99)
+  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '19cm', chocolateType: 'dark', poundAddon: 'vanilla-cream' }), 99)
+  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'none' }), 137)
 })
 
 test('AU currency display uses AUD code instead of dollar symbol', () => {

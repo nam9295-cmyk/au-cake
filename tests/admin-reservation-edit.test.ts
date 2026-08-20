@@ -212,8 +212,8 @@ test('admin edits preserve an audited promo discount and recalculate the discoun
   assert.equal(unchanged.totalPriceCents, 6750)
 
   const changed = buildAdminReservationUpdate(promoReservation, { cakeSize: '19cm', quantity: 2 })
-  assert.equal(changed.totalPrice, 171)
-  assert.equal(changed.totalPriceCents, 17100)
+  assert.equal(changed.totalPrice, 178.2)
+  assert.equal(changed.totalPriceCents, 17820)
 })
 
 test('admin edits preserve a Lemoni discount across Fresh Lemon pack changes', () => {

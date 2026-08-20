@@ -32,9 +32,9 @@ test('HTML shell fallback uses the current seven-cake homepage description', () 
 
 test('AU cake pages own starting prices and final schema modes', () => {
   assert.deepEqual(productStartingPrices, {
-    'pave-chocolate-cake': 75,
-    'vanilla-fresh-cream-cake': 75,
-    'buttercream-cake': 75,
+    'pave-chocolate-cake': 79,
+    'vanilla-fresh-cream-cake': 69,
+    'buttercream-cake': 74,
     'chocolate-cupcakes': 31,
     'signature-gateau-au-chocolat': 45,
     'lemon-cake': 36,
