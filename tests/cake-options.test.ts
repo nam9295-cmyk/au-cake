@@ -100,7 +100,7 @@ test('cheesecake product detection is shared by customer and admin presentation'
   assert.equal(isCheesecakeProduct('pave-cake'), false)
 })
 
-test('Vanilla Fresh Cream Cake keeps its size prices and fixes the chocolate cake sheet while retaining flavour choices', () => {
+test('Vanilla Fresh Cream Cake uses chocolate sheets with plain fresh cream and no selectable flavour', () => {
   const vanillaFreshCreamCakeId: ProductId = 'vanilla-fresh-cream-cake'
   const vanillaFreshCreamCake = getProductById(vanillaFreshCreamCakeId)
 
@@ -112,13 +112,10 @@ test('Vanilla Fresh Cream Cake keeps its size prices and fixes the chocolate cak
   assert.equal(vanillaFreshCreamCake.usesPoundAddonOptions, false)
   assert.equal(DEFAULT_VANILLA_CAKE_SHEET, 'vanilla')
   assert.equal(VANILLA_FRESH_CREAM_CAKE_SHEET, 'chocolate')
-  assert.equal(DEFAULT_VANILLA_CAKE_FLAVOR, 'triple-berry')
+  assert.equal(DEFAULT_VANILLA_CAKE_FLAVOR, 'plain')
   assert.equal(DEFAULT_VANILLA_CAKE_POINT_COLOR, 'pink')
   assert.deepEqual(VANILLA_CAKE_SHEET_OPTIONS, [{ value: 'chocolate', label: 'Chocolate cake sheet' }])
-  assert.deepEqual(VANILLA_CAKE_FLAVOR_OPTIONS, [
-    { value: 'triple-berry', label: 'Triple berry' },
-    { value: 'nutella-chocolate-chip', label: 'Nutella chocolate chip' },
-  ])
+  assert.deepEqual(VANILLA_CAKE_FLAVOR_OPTIONS, [{ value: 'plain', label: 'Plain fresh cream' }])
   assert.deepEqual(VANILLA_CAKE_POINT_COLOR_OPTIONS, [
     { value: 'pink', label: 'Pink', labelKo: '핑크', hex: '#ec4899' },
     { value: 'red', label: 'Red', labelKo: '레드', hex: '#ef4444' },
@@ -131,7 +128,7 @@ test('Vanilla Fresh Cream Cake keeps its size prices and fixes the chocolate cak
   ])
   assert.equal(normalizeVanillaCakeSheet(vanillaFreshCreamCakeId, 'vanilla'), 'chocolate')
   assert.equal(normalizeVanillaCakeSheet(vanillaFreshCreamCakeId, 'chocolate'), 'chocolate')
-  assert.equal(normalizeVanillaCakeFlavor(vanillaFreshCreamCakeId, 'nutella-chocolate-chip'), 'nutella-chocolate-chip')
+  assert.equal(normalizeVanillaCakeFlavor(vanillaFreshCreamCakeId, 'nutella-chocolate-chip'), 'plain')
   assert.equal(normalizeVanillaCakePointColor(vanillaFreshCreamCakeId, 'blue'), 'blue')
   assert.equal(normalizeVanillaCakePointColor(vanillaFreshCreamCakeId, 'unknown'), 'pink')
   assert.equal(normalizeVanillaCakeSheet('pave-cake', 'chocolate'), 'vanilla')
@@ -145,16 +142,17 @@ test('Vanilla Fresh Cream Cake keeps its size prices and fixes the chocolate cak
     const text = getProductText(vanillaFreshCreamCakeId, language)
     const features = getProductFeatures(vanillaFreshCreamCakeId, language)
     assert.match(text.description, /cake sheet|케이크 시트/i)
-    assert.match(text.description, /vanilla fresh cream|바닐라 생크림/)
+    assert.match(text.description, /plain fresh cream|담백한 생크림/)
+    assert.doesNotMatch(text.description, /Triple berry|Nutella|트리플베리|누텔라/)
     assert.equal(text.description.includes('cm'), false)
     assert.equal(text.priceNote.includes('cm'), false)
     assert.deepEqual(features, language === 'en'
-      ? ['Chocolate cake sheet only', 'Triple berry or Nutella chocolate chip', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
-      : ['초코 케이크 시트만 사용', '트리플베리 또는 누텔라 초코칩', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
+      ? ['Chocolate cake sheets', 'Plain fresh cream between each layer', 'No added fruit or flavour', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
+      : ['초콜릿 케이크 시트', '시트 사이마다 담백한 생크림', '과일이나 추가 flavour 없음', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
   }
 })
 
-test('Buttercream Cake uses the Vanilla size price ladder with no customer-selectable finish or flavour', () => {
+test('Buttercream Cake uses chocolate sheets, plain buttercream layers, and a selectable point colour', () => {
   const buttercream = getProductById('buttercream-cake')
 
   assert.equal(buttercream.name, 'Buttercream Cake')
@@ -171,6 +169,19 @@ test('Buttercream Cake uses the Vanilla size price ladder with no customer-selec
     chocolateType: 'milk',
     poundAddon: 'vanilla-cream',
   }), 128)
+  assert.equal(normalizeVanillaCakeSheet('buttercream-cake', 'vanilla'), 'chocolate')
+  assert.equal(normalizeVanillaCakeFlavor('buttercream-cake', 'nutella-chocolate-chip'), 'plain')
+  assert.equal(normalizeVanillaCakePointColor('buttercream-cake', 'blue'), 'blue')
+
+  for (const language of ['en', 'ko'] as const) {
+    const text = getProductText('buttercream-cake', language)
+    const features = getProductFeatures('buttercream-cake', language)
+    assert.match(text.description, /chocolate cake sheets|초콜릿 케이크 시트/i)
+    assert.match(text.description, /Chocolate Buttercream|초콜릿 버터크림/)
+    assert.deepEqual(features, language === 'en'
+      ? ['Chocolate cake sheets', 'Chocolate Buttercream between each layer', 'Choose a point colour', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
+      : ['초콜릿 케이크 시트', '시트 사이마다 초콜릿 버터크림', '포인트 컬러 선택 가능', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
+  }
 })
 
 test('Brownie Cheesecake keeps the three approved fixed finishing prices', () => {

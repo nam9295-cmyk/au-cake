@@ -242,23 +242,35 @@ function getCakeSizeText(reservation, config) {
   return config.sizeLabels[reservation.cakeSize] || reservation.cakeSize || '-'
 }
 
+function isCreamLayerCake(reservation) {
+  return ['vanilla-fresh-cream-cake', 'buttercream-cake'].includes(reservation.productId)
+}
+
 function getVanillaCakeSheetText(reservation, config) {
-  if (reservation.productId !== 'vanilla-fresh-cream-cake') return null
+  if (!isCreamLayerCake(reservation)) return null
   return config.currency === 'AUD'
     ? 'Chocolate cake sheet'
     : '초코 케이크 시트'
 }
 
 function getVanillaCakeFlavorText(reservation, config) {
-  if (reservation.productId !== 'vanilla-fresh-cream-cake') return null
+  if (reservation.productId !== 'vanilla-fresh-cream-cake' || reservation.vanillaCakeFlavor === 'plain') return null
   const nutellaChocolateChip = reservation.vanillaCakeFlavor === 'nutella-chocolate-chip'
   return config.currency === 'AUD'
     ? nutellaChocolateChip ? 'Nutella chocolate chip' : 'Triple berry'
     : nutellaChocolateChip ? '누텔라 초코칩' : '트리플베리'
 }
 
+function getCreamCakeFillingText(reservation, config) {
+  if (!isCreamLayerCake(reservation)) return null
+  if (reservation.productId === 'buttercream-cake') {
+    return config.currency === 'AUD' ? 'Chocolate Buttercream' : '초콜릿 버터크림'
+  }
+  return config.currency === 'AUD' ? 'Plain fresh cream' : '담백한 생크림'
+}
+
 function getVanillaCakePointColorText(reservation, config) {
-  if (reservation.productId !== 'vanilla-fresh-cream-cake') return null
+  if (!isCreamLayerCake(reservation)) return null
   const labels = config.currency === 'AUD'
     ? { pink: 'Pink', red: 'Red', green: 'Green', yellow: 'Yellow', blue: 'Blue', purple: 'Purple', orange: 'Orange', white: 'White' }
     : { pink: '핑크', red: '레드', green: '그린', yellow: '옐로우', blue: '블루', purple: '퍼플', orange: '오렌지', white: '화이트' }
@@ -450,9 +462,11 @@ function cakeDetailRows(reservation, config, suffix = '') {
   return [
     [label(config.labels.product), getProductName(reservation, config)],
     [label(config.labels.size), getCakeSizeText(reservation, config)],
-    ...(reservation.productId === 'vanilla-fresh-cream-cake' ? [
+    ...(isCreamLayerCake(reservation) ? [
       [label(config.labels.cakeSheet), getVanillaCakeSheetText(reservation, config)],
-      [label(config.labels.flavour), getVanillaCakeFlavorText(reservation, config)],
+      ...(getVanillaCakeFlavorText(reservation, config)
+        ? [[label(config.labels.flavour), getVanillaCakeFlavorText(reservation, config)]]
+        : [[label(config.currency === 'AUD' ? 'Filling' : '필링'), getCreamCakeFillingText(reservation, config)]]),
       [label(config.currency === 'AUD' ? 'Point colour' : '포인트 컬러'), getVanillaCakePointColorText(reservation, config)],
     ] : []),
     [label(config.labels.chocolate), getChocolateText(reservation, config)],

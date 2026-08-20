@@ -17,7 +17,7 @@ import {
   normalizeVanillaCakeFlavor,
   normalizeVanillaCakePointColor,
   normalizeVanillaCakeSheet,
-  isVanillaFreshCreamCakeProduct,
+  isCakePointColorProduct,
   isCupcakeProduct,
 } from './constants.js'
 import {
@@ -278,7 +278,7 @@ export function selectCakeDetailProduct(
     cupcakeFinish: normalizeCupcakeFinish(product.id, selection.cupcakeFinish),
     vanillaCakeSheet: normalizeVanillaCakeSheet(product.id, selection.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeVanillaCakeFlavor(product.id, selection.vanillaCakeFlavor),
-    ...(isVanillaFreshCreamCakeProduct(product.id)
+    ...(isCakePointColorProduct(product.id)
       ? { vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, selection.vanillaCakePointColor) }
       : {}),
     quantity: normalizeQuantity(selection.quantity),

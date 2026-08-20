@@ -77,7 +77,7 @@ test('AU operator cake notification projection exposes only approved cake-size l
   assert.equal(legacySize, '17cm')
 })
 
-test('AU operator notification gives Vanilla Fresh Cream Cake its size, cake sheet, and flavour selections', () => {
+test('AU operator notification gives new cream cakes their chocolate sheets, filling, and point colour', () => {
   const rows = rowsByLabel({
     reservationNumber: 'VG-C-AU-VANILLA',
     productId: 'vanilla-fresh-cream-cake',
@@ -85,7 +85,7 @@ test('AU operator notification gives Vanilla Fresh Cream Cake its size, cake she
     chocolateType: 'milk',
     poundAddon: 'vanilla-cream',
     vanillaCakeSheet: 'chocolate',
-    vanillaCakeFlavor: 'nutella-chocolate-chip',
+    vanillaCakeFlavor: 'plain',
     vanillaCakePointColor: 'blue',
     quantity: 1,
   })
@@ -95,8 +95,21 @@ test('AU operator notification gives Vanilla Fresh Cream Cake its size, cake she
   assert.equal(rows.Chocolate, '-')
   assert.equal(rows.Finish, '-')
   assert.equal(rows['Cake sheet'], 'Chocolate cake sheet')
-  assert.equal(rows.Flavour, 'Nutella chocolate chip')
+  assert.equal(rows.Filling, 'Plain fresh cream')
   assert.equal(rows['Point colour'], 'Blue')
+
+  const buttercream = rowsByLabel({
+    reservationNumber: 'VG-C-AU-BUTTERCREAM',
+    productId: 'buttercream-cake',
+    cakeSize: '19cm',
+    vanillaCakeSheet: 'chocolate',
+    vanillaCakeFlavor: 'plain',
+    vanillaCakePointColor: 'purple',
+    quantity: 1,
+  })
+  assert.equal(buttercream['Cake sheet'], 'Chocolate cake sheet')
+  assert.equal(buttercream.Filling, 'Chocolate Buttercream')
+  assert.equal(buttercream['Point colour'], 'Purple')
 })
 
 test('AU operator notification shows current Cupcake pack and whole-box finish', () => {

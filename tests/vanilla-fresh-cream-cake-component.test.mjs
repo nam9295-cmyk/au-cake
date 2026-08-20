@@ -35,14 +35,14 @@ test('reservation selection uses the safe photo-coming silhouette for Vanilla an
   assert.match(reserve, /catalogCard\?\.isPhotoComingSoon[\s\S]*?<VanillaFreshCreamCakeSilhouette/)
 })
 
-test('Vanilla Fresh Cream Cake selects its size and flavour while keeping the chocolate sheet fixed', () => {
+test('Vanilla Fresh Cream Cake selects its size without retired flavour controls, while Buttercream shares point colours', () => {
   assert.match(reserve, /!isVanillaFreshCreamCakeProduct\(selectedProduct\.id\)\s*&&\s*<span>\{optionText\.description\}<\/span>/)
   assert.match(reserve, /selectedProduct\.usesSizeOptions && \(/)
-  assert.match(reserve, /isVanillaFreshCreamCakeProduct\(selectedProduct\.id\) && \(/)
-  assert.match(reserve, /name="vanillaCakeFlavor"/)
-  assert.match(reserve, /VANILLA_CAKE_FLAVOR_OPTIONS\.map/)
+  assert.match(reserve, /isCakePointColorProduct\(selectedProduct\.id\) && \(/)
+  assert.doesNotMatch(reserve, /name="vanillaCakeFlavor"/)
+  assert.doesNotMatch(reserve, /VANILLA_CAKE_FLAVOR_OPTIONS\.map/)
   assert.match(reserve, /form\.cakeSize === option\.value/)
-  assert.match(reserve, /form\.vanillaCakeFlavor === option\.value/)
+  assert.match(reserve, /form\.vanillaCakePointColor === option\.value/)
   assert.doesNotMatch(reserve, /name="vanillaCakeSheet"/)
   assert.doesNotMatch(reserve, /VANILLA_CAKE_SHEET_OPTIONS\.map/)
 })

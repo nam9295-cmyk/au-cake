@@ -15,7 +15,6 @@ import {
   CUPCAKE_FINISH_OPTIONS,
   MAX_RESERVATION_QUANTITY,
   POUND_ADDON_OPTIONS,
-  VANILLA_CAKE_FLAVOR_OPTIONS,
   VANILLA_CAKE_POINT_COLOR_OPTIONS,
 
   formatCakeSizeLabel,
@@ -24,8 +23,8 @@ import {
   getFreshLemonCupcakePackSize,
   getProductById,
   isCupcakeProduct,
+  isCakePointColorProduct,
   isFreshLemonCupcakeProduct,
-  isVanillaFreshCreamCakeProduct,
   usesReservationChocolateType,
 } from './lib/constants'
 import {
@@ -397,44 +396,28 @@ export default function CakeDetailPage({
             </fieldset>
           )}
 
-          {isVanillaFreshCreamCakeProduct(product.id) && (
-            <>
-              <fieldset className="cake-detail-fieldset">
-                <legend>{language === 'ko' ? '맛 선택' : 'Choose a flavour'}</legend>
-                <div className="cake-detail-options">
-                  {VANILLA_CAKE_FLAVOR_OPTIONS.map((option) => (
-                    <OptionButton
-                      active={selection.vanillaCakeFlavor === option.value}
-                      onClick={() => updateSelection({ vanillaCakeFlavor: option.value })}
+          {isCakePointColorProduct(product.id) && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '포인트 컬러 선택' : 'Choose a point colour'}</legend>
+              <div className="vanilla-point-color-grid">
+                {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => {
+                  const isSelected = selection.vanillaCakePointColor === option.value
+                  return (
+                    <button
+                      type="button"
+                      className={`vanilla-point-color-card${isSelected ? ' is-selected' : ''}`}
+                      aria-label={language === 'ko' ? `${option.labelKo} 포인트 컬러` : `${option.label} point colour`}
+                      aria-pressed={isSelected}
+                      onClick={() => updateSelection({ vanillaCakePointColor: option.value })}
                       key={option.value}
                     >
-                      <strong>{option.label}</strong>
-                    </OptionButton>
-                  ))}
-                </div>
-              </fieldset>
-              <fieldset className="cake-detail-fieldset">
-                <legend>{language === 'ko' ? '포인트 컬러 선택' : 'Choose a point colour'}</legend>
-                <div className="vanilla-point-color-grid">
-                  {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => {
-                    const isSelected = selection.vanillaCakePointColor === option.value
-                    return (
-                      <button
-                        type="button"
-                        className={`vanilla-point-color-card${isSelected ? ' is-selected' : ''}`}
-                        aria-label={language === 'ko' ? `${option.labelKo} 포인트 컬러` : `${option.label} point colour`}
-                        aria-pressed={isSelected}
-                        onClick={() => updateSelection({ vanillaCakePointColor: option.value })}
-                        key={option.value}
-                      >
-                        <span className="vanilla-point-color-swatch" style={{ backgroundColor: option.hex }} aria-hidden="true" />
-                        <strong>{option.value}</strong>
-                      </button>
-                    )
-                  })}
-                </div>
-              </fieldset>
-            </>
+                      <span className="vanilla-point-color-swatch" style={{ backgroundColor: option.hex }} aria-hidden="true" />
+                      <strong>{option.value}</strong>
+                    </button>
+                  )
+                })}
+              </div>
+            </fieldset>
           )}
 
           {isFreshLemonCupcakeProduct(product.id) && (

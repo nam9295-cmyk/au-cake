@@ -21,7 +21,6 @@ import {
   MAX_RESERVATION_QUANTITY,
   formatCakeSizeLabel,
   isPromoEligibleProduct,
-  formatVanillaCakeFlavor,
   formatVanillaCakeSheet,
   getChocolateIcingSurcharge,
   getLemonIcingCount,
@@ -31,6 +30,8 @@ import {
   isCheesecakeProduct,
   isCupcakeProduct,
   isFreshLemonCupcakeProduct,
+  isCakePointColorProduct,
+  isCreamLayerCakeProduct,
   isVanillaFreshCreamCakeProduct,
   getReservationPrice,
   getReservationUnitPrice,
@@ -42,7 +43,6 @@ import {
   normalizeVanillaCakeSheet,
   POUND_ADDON_OPTIONS,
   PRODUCT_GROUPS,
-  VANILLA_CAKE_FLAVOR_OPTIONS,
   VANILLA_CAKE_POINT_COLOR_OPTIONS,
 
   usesReservationChocolateType,
@@ -706,7 +706,7 @@ export function ReservePage({
                   <dd>{formatCakeSizeLabel(form.cakeSize)}</dd>
                 </div>
               )}
-              {isVanillaFreshCreamCakeProduct(selectedProduct.id) && (
+              {isCreamLayerCakeProduct(selectedProduct.id) && (
                 <>
                   <div>
                     <dt>{language === 'ko' ? '케이크 시트' : 'Cake sheet'}</dt>
@@ -715,10 +715,10 @@ export function ReservePage({
                       : formatVanillaCakeSheet(form.vanillaCakeSheet)}</dd>
                   </div>
                   <div>
-                    <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
-                    <dd>{language === 'ko'
-                      ? form.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
-                      : formatVanillaCakeFlavor(form.vanillaCakeFlavor)}</dd>
+                    <dt>{language === 'ko' ? '필링' : 'Filling'}</dt>
+                    <dd>{selectedProduct.id === 'buttercream-cake'
+                      ? language === 'ko' ? '초콜릿 버터크림' : 'Chocolate Buttercream'
+                      : language === 'ko' ? '담백한 생크림' : 'Plain fresh cream'}</dd>
                   </div>
                   <div>
                     <dt>{language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
@@ -977,48 +977,28 @@ export function ReservePage({
               </fieldset>
             )}
 
-            {isVanillaFreshCreamCakeProduct(selectedProduct.id) && (
-              <>
-                <fieldset>
-                  <legend>{language === 'ko' ? '맛 선택' : 'Choose flavour'}</legend>
-                  <div className="choice-list">
-                    {VANILLA_CAKE_FLAVOR_OPTIONS.map((option) => (
-                      <label className="choice-item" key={option.value}>
-                        <input
-                          type="radio"
-                          name="vanillaCakeFlavor"
-                          checked={form.vanillaCakeFlavor === option.value}
-                          onChange={() => setForm({ ...form, vanillaCakeFlavor: option.value })}
-                        />
-                        <span className="choice-copy">
-                          <strong>{language === 'ko' ? option.value === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리' : option.label}</strong>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-                <fieldset>
-                  <legend>{language === 'ko' ? '포인트 컬러 선택' : 'Choose point colour'}</legend>
-                  <div className="vanilla-point-color-grid">
-                    {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => (
-                      <label
-                        className={`vanilla-point-color-card${form.vanillaCakePointColor === option.value ? ' is-selected' : ''}`}
-                        key={option.value}
-                      >
-                        <input
-                          type="radio"
-                          name="vanillaCakePointColor"
-                          value={option.value}
-                          checked={form.vanillaCakePointColor === option.value}
-                          onChange={() => setForm({ ...form, vanillaCakePointColor: option.value })}
-                        />
-                        <span className="vanilla-point-color-swatch" style={{ backgroundColor: option.hex }} aria-hidden="true" />
-                        <strong>{option.value}</strong>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-              </>
+            {isCakePointColorProduct(selectedProduct.id) && (
+              <fieldset>
+                <legend>{language === 'ko' ? '포인트 컬러 선택' : 'Choose point colour'}</legend>
+                <div className="vanilla-point-color-grid">
+                  {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => (
+                    <label
+                      className={`vanilla-point-color-card${form.vanillaCakePointColor === option.value ? ' is-selected' : ''}`}
+                      key={option.value}
+                    >
+                      <input
+                        type="radio"
+                        name="vanillaCakePointColor"
+                        value={option.value}
+                        checked={form.vanillaCakePointColor === option.value}
+                        onChange={() => setForm({ ...form, vanillaCakePointColor: option.value })}
+                      />
+                      <span className="vanilla-point-color-swatch" style={{ backgroundColor: option.hex }} aria-hidden="true" />
+                      <strong>{option.value}</strong>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             )}
 
             {selectedProduct.usesCacaoOptions && (

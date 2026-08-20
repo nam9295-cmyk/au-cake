@@ -42,8 +42,10 @@ const CUPCAKE_FINISH_PRICES_CENTS = {
 }
 const CUPCAKE_FINISHES = new Set(['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'])
 export const VANILLA_CAKE_SHEETS = new Set(['chocolate'])
-export const VANILLA_CAKE_FLAVORS = new Set(['triple-berry', 'nutella-chocolate-chip'])
+export const VANILLA_CAKE_FLAVORS = new Set(['plain'])
+const LEGACY_VANILLA_CAKE_FLAVORS = new Set(['triple-berry', 'nutella-chocolate-chip'])
 export const VANILLA_CAKE_POINT_COLORS = new Set(['pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'])
+const CREAM_LAYER_CAKE_PRODUCT_IDS = new Set(['vanilla-fresh-cream-cake', 'buttercream-cake'])
 export const CAKE_SIZE_LABELS = {
   '15cm': '6" | serves 8',
   '19cm': '7.5" | serves 14',
@@ -448,20 +450,34 @@ function normalizeCupcakeFinish(productId, value, { allowLegacyCupcakeCounts = f
   return value
 }
 
-function normalizeVanillaCakeOptions(productId, cakeSheet, flavor, pointColor) {
-  if (productId !== 'vanilla-fresh-cream-cake') {
+function normalizeVanillaCakeOptions(productId, cakeSheet, flavor, pointColor, { allowLegacyCreamCakeOptions = false } = {}) {
+  if (!CREAM_LAYER_CAKE_PRODUCT_IDS.has(productId)) {
     return { vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink' }
   }
-  const vanillaCakeSheet = cakeSheet === undefined || cakeSheet === 'vanilla' ? 'chocolate' : cakeSheet
-  const vanillaCakeFlavor = flavor === undefined ? 'triple-berry' : flavor
+  const vanillaCakeSheet = allowLegacyCreamCakeOptions
+    ? (cakeSheet === 'vanilla' || cakeSheet === 'chocolate' ? cakeSheet : 'chocolate')
+    : (cakeSheet === undefined || cakeSheet === 'vanilla' ? 'chocolate' : cakeSheet)
+  const vanillaCakeFlavor = allowLegacyCreamCakeOptions
+    ? (flavor === 'plain' || LEGACY_VANILLA_CAKE_FLAVORS.has(flavor) ? flavor : 'plain')
+    : (flavor === undefined || flavor === 'plain' || LEGACY_VANILLA_CAKE_FLAVORS.has(flavor) ? 'plain' : flavor)
   const vanillaCakePointColor = VANILLA_CAKE_POINT_COLORS.has(pointColor) ? pointColor : 'pink'
-  if (!VANILLA_CAKE_SHEETS.has(vanillaCakeSheet) || !VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)) {
+  const hasValidSheet = allowLegacyCreamCakeOptions
+    ? vanillaCakeSheet === 'vanilla' || VANILLA_CAKE_SHEETS.has(vanillaCakeSheet)
+    : VANILLA_CAKE_SHEETS.has(vanillaCakeSheet)
+  const hasValidFlavor = allowLegacyCreamCakeOptions
+    ? VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor) || LEGACY_VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)
+    : VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)
+  if (!hasValidSheet || !hasValidFlavor) {
     fail('INVALID_VANILLA_CAKE_OPTION')
   }
   return { vanillaCakeSheet, vanillaCakeFlavor, vanillaCakePointColor }
 }
 
-function normalizeCakeOptions(input, { allowStoredProduct = false, allowLegacyCupcakeCounts = false } = {}) {
+function normalizeCakeOptions(input, {
+  allowStoredProduct = false,
+  allowLegacyCupcakeCounts = false,
+  allowLegacyCreamCakeOptions = false,
+} = {}) {
   const isAllowedProduct = allowStoredProduct
     ? isStoredCakeOrderProductId(input.productId)
     : isActiveCakeOrderProductId(input.productId)
@@ -495,6 +511,7 @@ function normalizeCakeOptions(input, { allowStoredProduct = false, allowLegacyCu
     input.vanillaCakeSheet,
     input.vanillaCakeFlavor,
     input.vanillaCakePointColor,
+    { allowLegacyCreamCakeOptions },
   )
 
   return { product, cakeSize, poundAddon, chocolateType, cupcakeFinish, chocolateIcingCount, ...cupcakeFinishCounts, ...vanillaCakeOptions }
@@ -1046,6 +1063,7 @@ export function parseStoredOrderLines(document) {
       const normalized = normalizedCakeLine(line, line.quantity, {
         allowStoredProduct: true,
         allowLegacyCupcakeCounts: !hasCupcakeFinish,
+        allowLegacyCreamCakeOptions: true,
       })
       if (ORDER_LINE_IDENTITY_KEYS.some((key) => key !== 'vanillaCakePointColor' && (key !== 'cupcakeFinish' || hasCupcakeFinish) && normalized[key] !== line[key])) {
         throw new Error('noncanonical line')

@@ -10,7 +10,7 @@ export const DEFAULT_POUND_ADDON: PoundAddon = 'none'
 export const DEFAULT_CUPCAKE_FINISH: CupcakeFinish = 'basic'
 export const DEFAULT_VANILLA_CAKE_SHEET: VanillaCakeSheet = 'vanilla'
 export const VANILLA_FRESH_CREAM_CAKE_SHEET: VanillaCakeSheet = 'chocolate'
-export const DEFAULT_VANILLA_CAKE_FLAVOR: VanillaCakeFlavor = 'triple-berry'
+export const DEFAULT_VANILLA_CAKE_FLAVOR: VanillaCakeFlavor = 'plain'
 export const DEFAULT_VANILLA_CAKE_POINT_COLOR: VanillaCakePointColor = 'pink'
 export const MAX_RESERVATION_QUANTITY = 5
 export const PROMO_CODE = 'chocolate'
@@ -174,11 +174,23 @@ export function isVanillaFreshCreamCakeProduct(productId: ProductId) {
   return productId === 'vanilla-fresh-cream-cake'
 }
 
+export function isCreamLayerCakeProduct(productId: ProductId) {
+  return productId === 'vanilla-fresh-cream-cake' || productId === 'buttercream-cake'
+}
+
+export function isCakePointColorProduct(productId: ProductId) {
+  return isCreamLayerCakeProduct(productId)
+}
+
 export const VANILLA_CAKE_SHEET_OPTIONS: Array<{ value: VanillaCakeSheet; label: string }> = [
   { value: 'chocolate', label: 'Chocolate cake sheet' },
 ]
 
 export const VANILLA_CAKE_FLAVOR_OPTIONS: Array<{ value: VanillaCakeFlavor; label: string }> = [
+  { value: 'plain', label: 'Plain fresh cream' },
+]
+
+const LEGACY_VANILLA_CAKE_FLAVOR_OPTIONS: Array<{ value: VanillaCakeFlavor; label: string }> = [
   { value: 'triple-berry', label: 'Triple berry' },
   { value: 'nutella-chocolate-chip', label: 'Nutella chocolate chip' },
 ]
@@ -200,19 +212,33 @@ export const VANILLA_CAKE_POINT_COLOR_OPTIONS: Array<{
 ]
 
 export function normalizeVanillaCakeSheet(productId: ProductId, value?: VanillaCakeSheet | string) {
-  if (!isVanillaFreshCreamCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_SHEET
+  if (!isCreamLayerCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_SHEET
   void value
   return VANILLA_FRESH_CREAM_CAKE_SHEET
 }
 
 export function normalizeVanillaCakeFlavor(productId: ProductId, value?: VanillaCakeFlavor | string) {
-  if (!isVanillaFreshCreamCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_FLAVOR
-  return VANILLA_CAKE_FLAVOR_OPTIONS.some((option) => option.value === value) ? value as VanillaCakeFlavor : DEFAULT_VANILLA_CAKE_FLAVOR
+  if (!isCreamLayerCakeProduct(productId)) return 'triple-berry'
+  void value
+  return DEFAULT_VANILLA_CAKE_FLAVOR
 }
 
 export function normalizeVanillaCakePointColor(productId: ProductId, value?: VanillaCakePointColor | string) {
-  if (!isVanillaFreshCreamCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_POINT_COLOR
+  if (!isCakePointColorProduct(productId)) return DEFAULT_VANILLA_CAKE_POINT_COLOR
   return VANILLA_CAKE_POINT_COLOR_OPTIONS.some((option) => option.value === value) ? value as VanillaCakePointColor : DEFAULT_VANILLA_CAKE_POINT_COLOR
+}
+
+export function normalizeStoredVanillaCakeSheet(productId: ProductId, value?: VanillaCakeSheet | string) {
+  if (!isCreamLayerCakeProduct(productId)) return DEFAULT_VANILLA_CAKE_SHEET
+  return value === 'vanilla' || value === 'chocolate' ? value : VANILLA_FRESH_CREAM_CAKE_SHEET
+}
+
+export function normalizeStoredVanillaCakeFlavor(productId: ProductId, value?: VanillaCakeFlavor | string) {
+  if (!isCreamLayerCakeProduct(productId)) return 'triple-berry'
+  if (value === 'plain' || LEGACY_VANILLA_CAKE_FLAVOR_OPTIONS.some((option) => option.value === value)) {
+    return value as VanillaCakeFlavor
+  }
+  return DEFAULT_VANILLA_CAKE_FLAVOR
 }
 
 export function formatVanillaCakeSheet(value?: VanillaCakeSheet | string) {
@@ -220,7 +246,7 @@ export function formatVanillaCakeSheet(value?: VanillaCakeSheet | string) {
 }
 
 export function formatVanillaCakeFlavor(value?: VanillaCakeFlavor | string) {
-  return VANILLA_CAKE_FLAVOR_OPTIONS.find((option) => option.value === value)?.label || VANILLA_CAKE_FLAVOR_OPTIONS[0].label
+  return [...VANILLA_CAKE_FLAVOR_OPTIONS, ...LEGACY_VANILLA_CAKE_FLAVOR_OPTIONS].find((option) => option.value === value)?.label || VANILLA_CAKE_FLAVOR_OPTIONS[0].label
 }
 
 export function formatVanillaCakePointColor(value?: VanillaCakePointColor | string) {

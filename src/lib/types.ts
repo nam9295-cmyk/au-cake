@@ -10,7 +10,9 @@ export type CupcakeFinish = 'basic' | 'vanilla-fresh-cream' | 'chocolate-butterc
 
 export type VanillaCakeSheet = 'vanilla' | 'chocolate'
 
-export type VanillaCakeFlavor = 'triple-berry' | 'nutella-chocolate-chip'
+// `plain` is the only selectable option for new cream-cake orders. The two
+// legacy values remain in the type so historical reservations can be read.
+export type VanillaCakeFlavor = 'plain' | 'triple-berry' | 'nutella-chocolate-chip'
 
 export type VanillaCakePointColor = 'pink' | 'red' | 'green' | 'yellow' | 'blue' | 'purple' | 'orange' | 'white'
 

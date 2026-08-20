@@ -32,13 +32,13 @@ const koProducts: Record<ProductId, ProductText> = {
   },
   'vanilla-fresh-cream-cake': {
     name: '바닐라 생크림 케이크',
-    description: '초코 케이크 시트에 바닐라 생크림을 채우고, 트리플베리 또는 누텔라 초코칩 맛을 선택할 수 있어요.',
-    priceNote: '사이즈와 맛 선택 · 초코 케이크 시트 고정',
+    description: '초콜릿 케이크 시트 사이마다 담백한 생크림을 채운 케이크입니다. 과일이나 추가 flavour 없이 초콜릿 시트와 생크림의 조합에 집중했습니다.',
+    priceNote: '사이즈 선택 · 초콜릿 케이크 시트 사이의 담백한 생크림',
   },
   'buttercream-cake': {
     name: '버터크림 케이크',
-    description: '초콜릿 버터크림으로 완성한 케이크예요.',
-    priceNote: '사이즈 선택 · 초콜릿 버터크림 포함',
+    description: '초콜릿 케이크 시트 사이를 초콜릿 버터크림으로 채우고 마감한 케이크입니다. 포인트 컬러를 선택할 수 있습니다.',
+    priceNote: '사이즈와 포인트 컬러 선택 · 초콜릿 케이크 시트 사이의 초콜릿 버터크림',
   },
   'pound-cake': {
     name: '시그니처 갸또 쇼콜라',
@@ -104,8 +104,8 @@ const koProducts: Record<ProductId, ProductText> = {
 
 const koProductFeatures: Record<ProductId, string[]> = {
   'pave-cake': ['묵직한 초콜릿 케이크 4단', '각 층을 채운 파베 초콜릿 가나슈', '크림보다 초콜릿이 중심인 진한 맛', '6" · 7.5" · 9" 사이즈'],
-  'vanilla-fresh-cream-cake': ['초코 케이크 시트만 사용', '트리플베리 또는 누텔라 초코칩', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
-  'buttercream-cake': ['초콜릿 버터크림 포함', Object.values(AU_CAKE_SIZE_LABELS).join(' · '), '사이즈 선택'],
+  'vanilla-fresh-cream-cake': ['초콜릿 케이크 시트', '시트 사이마다 담백한 생크림', '과일이나 추가 flavour 없음', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
+  'buttercream-cake': ['초콜릿 케이크 시트', '시트 사이마다 초콜릿 버터크림', '포인트 컬러 선택 가능', Object.values(AU_CAKE_SIZE_LABELS).join(' · ')],
   'pound-cake': ['직사각형 갸또 쇼콜라', '고정 사이즈', '기본, 초콜릿 추가, 바닐라 크림 마감'],
   'cupcake-half-dozen': ['하프 더즌 · 6개', '박스 전체 동일 마감', '기본, 바닐라 생크림 또는 초콜릿 버터크림'],
   'cupcake-dozen': ['더즌 · 12개', '박스 전체 동일 마감', '기본, 바닐라 생크림 또는 초콜릿 버터크림'],

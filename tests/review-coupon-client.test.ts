@@ -185,7 +185,7 @@ test('cake request projection sends the exact allowlisted payload including Vani
   assert.deepEqual(buildCakeReservationRequest(contaminated as ReservationInput), {
     customerName: 'Customer', customerPhone: '0412345678', productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm',
     chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0,
-    partyDecorationCount: 0, vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'nutella-chocolate-chip', quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
+    partyDecorationCount: 0, vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'plain', quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
     requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
     promoCode: 'FOXKIWI7Q2MK',
   })

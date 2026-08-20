@@ -70,6 +70,21 @@ test('Cupcake and Signature detail selections remain independent and normalize h
   assert.equal(getCakeDetailBySlug('chocolatiers-basque-cheesecake', 'en')?.isLegacy, true)
 })
 
+test('cream cake details create plain chocolate-sheet selections and keep Buttercream point colours separate', () => {
+  const vanilla = createCakeDetailSelection('vanilla-fresh-cream-cake')
+  const buttercream = createCakeDetailSelection('buttercream-cake')
+  assert.equal(vanilla?.vanillaCakeSheet, 'chocolate')
+  assert.equal(vanilla?.vanillaCakeFlavor, 'plain')
+  assert.equal(buttercream?.vanillaCakeSheet, 'chocolate')
+  assert.equal(buttercream?.vanillaCakeFlavor, 'plain')
+
+  const blueButtercream = selectCakeDetailProduct({
+    ...buttercream!,
+    vanillaCakePointColor: 'blue',
+  }, 'buttercream-cake')
+  assert.equal(blueButtercream.vanillaCakePointColor, 'blue')
+})
+
 test('Lemon Cake supports two or more identical packs with simple quantity multiplication', () => {
   const initial = createCakeDetailSelection('lemon-cake')
   assert.ok(initial)

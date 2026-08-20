@@ -5,7 +5,7 @@ import {
   selectCakeDetailProduct,
   type CakeDetailSelection,
 } from './cake-detail.js'
-import { isVanillaFreshCreamCakeProduct } from './constants.js'
+import { isCakePointColorProduct } from './constants.js'
 import type {
   CakeSize,
   ChocolateType,
@@ -54,7 +54,7 @@ export function getCartLineKey(selection: CakeDetailSelection) {
     normalized.vanillaCakeSheet,
     normalized.vanillaCakeFlavor,
   ]
-  if (isVanillaFreshCreamCakeProduct(normalized.productId)) {
+  if (isCakePointColorProduct(normalized.productId)) {
     identity.push(normalized.vanillaCakePointColor || DEFAULT_VANILLA_CAKE_POINT_COLOR)
   }
   if (isCupcakeProduct(normalized.productId)) identity.push(normalized.cupcakeFinish)
@@ -147,7 +147,7 @@ function toPersistedSelection(selection: CakeDetailSelection): CakeDetailSelecti
     partyDecorationCount: normalized.partyDecorationCount,
     vanillaCakeSheet: normalized.vanillaCakeSheet,
     vanillaCakeFlavor: normalized.vanillaCakeFlavor,
-    ...(isVanillaFreshCreamCakeProduct(normalized.productId)
+    ...(isCakePointColorProduct(normalized.productId)
       ? { vanillaCakePointColor: normalized.vanillaCakePointColor }
       : {}),
     quantity: normalized.quantity,

@@ -153,9 +153,10 @@ test('AU catalogue cards use the canonical public image for every available phot
   }
 })
 
-test('canonical Pave and Vanilla statements match the selectable AU products', () => {
+test('canonical Pave and cream-cake statements match the selectable AU products', () => {
   const pave = getPublicCakePage('pave-chocolate-cake')
   const vanilla = getPublicCakePage('vanilla-fresh-cream-cake')
+  const buttercream = getPublicCakePage('buttercream-cake')
   assert.equal(pave?.optionSummary, 'Choose a size · dark chocolate only')
   assert.equal(pave?.startingPrice, 79)
   assert.equal(pave?.description, 'A rich four-layer chocolate cake built for a dense, chocolate-forward bite. Instead of a light sponge-and-cream style, each layer is filled with smooth pave chocolate ganache, creating a substantial cake with deep chocolate flavour from the first slice to the last.')
@@ -164,17 +165,20 @@ test('canonical Pave and Vanilla statements match the selectable AU products', (
     marketConfig.chocolateTypeOptions.map((option) => option.value),
     ['dark'],
   )
-  assert.match(vanilla?.description || '', /chocolate cake sheet/)
-  assert.match(vanilla?.description || '', /Triple berry or Nutella chocolate chip/)
+  assert.match(vanilla?.description || '', /chocolate cake sheets/i)
+  assert.match(vanilla?.description || '', /plain fresh cream/)
+  assert.doesNotMatch(vanilla?.description || '', /Triple berry|Nutella/)
   assert.deepEqual(
     VANILLA_CAKE_SHEET_OPTIONS.map((option) => option.value),
     ['chocolate'],
   )
   assert.deepEqual(
     VANILLA_CAKE_FLAVOR_OPTIONS.map((option) => option.value),
-    ['triple-berry', 'nutella-chocolate-chip'],
+    ['plain'],
   )
   assert.equal(vanilla?.imagePath, '/products/vanilla-cake-sydney.webp')
+  assert.match(buttercream?.description || '', /Chocolate Buttercream/)
+  assert.match(buttercream?.description || '', /chocolate cake sheets/i)
 })
 
 const serverPriceCases: Array<{
@@ -226,7 +230,7 @@ test('catalog base, size and paid option prices stay equal to the Reservation AP
       partyDecorationCount: options.partyDecorationCount || 0,
       cupcakeFinish: options.cupcakeFinish,
       vanillaCakeSheet: 'chocolate',
-      vanillaCakeFlavor: 'triple-berry',
+      vanillaCakeFlavor: 'plain',
       quantity: 1,
       pickupDate: '2026-08-01',
       pickupTime: '10:00',

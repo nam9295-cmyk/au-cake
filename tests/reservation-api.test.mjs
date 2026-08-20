@@ -194,7 +194,7 @@ test('cake API preserves Pave CakeSize IDs and approved prices', () => {
   }
 })
 
-test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and flavour choices at the size price', () => {
+test('cake API persists new Vanilla Fresh Cream Cake orders with chocolate sheets and plain fresh cream', () => {
   for (const [cakeSize, expectedPrice] of [['15cm', 69], ['19cm', 89], ['22cm', 119]]) {
     const reservation = buildCakeReservation(
       {
@@ -205,7 +205,7 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
         chocolateType: 'milk',
         poundAddon: 'vanilla-cream',
         vanillaCakeSheet: 'chocolate',
-        vanillaCakeFlavor: 'nutella-chocolate-chip',
+        vanillaCakeFlavor: 'plain',
         vanillaCakePointColor: 'blue',
         quantity: 2,
         totalPrice: 1,
@@ -222,7 +222,7 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
     assert.equal(reservation.chocolateType, 'dark')
     assert.equal(reservation.poundAddon, 'none')
     assert.equal(reservation.vanillaCakeSheet, 'chocolate')
-    assert.equal(reservation.vanillaCakeFlavor, 'nutella-chocolate-chip')
+    assert.equal(reservation.vanillaCakeFlavor, 'plain')
     assert.equal(JSON.parse(reservation.orderLinesJson).lines[0].vanillaCakePointColor, 'blue')
   }
 
@@ -231,7 +231,7 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
     { now, reservationNumber: 'VG-C-AU-VANILLA-LEGACY' },
   )
   assert.equal(legacy.vanillaCakeSheet, 'chocolate')
-  assert.equal(legacy.vanillaCakeFlavor, 'triple-berry')
+  assert.equal(legacy.vanillaCakeFlavor, 'plain')
   assert.equal(JSON.parse(legacy.orderLinesJson).lines[0].vanillaCakePointColor, 'pink')
   const invalidPointColor = buildCakeReservation(
     { ...cakeInput, productId: 'vanilla-fresh-cream-cake', vanillaCakePointColor: 'black' },
@@ -251,7 +251,7 @@ test('cake API persists only the approved Vanilla Fresh Cream Cake sheet and fla
   }
 })
 
-test('cake API sells Buttercream Cake by size and strips every unsupported customer option', () => {
+test('cake API sells Buttercream Cake by size with chocolate sheets, plain buttercream layers, and an approved point colour', () => {
   for (const [cakeSize, totalPrice] of [['15cm', 74], ['19cm', 94], ['22cm', 128]]) {
     const reservation = buildCakeReservation({
       ...cakeInput,
@@ -260,7 +260,7 @@ test('cake API sells Buttercream Cake by size and strips every unsupported custo
       chocolateType: 'milk',
       poundAddon: 'vanilla-cream',
       vanillaCakeSheet: 'chocolate',
-      vanillaCakeFlavor: 'nutella-chocolate-chip',
+      vanillaCakeFlavor: 'plain',
       vanillaCakePointColor: 'blue',
       totalPrice: 1,
       totalPriceCents: 1,
@@ -275,11 +275,34 @@ test('cake API sells Buttercream Cake by size and strips every unsupported custo
       {
         productId: 'buttercream-cake', cakeSize, chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
-        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink',
+        vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'plain', vanillaCakePointColor: 'blue',
         quantity: 1, unitPriceCents: totalPrice * 100, subtotalCents: totalPrice * 100,
         discountPercent: 0, discountCents: 0, totalPriceCents: totalPrice * 100,
       },
     )
+  }
+})
+
+test('stored legacy Vanilla flavours and pre-colour Buttercream fields remain readable', () => {
+  const legacyCases = [
+    ['vanilla-fresh-cream-cake', 'chocolate', 'nutella-chocolate-chip'],
+    ['buttercream-cake', 'vanilla', 'triple-berry'],
+  ]
+
+  for (const [productId, vanillaCakeSheet, vanillaCakeFlavor] of legacyCases) {
+    const historical = buildCakeReservation({
+      ...cakeInput,
+      productId,
+      vanillaCakeFlavor: 'plain',
+    }, { now, reservationNumber: `VG-C-AU-LEGACY-CREAM-${productId}` })
+    const payload = JSON.parse(historical.orderLinesJson)
+    payload.lines[0].vanillaCakeSheet = vanillaCakeSheet
+    payload.lines[0].vanillaCakeFlavor = vanillaCakeFlavor
+    historical.vanillaCakeSheet = vanillaCakeSheet
+    historical.vanillaCakeFlavor = vanillaCakeFlavor
+    historical.orderLinesJson = JSON.stringify(payload)
+
+    assert.deepEqual(parseStoredOrderLines(historical).lines, payload.lines)
   }
 })
 

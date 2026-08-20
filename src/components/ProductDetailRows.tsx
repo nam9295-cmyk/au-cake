@@ -3,7 +3,6 @@ import {
   formatCacaoLabel,
   formatCakeSizeLabel,
   formatVanillaCakeFlavor,
-
   getFreshLemonCupcakePackSize,
   getCupcakePackSize,
   getLemonIcingCount,
@@ -11,7 +10,7 @@ import {
   isCheesecakeProduct,
   isCupcakeProduct,
   isFreshLemonCupcakeProduct,
-  isVanillaFreshCreamCakeProduct,
+  isCreamLayerCakeProduct,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
   usesReservationChocolateType,
@@ -95,14 +94,23 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
           <dd>{formatCakeSizeLabel(reservation.cakeSize)}</dd>
         </div>
       )}
-      {isVanillaFreshCreamCakeProduct(product.id) && (
+      {isCreamLayerCakeProduct(product.id) && (
         <>
-          <div>
-            <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
-            <dd>{language === 'ko'
-              ? reservation.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
-              : formatVanillaCakeFlavor(reservation.vanillaCakeFlavor)}</dd>
-          </div>
+          {product.id === 'vanilla-fresh-cream-cake' && reservation.vanillaCakeFlavor !== 'plain' ? (
+            <div>
+              <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
+              <dd>{language === 'ko'
+                ? reservation.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
+                : formatVanillaCakeFlavor(reservation.vanillaCakeFlavor)}</dd>
+            </div>
+          ) : (
+            <div>
+              <dt>{language === 'ko' ? '필링' : 'Filling'}</dt>
+              <dd>{product.id === 'buttercream-cake'
+                ? language === 'ko' ? '초콜릿 버터크림' : 'Chocolate Buttercream'
+                : language === 'ko' ? '담백한 생크림' : 'Plain fresh cream'}</dd>
+            </div>
+          )}
           <div>
             <dt>{language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
             <dd>{formatVanillaCakePointColorText(reservation.vanillaCakePointColor, language)}</dd>

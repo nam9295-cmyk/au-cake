@@ -36,6 +36,13 @@ test('Chocolate Cupcakes use Pack Size then one whole-box Finish without per-cup
   assert.doesNotMatch(reserveSource, /Remove one vanilla cream finish|Party decoration is \+AUD 1\.00 each/)
 })
 
+test('new cream-cake order forms hide retired flavour controls and share point colours with Buttercream', () => {
+  assert.doesNotMatch(detailSource, /VANILLA_CAKE_FLAVOR_OPTIONS\.map/)
+  assert.doesNotMatch(reserveSource, /name="vanillaCakeFlavor"/)
+  assert.match(detailSource, /isCakePointColorProduct\(product\.id\)/)
+  assert.match(reserveSource, /isCakePointColorProduct\(selectedProduct\.id\)/)
+})
+
 test('English cake service notes use the canonical lowercase brand', () => {
   assert.match(detailSource, /aria-label=\{language === 'ko' \? '베리굿 제작 방식' : 'verygood chocolate service notes'\}/)
   assert.doesNotMatch(detailSource, /Verygood service notes/)

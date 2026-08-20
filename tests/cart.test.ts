@@ -128,26 +128,25 @@ test('Cupcake cart lines keep pack size and whole-box finish as separate priced 
   assert.equal(lines[0].selection.partyDecorationCount, 0)
 })
 
-test('meaningful Vanilla flavour and Lemon options stay separate with no total line cap', () => {
+test('new Vanilla orders ignore retired flavours while Lemon options stay separate with no total line cap', () => {
   const selections: CakeDetailSelection[] = [
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm' }),
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '19cm' }),
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '22cm' }),
     baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm', vanillaCakeFlavor: 'nutella-chocolate-chip' }),
-    baseSelection({ productId: 'vanilla-fresh-cream-cake', cakeSize: '19cm', vanillaCakeFlavor: 'nutella-chocolate-chip' }),
     baseSelection({ productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 0 }),
     baseSelection({ productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1 }),
   ]
   const lines = selections.reduce(addCartLine, [])
 
-  assert.equal(lines.length, 7)
-  assert.equal(new Set(lines.map((line) => line.lineKey)).size, 7)
-  assert.notEqual(lines[0].lineKey, lines[3].lineKey)
-  assert.notEqual(lines[5].lineKey, lines[6].lineKey)
-  assert.equal(getCartTotalQuantity(lines), 7)
+  assert.equal(lines.length, 5)
+  assert.equal(new Set(lines.map((line) => line.lineKey)).size, 5)
+  assert.equal(lines[0].selection.quantity, 2)
+  assert.notEqual(lines[3].lineKey, lines[4].lineKey)
+  assert.equal(getCartTotalQuantity(lines), 6)
 })
 
-test('Vanilla point colours remain separate and legacy carts default to pink', () => {
+test('Vanilla and Buttercream point colours remain separate and legacy carts default to pink', () => {
   const pink = baseSelection({ productId: 'vanilla-fresh-cream-cake', vanillaCakePointColor: 'pink' })
   const blue = baseSelection({ productId: 'vanilla-fresh-cream-cake', vanillaCakePointColor: 'blue' })
   const lines = addCartLine(addCartLine([], pink), blue)
@@ -162,6 +161,12 @@ test('Vanilla point colours remain separate and legacy carts default to pink', (
     lines: [{ ...pink, vanillaCakePointColor: undefined }],
   }))
   assert.equal(legacy[0].selection.vanillaCakePointColor, 'pink')
+
+  const buttercreamPink = baseSelection({ productId: 'buttercream-cake', vanillaCakePointColor: 'pink' })
+  const buttercreamBlue = baseSelection({ productId: 'buttercream-cake', vanillaCakePointColor: 'blue' })
+  const buttercreamLines = addCartLine(addCartLine([], buttercreamPink), buttercreamBlue)
+  assert.equal(buttercreamLines.length, 2)
+  assert.notEqual(buttercreamLines[0].lineKey, buttercreamLines[1].lineKey)
 })
 
 test('updating one line clamps its quantity without changing other lines', () => {
@@ -273,6 +278,7 @@ test('parsing fails soft for malformed JSON or a wrong version and preserves val
     productId: 'vanilla-fresh-cream-cake',
     cakeSize: '19cm',
     vanillaCakeSheet: 'chocolate',
+    vanillaCakeFlavor: 'plain',
     vanillaCakePointColor: 'pink',
     quantity: 2,
   }))

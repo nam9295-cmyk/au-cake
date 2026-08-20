@@ -13,6 +13,8 @@ import {
   normalizeVanillaCakeFlavor,
   normalizeVanillaCakePointColor,
   normalizeVanillaCakeSheet,
+  normalizeStoredVanillaCakeFlavor,
+  normalizeStoredVanillaCakeSheet,
   PRODUCTS,
 } from './constants.js'
 import { isValidPhone } from './utils.js'
@@ -31,7 +33,7 @@ const VALID_CHOCOLATE_TYPES = new Set<ChocolateType>(['dark', 'milk'])
 const VALID_POUND_ADDONS = new Set<PoundAddon>(['none', 'extra-chocolate', 'vanilla-cream'])
 const VALID_CUPCAKE_FINISHES = new Set<CupcakeFinish>(['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'])
 const VALID_VANILLA_CAKE_SHEETS = new Set<VanillaCakeSheet>(['vanilla', 'chocolate'])
-const VALID_VANILLA_CAKE_FLAVORS = new Set<VanillaCakeFlavor>(['triple-berry', 'nutella-chocolate-chip'])
+const VALID_VANILLA_CAKE_FLAVORS = new Set<VanillaCakeFlavor>(['plain', 'triple-berry', 'nutella-chocolate-chip'])
 const VALID_VANILLA_CAKE_POINT_COLORS = new Set<VanillaCakePointColor>(['pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'])
 const VALID_CACAO = new Set<CacaoPercent>(['기본', '70', '80.5', '100'])
 const VALID_STATUSES = new Set<Reservation['status']>(['예약신청', '예약확정', '픽업완료', '취소'])
@@ -266,8 +268,8 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     chocolateIcingCount: input.chocolateIcingCount,
     vanillaCreamCount: input.vanillaCreamCount,
     partyDecorationCount: input.partyDecorationCount,
-    vanillaCakeSheet: input.vanillaCakeSheet,
-    vanillaCakeFlavor: input.vanillaCakeFlavor,
+    vanillaCakeSheet: normalizeVanillaCakeSheet(input.productId, input.vanillaCakeSheet),
+    vanillaCakeFlavor: normalizeVanillaCakeFlavor(input.productId, input.vanillaCakeFlavor),
     ...(input.vanillaCakePointColor ? {
       vanillaCakePointColor: normalizeVanillaCakePointColor(input.productId, input.vanillaCakePointColor),
     } : {}),
@@ -306,8 +308,8 @@ function projectCakeOrderLine(line: CakeOrderLineRequest): CakeOrderLineRequest 
     chocolateIcingCount: line.chocolateIcingCount,
     vanillaCreamCount: line.vanillaCreamCount,
     partyDecorationCount: line.partyDecorationCount,
-    vanillaCakeSheet: line.vanillaCakeSheet,
-    vanillaCakeFlavor: line.vanillaCakeFlavor,
+    vanillaCakeSheet: normalizeVanillaCakeSheet(line.productId, line.vanillaCakeSheet),
+    vanillaCakeFlavor: normalizeVanillaCakeFlavor(line.productId, line.vanillaCakeFlavor),
     ...(line.vanillaCakePointColor ? {
       vanillaCakePointColor: normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
     } : {}),
@@ -532,8 +534,8 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
       chocolateIcingCount !== normalizeChocolateIcingCount(productId, chocolateIcingCount) ||
       vanillaCreamCount !== normalizedFinishes.vanillaCreamCount ||
       partyDecorationCount !== normalizedFinishes.partyDecorationCount ||
-      vanillaCakeSheet !== normalizeVanillaCakeSheet(productId, vanillaCakeSheet) ||
-      vanillaCakeFlavor !== normalizeVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
+      vanillaCakeSheet !== normalizeStoredVanillaCakeSheet(productId, vanillaCakeSheet) ||
+      vanillaCakeFlavor !== normalizeStoredVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
       vanillaCakePointColor !== normalizeVanillaCakePointColor(productId, vanillaCakePointColor) ||
       quantity < 1 || quantity > MAX_RESERVATION_QUANTITY
     ) invalidResponse()
@@ -709,8 +711,8 @@ export function parseCakeReservationResult(value: unknown): Reservation {
     chocolateIcingCount !== normalizeChocolateIcingCount(productId, chocolateIcingCount) ||
     vanillaCreamCount !== normalizedFinishes.vanillaCreamCount ||
     partyDecorationCount !== normalizedFinishes.partyDecorationCount ||
-    vanillaCakeSheet !== normalizeVanillaCakeSheet(productId, vanillaCakeSheet) ||
-    vanillaCakeFlavor !== normalizeVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
+    vanillaCakeSheet !== normalizeStoredVanillaCakeSheet(productId, vanillaCakeSheet) ||
+    vanillaCakeFlavor !== normalizeStoredVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
     vanillaCakePointColor !== normalizeVanillaCakePointColor(productId, vanillaCakePointColor) ||
     quantity < 1 || quantity > MAX_RESERVATION_QUANTITY
   ) invalidResponse()
