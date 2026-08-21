@@ -562,7 +562,9 @@ main {
 }
 
 .hero-cake-slide-lemon,
-.hero-cake-slide-vanilla {
+.hero-cake-slide-vanilla,
+.hero-cake-slide-buttercream,
+.hero-cake-slide-cupcakes {
   display: none;
 }
 

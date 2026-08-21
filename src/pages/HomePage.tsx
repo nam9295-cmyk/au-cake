@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, type CSSProperties, type PointerEvent
 import { CalendarDays, ChevronLeft, ChevronRight, Clipboard, MessageCircleCheck, Wallet } from 'lucide-react'
 import heroCake2Img from '../assets/hero-cake-2.webp'
 import heroCake3Img from '../assets/hero-cake-3.webp'
-import basqueCheesecakeHeroImg from '../assets/basquecheesecake.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
@@ -55,11 +54,13 @@ export function HomePage({
   const [quickViewCardId, setQuickViewCardId] = useState<string | null>(null)
   const [quickViewOpener, setQuickViewOpener] = useState<HTMLButtonElement | null>(null)
   const heroCakes = [
-    { image: basqueCheesecakeHeroImg, label: "Chocolatier's Basque", tagKey: 'mini', className: 'hero-cake-one' },
+    { image: getPublicCakePage('brownie-cheesecake')?.imagePath, label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
     { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
     { image: getPublicCakePage('vanilla-fresh-cream-cake')?.imagePath, label: 'Vanilla Fresh Cream Cake', tagKey: 'vanilla', className: 'hero-cake-five' },
+    { image: getPublicCakePage('buttercream-cake')?.imagePath, label: 'Buttercream Cake', tagKey: 'buttercream', className: 'hero-cake-six' },
+    { image: getPublicCakePage('chocolate-cupcakes')?.imagePath, label: 'Chocolate Cupcakes', tagKey: 'cupcakes', className: 'hero-cake-seven' },
   ]
 
   useEffect(() => {
@@ -258,7 +259,7 @@ export function HomePage({
                 const position = heroCakePosition(index)
                 return (
                   <div
-                    className={`hero-cake-slide${cake.className === 'hero-cake-four' ? ' hero-cake-slide-lemon' : ''}${cake.className === 'hero-cake-five' ? ' hero-cake-slide-vanilla' : ''}`}
+                    className={`hero-cake-slide${cake.className === 'hero-cake-four' ? ' hero-cake-slide-lemon' : ''}${cake.className === 'hero-cake-five' ? ' hero-cake-slide-vanilla' : ''}${cake.className === 'hero-cake-six' ? ' hero-cake-slide-buttercream' : ''}${cake.className === 'hero-cake-seven' ? ' hero-cake-slide-cupcakes' : ''}`}
                     data-position={position}
                     key={cake.label}
                   >

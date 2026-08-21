@@ -33,9 +33,10 @@ test('App delegates the public shell and home page to explicit modules', () => {
 test('HomePage owns its catalogue and hero asset dependencies', () => {
   assert.match(homeSource, /from '\.\.\/lib\/cake-catalog'/)
   assert.match(homeSource, /from '\.\.\/assets\/hero-cake-2\.webp'/)
-  assert.match(homeSource, /from '\.\.\/assets\/basquecheesecake\.webp'/)
+  assert.doesNotMatch(homeSource, /from '\.\.\/assets\/basquecheesecake\.webp'/)
   assert.match(homeSource, /<SiteHeader/)
   assert.match(homeSource, /<PickupLocationCard/)
+  assert.match(homeSource, /getPublicCakePage\('brownie-cheesecake'\)\?\.imagePath/)
   assert.match(homeSource, /getPublicCakePage\('vanilla-fresh-cream-cake'\)\?\.imagePath/)
 })
 

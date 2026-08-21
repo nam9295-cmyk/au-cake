@@ -44,6 +44,27 @@ test('new Lemon Cake catalogue photo is also used in the home hero', () => {
   assert.doesNotMatch(homeSource, /import freshLemonCupcakesHeroImg/)
 })
 
+test('home hero cycles the seven current sale cakes every three seconds', () => {
+  const heroCakes = homeSource.match(/const heroCakes = \[([\s\S]*?)\n  \]/)?.[1]
+
+  assert.ok(heroCakes, 'hero cake list must be present')
+  assert.equal((heroCakes.match(/label:/g) || []).length, 7)
+  for (const label of [
+    'Pave Chocolate Cake',
+    'Vanilla Fresh Cream Cake',
+    'Buttercream Cake',
+    'Chocolate Cupcakes',
+    'Signature Gâteau au Chocolat',
+    'Lemon Cake',
+    'Brownie Cheesecake',
+  ]) assert.match(heroCakes, new RegExp(`label: '${label}'`))
+  assert.match(heroCakes, /image:\s*getPublicCakePage\('brownie-cheesecake'\)\?\.imagePath/)
+  assert.match(heroCakes, /image:\s*getPublicCakePage\('buttercream-cake'\)\?\.imagePath/)
+  assert.match(heroCakes, /image:\s*getPublicCakePage\('chocolate-cupcakes'\)\?\.imagePath/)
+  assert.doesNotMatch(heroCakes, /basqueCheesecakeHeroImg|Chocolatier's Basque/)
+  assert.match(homeSource, /window\.setInterval\([\s\S]*?\}, 3000\)/)
+})
+
 test('quick view uses dedicated replaceable detail-shot files', () => {
   assert.match(homeSource, /'pound-cake':\s*'\/products\/details\/chocolate-pound-cake-quick-view\.webp'/)
   assert.match(homeSource, /'pave-cake':\s*'\/products\/details\/pave-chocolate-cake-quick-view\.webp'/)
