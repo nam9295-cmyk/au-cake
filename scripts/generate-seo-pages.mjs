@@ -16,6 +16,7 @@ const organization = {
   url: siteUrl,
   logo: `${siteUrl}/favicon.png`,
   description: auPublicPages.site.organizationDescription,
+  sameAs: auPublicPages.site.socialProfiles,
   areaServed: { '@type': 'City', name: 'Sydney' },
 }
 
@@ -33,6 +34,19 @@ const cakeItemList = {
   name: `${brand} Sydney cake catalogue`,
   numberOfItems: cakeListItems.length,
   itemListElement: cakeListItems,
+}
+
+const homeFaqPage = {
+  '@type': 'FAQPage',
+  '@id': `${siteUrl}/#faq`,
+  mainEntity: auPublicPages.home.faq.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
+    },
+  })),
 }
 
 function canonicalFor(path) {
@@ -211,6 +225,7 @@ const pages = {
         inLanguage: auPublicPages.site.language,
       },
       cakeItemList,
+      homeFaqPage,
     ],
     fallbackHtml: homeFallback,
   },
@@ -329,11 +344,13 @@ function renderPage(template, path, config) {
     .replace(/<meta\s+name="twitter:description"[\s\S]*?\/>/, `<meta name="twitter:description" content="${description}" />`)
 
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:type"[\s\S]*?\/>/, `<meta property="og:type" content="${config.ogType || 'website'}" />`)
+  rendered = upsertHeadTag(rendered, /<meta\s+property="og:site_name"[\s\S]*?\/>/, `<meta property="og:site_name" content="${brand}" />`)
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:image"[\s\S]*?\/>/, `<meta property="og:image" content="${image}" />`)
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:type"[\s\S]*?\/>/, `<meta property="og:image:type" content="${imageType}" />`)
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:width"[\s\S]*?\/>/, `<meta property="og:image:width" content="${imageWidth}" />`)
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:height"[\s\S]*?\/>/, `<meta property="og:image:height" content="${imageHeight}" />`)
   rendered = upsertHeadTag(rendered, /<meta\s+name="twitter:image"[\s\S]*?\/>/, `<meta name="twitter:image" content="${image}" />`)
+  rendered = upsertHeadTag(rendered, /<meta\s+name="twitter:card"[\s\S]*?\/>/, '<meta name="twitter:card" content="summary_large_image" />')
 
   if (config.structuredData?.length) {
     const scripts = config.structuredData

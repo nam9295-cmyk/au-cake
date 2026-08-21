@@ -32,6 +32,7 @@ const organization: Record<string, unknown> = {
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.png`,
   description: publicContent.site.organizationDescription,
+  sameAs: publicContent.site.socialProfiles,
   areaServed: {
     '@type': 'City',
     name: 'Sydney',
@@ -54,6 +55,19 @@ const cakeItemList: Record<string, unknown> = {
   name: `${publicContent.site.brand} Sydney cake catalogue`,
   numberOfItems: cakeListItems.length,
   itemListElement: cakeListItems,
+}
+
+const homeFaqPage: Record<string, unknown> = {
+  '@type': 'FAQPage',
+  '@id': `${SITE_URL}/#faq`,
+  mainEntity: publicContent.home.faq.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
+    },
+  })),
 }
 
 function getBreadcrumbList(pathname: string, name: string): Record<string, unknown> {
@@ -84,6 +98,7 @@ const publicSeo: Record<string, SeoConfig> = {
         inLanguage: 'en-AU',
       },
       cakeItemList,
+      homeFaqPage,
     ],
   },
   '/classes': {

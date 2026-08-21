@@ -10,6 +10,9 @@ import { renderAuLlms } from '../scripts/render-au-llms.mjs'
 
 const generatorPath = fileURLToPath(new URL('../scripts/generate-seo-pages.mjs', import.meta.url))
 const llmsPath = fileURLToPath(new URL('../public/llms.txt', import.meta.url))
+const robotsPath = fileURLToPath(new URL('../public/robots.txt', import.meta.url))
+const manifestPath = fileURLToPath(new URL('../public/site.webmanifest', import.meta.url))
+const indexPath = fileURLToPath(new URL('../index.html', import.meta.url))
 const site = 'https://au.verygood-chocolate.com'
 const cakeSlugs = [
   'pave-chocolate-cake',
@@ -81,6 +84,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   assert.match(catalogue, /<h1>Choose Your Cake<\/h1>/)
 
   const generatedSitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
+  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, 11)
   for (const path of ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']) {
     assert.match(generatedSitemap, new RegExp(`<loc>${(path === '/' ? site : `${site}${path}`).replaceAll('.', '\\.')}</loc>`), path)
   }
@@ -89,6 +93,61 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   }
   for (const legacyPath of ['/cakes/chocolate-pound-cake-and-cupcakes', '/cakes/chocolatiers-basque-cheesecake']) {
     assert.doesNotMatch(generatedSitemap, new RegExp(`<loc>[^<]*${legacyPath}`), legacyPath)
+  }
+})
+
+test('public crawl metadata explicitly allows selected AI training crawlers while private flows retain crawlable noindex policy', async () => {
+  const [robots, manifest, index] = await Promise.all([
+    readFile(robotsPath, 'utf8'),
+    readFile(manifestPath, 'utf8').catch(() => '{}').then(JSON.parse),
+    readFile(indexPath, 'utf8'),
+  ])
+
+  assert.deepEqual(manifest, {
+    name: 'verygood chocolate',
+    short_name: 'verygood chocolate',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#f0eee9',
+    theme_color: '#1f5a46',
+    icons: [{ src: '/favicon.png', sizes: '512x512', type: 'image/png', purpose: 'any' }],
+  })
+  assert.match(index, /<link rel="apple-touch-icon" href="\/favicon\.png" \/>/)
+  assert.match(index, /<link rel="manifest" href="\/site\.webmanifest" \/>/)
+  assert.match(index, /<meta name="theme-color" content="#1f5a46" \/>/)
+  assert.match(index, /<meta property="og:site_name" content="verygood chocolate" \/>/)
+
+  for (const crawler of [
+    'Googlebot', 'Bingbot', 'OAI-SearchBot', 'GPTBot', 'ChatGPT-User',
+    'ClaudeBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User',
+    'Applebot', 'Applebot-Extended', 'Google-Extended',
+  ]) {
+    const group = robots.split(/\n\s*\n/).find((entry) => entry.includes(`User-agent: ${crawler}`))
+    assert.ok(group, `${crawler} needs an explicit robots group`)
+    assert.match(group, /^Allow: \/$/m)
+    assert.doesNotMatch(group, /^Disallow:/m, `${crawler} must be able to read noindex on private paths`)
+  }
+  assert.match(robots, new RegExp(`Sitemap: ${escapeRegExp(site)}/sitemap\\.xml`))
+})
+
+test('generated public HTML exposes verified organization, homepage FAQs, and one semantic top-level heading per indexable page', async () => {
+  const { dist } = await generate()
+  const home = await readFile(join(dist, 'index.html'), 'utf8')
+  const homeData = jsonLd(home)
+  const organization = homeData.find((entry) => entry['@type'] === 'Organization')
+  const faq = homeData.find((entry) => entry['@type'] === 'FAQPage')
+  assert.deepEqual(organization?.sameAs, ['https://www.instagram.com/verygood_syd/'])
+  assert.deepEqual(faq?.mainEntity, auPublicPages.home.faq.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })))
+
+  for (const path of ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']) {
+    const file = path === '/' ? 'index.html' : `${path.slice(1)}.html`
+    const html = await readFile(join(dist, file), 'utf8')
+    assert.equal([...html.matchAll(/<h1(?:\s[^>]*)?>/g)].length, 1, path)
+    assert.equal([...html.matchAll(/<link rel="canonical" href="[^"]+" \/>/g)].length, 1, path)
   }
 })
 
@@ -157,6 +216,8 @@ test('all indexable artifacts keep canonical brand, schema, canonical URLs, and 
     const canonicals = [...html.matchAll(/<link rel="canonical" href="([^"]+)" \/>/g)]
     assert.equal(canonicals.length, 1, path)
     assert.equal(canonicals[0][1], canonical, path)
+    assert.match(html, /<meta property="og:site_name" content="verygood chocolate" \/>/, path)
+    assert.match(html, /<meta name="twitter:card" content="summary_large_image" \/>/, path)
     assert.doesNotMatch(html, /Very Good Chocolate|Verygood Chocolate/, path)
     assert.doesNotMatch(html, /hreflang=/i, path)
 
@@ -229,5 +290,6 @@ test('llms text exposes only grounded public catalogue and ordering facts', asyn
   assert.doesNotMatch(llms, /vanilla or chocolate cake sheet|photo is coming soon/i)
   assert.match(llms, /AUD 99–254\.60/)
   assert.match(llms, /AUD 20 per participant, per class/)
+  assert.match(llms, /Official Instagram: https:\/\/www\.instagram\.com\/verygood_syd\//)
   assert.doesNotMatch(llms, /\/admin|customer name|mobile number/i)
 })

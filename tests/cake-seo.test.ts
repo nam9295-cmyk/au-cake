@@ -42,7 +42,15 @@ test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
   assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(config.description, 'Order small-batch cakes for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.')
-  assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList'])
+  assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList', 'FAQPage'])
+  const organization = config.structuredData?.find((entry) => entry['@type'] === 'Organization')
+  const faq = config.structuredData?.find((entry) => entry['@type'] === 'FAQPage')
+  assert.deepEqual(organization?.sameAs, ['https://www.instagram.com/verygood_syd/'])
+  assert.deepEqual(faq?.mainEntity, publicContent.home.faq.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })))
 })
 
 test('all indexable runtime SEO uses the canonical lowercase brand', () => {

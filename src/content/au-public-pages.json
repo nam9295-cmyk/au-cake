@@ -5,6 +5,9 @@
     "language": "en-AU",
     "pickupArea": "Melrose Park, Sydney",
     "organizationDescription": "Small-batch, made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.",
+    "socialProfiles": [
+      "https://www.instagram.com/verygood_syd/"
+    ],
     "defaultSocialImage": {
       "path": "/og-image.jpg",
       "type": "image/jpeg",

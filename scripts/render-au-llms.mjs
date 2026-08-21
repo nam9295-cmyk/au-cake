@@ -16,6 +16,7 @@ export function renderAuLlms(content) {
     '',
     'Official AU website: ' + site.url,
     'Primary service area: ' + site.pickupArea,
+    ...site.socialProfiles.map((url) => 'Official Instagram: ' + url),
     '',
     '## Ordering',
     ...home.orderingSteps.map((step) => '- ' + step),

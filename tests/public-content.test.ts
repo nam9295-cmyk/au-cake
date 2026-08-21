@@ -16,6 +16,9 @@ test('typed AU public content exposes the approved home contract', () => {
   assert.equal(AU_PUBLIC_CONTENT.home.h1, 'Made-to-Order Chocolate Cakes in Sydney')
   assert.equal(AU_PUBLIC_CONTENT.home.ctas[0].href, '/cakes')
   assert.equal(AU_PUBLIC_CONTENT.home.ctas[1].href, '#how-ordering-works')
+  assert.deepEqual((AU_PUBLIC_CONTENT.site as { socialProfiles?: string[] }).socialProfiles, [
+    'https://www.instagram.com/verygood_syd/',
+  ])
 })
 
 test('typed cake page helpers expose seven sale pages and noindex legacy pages', () => {
