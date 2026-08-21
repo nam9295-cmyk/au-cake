@@ -96,7 +96,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   }
 })
 
-test('public crawl metadata explicitly allows selected AI training crawlers while private flows retain crawlable noindex policy', async () => {
+test('public crawl metadata permits search while reserving AI training and private flows retain crawlable noindex policy', async () => {
   const [robots, manifest, index] = await Promise.all([
     readFile(robotsPath, 'utf8'),
     readFile(manifestPath, 'utf8').catch(() => '{}').then(JSON.parse),
@@ -116,18 +116,19 @@ test('public crawl metadata explicitly allows selected AI training crawlers whil
   assert.match(index, /<link rel="manifest" href="\/site\.webmanifest" \/>/)
   assert.match(index, /<meta name="theme-color" content="#1f5a46" \/>/)
   assert.match(index, /<meta property="og:site_name" content="verygood chocolate" \/>/)
-  assert.match(robots, /^Content-Signal: search=yes, ai-input=yes, ai-train=yes$/m)
+  assert.match(robots, /^Content-Signal: search=yes, ai-train=no, use=reference$/m)
+  assert.doesNotMatch(robots, /ai-input=yes/)
 
-  for (const crawler of [
-    'Googlebot', 'Bingbot', 'OAI-SearchBot', 'GPTBot', 'ChatGPT-User',
-    'ClaudeBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User',
-    'Applebot', 'Applebot-Extended', 'Google-Extended',
-  ]) {
+  for (const crawler of ['Googlebot', 'Bingbot', 'OAI-SearchBot']) {
     const group = robots.split(/\n\s*\n/).find((entry) => entry.includes(`User-agent: ${crawler}`))
     assert.ok(group, `${crawler} needs an explicit robots group`)
     assert.match(group, /^Allow: \/$/m)
     assert.doesNotMatch(group, /^Disallow:/m, `${crawler} must be able to read noindex on private paths`)
   }
+  for (const crawler of [
+    'GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User',
+    'Applebot-Extended', 'Google-Extended',
+  ]) assert.doesNotMatch(robots, new RegExp(`^User-agent: ${crawler}$`, 'm'))
   assert.match(robots, new RegExp(`Sitemap: ${escapeRegExp(site)}/sitemap\\.xml`))
 })
 
