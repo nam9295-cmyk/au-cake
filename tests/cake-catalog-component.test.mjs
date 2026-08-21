@@ -50,17 +50,24 @@ test('quick view uses dedicated replaceable detail-shot files', () => {
   assert.match(homeSource, /'basque-cheesecake':\s*'\/products\/details\/chocolatiers-basque-cheesecake-quick-view\.webp'/)
   assert.match(homeSource, /'lemon-cake':\s*'\/products\/details\/lemon-cake-quick-view\.webp'/)
   assert.match(homeSource, /'vanilla-fresh-cream-cake':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
+  assert.match(homeSource, /'buttercream-cake':\s*'\/products\/details\/buttercream-cake-quick-view\.webp'/)
   assert.match(homeSource, /'chocolate-cupcakes':\s*'\/products\/details\/chocolate-cupcakes2-sydney\.webp'/)
   assert.match(homeSource, /'brownie-cheesecake':\s*'\/products\/details\/brownie-cheese-quick-view\.webp'/)
   assert.match(homeSource, /imageUrl=\{quickViewImages\[quickViewCard\.imageKey\]\}/)
 })
 
-test('Brownie uses only the supplied product and Quick View files while Buttercream remains photo-pending', async () => {
+test('Buttercream and Brownie use only their supplied product and Quick View files', async () => {
   const catalogSource = await readFile(new URL('../src/lib/cake-catalog.ts', import.meta.url), 'utf8')
+  const cakeDetailSource = await readFile(new URL('../src/lib/cake-detail.ts', import.meta.url), 'utf8')
   const detailSource = await readFile(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
+  const publicContent = await readFile(new URL('../src/content/au-public-pages.json', import.meta.url), 'utf8')
 
   assert.match(catalogSource, /id: 'brownie-cheesecake',[\s\S]*?isPhotoComingSoon: false/)
-  assert.match(catalogSource, /id: 'buttercream',[\s\S]*?isPhotoComingSoon: true/)
+  assert.match(catalogSource, /id: 'buttercream',[\s\S]*?isPhotoComingSoon: false/)
+  assert.match(cakeDetailSource, /buttercream: \['buttercream-side', 'buttercream-quick-view'\]/)
+  assert.match(detailSource, /'buttercream-side': '\/products\/buttercream-cake-sydney\.webp'/)
+  assert.match(detailSource, /'buttercream-quick-view': '\/products\/details\/buttercream-cake-quick-view\.webp'/)
+  assert.match(publicContent, /"buttercream-cake": \{[\s\S]*?"imagePath": "\/products\/buttercream-cake-sydney\.webp"/)
   assert.match(detailSource, /'brownie-side': '\/products\/brownie-cheese-sydney\.webp'/)
   assert.match(detailSource, /'brownie-quick-view': '\/products\/details\/brownie-cheese-quick-view\.webp'/)
   assert.match(detailSource, /'brownie-side': \{ width: 1080, height: 1012 \}/)
@@ -68,16 +75,25 @@ test('Brownie uses only the supplied product and Quick View files while Buttercr
   assert.doesNotMatch(`${catalogSource}\n${detailSource}\n${homeSource}`, /brownie-cheesecake-sydney\.webp/)
 })
 
-test('supplied Cupcake and Brownie WebPs are present in this worktree', async () => {
+test('supplied Cupcake, Buttercream, and Brownie WebPs are present in this worktree', async () => {
   for (const path of [
     '../public/products/chocolate-cupcakes-sydney.webp',
     '../public/products/details/chocolate-cupcakes2-sydney.webp',
+    '../public/products/buttercream-cake-sydney.webp',
+    '../public/products/details/buttercream-cake-quick-view.webp',
     '../public/products/brownie-cheese-sydney.webp',
     '../public/products/details/brownie-cheese-quick-view.webp',
   ]) {
     const image = await stat(new URL(path, import.meta.url))
     assert.ok(image.size > 0, path)
   }
+})
+
+test('desktop home catalogue uses four columns so eight products form two rows', async () => {
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+
+  assert.match(css, /@media \(min-width: 1100px\)[\s\S]*?\.product-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/)
+  assert.doesNotMatch(css, /@media \(min-width: 1100px\)[\s\S]*?\.product-grid\s*\{[^}]*grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/)
 })
 
 test('home catalogue cards show only image, title, price, and one action', async () => {

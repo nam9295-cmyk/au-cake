@@ -133,7 +133,8 @@ test('catalog cards expose separated Cupcake and Signature names in English and 
     '파베 초콜릿 케이크', '바닐라 생크림 케이크', '버터크림 케이크', '초콜릿 컵케이크',
     '시그니처 갸또 쇼콜라', '레몬 케이크', '브라우니 치즈케이크',
   ])
-  assert.equal(english.find((card) => card.id === 'buttercream')?.isPhotoComingSoon, true)
+  assert.equal(english.find((card) => card.id === 'buttercream')?.isPhotoComingSoon, false)
+  assert.equal(english.find((card) => card.id === 'buttercream')?.imagePath, '/products/buttercream-cake-sydney.webp')
   assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.isPhotoComingSoon, false)
   assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.imagePath, '/products/brownie-cheese-sydney.webp')
   assert.equal(english.find((card) => card.id === 'cupcake')?.imagePath, '/products/chocolate-cupcakes-sydney.webp')

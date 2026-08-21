@@ -25,7 +25,7 @@ const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'basque-cheesecake': '/products/details/chocolatiers-basque-cheesecake-quick-view.webp',
   'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
   'vanilla-fresh-cream-cake': '/products/details/vanillacake-quickview.webp',
-  'buttercream-cake': '',
+  'buttercream-cake': '/products/details/buttercream-cake-quick-view.webp',
   'chocolate-cupcakes': '/products/details/chocolate-cupcakes2-sydney.webp',
   'signature-gateau-au-chocolat': '/products/details/chocolate-pound-cake-quick-view.webp',
   'brownie-cheesecake': '/products/details/brownie-cheese-quick-view.webp',

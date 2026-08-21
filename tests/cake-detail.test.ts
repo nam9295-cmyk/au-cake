@@ -29,12 +29,13 @@ test('seven public sale slugs resolve to independent reusable detail contracts',
     'lemon-cake',
     'brownie-cheesecake',
   ])
-  assert.deepEqual(details.map((detail) => detail?.gallery.length), [7, 2, 0, 2, 4, 4, 2])
+  assert.deepEqual(details.map((detail) => detail?.gallery.length), [7, 2, 2, 2, 4, 4, 2])
   assert.deepEqual(details[0]?.gallery.slice(0, 4), ['pave-side', 'pave-quick-view', 'pave-previous', 'pave-hero'])
+  assert.deepEqual(details[2]?.gallery, ['buttercream-side', 'buttercream-quick-view'])
   assert.deepEqual(details[3]?.gallery, ['cupcake-side', 'cupcake-hero'])
   assert.deepEqual(details[4]?.gallery, ['signature-gateau-side', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'])
   assert.deepEqual(details[6]?.gallery, ['brownie-side', 'brownie-quick-view'])
-  assert.equal(details[2]?.isPhotoComingSoon, true)
+  assert.equal(details[2]?.isPhotoComingSoon, false)
   assert.equal(details[6]?.isPhotoComingSoon, false)
   assert.equal(getCakeDetailBySlug('not-a-cake', 'en'), null)
 })

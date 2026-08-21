@@ -87,7 +87,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     defaultProductId: 'buttercream-cake',
     productIds: ['buttercream-cake'],
     imageKey: 'buttercream-cake',
-    isPhotoComingSoon: true,
+    isPhotoComingSoon: false,
     priceMode: 'from',
     priceDisplay: 'whole-aud',
   },

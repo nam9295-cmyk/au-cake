@@ -62,6 +62,8 @@ export type CakeDetailImageKey =
   | 'lemon-previous'
   | 'vanilla-side'
   | 'vanilla-quick-view'
+  | 'buttercream-side'
+  | 'buttercream-quick-view'
   | 'signature-gateau-side'
   | 'signature-gateau-quick-view'
   | 'signature-gateau-previous'
@@ -108,7 +110,7 @@ const DETAIL_GALLERIES: Record<CakeCatalogId, readonly CakeDetailImageKey[]> = {
   cheesecake: ['cheesecake-side', 'cheesecake-quick-view', 'cheesecake-previous', 'cheesecake-hero'],
   'fresh-lemon-cupcakes': ['lemon-side', 'lemon-quick-view', 'lemon-previous', 'lemon-hero'],
   'vanilla-fresh-cream': ['vanilla-side', 'vanilla-quick-view'],
-  buttercream: [],
+  buttercream: ['buttercream-side', 'buttercream-quick-view'],
   cupcake: ['cupcake-side', 'cupcake-hero'],
   'signature-gateau': ['signature-gateau-side', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'],
   'brownie-cheesecake': ['brownie-side', 'brownie-quick-view'],
