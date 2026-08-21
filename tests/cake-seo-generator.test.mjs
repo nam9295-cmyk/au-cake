@@ -116,6 +116,7 @@ test('public crawl metadata explicitly allows selected AI training crawlers whil
   assert.match(index, /<link rel="manifest" href="\/site\.webmanifest" \/>/)
   assert.match(index, /<meta name="theme-color" content="#1f5a46" \/>/)
   assert.match(index, /<meta property="og:site_name" content="verygood chocolate" \/>/)
+  assert.match(robots, /^Content-Signal: search=yes, ai-input=yes, ai-train=yes$/m)
 
   for (const crawler of [
     'Googlebot', 'Bingbot', 'OAI-SearchBot', 'GPTBot', 'ChatGPT-User',
