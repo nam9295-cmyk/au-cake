@@ -246,13 +246,6 @@ function isCreamLayerCake(reservation) {
   return ['vanilla-fresh-cream-cake', 'buttercream-cake'].includes(reservation.productId)
 }
 
-function getVanillaCakeSheetText(reservation, config) {
-  if (!isCreamLayerCake(reservation)) return null
-  return config.currency === 'AUD'
-    ? 'Chocolate cake sheet'
-    : '초코 케이크 시트'
-}
-
 function getVanillaCakeFlavorText(reservation, config) {
   if (reservation.productId !== 'vanilla-fresh-cream-cake' || reservation.vanillaCakeFlavor === 'plain') return null
   const nutellaChocolateChip = reservation.vanillaCakeFlavor === 'nutella-chocolate-chip'
@@ -261,12 +254,33 @@ function getVanillaCakeFlavorText(reservation, config) {
     : nutellaChocolateChip ? '누텔라 초코칩' : '트리플베리'
 }
 
+function isCurrentVanillaSelection(reservation) {
+  return reservation.productId === 'vanilla-fresh-cream-cake'
+    && reservation.vanillaCakeSheet === 'chocolate'
+    && reservation.vanillaCakeFlavor === 'plain'
+}
+
+function getHistoricalVanillaCakeSheetText(reservation, config) {
+  const chocolate = reservation.vanillaCakeSheet === 'chocolate'
+  if (config.currency === 'AUD') return chocolate ? 'Chocolate cake sheet' : 'Vanilla cake sheet'
+  return chocolate ? '초콜릿 케이크 시트' : '바닐라 케이크 시트'
+}
+
+function getHistoricalVanillaCakeFlavorText(reservation, config) {
+  if (reservation.vanillaCakeFlavor === 'plain') {
+    return config.currency === 'AUD' ? 'Plain fresh cream (legacy)' : '플레인 생크림 (과거 주문)'
+  }
+  return getVanillaCakeFlavorText(reservation, config)
+}
+
 function getCreamCakeFillingText(reservation, config) {
   if (!isCreamLayerCake(reservation)) return null
   if (reservation.productId === 'buttercream-cake') {
     return config.currency === 'AUD' ? 'Chocolate Buttercream' : '초콜릿 버터크림'
   }
-  return config.currency === 'AUD' ? 'Plain fresh cream' : '담백한 생크림'
+  return config.currency === 'AUD'
+    ? 'Vanilla fresh cream with real vanilla bean'
+    : '실제 바닐라빈을 넣은 바닐라 생크림'
 }
 
 function getVanillaCakePointColorText(reservation, config) {
@@ -463,16 +477,31 @@ function cakeDetailRows(reservation, config, suffix = '') {
     [label(config.labels.product), getProductName(reservation, config)],
     [label(config.labels.size), getCakeSizeText(reservation, config)],
     ...(isCreamLayerCake(reservation) ? [
-      [label(config.labels.cakeSheet), getVanillaCakeSheetText(reservation, config)],
-      ...(getVanillaCakeFlavorText(reservation, config)
-        ? [[label(config.labels.flavour), getVanillaCakeFlavorText(reservation, config)]]
-        : [[label(config.currency === 'AUD' ? 'Filling' : '필링'), getCreamCakeFillingText(reservation, config)]]),
-      [label(config.currency === 'AUD' ? 'Point colour' : '포인트 컬러'), getVanillaCakePointColorText(reservation, config)],
+      ...(reservation.productId === 'buttercream-cake' || isCurrentVanillaSelection(reservation)
+        ? [
+            [label(config.currency === 'AUD' ? 'Layers' : '시트'), config.currency === 'AUD'
+              ? 'Signature Gâteau au Chocolat layers'
+              : '시그니처 갸또 쇼콜라 시트'],
+            [label(config.currency === 'AUD' ? 'Filling' : '필링'), getCreamCakeFillingText(reservation, config)],
+          ]
+        : [
+            [label(config.labels.cakeSheet), getHistoricalVanillaCakeSheetText(reservation, config)],
+            [label(config.labels.flavour), getHistoricalVanillaCakeFlavorText(reservation, config)],
+          ]),
+      [label(reservation.productId === 'buttercream-cake'
+        ? config.currency === 'AUD' ? 'Cake colour' : '케이크 컬러'
+        : config.currency === 'AUD' ? 'Point colour' : '포인트 컬러'), getVanillaCakePointColorText(reservation, config)],
     ] : []),
     [label(config.labels.chocolate), getChocolateText(reservation, config)],
     [label(config.labels.finish), getPoundAddonText(reservation, config)],
     [label(config.labels.icingMix), getIcingMixText(reservation, config)],
     [label(config.labels.quantity), `${quantity}${config.quantityUnit}`],
+    ...(reservation.individualPackaging === true ? [[
+      label(config.currency === 'AUD' ? 'Individual packaging' : '개별 포장'),
+      `${reservation.individualPackagingPieces || 0} ${config.currency === 'AUD' ? 'pieces' : '개'} · ${reservation.individualPackagingFeeCents === 0
+        ? 'FREE'
+        : formatCurrency(Number(reservation.individualPackagingFeeCents || 0) / 100, config)}`,
+    ]] : []),
   ]
 }
 

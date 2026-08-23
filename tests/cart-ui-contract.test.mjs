@@ -73,8 +73,17 @@ test('CartPage quantity and removal callbacks always receive the rendered line e
   assert.match(cartPageSource, /onRemove\(line\.lineKey\)/)
   assert.match(cartPageSource, /onContinue\(\)/)
   assert.match(cartPageSource, /MAX_RESERVATION_QUANTITY/)
-  assert.match(cartPageSource, /getCartEstimatedSubtotal\(lines\)/)
+  assert.match(cartPageSource, /getCartEstimatedPricing\(lines\)/)
   assert.doesNotMatch(cartPageSource, /as Reservation/)
+})
+
+test('CartPage displays selected packaging pieces, fee, and total separately', () => {
+  assert.match(cartPageSource, /getCartEstimatedPricing\(lines\)/)
+  assert.match(cartPageSource, /Individual packaging/)
+  assert.match(cartPageSource, /개별 포장/)
+  assert.match(cartPageSource, /selectedPackagingPieces/)
+  assert.match(cartPageSource, /individualPackagingFeeCents/)
+  assert.match(cartPageSource, /FREE/)
 })
 
 test('App owns cart once, adds detail selections, and renders the direct cart route in the public shell', () => {

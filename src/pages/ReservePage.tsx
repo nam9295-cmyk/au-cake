@@ -5,6 +5,11 @@ import { BankAccountBox } from '../components/BankAccountBox'
 import { SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { type CakeDetailSelection } from '../lib/cake-detail'
 import { getAuCakeCatalogCards } from '../lib/cake-catalog'
+import {
+  getIndividualPackagingPieceCount,
+  getIndividualPackagingPricing,
+  isIndividualPackagingEligibleProduct,
+} from '../lib/individual-packaging'
 import { marketConfig } from '../lib/market'
 import { type Page } from '../lib/app-routes'
 import {
@@ -21,7 +26,6 @@ import {
   MAX_RESERVATION_QUANTITY,
   formatCakeSizeLabel,
   isPromoEligibleProduct,
-  formatVanillaCakeSheet,
   getChocolateIcingSurcharge,
   getLemonIcingCount,
   getProductById,
@@ -29,6 +33,7 @@ import {
   getCupcakePackSize,
   isCheesecakeProduct,
   isCupcakeProduct,
+  isButtercreamCakeProduct,
   isFreshLemonCupcakeProduct,
   isCakePointColorProduct,
   isCreamLayerCakeProduct,
@@ -172,6 +177,7 @@ export function ReservePage({
     vanillaCakeSheet: normalizeVanillaCakeSheet(initialSelection?.productId || initialProductId, initialSelection?.vanillaCakeSheet) as VanillaCakeSheet,
     vanillaCakeFlavor: initialSelection?.vanillaCakeFlavor || DEFAULT_VANILLA_CAKE_FLAVOR as VanillaCakeFlavor,
     vanillaCakePointColor: normalizeVanillaCakePointColor(initialSelection?.productId || initialProductId, initialSelection?.vanillaCakePointColor || DEFAULT_VANILLA_CAKE_POINT_COLOR) as VanillaCakePointColor,
+    individualPackaging: initialSelection?.individualPackaging === true,
     pickupDate: todayInputValue(),
     pickupTime: '',
     quantity: initialSelection?.quantity || 1,
@@ -388,6 +394,7 @@ export function ReservePage({
         vanillaCakeSheet: form.vanillaCakeSheet,
         vanillaCakeFlavor: form.vanillaCakeFlavor,
         vanillaCakePointColor: form.vanillaCakePointColor,
+        individualPackaging: form.individualPackaging,
         quantity: form.quantity,
         pickupDate,
         pickupTime: selectedPickupTime,
@@ -398,7 +405,20 @@ export function ReservePage({
         requestId,
         website: form.website,
       }
-      const demoPricing = reviewDemoMode ? getDemoReviewPricingAudit(currentPrice, submittedPromo) : null
+      const demoProductPricing = reviewDemoMode ? getDemoReviewPricingAudit(currentPrice, submittedPromo) : null
+      const demoPackagingPricing = getIndividualPackagingPricing([{
+        productId: form.productId,
+        quantity: form.quantity,
+        individualPackaging: form.individualPackaging,
+      }])
+      const demoPricing = demoProductPricing
+        ? {
+            ...demoProductPricing,
+            individualPackagingPieces: demoPackagingPricing.selectedPackagingPieces,
+            individualPackagingFeeCents: demoPackagingPricing.individualPackagingFeeCents,
+            totalPriceCents: demoProductPricing.totalPriceCents + demoPackagingPricing.individualPackagingFeeCents,
+          }
+        : null
       const reservation: Reservation = demoPricing
         ? {
             id: 'demo-reservation',
@@ -416,6 +436,7 @@ export function ReservePage({
             vanillaCakeSheet: form.vanillaCakeSheet,
             vanillaCakeFlavor: form.vanillaCakeFlavor,
             vanillaCakePointColor: form.vanillaCakePointColor,
+            individualPackaging: form.individualPackaging,
             quantity: form.quantity,
             pickupDate,
             pickupTime: selectedPickupTime,
@@ -453,6 +474,7 @@ export function ReservePage({
                 vanillaCakeSheet: selection.vanillaCakeSheet,
                 vanillaCakeFlavor: selection.vanillaCakeFlavor,
                 vanillaCakePointColor: selection.vanillaCakePointColor,
+                individualPackaging: selection.individualPackaging,
                 quantity: selection.quantity,
               })),
             })
@@ -521,12 +543,18 @@ export function ReservePage({
   const currentPrice = orderSelections
     ? orderSelections.reduce((sum, selection) => sum + getReservationPrice(selection.productId, selection, selection.quantity), 0)
     : singleSelectionPrice
+  const packagingPricing = getIndividualPackagingPricing(orderSelections || [{
+    productId: selectedProduct.id,
+    quantity: form.quantity,
+    individualPackaging: form.individualPackaging,
+  }])
+  const packagingFee = packagingPricing.individualPackagingFeeCents / 100
   const promoProductId = orderSelections?.find((selection) => getValidPromoCode(selection.productId, form.promoCode))?.productId || selectedProduct.id
   const promoEntry = getPromoEntryState(promoProductId, form.promoCode, undefined, knownReviewRewardPercent)
   const isManualCouponPending = promoEntry.kind === 'review-pending' && promoEntry.normalizedCode.startsWith('JENNIE')
   const isPromoApplied = promoEntry.kind === 'static-valid' || promoEntry.kind === 'review-pending'
   const basePromoPriceDisplay = getPromoPriceDisplay(currentPrice, promoEntry)
-  const promoPriceDisplay = orderSelections && promoEntry.kind === 'static-valid'
+  const productPromoPriceDisplay = orderSelections && promoEntry.kind === 'static-valid'
     ? (() => {
         const eligibleBasisCents = orderSelections.reduce((sum, selection) => {
           if (!getValidPromoCode(selection.productId, promoEntry.normalizedCode)) return sum
@@ -538,7 +566,13 @@ export function ReservePage({
         }
       })()
     : basePromoPriceDisplay
-  const promoPreviewPrice = promoPriceDisplay.estimatedPrice ?? promoPriceDisplay.finalPrice
+  const promoPriceDisplay = {
+    finalPrice: productPromoPriceDisplay.finalPrice + packagingFee,
+    estimatedPrice: productPromoPriceDisplay.estimatedPrice === null
+      ? null
+      : productPromoPriceDisplay.estimatedPrice + packagingFee,
+  }
+  const promoPreviewPrice = productPromoPriceDisplay.estimatedPrice ?? productPromoPriceDisplay.finalPrice
   const promoDiscountAmount = Math.max(0, currentPrice - promoPreviewPrice)
   const lemonPackSize = getFreshLemonCupcakePackSize(selectedProduct.id) || 0
   const chocolateIcingCount = normalizeChocolateIcingCount(selectedProduct.id, form.chocolateIcingCount)
@@ -600,6 +634,7 @@ export function ReservePage({
       vanillaCakeSheet: normalizeVanillaCakeSheet(productId, form.vanillaCakeSheet),
       vanillaCakeFlavor: normalizeVanillaCakeFlavor(productId, form.vanillaCakeFlavor),
       vanillaCakePointColor: normalizeVanillaCakePointColor(productId, form.vanillaCakePointColor),
+      individualPackaging: isIndividualPackagingEligibleProduct(productId) && form.individualPackaging,
       quantity: form.quantity,
     })
   }
@@ -647,7 +682,7 @@ export function ReservePage({
                 <dd>
                   {promoEntry.kind === 'static-valid' ? (
                     <span className="promo-price-summary">
-                      <span className="original-price">{formatCurrency(currentPrice)}</span>
+                      <span className="original-price">{formatCurrency(currentPrice + packagingFee)}</span>
                       <strong>{formatCurrency(promoPriceDisplay.finalPrice)}</strong>
                     </span>
                   ) : (
@@ -664,6 +699,14 @@ export function ReservePage({
                   )}
                 </dd>
               </div>
+              {packagingPricing.selectedPackagingPieces > 0 && (
+                <div>
+                  <dt>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</dt>
+                  <dd>{packagingPricing.selectedPackagingPieces} {language === 'ko' ? '개' : 'pieces'} · {packagingPricing.individualPackagingFeeCents === 0
+                    ? 'FREE'
+                    : formatCurrency(packagingFee)}</dd>
+                </div>
+              )}
               {!isMultiOrder && (<>
               {isFreshLemonCupcakeProduct(selectedProduct.id) && (
                 <div>
@@ -709,19 +752,19 @@ export function ReservePage({
               {isCreamLayerCakeProduct(selectedProduct.id) && (
                 <>
                   <div>
-                    <dt>{language === 'ko' ? '케이크 시트' : 'Cake sheet'}</dt>
-                    <dd>{language === 'ko'
-                      ? form.vanillaCakeSheet === 'chocolate' ? '초코 케이크 시트' : '바닐라 케이크 시트'
-                      : formatVanillaCakeSheet(form.vanillaCakeSheet)}</dd>
+                    <dt>{language === 'ko' ? '시트' : 'Layers'}</dt>
+                    <dd>{language === 'ko' ? '시그니처 갸또 쇼콜라 시트' : 'Signature Gâteau au Chocolat layers'}</dd>
                   </div>
                   <div>
                     <dt>{language === 'ko' ? '필링' : 'Filling'}</dt>
                     <dd>{selectedProduct.id === 'buttercream-cake'
                       ? language === 'ko' ? '초콜릿 버터크림' : 'Chocolate Buttercream'
-                      : language === 'ko' ? '담백한 생크림' : 'Plain fresh cream'}</dd>
+                      : language === 'ko' ? '실제 바닐라빈을 넣은 바닐라 생크림' : 'Vanilla fresh cream with real vanilla bean'}</dd>
                   </div>
                   <div>
-                    <dt>{language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
+                    <dt>{selectedProduct.id === 'buttercream-cake'
+                      ? language === 'ko' ? '케이크 컬러' : 'Cake colour'
+                      : language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
                     <dd>{formatVanillaCakePointColorText(form.vanillaCakePointColor, language)}</dd>
                   </div>
                 </>
@@ -768,6 +811,9 @@ export function ReservePage({
                     <li key={`${selection.productId}-${index}`}>
                       <span>{getProductText(selection.productId, language).name}</span>
                       <strong>{selection.quantity}{copy.quantityUnit} · {formatCurrency(getReservationPrice(selection.productId, selection, selection.quantity))}</strong>
+                      {selection.individualPackaging && (
+                        <small>{language === 'ko' ? '개별 포장' : 'Individual packaging'} · {getIndividualPackagingPieceCount(selection.productId, selection.quantity)} {language === 'ko' ? '개' : 'pieces'}</small>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -800,10 +846,10 @@ export function ReservePage({
                     const groupPrice = catalogCard?.priceLabel || (group.id === 'pave'
                       ? formatCurrency(79)
                       : group.id === 'vanilla-fresh-cream'
-                        ? 'From AUD 69'
+                        ? `From ${formatCurrency(69)}`
                         : group.id === 'pound-cupcake'
-                        ? 'From AUD 45'
-                        : group.id === 'cheesecake' ? 'From AUD 55' : 'From AUD 36')
+                        ? `From ${formatCurrency(45)}`
+                        : group.id === 'cheesecake' ? `From ${formatCurrency(55)}` : `From ${formatCurrency(36)}`)
                     return (
                       <label
                         className={`product-choice-card${isSelected ? ' is-selected' : ''}`}
@@ -949,6 +995,26 @@ export function ReservePage({
               </fieldset>
             )}
 
+            {isIndividualPackagingEligibleProduct(selectedProduct.id) && (
+              <fieldset>
+                <legend>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</legend>
+                <label className="choice-item">
+                  <input
+                    type="checkbox"
+                    name="individualPackaging"
+                    checked={form.individualPackaging}
+                    onChange={(event) => setForm({ ...form, individualPackaging: event.target.checked })}
+                  />
+                  <span className="choice-copy">
+                    <strong>{language === 'ko' ? '개별 포장 추가' : 'Add individual packaging'}</strong>
+                    <span>{language === 'ko'
+                      ? '개당 AUD 0.50 · 100개 이상 무료'
+                      : 'AUD 0.50 per piece · FREE for 100+ pieces'}</span>
+                  </span>
+                </label>
+              </fieldset>
+            )}
+
             {selectedProduct.usesSizeOptions && (
               <fieldset>
               <legend>{labels.sizeSelect}</legend>
@@ -979,7 +1045,9 @@ export function ReservePage({
 
             {isCakePointColorProduct(selectedProduct.id) && (
               <fieldset>
-                <legend>{language === 'ko' ? '포인트 컬러 선택' : 'Choose point colour'}</legend>
+                <legend>{isButtercreamCakeProduct(selectedProduct.id)
+                  ? language === 'ko' ? '케이크 컬러 선택' : 'Choose a cake colour'
+                  : language === 'ko' ? '포인트 컬러 선택' : 'Choose point colour'}</legend>
                 <div className="vanilla-point-color-grid">
                   {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => (
                     <label

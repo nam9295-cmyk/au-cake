@@ -113,8 +113,8 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
           <article className="kids-price-card">
             <h2>Price Guide</h2>
             <p className="kids-price-line">
-              Base course/package range · AUD {publicClassContent.baseLowPrice}–
-              {publicClassContent.baseHighPrice.toFixed(2)}
+              Base course/package range · {formatCurrency(publicClassContent.baseLowPrice)}–
+              {formatCurrency(publicClassContent.baseHighPrice).replace('AUD ', '')}
             </p>
             <strong>Basic · Kindy–Year 2 {formatCurrency(99)}</strong>
             <p className="kids-price-line">Basic · Year 3–6 {formatCurrency(109)}</p>

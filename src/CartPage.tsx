@@ -12,12 +12,16 @@ import {
   getCupcakePackSize,
   isCupcakeProduct,
   isFreshLemonCupcakeProduct,
-  isVanillaFreshCreamCakeProduct,
+  isCreamLayerCakeProduct,
   normalizeChocolateIcingCount,
   usesReservationChocolateType,
 } from './lib/constants'
 import { getCakeDetailSelectionTotal } from './lib/cake-detail'
-import { getCartEstimatedSubtotal, type CartLine } from './lib/cart'
+import { getCartEstimatedPricing, type CartLine } from './lib/cart'
+import {
+  INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
+  getIndividualPackagingPieceCount,
+} from './lib/individual-packaging'
 import {
   cakeCopy,
   formatChocolateTypeText,
@@ -45,6 +49,9 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
   const cupcakePackSize = getCupcakePackSize(product.id)
   const cupcakeFinish = CUPCAKE_FINISH_OPTIONS.find((option) => option.value === selection.cupcakeFinish) || CUPCAKE_FINISH_OPTIONS[0]
   const chocolateIcingCount = normalizeChocolateIcingCount(product.id, selection.chocolateIcingCount)
+  const packagingPieces = selection.individualPackaging
+    ? getIndividualPackagingPieceCount(product.id, selection.quantity)
+    : 0
 
   return (
     <dl className="cart-line-options">
@@ -66,16 +73,26 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
           <dd>{formatChocolateTypeText(selection.chocolateType, language)}</dd>
         </div>
       )}
-      {isVanillaFreshCreamCakeProduct(product.id) && (
+      {isCreamLayerCakeProduct(product.id) && (
         <>
+          {product.id === 'vanilla-fresh-cream-cake' && selection.vanillaCakeFlavor !== 'plain' && (
+            <div>
+              <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
+              <dd>{language === 'ko'
+                ? selection.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
+                : formatVanillaCakeFlavor(selection.vanillaCakeFlavor)}</dd>
+            </div>
+          )}
           <div>
-            <dt>{language === 'ko' ? '맛' : 'Flavour'}</dt>
-            <dd>{language === 'ko'
-              ? selection.vanillaCakeFlavor === 'nutella-chocolate-chip' ? '누텔라 초코칩' : '트리플베리'
-              : formatVanillaCakeFlavor(selection.vanillaCakeFlavor)}</dd>
+            <dt>{language === 'ko' ? '필링' : 'Filling'}</dt>
+            <dd>{product.id === 'buttercream-cake'
+              ? language === 'ko' ? '초콜릿 버터크림' : 'Chocolate Buttercream'
+              : language === 'ko' ? '실제 바닐라빈을 넣은 바닐라 생크림' : 'Vanilla fresh cream with real vanilla bean'}</dd>
           </div>
           <div>
-            <dt>{language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
+            <dt>{product.id === 'buttercream-cake'
+              ? language === 'ko' ? '케이크 컬러' : 'Cake colour'
+              : language === 'ko' ? '포인트 컬러' : 'Point colour'}</dt>
             <dd>{formatVanillaCakePointColorText(selection.vanillaCakePointColor, language)}</dd>
           </div>
         </>
@@ -108,6 +125,12 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
           </div>
         </>
       )}
+      {packagingPieces > 0 && (
+        <div>
+          <dt>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</dt>
+          <dd>{packagingPieces} {language === 'ko' ? '개' : 'pieces'}</dd>
+        </div>
+      )}
     </dl>
   )
 }
@@ -122,7 +145,7 @@ export default function CartPage({
   onBrowseCakes,
 }: CartPageProps) {
   const canContinue = lines.length === 1 || (lines.length > 1 && cakeOrderLinesAvailable === true)
-  const subtotal = getCartEstimatedSubtotal(lines)
+  const pricing = getCartEstimatedPricing(lines)
   const copy = language === 'ko'
     ? {
         title: '주문 목록',
@@ -132,6 +155,8 @@ export default function CartPage({
         remove: '삭제',
         lineTotal: '상품 합계',
         subtotal: '예상 소계',
+        packaging: '개별 포장',
+        total: '예상 합계',
         continue: '주문 신청 계속하기',
         multiNotice: cakeOrderLinesAvailable === null
           ? '여러 케이크 동시 신청 가능 여부를 확인하고 있어요.'
@@ -148,6 +173,8 @@ export default function CartPage({
         remove: 'Remove',
         lineTotal: 'Line total',
         subtotal: 'Estimated subtotal',
+        packaging: 'Individual packaging',
+        total: 'Estimated total',
         continue: 'Continue to reservation',
         multiNotice: cakeOrderLinesAvailable === null
           ? 'Checking whether multiple-cake requests are available.'
@@ -173,6 +200,12 @@ export default function CartPage({
             <div className="cart-list">
               {lines.map((line) => {
                 const productText = getProductText(line.selection.productId, language)
+                const packagingPieces = line.selection.individualPackaging
+                  ? getIndividualPackagingPieceCount(line.selection.productId, line.selection.quantity)
+                  : 0
+                const packagingFeeCents = pricing.individualPackagingFeeCents === 0
+                  ? 0
+                  : packagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
                 return (
                   <article className="cart-line" key={line.lineKey}>
                     <header className="cart-line-heading">
@@ -180,7 +213,7 @@ export default function CartPage({
                         <h2>{productText.name}</h2>
                         <span>{copy.lineTotal}</span>
                       </div>
-                      <strong>{formatCurrency(getCakeDetailSelectionTotal(line.selection))}</strong>
+                      <strong>{formatCurrency(getCakeDetailSelectionTotal(line.selection) + packagingFeeCents / 100)}</strong>
                     </header>
 
                     <CartLineOptions line={line} language={language} />
@@ -221,7 +254,19 @@ export default function CartPage({
             <section className="cart-summary" aria-label={copy.subtotal}>
               <div className="cart-summary-total">
                 <span>{copy.subtotal}</span>
-                <strong>{formatCurrency(subtotal)}</strong>
+                <strong>{formatCurrency(pricing.productSubtotalCents / 100)}</strong>
+              </div>
+              {pricing.selectedPackagingPieces > 0 && (
+                <div className="cart-summary-total">
+                  <span>{copy.packaging} · {pricing.selectedPackagingPieces} {language === 'ko' ? '개' : 'pieces'}</span>
+                  <strong>{pricing.individualPackagingFeeCents === 0
+                    ? 'FREE'
+                    : formatCurrency(pricing.individualPackagingFeeCents / 100)}</strong>
+                </div>
+              )}
+              <div className="cart-summary-total">
+                <span>{copy.total}</span>
+                <strong>{formatCurrency(pricing.totalPriceCents / 100)}</strong>
               </div>
               {lines.length > 1 && <p className="cart-multi-notice" role="status">{copy.multiNotice}</p>}
               <button

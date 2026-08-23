@@ -91,6 +91,49 @@ test('cake CSV exports current Cupcake pack and whole-box finish', () => {
   assert.match(csv, /Finish: Chocolate Buttercream/)
 })
 
+test('cake CSV preserves historical Vanilla sheet and flavour without applying current copy', () => {
+  const historicalVanilla: Reservation = {
+    ...cakeReservation,
+    productId: 'vanilla-fresh-cream-cake',
+    vanillaCakeSheet: 'vanilla',
+    vanillaCakeFlavor: 'triple-berry',
+    vanillaCakePointColor: 'blue',
+    totalPrice: 75,
+    totalPriceCents: 7500,
+  }
+  const csv = reservationsToCsv([historicalVanilla])
+  const sms = buildSmsMessage(historicalVanilla)
+
+  assert.match(csv, /Vanilla cake sheet/)
+  assert.match(csv, /Triple berry/)
+  assert.doesNotMatch(csv, /Signature Gâteau au Chocolat layers/)
+  assert.doesNotMatch(csv, /real vanilla bean/)
+  assert.match(sms, /Cake sheet: Vanilla cake sheet/)
+  assert.match(sms, /Flavour: Triple berry/)
+  assert.doesNotMatch(sms, /real vanilla bean/)
+})
+
+test('cake CSV and confirmation SMS show individual packaging pieces, fee, and two-decimal total', () => {
+  const packaged: Reservation = {
+    ...cakeReservation,
+    productId: 'cupcake-half-dozen',
+    cupcakeFinish: 'basic',
+    individualPackaging: true,
+    individualPackagingPieces: 6,
+    individualPackagingFeeCents: 300,
+    subtotalCents: 3100,
+    totalPrice: 34,
+    totalPriceCents: 3400,
+  }
+  const csv = reservationsToCsv([packaged])
+  const sms = buildSmsMessage(packaged)
+
+  assert.match(csv, /Individual packaging: 6 pieces · AUD 3\.00/)
+  assert.match(csv, /AUD 34\.00/)
+  assert.match(sms, /Individual packaging: 6 pieces · AUD 3\.00/)
+  assert.match(sms, /Total: AUD 34\.00/)
+})
+
 test('cake CSV preserves legacy columns and appends every multi-line item with authoritative counts', () => {
   const csv = reservationsToCsv([{
     ...cakeReservation,

@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import * as notification from '../appwrite-functions/reservation-notification/src/main.js'
+import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 
 function rowsByLabel(reservation) {
   assert.equal(typeof notification.buildCakeNotificationRows, 'function')
@@ -94,8 +95,8 @@ test('AU operator notification gives new cream cakes their chocolate sheets, fil
   assert.equal(rows.Size, '9" | serves 22')
   assert.equal(rows.Chocolate, '-')
   assert.equal(rows.Finish, '-')
-  assert.equal(rows['Cake sheet'], 'Chocolate cake sheet')
-  assert.equal(rows.Filling, 'Plain fresh cream')
+  assert.equal(rows.Layers, 'Signature Gâteau au Chocolat layers')
+  assert.equal(rows.Filling, 'Vanilla fresh cream with real vanilla bean')
   assert.equal(rows['Point colour'], 'Blue')
 
   const buttercream = rowsByLabel({
@@ -107,9 +108,26 @@ test('AU operator notification gives new cream cakes their chocolate sheets, fil
     vanillaCakePointColor: 'purple',
     quantity: 1,
   })
-  assert.equal(buttercream['Cake sheet'], 'Chocolate cake sheet')
+  assert.equal(buttercream.Layers, 'Signature Gâteau au Chocolat layers')
   assert.equal(buttercream.Filling, 'Chocolate Buttercream')
-  assert.equal(buttercream['Point colour'], 'Purple')
+  assert.equal(buttercream['Cake colour'], 'Purple')
+})
+
+test('AU operator notification preserves historical Vanilla sheet and flavour', () => {
+  const rows = rowsByLabel({
+    reservationNumber: 'VG-C-AU-VANILLA-LEGACY',
+    productId: 'vanilla-fresh-cream-cake',
+    cakeSize: '15cm',
+    vanillaCakeSheet: 'vanilla',
+    vanillaCakeFlavor: 'triple-berry',
+    vanillaCakePointColor: 'pink',
+    quantity: 1,
+  })
+
+  assert.equal(rows['Cake sheet'], 'Vanilla cake sheet')
+  assert.equal(rows.Flavour, 'Triple berry')
+  assert.equal(rows.Layers, undefined)
+  assert.equal(rows.Filling, undefined)
 })
 
 test('AU operator notification shows current Cupcake pack and whole-box finish', () => {
@@ -121,6 +139,18 @@ test('AU operator notification shows current Cupcake pack and whole-box finish',
   assert.equal(rows.Product, 'Chocolate Cupcakes')
   assert.equal(rows.Size, '-')
   assert.equal(rows['Finishing mix'], 'Pack: Half Dozen · 6 cupcakes / Finish: Chocolate Buttercream')
+})
+
+test('AU operator notification shows authoritative individual packaging pieces and fee', () => {
+  const reservation = buildCakeReservation({
+    customerName: 'Customer', customerPhone: '0412345678', productId: 'cupcake-half-dozen',
+    cupcakeFinish: 'basic', individualPackaging: true, quantity: 1,
+    pickupDate: '2026-08-30', pickupTime: '10:00', requestNote: '', promoCode: '', privacyConsent: true,
+  }, { now: new Date('2026-08-23T00:00:00.000Z'), reservationNumber: 'VG-C-AU-PACKAGING' })
+  const rows = rowsByLabel(reservation)
+
+  assert.equal(rows['Individual packaging'], '6 pieces · AUD 3.00')
+  assert.equal(rows.Total, 'AUD 34.00')
 })
 
 test('AU operator notification renders every validated stored order line and one aggregate total', () => {

@@ -318,6 +318,8 @@ test('reservation multi-line attributes are optional, bounded, and rollback comp
     { key: 'orderLineCount', type: 'integer', required: false, min: 1 },
     { key: 'orderItemCount', type: 'integer', required: false, min: 1 },
     { key: 'discountBasisCents', type: 'integer', required: false, min: 0 },
+    { key: 'individualPackagingPieces', type: 'integer', required: false, min: 0 },
+    { key: 'individualPackagingFeeCents', type: 'integer', required: false, min: 0 },
     { key: 'requestFingerprint', type: 'string', size: 64, required: false },
   ])
 })

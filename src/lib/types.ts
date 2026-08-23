@@ -55,6 +55,9 @@ export type Reservation = {
   vanillaCakeSheet?: VanillaCakeSheet
   vanillaCakeFlavor?: VanillaCakeFlavor
   vanillaCakePointColor?: VanillaCakePointColor
+  individualPackaging?: boolean
+  individualPackagingPieces?: number
+  individualPackagingFeeCents?: number
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -93,6 +96,7 @@ export type ReservationInput = {
   vanillaCakeSheet?: VanillaCakeSheet
   vanillaCakeFlavor?: VanillaCakeFlavor
   vanillaCakePointColor?: VanillaCakePointColor
+  individualPackaging?: boolean
   quantity: number
   pickupDate: string
   pickupTime: string
@@ -116,6 +120,7 @@ export type CakeOrderLineRequest = Pick<ReservationInput,
   | 'vanillaCakeSheet'
   | 'vanillaCakeFlavor'
   | 'vanillaCakePointColor'
+  | 'individualPackaging'
   | 'quantity'
 >
 
@@ -138,6 +143,8 @@ export type CakeOrderLineResult = CakeOrderLineRequest & {
   subtotalCents: number
   discountPercent: 0 | 5 | 10
   discountCents: number
+  individualPackagingPieces?: number
+  individualPackagingFeeCents?: number
   totalPriceCents: number
 }
 
@@ -166,6 +173,7 @@ export type PublicReservation = Pick<
   | 'vanillaCakeSheet'
   | 'vanillaCakeFlavor'
   | 'vanillaCakePointColor'
+  | 'individualPackaging'
   | 'quantity'
   | 'pickupDate'
   | 'pickupTime'
@@ -182,6 +190,8 @@ export type PublicReservation = Pick<
   | 'discountPercent'
   | 'discountCents'
   | 'totalPriceCents'
+  | 'individualPackagingPieces'
+  | 'individualPackagingFeeCents'
 >>
 
 export type StoreSettings = {

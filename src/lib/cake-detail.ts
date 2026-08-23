@@ -27,6 +27,11 @@ import {
 } from './cake-catalog.js'
 import type { Language } from './i18n.js'
 import { getPublicCakePage } from './public-content.js'
+import {
+  calculateIndividualPackagingFeeCents,
+  getIndividualPackagingPieceCount,
+  isIndividualPackagingEligibleProduct,
+} from './individual-packaging.js'
 import type {
   CakeSize,
   ChocolateType,
@@ -83,6 +88,7 @@ export type CakeDetailSelection = {
   vanillaCakeSheet: VanillaCakeSheet
   vanillaCakeFlavor: VanillaCakeFlavor
   vanillaCakePointColor?: VanillaCakePointColor
+  individualPackaging: boolean
   quantity: number
 }
 
@@ -252,6 +258,7 @@ export function createCakeDetailSelection(slug: string): CakeDetailSelection | n
     vanillaCakeSheet: DEFAULT_VANILLA_CAKE_SHEET,
     vanillaCakeFlavor: DEFAULT_VANILLA_CAKE_FLAVOR,
     vanillaCakePointColor: DEFAULT_VANILLA_CAKE_POINT_COLOR,
+    individualPackaging: false,
     quantity: 1,
   }, entry.defaultProductId)
 }
@@ -283,6 +290,7 @@ export function selectCakeDetailProduct(
     ...(isCakePointColorProduct(product.id)
       ? { vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, selection.vanillaCakePointColor) }
       : {}),
+    individualPackaging: isIndividualPackagingEligibleProduct(product.id) && selection.individualPackaging === true,
     quantity: normalizeQuantity(selection.quantity),
   }
 }
@@ -297,4 +305,11 @@ export function getCakeDetailSelectionTotal(selection: CakeDetailSelection) {
     vanillaCreamCount: selection.vanillaCreamCount,
     partyDecorationCount: selection.partyDecorationCount,
   }, normalizeQuantity(selection.quantity))
+}
+
+export function getCakeDetailSelectionEstimatedTotal(selection: CakeDetailSelection) {
+  const productTotal = getCakeDetailSelectionTotal(selection)
+  if (!selection.individualPackaging) return productTotal
+  const pieces = getIndividualPackagingPieceCount(selection.productId, normalizeQuantity(selection.quantity))
+  return productTotal + calculateIndividualPackagingFeeCents(pieces) / 100
 }

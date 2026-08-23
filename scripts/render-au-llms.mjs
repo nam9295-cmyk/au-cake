@@ -1,5 +1,5 @@
 function formatAud(value) {
-  return Number.isInteger(value) ? 'AUD ' + value : 'AUD ' + value.toFixed(2)
+  return 'AUD ' + value.toFixed(2)
 }
 
 export function renderAuLlms(content) {

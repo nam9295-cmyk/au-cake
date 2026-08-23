@@ -36,11 +36,29 @@ test('Chocolate Cupcakes use Pack Size then one whole-box Finish without per-cup
   assert.doesNotMatch(reserveSource, /Remove one vanilla cream finish|Party decoration is \+AUD 1\.00 each/)
 })
 
+test('only Cupcakes and Lemon Cake expose the bilingual individual packaging choice', () => {
+  assert.match(detailSource, /isIndividualPackagingEligibleProduct\(product\.id\)/)
+  assert.match(detailSource, /Individual packaging/)
+  assert.match(detailSource, /개별 포장/)
+  assert.match(detailSource, /AUD 0\.50 per piece · FREE for 100\+ pieces/)
+  assert.match(reserveSource, /isIndividualPackagingEligibleProduct\(selectedProduct\.id\)/)
+  assert.match(reserveSource, /name="individualPackaging"/)
+})
+
 test('new cream-cake order forms hide retired flavour controls and share point colours with Buttercream', () => {
   assert.doesNotMatch(detailSource, /VANILLA_CAKE_FLAVOR_OPTIONS\.map/)
   assert.doesNotMatch(reserveSource, /name="vanillaCakeFlavor"/)
   assert.match(detailSource, /isCakePointColorProduct\(product\.id\)/)
   assert.match(reserveSource, /isCakePointColorProduct\(selectedProduct\.id\)/)
+  assert.match(detailSource, /isButtercreamCakeProduct\(product\.id\)[\s\S]*?'케이크 컬러 선택'[\s\S]*?'Choose a cake colour'/)
+  assert.match(reserveSource, /isButtercreamCakeProduct\(selectedProduct\.id\)[\s\S]*?'케이크 컬러 선택'[\s\S]*?'Choose a cake colour'/)
+  assert.match(detailSource, /aria-label=\{language === 'ko'[\s\S]*?isButtercreamCakeProduct\(product\.id\)[\s\S]*?'케이크 컬러'[\s\S]*?isButtercreamCakeProduct\(product\.id\)[\s\S]*?'cake colour'/)
+})
+
+test('AU detail option prices use the shared two-decimal currency formatter', () => {
+  assert.match(detailSource, /\+\$\{formatCurrency\(option\.extraPrice\)\}/)
+  assert.doesNotMatch(detailSource, /\+AUD \$\{/)
+  assert.match(reserveSource, /formatCurrency\(getReservationUnitPrice/)
 })
 
 test('English cake service notes use the canonical lowercase brand', () => {

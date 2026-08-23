@@ -139,8 +139,16 @@ test('catalog cards expose separated Cupcake and Signature names in English and 
   assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.imagePath, '/products/brownie-cheese-sydney.webp')
   assert.equal(english.find((card) => card.id === 'cupcake')?.imagePath, '/products/chocolate-cupcakes-sydney.webp')
   assert.deepEqual(
-    english.filter((card) => ['pave', 'vanilla-fresh-cream', 'buttercream'].includes(card.id)).map((card) => [card.id, card.priceLabel]),
-    [['pave', 'AUD 79.00'], ['vanilla-fresh-cream', 'From AUD 69'], ['buttercream', 'From AUD 74']],
+    english.map((card) => [card.id, card.priceLabel]),
+    [
+      ['pave', 'AUD 79.00'],
+      ['vanilla-fresh-cream', 'From AUD 69.00'],
+      ['buttercream', 'From AUD 74.00'],
+      ['cupcake', 'From AUD 31.00'],
+      ['signature-gateau', 'AUD 45.00'],
+      ['fresh-lemon-cupcakes', 'From AUD 36.00'],
+      ['brownie-cheesecake', 'From AUD 55.00'],
+    ],
   )
 })
 
@@ -166,8 +174,9 @@ test('canonical Pave and cream-cake statements match the selectable AU products'
     marketConfig.chocolateTypeOptions.map((option) => option.value),
     ['dark'],
   )
-  assert.match(vanilla?.description || '', /chocolate cake sheets/i)
-  assert.match(vanilla?.description || '', /plain fresh cream/)
+  assert.match(vanilla?.description || '', /Signature Gâteau au Chocolat/)
+  assert.match(vanilla?.description || '', /100% fresh milk/)
+  assert.match(vanilla?.description || '', /real vanilla bean/)
   assert.doesNotMatch(vanilla?.description || '', /Triple berry|Nutella/)
   assert.deepEqual(
     VANILLA_CAKE_SHEET_OPTIONS.map((option) => option.value),
@@ -178,8 +187,9 @@ test('canonical Pave and cream-cake statements match the selectable AU products'
     ['plain'],
   )
   assert.equal(vanilla?.imagePath, '/products/vanilla-cake-sydney.webp')
-  assert.match(buttercream?.description || '', /Chocolate Buttercream/)
-  assert.match(buttercream?.description || '', /chocolate cake sheets/i)
+  assert.match(buttercream?.description || '', /Signature Gâteau au Chocolat/)
+  assert.match(buttercream?.description || '', /organic cocoa/)
+  assert.match(buttercream?.description || '', /not added chocolate flavouring/)
 })
 
 const serverPriceCases: Array<{

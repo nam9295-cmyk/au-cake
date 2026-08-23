@@ -19,6 +19,12 @@ import {
 } from './constants.js'
 import { isValidPhone } from './utils.js'
 import { isActiveCakeOrderProductId, isStoredCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
+import {
+  INDIVIDUAL_PACKAGING_FREE_FROM_PIECES,
+  INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
+  getIndividualPackagingPieceCount,
+  isIndividualPackagingEligibleProduct,
+} from './individual-packaging.js'
 import type { CakeOrderLineRequest, CakeOrderLineResult, CakeOrderRequest, CakeOrderReservation, CakeSize, CacaoPercent, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, ReservationApiCapabilities, ReservationInput, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
 
 const REVIEW_COUPON_ANIMALS = ['FOX', 'CAT', 'DOG', 'OWL', 'PIG', 'BEE', 'COW', 'CUB', 'EMU', 'HEN', 'KOI', 'PUP', 'RAM', 'YAK', 'APE']
@@ -313,13 +319,14 @@ function projectCakeOrderLine(line: CakeOrderLineRequest): CakeOrderLineRequest 
     ...(line.vanillaCakePointColor ? {
       vanillaCakePointColor: normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
     } : {}),
+    individualPackaging: line.individualPackaging === true,
     quantity: line.quantity,
   }
 }
 
 const CAKE_ORDER_LINE_FIELDS = [
   'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'cupcakeFinish', 'chocolateIcingCount', 'vanillaCreamCount',
-  'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity',
+  'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'individualPackaging', 'quantity',
 ] as const
 
 function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
@@ -341,6 +348,8 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
       typeof line.vanillaCakePointColor !== 'string' ||
       !VALID_VANILLA_CAKE_POINT_COLORS.has(line.vanillaCakePointColor as VanillaCakePointColor)
     )) ||
+    typeof line.individualPackaging !== 'boolean' ||
+    (line.individualPackaging && !isIndividualPackagingEligibleProduct(line.productId as ProductId)) ||
     !Number.isSafeInteger(line.chocolateIcingCount) || Number(line.chocolateIcingCount) < 0 ||
     !Number.isSafeInteger(line.vanillaCreamCount) || Number(line.vanillaCreamCount) < 0 ||
     !Number.isSafeInteger(line.partyDecorationCount) || Number(line.partyDecorationCount) < 0 ||
@@ -454,6 +463,7 @@ function canonicalOrderLineKey(line: CakeOrderLineRequest): string {
     line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.cupcakeFinish, line.chocolateIcingCount,
     line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
     normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
+    line.individualPackaging === true,
   ])
 }
 
@@ -496,20 +506,27 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     'totalPrice', 'customerName', 'customerPhone', 'reservationNumber', 'pickupDate', 'pickupTime',
     'cacaoPercent', 'requestNote', 'status', 'paymentStatus', 'adminMemo', 'updatedAt',
   ])) invalidResponse()
-  const rawOrderLines = readDensePlainDataArray(row.orderLines, 2)
+  const rawOrderLines = readDensePlainDataArray(row.orderLines, 1)
   if (!rawOrderLines) invalidResponse()
 
-  const lineKeys = new Set([
+  const prePackagingLineKeys = new Set([
     'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'cupcakeFinish', 'chocolateIcingCount', 'vanillaCreamCount',
     'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'quantity', 'unitPriceCents',
     'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
   ])
-  const legacyLineKeys = new Set([...lineKeys].filter((key) => key !== 'vanillaCakePointColor'))
+  const lineKeys = new Set([
+    ...prePackagingLineKeys,
+    'individualPackaging', 'individualPackagingPieces', 'individualPackagingFeeCents',
+  ])
+  const legacyLineKeys = new Set([...prePackagingLineKeys].filter((key) => key !== 'vanillaCakePointColor'))
   const orderLines = rawOrderLines.map((value): CakeOrderLineResult => {
     const line = readPlainDataRecordSnapshot(value)
     if (!line) invalidResponse()
     const keys = Object.keys(line)
-    const allowedLineKeys = keys.length === legacyLineKeys.size ? legacyLineKeys : lineKeys
+    const hasPackagingFields = keys.length === lineKeys.size
+    const allowedLineKeys = hasPackagingFields
+      ? lineKeys
+      : keys.length === legacyLineKeys.size ? legacyLineKeys : prePackagingLineKeys
     if (keys.length !== allowedLineKeys.size || !keys.every((key) => typeof key === 'string' && allowedLineKeys.has(key))) invalidResponse()
     const productId = requiredProductId(line)
     const cakeSize = requiredSetValue(line, 'cakeSize', VALID_CAKE_SIZES)
@@ -525,6 +542,13 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
       ? 'pink'
       : requiredSetValue(line, 'vanillaCakePointColor', VALID_VANILLA_CAKE_POINT_COLORS)
     const quantity = nonnegativeInteger(line.quantity)
+    const individualPackaging = hasPackagingFields && line.individualPackaging === true
+    if (hasPackagingFields && typeof line.individualPackaging !== 'boolean') invalidResponse()
+    if (individualPackaging && !isIndividualPackagingEligibleProduct(productId)) invalidResponse()
+    const individualPackagingPieces = hasPackagingFields ? nonnegativeInteger(line.individualPackagingPieces) : 0
+    const individualPackagingFeeCents = hasPackagingFields ? nonnegativeInteger(line.individualPackagingFeeCents) : 0
+    const expectedPackagingPieces = individualPackaging ? getIndividualPackagingPieceCount(productId, quantity) : 0
+    if (individualPackagingPieces !== expectedPackagingPieces) invalidResponse()
     const normalizedFinishes = normalizeCupcakeFinishCounts(productId, vanillaCreamCount, partyDecorationCount)
     if (
       cakeSize !== normalizeCakeSize(productId, cakeSize) ||
@@ -554,12 +578,13 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
       !Number.isSafeInteger(expectedSubtotalCents) ||
       unitPriceCents !== authoritativeUnitPriceCents ||
       expectedSubtotalCents !== subtotalCents ||
-      subtotalCents - discountCents !== totalPriceCents
+      subtotalCents - discountCents + individualPackagingFeeCents !== totalPriceCents
     ) invalidResponse()
     if (discountPercent === 0 && discountCents !== 0) invalidResponse()
     return {
       productId, cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, vanillaCreamCount,
       partyDecorationCount, vanillaCakeSheet, vanillaCakeFlavor, vanillaCakePointColor, quantity,
+      ...(hasPackagingFields ? { individualPackaging, individualPackagingPieces, individualPackagingFeeCents } : {}),
       unitPriceCents, subtotalCents, discountPercent, discountCents, totalPriceCents,
     }
   })
@@ -572,7 +597,11 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
   const totalPriceCents = nonnegativeInteger(row.totalPriceCents)
   const discountPercent = row.discountPercent
   if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10) invalidResponse()
-  if (subtotalCents - discountCents !== totalPriceCents) invalidResponse()
+  const hasPackagingAggregates = Object.hasOwn(row, 'individualPackagingPieces') || Object.hasOwn(row, 'individualPackagingFeeCents')
+  if (hasPackagingAggregates && (!Object.hasOwn(row, 'individualPackagingPieces') || !Object.hasOwn(row, 'individualPackagingFeeCents'))) invalidResponse()
+  const individualPackagingPieces = hasPackagingAggregates ? nonnegativeInteger(row.individualPackagingPieces) : 0
+  const individualPackagingFeeCents = hasPackagingAggregates ? nonnegativeInteger(row.individualPackagingFeeCents) : 0
+  if (subtotalCents - discountCents + individualPackagingFeeCents !== totalPriceCents) invalidResponse()
   const aggregateDiscountNumerator = discountBasisCents * Number(discountPercent)
   if (!Number.isSafeInteger(aggregateDiscountNumerator) || discountCents !== Math.round(aggregateDiscountNumerator / 100)) invalidResponse()
   const appliedPromoCodeLast4 = row.appliedPromoCodeLast4 === undefined
@@ -613,6 +642,11 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
   const lineSubtotal = safeSum(orderLines.map((line) => line.subtotalCents))
   const lineDiscount = safeSum(orderLines.map((line) => line.discountCents))
   const lineTotal = safeSum(orderLines.map((line) => line.totalPriceCents))
+  const linePackagingPieces = safeSum(orderLines.map((line) => line.individualPackagingPieces || 0))
+  const linePackagingFeeCents = safeSum(orderLines.map((line) => line.individualPackagingFeeCents || 0))
+  const expectedPackagingFeeCents = individualPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES
+    ? 0
+    : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
   const itemCount = safeSum(orderLines.map((line) => line.quantity))
   if (
     nonnegativeInteger(row.orderLineCount) !== orderLines.length ||
@@ -620,7 +654,10 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     lineSubtotal !== subtotalCents ||
     expectedBasis !== discountBasisCents ||
     lineDiscount !== discountCents ||
-    lineTotal !== totalPriceCents
+    lineTotal !== totalPriceCents ||
+    linePackagingPieces !== individualPackagingPieces ||
+    linePackagingFeeCents !== individualPackagingFeeCents ||
+    individualPackagingFeeCents !== expectedPackagingFeeCents
   ) invalidResponse()
 
   const first = orderLines[0]
@@ -628,6 +665,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     if (row[key] !== first[key]) invalidResponse()
   }
   if (row.vanillaCakePointColor !== undefined && row.vanillaCakePointColor !== first.vanillaCakePointColor) invalidResponse()
+  if (row.individualPackaging !== undefined && row.individualPackaging !== first.individualPackaging) invalidResponse()
   const totalPrice = requiredFiniteNumber(row, 'totalPrice')
   if (!Number.isSafeInteger(totalPriceCents) || totalPrice !== totalPriceCents / 100) invalidResponse()
   const customerName = requiredString(row, 'customerName')
@@ -650,6 +688,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     vanillaCakeSheet: first.vanillaCakeSheet,
     vanillaCakeFlavor: first.vanillaCakeFlavor,
     vanillaCakePointColor: first.vanillaCakePointColor,
+    ...(first.individualPackaging !== undefined ? { individualPackaging: first.individualPackaging } : {}),
     quantity: first.quantity,
     pickupDate: requiredDateOnly(row, 'pickupDate'),
     pickupTime: requiredTime(row, 'pickupTime'),
@@ -671,12 +710,14 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     orderLineCount: orderLines.length,
     orderItemCount: itemCount,
     discountBasisCents,
+    ...(hasPackagingAggregates ? { individualPackagingPieces, individualPackagingFeeCents } : {}),
   }
 }
 
 export function parseCakeReservationResult(value: unknown): Reservation {
   const row = readPlainDataRecordSnapshot(value)
   if (!row) invalidResponse()
+  if (Array.isArray(row.orderLines)) return parseCakeOrderResult(row)
   const pricing = getReservationPricingAudit(row)
   const totalPrice = requiredFiniteNumber(row, 'totalPrice')
   if (Math.round(totalPrice * 100) !== pricing.totalPriceCents) invalidResponse()

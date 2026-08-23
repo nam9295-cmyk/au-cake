@@ -4,12 +4,14 @@ import {
   formatCacaoLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
+  formatVanillaCakePointColor,
   getLemonIcingCount,
   getCupcakePackSize,
   getProductById,
   isCheesecakeProduct,
   isCupcakeProduct,
   isFreshLemonCupcakeProduct,
+  isCreamLayerCakeProduct,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
   usesReservationChocolateType,
@@ -306,6 +308,33 @@ function formatCupcakeFinishMix(reservation: Reservation, korean = false) {
     : `Finishing mix: Basic ${basicCount} / Vanilla cream ${counts.vanillaCreamCount} / Party decoration ${counts.partyDecorationCount}\n`
 }
 
+function formatIndividualPackaging(reservation: Reservation, korean = false) {
+  if (!reservation.individualPackaging) return ''
+  const pieces = reservation.individualPackagingPieces || 0
+  const fee = reservation.individualPackagingFeeCents === 0
+    ? 'FREE'
+    : formatCurrency((reservation.individualPackagingFeeCents || 0) / 100)
+  return korean
+    ? `개별 포장: ${pieces}개 · ${fee}\n`
+    : `Individual packaging: ${pieces} pieces · ${fee}\n`
+}
+
+function formatAuCreamCakeDetails(reservation: Reservation) {
+  if (!isCreamLayerCakeProduct(reservation.productId)) return ''
+  const colour = formatVanillaCakePointColor(reservation.vanillaCakePointColor)
+  if (reservation.productId === 'buttercream-cake') {
+    return `Layers: Signature Gâteau au Chocolat layers\nFilling: Chocolate Buttercream\nCake colour: ${colour}\n`
+  }
+  if (reservation.vanillaCakeSheet === 'chocolate' && reservation.vanillaCakeFlavor === 'plain') {
+    return `Layers: Signature Gâteau au Chocolat layers\nFilling: Vanilla fresh cream with real vanilla bean\nPoint colour: ${colour}\n`
+  }
+  const sheet = reservation.vanillaCakeSheet === 'vanilla' ? 'Vanilla cake sheet' : 'Chocolate cake sheet'
+  const flavour = reservation.vanillaCakeFlavor === 'plain'
+    ? 'Plain fresh cream (legacy)'
+    : reservation.vanillaCakeFlavor === 'nutella-chocolate-chip' ? 'Nutella chocolate chip' : 'Triple berry'
+  return `Cake sheet: ${sheet}\nFlavour: ${flavour}\nPoint colour: ${colour}\n`
+}
+
 export function buildSmsMessage(reservation: Reservation, settings: StoreSettings = marketConfig.defaultSettings) {
   const product = getProductById(reservation.productId)
   const labels = marketConfig.smsLabels
@@ -321,6 +350,7 @@ ${labels.reservationNumber}: ${reservation.reservationNumber}
 Items:
 ${itemLines}
 Total items: ${getReservationItemCount(reservation)}
+Total: ${formatCurrency(reservation.totalPriceCents === undefined ? reservation.totalPrice : reservation.totalPriceCents / 100)}
 ${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 Pick-up location: https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw
@@ -337,8 +367,9 @@ Thank you for your order ${reservation.customerName}. (${reservation.customerPho
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
 ${(product.usesSizeOptions || isCheesecakeProduct(product.id)) ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
-${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${formatAuCreamCakeDetails(reservation)}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${formatIndividualPackaging(reservation, marketConfig.locale.startsWith('ko'))}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
+Total: ${formatCurrency(reservation.totalPriceCents === undefined ? reservation.totalPrice : reservation.totalPriceCents / 100)}
 Pick-up location: https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw
 
 Thank you for your order:)
@@ -389,7 +420,7 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.requestNote,
     reservation.status,
     reservation.paymentStatus,
-    String(reservation.totalPrice),
+    formatCurrency(reservation.totalPrice),
     reservation.adminMemo,
     String(getReservationLineCount(reservation)),
     String(getReservationItemCount(reservation)),

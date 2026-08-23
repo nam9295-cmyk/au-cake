@@ -786,6 +786,66 @@ test('cake API normalizes, authoritatively prices and aggregates two distinct se
   ])
 })
 
+test('cake API authoritatively prices individual packaging after product pricing', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', individualPackaging: true, quantity: 1 },
+    { productId: 'cupcake-dozen', cupcakeFinish: 'basic', individualPackaging: true, quantity: 1 },
+  ]), { now, reservationNumber: 'VG-C-AU-PACKAGING' })
+  const { lines } = parseStoredOrderLines(reservation)
+
+  assert.deepEqual(
+    [reservation.subtotalCents, reservation.individualPackagingPieces, reservation.individualPackagingFeeCents, reservation.totalPriceCents],
+    [8600, 18, 900, 9500],
+  )
+  assert.deepEqual(lines.map((line) => [
+    line.productId,
+    line.individualPackaging,
+    line.individualPackagingPieces,
+    line.individualPackagingFeeCents,
+    line.totalPriceCents,
+  ]), [
+    ['cupcake-half-dozen', true, 6, 300, 3400],
+    ['cupcake-dozen', true, 12, 600, 6100],
+  ])
+})
+
+test('cake API makes aggregate selected packaging free at 100 pieces', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'fresh-lemon-cupcakes-16', individualPackaging: true, quantity: 5 },
+    { productId: 'fresh-lemon-cupcakes-8', individualPackaging: true, quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-12', individualPackaging: true, quantity: 1 },
+  ]), { now, reservationNumber: 'VG-C-AU-PACKAGING-FREE' })
+  const { lines } = parseStoredOrderLines(reservation)
+
+  assert.equal(reservation.individualPackagingPieces, 100)
+  assert.equal(reservation.individualPackagingFeeCents, 0)
+  assert.equal(reservation.totalPriceCents, reservation.subtotalCents)
+  assert.deepEqual(lines.map((line) => line.individualPackagingFeeCents), [0, 0, 0])
+})
+
+test('cake API rejects invalid or ineligible packaging and ignores forged single-order fees', () => {
+  assertApiError('INVALID_INDIVIDUAL_PACKAGING', () => buildCakeReservation(multiCakeInput([
+    { productId: 'pave-cake', individualPackaging: true, quantity: 1 },
+  ]), { now }))
+  assertApiError('INVALID_INDIVIDUAL_PACKAGING', () => buildCakeReservation(multiCakeInput([
+    { productId: 'cupcake-dozen', cupcakeFinish: 'basic', individualPackaging: 'yes', quantity: 1 },
+  ]), { now }))
+  assertApiError('INVALID_ORDER_LINE', () => buildCakeReservation(multiCakeInput([
+    { productId: 'cupcake-dozen', individualPackaging: true, individualPackagingFeeCents: 1, quantity: 1 },
+  ]), { now }))
+
+  const reservation = buildCakeReservation({
+    ...cakeInput,
+    productId: 'cupcake-half-dozen',
+    cupcakeFinish: 'basic',
+    individualPackaging: true,
+    individualPackagingFeeCents: 1,
+    totalPriceCents: 1,
+  }, { now })
+  assert.equal(reservation.individualPackagingFeeCents, 300)
+  assert.equal(reservation.totalPriceCents, 3400)
+})
+
 test('multi-line cake API rejects client line metadata, forged prices and top-level legacy line fields', () => {
   for (const forged of [
     { lineKey: 'client-key' },
@@ -873,6 +933,20 @@ test('static promo discounts only eligible lines from one aggregate basis and wr
   ])
   assert.equal(reservation.requestNote, '[Promo lemoni] 10% discount applied: 81.50 -> 73.35\nHappy birthday')
   assert.equal(reservation.requestNote.match(/\[Promo/g)?.length, 1)
+})
+
+test('product discounts exclude individual packaging fees', () => {
+  const reservation = buildCakeReservation(multiCakeInput([
+    { productId: 'fresh-lemon-cupcakes-6', individualPackaging: true, quantity: 1 },
+  ], { promoCode: 'lemoni' }), { now, reservationNumber: 'VG-C-AU-PACKAGING-PROMO' })
+
+  assert.deepEqual([
+    reservation.subtotalCents,
+    reservation.discountBasisCents,
+    reservation.discountCents,
+    reservation.individualPackagingFeeCents,
+    reservation.totalPriceCents,
+  ], [3600, 3600, 360, 300, 3540])
 })
 
 test('aggregate discount allocation breaks equal fractional ties by canonical key, not request order', () => {

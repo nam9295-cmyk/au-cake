@@ -857,6 +857,8 @@ const multiLineAttributes = [
   { key: 'orderLineCount', type: 'integer', required: false, min: 1, max: 9_223_372_036_854_775_807n, status: 'available' },
   { key: 'orderItemCount', type: 'integer', required: false, min: 1, max: 9_223_372_036_854_775_807n, status: 'available' },
   { key: 'discountBasisCents', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807n, status: 'available' },
+  { key: 'individualPackagingPieces', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807n, status: 'available' },
+  { key: 'individualPackagingFeeCents', type: 'integer', required: false, min: 0, max: 9_223_372_036_854_775_807n, status: 'available' },
   { key: 'requestFingerprint', type: 'string', size: 64, required: false, status: 'available' },
 ]
 

@@ -4,6 +4,7 @@ import {
   CART_STORAGE_KEY,
   addCartLine,
   getCartEstimatedSubtotal,
+  getCartEstimatedPricing,
   getCartLineKey,
   getCartTotalQuantity,
   loadCartLines,
@@ -28,6 +29,7 @@ const baseSelection = (overrides: Partial<CakeDetailSelection> = {}): CakeDetail
   partyDecorationCount: 0,
   vanillaCakeSheet: 'vanilla',
   vanillaCakeFlavor: 'triple-berry',
+  individualPackaging: false,
   quantity: 1,
   ...overrides,
 })
@@ -126,6 +128,41 @@ test('Cupcake cart lines keep pack size and whole-box finish as separate priced 
   assert.equal((lines[0].selection as CakeDetailSelection & { cupcakeFinish?: string }).cupcakeFinish, 'vanilla-fresh-cream')
   assert.equal(lines[0].selection.vanillaCreamCount, 0)
   assert.equal(lines[0].selection.partyDecorationCount, 0)
+})
+
+test('individual packaging is a persisted eligible line choice and participates in cart identity', () => {
+  const unpackaged = baseSelection({ productId: 'cupcake-half-dozen' })
+  const packaged = baseSelection({ productId: 'cupcake-half-dozen', individualPackaging: true })
+  const wholeCake = baseSelection({ productId: 'pave-cake', individualPackaging: true })
+  const lines = addCartLine(addCartLine([], unpackaged), packaged)
+
+  assert.equal(lines.length, 2)
+  assert.notEqual(lines[0].lineKey, lines[1].lineKey)
+  assert.equal(lines[1].selection.individualPackaging, true)
+  assert.equal(normalizeCartSelection(wholeCake)?.individualPackaging, false)
+  assert.deepEqual(JSON.parse(serializeCartLines(lines)).lines.map((line: CakeDetailSelection) => line.individualPackaging), [false, true])
+
+  const historical = parseCartLines(JSON.stringify({
+    version: 1,
+    lines: [{ ...unpackaged, individualPackaging: undefined }],
+  }))
+  assert.equal(historical[0].selection.individualPackaging, false)
+})
+
+test('cart pricing keeps product subtotal separate and aggregates packaging after it', () => {
+  const lines = [
+    ...addCartLine([], baseSelection({ productId: 'cupcake-half-dozen', quantity: 1, individualPackaging: true })),
+    ...addCartLine([], baseSelection({ productId: 'cupcake-dozen', quantity: 1, individualPackaging: true })),
+    ...addCartLine([], baseSelection({ productId: 'pave-cake', cakeSize: '15cm', individualPackaging: true })),
+  ]
+
+  assert.equal(getCartEstimatedSubtotal(lines), 165)
+  assert.deepEqual(getCartEstimatedPricing(lines), {
+    productSubtotalCents: 16500,
+    selectedPackagingPieces: 18,
+    individualPackagingFeeCents: 900,
+    totalPriceCents: 17400,
+  })
 })
 
 test('new Vanilla orders ignore retired flavours while Lemon options stay separate with no total line cap', () => {

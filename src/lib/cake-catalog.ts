@@ -46,7 +46,6 @@ export type CakeCatalogEntry = {
   imageKey: CakeCatalogImageKey
   isPhotoComingSoon: boolean
   priceMode: 'fixed' | 'from'
-  priceDisplay: 'currency' | 'whole-aud'
   copy?: LocalizedCopyMap
 }
 
@@ -69,7 +68,6 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     imageKey: 'pave-cake',
     isPhotoComingSoon: false,
     priceMode: 'fixed',
-    priceDisplay: 'currency',
   },
   {
     id: 'vanilla-fresh-cream',
@@ -79,7 +77,6 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     imageKey: 'vanilla-fresh-cream-cake',
     isPhotoComingSoon: false,
     priceMode: 'from',
-    priceDisplay: 'whole-aud',
   },
   {
     id: 'buttercream',
@@ -89,7 +86,6 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     imageKey: 'buttercream-cake',
     isPhotoComingSoon: false,
     priceMode: 'from',
-    priceDisplay: 'whole-aud',
   },
   {
     id: 'cupcake',
@@ -99,7 +95,6 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     imageKey: 'chocolate-cupcakes',
     isPhotoComingSoon: false,
     priceMode: 'from',
-    priceDisplay: 'whole-aud',
   },
   {
     id: 'signature-gateau',
@@ -109,7 +104,6 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     imageKey: 'signature-gateau-au-chocolat',
     isPhotoComingSoon: false,
     priceMode: 'fixed',
-    priceDisplay: 'currency',
   },
   {
     id: 'fresh-lemon-cupcakes',
@@ -119,18 +113,17 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     imageKey: 'lemon-cake',
     isPhotoComingSoon: false,
     priceMode: 'from',
-    priceDisplay: 'whole-aud',
     copy: {
       en: {
         name: 'Lemon Cake',
-        description: 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
-        features: ['Boxes of 6, 8, 12 or 16', '12 pieces · Most Popular', 'Choose basic or special finishing'],
+        description: 'Lemon-shaped cakes made with freshly squeezed lemon juice, filled with fresh lemon cream and finished with a floral decoration.',
+        features: ['Made with freshly squeezed lemon juice', 'Fresh lemon cream', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'],
         optionLabel: 'Choose a pack size',
       },
       ko: {
         name: '레몬 케이크',
-        description: '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.',
-        features: ['6, 8, 12, 16개 구성', '12개 · Most Popular', '기본 또는 스페셜 마감 선택'],
+        description: '신선한 레몬즙을 직접 짜서 만든 레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리합니다.',
+        features: ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'],
         optionLabel: '구성 수량만 선택',
       },
     },
@@ -143,7 +136,6 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     imageKey: 'brownie-cheesecake',
     isPhotoComingSoon: false,
     priceMode: 'from',
-    priceDisplay: 'whole-aud',
   },
 ]
 
@@ -186,7 +178,7 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
     throw new Error('Missing public cake image: ' + entry.slug)
   }
   const startingPrice = getCakeCatalogStartingPrice(entry)
-  const price = entry.priceDisplay === 'whole-aud' ? `AUD ${startingPrice}` : formatCurrency(startingPrice)
+  const price = formatCurrency(startingPrice)
   const priceLabel = entry.priceMode === 'fixed'
     ? price
     : language === 'ko' ? `${price}부터` : `From ${price}`

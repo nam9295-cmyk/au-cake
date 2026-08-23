@@ -33,6 +33,12 @@ import {
 } from './constants'
 import type { ReservationPriceOptions } from './constants'
 import {
+  INDIVIDUAL_PACKAGING_FREE_FROM_PIECES,
+  INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
+  getIndividualPackagingPieceCount,
+  isIndividualPackagingEligibleProduct,
+} from './individual-packaging'
+import {
   CLASS_TYPE_ID,
   calculateClassPricing,
   filterClassReservationsForAdmin,
@@ -99,7 +105,7 @@ const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
 export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 export const CAKE_ORDER_LINES_UNAVAILABLE_ERROR = 'CAKE_ORDER_LINES_UNAVAILABLE'
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'discountBasisCents' | 'orderLines' | 'orderLineCount' | 'orderItemCount' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'individualPackaging' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'discountBasisCents' | 'orderLines' | 'orderLineCount' | 'orderItemCount' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
@@ -119,6 +125,8 @@ type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeS
   discountPercent?: number
   discountCents?: number
   discountBasisCents?: number
+  individualPackagingPieces?: number
+  individualPackagingFeeCents?: number
   orderLinesJson?: string
   orderLineCount?: number
   orderItemCount?: number
@@ -347,6 +355,9 @@ function normalizePublicOrderLine(
     vanillaCakeSheet: normalizeStoredVanillaCakeSheet(product.id, line.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeStoredVanillaCakeFlavor(product.id, line.vanillaCakeFlavor),
     vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, line.vanillaCakePointColor),
+    ...(Object.hasOwn(line, 'individualPackaging') ? {
+      individualPackaging: line.individualPackaging === true,
+    } : {}),
     quantity: line.quantity,
   }
   if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('INVALID_RESERVATION_RESPONSE')
@@ -357,11 +368,23 @@ function normalizePublicOrderLine(
   if (line.vanillaCakePointColor !== undefined && line.vanillaCakePointColor !== normalized.vanillaCakePointColor) {
     throw new Error('INVALID_RESERVATION_RESPONSE')
   }
+  if (Object.hasOwn(line, 'individualPackaging')) {
+    if (typeof line.individualPackaging !== 'boolean'
+      || (line.individualPackaging && !isIndividualPackagingEligibleProduct(product.id))) {
+      throw new Error('INVALID_RESERVATION_RESPONSE')
+    }
+  }
   const priced = line as Partial<CakeOrderLineResult>
   const priceKeys = ['unitPriceCents', 'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents'] as const
+  const packagingKeys = ['individualPackagingPieces', 'individualPackagingFeeCents'] as const
   const presentPriceKeys = priceKeys.filter((key) => Object.hasOwn(priced, key))
   if (presentPriceKeys.length === 0) return normalized
   if (presentPriceKeys.length !== priceKeys.length || priceKeys.some((key) => !Number.isSafeInteger(priced[key]) || (priced[key] as number) < 0)) {
+    throw new Error('INVALID_RESERVATION_RESPONSE')
+  }
+  const hasPackagingFields = Object.hasOwn(line, 'individualPackaging')
+  if (packagingKeys.some((key) => Object.hasOwn(priced, key)) !== hasPackagingFields
+    || (hasPackagingFields && packagingKeys.some((key) => !Number.isSafeInteger(priced[key]) || (priced[key] as number) < 0))) {
     throw new Error('INVALID_RESERVATION_RESPONSE')
   }
   const unitPriceCents = normalizedLineUnitPriceCents(product.id, normalized, legacyCupcakeCounts)
@@ -369,11 +392,21 @@ function normalizePublicOrderLine(
   const discountCents = priced.discountCents as number
   const totalPriceCents = priced.totalPriceCents as number
   const approvedUnitPriceCents = priced.unitPriceCents as number
+  const individualPackagingPieces = hasPackagingFields ? priced.individualPackagingPieces as number : 0
+  const individualPackagingFeeCents = hasPackagingFields ? priced.individualPackagingFeeCents as number : 0
+  const expectedPackagingPieces = normalized.individualPackaging
+    ? getIndividualPackagingPieceCount(product.id, line.quantity)
+    : 0
   if (!isApprovedStoredUnitPriceCents(product.id, normalized.cakeSize, unitPriceCents, approvedUnitPriceCents, allowHistoricalUnitPrice)
     || priced.subtotalCents !== approvedUnitPriceCents * line.quantity
-    || totalPriceCents !== subtotalCents - discountCents
+    || individualPackagingPieces !== expectedPackagingPieces
+    || totalPriceCents !== subtotalCents - discountCents + individualPackagingFeeCents
     || ![0, 5, 10].includes(priced.discountPercent!)) throw new Error('INVALID_RESERVATION_RESPONSE')
-  return { ...normalized, ...Object.fromEntries(priceKeys.map((key) => [key, priced[key]])) }
+  return {
+    ...normalized,
+    ...Object.fromEntries(priceKeys.map((key) => [key, priced[key]])),
+    ...(hasPackagingFields ? { individualPackagingPieces, individualPackagingFeeCents } : {}),
+  }
 }
 
 function orderLineIdentityKey(line: CakeOrderLineRequest) {
@@ -381,6 +414,7 @@ function orderLineIdentityKey(line: CakeOrderLineRequest) {
     line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.cupcakeFinish || '', line.chocolateIcingCount,
     line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
     normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
+    line.individualPackaging === true,
   ])
 }
 
@@ -395,7 +429,15 @@ function safeOrderSum(values: number[], invalid: () => never) {
 
 function validateOrderPricing(
   lines: CakeOrderLineResult[],
-  aggregates: { subtotalCents: number; discountBasisCents: number; discountPercent: number; discountCents: number; totalPriceCents: number },
+  aggregates: {
+    subtotalCents: number
+    discountBasisCents: number
+    discountPercent: number
+    discountCents: number
+    totalPriceCents: number
+    individualPackagingPieces?: number
+    individualPackagingFeeCents?: number
+  },
   eligibleIndexes: number[],
   invalid: () => never,
 ) {
@@ -426,11 +468,19 @@ function validateOrderPricing(
   const subtotalCents = safeOrderSum(lines.map((line) => line.subtotalCents), invalid)
   const discountCents = safeOrderSum(lines.map((line) => line.discountCents), invalid)
   const totalPriceCents = safeOrderSum(lines.map((line) => line.totalPriceCents), invalid)
+  const individualPackagingPieces = safeOrderSum(lines.map((line) => line.individualPackagingPieces || 0), invalid)
+  const individualPackagingFeeCents = safeOrderSum(lines.map((line) => line.individualPackagingFeeCents || 0), invalid)
+  const expectedPackagingFeeCents = individualPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES
+    ? 0
+    : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
   if (
     aggregates.subtotalCents !== subtotalCents || aggregates.discountBasisCents !== expectedBasis
     || aggregates.discountCents !== discountCents || aggregates.discountCents !== expectedDiscount
     || aggregates.totalPriceCents !== totalPriceCents
-    || aggregates.totalPriceCents !== aggregates.subtotalCents - aggregates.discountCents
+    || aggregates.totalPriceCents !== aggregates.subtotalCents - aggregates.discountCents + individualPackagingFeeCents
+    || (aggregates.individualPackagingPieces || 0) !== individualPackagingPieces
+    || (aggregates.individualPackagingFeeCents || 0) !== individualPackagingFeeCents
+    || individualPackagingFeeCents !== expectedPackagingFeeCents
   ) invalid()
 }
 
@@ -455,6 +505,9 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     vanillaCakeSheet: normalizeStoredVanillaCakeSheet(product.id, reservation.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeStoredVanillaCakeFlavor(product.id, reservation.vanillaCakeFlavor),
     vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, reservation.vanillaCakePointColor),
+    ...(reservation.individualPackaging === undefined ? {} : {
+      individualPackaging: reservation.individualPackaging === true,
+    }),
     quantity: normalizeQuantity(reservation.quantity),
   }
   const orderLines = payload.orderLines?.map((line) => normalizePublicOrderLine(line, { allowHistoricalUnitPrice: true }))
@@ -471,6 +524,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
   }
 
   const aggregateKeys = ['subtotalCents', 'discountBasisCents', 'discountPercent', 'discountCents', 'totalPriceCents'] as const
+  const packagingAggregateKeys = ['individualPackagingPieces', 'individualPackagingFeeCents'] as const
   const presentAggregateKeys = aggregateKeys.filter((key) => payload[key] !== undefined)
   const hasPricedLines = Boolean(orderLines?.some((line) => Object.hasOwn(line, 'unitPriceCents')))
   if (hasPricedLines) {
@@ -482,6 +536,11 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     }
     if (payload.discountPercent !== 0 && payload.discountPercent !== 5 && payload.discountPercent !== 10) throw new Error('INVALID_RESERVATION_RESPONSE')
     const pricedLines = orderLines as CakeOrderLineResult[]
+    const presentPackagingAggregateKeys = packagingAggregateKeys.filter((key) => payload[key] !== undefined)
+    const hasPackagedLines = pricedLines.some((line) => Object.hasOwn(line, 'individualPackaging'))
+    if (presentPackagingAggregateKeys.length !== (hasPackagedLines ? packagingAggregateKeys.length : 0)) {
+      throw new Error('INVALID_RESERVATION_RESPONSE')
+    }
     const eligibleIndexes = payload.discountPercent === 0
       ? []
       : pricedLines.map((line, index) => line.discountPercent === payload.discountPercent ? index : -1).filter((index) => index >= 0)
@@ -491,11 +550,15 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
       discountPercent: payload.discountPercent!,
       discountCents: payload.discountCents!,
       totalPriceCents: payload.totalPriceCents!,
+      ...(hasPackagedLines ? {
+        individualPackagingPieces: payload.individualPackagingPieces!,
+        individualPackagingFeeCents: payload.individualPackagingFeeCents!,
+      } : {}),
     }, eligibleIndexes, () => { throw new Error('INVALID_RESERVATION_RESPONSE') })
   } else if (presentAggregateKeys.length !== 0) {
     throw new Error('INVALID_RESERVATION_RESPONSE')
   }
-  const aggregates = Object.fromEntries(presentAggregateKeys.map((key) => [key, payload[key]]))
+  const aggregates = Object.fromEntries([...presentAggregateKeys, ...packagingAggregateKeys.filter((key) => payload[key] !== undefined)].map((key) => [key, payload[key]]))
   return {
     reservationNumber: reservation.reservationNumber,
     ...topProjection,
@@ -561,12 +624,16 @@ function normalizeSettings(settings?: Partial<StoreSettings> | null): StoreSetti
 }
 
 const STORED_ORDER_MAX_BYTES = 65_535
-const STORED_ORDER_LINE_KEYS = new Set([
+const PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
   'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'cupcakeFinish', 'chocolateIcingCount', 'vanillaCreamCount',
   'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'quantity', 'unitPriceCents',
   'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
 ])
-const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
+const STORED_ORDER_LINE_KEYS = new Set([
+  ...PRE_PACKAGING_STORED_ORDER_LINE_KEYS,
+  'individualPackaging', 'individualPackagingPieces', 'individualPackagingFeeCents',
+])
+const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...PRE_PACKAGING_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
 const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
 const SAFE_PROMO_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 const MANUAL_REVIEW_COUPON_ID_PATTERN = /^manual:[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
@@ -577,7 +644,7 @@ function invalidStoredOrder(): never {
 
 function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProjection: Reservation): Pick<
   Reservation,
-  'orderLines' | 'orderLineCount' | 'orderItemCount' | 'subtotalCents' | 'discountBasisCents' | 'discountPercent' | 'discountCents' | 'totalPriceCents'
+  'orderLines' | 'orderLineCount' | 'orderItemCount' | 'subtotalCents' | 'discountBasisCents' | 'discountPercent' | 'discountCents' | 'totalPriceCents' | 'individualPackagingPieces' | 'individualPackagingFeeCents'
 > | null {
   if (!Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) return null
   if (typeof document.orderLinesJson !== 'string'
@@ -593,13 +660,18 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
     || (payload as { version?: unknown }).version !== 1 || !Array.isArray((payload as { lines?: unknown }).lines)
     || !(payload as { lines: unknown[] }).lines.length) invalidStoredOrder()
   const rawLines = (payload as { lines: unknown[] }).lines
+  const packagingVersions = new Set<boolean>()
   const orderLines = rawLines.map((rawLine): CakeOrderLineResult => {
     if (!rawLine || typeof rawLine !== 'object' || Array.isArray(rawLine)) invalidStoredOrder()
     const keys = Reflect.ownKeys(rawLine)
-    const hasCupcakeFinish = keys.length === STORED_ORDER_LINE_KEYS.size
-    const allowedKeys = hasCupcakeFinish
+    const hasPackagingFields = keys.length === STORED_ORDER_LINE_KEYS.size
+    const hasCupcakeFinish = hasPackagingFields || keys.length === PRE_PACKAGING_STORED_ORDER_LINE_KEYS.size
+    packagingVersions.add(hasPackagingFields)
+    const allowedKeys = hasPackagingFields
       ? STORED_ORDER_LINE_KEYS
-      : keys.length === PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS.size
+      : hasCupcakeFinish
+        ? PRE_PACKAGING_STORED_ORDER_LINE_KEYS
+        : keys.length === PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS.size
         ? PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS
         : LEGACY_STORED_ORDER_LINE_KEYS
     if (keys.length !== allowedKeys.size
@@ -615,6 +687,8 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
       invalidStoredOrder()
     }
   })
+  if (packagingVersions.size !== 1) invalidStoredOrder()
+  const hasPackagingFields = packagingVersions.has(true)
   const safeSum = (values: number[]) => {
     let sum = 0
     for (const value of values) {
@@ -627,10 +701,16 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
   const subtotalCents = safeSum(orderLines.map((line) => line.subtotalCents))
   const discountCents = safeSum(orderLines.map((line) => line.discountCents))
   const totalPriceCents = safeSum(orderLines.map((line) => line.totalPriceCents))
+  const individualPackagingPieces = safeSum(orderLines.map((line) => line.individualPackagingPieces || 0))
+  const individualPackagingFeeCents = safeSum(orderLines.map((line) => line.individualPackagingFeeCents || 0))
   if (
     document.orderLineCount !== orderLines.length || document.orderItemCount !== orderItemCount
     || document.subtotalCents !== subtotalCents || document.discountCents !== discountCents
     || document.totalPriceCents !== totalPriceCents
+    || (hasPackagingFields && (
+      document.individualPackagingPieces !== individualPackagingPieces
+      || document.individualPackagingFeeCents !== individualPackagingFeeCents
+    ))
     || !Number.isSafeInteger(document.discountBasisCents) || Number(document.discountBasisCents) < 0
     || ![0, 5, 10].includes(Number(document.discountPercent))
   ) invalidStoredOrder()
@@ -672,6 +752,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
     discountPercent: aggregateDiscountPercent,
     discountCents,
     totalPriceCents,
+    ...(hasPackagingFields ? { individualPackagingPieces, individualPackagingFeeCents } : {}),
   }, eligibleIndexes, invalidStoredOrder)
   const exactTotal = totalPriceCents / 100
   if (document.totalPrice !== exactTotal && document.totalPrice !== Math.round(exactTotal)) invalidStoredOrder()
@@ -691,6 +772,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
     discountPercent: document.discountPercent,
     discountCents,
     totalPriceCents,
+    ...(hasPackagingFields ? { individualPackagingPieces, individualPackagingFeeCents } : {}),
   }
 }
 
@@ -746,7 +828,14 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
   }
   const storedOrder = parseAdminStoredOrder(document, reservation)
   return storedOrder
-    ? { ...reservation, ...storedOrder, totalPrice: fromCurrencyCents(storedOrder.totalPriceCents ?? 0) }
+    ? {
+        ...reservation,
+        ...storedOrder,
+        ...(storedOrder.orderLines?.[0]?.individualPackaging !== undefined ? {
+          individualPackaging: storedOrder.orderLines[0].individualPackaging,
+        } : {}),
+        totalPrice: fromCurrencyCents(storedOrder.totalPriceCents ?? 0),
+      }
     : reservation
 }
 

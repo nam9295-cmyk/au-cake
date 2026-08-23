@@ -3,6 +3,7 @@ import * as assert from 'node:assert/strict'
 import {
   createCakeDetailSelection,
   getCakeDetailBySlug,
+  getCakeDetailSelectionEstimatedTotal,
   getCakeDetailSelectionTotal,
   selectCakeDetailProduct,
 } from '../src/lib/cake-detail.js'
@@ -45,6 +46,7 @@ test('Cupcake and Signature detail selections remain independent and normalize h
   assert.ok(initial)
   assert.equal(initial.productId, 'cupcake-dozen')
   assert.equal((initial as unknown as { cupcakeFinish?: string }).cupcakeFinish, 'basic')
+  assert.equal(initial.individualPackaging, false)
 
   const cupcakes = selectCakeDetailProduct({
     ...initial,
@@ -53,6 +55,7 @@ test('Cupcake and Signature detail selections remain independent and normalize h
     vanillaCreamCount: 4,
     partyDecorationCount: 3,
     cupcakeFinish: 'chocolate-buttercream',
+    individualPackaging: true,
     quantity: 3,
   } as CakeDetailSelection, 'cupcake-half-dozen' as CakeDetailSelection['productId']) as CakeDetailSelection & { cupcakeFinish?: string }
 
@@ -63,10 +66,12 @@ test('Cupcake and Signature detail selections remain independent and normalize h
   assert.equal(cupcakes.partyDecorationCount, 0)
   assert.equal(cupcakes.cupcakeFinish, 'chocolate-buttercream')
   assert.equal(getCakeDetailSelectionTotal(cupcakes), 123)
+  assert.equal(getCakeDetailSelectionEstimatedTotal(cupcakes), 132)
   assert.equal(cupcakes.quantity, 3)
 
   const signature = createCakeDetailSelection('signature-gateau-au-chocolat')
   assert.equal(signature?.productId, 'pound-cake')
+  assert.equal(selectCakeDetailProduct({ ...signature!, individualPackaging: true }, 'pound-cake').individualPackaging, false)
   assert.equal(getCakeDetailBySlug('chocolate-pound-cake-and-cupcakes', 'en')?.isLegacy, true)
   assert.equal(getCakeDetailBySlug('chocolatiers-basque-cheesecake', 'en')?.isLegacy, true)
 })
@@ -92,10 +97,12 @@ test('Lemon Cake supports two or more identical packs with simple quantity multi
   const selection = {
     ...selectCakeDetailProduct(initial, 'fresh-lemon-cupcakes-6'),
     chocolateIcingCount: 3,
+    individualPackaging: true,
     quantity: 2,
   }
 
   assert.equal(getCakeDetailSelectionTotal(selection), 75)
+  assert.equal(getCakeDetailSelectionEstimatedTotal(selection), 81)
 
   const reservation = buildCakeReservation({
     customerName: 'Lemon Quantity',
@@ -113,5 +120,7 @@ test('Lemon Cake supports two or more identical packs with simple quantity multi
   })
 
   assert.equal(reservation.quantity, 2)
-  assert.equal(reservation.totalPriceCents, 7500)
+  assert.equal(reservation.individualPackagingPieces, 12)
+  assert.equal(reservation.individualPackagingFeeCents, 600)
+  assert.equal(reservation.totalPriceCents, 8100)
 })

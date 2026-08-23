@@ -27,6 +27,8 @@ export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
 export const CUPCAKE_PACK_SIZE = 12
 export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
+export const INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE = 50
+export const INDIVIDUAL_PACKAGING_FREE_FROM_PIECES = 100
 const CUPCAKE_PRODUCT_IDS = new Set(['cupcake-half-dozen', 'cupcake-dozen'])
 const CUPCAKE_FINISH_PRICES_CENTS = {
   'cupcake-half-dozen': {
@@ -64,6 +66,14 @@ const FRESH_LEMON_CUPCAKE_PRODUCT_IDS = new Set([
   'fresh-lemon-cupcakes-12',
   'fresh-lemon-cupcakes-16',
 ])
+const INDIVIDUAL_PACKAGING_PRODUCT_PIECES = Object.freeze({
+  'cupcake-half-dozen': 6,
+  'cupcake-dozen': 12,
+  'fresh-lemon-cupcakes-6': 6,
+  'fresh-lemon-cupcakes-8': 8,
+  'fresh-lemon-cupcakes-12': 12,
+  'fresh-lemon-cupcakes-16': 16,
+})
 const PROMOTIONS = [
   { code: PROMO_CODE, expiresOn: CHOCOLATE_PROMO_EXPIRES_ON, productIds: CHEESECAKE_PROMO_PRODUCT_IDS },
   { code: LEMON_PROMO_CODE, expiresOn: LEMONI_PROMO_EXPIRES_ON, productIds: FRESH_LEMON_CUPCAKE_PRODUCT_IDS },
@@ -517,7 +527,7 @@ function normalizeCakeOptions(input, {
   return { product, cakeSize, poundAddon, chocolateType, cupcakeFinish, chocolateIcingCount, ...cupcakeFinishCounts, ...vanillaCakeOptions }
 }
 
-const ORDER_LINE_IDENTITY_KEYS = [
+const LEGACY_ORDER_LINE_IDENTITY_KEYS = [
   'productId',
   'cakeSize',
   'chocolateType',
@@ -530,10 +540,11 @@ const ORDER_LINE_IDENTITY_KEYS = [
   'vanillaCakeFlavor',
   'vanillaCakePointColor',
 ]
+const ORDER_LINE_IDENTITY_KEYS = [...LEGACY_ORDER_LINE_IDENTITY_KEYS, 'individualPackaging']
 const ORDER_LINE_INPUT_KEYS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity'])
 const LEGACY_ORDER_LINE_FIELDS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity', 'cacaoPercent'])
-const STORED_ORDER_LINE_KEYS = new Set([
-  ...ORDER_LINE_IDENTITY_KEYS,
+const PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
+  ...LEGACY_ORDER_LINE_IDENTITY_KEYS,
   'quantity',
   'unitPriceCents',
   'subtotalCents',
@@ -541,11 +552,22 @@ const STORED_ORDER_LINE_KEYS = new Set([
   'discountCents',
   'totalPriceCents',
 ])
-const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
+const STORED_ORDER_LINE_KEYS = new Set([
+  ...ORDER_LINE_IDENTITY_KEYS,
+  'quantity',
+  'unitPriceCents',
+  'subtotalCents',
+  'discountPercent',
+  'discountCents',
+  'individualPackagingPieces',
+  'individualPackagingFeeCents',
+  'totalPriceCents',
+])
+const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...PRE_PACKAGING_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
 const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
 const STORED_ORDER_MAX_BYTES = 65535
 const REQUIRED_STORED_ORDER_DOCUMENT_KEYS = new Set([
-  ...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor' && key !== 'cupcakeFinish'),
+  ...LEGACY_ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor' && key !== 'cupcakeFinish'),
   'quantity',
   'subtotalCents',
   'discountBasisCents',
@@ -576,6 +598,13 @@ function normalizedCakeLine(input, quantity, options) {
     vanillaCakeFlavor,
     vanillaCakePointColor,
   } = normalizeCakeOptions(input, options)
+  if (input.individualPackaging !== undefined && typeof input.individualPackaging !== 'boolean') {
+    fail('INVALID_INDIVIDUAL_PACKAGING')
+  }
+  const individualPackaging = input.individualPackaging === true
+  if (individualPackaging && !Object.hasOwn(INDIVIDUAL_PACKAGING_PRODUCT_PIECES, input.productId)) {
+    fail('INVALID_INDIVIDUAL_PACKAGING')
+  }
   return {
     productId: input.productId,
     cakeSize,
@@ -588,6 +617,7 @@ function normalizedCakeLine(input, quantity, options) {
     vanillaCakeSheet,
     vanillaCakeFlavor,
     vanillaCakePointColor,
+    individualPackaging,
     quantity,
   }
 }
@@ -736,24 +766,48 @@ function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
   const discountBasisCents = eligibleIndexes.reduce((sum, index) => sum + baseLines[index].subtotalCents, 0)
   const discountCents = Math.round(discountBasisCents * discountPercent / 100)
   const allocations = allocateDiscounts(baseLines, eligibleIndexes, discountPercent, discountCents)
+  const individualPackagingPieces = baseLines.reduce((sum, line) => sum + (
+    line.individualPackaging
+      ? INDIVIDUAL_PACKAGING_PRODUCT_PIECES[line.productId] * line.quantity
+      : 0
+  ), 0)
+  const individualPackagingFeeCents = individualPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES
+    ? 0
+    : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
   const pricedLines = baseLines.map((line, index) => {
+    const { individualPackaging, ...legacyCompatibleLine } = line
     const lineDiscountPercent = eligibleIndexes.includes(index) ? discountPercent : 0
     const lineDiscountCents = allocations[index]
+    const linePackagingPieces = line.individualPackaging
+      ? INDIVIDUAL_PACKAGING_PRODUCT_PIECES[line.productId] * line.quantity
+      : 0
+    const linePackagingFeeCents = individualPackagingFeeCents === 0
+      ? 0
+      : linePackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
     return {
-      ...line,
+      ...legacyCompatibleLine,
+      ...(individualPackagingPieces > 0 ? { individualPackaging } : {}),
       discountPercent: lineDiscountPercent,
       discountCents: lineDiscountCents,
-      totalPriceCents: line.subtotalCents - lineDiscountCents,
+      ...(individualPackagingPieces > 0 ? {
+        individualPackagingPieces: linePackagingPieces,
+        individualPackagingFeeCents: linePackagingFeeCents,
+      } : {}),
+      totalPriceCents: line.subtotalCents - lineDiscountCents + linePackagingFeeCents,
     }
   })
   const subtotalCents = pricedLines.reduce((sum, line) => sum + line.subtotalCents, 0)
-  const totalPriceCents = subtotalCents - discountCents
+  const totalPriceCents = subtotalCents - discountCents + individualPackagingFeeCents
   return {
     lines: pricedLines,
     subtotalCents,
     discountBasisCents,
     discountPercent,
     discountCents,
+    ...(individualPackagingPieces > 0 ? {
+      individualPackagingPieces,
+      individualPackagingFeeCents,
+    } : {}),
     totalPrice: totalPriceCents / 100,
     totalPriceCents,
     appliedPromoCode,
@@ -843,6 +897,10 @@ export function buildCakeReservation(input, {
     discountBasisCents: pricing.discountBasisCents,
     discountPercent: pricing.discountPercent,
     discountCents: pricing.discountCents,
+    ...(pricing.individualPackagingPieces > 0 ? {
+      individualPackagingPieces: pricing.individualPackagingPieces,
+      individualPackagingFeeCents: pricing.individualPackagingFeeCents,
+    } : {}),
     orderLineCount,
     orderItemCount,
     orderLinesJson,
@@ -1030,6 +1088,7 @@ function sanitizedOrderLine(line) {
     vanillaCakeSheet: line.vanillaCakeSheet,
     vanillaCakeFlavor: line.vanillaCakeFlavor,
     vanillaCakePointColor: line.vanillaCakePointColor || 'pink',
+    ...(Object.hasOwn(line, 'individualPackaging') ? { individualPackaging: line.individualPackaging === true } : {}),
     quantity: line.quantity,
   }
 }
@@ -1048,11 +1107,16 @@ export function parseStoredOrderLines(document) {
     }
 
     const canonicalKeys = new Set()
+    let currentPackagingDocument = null
     for (const line of payload.lines) {
       const preCupcakeFinishStoredLine = hasExactOwnKeys(line, PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS)
       const legacyStoredLine = hasExactOwnKeys(line, LEGACY_STORED_ORDER_LINE_KEYS)
-      const hasCupcakeFinish = hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)
-      if (!preCupcakeFinishStoredLine && !legacyStoredLine && !hasCupcakeFinish) throw new Error('invalid line keys')
+      const prePackagingStoredLine = hasExactOwnKeys(line, PRE_PACKAGING_STORED_ORDER_LINE_KEYS)
+      const hasPackagingFields = hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)
+      const hasCupcakeFinish = prePackagingStoredLine || hasPackagingFields
+      if (!preCupcakeFinishStoredLine && !legacyStoredLine && !prePackagingStoredLine && !hasPackagingFields) throw new Error('invalid line keys')
+      if (currentPackagingDocument === null) currentPackagingDocument = hasPackagingFields
+      if (currentPackagingDocument !== hasPackagingFields) throw new Error('mixed line versions')
       if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('invalid quantity')
       for (const key of ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount']) {
         if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid option count')
@@ -1065,7 +1129,11 @@ export function parseStoredOrderLines(document) {
         allowLegacyCupcakeCounts: !hasCupcakeFinish,
         allowLegacyCreamCakeOptions: true,
       })
-      if (ORDER_LINE_IDENTITY_KEYS.some((key) => key !== 'vanillaCakePointColor' && (key !== 'cupcakeFinish' || hasCupcakeFinish) && normalized[key] !== line[key])) {
+      if (ORDER_LINE_IDENTITY_KEYS.some((key) =>
+        key !== 'vanillaCakePointColor' &&
+        (key !== 'cupcakeFinish' || hasCupcakeFinish) &&
+        (key !== 'individualPackaging' || hasPackagingFields) &&
+        normalized[key] !== line[key])) {
         throw new Error('noncanonical line')
       }
       if (!legacyStoredLine && normalized.vanillaCakePointColor !== line.vanillaCakePointColor) {
@@ -1080,7 +1148,15 @@ export function parseStoredOrderLines(document) {
       if (!isApprovedStoredUnitPrice(line)) throw new Error('invalid unit price')
       if (line.subtotalCents !== line.unitPriceCents * line.quantity) throw new Error('invalid subtotal')
       if (line.discountPercent !== 0 && line.discountPercent !== 5 && line.discountPercent !== 10) throw new Error('invalid discount percent')
-      if (line.totalPriceCents !== line.subtotalCents - line.discountCents) throw new Error('invalid total')
+      if (hasPackagingFields) {
+        const expectedPieces = line.individualPackaging
+          ? INDIVIDUAL_PACKAGING_PRODUCT_PIECES[line.productId] * line.quantity
+          : 0
+        if (line.individualPackagingPieces !== expectedPieces) throw new Error('invalid packaging pieces')
+        if (!Number.isInteger(line.individualPackagingFeeCents) || line.individualPackagingFeeCents < 0) throw new Error('invalid packaging fee')
+      }
+      const packagingFeeCents = hasPackagingFields ? line.individualPackagingFeeCents : 0
+      if (line.totalPriceCents !== line.subtotalCents - line.discountCents + packagingFeeCents) throw new Error('invalid total')
       if (line.discountPercent === 0 && line.discountCents !== 0) throw new Error('invalid undiscounted line')
     }
 
@@ -1128,6 +1204,15 @@ export function parseStoredOrderLines(document) {
     const expectedAllocations = allocateDiscounts(payload.lines, eligibleIndexes, discountPercent, discountCents)
     if (payload.lines.some((line, index) => line.discountCents !== expectedAllocations[index])) throw new Error('invalid discount allocation')
 
+    const individualPackagingPieces = currentPackagingDocument
+      ? payload.lines.reduce((sum, line) => sum + line.individualPackagingPieces, 0)
+      : 0
+    const expectedPackagingFeeCents = individualPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES
+      ? 0
+      : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+    if (currentPackagingDocument && payload.lines.reduce((sum, line) => sum + line.individualPackagingFeeCents, 0) !== expectedPackagingFeeCents) {
+      throw new Error('invalid aggregate packaging fee')
+    }
     const subtotalCents = payload.lines.reduce((sum, line) => sum + line.subtotalCents, 0)
     const totalPriceCents = payload.lines.reduce((sum, line) => sum + line.totalPriceCents, 0)
     const orderLineCount = payload.lines.length
@@ -1140,6 +1225,10 @@ export function parseStoredOrderLines(document) {
       totalPriceCents,
       orderLineCount,
       orderItemCount,
+      ...(currentPackagingDocument ? {
+        individualPackagingPieces,
+        individualPackagingFeeCents: expectedPackagingFeeCents,
+      } : {}),
     }
     for (const [key, expected] of Object.entries(expectedDocumentValues)) {
       if (document[key] !== expected) throw new Error(`inconsistent ${key}`)
@@ -1152,7 +1241,10 @@ export function parseStoredOrderLines(document) {
     const firstLineHasCupcakeFinish = Object.hasOwn(firstLine, 'cupcakeFinish')
     const documentHasCupcakeFinish = typeof document.cupcakeFinish === 'string'
     if (firstLineHasCupcakeFinish !== documentHasCupcakeFinish) throw new Error('inconsistent cupcakeFinish projection')
-    for (const key of [...ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor' && (key !== 'cupcakeFinish' || firstLineHasCupcakeFinish)), 'quantity']) {
+    for (const key of [...ORDER_LINE_IDENTITY_KEYS.filter((key) =>
+      key !== 'vanillaCakePointColor' &&
+      key !== 'individualPackaging' &&
+      (key !== 'cupcakeFinish' || firstLineHasCupcakeFinish)), 'quantity']) {
       if (document[key] !== firstLine[key]) throw new Error(`inconsistent ${key}`)
     }
     return payload
@@ -1184,6 +1276,10 @@ export function publicCakeReservation(document) {
         subtotalCents: line.subtotalCents,
         discountPercent: line.discountPercent,
         discountCents: line.discountCents,
+        ...(Object.hasOwn(line, 'individualPackagingPieces') ? {
+          individualPackagingPieces: line.individualPackagingPieces,
+          individualPackagingFeeCents: line.individualPackagingFeeCents,
+        } : {}),
         totalPriceCents: line.totalPriceCents,
       }))
     : [legacyLine]
@@ -1204,6 +1300,10 @@ export function publicCakeReservation(document) {
       discountBasisCents: document.discountBasisCents,
       discountPercent: document.discountPercent,
       discountCents: document.discountCents,
+      ...(Object.hasOwn(document, 'individualPackagingPieces') ? {
+        individualPackagingPieces: Number(document.individualPackagingPieces || 0),
+        individualPackagingFeeCents: Number(document.individualPackagingFeeCents || 0),
+      } : {}),
       totalPriceCents: document.totalPriceCents,
     } : {}),
   }

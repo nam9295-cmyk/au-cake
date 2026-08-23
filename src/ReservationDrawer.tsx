@@ -66,7 +66,6 @@ export function ReservationDrawer({
   const [memo, setMemo] = useState(reservation.adminMemo)
   const hasOneTimeCoupon = Boolean(reservation.reviewCouponId)
   const isVersionedOrder = Array.isArray(reservation.orderLines)
-  const isMultiLineOrder = (reservation.orderLines?.length || 0) > 1
   const isLegacyCupcake = reservation.productId === 'cupcake-dozen' && reservation.cupcakeFinish === undefined
   const reservationPricingAudit = getOptionalReservationPricingAudit(reservation)
 
@@ -136,8 +135,8 @@ export function ReservationDrawer({
           )}
         </dl>
 
-        {isMultiLineOrder && (
-          <section className="admin-order-summary" aria-label="다중 품목 주문 구성">
+        {isVersionedOrder && (
+          <section className="admin-order-summary" aria-label="서버 산출 주문 구성">
             <h3>주문 구성 · {reservation.orderItemCount || reservation.orderLines?.reduce((total, line) => total + line.quantity, 0)}개</h3>
             <dl className="detail-list order-detail-list">
               <OrderDetailRows reservation={reservation} language="en" />

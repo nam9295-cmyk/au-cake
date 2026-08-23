@@ -100,7 +100,7 @@ test('cheesecake product detection is shared by customer and admin presentation'
   assert.equal(isCheesecakeProduct('pave-cake'), false)
 })
 
-test('Vanilla Fresh Cream Cake uses chocolate sheets with plain fresh cream and no selectable flavour', () => {
+test('Vanilla Fresh Cream Cake uses Signature Gâteau layers and real vanilla fresh cream without a selectable flavour', () => {
   const vanillaFreshCreamCakeId: ProductId = 'vanilla-fresh-cream-cake'
   const vanillaFreshCreamCake = getProductById(vanillaFreshCreamCakeId)
 
@@ -115,7 +115,7 @@ test('Vanilla Fresh Cream Cake uses chocolate sheets with plain fresh cream and 
   assert.equal(DEFAULT_VANILLA_CAKE_FLAVOR, 'plain')
   assert.equal(DEFAULT_VANILLA_CAKE_POINT_COLOR, 'pink')
   assert.deepEqual(VANILLA_CAKE_SHEET_OPTIONS, [{ value: 'chocolate', label: 'Chocolate cake sheet' }])
-  assert.deepEqual(VANILLA_CAKE_FLAVOR_OPTIONS, [{ value: 'plain', label: 'Plain fresh cream' }])
+  assert.deepEqual(VANILLA_CAKE_FLAVOR_OPTIONS, [{ value: 'plain', label: 'Vanilla fresh cream with real vanilla bean' }])
   assert.deepEqual(VANILLA_CAKE_POINT_COLOR_OPTIONS, [
     { value: 'pink', label: 'Pink', labelKo: '핑크', hex: '#ec4899' },
     { value: 'red', label: 'Red', labelKo: '레드', hex: '#ef4444' },
@@ -141,18 +141,20 @@ test('Vanilla Fresh Cream Cake uses chocolate sheets with plain fresh cream and 
   for (const language of ['en', 'ko'] as const) {
     const text = getProductText(vanillaFreshCreamCakeId, language)
     const features = getProductFeatures(vanillaFreshCreamCakeId, language)
-    assert.match(text.description, /cake sheet|케이크 시트/i)
-    assert.match(text.description, /plain fresh cream|담백한 생크림/)
+    assert.match(text.description, /Signature Gâteau au Chocolat|시그니처 갸또 쇼콜라/)
+    assert.match(text.description, /100% fresh milk|100% 신선한 우유/)
+    assert.match(text.description, /real vanilla bean|실제 바닐라빈/i)
+    assert.match(text.description, /vanilla bean specks|작은 점/)
     assert.doesNotMatch(text.description, /Triple berry|Nutella|트리플베리|누텔라/)
     assert.equal(text.description.includes('cm'), false)
     assert.equal(text.priceNote.includes('cm'), false)
     assert.deepEqual(features, language === 'en'
-      ? ['Chocolate cake sheets', 'Plain fresh cream between each layer', 'No added fruit or flavour', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
-      : ['초콜릿 케이크 시트', '시트 사이마다 담백한 생크림', '과일이나 추가 flavour 없음', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
+      ? ['Signature Gâteau au Chocolat layers', 'Vanilla fresh cream made with 100% fresh milk', 'Real vanilla bean with visible vanilla bean specks', '6" · 7.5" · 9"']
+      : ['시그니처 갸또 쇼콜라 시트', '100% 신선한 우유로 만든 바닐라 생크림', '눈에 보이는 실제 바닐라빈', '6" · 7.5" · 9" 사이즈'])
   }
 })
 
-test('Buttercream Cake uses chocolate sheets, plain buttercream layers, and a selectable point colour', () => {
+test('Buttercream Cake uses Signature Gâteau layers, real chocolate ingredients, and a selectable cake colour', () => {
   const buttercream = getProductById('buttercream-cake')
 
   assert.equal(buttercream.name, 'Buttercream Cake')
@@ -176,11 +178,14 @@ test('Buttercream Cake uses chocolate sheets, plain buttercream layers, and a se
   for (const language of ['en', 'ko'] as const) {
     const text = getProductText('buttercream-cake', language)
     const features = getProductFeatures('buttercream-cake', language)
-    assert.match(text.description, /chocolate cake sheets|초콜릿 케이크 시트/i)
-    assert.match(text.description, /Chocolate Buttercream|초콜릿 버터크림/)
+    assert.match(text.description, /Signature Gâteau au Chocolat|시그니처 갸또 쇼콜라/)
+    assert.match(text.description, /organic cocoa|유기농 코코아/i)
+    assert.match(text.description, /fresh milk|신선한 우유/i)
+    assert.match(text.description, /chocolatier-grade couverture chocolate|쇼콜라티에용 커버춰 초콜릿/i)
+    assert.match(text.description, /not added chocolate flavouring|초코 향료가 아니라/i)
     assert.deepEqual(features, language === 'en'
-      ? ['Chocolate cake sheets', 'Chocolate Buttercream between each layer', 'Choose a point colour', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22']
-      : ['초콜릿 케이크 시트', '시트 사이마다 초콜릿 버터크림', '포인트 컬러 선택 가능', '6" | serves 8 · 7.5" | serves 14 · 9" | serves 22'])
+      ? ['Signature Gâteau au Chocolat layers', 'Proudly made with organic cocoa, fresh milk and chocolatier-grade couverture chocolate.', 'Organic cocoa for a deep, intense chocolate taste', 'Fresh milk', 'Chocolatier-grade couverture chocolate', 'Choose a cake colour']
+      : ['시그니처 갸또 쇼콜라 시트', '유기농 코코아·신선한 우유·쇼콜라티에용 커버춰 초콜릿 사용', '깊고 진한 맛을 내는 유기농 코코아', '신선한 우유', '쇼콜라티에용 커버춰 초콜릿', '케이크 컬러 선택'])
   }
 })
 
@@ -218,6 +223,12 @@ test('Lemon Cake variants use fixed pack prices and the twelve pack is Most Popu
     assert.equal(product.usesPoundAddonOptions, false)
     assert.equal(getReservationUnitPrice(productId as ProductId), price)
     assert.equal(applyPromoDiscount(price, productId as ProductId, 'chocolate'), price)
+    const english = getProductText(productId, 'en')
+    const korean = getProductText(productId, 'ko')
+    assert.match(english.description, /freshly squeezed lemon juice/)
+    assert.match(korean.description, /신선한 레몬즙을 직접 짜서/)
+    assert.deepEqual(getProductFeatures(productId, 'en'), ['Made with freshly squeezed lemon juice', 'Fresh lemon cream', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'])
+    assert.deepEqual(getProductFeatures(productId, 'ko'), ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'])
   }
 
   assert.equal(getProductById('fresh-lemon-cupcakes-6').priceNote.includes('Most Popular'), false)
@@ -727,6 +738,7 @@ Quantity: 1ea
 Chocolate: Dark chocolate
 Pick-up date: 2026-07-04
 Pick-up time: 10:00
+Total: AUD 75.00
 Pick-up location: https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw
 
 Thank you for your order:)

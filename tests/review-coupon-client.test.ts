@@ -252,14 +252,14 @@ test('multi-line request projection requires a UUID and strips all cart metadata
         productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
-        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
+        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 2,
         lineKey: 'private-key', unitPriceCents: 1, customerName: 'Private', promoCode: 'forged', cacaoPercent: '100',
       },
       {
         productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
-        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1,
+        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 1,
         totalPriceCents: 1, pickupDate: 'private', requestNote: 'private',
       },
     ],
@@ -274,13 +274,13 @@ test('multi-line request projection requires a UUID and strips all cart metadata
         productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
-        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 2,
+        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 2,
       },
       {
         productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
-        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1,
+        vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 1,
       },
     ],
   })
@@ -305,7 +305,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
   assert.throws(() => buildCakeOrderRequest({ ...contaminated, orderLines: [{}, {}] } as never), /INVALID_ORDER_LINES/)
   for (const missingField of [
     'productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount',
-    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity',
+    'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'individualPackaging', 'quantity',
   ]) {
     const missing = { ...contaminated.orderLines[0] } as Record<string, unknown>
     delete missing[missingField]
@@ -494,6 +494,38 @@ test('multi-line response parser allowlists authoritative lines and validates ev
     ...base, ...retired, orderLines: [retired, rows[1]], orderItemCount: 2,
     subtotalCents: 7900, totalPriceCents: 7900, totalPrice: 79,
   }), /RESERVATION_API_INVALID_RESPONSE/)
+})
+
+test('single-line response parser keeps authoritative individual packaging outside discounts', () => {
+  const line = {
+    productId: 'cupcake-half-dozen' as const, cakeSize: '15cm' as const, chocolateType: 'dark' as const, poundAddon: 'none' as const, cupcakeFinish: 'basic' as const,
+    chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink',
+    individualPackaging: true, quantity: 1, unitPriceCents: 3100, subtotalCents: 3100,
+    discountPercent: 0, discountCents: 0, individualPackagingPieces: 6,
+    individualPackagingFeeCents: 300, totalPriceCents: 3400,
+  }
+  const parsed = parseCakeReservationResult({
+    ...reservation({
+      ...line,
+      totalPrice: 34,
+      subtotalCents: 3100,
+      totalPriceCents: 3400,
+      individualPackagingPieces: 6,
+      individualPackagingFeeCents: 300,
+      appliedPromoCodeLast4: undefined,
+      promotionKind: 'none',
+    } as Partial<Reservation>),
+    orderLines: [line],
+    orderLineCount: 1,
+    orderItemCount: 1,
+    discountBasisCents: 0,
+  })
+
+  assert.equal(parsed.individualPackaging, true)
+  assert.equal(parsed.individualPackagingPieces, 6)
+  assert.equal(parsed.individualPackagingFeeCents, 300)
+  assert.equal(parsed.totalPriceCents, 3400)
 })
 
 test('multi-line response accepts exact cents represented by authoritative division', () => {

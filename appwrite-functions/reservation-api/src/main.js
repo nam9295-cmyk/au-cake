@@ -172,7 +172,6 @@ async function uniqueReservationNumber(databases, databaseId, collectionId, gene
 export function cakeReservationResponse(document) {
   const discountCents = Number(document.discountCents || 0)
   const storedOrder = Object.hasOwn(document, 'orderLinesJson') ? parseStoredOrderLines(document) : null
-  const multiLineOrder = storedOrder && storedOrder.lines.length > 1 ? storedOrder : null
   const promotionKind = typeof document.reviewCouponId === 'string' && document.reviewCouponId.startsWith('manual:')
     ? 'manual-coupon'
     : document.reviewCouponId
@@ -195,6 +194,9 @@ export function cakeReservationResponse(document) {
     vanillaCakeSheet: document.vanillaCakeSheet || (document.productId === 'vanilla-fresh-cream-cake' ? 'chocolate' : 'vanilla'),
     vanillaCakeFlavor: document.vanillaCakeFlavor || 'triple-berry',
     vanillaCakePointColor: storedOrder?.lines[0]?.vanillaCakePointColor || 'pink',
+    ...(Object.hasOwn(storedOrder?.lines?.[0] || {}, 'individualPackaging') ? {
+      individualPackaging: storedOrder.lines[0].individualPackaging === true,
+    } : {}),
     quantity: document.quantity,
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
@@ -207,11 +209,15 @@ export function cakeReservationResponse(document) {
     subtotalCents: document.subtotalCents,
     discountPercent: document.discountPercent,
     discountCents: document.discountCents,
-    ...(multiLineOrder ? {
-      orderLines: multiLineOrder.lines,
+    ...(storedOrder ? {
+      orderLines: storedOrder.lines,
       orderLineCount: document.orderLineCount,
       orderItemCount: document.orderItemCount,
       discountBasisCents: document.discountBasisCents,
+      ...(Object.hasOwn(document, 'individualPackagingPieces') ? {
+        individualPackagingPieces: Number(document.individualPackagingPieces || 0),
+        individualPackagingFeeCents: Number(document.individualPackagingFeeCents || 0),
+      } : {}),
     } : {}),
     promotionKind,
     ...(document.appliedPromoCodeLast4 ? { appliedPromoCodeLast4: document.appliedPromoCodeLast4 } : {}),
@@ -881,6 +887,8 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
     { key: 'orderLineCount', type: 'integer', required: false, min: 1, max: APPWRITE_INTEGER_MAX },
     { key: 'orderItemCount', type: 'integer', required: false, min: 1, max: APPWRITE_INTEGER_MAX },
     { key: 'discountBasisCents', type: 'integer', required: false, min: 0, max: APPWRITE_INTEGER_MAX },
+    { key: 'individualPackagingPieces', type: 'integer', required: false, min: 0, max: APPWRITE_INTEGER_MAX },
+    { key: 'individualPackagingFeeCents', type: 'integer', required: false, min: 0, max: APPWRITE_INTEGER_MAX },
     { key: 'requestFingerprint', type: 'string', required: false, size: 64 },
   ]
   const compatibleAuditAttribute = (expected) => {

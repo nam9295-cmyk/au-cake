@@ -178,6 +178,10 @@ export function isCreamLayerCakeProduct(productId: ProductId) {
   return productId === 'vanilla-fresh-cream-cake' || productId === 'buttercream-cake'
 }
 
+export function isButtercreamCakeProduct(productId: ProductId) {
+  return productId === 'buttercream-cake'
+}
+
 export function isCakePointColorProduct(productId: ProductId) {
   return isCreamLayerCakeProduct(productId)
 }
@@ -187,7 +191,7 @@ export const VANILLA_CAKE_SHEET_OPTIONS: Array<{ value: VanillaCakeSheet; label:
 ]
 
 export const VANILLA_CAKE_FLAVOR_OPTIONS: Array<{ value: VanillaCakeFlavor; label: string }> = [
-  { value: 'plain', label: 'Plain fresh cream' },
+  { value: 'plain', label: 'Vanilla fresh cream with real vanilla bean' },
 ]
 
 const LEGACY_VANILLA_CAKE_FLAVOR_OPTIONS: Array<{ value: VanillaCakeFlavor; label: string }> = [

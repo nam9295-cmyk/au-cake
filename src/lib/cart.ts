@@ -6,6 +6,7 @@ import {
   type CakeDetailSelection,
 } from './cake-detail.js'
 import { isCakePointColorProduct } from './constants.js'
+import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './individual-packaging.js'
 import type {
   CakeSize,
   ChocolateType,
@@ -58,6 +59,7 @@ export function getCartLineKey(selection: CakeDetailSelection) {
     identity.push(normalized.vanillaCakePointColor || DEFAULT_VANILLA_CAKE_POINT_COLOR)
   }
   if (isCupcakeProduct(normalized.productId)) identity.push(normalized.cupcakeFinish)
+  if (isIndividualPackagingEligibleProduct(normalized.productId)) identity.push(normalized.individualPackaging)
   return JSON.stringify(identity)
 }
 
@@ -87,6 +89,16 @@ export function getCartTotalQuantity(lines: readonly CartLine[]) {
 
 export function getCartEstimatedSubtotal(lines: readonly CartLine[]) {
   return lines.reduce((subtotal, line) => subtotal + getCakeDetailSelectionTotal(line.selection), 0)
+}
+
+export function getCartEstimatedPricing(lines: readonly CartLine[]) {
+  const productSubtotalCents = Math.round(getCartEstimatedSubtotal(lines) * 100)
+  const packaging = getIndividualPackagingPricing(lines.map((line) => line.selection))
+  return {
+    productSubtotalCents,
+    ...packaging,
+    totalPriceCents: productSubtotalCents + packaging.individualPackagingFeeCents,
+  }
 }
 
 export function updateCartLineQuantity(
@@ -150,6 +162,7 @@ function toPersistedSelection(selection: CakeDetailSelection): CakeDetailSelecti
     ...(isCakePointColorProduct(normalized.productId)
       ? { vanillaCakePointColor: normalized.vanillaCakePointColor }
       : {}),
+    individualPackaging: normalized.individualPackaging,
     quantity: normalized.quantity,
   }
 }
@@ -183,6 +196,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     vanillaCakeSheet,
     vanillaCakeFlavor,
     vanillaCakePointColor,
+    individualPackaging,
     quantity,
   } = value
 
@@ -198,6 +212,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     typeof vanillaCakeSheet !== 'string' ||
     typeof vanillaCakeFlavor !== 'string' ||
     (vanillaCakePointColor !== undefined && typeof vanillaCakePointColor !== 'string') ||
+    (individualPackaging !== undefined && typeof individualPackaging !== 'boolean') ||
     typeof quantity !== 'number' || !Number.isFinite(quantity)
   ) return null
 
@@ -218,6 +233,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     ...(vanillaCakePointColor === undefined ? {} : {
       vanillaCakePointColor: vanillaCakePointColor as VanillaCakePointColor,
     }),
+    individualPackaging: individualPackaging === true,
     quantity,
   })
 }

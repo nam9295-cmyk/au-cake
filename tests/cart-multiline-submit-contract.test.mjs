@@ -61,5 +61,7 @@ test('ReservePage reuses the shared customer and pickup form while multi-line pr
   assert.match(reservePage, /\{!isMultiOrder && \(<>/)
   assert.match(reservePage, /await createCakeOrder\(/)
   assert.match(reservePage, /orderLines: orderSelections\.map/)
+  assert.match(reservePage, /packagingPricing\.selectedPackagingPieces > 0/)
+  assert.match(reservePage, /getIndividualPackagingPieceCount\(selection\.productId, selection\.quantity\)/)
   assert.match(reservePage, /CAKE_ORDER_LINES_UNAVAILABLE_ERROR/)
 })

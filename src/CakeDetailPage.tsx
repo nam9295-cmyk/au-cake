@@ -23,6 +23,7 @@ import {
   getFreshLemonCupcakePackSize,
   getProductById,
   isCupcakeProduct,
+  isButtercreamCakeProduct,
   isCakePointColorProduct,
   isFreshLemonCupcakeProduct,
   usesReservationChocolateType,
@@ -30,11 +31,12 @@ import {
 import {
   createCakeDetailSelection,
   getCakeDetailBySlug,
-  getCakeDetailSelectionTotal,
+  getCakeDetailSelectionEstimatedTotal,
   selectCakeDetailProduct,
   type CakeDetailImageKey,
   type CakeDetailSelection,
 } from './lib/cake-detail'
+import { isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
 import { getAuCakeCatalogCards } from './lib/cake-catalog'
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
@@ -199,7 +201,7 @@ export default function CakeDetailPage({
 
   const product = getProductById(selection.productId)
   const productText = getProductText(selection.productId, language)
-  const total = getCakeDetailSelectionTotal(selection)
+  const total = getCakeDetailSelectionEstimatedTotal(selection)
   const galleryCount = detail.gallery.length
   const currentImageKey = detail.gallery[Math.min(activeImage, Math.max(0, galleryCount - 1))]
   const addLabel = language === 'ko' ? '주문에 담기' : 'Add to order'
@@ -402,7 +404,9 @@ export default function CakeDetailPage({
 
           {isCakePointColorProduct(product.id) && (
             <fieldset className="cake-detail-fieldset">
-              <legend>{language === 'ko' ? '포인트 컬러 선택' : 'Choose a point colour'}</legend>
+              <legend>{isButtercreamCakeProduct(product.id)
+                ? language === 'ko' ? '케이크 컬러 선택' : 'Choose a cake colour'
+                : language === 'ko' ? '포인트 컬러 선택' : 'Choose a point colour'}</legend>
               <div className="vanilla-point-color-grid">
                 {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => {
                   const isSelected = selection.vanillaCakePointColor === option.value
@@ -410,7 +414,9 @@ export default function CakeDetailPage({
                     <button
                       type="button"
                       className={`vanilla-point-color-card${isSelected ? ' is-selected' : ''}`}
-                      aria-label={language === 'ko' ? `${option.labelKo} 포인트 컬러` : `${option.label} point colour`}
+                      aria-label={language === 'ko'
+                        ? `${option.labelKo} ${isButtercreamCakeProduct(product.id) ? '케이크 컬러' : '포인트 컬러'}`
+                        : `${option.label} ${isButtercreamCakeProduct(product.id) ? 'cake colour' : 'point colour'}`}
                       aria-pressed={isSelected}
                       onClick={() => updateSelection({ vanillaCakePointColor: option.value })}
                       key={option.value}
@@ -456,6 +462,26 @@ export default function CakeDetailPage({
                   </OptionButton>
                 ))}
               </div>
+            </fieldset>
+          )}
+
+          {isIndividualPackagingEligibleProduct(product.id) && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</legend>
+              <label className="choice-item">
+                <input
+                  type="checkbox"
+                  name="individualPackaging"
+                  checked={selection.individualPackaging}
+                  onChange={(event) => updateSelection({ individualPackaging: event.target.checked })}
+                />
+                <span className="choice-copy">
+                  <strong>{language === 'ko' ? '개별 포장 추가' : 'Add individual packaging'}</strong>
+                  <span>{language === 'ko'
+                    ? '개당 AUD 0.50 · 100개 이상 무료'
+                    : 'AUD 0.50 per piece · FREE for 100+ pieces'}</span>
+                </span>
+              </label>
             </fieldset>
           )}
 

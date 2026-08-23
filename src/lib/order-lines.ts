@@ -3,6 +3,7 @@ import {
   formatCakeSizeLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
+  formatVanillaCakeFlavor,
   formatVanillaCakePointColor,
   getLemonIcingCount,
   getProductById,
@@ -10,7 +11,8 @@ import {
   getCupcakePackSize,
   isCupcakeProduct,
   isFreshLemonCupcakeProduct,
-  isVanillaFreshCreamCakeProduct,
+  isCreamLayerCakeProduct,
+  isCakePointColorProduct,
   normalizeChocolateIcingCount,
   normalizeCupcakeFinishCounts,
   normalizeVanillaCakePointColor,
@@ -18,6 +20,7 @@ import {
 } from './constants.js'
 import { marketConfig } from './market.js'
 import type { CakeOrderLineRequest, CakeOrderLineResult, Reservation } from './types.js'
+import { getIndividualPackagingPieceCount } from './individual-packaging.js'
 
 function cupcakeFinishLabel(value: CakeOrderLineRequest['cupcakeFinish']) {
   if (value === 'vanilla-fresh-cream') return 'Vanilla Fresh Cream'
@@ -27,7 +30,7 @@ function cupcakeFinishLabel(value: CakeOrderLineRequest['cupcakeFinish']) {
 
 export type ReservationOrderLine = CakeOrderLineRequest & Partial<Pick<
   CakeOrderLineResult,
-  'unitPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'totalPriceCents'
+  'unitPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'totalPriceCents'
 >>
 
 export function getReservationOrderLines(reservation: Reservation): ReservationOrderLine[] {
@@ -43,10 +46,13 @@ export function getReservationOrderLines(reservation: Reservation): ReservationO
     partyDecorationCount: reservation.partyDecorationCount || 0,
     vanillaCakeSheet: reservation.vanillaCakeSheet || 'vanilla',
     vanillaCakeFlavor: reservation.vanillaCakeFlavor || 'triple-berry',
-    ...(isVanillaFreshCreamCakeProduct(reservation.productId)
+    ...(isCakePointColorProduct(reservation.productId)
       ? { vanillaCakePointColor: normalizeVanillaCakePointColor(reservation.productId, reservation.vanillaCakePointColor) }
       : {}),
+    individualPackaging: reservation.individualPackaging === true,
     quantity: reservation.quantity,
+    ...(reservation.individualPackagingPieces === undefined ? {} : { individualPackagingPieces: reservation.individualPackagingPieces }),
+    ...(reservation.individualPackagingFeeCents === undefined ? {} : { individualPackagingFeeCents: reservation.individualPackagingFeeCents }),
     ...(reservation.totalPriceCents !== undefined ? { totalPriceCents: reservation.totalPriceCents } : {}),
   }]
 }
@@ -69,14 +75,38 @@ function formatLinePrice(cents: number) {
   }).format(cents / 100)
 }
 
+function isCurrentVanillaSelection(line: ReservationOrderLine) {
+  return line.productId === 'vanilla-fresh-cream-cake'
+    && line.vanillaCakeSheet === 'chocolate'
+    && line.vanillaCakeFlavor === 'plain'
+}
+
+function formatHistoricalVanillaFlavor(value: ReservationOrderLine['vanillaCakeFlavor']) {
+  return value === 'plain' ? 'Plain fresh cream (legacy)' : formatVanillaCakeFlavor(value)
+}
+
+function formatHistoricalVanillaSheet(value: ReservationOrderLine['vanillaCakeSheet']) {
+  return value === 'vanilla' ? 'Vanilla cake sheet' : 'Chocolate cake sheet'
+}
+
 export function formatOrderLineSummary(line: ReservationOrderLine) {
   const product = getProductById(line.productId)
   const details: string[] = [product.name]
   if (product.usesSizeOptions || isCheesecakeProduct(product.id)) details.push(formatCakeSizeLabel(line.cakeSize))
-  if (product.id === 'vanilla-fresh-cream-cake') {
-    details.push('Chocolate sheet')
-    details.push(line.vanillaCakeFlavor === 'nutella-chocolate-chip' ? 'Nutella chocolate chip' : 'Triple berry')
-    details.push(`Point colour: ${formatVanillaCakePointColor(line.vanillaCakePointColor)}`)
+  if (isCreamLayerCakeProduct(product.id)) {
+    if (product.id === 'buttercream-cake') {
+      details.push('Signature Gâteau au Chocolat layers')
+      details.push('Chocolate Buttercream')
+      details.push(`Cake colour: ${formatVanillaCakePointColor(line.vanillaCakePointColor)}`)
+    } else if (isCurrentVanillaSelection(line)) {
+      details.push('Signature Gâteau au Chocolat layers')
+      details.push('Vanilla fresh cream with real vanilla bean')
+      details.push(`Point colour: ${formatVanillaCakePointColor(line.vanillaCakePointColor)}`)
+    } else {
+      details.push(formatHistoricalVanillaSheet(line.vanillaCakeSheet))
+      details.push(formatHistoricalVanillaFlavor(line.vanillaCakeFlavor))
+      details.push(`Point colour: ${formatVanillaCakePointColor(line.vanillaCakePointColor)}`)
+    }
   }
   if (usesReservationChocolateType(product.id, line.poundAddon)) details.push(formatChocolateTypeLabel(line.chocolateType))
   if (product.usesPoundAddonOptions) details.push(formatPoundAddonLabel(line.poundAddon))
@@ -92,6 +122,11 @@ export function formatOrderLineSummary(line: ReservationOrderLine) {
       const counts = normalizeCupcakeFinishCounts(product.id, line.vanillaCreamCount, line.partyDecorationCount)
       details.push(`Basic ${CUPCAKE_PACK_SIZE - counts.vanillaCreamCount - counts.partyDecorationCount} / Vanilla cream ${counts.vanillaCreamCount} / Party decoration ${counts.partyDecorationCount}`)
     }
+  }
+  if (line.individualPackaging) {
+    const pieces = line.individualPackagingPieces ?? getIndividualPackagingPieceCount(line.productId, line.quantity)
+    const fee = line.individualPackagingFeeCents
+    details.push(`Individual packaging: ${pieces} pieces · ${fee === 0 ? 'FREE' : Number.isSafeInteger(fee) ? formatLinePrice(fee as number) : 'fee pending'}`)
   }
   details.push(`x${line.quantity}`)
   if (Number.isSafeInteger(line.totalPriceCents)) details.push(formatLinePrice(line.totalPriceCents as number))

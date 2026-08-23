@@ -95,3 +95,8 @@ test('admin list and drawer expose every multi-line item and make repricing cont
   assert.match(reservationDrawerSource, /disabled=\{hasOneTimeCoupon \|\| isVersionedOrder\}/)
   assert.match(reservationDrawerSource, /서버 산출 주문은 제품·옵션·수량/)
 })
+
+test('admin drawer exposes options for versioned single-line orders including packaging and cake colour', () => {
+  assert.match(reservationDrawerSource, /\{isVersionedOrder && \(/)
+  assert.match(reservationDrawerSource, /<OrderDetailRows reservation=\{reservation\} language="en" \/>/)
+})

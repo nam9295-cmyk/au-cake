@@ -126,6 +126,37 @@ test('admin Appwrite hydration retains mixed cupcake finishes with the same pack
   ])
 })
 
+test('admin Appwrite hydration preserves authoritative individual packaging fields', () => {
+  const packagedLine = {
+    productId: 'cupcake-half-dozen', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+    cupcakeFinish: 'basic', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink', quantity: 1,
+    unitPriceCents: 3100, subtotalCents: 3100, individualPackaging: true,
+    discountPercent: 0, discountCents: 0, individualPackagingPieces: 6,
+    individualPackagingFeeCents: 300, totalPriceCents: 3400,
+  }
+  const reservation = toReservation({
+    ...document,
+    $id: 'reservation-packaged-cupcakes',
+    productId: 'cupcake-half-dozen',
+    cupcakeFinish: 'basic',
+    totalPrice: 34,
+    totalPriceCents: 3400,
+    subtotalCents: 3100,
+    individualPackagingPieces: 6,
+    individualPackagingFeeCents: 300,
+    orderLinesJson: JSON.stringify({ version: 1, lines: [packagedLine] }),
+    orderLineCount: 1,
+    orderItemCount: 1,
+  } as never)
+
+  assert.equal(reservation.individualPackaging, true)
+  assert.equal(reservation.individualPackagingPieces, 6)
+  assert.equal(reservation.individualPackagingFeeCents, 300)
+  assert.equal(reservation.orderLines?.[0]?.individualPackaging, true)
+  assert.equal(reservation.orderLines?.[0]?.totalPriceCents, 3400)
+})
+
 test('admin Appwrite hydration treats nullable unused discount fields as absent', () => {
   const reservation = toReservation({
     ...document,
