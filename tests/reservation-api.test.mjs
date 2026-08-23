@@ -36,7 +36,7 @@ const cakeInput = {
 
 const classInput = {
   classType: 'school-holiday-private-cake-class',
-  classDate: '2026-07-11',
+  classDate: '2026-10-03',
   classTime: '13:00',
   bookingType: 'year-1-2',
   parentName: 'Jenny Parent',
@@ -112,7 +112,7 @@ test('class API authoritatively prices basic, advanced and package extensions in
   assert.equal(advanced.totalPriceCents, 17900)
 
   const packageBooking = buildClassReservation({
-    ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: '2026-07-12', advancedClassTime: '16:00',
+    ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: '2026-10-10', advancedClassTime: '16:00',
     extensionMinutes: 30, advancedExtensionMinutes: 30, totalPriceCents: 1,
   }, { now, reservationNumber: 'PACKAGE' })
   assert.equal(packageBooking.durationMinutes, 120)
@@ -134,12 +134,16 @@ test('class API allows Basic from Kindy but keeps Advanced and packages at Year 
   }, { now }))
   assertApiError('INVALID_SCHOOL_YEAR', () => buildClassReservation({
     ...classInput, coursePlan: 'basic-advanced-package', schoolYear: 'Year 1',
-    advancedClassDate: '2026-07-12', advancedClassTime: '16:00',
+    advancedClassDate: '2026-10-10', advancedClassTime: '16:00',
   }, { now }))
 })
 
-test('class API rejects weekdays, invalid extensions and multi-child advanced/package requests', () => {
+test('class API accepts only the two Spring dates and rejects invalid extensions and multi-child advanced/package requests', () => {
+  assert.doesNotThrow(() => buildClassReservation({ ...classInput, classDate: '2026-10-03' }, { now }))
+  assert.doesNotThrow(() => buildClassReservation({ ...classInput, classDate: '2026-10-10' }, { now }))
   assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-07-13' }, { now }))
+  assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-10-04' }, { now }))
+  assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-10-17' }, { now }))
   assertApiError('INVALID_EXTENSION', () => buildClassReservation({ ...classInput, extensionMinutes: 15 }, { now }))
   assertApiError('INVALID_PARTY_SIZE', () => buildClassReservation({
     ...classInput, coursePlan: 'advanced', classType: 'advanced-2-tier-cake-class', bookingType: '2-friends',
@@ -147,6 +151,9 @@ test('class API rejects weekdays, invalid extensions and multi-child advanced/pa
   }, { now }))
   assertApiError('INVALID_PACKAGE_SESSION', () => buildClassReservation({
     ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: classInput.classDate, advancedClassTime: classInput.classTime,
+  }, { now }))
+  assertApiError('INVALID_PACKAGE_SESSION', () => buildClassReservation({
+    ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: '2026-10-04', advancedClassTime: '16:00',
   }, { now }))
 })
 
@@ -171,13 +178,13 @@ test('package class creation reserves both slots in the same transaction with ac
   }
   await createClass(databases, {
     ...classInput, requestId: 'f65f7e08-20f7-4b4a-b12a-6b42c043b268', coursePlan: 'basic-advanced-package',
-    advancedClassDate: '2026-07-12', advancedClassTime: '16:00', extensionMinutes: 30, advancedExtensionMinutes: 30,
+    advancedClassDate: '2026-10-10', advancedClassTime: '16:00', extensionMinutes: 30, advancedExtensionMinutes: 30,
   }, { now })
   const slotCreates = creates.filter((request) => request.collectionId === 'class_booked_dates')
   assert.equal(slotCreates.length, 2)
   assert.deepEqual(slotCreates.map((request) => request.data), [
-    { classDate: '2026-07-11', classTime: '13:00', durationMinutes: 120, createdAt: now.toISOString() },
-    { classDate: '2026-07-12', classTime: '16:00', durationMinutes: 150, createdAt: now.toISOString() },
+    { classDate: '2026-10-03', classTime: '13:00', durationMinutes: 120, createdAt: now.toISOString() },
+    { classDate: '2026-10-10', classTime: '16:00', durationMinutes: 150, createdAt: now.toISOString() },
   ])
   assert.ok(creates.every((request) => request.transactionId === 'tx-package'))
 })
@@ -572,7 +579,7 @@ test('cake API rejects invalid consent, quantity, mobile and pickup time', () =>
   assertApiError('INVALID_PHONE', () => buildCakeReservation({ ...cakeInput, customerPhone: '1234' }, { now }))
   assertApiError('INVALID_PRODUCT', () => buildCakeReservation({ ...cakeInput, productId: '__proto__' }, { now }))
   assertApiError('INVALID_REQUEST', () => buildCakeReservation({ ...cakeInput, website: 'spam.example' }, { now }))
-  assertApiError('INVALID_PICKUP_TIME', () => buildCakeReservation({ ...cakeInput, pickupTime: '10:15' }, { now }))
+  assertApiError('INVALID_PICKUP_TIME', () => buildCakeReservation({ ...cakeInput, pickupTime: '10:07' }, { now }))
   assertApiError('PICKUP_TIME_TOO_SOON', () => buildCakeReservation({ ...cakeInput, pickupDate: '2026-07-10' }, { now }))
 })
 
@@ -594,25 +601,32 @@ test('cake API applies the Sydney 20:00 next-day pickup cutoff', () => {
   ))
 })
 
-test('cake API accepts only Saturday and Sunday pick-ups from 10:00 through 17:00', () => {
-  assert.equal(isCakePickupServiceTime('2026-08-08', '10:00'), true)
-  assert.equal(isCakePickupServiceTime('2026-08-09', '17:00'), true)
-  assert.doesNotThrow(() => buildCakeReservation(
-    { ...cakeInput, pickupDate: '2026-08-08', pickupTime: '10:00' },
-    { now, reservationNumber: 'WEEKEND-OPEN' },
-  ))
-  assert.doesNotThrow(() => buildCakeReservation(
-    { ...cakeInput, pickupDate: '2026-08-09', pickupTime: '17:00' },
-    { now, reservationNumber: 'WEEKEND-CLOSE' },
-  ))
-
+test('cake API authoritatively enforces Friday evening and weekend 15-minute pick-ups', () => {
   for (const [pickupDate, pickupTime] of [
-    ['2026-08-07', '10:00'],
-    ['2026-08-08', '09:30'],
-    ['2026-08-08', '17:30'],
+    ['2026-08-28', '18:00'],
+    ['2026-08-28', '20:00'],
+    ['2026-08-29', '08:00'],
+    ['2026-08-29', '20:00'],
+    ['2026-08-30', '08:00'],
+    ['2026-08-30', '20:00'],
   ]) {
-    assert.equal(isCakePickupServiceTime(pickupDate, pickupTime), false)
-    assertApiError('PICKUP_TIME_UNAVAILABLE', () => buildCakeReservation(
+    assert.equal(isCakePickupServiceTime(pickupDate, pickupTime), true, `${pickupDate} ${pickupTime}`)
+    assert.doesNotThrow(() => buildCakeReservation(
+      { ...cakeInput, pickupDate, pickupTime },
+      { now, reservationNumber: 'VALID-PICKUP' },
+    ))
+  }
+
+  for (const [pickupDate, pickupTime, errorCode] of [
+    ['2026-08-27', '18:00', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-28', '17:45', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-28', '20:15', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-29', '07:45', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-29', '20:15', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-29', '18:07', 'INVALID_PICKUP_TIME'],
+  ]) {
+    assert.equal(isCakePickupServiceTime(pickupDate, pickupTime), false, `${pickupDate} ${pickupTime}`)
+    assertApiError(errorCode, () => buildCakeReservation(
       { ...cakeInput, pickupDate, pickupTime },
       { now, reservationNumber: 'PICKUP-CLOSED' },
     ))

@@ -173,7 +173,7 @@ const cakeInput = {
 
 const classInput = {
   classType: 'school-holiday-private-cake-class',
-  classDate: '2099-07-11',
+  classDate: '2026-10-03',
   classTime: '13:00',
   bookingType: 'year-1-2',
   parentName: 'Jenny Parent',

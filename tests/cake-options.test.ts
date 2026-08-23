@@ -434,31 +434,39 @@ test('Lemoni promo is case-insensitive, lemon-only, and valid through 16 July Sy
   assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'lemoni', validAt), 55)
 })
 
-test('AU cake pick-up is available only on weekends from 10:00 through 17:00', () => {
-  const weekdayTimes = timeOptionsForDate('2026-07-06', DEFAULT_SETTINGS)
-  const weekendTimes = timeOptionsForDate('2026-07-05', DEFAULT_SETTINGS)
-  const customerWeekdayTimes = customerTimeOptionsForDate(
-    '2026-07-06',
-    DEFAULT_SETTINGS,
-    new Date('2026-07-04T00:00:00.000Z'),
-  )
-  const customerWeekendTimes = customerTimeOptionsForDate(
-    '2026-07-05',
-    { ...DEFAULT_SETTINGS, weekendClose: '20:00' },
-    new Date('2026-07-03T00:00:00.000Z'),
-  )
+test('AU cake pick-up exposes Friday evening and weekend 15-minute slots', () => {
+  const fridayTimes = timeOptionsForDate('2026-08-28', DEFAULT_SETTINGS)
+  const saturdayTimes = timeOptionsForDate('2026-08-29', DEFAULT_SETTINGS)
+  const sundayTimes = timeOptionsForDate('2026-08-30', DEFAULT_SETTINGS)
 
-  assert.equal(weekdayTimes.at(-1), '20:00')
-  assert.equal(weekendTimes.at(-1), '17:00')
-  assert.ok(weekdayTimes.includes('19:30'))
-  assert.deepEqual(customerWeekdayTimes, [])
-  assert.equal(customerWeekendTimes[0], '10:00')
-  assert.equal(customerWeekendTimes.at(-1), '17:00')
-  assert.equal(customerWeekendTimes.includes('17:30'), false)
-  assert.equal(isCakePickupServiceTime('2026-07-05', '10:00'), true)
-  assert.equal(isCakePickupServiceTime('2026-07-05', '17:00'), true)
-  assert.equal(isCakePickupServiceTime('2026-07-05', '17:30'), false)
-  assert.equal(isCakePickupServiceTime('2026-07-06', '10:00'), false)
+  assert.equal(fridayTimes.length, 9)
+  assert.deepEqual(fridayTimes.slice(0, 3), ['18:00', '18:15', '18:30'])
+  assert.equal(fridayTimes.at(-1), '20:00')
+  assert.equal(saturdayTimes.length, 49)
+  assert.equal(saturdayTimes[0], '08:00')
+  assert.equal(saturdayTimes.at(-1), '20:00')
+  assert.deepEqual(sundayTimes, saturdayTimes)
+  assert.deepEqual(timeOptionsForDate('2026-08-27', DEFAULT_SETTINGS), [])
+})
+
+test('AU cake pick-up rejects closed days, outside boundaries, and off-grid minutes', () => {
+  for (const [pickupDate, pickupTime] of [
+    ['2026-08-28', '17:45'],
+    ['2026-08-28', '20:15'],
+    ['2026-08-29', '07:45'],
+    ['2026-08-29', '20:15'],
+    ['2026-08-29', '18:07'],
+    ['2026-08-27', '18:00'],
+  ]) assert.equal(isCakePickupServiceTime(pickupDate, pickupTime), false, `${pickupDate} ${pickupTime}`)
+
+  for (const [pickupDate, pickupTime] of [
+    ['2026-08-28', '18:00'],
+    ['2026-08-28', '20:00'],
+    ['2026-08-29', '08:00'],
+    ['2026-08-29', '20:00'],
+    ['2026-08-30', '08:00'],
+    ['2026-08-30', '20:00'],
+  ]) assert.equal(isCakePickupServiceTime(pickupDate, pickupTime), true, `${pickupDate} ${pickupTime}`)
 })
 
 test('AU customer calendar skips weekdays and selects the next eligible weekend date', () => {
@@ -468,8 +476,18 @@ test('AU customer calendar skips weekdays and selects the next eligible weekend 
   assert.equal(firstCustomerPickupDate(DEFAULT_SETTINGS, now), '2026-07-11')
   assert.equal(
     firstCustomerPickupDate(DEFAULT_SETTINGS, new Date('2026-07-12T00:00:00.000Z')),
-    '2026-07-18',
+    '2026-07-17',
   )
+})
+
+test('a 10:00 basic class blocks every 15-minute pick-up through 11:30 inclusive', () => {
+  const bookedSlots = [{ classDate: '2026-10-03', classTime: '10:00', durationMinutes: 90 }]
+
+  for (const pickupTime of ['10:00', '10:15', '10:30', '10:45', '11:00', '11:15', '11:30']) {
+    assert.equal(isCakePickupBlockedByClass('2026-10-03', pickupTime, bookedSlots), true, pickupTime)
+  }
+  assert.equal(isCakePickupBlockedByClass('2026-10-03', '09:45', bookedSlots), false)
+  assert.equal(isCakePickupBlockedByClass('2026-10-03', '11:45', bookedSlots), false)
 })
 
 test('10:00 class blocks every half-hour pick-up boundary through 12:00 inclusive', () => {
@@ -652,8 +670,8 @@ test('orders before 20:00 Sydney can pick up from opening time the next day', ()
   const atOneSecondBeforeEight = new Date('2026-07-10T09:59:59.000Z')
 
   assert.deepEqual(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, atOneSecondBeforeEight), [])
-  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, atOneSecondBeforeEight)[0], '10:00')
-  assert.equal(isPickupTimeAllowed('2026-07-11', '10:00', atOneSecondBeforeEight), true)
+  assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, atOneSecondBeforeEight)[0], '08:00')
+  assert.equal(isPickupTimeAllowed('2026-07-11', '08:00', atOneSecondBeforeEight), true)
 })
 
 test('orders from 20:00 Sydney can pick up only from noon the next day', () => {
@@ -662,7 +680,7 @@ test('orders from 20:00 Sydney can pick up only from noon the next day', () => {
 
   assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, atEight)[0], '12:00')
   assert.equal(customerTimeOptionsForDate('2026-07-11', DEFAULT_SETTINGS, beforeMidnight)[0], '12:00')
-  assert.equal(isPickupTimeAllowed('2026-07-11', '11:30', atEight), false)
+  assert.equal(isPickupTimeAllowed('2026-07-11', '11:45', atEight), false)
   assert.equal(isPickupTimeAllowed('2026-07-11', '12:00', atEight), true)
 })
 
@@ -672,7 +690,7 @@ test('same-day pickup stays closed and later dates keep all store hours', () => 
 
   assert.deepEqual(customerTimeOptionsForDate('2026-07-10', DEFAULT_SETTINGS, atSevenSydney), [])
   assert.equal(isPickupTimeAllowed('2026-07-10', '20:00', atNineTenSydney), false)
-  assert.equal(customerTimeOptionsForDate('2026-07-12', DEFAULT_SETTINGS, atSevenSydney)[0], '10:00')
+  assert.equal(customerTimeOptionsForDate('2026-07-12', DEFAULT_SETTINGS, atSevenSydney)[0], '08:00')
 })
 
 test('AU mobile numbers accept common local and international formats', () => {

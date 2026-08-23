@@ -84,9 +84,23 @@ export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 const SCHOOL_PICKUP_START_MINUTES = 15 * 60
 const SHORT_SCHOOL_PICKUP_END_MINUTES = 15 * 60 + 30
 const LONG_SCHOOL_PICKUP_END_MINUTES = 17 * 60 + 30
-const CAKE_PICKUP_OPEN_MINUTES = 10 * 60
-const CAKE_PICKUP_CLOSE_MINUTES = 17 * 60
+export const AU_CAKE_PICKUP_SCHEDULE = Object.freeze({
+  timezone: MARKET_TIMEZONE,
+  intervalMinutes: 15,
+  weekdays: Object.freeze({
+    0: Object.freeze({ open: '08:00', close: '20:00' }),
+    5: Object.freeze({ open: '18:00', close: '20:00' }),
+    6: Object.freeze({ open: '08:00', close: '20:00' }),
+  }),
+})
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
+export const SPRING_CLASS_CAMPAIGN_2026 = Object.freeze({
+  enabled: true,
+  timezone: MARKET_TIMEZONE,
+  allowedDates: Object.freeze(['2026-10-03', '2026-10-10']),
+  sessionTimes: Object.freeze([...CLASS_SESSION_TIMES]),
+  visibleThrough: '2026-10-10',
+})
 export const CLASS_SESSION_DURATION_MINUTES = 120
 export const CLASS_BASIC_DURATION_MINUTES = 90
 export const CLASS_ADVANCED_DURATION_MINUTES = 120
@@ -399,10 +413,16 @@ export function isCakePickupServiceTime(dateValue, timeValue) {
   const minute = Number(match[2])
   if (hour > 23 || minute > 59) return false
   const weekday = new Date(`${dateValue}T00:00:00.000Z`).getUTCDay()
+  const window = AU_CAKE_PICKUP_SCHEDULE.weekdays[weekday]
+  if (!window) return false
   const pickupMinutes = hour * 60 + minute
-  return (weekday === 0 || weekday === 6)
-    && pickupMinutes >= CAKE_PICKUP_OPEN_MINUTES
-    && pickupMinutes <= CAKE_PICKUP_CLOSE_MINUTES
+  const openMinutes = minutes(window.open)
+  const closeMinutes = minutes(window.close)
+  return openMinutes !== null
+    && closeMinutes !== null
+    && pickupMinutes >= openMinutes
+    && pickupMinutes <= closeMinutes
+    && (pickupMinutes - openMinutes) % AU_CAKE_PICKUP_SCHEDULE.intervalMinutes === 0
 }
 
 function validatePickupDateTime(dateValue, timeValue, now) {
@@ -412,7 +432,7 @@ function validatePickupDateTime(dateValue, timeValue, now) {
   const hour = Number(match[1])
   const minute = Number(match[2])
   const totalMinutes = hour * 60 + minute
-  if ((minute !== 0 && minute !== 30) || hour > 23) {
+  if (minute % AU_CAKE_PICKUP_SCHEDULE.intervalMinutes !== 0 || hour > 23) {
     fail('INVALID_PICKUP_TIME')
   }
   if (zonedTimestamp(dateValue, timeValue) === null) fail('INVALID_PICKUP_DATE')
@@ -918,10 +938,12 @@ function validateAge(value, code) {
   return age
 }
 
-function isWeekendDateValue(value) {
-  if (!isValidDateValue(value)) return false
-  const day = new Date(`${value}T00:00:00.000Z`).getUTCDay()
-  return day === 0 || day === 6
+export function isSpringClassBookingDateAllowed(value, now = new Date()) {
+  if (!isValidDateValue(value) || !SPRING_CLASS_CAMPAIGN_2026.enabled) return false
+  const today = sydneyDateValue(now)
+  return today <= SPRING_CLASS_CAMPAIGN_2026.visibleThrough
+    && value >= today
+    && SPRING_CLASS_CAMPAIGN_2026.allowedDates.includes(value)
 }
 
 function classExtensionMinutes(value) {
@@ -960,7 +982,7 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
   if (!CLASS_TYPES.has(classType)) fail('INVALID_CLASS_TYPE')
   if (coursePlan === 'advanced' && classType !== 'advanced-2-tier-cake-class') fail('INVALID_CLASS_TYPE')
   if (coursePlan !== 'advanced' && classType === 'advanced-2-tier-cake-class') fail('INVALID_CLASS_TYPE')
-  if (!isWeekendDateValue(input.classDate) || input.classDate < sydneyDateValue(now)) fail('INVALID_CLASS_DATE')
+  if (!isSpringClassBookingDateAllowed(input.classDate, now)) fail('INVALID_CLASS_DATE')
   if (!CLASS_SESSION_TIMES.includes(input.classTime)) fail('INVALID_CLASS_TIME')
   if (input.parentConsent !== true || input.cancellationAgreement !== true || input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   if (typeof input.photoConsent !== 'boolean') fail('PHOTO_CONSENT_REQUIRED')
@@ -982,7 +1004,7 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
   if (coursePlan === 'basic-advanced-package') {
     advancedClassDate = input.advancedClassDate
     advancedClassTime = input.advancedClassTime
-    if (!isWeekendDateValue(advancedClassDate) || advancedClassDate < sydneyDateValue(now) || !CLASS_SESSION_TIMES.includes(advancedClassTime)) {
+    if (!isSpringClassBookingDateAllowed(advancedClassDate, now) || !CLASS_SESSION_TIMES.includes(advancedClassTime)) {
       fail('INVALID_PACKAGE_SESSION')
     }
     if (advancedClassDate === input.classDate && advancedClassTime === input.classTime) fail('INVALID_PACKAGE_SESSION')

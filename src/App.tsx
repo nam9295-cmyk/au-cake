@@ -256,7 +256,7 @@ function App() {
           />
         </>
       )}
-      {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} cartItemCount={cartItemCount} />}
+      {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} cartItemCount={cartItemCount} />}
       {page === 'reserve' && (
         <ReservePage

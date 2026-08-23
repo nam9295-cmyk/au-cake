@@ -4,6 +4,7 @@ import {
   getClassCalendarMonthLabel,
   shiftClassCalendarMonth,
 } from '../lib/class-utils'
+import { AU_CAKE_PICKUP_ALLOWED_WEEKDAYS } from '../lib/pickup-schedule'
 
 interface SharedDatePickerProps {
   label: string
@@ -13,6 +14,10 @@ interface SharedDatePickerProps {
   locale?: 'en-AU' | 'ko-KR'
   isDateDisabled?: (value: string) => boolean
   loading?: boolean
+  allowedWeekdays?: readonly number[]
+  availabilityNote?: string
+  initialVisibleMonth?: string
+  maxDate?: string
 }
 
 interface BookingDatePickerProps extends SharedDatePickerProps {
@@ -45,21 +50,27 @@ function BookingDatePicker({
   locale = 'en-AU',
   isDateDisabled = () => false,
   loading = false,
+  allowedWeekdays,
+  availabilityNote,
+  initialVisibleMonth,
+  maxDate,
 }: BookingDatePickerProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
-  const [visibleMonth, setVisibleMonth] = useState(value.slice(0, 7) || minDate.slice(0, 7))
+  const [visibleMonth, setVisibleMonth] = useState(initialVisibleMonth || value.slice(0, 7) || minDate.slice(0, 7))
   const days = getBookingCalendarMonthDays(visibleMonth, minDate, weekendsOnly)
   const previousMonth = shiftClassCalendarMonth(visibleMonth, -1)
+  const nextMonth = shiftClassCalendarMonth(visibleMonth, 1)
   const minimumMonth = minDate.slice(0, 7)
+  const maximumMonth = maxDate?.slice(0, 7)
   const previousLabel = locale === 'ko-KR' ? '이전 달' : 'Previous month'
   const nextLabel = locale === 'ko-KR' ? '다음 달' : 'Next month'
   const note = loading
     ? locale === 'ko-KR' ? '예약 가능 날짜를 확인하고 있습니다.' : 'Checking available dates.'
-    : weekendsOnly
-      ? 'Saturday and Sunday are available.'
-      : locale === 'ko-KR' ? '예약할 수 없는 날짜는 회색으로 표시됩니다.' : 'Unavailable dates are shown in grey.'
+    : availabilityNote || (weekendsOnly
+      ? locale === 'ko-KR' ? '토요일과 일요일에 예약할 수 있습니다.' : 'Saturday and Sunday are available.'
+      : locale === 'ko-KR' ? '예약할 수 없는 날짜는 회색으로 표시됩니다.' : 'Unavailable dates are shown in grey.')
 
   useEffect(() => {
     if (!open) return
@@ -116,7 +127,8 @@ function BookingDatePicker({
               type="button"
               className="weekend-calendar-nav"
               aria-label={nextLabel}
-              onClick={() => setVisibleMonth(shiftClassCalendarMonth(visibleMonth, 1))}
+              disabled={maximumMonth !== undefined && nextMonth > maximumMonth}
+              onClick={() => setVisibleMonth(nextMonth)}
             >
               ›
             </button>
@@ -127,7 +139,10 @@ function BookingDatePicker({
           </div>
           <div className="weekend-calendar-grid">
             {days.map((day) => {
-              const externallyDisabled = loading || isDateDisabled(day.isoDate)
+              const weekday = new Date(`${day.isoDate}T00:00:00.000Z`).getUTCDay()
+              const outsideAllowedWeekdays = allowedWeekdays !== undefined && !allowedWeekdays.includes(weekday)
+              const outsideMaximum = maxDate !== undefined && day.isoDate > maxDate
+              const externallyDisabled = loading || outsideAllowedWeekdays || outsideMaximum || isDateDisabled(day.isoDate)
               const disabled = day.disabled || externallyDisabled
               const availabilityLabel = disabled && day.inCurrentMonth
                 ? locale === 'ko-KR' ? ', 예약 불가' : ', unavailable'
@@ -163,5 +178,5 @@ export function WeekendDatePicker(props: SharedDatePickerProps) {
 }
 
 export function PickupDatePicker(props: SharedDatePickerProps) {
-  return <BookingDatePicker {...props} weekendsOnly />
+  return <BookingDatePicker {...props} weekendsOnly={false} allowedWeekdays={AU_CAKE_PICKUP_ALLOWED_WEEKDAYS} />
 }

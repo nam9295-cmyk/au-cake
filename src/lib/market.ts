@@ -559,7 +559,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       productName: 'Gâteau au Chocolat',
       homeTitle: 'Sydney Made-to-Order Cakes',
       homeDescription: 'Cakes made with chocolatier-grade couverture chocolate by Very Good Chocolate, available by pre-order for confirmed Melrose Park pick-up.',
-      reserveCta: 'Order for weekend pick-up',
+      reserveCta: 'Order for pick-up',
       lookupNav: 'Find booking',
       adminNav: 'Admin',
       productSectionTitle: 'Choose a cake',

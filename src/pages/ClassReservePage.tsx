@@ -7,6 +7,12 @@ import { useTodayInputValue } from '../hooks/useTodayInputValue'
 import { type Page } from '../lib/app-routes'
 import { trackEvent } from '../lib/analytics'
 import {
+  SPRING_CLASS_CAMPAIGN_2026,
+  getNextSpringClassDate,
+  getSpringClassCampaignCopy,
+  isSpringClassBookingDateAllowed,
+} from '../lib/class-campaign'
+import {
   calculateClassPricing,
   CLASS_EXTENSION_WARNING,
   CLASS_PAYMENT_SETTINGS,
@@ -20,10 +26,10 @@ import {
   getClassTypeLabel,
   isClassDateBooked,
   isClassSchoolYearAllowed,
-  isWeekendClassDate,
   normalizeClassReservationInput,
   type ClassBookedSlot,
 } from '../lib/class-utils'
+import type { Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 import { createClassReservation, listClassBookedSlots } from '../lib/repository'
 import type {
@@ -34,22 +40,23 @@ import type {
   ClassType,
 } from '../lib/types'
 import {
-  addDaysInputValue,
   formatCurrency,
   generateRequestId,
   isValidPhone,
   normalizePhone,
 } from '../lib/utils'
 
-function nextWeekendClassDate() {
-  for (let offset = 0; offset < 8; offset += 1) {
-    const value = addDaysInputValue(offset)
-    if (isWeekendClassDate(value)) return value
-  }
-  return addDaysInputValue(1)
-}
-
-export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navigate: (page: Page) => void; onComplete: (reservation: ClassReservation) => void; cartItemCount: number }) {
+export function ClassReservePage({ navigate, onComplete, language, setLanguage, cartItemCount }: {
+  navigate: (page: Page) => void
+  onComplete: (reservation: ClassReservation) => void
+  language: Language
+  setLanguage: (language: Language) => void
+  cartItemCount: number
+}) {
+  const nextCampaignDate = getNextSpringClassDate()
+  const campaignCopy = getSpringClassCampaignCopy(language)
+  const campaignMonth = SPRING_CLASS_CAMPAIGN_2026.allowedDates[0].slice(0, 7)
+  const campaignLastDate = SPRING_CLASS_CAMPAIGN_2026.allowedDates.at(-1) || SPRING_CLASS_CAMPAIGN_2026.visibleThrough
   const [requestId] = useState(generateRequestId)
   const [form, setForm] = useState<{
     classDate: string
@@ -78,12 +85,12 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
     photoConsent: boolean
     privacyConsent: boolean
     website: string
-  }>({
-    classDate: nextWeekendClassDate(),
+  }>(() => ({
+    classDate: nextCampaignDate || '',
     classTime: CLASS_SESSION_TIMES[0],
     coursePlan: 'basic',
     extensionMinutes: 0,
-    advancedClassDate: nextWeekendClassDate(),
+    advancedClassDate: nextCampaignDate || '',
     advancedClassTime: CLASS_SESSION_TIMES[1],
     advancedExtensionMinutes: 0,
     classType: 'school-holiday-private-cake-class',
@@ -105,7 +112,7 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
     photoConsent: false,
     privacyConsent: false,
     website: '',
-  })
+  }))
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [bookedClassSlots, setBookedClassSlots] = useState<ClassBookedSlot[]>([])
@@ -151,11 +158,11 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
     if (!isClassSchoolYearAllowed(form.coursePlan, form.schoolYear)) return setError(form.coursePlan === 'basic' ? 'Please choose a school year from Kindy to Year 6.' : 'Advanced classes are available from Year 2 to Year 6.')
     if (!isValidPhone(phone)) return setError(`Please check the mobile number. ${marketConfig.copy.phoneHelp}`)
     if (!form.parentEmail.includes('@')) return setError('Please enter a valid email address.')
-    if (!form.classDate || form.classDate < today || !isWeekendClassDate(form.classDate)) return setError('Please choose a Saturday or Sunday.')
+    if (!isSpringClassBookingDateAllowed(form.classDate)) return setError('Please choose Saturday 3 or Saturday 10 October.')
     if (selectedDateBooked) return setError('This date is already booked. Please choose another date.')
     if (!availableSessionTimes.includes(form.classTime as (typeof CLASS_SESSION_TIMES)[number])) return setError('Please choose an available class time.')
     if (form.coursePlan === 'basic-advanced-package') {
-      if (!form.advancedClassDate || form.advancedClassDate < today || !isWeekendClassDate(form.advancedClassDate)) return setError('Please choose a Saturday or Sunday for the Advanced session.')
+      if (!isSpringClassBookingDateAllowed(form.advancedClassDate)) return setError('Please choose 3 or 10 October for the Advanced session.')
       if (advancedSelectedUnavailable || (form.advancedClassDate === form.classDate && form.advancedClassTime === form.classTime)) return setError('Please choose a different available Advanced session.')
     }
     if (partySize === 2 && (!form.secondChildName.trim() || !isClassSchoolYearAllowed('basic', form.secondChildSchoolYear))) return setError('Please enter Child 2 name and choose a school year from Kindy to Year 6.')
@@ -192,8 +199,16 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
 
   return (
     <>
-      <SiteHeader navigate={navigate} cartItemCount={cartItemCount} />
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
       <main className="class-reserve-page">
+        {!nextCampaignDate ? (
+          <section className="class-reserve-form class-campaign-closed" aria-labelledby="spring-class-closed-title">
+            <button className="class-back-button" type="button" onClick={() => navigate('classes')}>
+              <ArrowLeft size={14} /> {language === 'ko' ? '클래스 안내로 돌아가기' : 'Back to classes'}
+            </button>
+            <h1 id="spring-class-closed-title">{campaignCopy.closed}</h1>
+          </section>
+        ) : (
         <form className="class-reserve-form" onSubmit={submitClassReservation}>
           <label className="website-field" aria-hidden="true">
             Leave this field blank
@@ -229,7 +244,7 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
                     })}
                   />
                   <span>{label}</span>
-                  <strong>{coursePlan === 'advanced' ? 'One child · 2-tier cake' : coursePlan === 'basic-advanced-package' ? 'One child · two weekend sessions' : 'Cake or cupcakes · 1–2 children'}</strong>
+                  <strong>{coursePlan === 'advanced' ? 'One child · 2-tier cake' : coursePlan === 'basic-advanced-package' ? 'One child · two Spring sessions' : 'Cake or cupcakes · 1–2 children'}</strong>
                 </label>
               ))}
             </div>
@@ -299,13 +314,17 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
           </section>
 
           <section className="class-form-section class-form-section-tight" aria-labelledby="session-detail-title">
-            <h2 id="session-detail-title">5. {form.coursePlan === 'advanced' ? 'Advanced' : 'Basic'} Weekend Session · {getClassDurationMinutes(form.coursePlan === 'advanced' ? 'advanced' : 'basic', form.extensionMinutes)} minutes</h2>
+            <h2 id="session-detail-title">5. {form.coursePlan === 'advanced' ? 'Advanced' : 'Basic'} Spring Session · {getClassDurationMinutes(form.coursePlan === 'advanced' ? 'advanced' : 'basic', form.extensionMinutes)} minutes</h2>
             <div className="class-field">
               <span>Preferred Date</span>
               <WeekendDatePicker
                 label="Preferred Date"
                 value={form.classDate}
                 minDate={today}
+                initialVisibleMonth={campaignMonth}
+                maxDate={campaignLastDate}
+                availabilityNote={`${campaignCopy.dates.join(' · ')} · ${campaignCopy.sessions}`}
+                isDateDisabled={(date) => !isSpringClassBookingDateAllowed(date) || isClassDateBooked(date, bookedClassSlots)}
                 onChange={(nextDate) => {
                   const nextAvailableTimes = getAvailableClassSessionTimes(nextDate, bookedClassSlots)
                   setForm({ ...form, classDate: nextDate, classTime: nextAvailableTimes[0] || CLASS_SESSION_TIMES[0] })
@@ -332,7 +351,7 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
               {availabilityLoaded && availabilityError && <p className="class-availability-note unavailable">Availability could not be loaded. Jenny will double-check this session before confirming.</p>}
               {availabilityLoaded && !availabilityError && !selectedDateBooked && <p className="class-availability-note">Available: {availableSessionTimes.join(' / ')}</p>}
             </fieldset>
-            <p className="field-help">Saturday and Sunday only.</p>
+            <p className="field-help">{campaignCopy.calloutDates} · {campaignCopy.sessions}</p>
             <label className="class-check-row">
               <input type="checkbox" checked={form.extensionMinutes === 30} onChange={(event) => setForm({ ...form, extensionMinutes: event.target.checked ? 30 : 0 })} />
               <span>Add 30 minutes to this class</span>
@@ -341,10 +360,18 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
 
             {form.coursePlan === 'basic-advanced-package' && (
               <div className="class-package-session">
-                <h3>Advanced Weekend Session · {getClassDurationMinutes('advanced', form.advancedExtensionMinutes)} minutes</h3>
+                <h3>Advanced Spring Session · {getClassDurationMinutes('advanced', form.advancedExtensionMinutes)} minutes</h3>
                 <div className="class-field">
-                  <span>Advanced Date · Saturday or Sunday</span>
-                  <WeekendDatePicker label="Advanced Date" minDate={today} value={form.advancedClassDate} onChange={(advancedClassDate) => {
+                  <span>Advanced Date · 3 or 10 October</span>
+                  <WeekendDatePicker
+                    label="Advanced Date"
+                    minDate={today}
+                    value={form.advancedClassDate}
+                    initialVisibleMonth={campaignMonth}
+                    maxDate={campaignLastDate}
+                    availabilityNote={`${campaignCopy.dates.join(' · ')} · ${campaignCopy.sessions}`}
+                    isDateDisabled={(date) => !isSpringClassBookingDateAllowed(date) || isClassDateBooked(date, bookedClassSlots)}
+                    onChange={(advancedClassDate) => {
                     const times = getAvailableClassSessionTimes(advancedClassDate, bookedClassSlots)
                     setForm({ ...form, advancedClassDate, advancedClassTime: times[0] || CLASS_SESSION_TIMES[0] })
                   }} />
@@ -494,6 +521,7 @@ export function ClassReservePage({ navigate, onComplete, cartItemCount }: { navi
           <button className="class-submit-button" type="submit" disabled={submitting || selectedDateBooked}>{submitting ? 'Submitting...' : selectedDateBooked ? 'Date unavailable' : 'Request booking'}</button>
           <p className="class-submit-note">Jenny will confirm availability and send full payment details. Your booking is complete after payment is received.</p>
         </form>
+        )}
       </main>
     </>
   )

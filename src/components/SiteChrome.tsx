@@ -31,6 +31,7 @@ export function PickupLocationCard({ language }: { language: Language }) {
         <p className="summary-kicker">{copy.pickupLocationKicker}</p>
         <h2 id="pickup-location-title">{copy.pickupLocationTitle}</h2>
         <p>{copy.pickupLocationText}</p>
+        <p className="pickup-location-hours">{copy.pickupHours[0]}</p>
         <p className="pickup-location-point">
           {language === 'ko' ? `사전 약속 픽업 장소: ${PICKUP_LOCATION_NAME} 인근` : `Pre-arranged meeting point near ${PICKUP_LOCATION_NAME}`}<br />
           {PICKUP_LOCATION_ADDRESS}<br />

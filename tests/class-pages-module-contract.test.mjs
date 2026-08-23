@@ -25,8 +25,10 @@ test('App delegates all class customer pages to explicit page modules', () => {
   assert.match(classCompleteSource, /export function ClassCompletePage\b/)
 })
 
-test('class reservation keeps its weekend default private and shares reusable leaf dependencies with customer reservation owners', () => {
-  assert.match(classReserveSource, /function nextWeekendClassDate\b/)
+test('class reservation keeps its seasonal policy in a shared module and shares reusable leaf dependencies', () => {
+  assert.match(classReserveSource, /from '\.\.\/lib\/class-campaign'/)
+  assert.match(classReserveSource, /getNextSpringClassDate/)
+  assert.doesNotMatch(classReserveSource, /function nextWeekendClassDate\b/)
   assert.doesNotMatch(appSource, /function nextWeekendClassDate\b/)
   assert.match(bankAccountSource, /export function BankAccountBox\b/)
   assert.match(reserveSource, /from '\.\.\/components\/BankAccountBox'/)

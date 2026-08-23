@@ -19,6 +19,7 @@ import {
 import { marketConfig } from './market.js'
 import { formatCupcakeFinishText } from './i18n.js'
 import { formatOrderLineSummary, getReservationItemCount, getReservationLineCount, getReservationOrderLines } from './order-lines.js'
+import { getAuCakePickupTimeOptions, isAuCakePickupServiceTime } from './pickup-schedule.js'
 import type { Reservation, StoreSettings } from './types.js'
 import { escapeCsvCell } from './csv.js'
 
@@ -100,6 +101,7 @@ export function isWeekend(dateValue: string) {
 }
 
 export function timeOptionsForDate(dateValue: string, settings: StoreSettings) {
+  if (marketConfig.market === 'AU') return getAuCakePickupTimeOptions(dateValue)
   const open = isWeekend(dateValue) ? settings.weekendOpen : settings.weekdayOpen
   const close = isWeekend(dateValue) ? settings.weekendClose : settings.weekdayClose
   const [openHour, openMinute] = open.split(':').map(Number)
@@ -121,8 +123,6 @@ export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 export const PICKUP_TIME_TOO_SOON_ERROR = 'PICKUP_TIME_TOO_SOON'
 export const PICKUP_TIME_UNAVAILABLE_ERROR = 'PICKUP_TIME_UNAVAILABLE'
-const AU_CAKE_PICKUP_OPEN_MINUTES = 10 * 60
-const AU_CAKE_PICKUP_CLOSE_MINUTES = 17 * 60
 const SCHOOL_PICKUP_START_MINUTES = 15 * 60
 const SHORT_SCHOOL_PICKUP_END_MINUTES = 15 * 60 + 30
 const LONG_SCHOOL_PICKUP_END_MINUTES = 17 * 60 + 30
@@ -213,15 +213,8 @@ export function isSchoolPickupWindowClosed(dateValue: string, timeValue: string)
 
 export function isCakePickupServiceTime(dateValue: string, timeValue: string) {
   if (marketConfig.market !== 'AU') return zonedPickupTimestamp(dateValue, timeValue) !== null
-  if (zonedPickupTimestamp(dateValue, timeValue) === null) return false
-
-  const [year, month, day] = dateValue.split('-').map(Number)
-  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
-  const [hour, minute] = timeValue.split(':').map(Number)
-  const pickupMinutes = hour * 60 + minute
-  return (weekday === 0 || weekday === 6)
-    && pickupMinutes >= AU_CAKE_PICKUP_OPEN_MINUTES
-    && pickupMinutes <= AU_CAKE_PICKUP_CLOSE_MINUTES
+  return zonedPickupTimestamp(dateValue, timeValue) !== null
+    && isAuCakePickupServiceTime(dateValue, timeValue)
 }
 
 export function isPickupTimeAllowed(dateValue: string, timeValue: string, now = new Date()) {

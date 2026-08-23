@@ -5,6 +5,7 @@ import PublicReviewsSection from '../PublicReviewsSection'
 import { SiteHeader } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
+import { getSpringClassCampaignCopy } from '../lib/class-campaign'
 import { type Language } from '../lib/i18n'
 import { getAuPublicContent, getPublicRoutePage } from '../lib/public-content'
 import { formatCurrency } from '../lib/utils'
@@ -12,11 +13,12 @@ import { formatCurrency } from '../lib/utils'
 export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: { navigate: (page: Page) => void; language: Language; setLanguage: (language: Language) => void; cartItemCount: number }) {
   const publicPage = getPublicRoutePage('/classes')!
   const publicClassContent = getAuPublicContent().classes
+  const campaignCopy = getSpringClassCampaignCopy(language)
   const essentials = [
     ['Basic from Kindy', 'Kindy–Year 2 and Year 3–6 school groups'],
     ['Professional-style course', 'Real studio guidance from planning to finishing'],
     ['Basic and Advanced', 'Start with a 15cm cake or cupcakes, then progress to a 2-tier cake'],
-    ['Weekend classes', 'Saturday and Sunday sessions with Jenny'],
+    ['Limited Saturday classes', '3 and 10 October 2026 with Jenny'],
     ['Max 2 kids per session', 'Private small group focus'],
   ]
   const steps = [
@@ -41,8 +43,13 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
               <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
                 Request a spot
               </button>
-              <span>Basic: Kindy–Year 6 · Advanced: Year 2–6 · Weekend sessions</span>
+              <span>Basic: Kindy–Year 6 · Advanced: Year 2–6 · Limited Saturday classes</span>
             </div>
+            <aside className="spring-class-callout" aria-label={campaignCopy.calloutTitle}>
+              <strong>{campaignCopy.calloutTitle}</strong>
+              <span>{campaignCopy.calloutDates}</span>
+              <span>{campaignCopy.calloutSessions}</span>
+            </aside>
           </div>
 
           <div className="kids-photo-card reveal-up delay-one">
@@ -150,7 +157,7 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
         />
 
         <section className="kids-final-cta reveal-up" aria-label="Request class booking">
-          <p>Weekend spots are handled manually so Jenny can confirm each class safely.</p>
+          <p>Limited Spring Saturday spots are handled manually so Jenny can confirm each class safely.</p>
           <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
             Request a spot
           </button>

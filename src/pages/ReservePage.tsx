@@ -1175,6 +1175,9 @@ export function ReservePage({
                   minDate={minPickupDate}
                   value={pickupDate}
                   locale={language === 'ko' ? 'ko-KR' : 'en-AU'}
+                  availabilityNote={language === 'ko'
+                    ? '케이크 픽업 · 금 18:00–20:00 · 토·일 08:00–20:00'
+                    : 'Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00'}
                   loading={pickupCalendarAvailability.loading}
                   isDateDisabled={isPickupCalendarDateDisabled}
                   onChange={(nextDate) => setForm({

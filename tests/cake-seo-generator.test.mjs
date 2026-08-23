@@ -76,6 +76,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   assert.match(home, /Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31\.00/)
   assert.match(home, /Signature Gâteau au Chocolat/)
   assert.match(home, /Brownie Cheesecake/)
+  assert.match(home, /Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
   assert.match(home, /id="how-ordering-works"/)
   assert.doesNotMatch(home, /\.seo-fallback\s*\{\s*display:\s*none/)
 
@@ -237,6 +238,10 @@ test('all indexable artifacts keep canonical brand, schema, canonical URLs, and 
   assert.ok(course)
   assert.equal(course.offers.lowPrice, 99)
   assert.equal(course.offers.highPrice, 254.6)
+  assert.match(classes, /Basic and Advanced Spring Vacation classes/)
+  assert.match(classes, /3 and 10 October 2026/)
+  assert.match(classes, /10:00, 13:00 and 16:00/)
+  assert.doesNotMatch(classes, /weekend classes/i)
   assert.match(classes, new RegExp(escapeRegExp(auPublicPages.classes.extensionSummary)))
 
   const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
@@ -295,6 +300,8 @@ test('llms text exposes only grounded public catalogue and ordering facts', asyn
   assert.doesNotMatch(llms, /vanilla or chocolate cake sheet|photo is coming soon/i)
   assert.match(llms, /AUD 99\.00–254\.60/)
   assert.match(llms, /AUD 20\.00 per participant, per class/)
+  assert.match(llms, /3 and 10 October 2026/)
+  assert.match(llms, /10:00, 13:00 and 16:00/)
   assert.match(llms, /Official Instagram: https:\/\/www\.instagram\.com\/verygood_syd\//)
   assert.doesNotMatch(llms, /\/admin|customer name|mobile number/i)
 })

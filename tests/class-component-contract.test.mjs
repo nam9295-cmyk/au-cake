@@ -6,6 +6,7 @@ const adminClasses = readFileSync(new URL('../src/AdminClassesPage.tsx', import.
 const classReservationDrawer = readFileSync(new URL('../src/ClassReservationDrawer.tsx', import.meta.url), 'utf8')
 const landing = readFileSync(new URL('../src/pages/ClassesPage.tsx', import.meta.url), 'utf8')
 const reserve = readFileSync(new URL('../src/pages/ClassReservePage.tsx', import.meta.url), 'utf8')
+const campaign = readFileSync(new URL('../src/lib/class-campaign.ts', import.meta.url), 'utf8')
 const setup = readFileSync(new URL('../scripts/setup-appwrite.mjs', import.meta.url), 'utf8')
 const repository = readFileSync(new URL('../src/lib/repository.ts', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
@@ -14,15 +15,21 @@ const publicContent = JSON.parse(
   readFileSync(new URL('../src/content/au-public-pages.json', import.meta.url), 'utf8'),
 )
 
-test('kids class landing presents Basic, Advanced and weekend-only wording without visible Holiday copy', () => {
+test('kids class landing presents Basic, Advanced and the Spring campaign dates without stale weekend copy', () => {
   assert.match(landing, /Basic Cake Class/)
   assert.match(landing, /Advanced 2-Tier Cake Class/)
-  assert.match(landing, /Saturday and Sunday|weekend/i)
+  assert.match(landing, /getSpringClassCampaignCopy/)
+  assert.match(landing, /calloutTitle/)
+  assert.match(landing, /calloutDates/)
+  assert.match(landing, /calloutSessions/)
   assert.doesNotMatch(landing, /school holiday|Holiday/)
+  assert.doesNotMatch(landing, /Saturday and Sunday sessions|Weekend classes|Weekend spots/)
+  assert.match(campaign, /Saturday 3 & Saturday 10 October/)
+  assert.match(campaign, /10월 3일·10월 10일 토요일/)
   assert.match(landing, /Price Guide/)
 })
 
-test('class reserve contract offers Basic from Kindy, Advanced from Year 2, two package slots and exact extension warning', () => {
+test('class reserve contract limits Basic and package dates to the Spring campaign and supports a closed state', () => {
   assert.match(reserve, /basic-advanced-package/)
   assert.match(reserve, /advancedClassDate/)
   assert.match(reserve, /advancedClassTime/)
@@ -32,7 +39,15 @@ test('class reserve contract offers Basic from Kindy, Advanced from Year 2, two 
   assert.match(reserve, /Kindy/)
   assert.match(reserve, /Basic · Kindy–Year 6/)
   assert.match(reserve, /Advanced · Year 2–6 only/)
-  assert.match(reserve, /isWeekendClassDate/)
+  assert.match(reserve, /getNextSpringClassDate/)
+  assert.match(reserve, /isSpringClassBookingDateAllowed/)
+  assert.match(reserve, /SPRING_CLASS_CAMPAIGN_2026/)
+  assert.match(reserve, /initialVisibleMonth/)
+  assert.match(reserve, /maxDate/)
+  assert.match(reserve, /availabilityNote/)
+  assert.match(reserve, /campaignCopy\.closed/)
+  assert.doesNotMatch(reserve, /isWeekendClassDate|nextWeekendClassDate/)
+  assert.doesNotMatch(reserve, /Saturday and Sunday only|Weekend Session|Saturday or Sunday/)
   assert.ok((reserve.match(/<WeekendDatePicker/g) || []).length >= 2)
   assert.doesNotMatch(reserve, /type="date"/)
   assert.match(calendar, /aria-haspopup="dialog"/)
@@ -59,7 +74,8 @@ test('class Appwrite definitions include optional program audit fields and booke
 
 test('kids class public content stays canonical while writes remain server-authoritative', () => {
   const classes = publicContent.classes
-  assert.match(classes.description, /weekend/i)
+  assert.match(classes.description, /3 and 10 October 2026/i)
+  assert.match(classes.description, /10:00, 13:00 and 16:00/)
   assert.match(classes.description, /Kindy/)
   assert.match(classes.description, /Years 2[–-]6/)
   assert.equal(classes.baseLowPrice, 99)

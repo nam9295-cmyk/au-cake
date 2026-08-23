@@ -281,7 +281,7 @@ const pages = {
         <h1>${escapeHtml(auPublicPages.classes.h1)}</h1>
         <p>${escapeHtml(auPublicPages.classes.intro)}</p>
         <section>
-          <h2>Basic and Advanced weekend classes</h2>
+          <h2>Basic and Advanced Spring Vacation classes</h2>
           <p>${escapeHtml(auPublicPages.classes.courseDescription)}</p>
         </section>
         <section>
