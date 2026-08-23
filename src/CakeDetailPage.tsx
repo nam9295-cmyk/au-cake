@@ -8,6 +8,8 @@ import paveSliceImg from './assets/chocolate-cake-slice.jpg'
 import paveSlicesImg from './assets/chocolate-cake-eight-slices.jpg'
 import cheesecakeHeroImg from './assets/basquecheesecake.webp'
 import lemonHeroImg from './assets/lemoncake.webp'
+import eiffelChocolateImg from './assets/eiffel-chocolate-card.jpg'
+import CakeEditorialDetail from './CakeEditorialDetail'
 import KoreanCakeReviewsSection from './KoreanCakeReviewsSection'
 import {
   CAKE_SIZE_OPTIONS,
@@ -37,7 +39,8 @@ import {
   type CakeDetailSelection,
 } from './lib/cake-detail'
 import { isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
-import { getAuCakeCatalogCards } from './lib/cake-catalog'
+import { getAuCakeCatalogCards, type CakeCatalogCard } from './lib/cake-catalog'
+import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-editorial'
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
 import type { ProductId } from './lib/types'
@@ -116,6 +119,22 @@ const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height:
   'brownie-side': { width: 1080, height: 1012 },
   'brownie-detail': { width: 1080, height: 1012 },
   'brownie-quick-view': { width: 1080, height: 1012 },
+}
+
+const editorialImages: Record<CakeEditorialImageKey, { src: string; width: number; height: number }> = {
+  'pave-quick-view': {
+    src: detailImages['pave-quick-view'],
+    ...detailImageDimensions['pave-quick-view'],
+  },
+  'pave-side': {
+    src: detailImages['pave-side'],
+    ...detailImageDimensions['pave-side'],
+  },
+  'eiffel-chocolate': {
+    src: eiffelChocolateImg,
+    width: 1000,
+    height: 1000,
+  },
 }
 
 type CakeDetailPageProps = {
@@ -213,6 +232,19 @@ export default function CakeDetailPage({
   const galleryCount = detail.gallery.length
   const currentImageKey = detail.gallery[Math.min(activeImage, Math.max(0, galleryCount - 1))]
   const addLabel = language === 'ko' ? '주문에 담기' : 'Add to order'
+  const editorial = getCakeEditorialBySlug(slug, language)
+  const relatedProducts = editorial
+    ? editorial.relatedProductSlugs
+        .map((relatedSlug) => getAuCakeCatalogCards(language).find((candidate) => candidate.slug === relatedSlug))
+        .filter((candidate): candidate is CakeCatalogCard => {
+          if (!candidate) return false
+          return candidate.slug !== slug
+        })
+        .slice(0, 2)
+    : []
+  const selectedUnitPrice = product.usesSizeOptions
+    ? product.sizePrices[selection.cakeSize] || product.price
+    : product.price
 
   function updateSelection(patch: Partial<CakeDetailSelection>) {
     setAddedToOrder(false)
@@ -545,59 +577,80 @@ export default function CakeDetailPage({
         </aside>
       </section>
 
-      <section className="cake-detail-trust" aria-label={language === 'ko' ? '베리굿 제작 방식' : 'verygood chocolate service notes'}>
-        {detail.trustPoints.map((point, index) => (
-          <article key={point}>
-            <span>0{index + 1}</span>
-            <strong>{point}</strong>
-          </article>
-        ))}
-      </section>
-
-      <section className="cake-detail-story" aria-labelledby="cake-detail-story-title">
-        <p className="summary-kicker">{language === 'ko' ? '제품 안내' : 'Cake notes'}</p>
-        <h2 id="cake-detail-story-title">{language === 'ko' ? '이 케이크의 특징' : "Why you'll love it"}</h2>
-        <div>
-          {detail.features.map((feature, index) => (
-            <article key={feature}>
+      {editorial ? (
+        <CakeEditorialDetail
+          editorial={editorial}
+          language={language}
+          slug={slug}
+          selectedSizeLabel={formatCakeSizeLabel(selection.cakeSize)}
+          selectedUnitPrice={formatCurrency(selectedUnitPrice)}
+          estimatedTotal={formatCurrency(total)}
+          detailAccordions={detail.accordions}
+          relatedProducts={relatedProducts}
+          images={editorialImages}
+          addedToOrder={addedToOrder}
+          onAddToOrder={addToOrder}
+          onViewOrder={onViewOrder}
+          onBrowseCakes={onBrowseCakes}
+          onOpenCake={onOpenCake}
+        />
+      ) : (
+        <>
+        <section className="cake-detail-trust" aria-label={language === 'ko' ? '베리굿 제작 방식' : 'verygood chocolate service notes'}>
+          {detail.trustPoints.map((point, index) => (
+            <article key={point}>
               <span>0{index + 1}</span>
-              <p>{feature}</p>
+              <strong>{point}</strong>
             </article>
           ))}
-        </div>
-      </section>
+        </section>
 
-      <KoreanCakeReviewsSection slug={slug} language={language} />
-
-      <section className="cake-detail-accordion" aria-labelledby="cake-detail-info-title">
-        <p className="summary-kicker">{language === 'ko' ? '주문 전 확인' : 'Good to know'}</p>
-        <h2 id="cake-detail-info-title">{language === 'ko' ? '주문과 픽업 안내' : 'Ordering and pick-up'}</h2>
-        <div>
-          {detail.accordions.map((item, index) => (
-            <details key={item.title} open={index === 0}>
-              <summary>{item.title}</summary>
-              <p>{item.body}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      <section className="cake-detail-other" aria-labelledby="cake-detail-other-title">
-        <h2 id="cake-detail-other-title">{language === 'ko' ? '다른 케이크 보기' : 'Explore other cakes'}</h2>
-        <button type="button" className="secondary-button" onClick={onBrowseCakes}>
-          {language === 'ko' ? '전체 케이크' : 'View all cakes'}
-        </button>
-        <div className="cake-detail-other-links">
-          {getAuCakeCatalogCards(language)
-            .filter((candidate) => candidate.slug !== slug)
-            .slice(0, 2)
-            .map((candidate) => (
-              <button type="button" onClick={() => onOpenCake(candidate.slug)} key={candidate.slug}>
-                {candidate.name}
-              </button>
+        <section className="cake-detail-story" aria-labelledby="cake-detail-story-title">
+          <p className="summary-kicker">{language === 'ko' ? '제품 안내' : 'Cake notes'}</p>
+          <h2 id="cake-detail-story-title">{language === 'ko' ? '이 케이크의 특징' : "Why you'll love it"}</h2>
+          <div>
+            {detail.features.map((feature, index) => (
+              <article key={feature}>
+                <span>0{index + 1}</span>
+                <p>{feature}</p>
+              </article>
             ))}
-        </div>
-      </section>
+          </div>
+        </section>
+
+        <KoreanCakeReviewsSection slug={slug} language={language} />
+
+        <section className="cake-detail-accordion" aria-labelledby="cake-detail-info-title">
+          <p className="summary-kicker">{language === 'ko' ? '주문 전 확인' : 'Good to know'}</p>
+          <h2 id="cake-detail-info-title">{language === 'ko' ? '주문과 픽업 안내' : 'Ordering and pick-up'}</h2>
+          <div>
+            {detail.accordions.map((item, index) => (
+              <details key={item.title} open={index === 0}>
+                <summary>{item.title}</summary>
+                <p>{item.body}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section className="cake-detail-other" aria-labelledby="cake-detail-other-title">
+          <h2 id="cake-detail-other-title">{language === 'ko' ? '다른 케이크 보기' : 'Explore other cakes'}</h2>
+          <button type="button" className="secondary-button" onClick={onBrowseCakes}>
+            {language === 'ko' ? '전체 케이크' : 'View all cakes'}
+          </button>
+          <div className="cake-detail-other-links">
+            {getAuCakeCatalogCards(language)
+              .filter((candidate) => candidate.slug !== slug)
+              .slice(0, 2)
+              .map((candidate) => (
+                <button type="button" onClick={() => onOpenCake(candidate.slug)} key={candidate.slug}>
+                  {candidate.name}
+                </button>
+              ))}
+          </div>
+        </section>
+        </>
+      )}
     </main>
   )
 }

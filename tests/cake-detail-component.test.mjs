@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const detailSource = await readFile(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
+const editorialSource = await readFile(new URL('../src/CakeEditorialDetail.tsx', import.meta.url), 'utf8').catch(() => '')
 const reserveSource = await readFile(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const reviewSource = await readFile(new URL('../src/KoreanCakeReviewsSection.tsx', import.meta.url), 'utf8')
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
@@ -66,10 +67,32 @@ test('English cake service notes use the canonical lowercase brand', () => {
   assert.doesNotMatch(detailSource, /Verygood service notes/)
 })
 
-test('matching cake details place the Korean review carousel between story and ordering information', () => {
-  assert.match(detailSource, /import KoreanCakeReviewsSection from '.\/KoreanCakeReviewsSection'/)
-  assert.match(detailSource, /cake-detail-story[\s\S]*<KoreanCakeReviewsSection[\s\S]*cake-detail-accordion/)
-  assert.match(detailSource, /<KoreanCakeReviewsSection slug=\{slug\} language=\{language\} \/>/)
+test('Pave uses the editorial detail after the protected Hero while other cakes keep the existing post-Hero sections', () => {
+  assert.match(detailSource, /getCakeEditorialBySlug\(slug, language\)/)
+  assert.match(detailSource, /editorial \? \([\s\S]*<CakeEditorialDetail/)
+  assert.match(detailSource, /cake-detail-trust[\s\S]*cake-detail-story[\s\S]*KoreanCakeReviewsSection[\s\S]*cake-detail-accordion[\s\S]*cake-detail-other/)
+  assert.match(editorialSource, /import KoreanCakeReviewsSection from '.\/KoreanCakeReviewsSection'/)
+  assert.match(editorialSource, /<KoreanCakeReviewsSection slug=\{slug\} language=\{language\} \/>/)
+})
+
+test('Pave editorial reuses live catalogue cards and the existing add-to-order callbacks', () => {
+  assert.match(detailSource, /getAuCakeCatalogCards\(language\)/)
+  assert.match(detailSource, /candidate\.slug !== slug/)
+  assert.match(detailSource, /slice\(0, 2\)/)
+  assert.match(detailSource, /onAddToOrder=\{addToOrder\}/)
+  assert.match(editorialSource, /relatedProducts\.map/)
+  assert.match(editorialSource, /product\.imagePath/)
+  assert.match(editorialSource, /onAddToOrder/)
+  assert.match(editorialSource, /onViewOrder/)
+  assert.doesNotMatch(editorialSource, /createRoot|BrowserRouter|<html|<!doctype/i)
+})
+
+test('editorial styles remain isolated from protected detail and operational controls', () => {
+  assert.match(cssSource, /\.cake-editorial-/)
+  assert.match(cssSource, /@media \(max-width: 760px\)[\s\S]*\.cake-editorial-/)
+  assert.match(cssSource, /\.cake-editorial-gift-images img\s*\{[^}]*height:\s*auto/s)
+  assert.match(cssSource, /\.cake-editorial-related-grid img\s*\{[^}]*height:\s*auto/s)
+  assert.doesNotMatch(editorialSource, /isIndividualPackagingEligibleProduct|getCakeDetailSelectionEstimatedTotal|useCart/)
 })
 
 test('review carousel uses the approved bilingual heading and compact Daegu disclosure', () => {
