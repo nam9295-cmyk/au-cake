@@ -6,6 +6,15 @@ const contentPath = new URL('../src/content/au-public-pages.json', import.meta.u
 const htmlShellPath = new URL('../index.html', import.meta.url)
 const content = JSON.parse(await readFile(contentPath, 'utf8'))
 const htmlShell = await readFile(htmlShellPath, 'utf8')
+const customerCopySources = await Promise.all([
+  '../src/pages/HomePage.tsx',
+  '../src/components/SiteChrome.tsx',
+  '../src/lib/market.ts',
+  '../src/lib/i18n.ts',
+  '../src/lib/cake-detail.ts',
+  '../scripts/setup-appwrite.mjs',
+  '../public/llms.txt',
+].map(async (path) => [path, await readFile(new URL(path, import.meta.url), 'utf8')]))
 
 const cakePages = content.cakePages
 const productStartingPrices = Object.fromEntries(
@@ -17,12 +26,24 @@ const productStartingPrices = Object.fromEntries(
 test('AU public content owns the approved homepage contract', () => {
   assert.equal(content.home.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(content.home.h1, 'Made-to-Order Chocolate Cakes in Sydney')
-  assert.equal(content.home.description, 'Order small-batch cakes for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.00.')
+  assert.equal(content.home.description, 'Order cakes made with chocolatier-grade couverture chocolate for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.00.')
   assert.equal(content.home.pickup, 'Pre-order only. Pickup in Melrose Park, Sydney. No walk-in shop or delivery.')
   assert.deepEqual(content.home.ctas, [
     { label: 'Browse Chocolate Cakes', href: '/cakes' },
     { label: 'How Ordering Works', href: '#how-ordering-works' },
   ])
+})
+
+test('AU customer copy replaces small-batch claims with chocolatier-grade couverture chocolate', () => {
+  const publicContentText = JSON.stringify(content)
+  assert.doesNotMatch(publicContentText, /small[- ]batch/i)
+  assert.match(publicContentText, /chocolatier-grade couverture chocolate/i)
+  assert.doesNotMatch(htmlShell, /small[- ]batch/i)
+  assert.match(htmlShell, /chocolatier-grade couverture chocolate/i)
+  for (const [path, source] of customerCopySources) {
+    assert.doesNotMatch(source, /small[- ]batch|소량/i, path)
+    assert.match(source, /chocolatier-grade couverture chocolate|쇼콜라티에용 커버춰 초콜릿/i, path)
+  }
 })
 
 test('AU public product copy and price summaries use the approved copy and two-decimal money', () => {

@@ -47,21 +47,21 @@ Individual packaging stores the customer choice as `individualPackaging` on each
 
 - Representative: `public/products/buttercream-cake-sydney.webp`
 - Quick View: `public/products/details/buttercream-cake-quick-view.webp`
-- Detail gallery: those two existing paths
+- Detail gallery: those two paths plus the previous representative at `public/products/details/buttercream-cake-detail-01.webp`
 - Replacement brief: use a slightly lower camera angle so the cake height and volume are clearer, and change the sprinkle colours. Replace the files in place; do not change the paths.
 
 ### Chocolate Cupcakes images
 
 - Representative: `public/products/chocolate-cupcakes-sydney.webp`
 - Quick View: `public/products/details/chocolate-cupcakes2-sydney.webp`
-- Detail gallery: the representative path and imported `src/assets/cupcake-hero.webp`
+- Detail gallery: the representative path, the previous representative at `public/products/details/chocolate-cupcakes-detail-01.webp`, and imported `src/assets/cupcake-hero.webp`
 - Replacement brief: one image should clearly show three cupcakes, one each of Basic, Vanilla Fresh Cream, and Chocolate Buttercream. Replace the files in place; do not change the paths.
 
 ### Signature Gâteau au Chocolat images
 
-- Representative: `public/products/chocolate-pound-cake-sydney.webp`
+- Representative: `public/products/signature-gateau-au-chocolat-sydney.webp`
 - Quick View: `public/products/details/chocolate-pound-cake-quick-view.webp`
-- Detail gallery: those two paths, `public/products/details/chocolate-pound-cake-previous.webp`, and imported `src/assets/hero-cake-3.webp`
+- Detail gallery: those two paths, the previous representative at `public/products/details/signature-gateau-au-chocolat-detail-01.webp`, `public/products/details/chocolate-pound-cake-previous.webp`, and imported `src/assets/hero-cake-3.webp`
 
 ### Lemon Cake images
 
@@ -71,9 +71,9 @@ Individual packaging stores the customer choice as `individualPackaging` on each
 
 ### Brownie Cheesecake images
 
-- Representative: `public/products/brownie-cheese-sydney.webp`
+- Representative: `public/products/brownie-cheesecake-sydney.webp`
 - Quick View: `public/products/details/brownie-cheese-quick-view.webp`
-- Detail gallery: those two existing paths
+- Detail gallery: those two paths plus the previous representative at `public/products/details/brownie-cheesecake-detail-01.webp`
 - Replacement brief: clearly show the brownie layer and cheesecake layer in cross-section so the product structure is immediately understandable. Replace the files in place; do not change the paths.
 
 ## Individual packaging contract

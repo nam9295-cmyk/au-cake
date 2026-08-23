@@ -54,7 +54,7 @@ export function HomePage({
   const [quickViewCardId, setQuickViewCardId] = useState<string | null>(null)
   const [quickViewOpener, setQuickViewOpener] = useState<HTMLButtonElement | null>(null)
   const heroCakes = [
-    { image: getPublicCakePage('brownie-cheesecake')?.imagePath, label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
+    { image: '/products/brownie-cheese-sydney.webp', label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
     { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
@@ -202,11 +202,11 @@ export function HomePage({
             <h1 className="hero-title">{language === 'en' && publicHomeContent ? publicHomeContent.h1 : copy.homeTitle}</h1>
             <p className="hero-description">
               {language === 'ko' ? (
-                <><strong>verygood chocolate</strong>이 만드는 소량 생산 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
+                <><strong>verygood chocolate</strong>이 쇼콜라티에용 커버춰 초콜릿으로 만드는 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
               ) : publicHomeContent ? (
                 <>{publicHomeContent.hero}<br /><span>{publicHomeContent.pickup}</span></>
               ) : (
-                <>Small-batch cakes made by <strong>verygood chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
+                <>Cakes made with chocolatier-grade couverture chocolate by <strong>verygood chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
               )}
             </p>
             <div className="hero-actions">
@@ -429,12 +429,12 @@ export function HomePage({
         <section className="content-section cake-information-section" aria-labelledby="sydney-cake-info-title">
           <p className="summary-kicker">{language === 'ko' ? '시드니에서 직접 제작' : 'Made in Sydney'}</p>
           <h2 id="sydney-cake-info-title">
-            {language === 'ko' ? '예약 주문으로 준비하는 소량 제작 초콜릿 케이크' : 'Small-batch chocolate cakes for pre-order'}
+            {language === 'ko' ? '쇼콜라티에용 커버춰 초콜릿으로 만드는 주문 제작 케이크' : 'Chocolate cakes made with chocolatier-grade couverture chocolate'}
           </h2>
           <div className="cake-information-grid">
             <article>
               <h3>{language === 'ko' ? '초콜릿이 중심인 레시피' : 'Chocolate-first recipes'}</h3>
-              <p>{language === 'ko' ? '파베, 바닐라 생크림, 버터크림, 초콜릿 컵케이크, 시그니처 갸또 쇼콜라, 레몬 케이크, 브라우니 치즈케이크를 주문할 수 있어요. 확정된 주문에 맞춰 소량으로 준비합니다.' : 'Choose from Pave, Vanilla Fresh Cream, Buttercream, Chocolate Cupcakes, Signature Gâteau au Chocolat, Lemon Cake and Brownie Cheesecake. Each order is made in a small batch.'}</p>
+              <p>{language === 'ko' ? '파베, 바닐라 생크림, 버터크림, 초콜릿 컵케이크, 시그니처 갸또 쇼콜라, 레몬 케이크, 브라우니 치즈케이크를 주문할 수 있어요. 모든 주문은 쇼콜라티에용 커버춰 초콜릿을 사용해 준비합니다.' : 'Choose from Pave, Vanilla Fresh Cream, Buttercream, Chocolate Cupcakes, Signature Gâteau au Chocolat, Lemon Cake and Brownie Cheesecake. Every order is made with chocolatier-grade couverture chocolate.'}</p>
             </article>
             <article>
               <h3>{language === 'ko' ? '원하는 옵션 선택' : 'Choose your finish'}</h3>

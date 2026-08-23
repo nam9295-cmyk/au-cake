@@ -1,6 +1,7 @@
 import { AppwriteException, ExecutionMethod, ID, OAuthProvider, Query, type Models } from 'appwrite'
 import { account, appwriteConfig, databases, functions, isAppwriteConfigured } from './appwrite'
 import { MARKET } from './market'
+import { normalizeAuDailyLimitText } from './legacy-settings'
 import { isStoredCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
 import {
   DEFAULT_CHOCOLATE_TYPE,
@@ -599,6 +600,7 @@ function normalizeSettings(settings?: Partial<StoreSettings> | null): StoreSetti
   }
 
   if (MARKET === 'AU') {
+    merged.dailyLimitText = normalizeAuDailyLimitText(merged.dailyLimitText)
     if (merged.bankName === 'Payment details TBC') merged.bankName = DEFAULT_SETTINGS.bankName
     if (merged.bankAccount === 'Confirm with Jenny') merged.bankAccount = DEFAULT_SETTINGS.bankAccount
     if (merged.accountHolder === 'Verygood Chocolate' || merged.accountHolder === 'verygood') {

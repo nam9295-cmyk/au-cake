@@ -58,9 +58,10 @@ test('home hero cycles the seven current sale cakes every three seconds', () => 
     'Lemon Cake',
     'Brownie Cheesecake',
   ]) assert.match(heroCakes, new RegExp(`label: '${label}'`))
-  assert.match(heroCakes, /image:\s*getPublicCakePage\('brownie-cheesecake'\)\?\.imagePath/)
   assert.match(heroCakes, /image:\s*getPublicCakePage\('buttercream-cake'\)\?\.imagePath/)
   assert.match(heroCakes, /image:\s*getPublicCakePage\('chocolate-cupcakes'\)\?\.imagePath/)
+  assert.match(heroCakes, /image:\s*'\/products\/brownie-cheese-sydney\.webp'/)
+  assert.doesNotMatch(heroCakes, /image:\s*getPublicCakePage\('brownie-cheesecake'\)\?\.imagePath/)
   assert.doesNotMatch(heroCakes, /basqueCheesecakeHeroImg|Chocolatier's Basque/)
   assert.match(homeSource, /window\.setInterval\([\s\S]*?\}, 3000\)/)
 })
@@ -77,7 +78,7 @@ test('quick view uses dedicated replaceable detail-shot files', () => {
   assert.match(homeSource, /imageUrl=\{quickViewImages\[quickViewCard\.imageKey\]\}/)
 })
 
-test('Buttercream and Brownie use only their supplied product and Quick View files', async () => {
+test('new catalogue photos and previous detail photos use descriptive canonical files', async () => {
   const catalogSource = await readFile(new URL('../src/lib/cake-catalog.ts', import.meta.url), 'utf8')
   const cakeDetailSource = await readFile(new URL('../src/lib/cake-detail.ts', import.meta.url), 'utf8')
   const detailSource = await readFile(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
@@ -85,25 +86,33 @@ test('Buttercream and Brownie use only their supplied product and Quick View fil
 
   assert.match(catalogSource, /id: 'brownie-cheesecake',[\s\S]*?isPhotoComingSoon: false/)
   assert.match(catalogSource, /id: 'buttercream',[\s\S]*?isPhotoComingSoon: false/)
-  assert.match(cakeDetailSource, /buttercream: \['buttercream-side', 'buttercream-quick-view'\]/)
+  assert.match(cakeDetailSource, /buttercream: \['buttercream-side', 'buttercream-detail', 'buttercream-quick-view'\]/)
   assert.match(detailSource, /'buttercream-side': '\/products\/buttercream-cake-sydney\.webp'/)
+  assert.match(detailSource, /'buttercream-detail': '\/products\/details\/buttercream-cake-detail-01\.webp'/)
   assert.match(detailSource, /'buttercream-quick-view': '\/products\/details\/buttercream-cake-quick-view\.webp'/)
   assert.match(publicContent, /"buttercream-cake": \{[\s\S]*?"imagePath": "\/products\/buttercream-cake-sydney\.webp"/)
-  assert.match(detailSource, /'brownie-side': '\/products\/brownie-cheese-sydney\.webp'/)
+  assert.match(detailSource, /'cupcake-detail': '\/products\/details\/chocolate-cupcakes-detail-01\.webp'/)
+  assert.match(detailSource, /'signature-gateau-side': '\/products\/signature-gateau-au-chocolat-sydney\.webp'/)
+  assert.match(detailSource, /'signature-gateau-detail': '\/products\/details\/signature-gateau-au-chocolat-detail-01\.webp'/)
+  assert.match(detailSource, /'brownie-side': '\/products\/brownie-cheesecake-sydney\.webp'/)
+  assert.match(detailSource, /'brownie-detail': '\/products\/details\/brownie-cheesecake-detail-01\.webp'/)
   assert.match(detailSource, /'brownie-quick-view': '\/products\/details\/brownie-cheese-quick-view\.webp'/)
   assert.match(detailSource, /'brownie-side': \{ width: 1080, height: 1012 \}/)
   assert.match(detailSource, /'brownie-quick-view': \{ width: 1080, height: 1012 \}/)
-  assert.doesNotMatch(`${catalogSource}\n${detailSource}\n${homeSource}`, /brownie-cheesecake-sydney\.webp/)
+  assert.match(publicContent, /"signature-gateau-au-chocolat": \{[\s\S]*?"imagePath": "\/products\/signature-gateau-au-chocolat-sydney\.webp"/)
+  assert.match(publicContent, /"brownie-cheesecake": \{[\s\S]*?"imagePath": "\/products\/brownie-cheesecake-sydney\.webp"/)
 })
 
-test('supplied Cupcake, Buttercream, and Brownie WebPs are present in this worktree', async () => {
+test('new catalogue and preserved detail WebPs are present in this worktree', async () => {
   for (const path of [
+    '../public/products/signature-gateau-au-chocolat-sydney.webp',
     '../public/products/chocolate-cupcakes-sydney.webp',
-    '../public/products/details/chocolate-cupcakes2-sydney.webp',
     '../public/products/buttercream-cake-sydney.webp',
-    '../public/products/details/buttercream-cake-quick-view.webp',
-    '../public/products/brownie-cheese-sydney.webp',
-    '../public/products/details/brownie-cheese-quick-view.webp',
+    '../public/products/brownie-cheesecake-sydney.webp',
+    '../public/products/details/signature-gateau-au-chocolat-detail-01.webp',
+    '../public/products/details/chocolate-cupcakes-detail-01.webp',
+    '../public/products/details/buttercream-cake-detail-01.webp',
+    '../public/products/details/brownie-cheesecake-detail-01.webp',
   ]) {
     const image = await stat(new URL(path, import.meta.url))
     assert.ok(image.size > 0, path)

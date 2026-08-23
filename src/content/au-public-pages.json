@@ -4,7 +4,7 @@
     "brand": "verygood chocolate",
     "language": "en-AU",
     "pickupArea": "Melrose Park, Sydney",
-    "organizationDescription": "Small-batch, made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.",
+    "organizationDescription": "Made-to-order cakes crafted with chocolatier-grade couverture chocolate for pre-arranged pickup in Melrose Park, Sydney.",
     "socialProfiles": [
       "https://www.instagram.com/verygood_syd/"
     ],
@@ -18,8 +18,8 @@
   "home": {
     "title": "Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate",
     "h1": "Made-to-Order Chocolate Cakes in Sydney",
-    "description": "Order small-batch cakes for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.00.",
-    "hero": "Small-batch chocolate cakes made to order for birthdays, parties and gifting.",
+    "description": "Order cakes made with chocolatier-grade couverture chocolate for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.00.",
+    "hero": "Chocolate cakes made with chocolatier-grade couverture chocolate for birthdays, parties and gifting.",
     "pickup": "Pre-order only. Pickup in Melrose Park, Sydney. No walk-in shop or delivery.",
     "ctas": [
       { "label": "Browse Chocolate Cakes", "href": "/cakes" },
@@ -49,7 +49,7 @@
   "catalogue": {
     "title": "Made-to-Order Cakes Sydney | verygood chocolate",
     "h1": "Choose Your Cake",
-    "description": "Browse seven small-batch cakes and request confirmed pickup in Melrose Park, Sydney.",
+    "description": "Browse seven cakes made with chocolatier-grade couverture chocolate and request confirmed pickup in Melrose Park, Sydney.",
     "intro": "Browse seven made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.",
     "collectionName": "Made-to-Order Cakes Sydney"
   },
@@ -148,7 +148,7 @@
       "priceSummary": "AUD 45.00. Choose Basic finish, Extra chocolate +AUD 7.00, or Vanilla cream +AUD 10.00.",
       "optionSummary": "Choose one finish option",
       "cardOptionLabel": "Choose one finish option",
-      "imagePath": "/products/chocolate-pound-cake-sydney.webp",
+      "imagePath": "/products/signature-gateau-au-chocolat-sydney.webp",
       "imageAlt": "Signature Gâteau au Chocolat prepared for pre-arranged pickup in Sydney",
       "imageType": "image/webp",
       "imageWidth": 1080,
@@ -180,7 +180,7 @@
       "priceSummary": "From AUD 55.00. Basic AUD 55.00, pave chocolate on top AUD 65.00, or full pave chocolate finish with one Eiffel Tower chocolate AUD 70.00.",
       "optionSummary": "6 inch serves 8 · three finishing options",
       "cardOptionLabel": "Three finishing options",
-      "imagePath": "/products/brownie-cheese-sydney.webp",
+      "imagePath": "/products/brownie-cheesecake-sydney.webp",
       "imageAlt": "Brownie Cheesecake prepared for pre-arranged pickup in Sydney",
       "imageType": "image/webp",
       "imageWidth": 1080,

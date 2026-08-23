@@ -170,7 +170,7 @@ const defaultSettingsByMarket = {
     weekdayClose: '20:00',
     weekendOpen: '10:00',
     weekendClose: '17:00',
-    dailyLimitText: 'Small-batch cakes, limited daily availability',
+    dailyLimitText: 'Made to order with chocolatier-grade couverture chocolate',
     reservationNotice: 'We will confirm availability after your request. Payment details and final confirmation will follow by message.',
     pickupNotice: 'Street pick-up near 1 Bundil Blvd, Melrose Park. There is a small playground and seating nearby. Parking can be limited, so Jenny will bring the cake down to you.',
     storeAddress: 'Street pick-up near 1 Bundil Blvd, Melrose Park. Small playground/seating nearby; Jenny will bring the cake down to you.',

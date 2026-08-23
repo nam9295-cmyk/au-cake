@@ -197,7 +197,7 @@ export function SiteFooter({
         reviews: '후기',
         lookup: '주문 조회',
         location: '쇼콜라티에가 주문에 맞춰 만드는 케이크',
-        description: '초콜릿을 중심으로 소량씩 만들고, 멜로즈 파크에서 손으로 정성껏 완성합니다.',
+        description: '쇼콜라티에용 커버춰 초콜릿으로 만들고, 멜로즈 파크에서 손으로 정성껏 완성합니다.',
       }
     : {
         service: 'Cake orders & kids classes',
@@ -206,7 +206,7 @@ export function SiteFooter({
         reviews: 'Reviews',
         lookup: 'Find my order',
         location: 'Made to order by our chocolatier',
-        description: 'Chocolate-first cakes, prepared in small batches and finished by hand in Melrose Park.',
+        description: 'Chocolate-first cakes made with chocolatier-grade couverture chocolate and finished by hand in Melrose Park.',
       }
 
   return (

@@ -160,9 +160,9 @@ test('cake generator uses the final per-page schema contract and real product We
     ['vanilla-fresh-cream-cake', { type: 'Product', price: 69, og: 'product', image: 'vanilla-cake-sydney.webp' }],
     ['buttercream-cake', { type: 'Product', price: 74, og: 'product', image: 'buttercream-cake-sydney.webp' }],
     ['chocolate-cupcakes', { type: 'Product', price: 31, og: 'product', image: 'chocolate-cupcakes-sydney.webp' }],
-    ['signature-gateau-au-chocolat', { type: 'Product', price: 45, og: 'product', image: 'chocolate-pound-cake-sydney.webp' }],
+    ['signature-gateau-au-chocolat', { type: 'Product', price: 45, og: 'product', image: 'signature-gateau-au-chocolat-sydney.webp' }],
     ['lemon-cake', { type: 'Product', price: 36, og: 'product', image: 'lemon-cake-sydney.webp' }],
-    ['brownie-cheesecake', { type: 'Product', price: 55, og: 'product', image: 'brownie-cheese-sydney.webp' }],
+    ['brownie-cheesecake', { type: 'Product', price: 55, og: 'product', image: 'brownie-cheesecake-sydney.webp' }],
   ])
 
   for (const [slug, expected] of expectations) {

@@ -49,6 +49,7 @@ export type CakeDetailImageKey =
   | 'pound-previous'
   | 'pound-hero'
   | 'cupcake-side'
+  | 'cupcake-detail'
   | 'cupcake-hero'
   | 'pave-side'
   | 'pave-quick-view'
@@ -68,12 +69,15 @@ export type CakeDetailImageKey =
   | 'vanilla-side'
   | 'vanilla-quick-view'
   | 'buttercream-side'
+  | 'buttercream-detail'
   | 'buttercream-quick-view'
   | 'signature-gateau-side'
+  | 'signature-gateau-detail'
   | 'signature-gateau-quick-view'
   | 'signature-gateau-previous'
   | 'signature-gateau-hero'
   | 'brownie-side'
+  | 'brownie-detail'
   | 'brownie-quick-view'
 
 export type CakeDetailSelection = {
@@ -116,10 +120,10 @@ const DETAIL_GALLERIES: Record<CakeCatalogId, readonly CakeDetailImageKey[]> = {
   cheesecake: ['cheesecake-side', 'cheesecake-quick-view', 'cheesecake-previous', 'cheesecake-hero'],
   'fresh-lemon-cupcakes': ['lemon-side', 'lemon-quick-view', 'lemon-previous', 'lemon-hero'],
   'vanilla-fresh-cream': ['vanilla-side', 'vanilla-quick-view'],
-  buttercream: ['buttercream-side', 'buttercream-quick-view'],
-  cupcake: ['cupcake-side', 'cupcake-hero'],
-  'signature-gateau': ['signature-gateau-side', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'],
-  'brownie-cheesecake': ['brownie-side', 'brownie-quick-view'],
+  buttercream: ['buttercream-side', 'buttercream-detail', 'buttercream-quick-view'],
+  cupcake: ['cupcake-side', 'cupcake-detail', 'cupcake-hero'],
+  'signature-gateau': ['signature-gateau-side', 'signature-gateau-detail', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'],
+  'brownie-cheesecake': ['brownie-side', 'brownie-detail', 'brownie-quick-view'],
 }
 
 const LEGACY_CAKE_DETAILS = {
@@ -150,7 +154,7 @@ const DETAIL_OPERATION_COPY: Record<Language, {
   accordions: readonly { title: string; body: string }[]
 }> = {
   en: {
-    trustPoints: ['Small-batch', 'Made to order', 'Melrose Park pick-up'],
+    trustPoints: ['Chocolatier-grade couverture', 'Made to order', 'Melrose Park pick-up'],
     accordions: [
       {
         title: 'How ordering works',
@@ -167,7 +171,7 @@ const DETAIL_OPERATION_COPY: Record<Language, {
     ],
   },
   ko: {
-    trustPoints: ['소량 제작', '주문 후 제작', 'Melrose Park 픽업'],
+    trustPoints: ['쇼콜라티에용 커버춰 초콜릿', '주문 후 제작', 'Melrose Park 픽업'],
     accordions: [
       {
         title: '주문 방법',

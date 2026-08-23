@@ -136,8 +136,9 @@ test('catalog cards expose separated Cupcake and Signature names in English and 
   assert.equal(english.find((card) => card.id === 'buttercream')?.isPhotoComingSoon, false)
   assert.equal(english.find((card) => card.id === 'buttercream')?.imagePath, '/products/buttercream-cake-sydney.webp')
   assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.isPhotoComingSoon, false)
-  assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.imagePath, '/products/brownie-cheese-sydney.webp')
+  assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.imagePath, '/products/brownie-cheesecake-sydney.webp')
   assert.equal(english.find((card) => card.id === 'cupcake')?.imagePath, '/products/chocolate-cupcakes-sydney.webp')
+  assert.equal(english.find((card) => card.id === 'signature-gateau')?.imagePath, '/products/signature-gateau-au-chocolat-sydney.webp')
   assert.deepEqual(
     english.map((card) => [card.id, card.priceLabel]),
     [

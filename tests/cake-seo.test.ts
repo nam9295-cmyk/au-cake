@@ -41,7 +41,7 @@ test('home and seven sale cake detail routes use AU self canonicals', () => {
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
   assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
-  assert.equal(config.description, 'Order small-batch cakes for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.00.')
+  assert.equal(config.description, 'Order cakes made with chocolatier-grade couverture chocolate for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.00.')
   assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList', 'FAQPage'])
   const organization = config.structuredData?.find((entry) => entry['@type'] === 'Organization')
   const faq = config.structuredData?.find((entry) => entry['@type'] === 'FAQPage')
@@ -194,10 +194,19 @@ test('Brownie Product publishes the supplied Brownie image with its actual dimen
   const config = getSeoConfig('/cakes/brownie-cheesecake')
   const product = config.structuredData?.find((entry) => entry['@type'] === 'Product')
   assert.ok(product)
-  const image = `${SITE_URL}/products/brownie-cheese-sydney.webp`
+  const image = `${SITE_URL}/products/brownie-cheesecake-sydney.webp`
   assert.equal(config.image, image)
   assert.equal(config.imageWidth, 1080)
   assert.equal(config.imageHeight, 1012)
+  assert.equal(product.image, image)
+})
+
+test('Signature Product publishes its descriptive canonical product image', () => {
+  const config = getSeoConfig('/cakes/signature-gateau-au-chocolat')
+  const product = config.structuredData?.find((entry) => entry['@type'] === 'Product')
+  assert.ok(product)
+  const image = `${SITE_URL}/products/signature-gateau-au-chocolat-sydney.webp`
+  assert.equal(config.image, image)
   assert.equal(product.image, image)
 })
 

@@ -36,7 +36,7 @@ test('HomePage owns its catalogue and hero asset dependencies', () => {
   assert.doesNotMatch(homeSource, /from '\.\.\/assets\/basquecheesecake\.webp'/)
   assert.match(homeSource, /<SiteHeader/)
   assert.match(homeSource, /<PickupLocationCard/)
-  assert.match(homeSource, /getPublicCakePage\('brownie-cheesecake'\)\?\.imagePath/)
+  assert.match(homeSource, /image:\s*'\/products\/brownie-cheese-sydney\.webp', label: 'Brownie Cheesecake'/)
   assert.match(homeSource, /getPublicCakePage\('vanilla-fresh-cream-cake'\)\?\.imagePath/)
 })
 

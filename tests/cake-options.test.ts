@@ -58,6 +58,15 @@ import {
   isCakePickupDateUnavailable,
 } from '../src/lib/class-utils.js'
 import { getProductFeatures, getProductText } from '../src/lib/i18n.js'
+import { normalizeAuDailyLimitText } from '../src/lib/legacy-settings.js'
+
+test('legacy AU small-batch settings copy is replaced without overwriting custom admin copy', () => {
+  assert.equal(
+    normalizeAuDailyLimitText('Small-batch cakes, limited daily availability'),
+    'Made to order with chocolatier-grade couverture chocolate',
+  )
+  assert.equal(normalizeAuDailyLimitText('Custom seasonal announcement'), 'Custom seasonal announcement')
+})
 
 test('AU cake chooser follows the final seven-product order and keeps Basque legacy-only', () => {
   assert.deepEqual(
@@ -720,7 +729,7 @@ test('AU cake confirmation message matches Jenny request copy', () => {
     weekdayClose: '17:00',
     weekendOpen: '10:00',
     weekendClose: '16:00',
-    dailyLimitText: 'Small-batch cakes, limited daily availability',
+    dailyLimitText: 'Made to order with chocolatier-grade couverture chocolate',
     reservationNotice: 'We will confirm availability after your request. Payment details and final confirmation will follow by message.',
     pickupNotice: 'Street pick-up near 1 Bundil Blvd, Melrose Park. There is a small playground and seating nearby. Parking can be limited, so Jenny will bring the cake down to you.',
     storeAddress: 'Street pick-up near 1 Bundil Blvd, Melrose Park. Small playground/seating nearby; Jenny will bring the cake down to you.',
