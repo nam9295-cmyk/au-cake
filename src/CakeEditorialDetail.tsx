@@ -70,7 +70,7 @@ export default function CakeEditorialDetail({
 
   return (
     <div className="cake-editorial-detail">
-      <section className="cake-editorial-facts" aria-label={isKorean ? '파베 케이크 핵심 정보' : 'Pavé cake quick facts'}>
+      <section className="cake-editorial-facts" aria-label={isKorean ? '케이크 핵심 정보' : 'Cake quick facts'}>
         <div className="cake-editorial-fact-grid">
           {editorial.quickFacts.map((fact, index) => (
             <article key={fact.title}>

@@ -5,6 +5,8 @@ export type CakeEditorialImageKey =
   | 'pave-side'
   | 'vanilla-side'
   | 'vanilla-quick-view'
+  | 'buttercream-side'
+  | 'buttercream-quick-view'
   | 'eiffel-chocolate'
 
 type EditorialCard = {
@@ -492,11 +494,221 @@ const VANILLA_EDITORIAL: Record<Language, CakeEditorialContent> = {
   },
 }
 
+const BUTTERCREAM_EDITORIAL: Record<Language, CakeEditorialContent> = {
+  en: {
+    quickFacts: [
+      {
+        title: 'Italian meringue',
+        body: 'The foundation of the buttercream finish.',
+      },
+      {
+        title: 'Real butter',
+        body: 'Blended into the finished meringue buttercream.',
+      },
+      {
+        title: 'Cocoa powder',
+        body: 'Added for a smooth chocolate finish.',
+      },
+      {
+        title: 'Made to order',
+        body: 'Prepared for your selected pick-up date.',
+      },
+    ],
+    lifestyle: {
+      eyebrow: 'MADE WITH REAL BUTTER & COCOA',
+      title: 'A BUTTERCREAM CAKE MADE FOR CELEBRATION',
+      body: 'Signature chocolate cake layers finished with Italian meringue chocolate buttercream and your selected cake colour.',
+    },
+    moments: [
+      {
+        title: 'Birthday centrepiece',
+        body: 'Choose a cake colour for the centre of the table.',
+      },
+      {
+        title: 'Anniversary moment',
+        body: 'A chocolate buttercream cake prepared for the occasion.',
+      },
+      {
+        title: 'Celebration gift',
+        body: 'Made to order with a colour detail chosen for the moment.',
+      },
+    ],
+    insideCake: {
+      eyebrow: 'Inside the cake',
+      title: 'ITALIAN MERINGUE CHOCOLATE BUTTERCREAM',
+      intro: 'We whip an Italian meringue until smooth, then blend in real butter and cocoa powder to create a silky chocolate buttercream with a soft, melt-in-the-mouth finish.',
+      items: [
+        'Signature chocolate cake — Our Signature Gâteau au Chocolat cake layers form the chocolate base.',
+        'Italian meringue buttercream — Egg whites and sugar are whipped into an Italian meringue before the butter is blended in.',
+        'Chocolate buttercream — Cocoa powder is blended into the finished buttercream for its chocolate finish.',
+      ],
+      imageKeys: ['buttercream-quick-view', 'buttercream-side'],
+    },
+    tasteProfile: {
+      eyebrow: 'Taste & texture',
+      title: 'Silky buttercream, smooth chocolate finish',
+      items: [
+        'Silky Italian meringue buttercream',
+        'Smooth chocolate finish',
+        'Soft, melt-in-the-mouth texture',
+      ],
+    },
+    ingredients: {
+      eyebrow: 'Ingredients & good to know',
+      title: 'Made with Italian meringue chocolate buttercream',
+      ingredientsLabel: 'Key ingredients',
+      allergenLabel: 'Allergen note',
+      ingredients: 'Made with our Signature Gâteau au Chocolat cake layers and Italian meringue chocolate buttercream prepared with butter, egg whites, sugar, vanilla extract and cocoa powder.',
+      allergens: 'Contains milk, egg and wheat (gluten).',
+      contact: 'Please contact us before ordering for someone with a food allergy.',
+    },
+    ordering: {
+      eyebrow: 'How ordering works',
+      title: 'A request, personally confirmed',
+      intro: 'Choose your cake and options here, then send your request through the existing order flow.',
+      steps: [
+        {
+          title: 'Choose your cake',
+          body: 'Select your cake and options, then choose Add to order.',
+        },
+        {
+          title: 'Jenny checks availability',
+          body: 'Send your request and Jenny will confirm availability for your selected date.',
+        },
+        {
+          title: 'Payment confirms the order',
+          body: 'Payment details are sent after availability is confirmed. Your order is confirmed once payment is complete.',
+        },
+      ],
+      paymentNote: 'No payment is taken on this detail page.',
+    },
+    giftPresentation: {
+      eyebrow: 'MADE FOR YOUR CELEBRATION',
+      title: 'CHOOSE A COLOUR FOR THE MOMENT',
+      body: 'Choose from the available cake colours when ordering and we’ll prepare the buttercream finish for your celebration.',
+      imageKeys: [],
+    },
+    relatedProductSlugs: [
+      'pave-chocolate-cake',
+      'vanilla-fresh-cream-cake',
+    ],
+    finalCta: {
+      eyebrow: 'Made to order in Sydney',
+      title: 'MAKE BUTTERCREAM PART OF YOUR NEXT CELEBRATION',
+      body: 'Choose your size and cake colour, then send the request when you’re ready.',
+    },
+  },
+  ko: {
+    quickFacts: [
+      {
+        title: '이탈리안 머랭',
+        body: '버터크림의 기본이 되는 머랭입니다.',
+      },
+      {
+        title: '버터 사용',
+        body: '완성된 머랭 버터크림에 버터를 더합니다.',
+      },
+      {
+        title: '코코아 파우더',
+        body: '부드러운 초콜릿 마무리를 더합니다.',
+      },
+      {
+        title: '주문 후 제작',
+        body: '선택한 픽업 날짜에 맞춰 준비합니다.',
+      },
+    ],
+    lifestyle: {
+      eyebrow: '버터와 코코아로 완성한 이탈리안 머랭 버터크림',
+      title: '기념일을 위해 완성하는 버터크림 케이크',
+      body: '시그니처 갸또 쇼콜라 시트에 이탈리안 머랭 초콜릿 버터크림을 더하고 선택한 케이크 컬러로 완성합니다.',
+    },
+    moments: [
+      {
+        title: '생일을 위한 메인 케이크',
+        body: '기념일 테이블의 중심에 어울리는 케이크 컬러를 선택하세요.',
+      },
+      {
+        title: '기념일을 위한 케이크',
+        body: '특별한 날에 어울리도록 준비하는 초콜릿 버터크림 케이크입니다.',
+      },
+      {
+        title: '마음을 전하는 선물',
+        body: '그 순간에 맞는 컬러 포인트를 골라 주문 후 제작합니다.',
+      },
+    ],
+    insideCake: {
+      eyebrow: '케이크 속 구성',
+      title: '이탈리안 머랭 초콜릿 버터크림',
+      intro: '이탈리안 머랭을 매끄럽게 올린 뒤 버터와 코코아 파우더를 더해, 입안에서 부드럽게 녹아드는 실키한 초콜릿 버터크림으로 완성합니다.',
+      items: [
+        '시그니처 초콜릿 케이크 — 베리굿의 시그니처 갸또 쇼콜라 시트를 사용합니다.',
+        '이탈리안 머랭 버터크림 — 흰자와 설탕으로 이탈리안 머랭을 만든 뒤 버터를 더해 부드럽게 완성합니다.',
+        '초콜릿 버터크림 — 완성된 버터크림에 코코아 파우더를 더해 초콜릿 버터크림으로 마무리합니다.',
+      ],
+      imageKeys: ['buttercream-quick-view', 'buttercream-side'],
+    },
+    tasteProfile: {
+      eyebrow: '맛과 식감',
+      title: '실키한 버터크림과 부드러운 초콜릿 마무리',
+      items: [
+        '실키한 이탈리안 머랭 버터크림',
+        '부드러운 초콜릿 마무리',
+        '입안에서 부드럽게 녹아드는 질감',
+      ],
+    },
+    ingredients: {
+      eyebrow: '재료와 주문 전 확인',
+      title: '이탈리안 머랭 초콜릿 버터크림으로 만듭니다',
+      ingredientsLabel: '주요 재료',
+      allergenLabel: '알레르기 안내',
+      ingredients: '시그니처 갸또 쇼콜라 시트와 버터, 흰자, 설탕, 바닐라 익스트랙, 코코아 파우더로 만든 이탈리안 머랭 초콜릿 버터크림을 사용합니다.',
+      allergens: '우유, 계란, 밀(글루텐)을 함유합니다.',
+      contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.',
+    },
+    ordering: {
+      eyebrow: '주문 방법',
+      title: 'Jenny가 직접 확인하는 주문',
+      intro: '케이크와 옵션을 선택해 기존 주문 요청 흐름으로 보내 주세요.',
+      steps: [
+        {
+          title: '케이크 선택',
+          body: '케이크와 옵션을 선택한 뒤 주문에 담기를 눌러 주세요.',
+        },
+        {
+          title: 'Jenny가 가능 여부 확인',
+          body: '요청을 보내면 선택한 날짜의 주문 가능 여부를 확인합니다.',
+        },
+        {
+          title: '결제 후 주문 확정',
+          body: '가능 여부 확인 후 결제 정보를 보내 드리며, 결제가 완료되면 주문이 확정됩니다.',
+        },
+      ],
+      paymentNote: '이 상세페이지에서는 지금 결제되지 않습니다.',
+    },
+    giftPresentation: {
+      eyebrow: '당신의 기념일을 위해',
+      title: '기념일에 맞는 케이크 컬러를 선택하세요',
+      body: '주문 시 제공되는 케이크 컬러 중 하나를 선택하면 기념일에 맞춰 버터크림 케이크를 준비합니다.',
+      imageKeys: [],
+    },
+    relatedProductSlugs: [
+      'pave-chocolate-cake',
+      'vanilla-fresh-cream-cake',
+    ],
+    finalCta: {
+      eyebrow: '시드니 주문 제작',
+      title: '다음 기념일을 버터크림 케이크와 함께',
+      body: '사이즈와 케이크 컬러를 선택한 뒤 준비되면 주문 요청을 보내주세요.',
+    },
+  },
+}
+
 export function getCakeEditorialBySlug(
   slug: string,
   language: Language,
 ): CakeEditorialContent | null {
   if (slug === 'pave-chocolate-cake') return PAVE_EDITORIAL[language]
   if (slug === 'vanilla-fresh-cream-cake') return VANILLA_EDITORIAL[language]
+  if (slug === 'buttercream-cake') return BUTTERCREAM_EDITORIAL[language]
   return null
 }
