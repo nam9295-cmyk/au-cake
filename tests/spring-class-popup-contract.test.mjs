@@ -24,11 +24,17 @@ test('Spring popup owns accessible modal, keyboard, focus, scroll and session di
   assert.match(popup, /window\.sessionStorage/)
   assert.match(popup, /dismissSpringClassPopup/)
   assert.match(popup, /isSpringClassCampaignActive/)
+  assert.match(popup, /copy\.courseOptions\.map/)
+  assert.match(popup, /copy\.discountNotes\.map/)
+  assert.match(popup, /Available class options/)
+  assert.match(popup, /Class booking discounts/)
 })
 
 test('Spring popup has isolated mobile-safe styles and respects reduced motion', () => {
   assert.match(css, /\.spring-class-popup-backdrop/)
   assert.match(css, /\.spring-class-popup-dialog/)
+  assert.match(css, /\.spring-class-popup-course-list/)
+  assert.match(css, /\.spring-class-popup-discount-list/)
   assert.match(css, /max-height:/)
   assert.match(css, /@media \(max-width:[\s\S]*\.spring-class-popup-dialog/)
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spring-class-popup-dialog/)

@@ -2307,6 +2307,57 @@ textarea {
   line-height: 1.4;
 }
 
+.spring-class-popup-course-list,
+.spring-class-popup-discount-list {
+  width: min(100%, 480px);
+  margin-right: auto;
+  margin-left: auto;
+  padding: 0;
+  list-style: none;
+}
+
+.spring-class-popup-course-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.spring-class-popup-course-list li {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.spring-class-popup-discount-list {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 16px;
+  color: var(--forest-deep);
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.spring-class-popup-discount-list li {
+  position: relative;
+  padding-left: 16px;
+}
+
+.spring-class-popup-discount-list li::before {
+  position: absolute;
+  top: 0.55em;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--berry-emphasis);
+  content: '';
+}
+
 .spring-class-popup-note {
   margin-bottom: 24px;
   color: var(--muted);
@@ -7926,6 +7977,19 @@ label.vanilla-point-color-card {
 .cake-detail-order-summary>strong {
   font-size: 22px;
   white-space: nowrap;
+}
+
+.cake-detail-packaging-discount {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+}
+
+.cake-detail-packaging-discount strong {
+  color: var(--forest-deep);
+  font-size: 12px;
 }
 
 .cake-detail-request {

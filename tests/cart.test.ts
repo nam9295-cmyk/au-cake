@@ -160,8 +160,28 @@ test('cart pricing keeps product subtotal separate and aggregates packaging afte
   assert.deepEqual(getCartEstimatedPricing(lines), {
     productSubtotalCents: 16500,
     selectedPackagingPieces: 18,
+    selectedPackagingProductSubtotalCents: 8600,
+    individualPackagingBaseFeeCents: 900,
+    individualPackagingDiscountCents: 0,
     individualPackagingFeeCents: 900,
     totalPriceCents: 17400,
+  })
+})
+
+test('cart makes selected Cupcake and Lemon packaging free when their combined product subtotal reaches AUD 100', () => {
+  const lines = [
+    ...addCartLine([], baseSelection({ productId: 'cupcake-dozen', cupcakeFinish: 'basic', individualPackaging: true })),
+    ...addCartLine([], baseSelection({ productId: 'fresh-lemon-cupcakes-8', individualPackaging: true })),
+  ]
+
+  assert.deepEqual(getCartEstimatedPricing(lines), {
+    productSubtotalCents: 10000,
+    selectedPackagingPieces: 20,
+    selectedPackagingProductSubtotalCents: 10000,
+    individualPackagingBaseFeeCents: 1000,
+    individualPackagingDiscountCents: 1000,
+    individualPackagingFeeCents: 0,
+    totalPriceCents: 10000,
   })
 })
 

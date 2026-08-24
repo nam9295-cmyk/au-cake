@@ -315,5 +315,5 @@ export function getCakeDetailSelectionEstimatedTotal(selection: CakeDetailSelect
   const productTotal = getCakeDetailSelectionTotal(selection)
   if (!selection.individualPackaging) return productTotal
   const pieces = getIndividualPackagingPieceCount(selection.productId, normalizeQuantity(selection.quantity))
-  return productTotal + calculateIndividualPackagingFeeCents(pieces) / 100
+  return productTotal + calculateIndividualPackagingFeeCents(pieces, Math.round(productTotal * 100)) / 100
 }

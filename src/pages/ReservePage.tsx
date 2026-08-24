@@ -410,6 +410,7 @@ export function ReservePage({
         productId: form.productId,
         quantity: form.quantity,
         individualPackaging: form.individualPackaging,
+        productSubtotalCents: Math.round(currentPrice * 100),
       }])
       const demoPricing = demoProductPricing
         ? {
@@ -543,12 +544,22 @@ export function ReservePage({
   const currentPrice = orderSelections
     ? orderSelections.reduce((sum, selection) => sum + getReservationPrice(selection.productId, selection, selection.quantity), 0)
     : singleSelectionPrice
-  const packagingPricing = getIndividualPackagingPricing(orderSelections || [{
-    productId: selectedProduct.id,
-    quantity: form.quantity,
-    individualPackaging: form.individualPackaging,
-  }])
+  const packagingPricing = orderSelections
+    ? getIndividualPackagingPricing(orderSelections.map((selection) => ({
+        productId: selection.productId,
+        quantity: selection.quantity,
+        individualPackaging: selection.individualPackaging,
+        productSubtotalCents: Math.round(getReservationPrice(selection.productId, selection, selection.quantity) * 100),
+      })))
+    : getIndividualPackagingPricing([{
+        productId: selectedProduct.id,
+        quantity: form.quantity,
+        individualPackaging: form.individualPackaging,
+        productSubtotalCents: Math.round(singleSelectionPrice * 100),
+      }])
   const packagingFee = packagingPricing.individualPackagingFeeCents / 100
+  const packagingBaseFee = packagingPricing.individualPackagingBaseFeeCents / 100
+  const packagingDiscount = packagingPricing.individualPackagingDiscountCents / 100
   const promoProductId = orderSelections?.find((selection) => getValidPromoCode(selection.productId, form.promoCode))?.productId || selectedProduct.id
   const promoEntry = getPromoEntryState(promoProductId, form.promoCode, undefined, knownReviewRewardPercent)
   const isManualCouponPending = promoEntry.kind === 'review-pending' && promoEntry.normalizedCode.startsWith('JENNIE')
@@ -700,12 +711,18 @@ export function ReservePage({
                 </dd>
               </div>
               {packagingPricing.selectedPackagingPieces > 0 && (
-                <div>
-                  <dt>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</dt>
-                  <dd>{packagingPricing.selectedPackagingPieces} {language === 'ko' ? '개' : 'pieces'} · {packagingPricing.individualPackagingFeeCents === 0
-                    ? 'FREE'
-                    : formatCurrency(packagingFee)}</dd>
-                </div>
+                <>
+                  <div>
+                    <dt>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</dt>
+                    <dd>{packagingPricing.selectedPackagingPieces} {language === 'ko' ? '개' : 'pieces'} · {formatCurrency(packagingBaseFee)}</dd>
+                  </div>
+                  {packagingPricing.individualPackagingDiscountCents > 0 && (
+                    <div>
+                      <dt>{language === 'ko' ? '포장 할인' : 'Packaging discount'}</dt>
+                      <dd>-{formatCurrency(packagingDiscount)} · FREE</dd>
+                    </div>
+                  )}
+                </>
               )}
               {!isMultiOrder && (<>
               {isFreshLemonCupcakeProduct(selectedProduct.id) && (
@@ -1008,8 +1025,8 @@ export function ReservePage({
                   <span className="choice-copy">
                     <strong>{language === 'ko' ? '개별 포장 추가' : 'Add individual packaging'}</strong>
                     <span>{language === 'ko'
-                      ? '개당 AUD 0.50 · 100개 이상 무료'
-                      : 'AUD 0.50 per piece · FREE for 100+ pieces'}</span>
+                      ? '개당 AUD 0.50 · 개별 포장 선택 상품 AUD 100.00 이상 무료'
+                      : 'AUD 0.50 per piece · FREE with AUD 100.00+ of individually packaged cupcakes or Lemon Cake'}</span>
                   </span>
                 </label>
               </fieldset>

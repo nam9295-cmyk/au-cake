@@ -74,6 +74,12 @@ export function SpringClassCampaignDialog({ language, onBook }: { language: Lang
           {copy.dates.map((date) => <li key={date}>{date}</li>)}
         </ul>
         <p className="spring-class-popup-sessions">{copy.sessions}</p>
+        <ul className="spring-class-popup-course-list" aria-label={language === 'ko' ? '수업 선택지' : 'Available class options'}>
+          {copy.courseOptions.map((course) => <li key={course}>{course}</li>)}
+        </ul>
+        <ul className="spring-class-popup-discount-list" aria-label={language === 'ko' ? '수업 할인' : 'Class booking discounts'}>
+          {copy.discountNotes.map((note) => <li key={note}>{note}</li>)}
+        </ul>
         <p className="spring-class-popup-note">{copy.note}</p>
         <div className="spring-class-popup-actions">
           <button type="button" className="spring-class-popup-primary" onClick={() => {

@@ -158,11 +158,11 @@ export function ClassReservePage({ navigate, onComplete, language, setLanguage, 
     if (!isClassSchoolYearAllowed(form.coursePlan, form.schoolYear)) return setError(form.coursePlan === 'basic' ? 'Please choose a school year from Kindy to Year 6.' : 'Advanced classes are available from Year 2 to Year 6.')
     if (!isValidPhone(phone)) return setError(`Please check the mobile number. ${marketConfig.copy.phoneHelp}`)
     if (!form.parentEmail.includes('@')) return setError('Please enter a valid email address.')
-    if (!isSpringClassBookingDateAllowed(form.classDate)) return setError('Please choose Saturday 3 or Saturday 10 October.')
+    if (!isSpringClassBookingDateAllowed(form.classDate)) return setError('Please choose Saturday 26 September, 3 October or 10 October.')
     if (selectedDateBooked) return setError('This date is already booked. Please choose another date.')
     if (!availableSessionTimes.includes(form.classTime as (typeof CLASS_SESSION_TIMES)[number])) return setError('Please choose an available class time.')
     if (form.coursePlan === 'basic-advanced-package') {
-      if (!isSpringClassBookingDateAllowed(form.advancedClassDate)) return setError('Please choose 3 or 10 October for the Advanced session.')
+      if (!isSpringClassBookingDateAllowed(form.advancedClassDate)) return setError('Please choose 26 September, 3 October or 10 October for the Advanced session.')
       if (advancedSelectedUnavailable || (form.advancedClassDate === form.classDate && form.advancedClassTime === form.classTime)) return setError('Please choose a different available Advanced session.')
     }
     if (partySize === 2 && (!form.secondChildName.trim() || !isClassSchoolYearAllowed('basic', form.secondChildSchoolYear))) return setError('Please enter Child 2 name and choose a school year from Kindy to Year 6.')
@@ -362,7 +362,7 @@ export function ClassReservePage({ navigate, onComplete, language, setLanguage, 
               <div className="class-package-session">
                 <h3>Advanced Spring Session · {getClassDurationMinutes('advanced', form.advancedExtensionMinutes)} minutes</h3>
                 <div className="class-field">
-                  <span>Advanced Date · 3 or 10 October</span>
+                  <span>Advanced Date · 26 September, 3 or 10 October</span>
                   <WeekendDatePicker
                     label="Advanced Date"
                     minDate={today}

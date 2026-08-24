@@ -24,8 +24,8 @@ test('kids class landing presents Basic, Advanced and the Spring campaign dates 
   assert.match(landing, /calloutSessions/)
   assert.doesNotMatch(landing, /school holiday|Holiday/)
   assert.doesNotMatch(landing, /Saturday and Sunday sessions|Weekend classes|Weekend spots/)
-  assert.match(campaign, /Saturday 3 & Saturday 10 October/)
-  assert.match(campaign, /10월 3일·10월 10일 토요일/)
+  assert.match(campaign, /Saturday 26 September · Saturday 3 & Saturday 10 October/)
+  assert.match(campaign, /9월 26일·10월 3일·10월 10일 토요일/)
   assert.match(landing, /Price Guide/)
 })
 
@@ -74,7 +74,7 @@ test('class Appwrite definitions include optional program audit fields and booke
 
 test('kids class public content stays canonical while writes remain server-authoritative', () => {
   const classes = publicContent.classes
-  assert.match(classes.description, /3 and 10 October 2026/i)
+  assert.match(classes.description, /26 September, 3 and 10 October 2026/i)
   assert.match(classes.description, /10:00, 13:00 and 16:00/)
   assert.match(classes.description, /Kindy/)
   assert.match(classes.description, /Years 2[–-]6/)

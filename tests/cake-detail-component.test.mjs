@@ -42,9 +42,16 @@ test('only Cupcakes and Lemon Cake expose the bilingual individual packaging cho
   assert.match(detailSource, /isIndividualPackagingEligibleProduct\(product\.id\)/)
   assert.match(detailSource, /Individual packaging/)
   assert.match(detailSource, /개별 포장/)
-  assert.match(detailSource, /AUD 0\.50 per piece · FREE for 100\+ pieces/)
+  assert.match(detailSource, /AUD 0\.50 per piece · FREE with AUD 100\.00\+ of individually packaged cupcakes or Lemon Cake/)
   assert.match(reserveSource, /isIndividualPackagingEligibleProduct\(selectedProduct\.id\)/)
   assert.match(reserveSource, /name="individualPackaging"/)
+})
+
+test('cake detail makes a free individual-packaging discount visible as a negative AUD amount before the final total', () => {
+  assert.match(detailSource, /individualPackagingDiscountCents/)
+  assert.match(detailSource, /Packaging discount/)
+  assert.match(detailSource, /포장 할인/)
+  assert.match(detailSource, /-\{formatCurrency\(individualPackagingDiscount/)
 })
 
 test('new cream-cake order forms hide retired flavour controls and share point colours with Buttercream', () => {

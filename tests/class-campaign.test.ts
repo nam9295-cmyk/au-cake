@@ -11,18 +11,21 @@ import {
   isSpringClassPopupDismissed,
 } from '../src/lib/class-campaign.js'
 
-test('Spring campaign selects only the next non-past October date in Sydney', () => {
-  assert.equal(getNextSpringClassDate(new Date('2026-08-23T00:00:00.000Z')), '2026-10-03')
+test('Spring campaign selects the next non-past scheduled date in Sydney', () => {
+  assert.equal(getNextSpringClassDate(new Date('2026-08-23T00:00:00.000Z')), '2026-09-26')
+  assert.equal(getNextSpringClassDate(new Date('2026-09-26T13:59:59.000Z')), '2026-09-26')
+  assert.equal(getNextSpringClassDate(new Date('2026-09-26T14:00:00.000Z')), '2026-10-03')
   assert.equal(getNextSpringClassDate(new Date('2026-10-03T13:59:59.000Z')), '2026-10-03')
   assert.equal(getNextSpringClassDate(new Date('2026-10-03T14:00:00.000Z')), '2026-10-10')
   assert.equal(getNextSpringClassDate(new Date('2026-10-10T13:00:00.000Z')), null)
 })
 
-test('Spring class booking allows exactly 3 and 10 October while the campaign is open', () => {
+test('Spring class booking allows the three scheduled Saturdays while the campaign is open', () => {
   const beforeCampaign = new Date('2026-08-23T00:00:00.000Z')
+  assert.equal(isSpringClassBookingDateAllowed('2026-09-26', beforeCampaign), true)
   assert.equal(isSpringClassBookingDateAllowed('2026-10-03', beforeCampaign), true)
   assert.equal(isSpringClassBookingDateAllowed('2026-10-10', beforeCampaign), true)
-  for (const value of ['2026-09-26', '2026-10-04', '2026-10-11', 'not-a-date']) {
+  for (const value of ['2026-09-27', '2026-10-04', '2026-10-11', 'not-a-date']) {
     assert.equal(isSpringClassBookingDateAllowed(value, beforeCampaign), false, value)
   }
   assert.equal(isSpringClassBookingDateAllowed('2026-10-03', new Date('2026-10-03T14:00:00.000Z')), false)
@@ -58,13 +61,22 @@ test('Spring campaign exposes the approved English and Korean customer copy', ()
     eyebrow: 'LIMITED SPRING CLASSES',
     title: 'SPRING VACATION CLASS BOOKING OPEN',
     body: 'Bookings are now open for two limited Saturday cake classes in Melrose Park.',
-    dates: ['Saturday 3 October', 'Saturday 10 October'],
+    dates: ['Saturday 26 September', 'Saturday 3 October', 'Saturday 10 October'],
     sessions: '10:00 · 13:00 · 16:00',
+    courseOptions: [
+      'Basic · Create Your Own Cake',
+      'Cupcakes & Pavé Chocolate',
+      'Advanced · 2-Tier Cake',
+    ],
+    discountNotes: [
+      'Returning students receive 5% off.',
+      'Book Basic + Advanced together and receive 5% off the base class fees.',
+    ],
     note: 'Private sessions · Maximum 2 children',
     primaryCta: 'Book a spring class',
     secondaryAction: 'Not now',
     calloutTitle: 'Spring vacation bookings open',
-    calloutDates: 'Saturday 3 & Saturday 10 October',
+    calloutDates: 'Saturday 26 September · Saturday 3 & Saturday 10 October',
     calloutSessions: 'Three sessions: 10:00 · 13:00 · 16:00',
     closed: 'Spring vacation class bookings are now closed.',
   })
@@ -72,13 +84,22 @@ test('Spring campaign exposes the approved English and Korean customer copy', ()
     eyebrow: '봄방학 한정 클래스',
     title: 'SPRING VACATION CLASS BOOKING OPEN',
     body: 'Melrose Park에서 진행하는 봄방학 토요일 케이크 클래스 예약이 열렸습니다.',
-    dates: ['10월 3일 토요일', '10월 10일 토요일'],
+    dates: ['9월 26일 토요일', '10월 3일 토요일', '10월 10일 토요일'],
     sessions: '10:00 · 13:00 · 16:00',
+    courseOptions: [
+      'Basic · 나만의 케이크 만들기',
+      '컵케이크 & 파베 초콜릿',
+      'Advanced · 2단 케이크',
+    ],
+    discountNotes: [
+      '재수강 학생 5% 할인',
+      'Basic + Advanced를 함께 예약하면 기본 수업료 5% 할인이 적용됩니다.',
+    ],
     note: '프라이빗 클래스 · 최대 2명',
     primaryCta: '봄방학 클래스 예약하기',
     secondaryAction: '나중에 보기',
     calloutTitle: '봄방학 클래스 예약 오픈',
-    calloutDates: '10월 3일·10월 10일 토요일',
+    calloutDates: '9월 26일·10월 3일·10월 10일 토요일',
     calloutSessions: '10:00 · 13:00 · 16:00 세 타임',
     closed: '봄방학 클래스 예약이 마감되었습니다.',
   })
