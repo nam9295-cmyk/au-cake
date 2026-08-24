@@ -66,7 +66,7 @@ test('Cupcake and Signature detail selections remain independent and normalize h
   assert.equal(cupcakes.partyDecorationCount, 0)
   assert.equal(cupcakes.cupcakeFinish, 'chocolate-buttercream')
   assert.equal(getCakeDetailSelectionTotal(cupcakes), 123)
-  assert.equal(getCakeDetailSelectionEstimatedTotal(cupcakes), 132)
+  assert.equal(getCakeDetailSelectionEstimatedTotal(cupcakes), 123)
   assert.equal(cupcakes.quantity, 3)
 
   const signature = createCakeDetailSelection('signature-gateau-au-chocolat')

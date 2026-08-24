@@ -18,7 +18,7 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
     ['Basic from Kindy', 'Kindy–Year 2 and Year 3–6 school groups'],
     ['Professional-style course', 'Real studio guidance from planning to finishing'],
     ['Basic and Advanced', 'Start with a 15cm cake or cupcakes, then progress to a 2-tier cake'],
-    ['Limited Saturday classes', '3 and 10 October 2026 with Jenny'],
+    ['Limited Saturday classes', '26 September, 3 and 10 October 2026 with Jenny'],
     ['Max 2 kids per session', 'Private small group focus'],
   ]
   const steps = [

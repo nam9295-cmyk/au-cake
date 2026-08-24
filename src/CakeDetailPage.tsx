@@ -33,12 +33,13 @@ import {
 import {
   createCakeDetailSelection,
   getCakeDetailBySlug,
+  getCakeDetailSelectionTotal,
   getCakeDetailSelectionEstimatedTotal,
   selectCakeDetailProduct,
   type CakeDetailImageKey,
   type CakeDetailSelection,
 } from './lib/cake-detail'
-import { isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
+import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
 import { getAuCakeCatalogCards, type CakeCatalogCard } from './lib/cake-catalog'
 import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-editorial'
 import { getProductText, type Language } from './lib/i18n'
@@ -228,6 +229,14 @@ export default function CakeDetailPage({
 
   const product = getProductById(selection.productId)
   const productText = getProductText(selection.productId, language)
+  const productTotal = getCakeDetailSelectionTotal(selection)
+  const individualPackagingPricing = getIndividualPackagingPricing([{
+    productId: selection.productId,
+    quantity: selection.quantity,
+    individualPackaging: selection.individualPackaging,
+    productSubtotalCents: Math.round(productTotal * 100),
+  }])
+  const individualPackagingDiscount = individualPackagingPricing.individualPackagingDiscountCents / 100
   const total = getCakeDetailSelectionEstimatedTotal(selection)
   const galleryCount = detail.gallery.length
   const currentImageKey = detail.gallery[Math.min(activeImage, Math.max(0, galleryCount - 1))]
@@ -518,8 +527,8 @@ export default function CakeDetailPage({
                 <span className="choice-copy">
                   <strong>{language === 'ko' ? '개별 포장 추가' : 'Add individual packaging'}</strong>
                   <span>{language === 'ko'
-                    ? '개당 AUD 0.50 · 100개 이상 무료'
-                    : 'AUD 0.50 per piece · FREE for 100+ pieces'}</span>
+                    ? '개당 AUD 0.50 · 개별 포장 선택 상품 AUD 100.00 이상 무료'
+                    : 'AUD 0.50 per piece · FREE with AUD 100.00+ of individually packaged cupcakes or Lemon Cake'}</span>
                 </span>
               </label>
             </fieldset>
@@ -552,6 +561,12 @@ export default function CakeDetailPage({
             <div>
               <span>{language === 'ko' ? '선택 상품' : 'Your selection'}</span>
               <strong>{productText.name}</strong>
+              {individualPackagingPricing.individualPackagingDiscountCents > 0 && (
+                <p className="cake-detail-packaging-discount">
+                  <span>{language === 'ko' ? '포장 할인' : 'Packaging discount'}</span>
+                  <strong>-{formatCurrency(individualPackagingDiscount)} · FREE</strong>
+                </p>
+              )}
             </div>
             <strong>{formatCurrency(total)}</strong>
           </div>

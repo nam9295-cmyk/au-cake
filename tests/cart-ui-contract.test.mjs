@@ -77,12 +77,18 @@ test('CartPage quantity and removal callbacks always receive the rendered line e
   assert.doesNotMatch(cartPageSource, /as Reservation/)
 })
 
-test('CartPage displays selected packaging pieces, fee, and total separately', () => {
+test('CartPage and reservation summary display selected packaging, its free discount, and the final total separately', () => {
   assert.match(cartPageSource, /getCartEstimatedPricing\(lines\)/)
   assert.match(cartPageSource, /Individual packaging/)
   assert.match(cartPageSource, /개별 포장/)
   assert.match(cartPageSource, /selectedPackagingPieces/)
+  assert.match(cartPageSource, /individualPackagingBaseFeeCents/)
+  assert.match(cartPageSource, /individualPackagingDiscountCents/)
   assert.match(cartPageSource, /individualPackagingFeeCents/)
+  assert.match(cartPageSource, /Packaging discount/)
+  assert.match(cartPageSource, /포장 할인/)
+  assert.match(reserveSource, /individualPackagingBaseFeeCents/)
+  assert.match(reserveSource, /individualPackagingDiscountCents/)
   assert.match(cartPageSource, /FREE/)
 })
 

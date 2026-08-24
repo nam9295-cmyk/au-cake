@@ -20,7 +20,7 @@ import {
 import { isValidPhone } from './utils.js'
 import { isActiveCakeOrderProductId, isStoredCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
 import {
-  INDIVIDUAL_PACKAGING_FREE_FROM_PIECES,
+  INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
   getIndividualPackagingPieceCount,
   isIndividualPackagingEligibleProduct,
@@ -644,7 +644,10 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
   const lineTotal = safeSum(orderLines.map((line) => line.totalPriceCents))
   const linePackagingPieces = safeSum(orderLines.map((line) => line.individualPackagingPieces || 0))
   const linePackagingFeeCents = safeSum(orderLines.map((line) => line.individualPackagingFeeCents || 0))
-  const expectedPackagingFeeCents = individualPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES
+  const selectedPackagingProductSubtotalCents = safeSum(
+    orderLines.filter((line) => line.individualPackaging === true).map((line) => line.subtotalCents),
+  )
+  const expectedPackagingFeeCents = selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
     ? 0
     : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
   const itemCount = safeSum(orderLines.map((line) => line.quantity))

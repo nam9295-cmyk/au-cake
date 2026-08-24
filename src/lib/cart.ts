@@ -93,7 +93,10 @@ export function getCartEstimatedSubtotal(lines: readonly CartLine[]) {
 
 export function getCartEstimatedPricing(lines: readonly CartLine[]) {
   const productSubtotalCents = Math.round(getCartEstimatedSubtotal(lines) * 100)
-  const packaging = getIndividualPackagingPricing(lines.map((line) => line.selection))
+  const packaging = getIndividualPackagingPricing(lines.map((line) => ({
+    ...line.selection,
+    productSubtotalCents: Math.round(getCakeDetailSelectionTotal(line.selection) * 100),
+  })))
   return {
     productSubtotalCents,
     ...packaging,

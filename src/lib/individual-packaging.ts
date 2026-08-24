@@ -1,16 +1,20 @@
 import type { ProductId } from './types.js'
 
 export const INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE = 50
-export const INDIVIDUAL_PACKAGING_FREE_FROM_PIECES = 100
+export const INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS = 10_000
 
 export type IndividualPackagingLine = {
   productId: ProductId
   quantity: number
   individualPackaging?: boolean
+  productSubtotalCents?: number
 }
 
 export type IndividualPackagingPricing = {
   selectedPackagingPieces: number
+  selectedPackagingProductSubtotalCents: number
+  individualPackagingBaseFeeCents: number
+  individualPackagingDiscountCents: number
   individualPackagingFeeCents: number
 }
 
@@ -34,19 +38,47 @@ export function getIndividualPackagingPieceCount(productId: ProductId, quantity:
   return Number.isSafeInteger(pieces) ? pieces : 0
 }
 
-export function calculateIndividualPackagingFeeCents(selectedPackagingPieces: number) {
+export function calculateIndividualPackagingBaseFeeCents(selectedPackagingPieces: number) {
   if (!Number.isSafeInteger(selectedPackagingPieces) || selectedPackagingPieces <= 0) return 0
-  if (selectedPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES) return 0
   return selectedPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
 }
 
+export function calculateIndividualPackagingFeeCents(
+  selectedPackagingPieces: number,
+  selectedPackagingProductSubtotalCents = 0,
+) {
+  const baseFeeCents = calculateIndividualPackagingBaseFeeCents(selectedPackagingPieces)
+  if (!baseFeeCents) return 0
+  return Number.isSafeInteger(selectedPackagingProductSubtotalCents)
+    && selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
+    ? 0
+    : baseFeeCents
+}
+
 export function getIndividualPackagingPricing(lines: readonly IndividualPackagingLine[]): IndividualPackagingPricing {
-  const selectedPackagingPieces = lines.reduce((pieces, line) => {
-    if (line.individualPackaging !== true) return pieces
-    return pieces + getIndividualPackagingPieceCount(line.productId, line.quantity)
-  }, 0)
+  const selectedLines = lines.filter((line) => line.individualPackaging === true && isIndividualPackagingEligibleProduct(line.productId))
+  const selectedPackagingPieces = selectedLines.reduce(
+    (pieces, line) => pieces + getIndividualPackagingPieceCount(line.productId, line.quantity),
+    0,
+  )
+  const selectedPackagingProductSubtotalCents = selectedLines.reduce(
+    (subtotalCents, line) => subtotalCents + (
+      Number.isSafeInteger(line.productSubtotalCents) && line.productSubtotalCents! >= 0
+        ? line.productSubtotalCents!
+        : 0
+    ),
+    0,
+  )
+  const individualPackagingBaseFeeCents = calculateIndividualPackagingBaseFeeCents(selectedPackagingPieces)
+  const individualPackagingFeeCents = calculateIndividualPackagingFeeCents(
+    selectedPackagingPieces,
+    selectedPackagingProductSubtotalCents,
+  )
   return {
     selectedPackagingPieces,
-    individualPackagingFeeCents: calculateIndividualPackagingFeeCents(selectedPackagingPieces),
+    selectedPackagingProductSubtotalCents,
+    individualPackagingBaseFeeCents,
+    individualPackagingDiscountCents: individualPackagingBaseFeeCents - individualPackagingFeeCents,
+    individualPackagingFeeCents,
   }
 }

@@ -138,7 +138,8 @@ test('class API allows Basic from Kindy but keeps Advanced and packages at Year 
   }, { now }))
 })
 
-test('class API accepts only the two Spring dates and rejects invalid extensions and multi-child advanced/package requests', () => {
+test('class API accepts the three scheduled Spring dates and rejects invalid extensions and multi-child advanced/package requests', () => {
+  assert.doesNotThrow(() => buildClassReservation({ ...classInput, classDate: '2026-09-26' }, { now }))
   assert.doesNotThrow(() => buildClassReservation({ ...classInput, classDate: '2026-10-03' }, { now }))
   assert.doesNotThrow(() => buildClassReservation({ ...classInput, classDate: '2026-10-10' }, { now }))
   assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-07-13' }, { now }))
@@ -823,18 +824,41 @@ test('cake API authoritatively prices individual packaging after product pricing
   ])
 })
 
-test('cake API makes aggregate selected packaging free at 100 pieces', () => {
+test('cake API makes aggregate selected Cupcake and Lemon packaging free at AUD 100 before discounts', () => {
   const reservation = buildCakeReservation(multiCakeInput([
-    { productId: 'fresh-lemon-cupcakes-16', individualPackaging: true, quantity: 5 },
+    { productId: 'cupcake-dozen', cupcakeFinish: 'basic', individualPackaging: true, quantity: 1 },
     { productId: 'fresh-lemon-cupcakes-8', individualPackaging: true, quantity: 1 },
-    { productId: 'fresh-lemon-cupcakes-12', individualPackaging: true, quantity: 1 },
   ]), { now, reservationNumber: 'VG-C-AU-PACKAGING-FREE' })
   const { lines } = parseStoredOrderLines(reservation)
 
-  assert.equal(reservation.individualPackagingPieces, 100)
+  assert.equal(reservation.subtotalCents, 10000)
+  assert.equal(reservation.individualPackagingPieces, 20)
   assert.equal(reservation.individualPackagingFeeCents, 0)
   assert.equal(reservation.totalPriceCents, reservation.subtotalCents)
-  assert.deepEqual(lines.map((line) => line.individualPackagingFeeCents), [0, 0, 0])
+  assert.deepEqual(lines.map((line) => line.individualPackagingFeeCents), [0, 0])
+})
+
+test('stored orders retain a valid legacy piece-based packaging fee for historical display', () => {
+  const current = buildCakeReservation(multiCakeInput([
+    { productId: 'cupcake-dozen', cupcakeFinish: 'basic', individualPackaging: true, quantity: 2 },
+  ]), { now, reservationNumber: 'VG-C-AU-PACKAGING-LEGACY' })
+  const currentLine = parseStoredOrderLines(current).lines[0]
+  const legacyLine = {
+    ...currentLine,
+    individualPackagingFeeCents: 1200,
+    totalPriceCents: 12200,
+  }
+  const historical = {
+    ...current,
+    individualPackagingFeeCents: 1200,
+    totalPriceCents: 12200,
+    totalPrice: 122,
+    orderLinesJson: serializeStoredOrderLines([legacyLine]),
+  }
+
+  assert.equal(current.individualPackagingFeeCents, 0)
+  assert.doesNotThrow(() => parseStoredOrderLines(historical))
+  assert.equal(parseStoredOrderLines(historical).lines[0].individualPackagingFeeCents, 1200)
 })
 
 test('cake API rejects invalid or ineligible packaging and ignores forged single-order fees', () => {

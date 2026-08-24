@@ -28,7 +28,7 @@ export const CUPCAKE_PACK_SIZE = 12
 export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 export const INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE = 50
-export const INDIVIDUAL_PACKAGING_FREE_FROM_PIECES = 100
+export const INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS = 10_000
 const CUPCAKE_PRODUCT_IDS = new Set(['cupcake-half-dozen', 'cupcake-dozen'])
 const CUPCAKE_FINISH_PRICES_CENTS = {
   'cupcake-half-dozen': {
@@ -74,6 +74,21 @@ const INDIVIDUAL_PACKAGING_PRODUCT_PIECES = Object.freeze({
   'fresh-lemon-cupcakes-12': 12,
   'fresh-lemon-cupcakes-16': 16,
 })
+
+function calculateIndividualPackagingFeeCents(individualPackagingPieces, selectedPackagingProductSubtotalCents) {
+  if (!Number.isSafeInteger(individualPackagingPieces) || individualPackagingPieces <= 0) return 0
+  const baseFeeCents = individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+  return selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
+    ? 0
+    : baseFeeCents
+}
+
+function calculateLegacyIndividualPackagingFeeCents(individualPackagingPieces) {
+  if (!Number.isSafeInteger(individualPackagingPieces) || individualPackagingPieces <= 0) return 0
+  return individualPackagingPieces >= 100
+    ? 0
+    : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+}
 const PROMOTIONS = [
   { code: PROMO_CODE, expiresOn: CHOCOLATE_PROMO_EXPIRES_ON, productIds: CHEESECAKE_PROMO_PRODUCT_IDS },
   { code: LEMON_PROMO_CODE, expiresOn: LEMONI_PROMO_EXPIRES_ON, productIds: FRESH_LEMON_CUPCAKE_PRODUCT_IDS },
@@ -97,7 +112,7 @@ export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const SPRING_CLASS_CAMPAIGN_2026 = Object.freeze({
   enabled: true,
   timezone: MARKET_TIMEZONE,
-  allowedDates: Object.freeze(['2026-10-03', '2026-10-10']),
+  allowedDates: Object.freeze(['2026-09-26', '2026-10-03', '2026-10-10']),
   sessionTimes: Object.freeze([...CLASS_SESSION_TIMES]),
   visibleThrough: '2026-10-10',
 })
@@ -791,9 +806,13 @@ function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
       ? INDIVIDUAL_PACKAGING_PRODUCT_PIECES[line.productId] * line.quantity
       : 0
   ), 0)
-  const individualPackagingFeeCents = individualPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES
-    ? 0
-    : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+  const selectedPackagingProductSubtotalCents = baseLines.reduce((sum, line) => sum + (
+    line.individualPackaging ? line.subtotalCents : 0
+  ), 0)
+  const individualPackagingFeeCents = calculateIndividualPackagingFeeCents(
+    individualPackagingPieces,
+    selectedPackagingProductSubtotalCents,
+  )
   const pricedLines = baseLines.map((line, index) => {
     const { individualPackaging, ...legacyCompatibleLine } = line
     const lineDiscountPercent = eligibleIndexes.includes(index) ? discountPercent : 0
@@ -1229,10 +1248,20 @@ export function parseStoredOrderLines(document) {
     const individualPackagingPieces = currentPackagingDocument
       ? payload.lines.reduce((sum, line) => sum + line.individualPackagingPieces, 0)
       : 0
-    const expectedPackagingFeeCents = individualPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES
-      ? 0
-      : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
-    if (currentPackagingDocument && payload.lines.reduce((sum, line) => sum + line.individualPackagingFeeCents, 0) !== expectedPackagingFeeCents) {
+    const selectedPackagingProductSubtotalCents = currentPackagingDocument
+      ? payload.lines.reduce((sum, line) => sum + (line.individualPackaging ? line.subtotalCents : 0), 0)
+      : 0
+    const expectedPackagingFeeCents = calculateIndividualPackagingFeeCents(
+      individualPackagingPieces,
+      selectedPackagingProductSubtotalCents,
+    )
+    const legacyPackagingFeeCents = calculateLegacyIndividualPackagingFeeCents(individualPackagingPieces)
+    const storedPackagingFeeCents = currentPackagingDocument
+      ? payload.lines.reduce((sum, line) => sum + line.individualPackagingFeeCents, 0)
+      : 0
+    if (currentPackagingDocument
+      && storedPackagingFeeCents !== expectedPackagingFeeCents
+      && storedPackagingFeeCents !== legacyPackagingFeeCents) {
       throw new Error('invalid aggregate packaging fee')
     }
     const subtotalCents = payload.lines.reduce((sum, line) => sum + line.subtotalCents, 0)
@@ -1249,7 +1278,7 @@ export function parseStoredOrderLines(document) {
       orderItemCount,
       ...(currentPackagingDocument ? {
         individualPackagingPieces,
-        individualPackagingFeeCents: expectedPackagingFeeCents,
+        individualPackagingFeeCents: storedPackagingFeeCents,
       } : {}),
     }
     for (const [key, expected] of Object.entries(expectedDocumentValues)) {

@@ -30,32 +30,35 @@ test('individual packaging pieces use authoritative pack sizes and line quantity
   assert.equal(getIndividualPackagingPieceCount('pave-cake', 5), 0)
 })
 
-test('individual packaging fee has exact 99, 100 and 101-piece boundaries', () => {
-  assert.equal(calculateIndividualPackagingFeeCents(0), 0)
-  assert.equal(calculateIndividualPackagingFeeCents(99), 4950)
-  assert.equal(calculateIndividualPackagingFeeCents(100), 0)
-  assert.equal(calculateIndividualPackagingFeeCents(101), 0)
+test('individual packaging becomes free at an AUD 100 selected packaging product subtotal, not a piece count', () => {
+  assert.equal(calculateIndividualPackagingFeeCents(0, 0), 0)
+  assert.equal(calculateIndividualPackagingFeeCents(12, 9_999), 600)
+  assert.equal(calculateIndividualPackagingFeeCents(12, 10_000), 0)
+  assert.equal(calculateIndividualPackagingFeeCents(12, 10_001), 0)
 })
 
-test('valid selected order lines aggregate packaging across the reservation', () => {
-  const pricing98 = getIndividualPackagingPricing([
-    { productId: 'fresh-lemon-cupcakes-16', quantity: 5, individualPackaging: true },
-    { productId: 'cupcake-half-dozen', quantity: 3, individualPackaging: true },
-    { productId: 'pave-cake', quantity: 5, individualPackaging: true },
+test('selected Cupcake and Lemon lines aggregate their product subtotal for the free packaging rule', () => {
+  const paid = getIndividualPackagingPricing([
+    { productId: 'cupcake-dozen', quantity: 1, individualPackaging: true, productSubtotalCents: 5_500 },
+    { productId: 'fresh-lemon-cupcakes-8', quantity: 1, individualPackaging: false, productSubtotalCents: 4_500 },
   ])
-  const pricing100 = getIndividualPackagingPricing([
-    { productId: 'fresh-lemon-cupcakes-16', quantity: 5, individualPackaging: true },
-    { productId: 'fresh-lemon-cupcakes-8', quantity: 1, individualPackaging: true },
-    { productId: 'fresh-lemon-cupcakes-12', quantity: 1, individualPackaging: true },
-  ])
-  const pricing102 = getIndividualPackagingPricing([
-    { productId: 'fresh-lemon-cupcakes-16', quantity: 5, individualPackaging: true },
-    { productId: 'fresh-lemon-cupcakes-8', quantity: 2, individualPackaging: true },
-    { productId: 'cupcake-half-dozen', quantity: 1, individualPackaging: true },
-    { productId: 'cupcake-dozen', quantity: 2, individualPackaging: false },
+  const free = getIndividualPackagingPricing([
+    { productId: 'cupcake-dozen', quantity: 1, individualPackaging: true, productSubtotalCents: 5_500 },
+    { productId: 'fresh-lemon-cupcakes-8', quantity: 1, individualPackaging: true, productSubtotalCents: 4_500 },
   ])
 
-  assert.deepEqual(pricing98, { selectedPackagingPieces: 98, individualPackagingFeeCents: 4900 })
-  assert.deepEqual(pricing100, { selectedPackagingPieces: 100, individualPackagingFeeCents: 0 })
-  assert.deepEqual(pricing102, { selectedPackagingPieces: 102, individualPackagingFeeCents: 0 })
+  assert.deepEqual(paid, {
+    selectedPackagingPieces: 12,
+    selectedPackagingProductSubtotalCents: 5_500,
+    individualPackagingBaseFeeCents: 600,
+    individualPackagingDiscountCents: 0,
+    individualPackagingFeeCents: 600,
+  })
+  assert.deepEqual(free, {
+    selectedPackagingPieces: 20,
+    selectedPackagingProductSubtotalCents: 10_000,
+    individualPackagingBaseFeeCents: 1_000,
+    individualPackagingDiscountCents: 1_000,
+    individualPackagingFeeCents: 0,
+  })
 })

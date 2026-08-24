@@ -34,7 +34,7 @@ import {
 } from './constants'
 import type { ReservationPriceOptions } from './constants'
 import {
-  INDIVIDUAL_PACKAGING_FREE_FROM_PIECES,
+  INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
   getIndividualPackagingPieceCount,
   isIndividualPackagingEligibleProduct,
@@ -441,6 +441,7 @@ function validateOrderPricing(
   },
   eligibleIndexes: number[],
   invalid: () => never,
+  allowLegacyPackagingFee = false,
 ) {
   const canonicalKeys = lines.map(orderLineIdentityKey)
   if (new Set(canonicalKeys).size !== canonicalKeys.length) invalid()
@@ -471,7 +472,14 @@ function validateOrderPricing(
   const totalPriceCents = safeOrderSum(lines.map((line) => line.totalPriceCents), invalid)
   const individualPackagingPieces = safeOrderSum(lines.map((line) => line.individualPackagingPieces || 0), invalid)
   const individualPackagingFeeCents = safeOrderSum(lines.map((line) => line.individualPackagingFeeCents || 0), invalid)
-  const expectedPackagingFeeCents = individualPackagingPieces >= INDIVIDUAL_PACKAGING_FREE_FROM_PIECES
+  const selectedPackagingProductSubtotalCents = safeOrderSum(
+    lines.filter((line) => line.individualPackaging === true).map((line) => line.subtotalCents),
+    invalid,
+  )
+  const expectedPackagingFeeCents = selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
+    ? 0
+    : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+  const legacyPackagingFeeCents = individualPackagingPieces >= 100
     ? 0
     : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
   if (
@@ -481,7 +489,8 @@ function validateOrderPricing(
     || aggregates.totalPriceCents !== aggregates.subtotalCents - aggregates.discountCents + individualPackagingFeeCents
     || (aggregates.individualPackagingPieces || 0) !== individualPackagingPieces
     || (aggregates.individualPackagingFeeCents || 0) !== individualPackagingFeeCents
-    || individualPackagingFeeCents !== expectedPackagingFeeCents
+    || (individualPackagingFeeCents !== expectedPackagingFeeCents
+      && (!allowLegacyPackagingFee || individualPackagingFeeCents !== legacyPackagingFeeCents))
   ) invalid()
 }
 
@@ -755,7 +764,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
     discountCents,
     totalPriceCents,
     ...(hasPackagingFields ? { individualPackagingPieces, individualPackagingFeeCents } : {}),
-  }, eligibleIndexes, invalidStoredOrder)
+  }, eligibleIndexes, invalidStoredOrder, true)
   const exactTotal = totalPriceCents / 100
   if (document.totalPrice !== exactTotal && document.totalPrice !== Math.round(exactTotal)) invalidStoredOrder()
 

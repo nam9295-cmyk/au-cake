@@ -156,6 +156,7 @@ export default function CartPage({
         lineTotal: '상품 합계',
         subtotal: '예상 소계',
         packaging: '개별 포장',
+        packagingDiscount: '포장 할인',
         total: '예상 합계',
         continue: '주문 신청 계속하기',
         multiNotice: cakeOrderLinesAvailable === null
@@ -174,6 +175,7 @@ export default function CartPage({
         lineTotal: 'Line total',
         subtotal: 'Estimated subtotal',
         packaging: 'Individual packaging',
+        packagingDiscount: 'Packaging discount',
         total: 'Estimated total',
         continue: 'Continue to reservation',
         multiNotice: cakeOrderLinesAvailable === null
@@ -257,12 +259,18 @@ export default function CartPage({
                 <strong>{formatCurrency(pricing.productSubtotalCents / 100)}</strong>
               </div>
               {pricing.selectedPackagingPieces > 0 && (
-                <div className="cart-summary-total">
-                  <span>{copy.packaging} · {pricing.selectedPackagingPieces} {language === 'ko' ? '개' : 'pieces'}</span>
-                  <strong>{pricing.individualPackagingFeeCents === 0
-                    ? 'FREE'
-                    : formatCurrency(pricing.individualPackagingFeeCents / 100)}</strong>
-                </div>
+                <>
+                  <div className="cart-summary-total">
+                    <span>{copy.packaging} · {pricing.selectedPackagingPieces} {language === 'ko' ? '개' : 'pieces'}</span>
+                    <strong>{formatCurrency(pricing.individualPackagingBaseFeeCents / 100)}</strong>
+                  </div>
+                  {pricing.individualPackagingDiscountCents > 0 && (
+                    <div className="cart-summary-total">
+                      <span>{copy.packagingDiscount}</span>
+                      <strong>-{formatCurrency(pricing.individualPackagingDiscountCents / 100)} · FREE</strong>
+                    </div>
+                  )}
+                </>
               )}
               <div className="cart-summary-total">
                 <span>{copy.total}</span>
