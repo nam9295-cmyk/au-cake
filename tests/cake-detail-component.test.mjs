@@ -67,12 +67,13 @@ test('English cake service notes use the canonical lowercase brand', () => {
   assert.doesNotMatch(detailSource, /Verygood service notes/)
 })
 
-test('Pave uses the editorial detail after the protected Hero while other cakes keep the existing post-Hero sections', () => {
+test('editorial-enabled cakes use the shared detail after the protected Hero while other cakes keep the existing post-Hero sections', () => {
   assert.match(detailSource, /getCakeEditorialBySlug\(slug, language\)/)
   assert.match(detailSource, /editorial \? \([\s\S]*<CakeEditorialDetail/)
   assert.match(detailSource, /cake-detail-trust[\s\S]*cake-detail-story[\s\S]*KoreanCakeReviewsSection[\s\S]*cake-detail-accordion[\s\S]*cake-detail-other/)
   assert.match(editorialSource, /import KoreanCakeReviewsSection from '.\/KoreanCakeReviewsSection'/)
   assert.match(editorialSource, /<KoreanCakeReviewsSection slug=\{slug\} language=\{language\} \/>/)
+  assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail/)
 })
 
 test('Pave editorial reuses live catalogue cards and the existing add-to-order callbacks', () => {
@@ -90,6 +91,9 @@ test('Pave editorial reuses live catalogue cards and the existing add-to-order c
 test('editorial styles remain isolated from protected detail and operational controls', () => {
   assert.match(cssSource, /\.cake-editorial-/)
   assert.match(cssSource, /@media \(max-width: 760px\)[\s\S]*\.cake-editorial-/)
+  assert.match(editorialSource, /const hasGiftImages = editorial\.giftPresentation\.imageKeys\.length > 0/)
+  assert.match(editorialSource, /cake-editorial-gift' \+ \(hasGiftImages \? '' : ' is-text-only'\)/)
+  assert.match(cssSource, /\.cake-editorial-gift\.is-text-only\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s)
   assert.match(cssSource, /\.cake-editorial-gift-images img\s*\{[^}]*height:\s*auto/s)
   assert.match(cssSource, /\.cake-editorial-related-grid img\s*\{[^}]*height:\s*auto/s)
   assert.doesNotMatch(editorialSource, /isIndividualPackagingEligibleProduct|getCakeDetailSelectionEstimatedTotal|useCart/)

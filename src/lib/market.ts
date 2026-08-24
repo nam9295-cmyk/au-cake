@@ -374,7 +374,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'vanilla-fresh-cream-cake': {
         id: 'vanilla-fresh-cream-cake',
         name: 'Vanilla Fresh Cream Cake',
-        description: 'Our Signature Gâteau au Chocolat layers are filled with vanilla fresh cream made with 100% fresh milk and real vanilla bean. The natural vanilla bean specks are visible throughout the cream.',
+        description: 'Our Signature Gâteau au Chocolat layers are filled with vanilla fresh cream made with real vanilla bean. Natural vanilla bean specks are visible throughout the cream.',
         price: 69,
         priceNote: 'Choose a size · Vanilla fresh cream with real vanilla bean',
         usesCacaoOptions: false,
@@ -585,7 +585,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     },
     productCardFeatures: {
       'pave-cake': ['Four layers of rich chocolate cake', 'Filled with smooth pave chocolate ganache', 'Dense, chocolate-forward finish', '6" · 7.5" · 9"'],
-      'vanilla-fresh-cream-cake': ['Signature Gâteau au Chocolat layers', 'Vanilla fresh cream made with 100% fresh milk', 'Real vanilla bean with visible vanilla bean specks', '6" · 7.5" · 9"'],
+      'vanilla-fresh-cream-cake': ['Signature Gâteau au Chocolat layers', 'Vanilla fresh cream with real vanilla bean', 'Real vanilla bean with visible vanilla bean specks', '6" · 7.5" · 9"'],
       'buttercream-cake': ['Signature Gâteau au Chocolat layers', 'Proudly made with organic cocoa, fresh milk and chocolatier-grade couverture chocolate.', 'Organic cocoa for a deep, intense chocolate taste', 'Fresh milk', 'Chocolatier-grade couverture chocolate', 'Choose a cake colour'],
       'pound-cake': ['Rectangular gâteau au chocolat', 'Fixed gâteau size', 'Basic, extra chocolate, or vanilla cream finish'],
       'cupcake-half-dozen': ['Half dozen · 6 cupcakes', 'One finish for the whole box', 'Basic, Vanilla Fresh Cream, or Chocolate Buttercream'],

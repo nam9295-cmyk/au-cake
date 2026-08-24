@@ -130,6 +130,14 @@ const editorialImages: Record<CakeEditorialImageKey, { src: string; width: numbe
     src: detailImages['pave-side'],
     ...detailImageDimensions['pave-side'],
   },
+  'vanilla-side': {
+    src: detailImages['vanilla-side'],
+    ...detailImageDimensions['vanilla-side'],
+  },
+  'vanilla-quick-view': {
+    src: detailImages['vanilla-quick-view'],
+    ...detailImageDimensions['vanilla-quick-view'],
+  },
   'eiffel-chocolate': {
     src: eiffelChocolateImg,
     width: 1000,

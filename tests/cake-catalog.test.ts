@@ -176,7 +176,7 @@ test('canonical Pave and cream-cake statements match the selectable AU products'
     ['dark'],
   )
   assert.match(vanilla?.description || '', /Signature Gâteau au Chocolat/)
-  assert.match(vanilla?.description || '', /100% fresh milk/)
+  assert.doesNotMatch(vanilla?.description || '', /100% fresh milk/)
   assert.match(vanilla?.description || '', /real vanilla bean/)
   assert.doesNotMatch(vanilla?.description || '', /Triple berry|Nutella/)
   assert.deepEqual(

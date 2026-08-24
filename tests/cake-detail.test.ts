@@ -8,6 +8,7 @@ import {
   selectCakeDetailProduct,
 } from '../src/lib/cake-detail.js'
 import type { CakeDetailSelection } from '../src/lib/cake-detail.js'
+import { getAuCakeCatalogCards } from '../src/lib/cake-catalog.js'
 import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 
 test('seven public sale slugs resolve to independent reusable detail contracts', () => {
@@ -39,6 +40,22 @@ test('seven public sale slugs resolve to independent reusable detail contracts',
   assert.equal(details[2]?.isPhotoComingSoon, false)
   assert.equal(details[6]?.isPhotoComingSoon, false)
   assert.equal(getCakeDetailBySlug('not-a-cake', 'en'), null)
+})
+
+test('sale detail badges mirror the first three Quick View features', () => {
+  for (const language of ['en', 'ko'] as const) {
+    for (const card of getAuCakeCatalogCards(language)) {
+      const detail = getCakeDetailBySlug(card.slug, language)
+      assert.ok(detail, card.slug)
+      assert.deepEqual(detail.trustPoints, card.features.slice(0, 3), card.slug)
+    }
+  }
+
+  assert.deepEqual(getCakeDetailBySlug('vanilla-fresh-cream-cake', 'en')?.trustPoints, [
+    'Signature Gâteau au Chocolat layers',
+    'Vanilla fresh cream with real vanilla bean',
+    'Real vanilla bean with visible vanilla bean specks',
+  ])
 })
 
 test('Cupcake and Signature detail selections remain independent and normalize hidden options', () => {

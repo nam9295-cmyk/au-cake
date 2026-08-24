@@ -3,6 +3,8 @@ import type { Language } from './i18n.js'
 export type CakeEditorialImageKey =
   | 'pave-quick-view'
   | 'pave-side'
+  | 'vanilla-side'
+  | 'vanilla-quick-view'
   | 'eiffel-chocolate'
 
 type EditorialCard = {
@@ -31,6 +33,8 @@ type EditorialLifestyle = {
 type EditorialIngredients = {
   eyebrow: string
   title: string
+  ingredientsLabel: string
+  allergenLabel: string
   ingredients: string
   allergens: string
   contact: string
@@ -132,6 +136,8 @@ const PAVE_EDITORIAL: Record<Language, CakeEditorialContent> = {
     ingredients: {
       eyebrow: 'Ingredients & good to know',
       title: 'Made with carefully selected ingredients',
+      ingredientsLabel: 'Ingredients',
+      allergenLabel: 'Allergen note',
       ingredients: 'Made with 57.9% dark couverture chocolate, fresh cream, cocoa powder, butter, eggs, milk and wheat flour.',
       allergens: 'Contains milk, egg and wheat (gluten).',
       contact: 'Please contact us before ordering for someone with a food allergy.',
@@ -233,6 +239,8 @@ const PAVE_EDITORIAL: Record<Language, CakeEditorialContent> = {
     ingredients: {
       eyebrow: '재료와 주문 전 확인',
       title: '엄선한 재료로 만듭니다',
+      ingredientsLabel: '재료',
+      allergenLabel: '알레르기 안내',
       ingredients: '57.9% 다크 커버춰 초콜릿, 생크림, 코코아 파우더, 버터, 계란, 우유, 밀가루를 사용합니다.',
       allergens: '우유, 계란, 밀(글루텐)을 함유합니다.',
       contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.',
@@ -275,10 +283,220 @@ const PAVE_EDITORIAL: Record<Language, CakeEditorialContent> = {
   },
 }
 
+const VANILLA_EDITORIAL: Record<Language, CakeEditorialContent> = {
+  en: {
+    quickFacts: [
+      {
+        title: 'Signature Gâteau layers',
+        body: 'Chocolate cake layers for the base of every slice.',
+      },
+      {
+        title: 'Vanilla fresh cream',
+        body: 'Made with real vanilla bean.',
+      },
+      {
+        title: 'Real vanilla bean',
+        body: 'Natural vanilla bean specks remain visible.',
+      },
+      {
+        title: 'Made to order',
+        body: 'Prepared for your selected pick-up date.',
+      },
+    ],
+    lifestyle: {
+      eyebrow: 'A classic celebration',
+      title: 'A CLASSIC CELEBRATION, FINISHED WITH REAL VANILLA',
+      body: 'Signature chocolate cake layers meet vanilla fresh cream made with real vanilla bean for a celebration cake with a familiar, elegant finish.',
+    },
+    moments: [
+      {
+        title: 'Birthday centrepiece',
+        body: 'A chocolate-and-vanilla celebration cake made for the centre of the table.',
+      },
+      {
+        title: 'Anniversary moment',
+        body: 'A classic combination for celebrating a thoughtful moment together.',
+      },
+      {
+        title: 'Thoughtful gift',
+        body: 'Made to order with real vanilla bean for a cake that feels considered and personal.',
+      },
+    ],
+    insideCake: {
+      eyebrow: 'Inside the cake',
+      title: 'Chocolate cake, finished with real vanilla',
+      intro: 'Three details that define every slice.',
+      items: [
+        'Signature chocolate cake — Our Signature Gâteau au Chocolat cake layers form the chocolate base.',
+        'Vanilla fresh cream — Made with real vanilla bean.',
+        'Real vanilla bean — Natural vanilla bean specks remain visible throughout the cream.',
+      ],
+      imageKeys: ['vanilla-quick-view', 'vanilla-side'],
+    },
+    tasteProfile: {
+      eyebrow: 'Taste & texture',
+      title: 'Chocolate cake, vanilla fresh cream',
+      items: [
+        'Signature chocolate cake layers',
+        'Vanilla fresh cream with real vanilla bean',
+        'Real vanilla bean visible throughout the cream',
+      ],
+    },
+    ingredients: {
+      eyebrow: 'Ingredients & good to know',
+      title: 'Made with signature cake layers and real vanilla bean',
+      ingredientsLabel: 'Key ingredients',
+      allergenLabel: 'Allergen note',
+      ingredients: 'Made with our Signature Gâteau au Chocolat cake layers—prepared with butter, eggs, milk, cocoa and wheat flour—and vanilla fresh cream with real vanilla bean.',
+      allergens: 'Contains milk, egg and wheat (gluten).',
+      contact: 'Please contact us before ordering for someone with a food allergy.',
+    },
+    ordering: {
+      eyebrow: 'How ordering works',
+      title: 'A request, personally confirmed',
+      intro: 'Choose your cake and options here, then send your request through the existing order flow.',
+      steps: [
+        {
+          title: 'Choose your cake',
+          body: 'Select your cake and options, then choose Add to order.',
+        },
+        {
+          title: 'Jenny checks availability',
+          body: 'Send your request and Jenny will confirm availability for your selected date.',
+        },
+        {
+          title: 'Payment confirms the order',
+          body: 'Payment details are sent after availability is confirmed. Your order is confirmed once payment is complete.',
+        },
+      ],
+      paymentNote: 'No payment is taken on this detail page.',
+    },
+    giftPresentation: {
+      eyebrow: 'Made for your moment',
+      title: 'A PERSONAL TOUCH FOR YOUR CELEBRATION',
+      body: 'Choose the available colour detail when ordering, and we’ll prepare your Vanilla Fresh Cream Cake to suit the moment.',
+      imageKeys: [],
+    },
+    relatedProductSlugs: [
+      'pave-chocolate-cake',
+      'buttercream-cake',
+    ],
+    finalCta: {
+      eyebrow: 'Made to order in Sydney',
+      title: 'MAKE VANILLA PART OF YOUR NEXT CELEBRATION',
+      body: 'Choose your size and colour detail, then send the request when you’re ready.',
+    },
+  },
+  ko: {
+    quickFacts: [
+      {
+        title: '시그니처 갸또 쇼콜라 시트',
+        body: '한 조각의 기본이 되는 시그니처 초콜릿 케이크입니다.',
+      },
+      {
+        title: '바닐라 생크림',
+        body: '실제 바닐라빈을 넣어 만듭니다.',
+      },
+      {
+        title: '실제 바닐라빈',
+        body: '크림 속에 자연스러운 바닐라빈 점이 보입니다.',
+      },
+      {
+        title: '주문 후 제작',
+        body: '선택한 픽업 날짜에 맞춰 준비합니다.',
+      },
+    ],
+    lifestyle: {
+      eyebrow: '클래식한 기념일 케이크',
+      title: '실제 바닐라빈으로 완성한 클래식한 기념일 케이크',
+      body: '시그니처 갸또 쇼콜라 시트에 실제 바닐라빈을 넣은 바닐라 생크림을 더해 익숙하면서도 특별한 기념일 케이크로 완성합니다.',
+    },
+    moments: [
+      {
+        title: '생일을 위한 메인 케이크',
+        body: '초콜릿과 바닐라의 클래식한 조합으로 생일 테이블의 중심을 완성합니다.',
+      },
+      {
+        title: '기념일을 위한 케이크',
+        body: '함께하는 특별한 순간에 잘 어울리는 초콜릿과 바닐라의 조합입니다.',
+      },
+      {
+        title: '마음을 전하는 선물',
+        body: '실제 바닐라빈을 사용해 주문 후 제작하는 정성스러운 케이크입니다.',
+      },
+    ],
+    insideCake: {
+      eyebrow: '케이크 속 구성',
+      title: '초콜릿 케이크와 실제 바닐라빈',
+      intro: '한 조각을 완성하는 세 가지 요소입니다.',
+      items: [
+        '시그니처 초콜릿 케이크 — 베리굿의 시그니처 갸또 쇼콜라 시트를 사용합니다.',
+        '바닐라 생크림 — 실제 바닐라빈을 넣어 만듭니다.',
+        '실제 바닐라빈 — 크림 속 작은 점들은 실제 바닐라빈의 자연스러운 흔적입니다.',
+      ],
+      imageKeys: ['vanilla-quick-view', 'vanilla-side'],
+    },
+    tasteProfile: {
+      eyebrow: '맛과 식감',
+      title: '초콜릿 케이크와 바닐라 생크림',
+      items: [
+        '시그니처 갸또 쇼콜라 시트',
+        '실제 바닐라빈을 넣은 바닐라 생크림',
+        '크림에 보이는 실제 바닐라빈',
+      ],
+    },
+    ingredients: {
+      eyebrow: '재료와 주문 전 확인',
+      title: '시그니처 시트와 실제 바닐라빈으로 만듭니다',
+      ingredientsLabel: '주요 재료',
+      allergenLabel: '알레르기 안내',
+      ingredients: '버터, 계란, 우유, 코코아, 밀가루로 만든 시그니처 갸또 쇼콜라 시트와 실제 바닐라빈을 넣은 바닐라 생크림을 사용합니다.',
+      allergens: '우유, 계란, 밀(글루텐)을 함유합니다.',
+      contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.',
+    },
+    ordering: {
+      eyebrow: '주문 방법',
+      title: 'Jenny가 직접 확인하는 주문',
+      intro: '케이크와 옵션을 선택해 기존 주문 요청 흐름으로 보내 주세요.',
+      steps: [
+        {
+          title: '케이크 선택',
+          body: '케이크와 옵션을 선택한 뒤 주문에 담기를 눌러 주세요.',
+        },
+        {
+          title: 'Jenny가 가능 여부 확인',
+          body: '요청을 보내면 선택한 날짜의 주문 가능 여부를 확인합니다.',
+        },
+        {
+          title: '결제 후 주문 확정',
+          body: '가능 여부 확인 후 결제 정보를 보내 드리며, 결제가 완료되면 주문이 확정됩니다.',
+        },
+      ],
+      paymentNote: '이 상세페이지에서는 지금 결제되지 않습니다.',
+    },
+    giftPresentation: {
+      eyebrow: '당신의 순간을 위해',
+      title: '기념일에 더하는 작은 맞춤 포인트',
+      body: '주문 시 제공되는 컬러 옵션을 선택하면 바닐라 생크림 케이크를 그 순간에 맞게 준비합니다.',
+      imageKeys: [],
+    },
+    relatedProductSlugs: [
+      'pave-chocolate-cake',
+      'buttercream-cake',
+    ],
+    finalCta: {
+      eyebrow: '시드니 주문 제작',
+      title: '다음 기념일을 바닐라 케이크와 함께',
+      body: '사이즈와 컬러 옵션을 선택한 뒤 준비되면 주문 요청을 보내주세요.',
+    },
+  },
+}
+
 export function getCakeEditorialBySlug(
   slug: string,
   language: Language,
 ): CakeEditorialContent | null {
-  if (slug !== 'pave-chocolate-cake') return null
-  return PAVE_EDITORIAL[language]
+  if (slug === 'pave-chocolate-cake') return PAVE_EDITORIAL[language]
+  if (slug === 'vanilla-fresh-cream-cake') return VANILLA_EDITORIAL[language]
+  return null
 }
