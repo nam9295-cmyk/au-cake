@@ -130,6 +130,30 @@ const editorialImages: Record<CakeEditorialImageKey, { src: string; width: numbe
     src: detailImages['pave-side'],
     ...detailImageDimensions['pave-side'],
   },
+  'vanilla-side': {
+    src: detailImages['vanilla-side'],
+    ...detailImageDimensions['vanilla-side'],
+  },
+  'vanilla-quick-view': {
+    src: detailImages['vanilla-quick-view'],
+    ...detailImageDimensions['vanilla-quick-view'],
+  },
+  'buttercream-side': {
+    src: detailImages['buttercream-side'],
+    ...detailImageDimensions['buttercream-side'],
+  },
+  'buttercream-quick-view': {
+    src: detailImages['buttercream-quick-view'],
+    ...detailImageDimensions['buttercream-quick-view'],
+  },
+  'cupcake-side': {
+    src: detailImages['cupcake-side'],
+    ...detailImageDimensions['cupcake-side'],
+  },
+  'cupcake-detail': {
+    src: detailImages['cupcake-detail'],
+    ...detailImageDimensions['cupcake-detail'],
+  },
   'eiffel-chocolate': {
     src: eiffelChocolateImg,
     width: 1000,

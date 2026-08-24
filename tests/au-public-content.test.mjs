@@ -54,7 +54,7 @@ test('AU public product copy and price summaries use the approved copy and two-d
   const lemon = cakePages['lemon-cake']
 
   assert.match(vanilla.description, /Signature Gâteau au Chocolat/)
-  assert.match(vanilla.description, /100% fresh milk/)
+  assert.doesNotMatch(vanilla.description, /100% fresh milk/)
   assert.match(vanilla.description, /real vanilla bean/)
   assert.match(vanilla.description, /vanilla bean specks/)
   assert.equal(vanilla.optionSummary, 'Choose a size · Vanilla fresh cream with real vanilla bean')

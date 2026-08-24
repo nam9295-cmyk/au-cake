@@ -9420,6 +9420,21 @@ label.vanilla-point-color-card {
   align-items: center;
 }
 
+.cake-editorial-gift.is-text-only {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+.cake-editorial-gift.is-text-only .cake-editorial-gift-copy {
+  width: min(100%, 680px);
+  text-align: center;
+}
+
+.cake-editorial-gift.is-text-only .cake-editorial-heading > p:last-child {
+  margin-right: auto;
+  margin-left: auto;
+}
+
 .cake-editorial-gift-copy {
   padding-left: 0;
 }

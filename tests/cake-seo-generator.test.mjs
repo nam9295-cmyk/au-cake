@@ -205,7 +205,8 @@ test('cake generator uses the final per-page schema contract and real product We
   assert.match(paveHtml, /Choose a size · dark chocolate only/)
   assert.doesNotMatch(paveHtml, /milk chocolate/i)
   assert.match(vanillaHtml, /Signature Gâteau au Chocolat/)
-  assert.match(vanillaHtml, /100% fresh milk/)
+  assert.doesNotMatch(vanillaHtml, /100% fresh milk/)
+  assert.match(vanillaHtml, /real vanilla bean/)
   assert.match(vanillaHtml, /products\/vanilla-cake-sydney\.webp/)
 })
 
@@ -290,7 +291,7 @@ test('llms text exposes only grounded public catalogue and ordering facts', asyn
   assert.match(llms, /^# verygood chocolate Sydney/m)
   assert.match(llms, /Choose a size · dark chocolate only/)
   assert.doesNotMatch(llms, /dark or milk|milk chocolate/i)
-  assert.match(llms, /vanilla fresh cream made with 100% fresh milk and real vanilla bean/i)
+  assert.match(llms, /vanilla fresh cream made with real vanilla bean/i)
   assert.match(llms, /chocolatier-grade couverture chocolate/)
   assert.match(llms, /freshly squeezed lemon juice/)
   assert.match(llms, /From AUD 31\.00/)

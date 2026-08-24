@@ -151,15 +151,15 @@ test('Vanilla Fresh Cream Cake uses Signature Gâteau layers and real vanilla fr
     const text = getProductText(vanillaFreshCreamCakeId, language)
     const features = getProductFeatures(vanillaFreshCreamCakeId, language)
     assert.match(text.description, /Signature Gâteau au Chocolat|시그니처 갸또 쇼콜라/)
-    assert.match(text.description, /100% fresh milk|100% 신선한 우유/)
+    assert.doesNotMatch(text.description, /100% fresh milk|100% 신선한 우유/)
     assert.match(text.description, /real vanilla bean|실제 바닐라빈/i)
     assert.match(text.description, /vanilla bean specks|작은 점/)
     assert.doesNotMatch(text.description, /Triple berry|Nutella|트리플베리|누텔라/)
     assert.equal(text.description.includes('cm'), false)
     assert.equal(text.priceNote.includes('cm'), false)
     assert.deepEqual(features, language === 'en'
-      ? ['Signature Gâteau au Chocolat layers', 'Vanilla fresh cream made with 100% fresh milk', 'Real vanilla bean with visible vanilla bean specks', '6" · 7.5" · 9"']
-      : ['시그니처 갸또 쇼콜라 시트', '100% 신선한 우유로 만든 바닐라 생크림', '눈에 보이는 실제 바닐라빈', '6" · 7.5" · 9" 사이즈'])
+      ? ['Signature Gâteau au Chocolat layers', 'Vanilla fresh cream with real vanilla bean', 'Real vanilla bean with visible vanilla bean specks', '6" · 7.5" · 9"']
+      : ['시그니처 갸또 쇼콜라 시트', '실제 바닐라빈을 넣은 바닐라 생크림', '눈에 보이는 실제 바닐라빈', '6" · 7.5" · 9" 사이즈'])
   }
 })
 

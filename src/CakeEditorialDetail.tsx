@@ -65,11 +65,12 @@ export default function CakeEditorialDetail({
 }: CakeEditorialDetailProps) {
   const isKorean = language === 'ko'
   const lifestyleImage = editorial.lifestyle.lifestyleImage
+  const hasGiftImages = editorial.giftPresentation.imageKeys.length > 0
   const canonicalOrdering = detailAccordions[0]?.body
 
   return (
     <div className="cake-editorial-detail">
-      <section className="cake-editorial-facts" aria-label={isKorean ? '파베 케이크 핵심 정보' : 'Pavé cake quick facts'}>
+      <section className="cake-editorial-facts" aria-label={isKorean ? '케이크 핵심 정보' : 'Cake quick facts'}>
         <div className="cake-editorial-fact-grid">
           {editorial.quickFacts.map((fact, index) => (
             <article key={fact.title}>
@@ -180,12 +181,12 @@ export default function CakeEditorialDetail({
         <div className="cake-editorial-info-grid">
           <article>
             <span>01</span>
-            <h3>{isKorean ? '재료' : 'Ingredients'}</h3>
+            <h3>{editorial.ingredients.ingredientsLabel}</h3>
             <p>{editorial.ingredients.ingredients}</p>
           </article>
           <article>
             <span>02</span>
-            <h3>{isKorean ? '알레르기 안내' : 'Allergen note'}</h3>
+            <h3>{editorial.ingredients.allergenLabel}</h3>
             <p>{editorial.ingredients.allergens}</p>
             <p>{editorial.ingredients.contact}</p>
           </article>
@@ -221,7 +222,7 @@ export default function CakeEditorialDetail({
         </div>
       </section>
 
-      <section className="cake-editorial-gift" aria-labelledby="cake-editorial-gift-title">
+      <section className={'cake-editorial-gift' + (hasGiftImages ? '' : ' is-text-only')} aria-labelledby="cake-editorial-gift-title">
         <div className="cake-editorial-gift-copy">
           <EditorialHeading
             eyebrow={editorial.giftPresentation.eyebrow}
@@ -230,22 +231,24 @@ export default function CakeEditorialDetail({
             id="cake-editorial-gift-title"
           />
         </div>
-        <div className="cake-editorial-gift-images">
-          {editorial.giftPresentation.imageKeys.map((imageKey) => {
-            const image = images[imageKey]
-            return (
-              <img
-                src={image.src}
-                alt=""
-                width={image.width}
-                height={image.height}
-                loading="lazy"
-                decoding="async"
-                key={imageKey}
-              />
-            )
-          })}
-        </div>
+        {hasGiftImages && (
+          <div className="cake-editorial-gift-images">
+            {editorial.giftPresentation.imageKeys.map((imageKey) => {
+              const image = images[imageKey]
+              return (
+                <img
+                  src={image.src}
+                  alt=""
+                  width={image.width}
+                  height={image.height}
+                  loading="lazy"
+                  decoding="async"
+                  key={imageKey}
+                />
+              )
+            })}
+          </div>
+        )}
       </section>
 
       <section className="cake-editorial-related" aria-labelledby="cake-editorial-related-title">

@@ -6,6 +6,7 @@ const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'ut
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const detailSource = await readFile(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
 const editorialSource = await readFile(new URL('../src/CakeEditorialDetail.tsx', import.meta.url), 'utf8').catch(() => '')
+const editorialDataSource = await readFile(new URL('../src/lib/cake-editorial.ts', import.meta.url), 'utf8')
 const reserveSource = await readFile(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const reviewSource = await readFile(new URL('../src/KoreanCakeReviewsSection.tsx', import.meta.url), 'utf8')
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
@@ -67,12 +68,15 @@ test('English cake service notes use the canonical lowercase brand', () => {
   assert.doesNotMatch(detailSource, /Verygood service notes/)
 })
 
-test('Pave uses the editorial detail after the protected Hero while other cakes keep the existing post-Hero sections', () => {
+test('editorial-enabled cakes use the shared detail after the protected Hero while other cakes keep the existing post-Hero sections', () => {
   assert.match(detailSource, /getCakeEditorialBySlug\(slug, language\)/)
   assert.match(detailSource, /editorial \? \([\s\S]*<CakeEditorialDetail/)
   assert.match(detailSource, /cake-detail-trust[\s\S]*cake-detail-story[\s\S]*KoreanCakeReviewsSection[\s\S]*cake-detail-accordion[\s\S]*cake-detail-other/)
   assert.match(editorialSource, /import KoreanCakeReviewsSection from '.\/KoreanCakeReviewsSection'/)
   assert.match(editorialSource, /<KoreanCakeReviewsSection slug=\{slug\} language=\{language\} \/>/)
+  assert.match(editorialDataSource, /buttercream-cake/)
+  assert.match(editorialDataSource, /chocolate-cupcakes/)
+  assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail|ButtercreamDetailPage|ButtercreamEditorialDetail|CupcakeDetailPage|CupcakeEditorialDetail/)
 })
 
 test('Pave editorial reuses live catalogue cards and the existing add-to-order callbacks', () => {
@@ -90,6 +94,9 @@ test('Pave editorial reuses live catalogue cards and the existing add-to-order c
 test('editorial styles remain isolated from protected detail and operational controls', () => {
   assert.match(cssSource, /\.cake-editorial-/)
   assert.match(cssSource, /@media \(max-width: 760px\)[\s\S]*\.cake-editorial-/)
+  assert.match(editorialSource, /const hasGiftImages = editorial\.giftPresentation\.imageKeys\.length > 0/)
+  assert.match(editorialSource, /cake-editorial-gift' \+ \(hasGiftImages \? '' : ' is-text-only'\)/)
+  assert.match(cssSource, /\.cake-editorial-gift\.is-text-only\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s)
   assert.match(cssSource, /\.cake-editorial-gift-images img\s*\{[^}]*height:\s*auto/s)
   assert.match(cssSource, /\.cake-editorial-related-grid img\s*\{[^}]*height:\s*auto/s)
   assert.doesNotMatch(editorialSource, /isIndividualPackagingEligibleProduct|getCakeDetailSelectionEstimatedTotal|useCart/)

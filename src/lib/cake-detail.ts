@@ -242,7 +242,7 @@ export function getCakeDetailBySlug(slug: string, language: Language): CakeDetai
     defaultProductId: entry.defaultProductId,
     gallery: DETAIL_GALLERIES[entry.id],
     isPhotoComingSoon: entry.isPhotoComingSoon,
-    trustPoints: operations.trustPoints,
+    trustPoints: card.features.slice(0, 3),
     accordions: operations.accordions,
   }
 }
