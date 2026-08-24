@@ -75,7 +75,8 @@ test('editorial-enabled cakes use the shared detail after the protected Hero whi
   assert.match(editorialSource, /import KoreanCakeReviewsSection from '.\/KoreanCakeReviewsSection'/)
   assert.match(editorialSource, /<KoreanCakeReviewsSection slug=\{slug\} language=\{language\} \/>/)
   assert.match(editorialDataSource, /buttercream-cake/)
-  assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail|ButtercreamDetailPage|ButtercreamEditorialDetail/)
+  assert.match(editorialDataSource, /chocolate-cupcakes/)
+  assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail|ButtercreamDetailPage|ButtercreamEditorialDetail|CupcakeDetailPage|CupcakeEditorialDetail/)
 })
 
 test('Pave editorial reuses live catalogue cards and the existing add-to-order callbacks', () => {

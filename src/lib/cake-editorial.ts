@@ -7,6 +7,8 @@ export type CakeEditorialImageKey =
   | 'vanilla-quick-view'
   | 'buttercream-side'
   | 'buttercream-quick-view'
+  | 'cupcake-side'
+  | 'cupcake-detail'
   | 'eiffel-chocolate'
 
 type EditorialCard = {
@@ -703,6 +705,215 @@ const BUTTERCREAM_EDITORIAL: Record<Language, CakeEditorialContent> = {
   },
 }
 
+const CUPCAKES_EDITORIAL: Record<Language, CakeEditorialContent> = {
+  en: {
+    quickFacts: [
+      {
+        title: 'Signature chocolate cake',
+        body: 'The chocolate base shared by every cupcake in the box.',
+      },
+      {
+        title: 'Three finishes',
+        body: 'Choose Basic, Vanilla Fresh Cream or Chocolate Buttercream.',
+      },
+      {
+        title: 'Half dozen or dozen',
+        body: 'Select the box size that suits the occasion.',
+      },
+      {
+        title: 'Individual packaging available',
+        body: 'Choose it in the existing order options when needed.',
+      },
+    ],
+    lifestyle: {
+      eyebrow: 'MADE FOR SHARING',
+      title: 'A BOX OF CHOCOLATE CUPCAKES, FINISHED YOUR WAY',
+      body: 'Start with our signature chocolate cupcake and choose the finish that suits your celebration—Basic, Vanilla Fresh Cream or Chocolate Buttercream.',
+    },
+    moments: [
+      {
+        title: 'Birthday table',
+        body: 'Easy to share around the table without slicing a whole cake.',
+      },
+      {
+        title: 'Party box',
+        body: 'Choose a finish and pack size to suit a small celebration or a larger gathering.',
+      },
+      {
+        title: 'Thoughtful gift',
+        body: 'A chocolate cupcake box that can also be individually packaged when needed.',
+      },
+    ],
+    insideCake: {
+      eyebrow: 'Choose your finish',
+      title: 'CHOOSE YOUR FINISH',
+      intro: 'Select one finish for the whole box.',
+      items: [
+        'Basic — Choose the current Basic finish for the whole box.',
+        'Vanilla Fresh Cream — Vanilla fresh cream made with 100% fresh milk and real vanilla bean.',
+        'Chocolate Buttercream — Italian meringue chocolate buttercream made with real butter and cocoa powder.',
+      ],
+      imageKeys: ['cupcake-side', 'cupcake-detail'],
+    },
+    tasteProfile: {
+      eyebrow: 'Taste & texture',
+      title: 'Chocolate cupcakes, three ways to finish',
+      items: [
+        'Signature chocolate cupcake',
+        'Vanilla fresh cream with real vanilla bean',
+        'Silky Italian meringue chocolate buttercream',
+      ],
+    },
+    ingredients: {
+      eyebrow: 'Ingredients & good to know',
+      title: 'Signature chocolate cupcakes, finished to order',
+      ingredientsLabel: 'Key ingredients',
+      allergenLabel: 'Allergen note',
+      ingredients: 'Our signature chocolate cupcakes are made with butter, eggs, milk, cocoa and wheat flour. Vanilla Fresh Cream is made with 100% fresh milk and real vanilla bean. Chocolate Buttercream is Italian meringue buttercream made with real butter and cocoa powder.',
+      allergens: 'Contains milk, egg and wheat (gluten).',
+      contact: 'Please contact us before ordering for someone with a food allergy.',
+    },
+    ordering: {
+      eyebrow: 'How ordering works',
+      title: 'A request, personally confirmed',
+      intro: 'Choose your box, finish and any packaging option, then send your request through the existing order flow.',
+      steps: [
+        {
+          title: 'Choose your box',
+          body: 'Select Half Dozen or Dozen and your preferred finish.',
+        },
+        {
+          title: 'Add packaging if needed',
+          body: 'Choose Individual Packaging when required.',
+        },
+        {
+          title: 'Send your request',
+          body: 'Jenny checks availability and sends payment details before the order is confirmed.',
+        },
+      ],
+      paymentNote: 'No payment is taken on this detail page.',
+    },
+    giftPresentation: {
+      eyebrow: 'READY TO SHARE — OR WRAP INDIVIDUALLY',
+      title: 'PACK THEM FOR THE WAY YOU’RE CELEBRATING',
+      body: 'Choose Individual Packaging when you need cupcakes prepared separately for gifting, events or easy sharing.',
+      imageKeys: [],
+    },
+    relatedProductSlugs: [
+      'lemon-cake',
+      'buttercream-cake',
+    ],
+    finalCta: {
+      eyebrow: 'Made to order in Sydney',
+      title: 'BUILD YOUR CUPCAKE BOX',
+      body: 'Choose your pack, finish and packaging options, then add it to your order.',
+    },
+  },
+  ko: {
+    quickFacts: [
+      {
+        title: '시그니처 초콜릿 케이크',
+        body: '박스의 모든 컵케이크에 사용하는 초콜릿 베이스입니다.',
+      },
+      {
+        title: '3가지 마감',
+        body: 'Basic, 바닐라 생크림 또는 초콜릿 버터크림을 선택합니다.',
+      },
+      {
+        title: '6개 또는 12개 구성',
+        body: '기념일에 맞는 박스 구성을 선택하세요.',
+      },
+      {
+        title: '개별 포장 선택 가능',
+        body: '필요한 경우 기존 주문 옵션에서 선택할 수 있습니다.',
+      },
+    ],
+    lifestyle: {
+      eyebrow: '함께 나누기 좋은 케이크',
+      title: '취향에 맞게 고르는 초콜릿 컵케이크 박스',
+      body: '시그니처 초콜릿 컵케이크에 Basic, Vanilla Fresh Cream, Chocolate Buttercream 중 원하는 마감을 선택해 기념일에 맞는 박스로 준비합니다.',
+    },
+    moments: [
+      {
+        title: '생일 테이블',
+        body: '홀케이크를 자르지 않아도 하나씩 나누기 좋은 컵케이크입니다.',
+      },
+      {
+        title: '파티 박스',
+        body: '원하는 마감과 수량 구성을 선택해 작은 모임부터 여러 사람이 함께하는 자리까지 준비할 수 있습니다.',
+      },
+      {
+        title: '마음을 전하는 선물',
+        body: '필요한 경우 개별 포장 옵션도 선택할 수 있는 초콜릿 컵케이크 박스입니다.',
+      },
+    ],
+    insideCake: {
+      eyebrow: '원하는 마감',
+      title: '원하는 마감을 선택하세요',
+      intro: '박스 전체에 적용할 마감 하나를 선택합니다.',
+      items: [
+        '기본 — 박스 전체에 적용되는 현재 기본 마감입니다.',
+        '바닐라 생크림 — 100% 신선한 우유와 실제 바닐라빈으로 만든 바닐라 생크림.',
+        '초콜릿 버터크림 — 버터와 코코아 파우더로 만든 이탈리안 머랭 초콜릿 버터크림.',
+      ],
+      imageKeys: ['cupcake-side', 'cupcake-detail'],
+    },
+    tasteProfile: {
+      eyebrow: '맛과 식감',
+      title: '초콜릿 컵케이크, 세 가지 마감',
+      items: [
+        '시그니처 초콜릿 컵케이크',
+        '실제 바닐라빈을 넣은 바닐라 생크림',
+        '실키한 이탈리안 머랭 초콜릿 버터크림',
+      ],
+    },
+    ingredients: {
+      eyebrow: '재료와 주문 전 확인',
+      title: '시그니처 초콜릿 컵케이크를 주문에 맞춰 마무리합니다',
+      ingredientsLabel: '주요 재료',
+      allergenLabel: '알레르기 안내',
+      ingredients: '버터, 계란, 우유, 코코아, 밀가루를 사용해 시그니처 초콜릿 컵케이크를 만듭니다. 100% 신선한 우유와 실제 바닐라빈으로 만든 바닐라 생크림을 사용합니다. 초콜릿 버터크림은 버터와 코코아 파우더로 만든 이탈리안 머랭 버터크림입니다.',
+      allergens: '우유, 계란, 밀(글루텐)을 함유합니다.',
+      contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.',
+    },
+    ordering: {
+      eyebrow: '주문 방법',
+      title: 'Jenny가 직접 확인하는 주문',
+      intro: '박스 구성과 마감, 필요한 포장 옵션을 선택한 뒤 기존 주문 요청 흐름으로 보내 주세요.',
+      steps: [
+        {
+          title: '박스 구성을 선택하세요',
+          body: '6개 또는 12개 구성과 원하는 마감을 선택합니다.',
+        },
+        {
+          title: '필요하면 개별 포장을 선택하세요',
+          body: '하나씩 포장이 필요한 경우 Individual Packaging을 선택합니다.',
+        },
+        {
+          title: '주문 요청을 보내세요',
+          body: 'Jenny가 가능 여부를 확인한 뒤 결제 정보를 안내하며, 결제 후 주문이 확정됩니다.',
+        },
+      ],
+      paymentNote: '이 상세페이지에서는 지금 결제되지 않습니다.',
+    },
+    giftPresentation: {
+      eyebrow: '함께 나누거나, 하나씩 포장하거나',
+      title: '필요한 방식에 맞춰 준비하는 컵케이크',
+      body: '선물이나 행사, 하나씩 나눠야 하는 경우 주문 시 개별 포장 옵션을 선택할 수 있습니다.',
+      imageKeys: [],
+    },
+    relatedProductSlugs: [
+      'lemon-cake',
+      'buttercream-cake',
+    ],
+    finalCta: {
+      eyebrow: '시드니 주문 제작',
+      title: '원하는 컵케이크 박스를 골라보세요',
+      body: '수량 구성과 마감, 필요한 포장 옵션을 선택한 뒤 주문에 담아주세요.',
+    },
+  },
+}
+
 export function getCakeEditorialBySlug(
   slug: string,
   language: Language,
@@ -710,5 +921,6 @@ export function getCakeEditorialBySlug(
   if (slug === 'pave-chocolate-cake') return PAVE_EDITORIAL[language]
   if (slug === 'vanilla-fresh-cream-cake') return VANILLA_EDITORIAL[language]
   if (slug === 'buttercream-cake') return BUTTERCREAM_EDITORIAL[language]
+  if (slug === 'chocolate-cupcakes') return CUPCAKES_EDITORIAL[language]
   return null
 }

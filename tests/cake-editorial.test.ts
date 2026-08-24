@@ -13,18 +13,73 @@ const currentCakeSlugs = [
   'brownie-cheesecake',
 ] as const
 
-test('Pave, Vanilla and Buttercream return editorial detail while the other current cakes keep their existing layout', () => {
+test('Pave, Vanilla, Buttercream and Cupcakes return editorial detail while the other current cakes keep their existing layout', () => {
   assert.ok(getCakeEditorialBySlug('pave-chocolate-cake', 'en'))
   assert.ok(getCakeEditorialBySlug('vanilla-fresh-cream-cake', 'en'))
   assert.ok(getCakeEditorialBySlug('vanilla-fresh-cream-cake', 'ko'))
   assert.ok(getCakeEditorialBySlug('buttercream-cake', 'en'))
   assert.ok(getCakeEditorialBySlug('buttercream-cake', 'ko'))
+  assert.ok(getCakeEditorialBySlug('chocolate-cupcakes', 'en'))
+  assert.ok(getCakeEditorialBySlug('chocolate-cupcakes', 'ko'))
 
-  for (const slug of currentCakeSlugs.slice(3)) {
+  for (const slug of currentCakeSlugs.slice(4)) {
     assert.equal(getCakeEditorialBySlug(slug, 'en'), null, slug)
     assert.equal(getCakeEditorialBySlug(slug, 'ko'), null, slug)
   }
   assert.equal(getCakeEditorialBySlug('not-a-cake', 'en'), null)
+})
+
+test('Cupcakes editorial exposes only the approved bilingual finish, ingredient, packaging, and allergen content', () => {
+  const english = getCakeEditorialBySlug('chocolate-cupcakes', 'en')
+  const korean = getCakeEditorialBySlug('chocolate-cupcakes', 'ko')
+  assert.ok(english)
+  assert.ok(korean)
+
+  assert.deepEqual(english.quickFacts.map((fact) => fact.title), [
+    'Signature chocolate cake',
+    'Three finishes',
+    'Half dozen or dozen',
+    'Individual packaging available',
+  ])
+  assert.deepEqual(korean.quickFacts.map((fact) => fact.title), [
+    '시그니처 초콜릿 케이크',
+    '3가지 마감',
+    '6개 또는 12개 구성',
+    '개별 포장 선택 가능',
+  ])
+  assert.equal(english.insideCake.title, 'CHOOSE YOUR FINISH')
+  assert.equal(korean.insideCake.title, '원하는 마감을 선택하세요')
+  assert.deepEqual(english.insideCake.items, [
+    'Basic — Choose the current Basic finish for the whole box.',
+    'Vanilla Fresh Cream — Vanilla fresh cream made with 100% fresh milk and real vanilla bean.',
+    'Chocolate Buttercream — Italian meringue chocolate buttercream made with real butter and cocoa powder.',
+  ])
+  assert.deepEqual(english.insideCake.imageKeys, ['cupcake-side', 'cupcake-detail'])
+  assert.deepEqual(korean.insideCake.imageKeys, ['cupcake-side', 'cupcake-detail'])
+  assert.deepEqual(korean.tasteProfile.items, [
+    '시그니처 초콜릿 컵케이크',
+    '실제 바닐라빈을 넣은 바닐라 생크림',
+    '실키한 이탈리안 머랭 초콜릿 버터크림',
+  ])
+  assert.equal(
+    english.ingredients.ingredients,
+    'Our signature chocolate cupcakes are made with butter, eggs, milk, cocoa and wheat flour. Vanilla Fresh Cream is made with 100% fresh milk and real vanilla bean. Chocolate Buttercream is Italian meringue buttercream made with real butter and cocoa powder.',
+  )
+  assert.equal(english.ingredients.allergens, 'Contains milk, egg and wheat (gluten).')
+  assert.equal(
+    english.ingredients.contact,
+    'Please contact us before ordering for someone with a food allergy.',
+  )
+  assert.match(english.giftPresentation.body, /Individual Packaging/)
+  assert.equal(english.relatedProductSlugs.join(','), 'lemon-cake,buttercream-cake')
+
+  const approvedCopy = JSON.stringify({ english, korean })
+  assert.doesNotMatch(approvedCopy, /(?:750(?:-|–)?760g|75(?:-|–)?76g|\b75g\b|\b76g\b|\b10 cupcakes?\b|\b10개\b)/i)
+  assert.doesNotMatch(approvedCopy, /corn syrup|honey/i)
+  assert.doesNotMatch(approvedCopy, /\b(?:soy|nuts?|peanuts?|sesame|calories|kilojoules|nutrition)\b|may contain|gluten-free|nut-free/i)
+  assert.doesNotMatch(approvedCopy, /대두|견과|땅콩|참깨|칼로리|영양|글루텐 프리|너트 프리/)
+  assert.doesNotMatch(approvedCopy, /AUD 0\.50|100\+/)
+  assert.doesNotMatch(approvedCopy, /(^|\D)(31|36|41|55|64|73)(\D|$)/)
 })
 
 test('Pave editorial exposes complete English and Korean section content', () => {
@@ -185,24 +240,29 @@ test('editorial data does not duplicate live product prices and leaves missing l
   const pave = getCakeEditorialBySlug('pave-chocolate-cake', 'en')
   const vanilla = getCakeEditorialBySlug('vanilla-fresh-cream-cake', 'en')
   const buttercream = getCakeEditorialBySlug('buttercream-cake', 'en')
+  const cupcakes = getCakeEditorialBySlug('chocolate-cupcakes', 'en')
   assert.ok(pave)
   assert.ok(vanilla)
   assert.ok(buttercream)
+  assert.ok(cupcakes)
 
   assert.doesNotMatch(JSON.stringify(pave), /(^|\D)(79|99|137)(\D|$)/)
   assert.doesNotMatch(JSON.stringify(vanilla), /(^|\D)(69|89|119)(\D|$)/)
   assert.doesNotMatch(JSON.stringify(buttercream), /(^|\D)(74|94|128)(\D|$)/)
+  assert.doesNotMatch(JSON.stringify(cupcakes), /(^|\D)(31|36|41|55|64|73)(\D|$)/)
   assert.equal(pave.lifestyle.lifestyleImage, undefined)
   assert.equal(vanilla.lifestyle.lifestyleImage, undefined)
   assert.equal(buttercream.lifestyle.lifestyleImage, undefined)
+  assert.equal(cupcakes.lifestyle.lifestyleImage, undefined)
   assert.deepEqual(vanilla.giftPresentation.imageKeys, [])
   assert.deepEqual(buttercream.giftPresentation.imageKeys, [])
+  assert.deepEqual(cupcakes.giftPresentation.imageKeys, [])
 })
 
-test('Pave, Vanilla and Buttercream related product preferences resolve through the current AU catalogue', () => {
+test('Pave, Vanilla, Buttercream and Cupcakes related product preferences resolve through the current AU catalogue', () => {
   const catalogueSlugs = new Set(getAuCakeCatalogCards('en').map((card) => card.slug))
 
-  for (const cakeSlug of ['pave-chocolate-cake', 'vanilla-fresh-cream-cake', 'buttercream-cake']) {
+  for (const cakeSlug of ['pave-chocolate-cake', 'vanilla-fresh-cream-cake', 'buttercream-cake', 'chocolate-cupcakes']) {
     const editorial = getCakeEditorialBySlug(cakeSlug, 'en')
     assert.ok(editorial)
     assert.equal(editorial.relatedProductSlugs.length, 2)

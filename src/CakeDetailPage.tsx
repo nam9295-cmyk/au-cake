@@ -146,6 +146,14 @@ const editorialImages: Record<CakeEditorialImageKey, { src: string; width: numbe
     src: detailImages['buttercream-quick-view'],
     ...detailImageDimensions['buttercream-quick-view'],
   },
+  'cupcake-side': {
+    src: detailImages['cupcake-side'],
+    ...detailImageDimensions['cupcake-side'],
+  },
+  'cupcake-detail': {
+    src: detailImages['cupcake-detail'],
+    ...detailImageDimensions['cupcake-detail'],
+  },
   'eiffel-chocolate': {
     src: eiffelChocolateImg,
     width: 1000,
