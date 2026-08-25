@@ -158,7 +158,7 @@ const DETAIL_OPERATION_COPY: Record<Language, {
     accordions: [
       {
         title: 'How ordering works',
-        body: 'Choose your cake and options, then send a request. Jenny checks availability before sending payment details.',
+        body: 'Choose your cake and options, then send a request. Our team checks availability before sending payment details.',
       },
       {
         title: 'Pick-up',
@@ -175,7 +175,7 @@ const DETAIL_OPERATION_COPY: Record<Language, {
     accordions: [
       {
         title: '주문 방법',
-        body: '케이크와 옵션을 선택해 요청을 보내면 Jenny가 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.',
+        body: '케이크와 옵션을 선택해 요청을 보내면 베리굿 팀이 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.',
       },
       {
         title: '픽업',

@@ -10,14 +10,14 @@ const DESKTOP_VISIBLE_COUNT = 3
 
 const SECTION_COPY = {
   en: {
-    title: 'REVIEWS FROM OUR DAEGU STORE',
-    intro: 'Reviews from our Daegu store in Korea. Korean is shown as posted with an English translation; products and availability may differ in Sydney.',
-    location: 'Daegu store, Korea',
+    title: 'REVIEWS FROM OUR STORE IN KOREA',
+    intro: 'Reviews from our store in Korea. Korean is shown as posted with an English translation; products and availability may differ in Sydney.',
+    location: 'Store in Korea',
   },
   ko: {
-    title: '대구 매장 고객 후기',
-    intro: '한국 대구 매장에 등록된 후기입니다. 한국어 원문은 게시된 그대로 표시하며 영어 번역을 함께 제공합니다. 시드니의 제품과 판매 여부는 다를 수 있습니다.',
-    location: '대구 매장, 한국',
+    title: '한국 매장 고객 후기',
+    intro: '한국 매장에 등록된 후기입니다. 한국어 원문은 게시된 그대로 표시하며 영어 번역을 함께 제공합니다. 시드니의 제품과 판매 여부는 다를 수 있습니다.',
+    location: '한국 매장',
   },
 } as const
 
@@ -129,7 +129,7 @@ export default function KoreanCakeReviewsSection({
           className="korean-cake-reviews-track"
           role="region"
           aria-roledescription="carousel"
-          aria-label={language === 'ko' ? '대구 매장 고객 후기' : 'Korean customer reviews'}
+          aria-label={language === 'ko' ? '한국 매장 고객 후기' : 'Customer reviews from our store in Korea'}
           onScroll={handleScroll}
         >
           {reviews.map((review, index) => (

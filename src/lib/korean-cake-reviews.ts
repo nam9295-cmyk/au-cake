@@ -8,7 +8,7 @@ export type KoreanCakeReview = Readonly<{
   reviewDate: string
   orderContextKo: string
   orderContextEn: string
-  source: 'Daegu store, Korea'
+  source: 'Store in Korea'
   attribution: 'Korean customer'
   photo: null
 }>
@@ -18,11 +18,11 @@ export const KOREAN_CAKE_REVIEWS: readonly KoreanCakeReview[] = [
     id: 'daegu-review-pave-chocolate',
     cakeSlugs: ['pave-chocolate-cake'],
     originalKo: '파베초코케이크가 맛있어요. 대구에 이렇게 디저트 제대로 하는 집이 있다는 게 감사하네요! 가끔 초콜릿 케이크 먹고 싶으면 무조건 여기서 시켜야겠습니다',
-    translationEn: "The Pave Chocolate Cake is delicious. I'm so glad there's a place in Daegu that does desserts this well! Whenever I'm craving chocolate cake, I'll definitely order from here.",
+    translationEn: "The Pave Chocolate Cake is delicious. I'm so glad there's a place in Korea that does desserts this well! Whenever I'm craving chocolate cake, I'll definitely order from here.",
     reviewDate: '2026-08-02',
     orderContextKo: '파베·갸또 함께 주문',
     orderContextEn: 'Order included Pave + Gâteau',
-    source: 'Daegu store, Korea',
+    source: 'Store in Korea',
     attribution: 'Korean customer',
     photo: null,
   },
@@ -34,7 +34,7 @@ export const KOREAN_CAKE_REVIEWS: readonly KoreanCakeReview[] = [
     reviewDate: '2026-08-03',
     orderContextKo: '파베·갸또 함께 주문',
     orderContextEn: 'Order included Pave + Gâteau',
-    source: 'Daegu store, Korea',
+    source: 'Store in Korea',
     attribution: 'Korean customer',
     photo: null,
   },
@@ -46,7 +46,7 @@ export const KOREAN_CAKE_REVIEWS: readonly KoreanCakeReview[] = [
     reviewDate: '2026-07-27',
     orderContextKo: '바스크 주문',
     orderContextEn: 'Basque order',
-    source: 'Daegu store, Korea',
+    source: 'Store in Korea',
     attribution: 'Korean customer',
     photo: null,
   },
@@ -58,7 +58,7 @@ export const KOREAN_CAKE_REVIEWS: readonly KoreanCakeReview[] = [
     reviewDate: '2026-07-25',
     orderContextKo: '바스크 주문',
     orderContextEn: 'Basque order',
-    source: 'Daegu store, Korea',
+    source: 'Store in Korea',
     attribution: 'Korean customer',
     photo: null,
   },
@@ -70,7 +70,7 @@ export const KOREAN_CAKE_REVIEWS: readonly KoreanCakeReview[] = [
     reviewDate: '2026-07-10',
     orderContextKo: '바스크 주문',
     orderContextEn: 'Basque order',
-    source: 'Daegu store, Korea',
+    source: 'Store in Korea',
     attribution: 'Korean customer',
     photo: null,
   },
@@ -82,7 +82,7 @@ export const KOREAN_CAKE_REVIEWS: readonly KoreanCakeReview[] = [
     reviewDate: '2026-08-03',
     orderContextKo: '파베·바스크 함께 주문',
     orderContextEn: 'Order included Pave + Basque',
-    source: 'Daegu store, Korea',
+    source: 'Store in Korea',
     attribution: 'Korean customer',
     photo: null,
   },
@@ -94,7 +94,7 @@ export const KOREAN_CAKE_REVIEWS: readonly KoreanCakeReview[] = [
     reviewDate: '2026-08-01',
     orderContextKo: '파베·바스크·갸또 함께 주문',
     orderContextEn: 'Order included Pave + Basque + Gâteau',
-    source: 'Daegu store, Korea',
+    source: 'Store in Korea',
     attribution: 'Korean customer',
     photo: null,
   },

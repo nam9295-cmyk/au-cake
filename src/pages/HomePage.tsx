@@ -443,7 +443,7 @@ export function HomePage({
             </article>
             <article>
               <h3>{language === 'ko' ? 'Melrose Park 사전 약속 픽업' : 'Pre-arranged Melrose Park pick-up'}</h3>
-              <p>{language === 'ko' ? '방문 매장 없이 운영하는 홈베이킹 서비스입니다. 신청 후 Jenny가 가능 여부, 결제 정보, 정확한 Melrose Park 전달 장소를 안내해 드려요.' : 'This is a home-baking service without a walk-in shop. Jenny confirms availability, payment details, and the exact Melrose Park handoff point after your request.'}</p>
+              <p>{language === 'ko' ? '방문 매장 없이 운영하는 홈베이킹 서비스입니다. 신청 후 베리굿 팀이 가능 여부, 결제 정보, 정확한 Melrose Park 전달 장소를 안내해 드려요.' : 'This is a home-baking service without a walk-in shop. Our team confirms availability, payment details, and the exact Melrose Park handoff point after your request.'}</p>
             </article>
           </div>
         </section>
@@ -460,11 +460,11 @@ export function HomePage({
               <>
                 <details>
                   <summary>{language === 'ko' ? '케이크는 어디서 픽업하나요?' : 'Where do I pick up my cake?'}</summary>
-                  <p>{language === 'ko' ? 'Sydney Melrose Park에서 사전 약속 픽업으로 진행됩니다. 방문 매장은 없으며 주문 확정 후 Jenny가 정확한 전달 방법을 안내해 드려요.' : 'Pick-up is arranged in Melrose Park, Sydney. There is no walk-in shop, so Jenny sends the exact meeting details after confirming your order.'}</p>
+                  <p>{language === 'ko' ? 'Sydney Melrose Park에서 사전 약속 픽업으로 진행됩니다. 방문 매장은 없으며 주문 확정 후 베리굿 팀이 정확한 전달 방법을 안내해 드려요.' : 'Pick-up is arranged in Melrose Park, Sydney. There is no walk-in shop, so our team sends the exact meeting details after confirming your order.'}</p>
                 </details>
                 <details>
                   <summary>{language === 'ko' ? '신청서를 보내면 바로 주문이 확정되나요?' : 'Is submitting the form a confirmed order?'}</summary>
-                  <p>{language === 'ko' ? '아니요. Jenny가 먼저 가능 여부를 확인하고 결제 정보를 보내드립니다. 입금이 확인되면 주문이 최종 확정됩니다.' : 'No. Jenny first checks availability and sends payment details. Your order is confirmed after payment is received.'}</p>
+                  <p>{language === 'ko' ? '아니요. 베리굿 팀이 먼저 가능 여부를 확인하고 결제 정보를 보내드립니다. 입금이 확인되면 주문이 최종 확정됩니다.' : 'No. Our team first checks availability and sends payment details. Your order is confirmed after payment is received.'}</p>
                 </details>
                 <details>
                   <summary>{language === 'ko' ? '어떤 초콜릿 케이크를 주문할 수 있나요?' : 'Which chocolate cakes can I order?'}</summary>

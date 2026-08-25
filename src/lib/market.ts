@@ -144,7 +144,7 @@ const AU_SETTINGS: StoreSettings = {
   dailyLimitText: 'Made to order with chocolatier-grade couverture chocolate',
   reservationNotice: 'We will confirm availability after your request. Payment details and final confirmation will follow by message.',
   pickupNotice: '',
-  storeAddress: 'Street pick-up near 1 Bundil Blvd, Melrose Park. Small playground/seating nearby; Jenny will bring the cake down to you.',
+  storeAddress: 'Street pick-up near 1 Bundil Blvd, Melrose Park. Small playground/seating nearby; our team will bring the cake down to you.',
   storePhone: '+61 mobile number TBC',
 }
 

@@ -1,9 +1,12 @@
 import KoreanCakeReviewsSection from './KoreanCakeReviewsSection'
+import type { ReactNode } from 'react'
 import type { CakeCatalogCard } from './lib/cake-catalog'
 import type { CakeDetailData } from './lib/cake-detail'
 import type {
   CakeEditorialContent,
   CakeEditorialImageKey,
+  CompactCakeEditorialContent,
+  LongFormCakeEditorialContent,
 } from './lib/cake-editorial'
 import type { Language } from './lib/i18n'
 
@@ -30,6 +33,14 @@ type CakeEditorialDetailProps = {
   onOpenCake: (slug: string) => void
 }
 
+type CompactCakeEditorialDetailProps = Omit<CakeEditorialDetailProps, 'editorial'> & {
+  editorial: CompactCakeEditorialContent
+}
+
+type LongFormCakeEditorialDetailProps = Omit<CakeEditorialDetailProps, 'editorial'> & {
+  editorial: LongFormCakeEditorialContent
+}
+
 function EditorialHeading({
   eyebrow,
   title,
@@ -50,7 +61,123 @@ function EditorialHeading({
   )
 }
 
-export default function CakeEditorialDetail({
+function CompactDisclosure({
+  title,
+  children,
+}: {
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <details>
+      <summary>
+        <span>{title}</span>
+        <span className="cake-editorial-compact-disclosure-icon" aria-hidden="true" />
+      </summary>
+      <div className="cake-editorial-compact-disclosure-body">{children}</div>
+    </details>
+  )
+}
+
+function CompactCakeEditorialDetail({
+  editorial,
+  language,
+  slug,
+  detailAccordions,
+  relatedProducts,
+  onBrowseCakes,
+  onOpenCake,
+}: CompactCakeEditorialDetailProps) {
+  const isKorean = language === 'ko'
+  const canonicalOrderSections = detailAccordions.slice(0, 3)
+
+  return (
+    <div className="cake-editorial-detail is-compact">
+      <section className="cake-editorial-compact-highlights" aria-label={isKorean ? '케이크 핵심 정보' : 'Cake highlights'}>
+        {editorial.highlights.map((highlight, index) => (
+          <article key={highlight.title}>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <strong>{highlight.title}</strong>
+            {highlight.body && <p>{highlight.body}</p>}
+          </article>
+        ))}
+      </section>
+
+      <section className="cake-editorial-compact-disclosures" aria-label={isKorean ? '케이크 상세 정보' : 'Cake details'}>
+        <CompactDisclosure title={editorial.details.title}>
+          <ul>
+            {editorial.details.items.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </CompactDisclosure>
+
+        <CompactDisclosure title={editorial.ingredientsAndAllergens.title}>
+          <section>
+            <h3>{editorial.ingredientsAndAllergens.ingredientsLabel}</h3>
+            <p>{editorial.ingredientsAndAllergens.ingredients}</p>
+          </section>
+          <section>
+            <h3>{editorial.ingredientsAndAllergens.allergenLabel}</h3>
+            <p>{editorial.ingredientsAndAllergens.allergens}</p>
+            <p>{editorial.ingredientsAndAllergens.contact}</p>
+          </section>
+        </CompactDisclosure>
+
+        {editorial.storageAndServing && (
+          <CompactDisclosure title={editorial.storageAndServing.title}>
+            <ul>
+              {editorial.storageAndServing.items.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </CompactDisclosure>
+        )}
+
+        <CompactDisclosure title={editorial.pickupAndConfirmation.title}>
+          {canonicalOrderSections.map((item) => (
+            <section key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </section>
+          ))}
+          <p>{isKorean ? '이 상세페이지에서는 지금 결제되지 않습니다.' : 'No payment is taken on this detail page.'}</p>
+        </CompactDisclosure>
+      </section>
+
+      <section className="cake-editorial-reviews" aria-label={isKorean ? '한국 고객 후기' : 'Korean customer reviews'}>
+        <KoreanCakeReviewsSection slug={slug} language={language} />
+      </section>
+
+      <section className="cake-editorial-related cake-editorial-compact-related" aria-labelledby="cake-editorial-related-title">
+        <div className="cake-editorial-related-header">
+          <EditorialHeading
+            eyebrow={isKorean ? '다른 케이크도 살펴보세요' : 'Explore more cakes'}
+            title={isKorean ? '함께 살펴볼 케이크' : 'Related products'}
+            id="cake-editorial-related-title"
+          />
+          <button type="button" className="secondary-button" onClick={onBrowseCakes}>
+            {isKorean ? '전체 케이크' : 'View all cakes'}
+          </button>
+        </div>
+        <div className="cake-editorial-related-grid">
+          {relatedProducts.map((product) => (
+            <button type="button" onClick={() => onOpenCake(product.slug)} key={product.slug}>
+              <img
+                src={product.imagePath}
+                alt=""
+                width="1080"
+                height="1012"
+                loading="lazy"
+                decoding="async"
+              />
+              <span>{product.name}</span>
+              <strong>{product.priceLabel}</strong>
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function LongFormCakeEditorialDetail({
   editorial,
   language,
   slug,
@@ -62,7 +189,7 @@ export default function CakeEditorialDetail({
   onViewOrder,
   onBrowseCakes,
   onOpenCake,
-}: CakeEditorialDetailProps) {
+}: LongFormCakeEditorialDetailProps) {
   const isKorean = language === 'ko'
   const lifestyleImage = editorial.lifestyle.lifestyleImage
   const hasGiftImages = editorial.giftPresentation.imageKeys.length > 0
@@ -299,4 +426,12 @@ export default function CakeEditorialDetail({
       </section>
     </div>
   )
+}
+
+export default function CakeEditorialDetail(props: CakeEditorialDetailProps) {
+  if (props.editorial.layout === 'compact') {
+    return <CompactCakeEditorialDetail {...props} editorial={props.editorial} />
+  }
+
+  return <LongFormCakeEditorialDetail {...props} editorial={props.editorial} />
 }

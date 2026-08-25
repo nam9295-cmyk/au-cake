@@ -266,6 +266,7 @@ export default function CakeDetailPage({
   const currentImageKey = detail.gallery[Math.min(activeImage, Math.max(0, galleryCount - 1))]
   const addLabel = language === 'ko' ? '주문에 담기' : 'Add to order'
   const editorial = getCakeEditorialBySlug(slug, language)
+  const compactOrderingNotice = editorial?.layout === 'compact' ? editorial.orderingNotice : null
   const relatedProducts = editorial
     ? editorial.relatedProductSlugs
         .map((relatedSlug) => getAuCakeCatalogCards(language).find((candidate) => candidate.slug === relatedSlug))
@@ -608,11 +609,23 @@ export default function CakeDetailPage({
               </button>
             </div>
           )}
-          <p className="cake-detail-confirmation-note">
-            {language === 'ko'
-              ? '지금 결제되지 않습니다. Jenny가 가능 여부를 확인한 뒤 결제 정보를 안내합니다.'
-              : 'No payment is taken now. Jenny will confirm availability and send payment details.'}
-          </p>
+          {compactOrderingNotice ? (
+            <section className="cake-detail-ordering-notice" aria-label={language === 'ko' ? '주문 및 픽업 안내' : 'Ordering and pick-up'}>
+              <span className="cake-detail-ordering-notice-label">
+                {language === 'ko' ? '주문 및 픽업 안내' : 'ORDERING & PICK-UP'}
+              </span>
+              <div className="cake-detail-ordering-notice-content">
+                <strong>{compactOrderingNotice.title}</strong>
+                <p>{compactOrderingNotice.body}</p>
+              </div>
+            </section>
+          ) : (
+            <p className="cake-detail-confirmation-note">
+              {language === 'ko'
+                ? '지금 결제되지 않습니다. 베리굿 팀이 가능 여부를 확인한 뒤 결제 정보를 안내합니다.'
+                : 'No payment is taken now. Our team will confirm availability and send payment details.'}
+            </p>
+          )}
         </aside>
       </section>
 

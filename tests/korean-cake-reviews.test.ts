@@ -50,7 +50,7 @@ test('complete Korean originals and faithful Australian English translations are
   assert.equal(basque[2].originalKo, '와~~ 바스크치츠케이크 진짜 맛있네요 말차라떼 진하게먹고싶었는데 요청사항들어주셔서 감사합니다. 여기 사장님 정말 금손 인정♡♡')
   assert.equal(basque[3].originalKo, '너무 달지않고 맛있어요')
 
-  assert.equal(pave[0].translationEn, "The Pave Chocolate Cake is delicious. I'm so glad there's a place in Daegu that does desserts this well! Whenever I'm craving chocolate cake, I'll definitely order from here.")
+  assert.equal(pave[0].translationEn, "The Pave Chocolate Cake is delicious. I'm so glad there's a place in Korea that does desserts this well! Whenever I'm craving chocolate cake, I'll definitely order from here.")
   assert.equal(pave[1].translationEn, 'Really enjoyed it. It was delicious.')
   assert.equal(pave[2].translationEn, 'The chocolate cakes were dense and fudgy, and so was the cheesecake. One chocolate cake was sweet; the other was bittersweet and fudgy. Each one was delicious in its own way.')
   assert.equal(basque[0].translationEn, 'It was delicious. I really enjoyed it.')
@@ -125,7 +125,7 @@ test('public review records use safe synthetic IDs and exclude private or promot
     assert.match(String(review.id), /^daegu-review-[a-z-]+$/)
     assert.match(String(review.reviewDate), /^2026-\d{2}-\d{2}$/)
     assert.equal(review.attribution, 'Korean customer')
-    assert.equal(review.source, 'Daegu store, Korea')
+    assert.equal(review.source, 'Store in Korea')
     assert.equal(review.photo, null)
     assert.doesNotMatch(Object.keys(review).join(' '), /username|platform|orderId|reviewId|record|image|stars|rating|score|verified|title/i)
     const shippedText = collectStrings(review).join(' ')

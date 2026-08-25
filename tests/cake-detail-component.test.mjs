@@ -9,6 +9,11 @@ const editorialSource = await readFile(new URL('../src/CakeEditorialDetail.tsx',
 const editorialDataSource = await readFile(new URL('../src/lib/cake-editorial.ts', import.meta.url), 'utf8')
 const reserveSource = await readFile(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const reviewSource = await readFile(new URL('../src/KoreanCakeReviewsSection.tsx', import.meta.url), 'utf8')
+const reviewDataSource = await readFile(new URL('../src/lib/korean-cake-reviews.ts', import.meta.url), 'utf8')
+const cakeDetailDataSource = await readFile(new URL('../src/lib/cake-detail.ts', import.meta.url), 'utf8')
+const cartSource = await readFile(new URL('../src/CartPage.tsx', import.meta.url), 'utf8')
+const i18nSource = await readFile(new URL('../src/lib/i18n.ts', import.meta.url), 'utf8')
+const marketSource = await readFile(new URL('../src/lib/market.ts', import.meta.url), 'utf8')
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
 test('home catalogue opens shared cake detail routes instead of skipping to the request form', () => {
@@ -98,6 +103,55 @@ test('Pave editorial reuses live catalogue cards and the existing add-to-order c
   assert.doesNotMatch(editorialSource, /createRoot|BrowserRouter|<html|<!doctype/i)
 })
 
+test('compact Pave uses native disclosures and does not render the retired long-form sections or a second CTA', () => {
+  const disclosureStart = editorialSource.indexOf('function CompactDisclosure')
+  const compactStart = editorialSource.indexOf('function CompactCakeEditorialDetail')
+  const longFormStart = editorialSource.indexOf('function LongFormCakeEditorialDetail')
+
+  assert.notEqual(disclosureStart, -1)
+  assert.notEqual(compactStart, -1)
+  assert.notEqual(longFormStart, -1)
+
+  const compactSource = editorialSource.slice(disclosureStart, longFormStart)
+  assert.match(compactSource, /<details>/)
+  assert.match(compactSource, /<summary>/)
+  assert.match(compactSource, /cake-editorial-compact-highlights/)
+  assert.match(compactSource, /cake-editorial-compact-disclosures/)
+  assert.match(compactSource, /<KoreanCakeReviewsSection slug=\{slug\} language=\{language\} \/>/)
+  assert.match(compactSource, /relatedProducts\.map/)
+  assert.doesNotMatch(compactSource, /cake-editorial-(?:lifestyle|moments|inside|taste|ordering|gift|final)/)
+  assert.doesNotMatch(compactSource, /onAddToOrder|onViewOrder/)
+})
+
+test('compact Pave places its ordering and pick-up notice below Add to order instead of below the highlights', () => {
+  const requestStart = detailSource.indexOf('cake-detail-request')
+  const orderingNoticeStart = detailSource.indexOf('cake-detail-ordering-notice')
+
+  assert.notEqual(requestStart, -1)
+  assert.notEqual(orderingNoticeStart, -1)
+  assert.ok(orderingNoticeStart > requestStart)
+  assert.match(detailSource, /ORDERING & PICK-UP/)
+  assert.match(detailSource, /주문 및 픽업 안내/)
+  assert.doesNotMatch(editorialSource, /cake-editorial-compact-notice/)
+})
+
+test('compact Pave ordering and pick-up notice uses the mint surface with only a forest left rail', () => {
+  assert.match(cssSource, /\.cake-detail-ordering-notice\s*\{[^}]*border:\s*0/s)
+  assert.match(cssSource, /\.cake-detail-ordering-notice\s*\{[^}]*border-left:\s*4px solid var\(--forest\)/s)
+  assert.match(cssSource, /\.cake-detail-ordering-notice\s*\{[^}]*background:\s*var\(--cream-teal\)/s)
+  assert.match(cssSource, /\.cake-detail-ordering-notice-label\s*\{[^}]*color:\s*var\(--forest\)/s)
+  assert.match(cssSource, /\.cake-detail-ordering-notice\s+strong\s*\{[^}]*font-size:\s*16px/s)
+})
+
+test('compact Pave keeps all three Quick Facts in columns on narrow screens', () => {
+  const mobileCss = cssSource.slice(cssSource.lastIndexOf('@media (max-width: 760px)'))
+
+  assert.match(mobileCss, /\.cake-editorial-compact-highlights\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/s)
+  assert.match(mobileCss, /\.cake-editorial-compact-highlights article\s*\{[^}]*border-right:\s*1px solid var\(--border\)/s)
+  assert.match(mobileCss, /\.cake-editorial-compact-highlights article:last-child\s*\{[^}]*border-right:\s*0/s)
+  assert.doesNotMatch(mobileCss, /\.cake-editorial-compact-highlights article\s*\{[^}]*border-bottom:\s*1px solid var\(--border\)/s)
+})
+
 test('editorial styles remain isolated from protected detail and operational controls', () => {
   assert.match(cssSource, /\.cake-editorial-/)
   assert.match(cssSource, /@media \(max-width: 760px\)[\s\S]*\.cake-editorial-/)
@@ -109,13 +163,17 @@ test('editorial styles remain isolated from protected detail and operational con
   assert.doesNotMatch(editorialSource, /isIndividualPackagingEligibleProduct|getCakeDetailSelectionEstimatedTotal|useCart/)
 })
 
-test('review carousel uses the approved bilingual heading and compact Daegu disclosure', () => {
-  assert.match(reviewSource, /REVIEWS FROM OUR DAEGU STORE/)
-  assert.match(reviewSource, /대구 매장 고객 후기/)
+test('review carousel identifies the source as our store in Korea without naming Daegu', () => {
+  assert.match(reviewSource, /REVIEWS FROM OUR STORE IN KOREA/)
+  assert.match(reviewSource, /한국 매장 고객 후기/)
+  assert.match(reviewSource, /Reviews from our store in Korea/)
   assert.match(reviewSource, /Korean is shown as posted with an English translation/)
   assert.match(reviewSource, /products and availability may differ in Sydney/)
   assert.match(reviewSource, /한국어 원문은 게시된 그대로 표시하며 영어 번역을 함께 제공합니다/)
   assert.match(reviewSource, /시드니의 제품과 판매 여부는 다를 수 있습니다/)
+  assert.doesNotMatch(reviewSource, /Daegu|대구/)
+  assert.match(reviewDataSource, /source: 'Store in Korea'/)
+  assert.doesNotMatch(reviewDataSource, /translationEn:[^\n]*Daegu/)
 })
 
 test('each compact card discloses bilingual order context before complete Korean and English text', () => {
@@ -127,8 +185,24 @@ test('each compact card discloses bilingual order context before complete Korean
   assert.match(reviewSource, /lang="en-AU"[^>]*>\{review\.translationEn\}/)
   assert.match(reviewSource, /<time dateTime=\{review\.reviewDate\}/)
   assert.match(reviewSource, /aria-label=\{`\$\{language === 'ko' \? '후기' : 'Review'\} \$\{index \+ 1\} \/ \$\{reviews\.length\}`\}/)
-  assert.match(reviewSource, /Daegu store, Korea/)
+  assert.match(reviewSource, /Store in Korea/)
   assert.doesNotMatch(reviewSource, /PublicReviewCard|PublicReviewDialog|<img|username|platform|stars|rating|score|Verified order|Incentivised review/)
+})
+
+test('customer-facing order and class copy assigns confirmation and handoff to our team', () => {
+  const customerCopy = [
+    detailSource,
+    editorialDataSource,
+    cakeDetailDataSource,
+    cartSource,
+    homeSource,
+    i18nSource,
+    marketSource,
+  ].join('\n')
+
+  assert.match(customerCopy, /our team/)
+  assert.match(customerCopy, /베리굿 팀/)
+  assert.doesNotMatch(customerCopy, /\bJenny\b|Jenny가/)
 })
 
 test('compact review cards keep restrained type, padding, and hidden scrollbars', () => {

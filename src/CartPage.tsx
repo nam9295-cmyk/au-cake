@@ -164,7 +164,7 @@ export default function CartPage({
           : cakeOrderLinesAvailable
             ? '여러 케이크를 한 번에 신청할 수 있어요.'
             : '현재 여러 케이크 동시 신청을 사용할 수 없어요. 잠시 후 다시 확인해 주세요.',
-        confirmation: '지금 결제되지 않습니다. 주문 신청 후 Jenny가 가능 여부를 확인하고 결제 정보를 안내합니다.',
+        confirmation: '지금 결제되지 않습니다. 주문 신청 후 베리굿 팀이 가능 여부를 확인하고 결제 정보를 안내합니다.',
       }
     : {
         title: 'Your order',
@@ -183,7 +183,7 @@ export default function CartPage({
           : cakeOrderLinesAvailable
             ? 'You can request all of these cakes together.'
             : 'Multiple-cake requests are currently unavailable. Please check again shortly.',
-        confirmation: 'No payment is taken now. Jenny will confirm availability and send payment details after you submit your request.',
+        confirmation: 'No payment is taken now. Our team will confirm availability and send payment details after you submit your request.',
       }
 
   return (

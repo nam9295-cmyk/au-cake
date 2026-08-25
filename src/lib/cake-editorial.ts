@@ -65,7 +65,43 @@ type EditorialFinalCta = {
   body: string
 }
 
-export type CakeEditorialContent = {
+type CompactHighlight = {
+  title: string
+  body?: string
+}
+
+type CompactDisclosure = {
+  title: string
+  items: readonly string[]
+}
+
+type CompactIngredientsAndAllergens = {
+  title: string
+  ingredientsLabel: string
+  ingredients: string
+  allergenLabel: string
+  allergens: string
+  contact: string
+}
+
+export type CompactCakeEditorialContent = {
+  layout: 'compact'
+  highlights: readonly CompactHighlight[]
+  orderingNotice: {
+    title: string
+    body: string
+  }
+  details: CompactDisclosure
+  ingredientsAndAllergens: CompactIngredientsAndAllergens
+  storageAndServing?: CompactDisclosure
+  pickupAndConfirmation: {
+    title: string
+  }
+  relatedProductSlugs: readonly string[]
+}
+
+export type LongFormCakeEditorialContent = {
+  layout?: 'long-form'
   quickFacts: readonly EditorialCard[]
   lifestyle: EditorialLifestyle
   moments: readonly EditorialCard[]
@@ -78,216 +114,84 @@ export type CakeEditorialContent = {
   finalCta: EditorialFinalCta
 }
 
-const PAVE_EDITORIAL: Record<Language, CakeEditorialContent> = {
+export type CakeEditorialContent = CompactCakeEditorialContent | LongFormCakeEditorialContent
+
+const PAVE_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
   en: {
-    quickFacts: [
-      {
-        title: 'Four layers',
-        body: 'Chocolate cake layered with smooth pavé ganache.',
-      },
-      {
-        title: 'Dark chocolate',
-        body: 'A deep couverture chocolate profile with a clean finish.',
-      },
-      {
-        title: 'Made to order',
-        body: 'Prepared for your selected pick-up date.',
-      },
-      {
-        title: 'Melrose Park pick-up',
-        body: 'Collect from our Sydney kitchen.',
-      },
+    layout: 'compact',
+    highlights: [
+      { title: 'Four chocolate layers' },
+      { title: 'Smooth pavé ganache' },
+      { title: '57.9% dark couverture chocolate' },
     ],
-    lifestyle: {
-      eyebrow: 'A cake to gather around',
-      title: 'Chocolate made for the moment',
-      body: 'Pavé Chocolate Cake brings four moist chocolate layers and silky ganache to celebrations that deserve an unhurried centrepiece.',
+    orderingNotice: {
+      title: 'Made to order · Melrose Park pick-up',
+      body: 'No payment is taken now. Our team confirms availability before sending payment details.',
     },
-    moments: [
-      {
-        title: 'Birthday centrepiece',
-        body: 'A rich chocolate cake made to hold the room.',
-      },
-      {
-        title: 'Anniversary moment',
-        body: 'An elegant finish for a table shared together.',
-      },
-      {
-        title: 'Thoughtful chocolate gift',
-        body: 'A generous way to mark a meaningful day.',
-      },
-    ],
-    insideCake: {
-      eyebrow: 'Inside the cake',
-      title: 'Layer upon layer of pavé ganache',
-      intro: 'A close look at the structure behind every slice.',
+    details: {
+      title: 'Cake details',
       items: [
         'Four chocolate cake layers',
         'Smooth pavé ganache between each layer',
         'Pavé ganache around the entire cake',
-      ],
-      imageKeys: ['pave-quick-view', 'pave-side'],
-    },
-    tasteProfile: {
-      eyebrow: 'Taste & texture',
-      title: 'Deep chocolate, balanced finish',
-      items: [
-        'Rich chocolate intensity',
-        'Medium sweetness',
-        'Moist cake · silky ganache · dense finish',
+        'A rich, chocolate-forward cake with moist chocolate layers and silky ganache.',
       ],
     },
-    ingredients: {
-      eyebrow: 'Ingredients & good to know',
-      title: 'Made with carefully selected ingredients',
-      ingredientsLabel: 'Ingredients',
+    ingredientsAndAllergens: {
+      title: 'Ingredients & allergens',
+      ingredientsLabel: 'Key ingredients',
       allergenLabel: 'Allergen note',
       ingredients: 'Made with 57.9% dark couverture chocolate, fresh cream, cocoa powder, butter, eggs, milk and wheat flour.',
       allergens: 'Contains milk, egg and wheat (gluten).',
       contact: 'Please contact us before ordering for someone with a food allergy.',
     },
-    ordering: {
-      eyebrow: 'How ordering works',
-      title: 'A request, personally confirmed',
-      intro: 'Choose your cake and options here, then send your request through the existing order flow.',
-      steps: [
-        {
-          title: 'Choose and add',
-          body: 'Select your cake and options, then choose Add to order.',
-        },
-        {
-          title: 'Jenny checks availability',
-          body: 'Send your request and Jenny will confirm availability for your selected date.',
-        },
-        {
-          title: 'Payment confirms the order',
-          body: 'Payment details are sent after availability is confirmed. Your order is confirmed once payment is complete.',
-        },
-      ],
-      paymentNote: 'No payment is taken on this detail page.',
-    },
-    giftPresentation: {
-      eyebrow: 'Chocolate detail',
-      title: 'A thoughtful presentation',
-      body: 'The Eiffel Tower chocolate and considered presentation add a distinctive finishing detail for gifting and celebrations.',
-      imageKeys: ['eiffel-chocolate', 'pave-side'],
+    pickupAndConfirmation: {
+      title: 'Pick-up & order confirmation',
     },
     relatedProductSlugs: [
-      'brownie-cheesecake',
       'signature-gateau-au-chocolat',
+      'brownie-cheesecake',
     ],
-    finalCta: {
-      eyebrow: 'Made to order in Sydney',
-      title: 'Make Pavé part of your next moment',
-      body: 'Choose your size and quantity above, then add the current selection to your order request.',
-    },
   },
   ko: {
-    quickFacts: [
-      {
-        title: '초콜릿 케이크 4단',
-        body: '부드러운 파베 가나슈를 층층이 채웠습니다.',
-      },
-      {
-        title: '다크 초콜릿',
-        body: '진한 커버춰 초콜릿 풍미와 깔끔한 마무리.',
-      },
-      {
-        title: '주문 제작',
-        body: '선택한 픽업 날짜에 맞춰 준비합니다.',
-      },
-      {
-        title: 'Melrose Park 픽업',
-        body: '시드니 키친에서 직접 픽업합니다.',
-      },
+    layout: 'compact',
+    highlights: [
+      { title: '초콜릿 케이크 4단' },
+      { title: '부드러운 파베 가나슈' },
+      { title: '57.9% 다크 커버춰 초콜릿' },
     ],
-    lifestyle: {
-      eyebrow: '함께 나누는 케이크',
-      title: '기억할 순간을 위한 초콜릿',
-      body: '파베 초콜릿 케이크는 촉촉한 초콜릿 케이크 4단과 부드러운 가나슈로 특별한 날의 중심을 완성합니다.',
+    orderingNotice: {
+      title: '주문 후 제작 · Melrose Park 픽업',
+      body: '지금 결제되지 않습니다. 베리굿 팀이 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.',
     },
-    moments: [
-      {
-        title: '생일을 위한 메인 케이크',
-        body: '한자리에 모인 모두가 함께 즐기는 진한 초콜릿.',
-      },
-      {
-        title: '기념일을 위한 초콜릿 케이크',
-        body: '함께한 시간을 우아하게 기념하는 마무리.',
-      },
-      {
-        title: '마음을 전하는 초콜릿 선물',
-        body: '소중한 날을 기억하게 하는 정성스러운 선택.',
-      },
-    ],
-    insideCake: {
-      eyebrow: '케이크 속 구성',
-      title: '층층이 이어지는 파베 가나슈',
-      intro: '한 조각 안에 담긴 구조를 자세히 살펴보세요.',
+    details: {
+      title: '케이크 상세',
       items: [
         '초콜릿 케이크 4단',
         '각 층 사이의 부드러운 파베 가나슈',
         '케이크 전체를 감싼 파베 가나슈',
-      ],
-      imageKeys: ['pave-quick-view', 'pave-side'],
-    },
-    tasteProfile: {
-      eyebrow: '맛과 식감',
-      title: '진한 초콜릿, 균형 잡힌 마무리',
-      items: [
-        '진한 초콜릿 풍미',
-        '중간 정도의 단맛',
-        '촉촉한 케이크 · 부드러운 가나슈 · 묵직한 마무리',
+        '촉촉한 초콜릿 케이크와 부드러운 가나슈가 어우러지는 진한 초콜릿 케이크입니다.',
       ],
     },
-    ingredients: {
-      eyebrow: '재료와 주문 전 확인',
-      title: '엄선한 재료로 만듭니다',
-      ingredientsLabel: '재료',
+    ingredientsAndAllergens: {
+      title: '재료 및 알레르기 안내',
+      ingredientsLabel: '주요 재료',
       allergenLabel: '알레르기 안내',
       ingredients: '57.9% 다크 커버춰 초콜릿, 생크림, 코코아 파우더, 버터, 계란, 우유, 밀가루를 사용합니다.',
       allergens: '우유, 계란, 밀(글루텐)을 함유합니다.',
       contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.',
     },
-    ordering: {
-      eyebrow: '주문 방법',
-      title: 'Jenny가 직접 확인하는 주문',
-      intro: '케이크와 옵션을 선택해 기존 주문 요청 흐름으로 보내 주세요.',
-      steps: [
-        {
-          title: '선택하고 담기',
-          body: '케이크와 옵션을 선택한 뒤 주문에 담기를 눌러 주세요.',
-        },
-        {
-          title: 'Jenny가 가능 여부 확인',
-          body: '요청을 보내면 선택한 날짜의 주문 가능 여부를 확인합니다.',
-        },
-        {
-          title: '결제 후 주문 확정',
-          body: '가능 여부 확인 후 결제 정보를 보내 드리며, 결제가 완료되면 주문이 확정됩니다.',
-        },
-      ],
-      paymentNote: '이 상세페이지에서는 지금 결제되지 않습니다.',
-    },
-    giftPresentation: {
-      eyebrow: '초콜릿 디테일',
-      title: '마음을 담은 프레젠테이션',
-      body: '에펠탑 초콜릿과 정돈된 프레젠테이션이 선물과 기념일에 어울리는 특별한 디테일을 더합니다.',
-      imageKeys: ['eiffel-chocolate', 'pave-side'],
+    pickupAndConfirmation: {
+      title: '픽업 및 주문 확정',
     },
     relatedProductSlugs: [
-      'brownie-cheesecake',
       'signature-gateau-au-chocolat',
+      'brownie-cheesecake',
     ],
-    finalCta: {
-      eyebrow: '시드니 주문 제작',
-      title: '다음 순간을 파베와 함께하세요',
-      body: '위에서 사이즈와 수량을 선택한 뒤 현재 선택값 그대로 주문 요청에 담을 수 있습니다.',
-    },
   },
 }
 
-const VANILLA_EDITORIAL: Record<Language, CakeEditorialContent> = {
+const VANILLA_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
   en: {
     quickFacts: [
       {
@@ -365,8 +269,8 @@ const VANILLA_EDITORIAL: Record<Language, CakeEditorialContent> = {
           body: 'Select your cake and options, then choose Add to order.',
         },
         {
-          title: 'Jenny checks availability',
-          body: 'Send your request and Jenny will confirm availability for your selected date.',
+          title: 'Our team checks availability',
+          body: 'Send your request and our team will confirm availability for your selected date.',
         },
         {
           title: 'Payment confirms the order',
@@ -460,7 +364,7 @@ const VANILLA_EDITORIAL: Record<Language, CakeEditorialContent> = {
     },
     ordering: {
       eyebrow: '주문 방법',
-      title: 'Jenny가 직접 확인하는 주문',
+      title: '베리굿 팀이 직접 확인하는 주문',
       intro: '케이크와 옵션을 선택해 기존 주문 요청 흐름으로 보내 주세요.',
       steps: [
         {
@@ -468,7 +372,7 @@ const VANILLA_EDITORIAL: Record<Language, CakeEditorialContent> = {
           body: '케이크와 옵션을 선택한 뒤 주문에 담기를 눌러 주세요.',
         },
         {
-          title: 'Jenny가 가능 여부 확인',
+          title: '베리굿 팀이 가능 여부 확인',
           body: '요청을 보내면 선택한 날짜의 주문 가능 여부를 확인합니다.',
         },
         {
@@ -496,7 +400,7 @@ const VANILLA_EDITORIAL: Record<Language, CakeEditorialContent> = {
   },
 }
 
-const BUTTERCREAM_EDITORIAL: Record<Language, CakeEditorialContent> = {
+const BUTTERCREAM_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
   en: {
     quickFacts: [
       {
@@ -574,8 +478,8 @@ const BUTTERCREAM_EDITORIAL: Record<Language, CakeEditorialContent> = {
           body: 'Select your cake and options, then choose Add to order.',
         },
         {
-          title: 'Jenny checks availability',
-          body: 'Send your request and Jenny will confirm availability for your selected date.',
+          title: 'Our team checks availability',
+          body: 'Send your request and our team will confirm availability for your selected date.',
         },
         {
           title: 'Payment confirms the order',
@@ -669,7 +573,7 @@ const BUTTERCREAM_EDITORIAL: Record<Language, CakeEditorialContent> = {
     },
     ordering: {
       eyebrow: '주문 방법',
-      title: 'Jenny가 직접 확인하는 주문',
+      title: '베리굿 팀이 직접 확인하는 주문',
       intro: '케이크와 옵션을 선택해 기존 주문 요청 흐름으로 보내 주세요.',
       steps: [
         {
@@ -677,7 +581,7 @@ const BUTTERCREAM_EDITORIAL: Record<Language, CakeEditorialContent> = {
           body: '케이크와 옵션을 선택한 뒤 주문에 담기를 눌러 주세요.',
         },
         {
-          title: 'Jenny가 가능 여부 확인',
+          title: '베리굿 팀이 가능 여부 확인',
           body: '요청을 보내면 선택한 날짜의 주문 가능 여부를 확인합니다.',
         },
         {
@@ -705,7 +609,7 @@ const BUTTERCREAM_EDITORIAL: Record<Language, CakeEditorialContent> = {
   },
 }
 
-const CUPCAKES_EDITORIAL: Record<Language, CakeEditorialContent> = {
+const CUPCAKES_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
   en: {
     quickFacts: [
       {
@@ -788,7 +692,7 @@ const CUPCAKES_EDITORIAL: Record<Language, CakeEditorialContent> = {
         },
         {
           title: 'Send your request',
-          body: 'Jenny checks availability and sends payment details before the order is confirmed.',
+          body: 'Our team checks availability and sends payment details before the order is confirmed.',
         },
       ],
       paymentNote: 'No payment is taken on this detail page.',
@@ -878,7 +782,7 @@ const CUPCAKES_EDITORIAL: Record<Language, CakeEditorialContent> = {
     },
     ordering: {
       eyebrow: '주문 방법',
-      title: 'Jenny가 직접 확인하는 주문',
+      title: '베리굿 팀이 직접 확인하는 주문',
       intro: '박스 구성과 마감, 필요한 포장 옵션을 선택한 뒤 기존 주문 요청 흐름으로 보내 주세요.',
       steps: [
         {
@@ -891,7 +795,7 @@ const CUPCAKES_EDITORIAL: Record<Language, CakeEditorialContent> = {
         },
         {
           title: '주문 요청을 보내세요',
-          body: 'Jenny가 가능 여부를 확인한 뒤 결제 정보를 안내하며, 결제 후 주문이 확정됩니다.',
+          body: '베리굿 팀이 가능 여부를 확인한 뒤 결제 정보를 안내하며, 결제 후 주문이 확정됩니다.',
         },
       ],
       paymentNote: '이 상세페이지에서는 지금 결제되지 않습니다.',
@@ -914,13 +818,58 @@ const CUPCAKES_EDITORIAL: Record<Language, CakeEditorialContent> = {
   },
 }
 
+function toCompactEditorial(
+  editorial: LongFormCakeEditorialContent,
+  language: Language,
+): CompactCakeEditorialContent {
+  const isKorean = language === 'ko'
+
+  return {
+    layout: 'compact',
+    highlights: editorial.quickFacts.slice(0, 3),
+    orderingNotice: isKorean
+      ? {
+          title: '주문 후 제작 · Melrose Park 픽업',
+          body: '지금 결제되지 않습니다. 베리굿 팀이 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.',
+        }
+      : {
+          title: 'Made to order · Melrose Park pick-up',
+          body: 'No payment is taken now. Our team confirms availability before sending payment details.',
+        },
+    details: {
+      title: editorial.insideCake.title,
+      items: editorial.insideCake.items,
+    },
+    ingredientsAndAllergens: {
+      title: editorial.ingredients.eyebrow,
+      ingredientsLabel: editorial.ingredients.ingredientsLabel,
+      ingredients: editorial.ingredients.ingredients,
+      allergenLabel: editorial.ingredients.allergenLabel,
+      allergens: editorial.ingredients.allergens,
+      contact: editorial.ingredients.contact,
+    },
+    pickupAndConfirmation: {
+      title: isKorean ? '픽업 및 주문 확정' : 'Pick-up & order confirmation',
+    },
+    relatedProductSlugs: editorial.relatedProductSlugs,
+  }
+}
+
+export function getCakeEditorialBySlug(
+  slug: 'pave-chocolate-cake' | 'vanilla-fresh-cream-cake' | 'buttercream-cake' | 'chocolate-cupcakes',
+  language: Language,
+): CompactCakeEditorialContent
+export function getCakeEditorialBySlug(
+  slug: string,
+  language: Language,
+): CakeEditorialContent | null
 export function getCakeEditorialBySlug(
   slug: string,
   language: Language,
 ): CakeEditorialContent | null {
   if (slug === 'pave-chocolate-cake') return PAVE_EDITORIAL[language]
-  if (slug === 'vanilla-fresh-cream-cake') return VANILLA_EDITORIAL[language]
-  if (slug === 'buttercream-cake') return BUTTERCREAM_EDITORIAL[language]
-  if (slug === 'chocolate-cupcakes') return CUPCAKES_EDITORIAL[language]
+  if (slug === 'vanilla-fresh-cream-cake') return toCompactEditorial(VANILLA_EDITORIAL[language], language)
+  if (slug === 'buttercream-cake') return toCompactEditorial(BUTTERCREAM_EDITORIAL[language], language)
+  if (slug === 'chocolate-cupcakes') return toCompactEditorial(CUPCAKES_EDITORIAL[language], language)
   return null
 }

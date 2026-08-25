@@ -8007,6 +8007,45 @@ label.vanilla-point-color-card {
   text-align: center;
 }
 
+.cake-detail-ordering-notice {
+  display: grid;
+  grid-template-columns: minmax(156px, 0.38fr) minmax(0, 1.62fr);
+  gap: 24px;
+  align-items: start;
+  margin-top: 12px;
+  padding: 18px 20px 18px 16px;
+  border: 0;
+  border-left: 4px solid var(--forest);
+  background: var(--cream-teal);
+}
+
+.cake-detail-ordering-notice-label {
+  color: var(--forest);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.cake-detail-ordering-notice-content {
+  min-width: 0;
+}
+
+.cake-detail-ordering-notice strong {
+  display: block;
+  color: var(--forest-deep);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.cake-detail-ordering-notice p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .cake-detail-trust {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -9622,6 +9661,150 @@ label.vanilla-point-color-card {
   min-height: 48px;
 }
 
+/* Compact cake detail: a product-information branch that keeps the shared editorial component short. */
+.cake-editorial-detail.is-compact {
+  gap: 32px;
+  margin-top: 44px;
+}
+
+.cake-editorial-compact-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.cake-editorial-compact-highlights article {
+  min-height: 96px;
+  padding: 16px 20px;
+  border-right: 1px solid var(--border);
+}
+
+.cake-editorial-compact-highlights article:last-child {
+  border-right: 0;
+}
+
+.cake-editorial-compact-highlights span {
+  color: var(--forest);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+}
+
+.cake-editorial-compact-highlights strong {
+  display: block;
+  margin-top: 14px;
+  color: var(--forest-deep);
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.12;
+}
+
+.cake-editorial-compact-highlights p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.cake-editorial-compact-disclosures {
+  width: min(100%, 860px);
+  margin: 0 auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.cake-editorial-compact-disclosures details {
+  border-top: 1px solid var(--border);
+}
+
+.cake-editorial-compact-disclosures summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 56px;
+  padding: 0;
+  color: var(--forest-deep);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  list-style: none;
+}
+
+.cake-editorial-compact-disclosures summary::-webkit-details-marker {
+  display: none;
+}
+
+.cake-editorial-compact-disclosure-icon::before {
+  content: '+';
+  color: var(--forest);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.cake-editorial-compact-disclosures details[open] .cake-editorial-compact-disclosure-icon::before {
+  content: '−';
+}
+
+.cake-editorial-compact-disclosures summary:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: -3px;
+}
+
+.cake-editorial-compact-disclosure-body {
+  padding: 0 0 20px;
+}
+
+.cake-editorial-compact-disclosure-body ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cake-editorial-compact-disclosure-body li,
+.cake-editorial-compact-disclosure-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.cake-editorial-compact-disclosure-body li {
+  position: relative;
+  padding-left: 14px;
+}
+
+.cake-editorial-compact-disclosure-body li::before {
+  position: absolute;
+  top: 0.68em;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--forest);
+  content: '';
+}
+
+.cake-editorial-compact-disclosure-body section + section,
+.cake-editorial-compact-disclosure-body section + p {
+  margin-top: 16px;
+}
+
+.cake-editorial-compact-disclosure-body h3 {
+  margin: 0 0 6px;
+  color: var(--forest-deep);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.cake-editorial-compact-related {
+  margin-top: 8px;
+}
+
 @media (max-width: 760px) {
   .cake-editorial-detail {
     gap: 24px;
@@ -9917,5 +10100,77 @@ label.vanilla-point-color-card {
 
   .cake-editorial-reviews .korean-cake-reviews-controls {
     margin-top: 12px;
+  }
+
+  .cake-editorial-detail.is-compact {
+    gap: 20px;
+    margin-top: 24px;
+  }
+
+  .cake-editorial-compact-highlights {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cake-editorial-compact-highlights article {
+    display: block;
+    min-height: 118px;
+    padding: 12px 10px;
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+  }
+
+  .cake-editorial-compact-highlights article:last-child {
+    border-right: 0;
+  }
+
+  .cake-editorial-compact-highlights strong {
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .cake-editorial-compact-highlights p {
+    margin-top: 6px;
+  }
+
+  .cake-detail-ordering-notice {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 15px 16px 15px 14px;
+  }
+
+  .cake-detail-ordering-notice-label {
+    font-size: 10px;
+  }
+
+  .cake-detail-ordering-notice strong {
+    font-size: 15px;
+  }
+
+  .cake-detail-ordering-notice p {
+    font-size: 12px;
+  }
+
+  .cake-editorial-compact-disclosures {
+    width: 100%;
+  }
+
+  .cake-editorial-compact-disclosures summary {
+    min-height: 56px;
+    font-size: 15px;
+  }
+
+  .cake-editorial-compact-disclosure-body {
+    padding-bottom: 16px;
+  }
+
+  .cake-editorial-compact-disclosure-body li,
+  .cake-editorial-compact-disclosure-body p {
+    font-size: 13px;
+  }
+
+  .cake-editorial-compact-disclosure-body section + section,
+  .cake-editorial-compact-disclosure-body section + p {
+    margin-top: 14px;
   }
 }
