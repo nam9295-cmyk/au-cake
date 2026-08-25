@@ -198,7 +198,7 @@ function App() {
       {page === 'home' && <HomeTigerBackground />}
       <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && (
-        <div className="env-notice">Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.</div>
+        <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}
       {!isPrivatePage && <AnnouncementTicker language={language} />}
 
@@ -257,7 +257,7 @@ function App() {
         </>
       )}
       {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
-      {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} cartItemCount={cartItemCount} />}
+      {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'reserve' && (
         <ReservePage
           key={reservationSessionKey}

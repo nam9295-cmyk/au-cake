@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
+import * as i18n from '../src/lib/i18n.js'
 import {
   SPRING_CLASS_CAMPAIGN_2026,
   SPRING_CLASS_POPUP_SESSION_KEY,
@@ -103,4 +104,30 @@ test('Spring campaign exposes the approved English and Korean customer copy', ()
     calloutSessions: '10:00 · 13:00 · 16:00 세 타임',
     closed: '봄방학 클래스 예약이 마감되었습니다.',
   })
+})
+
+test('class customer copy provides Korean labels for the reservation flow', () => {
+  const getClassPageCopy = (i18n as unknown as {
+    getClassPageCopy?: (language: 'en' | 'ko') => {
+      reserve: { title: string; submit: string; parentDetails: string }
+      complete: { title: string; backToClasses: string }
+    }
+  }).getClassPageCopy
+
+  assert.equal(typeof getClassPageCopy, 'function')
+  const copy = getClassPageCopy!('ko')
+  assert.equal(copy.reserve.title, '키즈 클래스 예약 요청')
+  assert.equal(copy.reserve.submit, '예약 요청 보내기')
+  assert.equal(copy.reserve.parentDetails, '보호자 정보')
+  assert.equal(copy.complete.title, '예약 요청을 보냈습니다')
+  assert.equal(copy.complete.backToClasses, '클래스 안내로 돌아가기')
+})
+
+test('shared Korean navigation uses a Korean kids-class label and neutral language helper', () => {
+  const cakeCopy = (i18n as unknown as {
+    cakeCopy: (language: 'en' | 'ko') => { kidsNav: string; languageHelp: string }
+  }).cakeCopy
+
+  assert.equal(cakeCopy('ko').kidsNav, '키즈 클래스')
+  assert.equal(cakeCopy('ko').languageHelp, '언어 선택')
 })

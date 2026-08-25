@@ -111,7 +111,7 @@ function BookingDatePicker({
       </button>
 
       {open && (
-        <div className="weekend-calendar-popover" role="dialog" aria-label={`${label} calendar`}>
+        <div className="weekend-calendar-popover" role="dialog" aria-label={`${label} ${locale === 'ko-KR' ? '달력' : 'calendar'}`}>
           <div className="weekend-calendar-header">
             <button
               type="button"
@@ -146,7 +146,7 @@ function BookingDatePicker({
               const disabled = day.disabled || externallyDisabled
               const availabilityLabel = disabled && day.inCurrentMonth
                 ? locale === 'ko-KR' ? ', 예약 불가' : ', unavailable'
-                : day.isWeekend ? ', weekend' : ''
+                : day.isWeekend ? locale === 'ko-KR' ? ', 주말' : ', weekend' : ''
               return (
                 <button
                   type="button"
