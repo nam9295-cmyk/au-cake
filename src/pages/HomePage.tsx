@@ -130,8 +130,8 @@ export function HomePage({
       isPhotoComingSoon: false,
       name: language === 'ko' ? '레몬 케이크' : 'Lemon Cake',
       description: language === 'ko'
-        ? '레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리해요.'
-        : 'Lemon-shaped cakes filled with fresh lemon cream and finished with a floral decoration.',
+        ? '신선한 레몬즙과 레몬 제스트로 만든 레몬 모양 케이크에 레몬 시럽, 생 레몬 글레이즈와 꽃 장식으로 마무리해요.'
+        : 'Lemon-shaped cakes made with freshly squeezed lemon juice and fresh lemon zest, finished with lemon syrup and a fresh lemon glaze.',
       features: language === 'ko'
         ? ['6, 8, 12, 16개 구성', '12개 · Most Popular', '기본 또는 스페셜 마감 선택']
         : ['Boxes of 6, 8, 12 or 16', '12 pieces · Most Popular', 'Choose basic or special finishing'],

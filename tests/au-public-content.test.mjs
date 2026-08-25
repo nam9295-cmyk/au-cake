@@ -52,6 +52,7 @@ test('AU public product copy and price summaries use the approved copy and two-d
   const vanilla = cakePages['vanilla-fresh-cream-cake']
   const buttercream = cakePages['buttercream-cake']
   const lemon = cakePages['lemon-cake']
+  const brownie = cakePages['brownie-cheesecake']
 
   assert.match(vanilla.description, /Signature Gâteau au Chocolat/)
   assert.doesNotMatch(vanilla.description, /100% fresh milk/)
@@ -65,7 +66,15 @@ test('AU public product copy and price summaries use the approved copy and two-d
   assert.match(buttercream.description, /not added chocolate flavouring/)
   assert.equal(buttercream.optionSummary, 'Choose a size and cake colour · Chocolate Buttercream included')
 
-  assert.match(lemon.description, /freshly squeezed lemon juice/)
+  assert.equal(
+    lemon.description,
+    'Made with freshly squeezed lemon juice and fresh lemon zest, from the cake batter to the lemon syrup and glaze. A bright, citrus-forward little cake finished with real lemon flavour in every step.',
+  )
+  assert.equal(
+    brownie.description,
+    'A rich dark chocolate brownie base topped with a baked Basque-style cheesecake layer. Two contrasting textures come together in one chocolate-and-cheesecake dessert.',
+  )
+  assert.doesNotMatch(brownie.description, /6 inch|serving 8|three finishing options/i)
   for (const page of Object.values(cakePages)) {
     assert.match(page.priceSummary, /AUD \d+\.\d{2}/, page.name)
     assert.doesNotMatch(page.priceSummary, /(?:From |\+)?AUD \d+(?![\d.])/, page.name)

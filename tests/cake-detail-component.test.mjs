@@ -88,7 +88,37 @@ test('editorial-enabled cakes use the shared detail after the protected Hero whi
   assert.match(editorialSource, /<KoreanCakeReviewsSection slug=\{slug\} language=\{language\} \/>/)
   assert.match(editorialDataSource, /buttercream-cake/)
   assert.match(editorialDataSource, /chocolate-cupcakes/)
-  assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail|ButtercreamDetailPage|ButtercreamEditorialDetail|CupcakeDetailPage|CupcakeEditorialDetail/)
+  assert.match(editorialDataSource, /lemon-cake/)
+  assert.match(editorialDataSource, /signature-gateau-au-chocolat/)
+  assert.match(editorialDataSource, /if \(slug === 'brownie-cheesecake'\)/)
+  assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail|ButtercreamDetailPage|ButtercreamEditorialDetail|CupcakeDetailPage|CupcakeEditorialDetail|LemonDetailPage|LemonEditorialDetail|SignatureGateauDetailPage|SignatureGateauEditorialDetail|BrownieDetailPage|BrownieEditorialDetail/)
+})
+
+test('Brownie Cheesecake uses the shared compact editorial while retaining its three current finish choices', () => {
+  assert.match(editorialDataSource, /BROWNIE_CHEESECAKE_EDITORIAL/)
+  assert.match(detailSource, /detail\.id === 'brownie-cheesecake'[\s\S]*?'Choose a finish'/)
+  assert.match(reserveSource, /selectedProductGroup\.id === 'brownie-cheesecake'[\s\S]*?'Choose a finish'/)
+})
+
+test('Signature Gâteau au Chocolat uses the shared compact editorial while retaining its current finish and chocolate controls', () => {
+  assert.match(editorialDataSource, /'signature-gateau-au-chocolat'/)
+  assert.match(detailSource, /product\.usesPoundAddonOptions/)
+  assert.match(detailSource, /POUND_ADDON_OPTIONS\.map/)
+  assert.match(detailSource, /usesReservationChocolateType\(product\.id, selection\.poundAddon\)/)
+  assert.match(detailSource, /Choose a finish/)
+  assert.match(detailSource, /Choose chocolate/)
+})
+
+test('Lemon uses the shared compact editorial while retaining its current pack, finishing, and individual packaging controls', () => {
+  assert.match(editorialDataSource, /'lemon-cake'/)
+  assert.match(detailSource, /isFreshLemonCupcakeProduct\(product\.id\)/)
+  assert.match(detailSource, /Dark chocolate finish pieces/)
+  assert.match(detailSource, /Individual packaging/)
+  assert.doesNotMatch(homeSource, /Lemon-shaped cakes filled with fresh lemon cream/)
+  assert.doesNotMatch(homeSource, /레몬 모양 케이크에 상큼한 레몬 크림을 채우고/)
+  assert.doesNotMatch(marketSource, /fresh lemon cream|레몬 크림/i)
+  assert.doesNotMatch(i18nSource, /fresh lemon cream|레몬 크림/i)
+  assert.doesNotMatch(reserveSource, /Lemon cream and floral decoration included|레몬 크림과 꽃무늬 장식 포함/)
 })
 
 test('Pave editorial reuses live catalogue cards and the existing add-to-order callbacks', () => {

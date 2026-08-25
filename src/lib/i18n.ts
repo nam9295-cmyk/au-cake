@@ -72,33 +72,33 @@ const koProducts: Record<ProductId, ProductText> = {
   },
   'brownie-cheesecake': {
     name: '브라우니 치즈케이크',
-    description: `${AU_CAKE_SIZE_LABELS['15cm']} 브라우니 치즈케이크예요.`,
+    description: '진한 다크초콜릿 브라우니 베이스 위에 부드럽게 구운 바스크 치즈케이크를 올린 2층 디저트입니다. 브라우니와 치즈케이크의 서로 다른 매력을 한 조각에서 함께 즐길 수 있습니다.',
     priceNote: AU_CAKE_SIZE_LABELS['15cm'],
   },
   'pave-brownie-cheesecake': {
     name: '브라우니 치즈케이크 · 파베 초콜릿 on top',
-    description: `파베 초콜릿을 올린 ${AU_CAKE_SIZE_LABELS['15cm']} 브라우니 치즈케이크예요.`,
+    description: '다크초콜릿 브라우니와 바스크 스타일 치즈케이크 위에 부드러운 파베 초콜릿을 더해 마무리합니다.',
     priceNote: AU_CAKE_SIZE_LABELS['15cm'],
   },
   'eiffel-tower-brownie-cheesecake': {
     name: '브라우니 치즈케이크 · 에펠탑 마감',
-    description: `전체 파베 초콜릿과 에펠탑 초콜릿으로 마감한 ${AU_CAKE_SIZE_LABELS['15cm']} 브라우니 치즈케이크예요.`,
+    description: '다크초콜릿 브라우니와 바스크 스타일 치즈케이크를 전체 파베 초콜릿과 에펠탑 초콜릿 하나로 마무리합니다.',
     priceNote: AU_CAKE_SIZE_LABELS['15cm'],
   },
   'fresh-lemon-cupcakes-4': {
-    name: '레몬 케이크 · 4개', description: '신선한 레몬즙을 직접 짜서 만든 레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리합니다.', priceNote: '4개 구성 · 레몬 크림과 꽃 장식 포함',
+    name: '레몬 케이크 · 4개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '4개 구성 · 레몬 글레이즈와 꽃 장식 포함',
   },
   'fresh-lemon-cupcakes-6': {
-    name: '레몬 케이크 · 6개', description: '신선한 레몬즙을 직접 짜서 만든 레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리합니다.', priceNote: '6개 구성 · 레몬 크림과 꽃 장식 포함',
+    name: '레몬 케이크 · 6개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '6개 구성 · 레몬 글레이즈와 꽃 장식 포함',
   },
   'fresh-lemon-cupcakes-8': {
-    name: '레몬 케이크 · 8개', description: '신선한 레몬즙을 직접 짜서 만든 레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리합니다.', priceNote: '8개 구성 · 레몬 크림과 꽃 장식 포함',
+    name: '레몬 케이크 · 8개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '8개 구성 · 레몬 글레이즈와 꽃 장식 포함',
   },
   'fresh-lemon-cupcakes-12': {
-    name: '레몬 케이크 · 12개', description: '신선한 레몬즙을 직접 짜서 만든 레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리합니다.', priceNote: '12개 구성 · Most Popular',
+    name: '레몬 케이크 · 12개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '12개 구성 · Most Popular',
   },
   'fresh-lemon-cupcakes-16': {
-    name: '레몬 케이크 · 16개', description: '신선한 레몬즙을 직접 짜서 만든 레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리합니다.', priceNote: '16개 구성 · 레몬 크림과 꽃 장식 포함',
+    name: '레몬 케이크 · 16개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '16개 구성 · 레몬 글레이즈와 꽃 장식 포함',
   },
 }
 
@@ -112,14 +112,14 @@ const koProductFeatures: Record<ProductId, string[]> = {
   'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '쇼콜라티에 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 마감', '+AUD 10.00 마감 추가'],
   'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15.00 마감 추가'],
-  'brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '기본 마감 · AUD 55.00', '세 가지 마감 선택'],
+  'brownie-cheesecake': ['다크초콜릿 브라우니 베이스', '위에는 바스크 치즈케이크', '두 가지 디저트를 한 번에', AU_CAKE_SIZE_LABELS['15cm'], '세 가지 마감 선택'],
   'pave-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 on top', '+AUD 10.00 마감 추가'],
   'eiffel-tower-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15.00 마감 추가'],
-  'fresh-lemon-cupcakes-4': ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'],
-  'fresh-lemon-cupcakes-6': ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'],
-  'fresh-lemon-cupcakes-8': ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'],
-  'fresh-lemon-cupcakes-12': ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'],
-  'fresh-lemon-cupcakes-16': ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'],
+  'fresh-lemon-cupcakes-4': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
+  'fresh-lemon-cupcakes-6': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
+  'fresh-lemon-cupcakes-8': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
+  'fresh-lemon-cupcakes-12': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
+  'fresh-lemon-cupcakes-16': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
 }
 
 export function getProductText(productId: ProductId, language: Language): ProductText {

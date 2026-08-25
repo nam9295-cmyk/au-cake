@@ -56,6 +56,30 @@ test('sale detail badges mirror the first three Quick View features', () => {
     'Vanilla fresh cream with real vanilla bean',
     'Real vanilla bean with visible vanilla bean specks',
   ])
+
+  assert.deepEqual(getCakeDetailBySlug('brownie-cheesecake', 'en')?.trustPoints, [
+    'Dark chocolate brownie base',
+    'Basque cheesecake on top',
+    'Two desserts in one',
+  ])
+})
+
+test('Brownie Cheesecake keeps its 15cm three-finish sales contract while customer copy explains the baked two-layer dessert', () => {
+  const english = getCakeDetailBySlug('brownie-cheesecake', 'en')
+  const korean = getCakeDetailBySlug('brownie-cheesecake', 'ko')
+
+  assert.equal(
+    english?.description,
+    'A rich dark chocolate brownie base topped with a baked Basque-style cheesecake layer. Two contrasting textures come together in one chocolate-and-cheesecake dessert.',
+  )
+  assert.equal(
+    korean?.description,
+    '진한 다크초콜릿 브라우니 베이스 위에 부드럽게 구운 바스크 치즈케이크를 올린 2층 디저트입니다. 브라우니와 치즈케이크의 서로 다른 매력을 한 조각에서 함께 즐길 수 있습니다.',
+  )
+  assert.deepEqual(english?.productIds, ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'])
+  assert.equal(english?.optionLabel, 'Three finishing options')
+  assert.equal(korean?.optionLabel, '6" | serves 8')
+  assert.equal(english?.gallery.join(','), 'brownie-side,brownie-detail,brownie-quick-view')
 })
 
 test('Cupcake and Signature detail selections remain independent and normalize hidden options', () => {

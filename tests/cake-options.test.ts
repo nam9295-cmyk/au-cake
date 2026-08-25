@@ -235,9 +235,11 @@ test('Lemon Cake variants use fixed pack prices and the twelve pack is Most Popu
     const english = getProductText(productId, 'en')
     const korean = getProductText(productId, 'ko')
     assert.match(english.description, /freshly squeezed lemon juice/)
-    assert.match(korean.description, /신선한 레몬즙을 직접 짜서/)
-    assert.deepEqual(getProductFeatures(productId, 'en'), ['Made with freshly squeezed lemon juice', 'Fresh lemon cream', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'])
-    assert.deepEqual(getProductFeatures(productId, 'ko'), ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'])
+    assert.match(korean.description, /레몬즙을 직접 짜/)
+    assert.deepEqual(getProductFeatures(productId, 'en'), ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'])
+    assert.deepEqual(getProductFeatures(productId, 'ko'), ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'])
+    assert.doesNotMatch(english.description, /fresh lemon cream/i)
+    assert.doesNotMatch(korean.description, /레몬 크림/)
   }
 
   assert.equal(getProductById('fresh-lemon-cupcakes-6').priceNote.includes('Most Popular'), false)

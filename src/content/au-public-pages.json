@@ -157,7 +157,7 @@
     "lemon-cake": {
       "title": "Lemon Cake Sydney | verygood chocolate",
       "name": "Lemon Cake",
-      "description": "Lemon-shaped cakes made with freshly squeezed lemon juice, filled with fresh lemon cream and finished with a floral decoration.",
+      "description": "Made with freshly squeezed lemon juice and fresh lemon zest, from the cake batter to the lemon syrup and glaze. A bright, citrus-forward little cake finished with real lemon flavour in every step.",
       "searchGoal": "Lemon Cake Sydney",
       "schema": "product-offer",
       "startingPrice": 36,
@@ -173,7 +173,7 @@
     "brownie-cheesecake": {
       "title": "Brownie Cheesecake Sydney | verygood chocolate",
       "name": "Brownie Cheesecake",
-      "description": "A 6 inch Brownie Cheesecake serving 8, with three finishing options.",
+      "description": "A rich dark chocolate brownie base topped with a baked Basque-style cheesecake layer. Two contrasting textures come together in one chocolate-and-cheesecake dessert.",
       "searchGoal": "Brownie Cheesecake Sydney",
       "schema": "product-offer",
       "startingPrice": 55,

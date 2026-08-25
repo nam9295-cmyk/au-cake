@@ -116,14 +116,14 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     copy: {
       en: {
         name: 'Lemon Cake',
-        description: 'Lemon-shaped cakes made with freshly squeezed lemon juice, filled with fresh lemon cream and finished with a floral decoration.',
-        features: ['Made with freshly squeezed lemon juice', 'Fresh lemon cream', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'],
+        description: 'Made with freshly squeezed lemon juice and fresh lemon zest, from the cake batter to the lemon syrup and glaze. A bright, citrus-forward little cake finished with real lemon flavour in every step.',
+        features: ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'],
         optionLabel: 'Choose a pack size',
       },
       ko: {
         name: '레몬 케이크',
-        description: '신선한 레몬즙을 직접 짜서 만든 레몬 모양 케이크에 상큼한 레몬 크림을 채우고 꽃무늬 장식으로 마무리합니다.',
-        features: ['신선한 레몬즙을 직접 짜서 제조', '상큼한 레몬 크림', '꽃무늬 장식', '6개·8개·12개·16개 구성'],
+        description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.',
+        features: ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
         optionLabel: '구성 수량만 선택',
       },
     },

@@ -936,7 +936,7 @@ export function ReservePage({
                           <span>{isCupcakePack
                             ? language === 'ko' ? '박스 전체 마감을 다음 단계에서 선택' : 'Choose one finish for the whole box next'
                             : isLemonPack
-                            ? language === 'ko' ? '레몬 크림과 꽃무늬 장식 포함' : 'Lemon cream and floral decoration included'
+                            ? language === 'ko' ? '레몬 글레이즈와 꽃 장식 포함' : 'Lemon glaze and floral decoration included'
                             : optionText.priceNote}</span>
                         </span>
                       </label>

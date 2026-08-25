@@ -191,6 +191,287 @@ const PAVE_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
   },
 }
 
+const LEMON_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
+  en: {
+    layout: 'compact',
+    highlights: [
+      {
+        title: 'FRESHLY SQUEEZED LEMON JUICE',
+        body: 'Fresh lemon juice is used throughout the cake, syrup and glaze for a bright, natural citrus flavour.',
+      },
+      {
+        title: 'FRESH LEMON ZEST',
+        body: 'Fresh lemon zest goes into the cake and lemon syrup for a fragrant citrus finish.',
+      },
+      {
+        title: 'LEMON SYRUP & GLAZE',
+        body: 'Finished with lemon syrup and a fresh lemon glaze for an extra layer of lemon flavour.',
+      },
+    ],
+    orderingNotice: {
+      title: 'Made to order · Melrose Park pick-up',
+      body: 'No payment is taken now. Our team confirms availability before sending payment details.',
+    },
+    details: {
+      title: 'Cake details',
+      items: [
+        'Fresh lemon cake — Made with freshly squeezed lemon juice and fresh lemon zest.',
+        'Lemon syrup — Fresh lemon juice and zest are used to make the lemon syrup.',
+        'Fresh lemon glaze — Finished with an icing sugar glaze made with freshly squeezed lemon juice.',
+      ],
+    },
+    ingredientsAndAllergens: {
+      title: 'Ingredients & allergens',
+      ingredientsLabel: 'Key ingredients',
+      allergenLabel: 'Allergen note',
+      ingredients: 'Made with freshly squeezed lemon juice, fresh lemon zest, butter, eggs and wheat flour, with a lemon syrup and fresh lemon glaze.',
+      allergens: 'Contains milk, egg and wheat (gluten).',
+      contact: 'Please contact us before ordering for someone with a food allergy.',
+    },
+    pickupAndConfirmation: {
+      title: 'Pick-up & order confirmation',
+    },
+    relatedProductSlugs: [
+      'chocolate-cupcakes',
+      'vanilla-fresh-cream-cake',
+    ],
+  },
+  ko: {
+    layout: 'compact',
+    highlights: [
+      {
+        title: '신선한 레몬즙을 직접 짜서 제조',
+        body: '직접 짜낸 생 레몬즙을 케이크와 시럽, 글레이즈에 사용해 산뜻하고 자연스러운 레몬 풍미를 살립니다.',
+      },
+      {
+        title: '신선한 레몬 제스트',
+        body: '생 레몬의 제스트를 케이크와 시럽에 더해 향긋한 시트러스 향을 살립니다.',
+      },
+      {
+        title: '레몬 시럽과 글레이즈',
+        body: '레몬 시럽과 생 레몬즙으로 만든 글레이즈로 마무리해 레몬의 풍미를 한 번 더 더합니다.',
+      },
+    ],
+    orderingNotice: {
+      title: '주문 후 제작 · Melrose Park 픽업',
+      body: '지금 결제되지 않습니다. 베리굿 팀이 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.',
+    },
+    details: {
+      title: '케이크 상세',
+      items: [
+        '생 레몬 케이크 — 직접 짜낸 신선한 레몬즙과 레몬 제스트를 사용합니다.',
+        '레몬 시럽 — 신선한 레몬즙과 제스트를 사용해 레몬 시럽을 만듭니다.',
+        '생 레몬 글레이즈 — 슈가파우더와 직접 짜낸 생 레몬즙으로 만든 글레이즈로 마무리합니다.',
+      ],
+    },
+    ingredientsAndAllergens: {
+      title: '재료 및 알레르기 안내',
+      ingredientsLabel: '주요 재료',
+      allergenLabel: '알레르기 안내',
+      ingredients: '신선하게 직접 짜낸 레몬즙과 레몬 제스트, 버터, 계란, 밀가루를 사용하며 레몬 시럽과 생 레몬 글레이즈로 마무리합니다.',
+      allergens: '우유, 계란, 밀(글루텐)을 함유합니다.',
+      contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.',
+    },
+    pickupAndConfirmation: {
+      title: '픽업 및 주문 확정',
+    },
+    relatedProductSlugs: [
+      'chocolate-cupcakes',
+      'vanilla-fresh-cream-cake',
+    ],
+  },
+}
+
+const SIGNATURE_GATEAU_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
+  en: {
+    layout: 'compact',
+    highlights: [
+      {
+        title: 'SIGNATURE CHOCOLATE CAKE',
+        body: 'Our chocolate-forward Signature Gâteau au Chocolat base.',
+      },
+      {
+        title: 'CHOOSE YOUR FINISH',
+        body: 'Keep it classic, add melted chocolate, or finish with vanilla fresh cream.',
+      },
+      {
+        title: 'MADE TO ORDER',
+        body: 'Prepared to order for pre-arranged Melrose Park pick-up.',
+      },
+    ],
+    orderingNotice: {
+      title: 'Made to order · Melrose Park pick-up',
+      body: 'No payment is taken now. Our team confirms availability before sending payment details.',
+    },
+    details: {
+      title: 'Cake details',
+      items: [
+        'Signature Gâteau au Chocolat — A rich chocolate cake made with butter, eggs, milk, cocoa and wheat flour.',
+        'Basic finish — Enjoy the Signature Gâteau au Chocolat in its classic form.',
+        'Extra chocolate — Finished with melted chocolate poured over the cake.',
+        'Vanilla fresh cream — Finished with the same real-vanilla fresh cream used in our Vanilla Fresh Cream Cake.',
+      ],
+    },
+    ingredientsAndAllergens: {
+      title: 'Ingredients & allergens',
+      ingredientsLabel: 'Key ingredients',
+      allergenLabel: 'Allergen note',
+      ingredients: 'Our Signature Gâteau au Chocolat is made with butter, eggs, milk, cocoa and wheat flour. Finish ingredients vary with the option selected. Vanilla Fresh Cream is made with real vanilla bean; the Extra Chocolate finish uses melted chocolate.',
+      allergens: 'Contains milk, egg and wheat (gluten).',
+      contact: 'Please contact us before ordering for someone with a food allergy.',
+    },
+    pickupAndConfirmation: {
+      title: 'Pick-up & order confirmation',
+    },
+    relatedProductSlugs: [
+      'pave-chocolate-cake',
+      'vanilla-fresh-cream-cake',
+    ],
+  },
+  ko: {
+    layout: 'compact',
+    highlights: [
+      {
+        title: '시그니처 갸또 쇼콜라',
+        body: '베리굿의 진한 초콜릿 시그니처 케이크입니다.',
+      },
+      {
+        title: '원하는 마감 선택',
+        body: '기본, 녹인 초콜릿 마감, 바닐라 생크림 중 원하는 스타일을 선택할 수 있습니다.',
+      },
+      {
+        title: '주문 후 제작',
+        body: '주문 요청에 맞춰 제작해 Melrose Park에서 사전 예약 픽업으로 준비합니다.',
+      },
+    ],
+    orderingNotice: {
+      title: '주문 후 제작 · Melrose Park 픽업',
+      body: '지금 결제되지 않습니다. 베리굿 팀이 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.',
+    },
+    details: {
+      title: '케이크 상세',
+      items: [
+        '시그니처 갸또 쇼콜라 — 버터, 계란, 우유, 코코아, 밀가루를 사용해 만드는 진한 초콜릿 케이크입니다.',
+        '기본 마감 — 시그니처 갸또 쇼콜라 본연의 형태로 즐길 수 있습니다.',
+        '초콜릿 추가 — 초콜릿을 녹여 케이크 위에 부어 더 진하게 마무리합니다.',
+        '바닐라 생크림 — Vanilla Fresh Cream Cake와 동일한 실제 바닐라빈 생크림으로 마무리합니다.',
+      ],
+    },
+    ingredientsAndAllergens: {
+      title: '재료 및 알레르기 안내',
+      ingredientsLabel: '주요 재료',
+      allergenLabel: '알레르기 안내',
+      ingredients: '버터, 계란, 우유, 코코아, 밀가루를 사용해 시그니처 갸또 쇼콜라를 만듭니다. 선택한 마감에 따라 추가 재료가 달라집니다. 바닐라 생크림에는 실제 바닐라빈을 사용하며, 초콜릿 추가 옵션은 녹인 초콜릿으로 마무리합니다.',
+      allergens: '우유, 계란, 밀(글루텐)을 함유합니다.',
+      contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.',
+    },
+    pickupAndConfirmation: {
+      title: '픽업 및 주문 확정',
+    },
+    relatedProductSlugs: [
+      'pave-chocolate-cake',
+      'vanilla-fresh-cream-cake',
+    ],
+  },
+}
+
+const BROWNIE_CHEESECAKE_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
+  en: {
+    layout: 'compact',
+    highlights: [
+      {
+        title: 'DARK CHOCOLATE BROWNIE BASE',
+        body: 'A rich brownie layer made with dark chocolate and cocoa.',
+      },
+      {
+        title: 'BASQUE CHEESECAKE ON TOP',
+        body: 'A baked cheesecake layer made with cream cheese and fresh cream.',
+      },
+      {
+        title: 'TWO DESSERTS IN ONE',
+        body: 'Chocolate brownie and creamy cheesecake come together in every slice.',
+      },
+    ],
+    orderingNotice: {
+      title: 'Made to order · Melrose Park pick-up',
+      body: 'No payment is taken now. Our team confirms availability before sending payment details.',
+    },
+    details: {
+      title: 'Cake details',
+      items: [
+        'Dark chocolate brownie — The lower layer is baked with dark chocolate, butter and cocoa for a rich chocolate base.',
+        'Basque-style cheesecake — The upper layer is made with cream cheese, fresh cream and eggs, with a small amount of fresh lemon and vanilla.',
+        'Two-layer bake — The brownie and cheesecake are baked together to create two distinct layers in every slice.',
+        'Basic — Enjoy the brownie and cheesecake layers in their classic form.',
+        'Pave chocolate on top — Finished with smooth pave chocolate on top for a richer chocolate finish.',
+        'Full pave finish — Fully finished with pave chocolate and topped with one Eiffel Tower chocolate.',
+      ],
+    },
+    ingredientsAndAllergens: {
+      title: 'Ingredients & allergens',
+      ingredientsLabel: 'Key ingredients',
+      allergenLabel: 'Allergen note',
+      ingredients: 'The brownie base is made with dark chocolate, butter, eggs, cocoa and wheat flour. The cheesecake layer is made with cream cheese, fresh cream and eggs, with fresh lemon and vanilla.',
+      allergens: 'Contains milk, egg and wheat (gluten).',
+      contact: 'Please contact us before ordering for someone with a food allergy.',
+    },
+    pickupAndConfirmation: {
+      title: 'Pick-up & order confirmation',
+    },
+    relatedProductSlugs: [
+      'pave-chocolate-cake',
+      'signature-gateau-au-chocolat',
+    ],
+  },
+  ko: {
+    layout: 'compact',
+    highlights: [
+      {
+        title: '다크초콜릿 브라우니 베이스',
+        body: '다크초콜릿과 코코아로 진하고 묵직하게 만든 브라우니층입니다.',
+      },
+      {
+        title: '위에는 바스크 치즈케이크',
+        body: '크림치즈와 생크림으로 부드럽게 구워낸 치즈케이크층입니다.',
+      },
+      {
+        title: '두 가지 디저트를 한 번에',
+        body: '진한 브라우니와 부드러운 치즈케이크를 한 조각에서 함께 즐길 수 있습니다.',
+      },
+    ],
+    orderingNotice: {
+      title: '주문 후 제작 · Melrose Park 픽업',
+      body: '지금 결제되지 않습니다. 베리굿 팀이 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.',
+    },
+    details: {
+      title: '케이크 상세',
+      items: [
+        '다크초콜릿 브라우니 — 아래층은 다크초콜릿, 버터, 코코아를 사용해 진한 초콜릿 베이스로 만듭니다.',
+        '바스크 스타일 치즈케이크 — 위층은 크림치즈와 생크림, 계란을 중심으로 만들고 소량의 생 레몬과 바닐라를 더합니다.',
+        '두 가지 층을 한 번에 — 브라우니와 치즈케이크를 함께 구워 한 조각 안에서 두 개의 뚜렷한 층을 즐길 수 있습니다.',
+        '기본 마감 — 브라우니와 치즈케이크의 기본 조합 그대로 즐길 수 있습니다.',
+        '파베 초콜릿 on top — 윗면에 부드러운 파베 초콜릿을 더해 더욱 진한 초콜릿 풍미로 마무리합니다.',
+        '전체 파베 마감 — 파베 초콜릿으로 전체를 마감하고 에펠탑 초콜릿 하나를 올려 완성합니다.',
+      ],
+    },
+    ingredientsAndAllergens: {
+      title: '재료 및 알레르기 안내',
+      ingredientsLabel: '주요 재료',
+      allergenLabel: '알레르기 안내',
+      ingredients: '브라우니 베이스에는 다크초콜릿, 버터, 계란, 코코아, 밀가루를 사용합니다. 치즈케이크층은 크림치즈, 생크림, 계란을 중심으로 만들고 생 레몬과 바닐라를 더합니다.',
+      allergens: '우유, 계란, 밀(글루텐)을 함유합니다.',
+      contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.',
+    },
+    pickupAndConfirmation: {
+      title: '픽업 및 주문 확정',
+    },
+    relatedProductSlugs: [
+      'pave-chocolate-cake',
+      'signature-gateau-au-chocolat',
+    ],
+  },
+}
+
 const VANILLA_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
   en: {
     quickFacts: [
@@ -856,7 +1137,7 @@ function toCompactEditorial(
 }
 
 export function getCakeEditorialBySlug(
-  slug: 'pave-chocolate-cake' | 'vanilla-fresh-cream-cake' | 'buttercream-cake' | 'chocolate-cupcakes',
+  slug: 'pave-chocolate-cake' | 'vanilla-fresh-cream-cake' | 'buttercream-cake' | 'chocolate-cupcakes' | 'lemon-cake' | 'signature-gateau-au-chocolat' | 'brownie-cheesecake',
   language: Language,
 ): CompactCakeEditorialContent
 export function getCakeEditorialBySlug(
@@ -868,6 +1149,9 @@ export function getCakeEditorialBySlug(
   language: Language,
 ): CakeEditorialContent | null {
   if (slug === 'pave-chocolate-cake') return PAVE_EDITORIAL[language]
+  if (slug === 'lemon-cake') return LEMON_EDITORIAL[language]
+  if (slug === 'signature-gateau-au-chocolat') return SIGNATURE_GATEAU_EDITORIAL[language]
+  if (slug === 'brownie-cheesecake') return BROWNIE_CHEESECAKE_EDITORIAL[language]
   if (slug === 'vanilla-fresh-cream-cake') return toCompactEditorial(VANILLA_EDITORIAL[language], language)
   if (slug === 'buttercream-cake') return toCompactEditorial(BUTTERCREAM_EDITORIAL[language], language)
   if (slug === 'chocolate-cupcakes') return toCompactEditorial(CUPCAKES_EDITORIAL[language], language)
