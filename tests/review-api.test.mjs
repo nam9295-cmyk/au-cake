@@ -808,8 +808,43 @@ test('atomic submit derives the photo only from its transaction invite read and 
   assert.deepEqual(repository.calls.filter(([name]) => ['commit', 'rollback'].includes(name)).map(([name]) => name), ['commit'])
 })
 
+test('submit invokes a private post-commit hook only after commit and isolates its failure from the coupon response', async () => {
+  const events = []
+  const repository = makeRepository()
+  repository.commitTransaction = async (transaction) => { repository.calls.push(['commit', transaction]); events.push('commit') }
+  const result = await submitReview(repository, VALID_TOKEN, {
+    rating: 5, body: 'Great', publishConsent: true,
+  }, {
+    now: fixedNow,
+    hmacSecret,
+    idFactory: (() => { let index = 0; return () => ['review-post-commit', 'coupon-post-commit'][index++] })(),
+    async postCommit(committed) {
+      events.push(`hook:${committed.reviewId}:${committed.couponId}:${committed.sourceType}:${committed.sourceReservationId}`)
+      throw new Error('email infrastructure unavailable')
+    },
+  })
+  assert.deepEqual(events, ['commit', 'hook:review-post-commit:coupon-post-commit:cake:cake-1'])
+  assert.match(result.couponCode, /^(?:FOX|CAT|DOG|OWL|PIG|BEE|COW|CUB|EMU|HEN|KOI|PUP|RAM|YAK|APE)/)
+  assert.equal(result.rewardPercent, 5)
+  assert.equal('reviewId' in result, false)
+})
+
+test('submit does not invoke a post-commit hook when coupon creation or commit fails', async () => {
+  for (const overrides of [
+    { createCouponError: new Error('coupon write failed') },
+    { commitError: Object.assign(new Error('commit conflict'), { code: 409 }) },
+  ]) {
+    let calls = 0
+    await assert.rejects(() => submitReview(makeRepository(overrides), VALID_TOKEN, {
+      rating: 5, body: 'Great', publishConsent: true,
+    }, { now: fixedNow, hmacSecret, postCommit: async () => { calls += 1 } }))
+    assert.equal(calls, 0)
+  }
+})
+
 test('submit reconciles a committed review after the commit response is lost before returning its coupon', async () => {
   const repository = makeRepository({ commitError: new Error('transport lost') })
+  const postCommit = []
   let inviteReads = 0
   repository.findInviteByTokenHash = async (tokenHash, transaction) => {
     repository.calls.push(['findInvite', tokenHash, transaction])
@@ -831,11 +866,19 @@ test('submit reconciles a committed review after the commit response is lost bef
 
   const result = await submitReview(repository, VALID_TOKEN, {
     rating: 5, body: 'Great', publishConsent: true,
-  }, { now: fixedNow, hmacSecret, idFactory: (() => { let i = 0; return () => ['review-reconcile', 'coupon-reconcile'][i++] })() })
+  }, {
+    now: fixedNow,
+    hmacSecret,
+    idFactory: (() => { let i = 0; return () => ['review-reconcile', 'coupon-reconcile'][i++] })(),
+    async postCommit(committed) { postCommit.push(committed) },
+  })
 
   assert.equal('reviewId' in result, false)
   assert.match(result.couponCode, /^(?:FOX|CAT|DOG|OWL|PIG|BEE|COW|CUB|EMU|HEN|KOI|PUP|RAM|YAK|APE)(?:KIWI|FIG|LIME|PEAR|PLUM|APPLE|GRAPE|GUAVA|LEMON|MANGO|MELON|PEACH)[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/)
   assert.deepEqual(repository.calls.filter(([name]) => ['commit', 'rollback'].includes(name)).map(([name]) => name), ['commit', 'rollback'])
+  assert.deepEqual(postCommit, [{
+    reviewId: 'review-reconcile', couponId: 'coupon-reconcile', sourceType: 'cake', sourceReservationId: 'cake-1',
+  }])
 })
 
 test('submit returns a stable uncertainty error when a lost commit response cannot be proven', async () => {
@@ -1039,6 +1082,27 @@ test('main routing separates public and admin actions without exposing internal 
     (error) => error instanceof ReviewApiError && error.code === 'REVIEW_ADMIN_UNAUTHORIZED')
   await assert.rejects(() => handleReviewRequest({ action: 'unknown' }, {}, {}, services),
     (error) => error instanceof ReviewApiError && error.code === 'UNKNOWN_ACTION')
+})
+
+test('main routing forwards only an internal post-commit callback to review submission', async () => {
+  let received
+  const postCommit = async () => {}
+  const services = {
+    async submit(_repository, token, review, options) {
+      received = { token, review, postCommit: options.postCommit }
+      return { rewardPercent: 5, couponCode: 'FOXKIWI7Q2MK' }
+    },
+  }
+  await handleReviewRequest({
+    action: 'submit-review',
+    data: {
+      token: 'review-token',
+      review: { rating: 5, body: 'Great', publishConsent: true, couponCode: 'CLIENT-SPOOF' },
+    },
+  }, {}, {}, services, {}, undefined, { hmacSecret, encryptionKey, postCommit })
+  assert.deepEqual(received.token, 'review-token')
+  assert.equal(received.review.couponCode, 'CLIENT-SPOOF')
+  assert.strictEqual(received.postCommit, postCommit)
 })
 
 test('submit transaction rechecks source completion and writes no review or coupon after a preflight TOCTOU change', async () => {

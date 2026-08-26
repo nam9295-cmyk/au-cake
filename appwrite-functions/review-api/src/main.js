@@ -28,6 +28,7 @@ import {
   getReviewInviteEmailStatus,
   sendReviewInviteEmail,
 } from './review-invite-actions.js'
+import { createReviewRewardPostCommit } from './review-reward-email.js'
 
 const APPWRITE_RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 
@@ -457,6 +458,7 @@ export async function handleReviewRequest(body, headers, env = process.env, serv
       isConflict,
       hmacSecret: options.hmacSecret,
       encryptionKey: options.encryptionKey,
+      postCommit: options.postCommit,
     })
   }
   if (action === 'list-public') return services.listPublic(repository, body.limit, {
@@ -595,6 +597,17 @@ export default async ({ req, res, log, error }) => {
       apiKey: emailRuntime.apiKey,
       userAgent: 'verygood-review-api/1.0',
     })
+    const postCommit = createReviewRewardPostCommit({
+      repository,
+      deliveryRepository,
+      transport,
+      encryptionKey,
+      from: emailRuntime.from,
+      replyTo: emailRuntime.replyTo,
+      cakeOrderUrl: new URL('/', emailRuntime.reviewOrigin).toString(),
+      log,
+      error,
+    })
     const result = await handleReviewRequest(body, req.headers, process.env, defaultServices, repository, photoStorage, {
       hmacSecret,
       encryptionKey,
@@ -607,6 +620,7 @@ export default async ({ req, res, log, error }) => {
       reviewOrigin: emailRuntime.reviewOrigin,
       log,
       error,
+      postCommit,
     })
     log(`review-api completed: ${action}`)
     return res.json({ ok: true, result }, 200)

@@ -533,6 +533,7 @@ export async function submitReview(repository, token, input, {
   isConflict = (error) => error?.code === 409,
   hmacSecret,
   encryptionKey,
+  postCommit,
 } = {}) {
   const couponHmacSecret = Buffer.isBuffer(hmacSecret)
     ? hmacSecret
@@ -619,6 +620,7 @@ export async function submitReview(repository, token, input, {
     }
     commitAttempted = true
     await repository.commitTransaction(transaction)
+    await runReviewPostCommit(postCommit, proposedSubmission)
     return proposedSubmission.result
   } catch (error) {
     try {
@@ -629,7 +631,10 @@ export async function submitReview(repository, token, input, {
     if (error instanceof ReviewApiError) throw error
     if (proposedSubmission && (commitAttempted || isConflict(error))) {
       const committed = await reconcileSubmittedReview(repository, proposedSubmission)
-      if (committed) return committed
+      if (committed) {
+        await runReviewPostCommit(postCommit, proposedSubmission)
+        return committed
+      }
       if (commitAttempted && !isConflict(error)) fail('REVIEW_SUBMISSION_UNCERTAIN', 503)
     }
     if (isConflict(error)) {
@@ -648,6 +653,20 @@ export async function submitReview(repository, token, input, {
       throw new ReviewApiError('REVIEW_ALREADY_SUBMITTED', 409)
     }
     throw error
+  }
+}
+
+async function runReviewPostCommit(postCommit, proposedSubmission) {
+  if (typeof postCommit !== 'function' || !proposedSubmission) return
+  try {
+    await postCommit({
+      reviewId: proposedSubmission.reviewId,
+      couponId: proposedSubmission.couponId,
+      sourceType: proposedSubmission.sourceType,
+      sourceReservationId: proposedSubmission.sourceReservationId,
+    })
+  } catch {
+    // Post-commit delivery is intentionally isolated from the review/coupon success result.
   }
 }
 

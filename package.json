@@ -19,7 +19,7 @@
     "test:review-invite-server": "node --test tests/review-invite-token-encryption.test.mjs tests/review-invite-recovery.test.mjs tests/review-invite-email.test.mjs tests/review-invite-actions.test.mjs tests/review-invite-main.test.mjs tests/shared-resend-transport.test.mjs",
     "test:review-schema": "node --test tests/review-schema.test.mjs tests/individual-packaging-schema.test.mjs",
     "test:email-delivery": "node --test tests/email-delivery.test.mjs",
-    "test:review-api": "node --test tests/review-api.test.mjs tests/review-photo-api.test.mjs tests/review-coupon-encryption.test.mjs tests/admin-review-reward-api.test.mjs",
+    "test:review-api": "node --test tests/review-api.test.mjs tests/review-photo-api.test.mjs tests/review-coupon-encryption.test.mjs tests/admin-review-reward-api.test.mjs tests/review-reward-email.test.mjs",
     "test:review-api-deploy": "node --test tests/review-api-deploy.test.mjs",
     "test:manual-coupon": "node --test tests/manual-coupon.test.mjs",
     "test:class": "TMP_DIR=/tmp/au-cake-test-$(date +%s); npx tsc tests/class-utils.test.ts tests/class-campaign.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && node --test $TMP_DIR/tests/class-utils.test.js $TMP_DIR/tests/class-campaign.test.js tests/class-component-contract.test.mjs tests/class-pages-module-contract.test.mjs tests/spring-class-popup-contract.test.mjs tests/reservation-notification-class.test.mjs",

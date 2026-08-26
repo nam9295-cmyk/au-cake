@@ -309,7 +309,7 @@ test('archive helper always cleans its temporary directory when upload fails', a
   ])
 })
 
-test('review API archive contains the shared ledger, transport, and encrypted invite sources', async () => {
+test('review API archive contains the shared ledger, transport, encrypted invite, and reward email sources', async () => {
   const archive = await createReviewApiArchive({ repositoryRoot })
   try {
     const listed = spawnSync('tar', ['-tzf', archive.path], { encoding: 'utf8' })
@@ -318,6 +318,7 @@ test('review API archive contains the shared ledger, transport, and encrypted in
       'src/invite-token-envelope.js',
       'src/review-invite-email.js',
       'src/review-invite-actions.js',
+      'src/review-reward-email.js',
       'shared/email-delivery/email-delivery.js',
       'shared/email-delivery/email-delivery-repository.js',
       'shared/email-delivery/resend-transport.js',
