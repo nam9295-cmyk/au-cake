@@ -17,13 +17,14 @@ import { retryEmail } from '../shared/email-delivery/email-delivery-retry.js'
 import { parseStoredOrderLines } from '../shared/reservation-api/business.js'
 
 const APPWRITE_RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
-const BOOKING_RECEIPT_TEMPLATE_VERSION = 'v1'
+const BOOKING_OPERATOR_RECEIPT_TEMPLATE_VERSION = 'v1'
+const BOOKING_CUSTOMER_RECEIPT_TEMPLATE_VERSION = 'v2'
 const BOOKING_RECEIPT_TEMPLATES = Object.freeze({
   operator: 'booking-received-operator',
   customer: 'booking-received-customer',
 })
 const BOOKING_CONFIRMATION_TEMPLATE = 'booking-confirmed-customer'
-const BOOKING_CONFIRMATION_TEMPLATE_VERSION = 'v1'
+const BOOKING_CONFIRMATION_TEMPLATE_VERSION = 'v2'
 const BOOKING_EMAIL_KINDS = Object.freeze([
   BOOKING_RECEIPT_TEMPLATES.operator,
   BOOKING_RECEIPT_TEMPLATES.customer,
@@ -706,22 +707,145 @@ function customerClassRows(reservation, config) {
   ]
 }
 
+const CUSTOMER_EMAIL_KOREAN_LABELS = Object.freeze({
+  Name: '예약자',
+  'Booking number': '예약번호',
+  Product: '주문 상품',
+  Size: '사이즈',
+  Layers: '케이크 시트',
+  Filling: '필링',
+  'Cake colour': '케이크 색상',
+  'Point colour': '포인트 색상',
+  Chocolate: '초콜릿',
+  Finish: '마감',
+  'Icing mix': '마감 구성',
+  Quantity: '수량',
+  'Individual packaging': '개별 포장',
+  Total: '총 금액',
+  'Pick-up date': '픽업 날짜',
+  'Pick-up time': '픽업 시간',
+  'Pick-up location': '픽업 장소',
+  'Your request': '요청사항',
+  'Parent name': '보호자',
+  'Child name': '참가자',
+  Course: '클래스',
+  Plan: '과정',
+  'First session': '첫 수업',
+  'Advanced session': 'Advanced 세션',
+  Location: '장소',
+  Payment: '결제 안내',
+  Preparation: '준비사항',
+})
+
+function customerEmailKoreanRows(rows) {
+  return rows.map(([rawLabel, value]) => {
+    const label = plainTextCell(rawLabel)
+    const match = /^(.*?)(\s+\d+)$/.exec(label)
+    const base = match ? match[1] : label
+    return [`${CUSTOMER_EMAIL_KOREAN_LABELS[base] || base}${match ? match[2] : ''}`, value]
+  })
+}
+
+function bilingualGreeting(section) {
+  const name = plainTextCell(section.greetingName)
+  return section.language === '한국어' ? `안녕하세요, ${name}님.` : `Hi ${name},`
+}
+
+function bilingualTextSection(section) {
+  return [
+    `[${section.language}]`,
+    bilingualGreeting(section),
+    '',
+    plainTextCell(section.heading),
+    '',
+    plainTextCell(section.intro),
+    '',
+    plainTextCell(section.detailsHeading),
+    ...section.rows.map(([label, value]) => `${plainTextCell(label)}: ${plainTextCell(value)}`),
+    '',
+    plainTextCell(section.followUp),
+    '',
+    ...section.signOff.map(plainTextCell),
+  ].join('\n')
+}
+
+function bilingualHtmlRows(rows) {
+  return rows.map(([label, value]) => `
+    <tr>
+      <th style="width: 42%; padding: 10px 12px; border: 1px solid #e8ded5; background: #fbf6ef; text-align: left; vertical-align: top;">${escapeHtml(plainTextCell(label))}</th>
+      <td style="padding: 10px 12px; border: 1px solid #e8ded5; vertical-align: top;">${escapeHtml(plainTextCell(value))}</td>
+    </tr>`).join('')
+}
+
+function bilingualHtmlSection(section) {
+  return `
+    <section>
+      <p style="margin: 0 0 8px; color: #6b4b3e; font-size: 13px; font-weight: 700;">[${escapeHtml(section.language)}]</p>
+      <h1 style="font-size: 22px; line-height: 1.3; margin: 0 0 16px;">${escapeHtml(plainTextCell(section.heading))}</h1>
+      <p style="margin: 0 0 16px;">${escapeHtml(bilingualGreeting(section))}</p>
+      <p style="margin: 0 0 20px;">${escapeHtml(plainTextCell(section.intro))}</p>
+      <div style="border: 1px solid #e8ded5; border-radius: 8px; overflow: hidden; margin: 0 0 20px;">
+        <div style="padding: 12px; background: #5b2417; color: #ffffff; font-weight: 700;">${escapeHtml(plainTextCell(section.detailsHeading))}</div>
+        <table style="border-collapse: collapse; width: 100%;"><tbody>${bilingualHtmlRows(section.rows)}</tbody></table>
+      </div>
+      <p style="margin: 0 0 16px;">${escapeHtml(plainTextCell(section.followUp))}</p>
+      <p style="margin: 0;">${section.signOff.map((line) => escapeHtml(plainTextCell(line))).join('<br />')}</p>
+    </section>`
+}
+
+function buildBilingualEmailText(korean, english) {
+  return [bilingualTextSection(korean), '', '--------------------', '', bilingualTextSection(english)].join('\n')
+}
+
+function buildBilingualEmailHtml(korean, english) {
+  return `
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55; max-width: 640px; margin: 0 auto;">
+      ${bilingualHtmlSection(korean)}
+      <div style="border-top: 1px solid #e8ded5; margin: 28px 0;"></div>
+      ${bilingualHtmlSection(english)}
+    </div>`
+}
+
 function customerEmailCopy(reservation) {
   if (isClassReservation(reservation)) {
     return {
-      subject: 'We’ve received your Verygood Kids Class booking request',
-      greetingName: reservation.parentName,
-      heading: 'Your kids class booking request has been received',
-      received: 'We’ve received your booking request. We’ll check the details and send payment details and final confirmation instructions next.',
-      followUp: 'Please tell us promptly if allergy information changes. Your child may bring a favourite small figure, doll, LEGO, or toy if they would like to include it in the class.',
+      subject: '[Verygood] 키즈 클래스 예약 요청이 접수됐어요 | Kids Class booking request received',
+      korean: {
+        language: '한국어', greetingName: reservation.parentName,
+        heading: '키즈 클래스 예약 요청이 접수되었습니다',
+        intro: '베리굿 키즈 클래스 예약 요청이 정상적으로 접수되었습니다.',
+        detailsHeading: '예약 내역',
+        followUp: '현재는 “예약 요청 접수” 상태입니다. 수업 및 결제 내용을 확인한 뒤 최종 확정 안내를 보내드릴게요. 수업 전 준비사항과 알러지 정보에 변경이 있으면 알려주세요.',
+        signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
+      },
+      english: {
+        language: 'English', greetingName: reservation.parentName,
+        heading: 'Your kids class booking request has been received',
+        intro: 'We’ve received your booking request. We’ll check the details and send payment details and final confirmation instructions next.',
+        detailsHeading: 'Booking details',
+        followUp: 'Please tell us promptly if allergy information changes. Your child may bring a favourite small figure, doll, LEGO, or toy if they would like to include it in the class.',
+        signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
+      },
     }
   }
   return {
-    subject: 'We’ve received your Verygood Chocolate booking request',
-    greetingName: reservation.customerName,
-    heading: 'Your booking request has been received',
-    received: 'Your booking request has been received. We’ll check the details and send your final confirmation next.',
-    followUp: 'This is a booking request, not a final confirmation.',
+    subject: '[Verygood] 케이크 예약 요청이 접수됐어요 | Cake booking request received',
+    korean: {
+      language: '한국어', greetingName: reservation.customerName,
+      heading: '케이크 예약 요청이 접수되었습니다',
+      intro: '베리굿 초콜릿 시드니에 예약해주셔서 감사합니다. 예약 요청이 정상적으로 접수되었습니다.',
+      detailsHeading: '예약 내역',
+      followUp: '현재는 “예약 요청 접수” 상태입니다. 주문 내용을 확인한 뒤 최종 예약 확정 안내를 다시 보내드릴게요.',
+      signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
+    },
+    english: {
+      language: 'English', greetingName: reservation.customerName,
+      heading: 'Your booking request has been received',
+      intro: 'Thank you for booking with Verygood Chocolate Sydney. We’ve received your booking request.',
+      detailsHeading: 'Booking details',
+      followUp: 'Your booking is currently awaiting final confirmation. We’ll review the details and send you a final confirmation shortly.',
+      signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
+    },
   }
 }
 
@@ -730,18 +854,10 @@ function buildCustomerReceiptText(reservation, config) {
   const rows = isClassReservation(reservation)
     ? customerClassRows(reservation, config)
     : customerCakeRows(reservation, config)
-  return [
-    copy.subject,
-    '',
-    `Hi ${plainTextCell(copy.greetingName)},`,
-    '',
-    copy.received,
-    '',
-    'Booking details',
-    ...rows.map(([label, value]) => `${plainTextCell(label)}: ${plainTextCell(value)}`),
-    '',
-    copy.followUp,
-  ].join('\n')
+  return buildBilingualEmailText(
+    { ...copy.korean, rows: customerEmailKoreanRows(rows) },
+    { ...copy.english, rows },
+  )
 }
 
 function buildCustomerReceiptHtml(reservation, config) {
@@ -749,23 +865,10 @@ function buildCustomerReceiptHtml(reservation, config) {
   const rows = isClassReservation(reservation)
     ? customerClassRows(reservation, config)
     : customerCakeRows(reservation, config)
-  const safeRows = rows.map(([label, value]) => `
-    <tr>
-      <th style="width: 42%; padding: 10px 12px; border: 1px solid #e8ded5; background: #fbf6ef; text-align: left; vertical-align: top;">${escapeHtml(plainTextCell(label))}</th>
-      <td style="padding: 10px 12px; border: 1px solid #e8ded5; vertical-align: top;">${escapeHtml(plainTextCell(value))}</td>
-    </tr>`).join('')
-  return `
-    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55; max-width: 640px; margin: 0 auto;">
-      <h1 style="font-size: 22px; line-height: 1.3; margin: 0 0 16px;">${escapeHtml(copy.heading)}</h1>
-      <p style="margin: 0 0 16px;">Hi ${escapeHtml(plainTextCell(copy.greetingName))},</p>
-      <p style="margin: 0 0 20px;">${escapeHtml(copy.received)}</p>
-      <div style="border: 1px solid #e8ded5; border-radius: 8px; overflow: hidden; margin: 0 0 20px;">
-        <div style="padding: 12px; background: #5b2417; color: #ffffff; font-weight: 700;">Booking details</div>
-        <table style="border-collapse: collapse; width: 100%;"><tbody>${safeRows}</tbody></table>
-      </div>
-      <p style="margin: 0;">${escapeHtml(copy.followUp)}</p>
-    </div>
-  `
+  return buildBilingualEmailHtml(
+    { ...copy.korean, rows: customerEmailKoreanRows(rows) },
+    { ...copy.english, rows },
+  )
 }
 
 function sourceIdForReservation(reservation) {
@@ -795,6 +898,9 @@ export function buildBookingDeliveryPayload({
   const sourceType = sourceTypeForReservation(reservation)
   const sourceId = sourceIdForReservation(reservation)
   const template = BOOKING_RECEIPT_TEMPLATES[role]
+  const templateVersion = role === 'operator'
+    ? BOOKING_OPERATOR_RECEIPT_TEMPLATE_VERSION
+    : `${template}-${sourceType}-${BOOKING_CUSTOMER_RECEIPT_TEMPLATE_VERSION}`
   const to = role === 'operator'
     ? normalizeRecipientEmailSet(operatorRecipients)
     : [normalizeRecipientEmail(sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)]
@@ -815,7 +921,7 @@ export function buildBookingDeliveryPayload({
     text,
     html,
     template,
-    templateVersion: BOOKING_RECEIPT_TEMPLATE_VERSION,
+    templateVersion,
   }
   return {
     from: normalizedFrom,
@@ -825,7 +931,7 @@ export function buildBookingDeliveryPayload({
     text,
     html,
     template,
-    templateVersion: BOOKING_RECEIPT_TEMPLATE_VERSION,
+    templateVersion,
     eventKey,
     sourceType,
     sourceId,
@@ -854,19 +960,43 @@ function confirmationClassRows(reservation, config) {
 function confirmationEmailCopy(reservation, sourceType) {
   if (sourceType === 'class') {
     return {
-      subject: 'Your Verygood Kids Class booking is confirmed',
-      greetingName: reservation.parentName,
-      heading: 'Your kids class booking is CONFIRMED',
-      confirmation: 'Your booking is confirmed. Please arrive ready for the session and let us know promptly if allergy information changes.',
-      followUp: 'Reply to this email if you have a question before the class.',
+      subject: '[Verygood] 키즈 클래스 예약이 확정됐어요 | Your class booking is confirmed',
+      korean: {
+        language: '한국어', greetingName: reservation.parentName,
+        heading: '키즈 클래스 예약이 최종 확정되었습니다',
+        intro: `${plainTextCell(reservation.childName)}님의 베리굿 키즈 클래스 예약이 최종 확정되었습니다. 수업 전 준비사항과 알러지 정보에 변경이 있으면 알려주세요.`,
+        detailsHeading: '예약 내역',
+        followUp: '수업 전 궁금한 점이 있으면 이 이메일 또는 기존 안내된 연락 방법으로 문의해주세요.',
+        signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
+      },
+      english: {
+        language: 'English', greetingName: reservation.parentName,
+        heading: 'Your kids class booking is CONFIRMED',
+        intro: 'Your Verygood Kids Class booking is confirmed. Please arrive ready for the session and let us know promptly if allergy information changes.',
+        detailsHeading: 'Booking details',
+        followUp: 'Reply to this email if you have a question before the class.',
+        signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
+      },
     }
   }
   return {
-    subject: 'Your Verygood Chocolate booking is confirmed',
-    greetingName: reservation.customerName,
-    heading: 'Your booking is CONFIRMED',
-    confirmation: 'Your booking is CONFIRMED. We look forward to seeing you at collection.',
-    followUp: 'Reply to this email if you have a question about your booking.',
+    subject: '[Verygood] 케이크 예약이 확정됐어요 | Your cake booking is confirmed',
+    korean: {
+      language: '한국어', greetingName: reservation.customerName,
+      heading: '예약이 최종 확정되었습니다',
+      intro: '베리굿 초콜릿 예약이 최종 확정되었습니다. 픽업 때 뵙겠습니다.',
+      detailsHeading: '예약 내역',
+      followUp: '변경사항이나 문의가 있으시면 이 이메일 또는 기존 안내된 연락 방법으로 연락해주세요.',
+      signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
+    },
+    english: {
+      language: 'English', greetingName: reservation.customerName,
+      heading: 'Your booking is CONFIRMED',
+      intro: 'Your Verygood Chocolate booking is confirmed. We look forward to seeing you at collection.',
+      detailsHeading: 'Booking details',
+      followUp: 'Reply to this email if you have a question about your booking.',
+      signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
+    },
   }
 }
 
@@ -878,39 +1008,20 @@ function confirmationRows(reservation, sourceType, config) {
 
 function buildBookingConfirmationText(reservation, sourceType, config) {
   const copy = confirmationEmailCopy(reservation, sourceType)
-  return [
-    copy.subject,
-    '',
-    `Hi ${plainTextCell(copy.greetingName)},`,
-    '',
-    copy.confirmation,
-    '',
-    'Booking details',
-    ...confirmationRows(reservation, sourceType, config).map(([label, value]) => `${plainTextCell(label)}: ${plainTextCell(value)}`),
-    '',
-    copy.followUp,
-  ].join('\n')
+  const rows = confirmationRows(reservation, sourceType, config)
+  return buildBilingualEmailText(
+    { ...copy.korean, rows: customerEmailKoreanRows(rows) },
+    { ...copy.english, rows },
+  )
 }
 
 function buildBookingConfirmationHtml(reservation, sourceType, config) {
   const copy = confirmationEmailCopy(reservation, sourceType)
-  const safeRows = confirmationRows(reservation, sourceType, config).map(([label, value]) => `
-    <tr>
-      <th style="width: 42%; padding: 10px 12px; border: 1px solid #e8ded5; background: #fbf6ef; text-align: left; vertical-align: top;">${escapeHtml(plainTextCell(label))}</th>
-      <td style="padding: 10px 12px; border: 1px solid #e8ded5; vertical-align: top;">${escapeHtml(plainTextCell(value))}</td>
-    </tr>`).join('')
-  return `
-    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55; max-width: 640px; margin: 0 auto;">
-      <h1 style="font-size: 22px; line-height: 1.3; margin: 0 0 16px;">${escapeHtml(copy.heading)}</h1>
-      <p style="margin: 0 0 16px;">Hi ${escapeHtml(plainTextCell(copy.greetingName))},</p>
-      <p style="margin: 0 0 20px;">${escapeHtml(copy.confirmation)}</p>
-      <div style="border: 1px solid #e8ded5; border-radius: 8px; overflow: hidden; margin: 0 0 20px;">
-        <div style="padding: 12px; background: #5b2417; color: #ffffff; font-weight: 700;">Booking details</div>
-        <table style="border-collapse: collapse; width: 100%;"><tbody>${safeRows}</tbody></table>
-      </div>
-      <p style="margin: 0;">${escapeHtml(copy.followUp)}</p>
-    </div>
-  `
+  const rows = confirmationRows(reservation, sourceType, config)
+  return buildBilingualEmailHtml(
+    { ...copy.korean, rows: customerEmailKoreanRows(rows) },
+    { ...copy.english, rows },
+  )
 }
 
 export function buildBookingConfirmationPayload({ reservation, sourceType, from, replyTo = null } = {}) {

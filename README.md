@@ -117,6 +117,8 @@ APPWRITE_SETTINGS_TABLE_ID=settings
 
 예약 신청이 Appwrite DB에 저장된 뒤 Appwrite Function이 Resend로 내부 운영자 알림과 별도의 고객용 “예약 요청 접수” 이메일을 각각 보냅니다. 이 고객 이메일은 최종 확정이 아니며, 확인 후 별도 확정 안내가 발송된다는 내용을 포함합니다. cake는 `customerEmail`, 키즈 클래스는 `parentEmail`을 수신자로 사용합니다.
 
+고객용 transactional email은 한 통 안에서 **한국어 우선, 영어 병기**로 제공합니다. cake/class의 예약 요청 접수와 관리자 버튼으로 보내는 최종 예약 확정 이메일, 리뷰 요청, 리뷰 리워드 쿠폰 이메일이 이 정책을 따릅니다. 내부 운영자 예약 알림은 고객용 메일이 아니므로 이 bilingual 요구사항의 대상이 아니며 기존 내부 템플릿을 유지합니다.
+
 ```bash
 RESEND_API_KEY=
 RESEND_FROM_EMAIL="Reservation <reservation@example.com>"

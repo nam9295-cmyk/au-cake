@@ -249,6 +249,17 @@ test('safe retry is fail-closed for sent, fresh pending, terminal errors, hash c
   )
 })
 
+test('a sent v1 delivery remains sent when a v2 customer template changes its payload hash', () => {
+  const sentV1 = delivery('sent', {
+    firstAttemptAt: '2026-08-26T00:00:00.000Z',
+    payloadHash: 'f'.repeat(64),
+  })
+  assert.deepEqual(
+    evaluateEmailDeliveryRetry({ delivery: sentV1, identity: identity(), now: NOW }),
+    { status: 'sent', retry: 'not_needed' },
+  )
+})
+
 test('only stale pending, uncertain, and the explicit external-fix failures are safe-retry candidates', () => {
   const firstAttemptAt = '2026-08-26T00:00:00.000Z'
   const now = new Date('2026-08-26T01:00:00.000Z')

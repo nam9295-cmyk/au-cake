@@ -228,9 +228,9 @@ export function evaluateEmailDeliveryRetry({ delivery, identity, retryClaim = nu
 
   const status = deliveryStatus(delivery.status)
   if (delivery.eventKey !== identity.eventKey) return retryResult(status, 'manual_fallback', { safeErrorCode: 'identity_mismatch' })
+  if (status === 'sent') return retryResult('sent', 'not_needed')
   if (delivery.recipientHash !== identity.recipientHash) return retryResult(status, 'recipient_changed', { safeErrorCode: 'recipient_changed' })
   if (delivery.payloadHash !== identity.payloadHash) return retryResult(status, 'payload_changed', { safeErrorCode: 'payload_changed' })
-  if (status === 'sent') return retryResult('sent', 'not_needed')
   if (status === 'pending' && pendingIsFresh(delivery, now)) return retryResult('pending', 'wait')
 
   const retryUntil = retryUntilTimestamp(delivery)

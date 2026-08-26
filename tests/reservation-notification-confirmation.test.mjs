@@ -117,13 +117,33 @@ test('confirmation payloads are separate, customer-safe final confirmations', ()
   assert.equal(cakePayload.eventKey, 'booking-confirmed-customer:cake:cake-123')
   assert.equal(classPayload.eventKey, 'booking-confirmed-customer:class:class-123')
   assert.notEqual(cakePayload.idempotencyKey, classPayload.idempotencyKey)
-  assert.equal(cakePayload.subject, 'Your Verygood Chocolate booking is confirmed')
-  assert.equal(classPayload.subject, 'Your Verygood Kids Class booking is confirmed')
+  assert.equal(cakePayload.idempotencyKey, 'verygood:3df81cd0b76352599b43c9ecdec6c19e8f5c3dcc0736bc616559601accc79478')
+  assert.equal(classPayload.idempotencyKey, 'verygood:54e7dda3681e8d0e1275bce907d134cd5dee8f9131266e079f4f2b2a2ada397a')
+  assert.equal(cakePayload.subject, '[Verygood] 케이크 예약이 확정됐어요 | Your cake booking is confirmed')
+  assert.equal(classPayload.subject, '[Verygood] 키즈 클래스 예약이 확정됐어요 | Your class booking is confirmed')
+  assert.equal(cakePayload.templateVersion, 'booking-confirmed-customer-cake-v2')
+  assert.equal(classPayload.templateVersion, 'booking-confirmed-customer-class-v2')
+  assert.match(cakePayload.text, /\[한국어\]/)
+  assert.match(cakePayload.text, /예약이 최종 확정되었습니다/)
+  assert.match(cakePayload.text, /\[English\]/)
+  assert.match(cakePayload.text, /Your Verygood Chocolate booking is confirmed/)
+  assert.match(classPayload.text, /\[한국어\]/)
+  assert.match(classPayload.text, /키즈 클래스 예약이 최종 확정되었습니다/)
+  assert.match(classPayload.text, /\[English\]/)
+  assert.match(classPayload.text, /Your Verygood Kids Class booking is confirmed/)
+  assert.ok(cakePayload.text.indexOf('[한국어]') < cakePayload.text.indexOf('[English]'))
+  assert.ok(classPayload.text.indexOf('[한국어]') < classPayload.text.indexOf('[English]'))
+  assert.ok(cakePayload.html.indexOf('[한국어]') < cakePayload.html.indexOf('[English]'))
+  assert.ok(classPayload.html.indexOf('[한국어]') < classPayload.html.indexOf('[English]'))
   assert.match(cakePayload.text, /CONFIRMED/)
   assert.match(cakePayload.text, /https:\/\/maps\.app\.goo\.gl\/bSVbF8M5BCdxJeDRA/)
   assert.match(classPayload.text, /1 Bundil Blvd, Melrose Park, Sydney/)
   assert.match(classPayload.text, /Advanced session: 2026-09-19 13:00/)
   assert.match(classPayload.text, /Please arrive 5 minutes early/)
+  assert.equal(cakePayload.text.split('VG-C-AU-20260826-123456789').length - 1, 2)
+  assert.equal(cakePayload.text.split('AUD 150.00').length - 1, 2)
+  assert.equal(classPayload.text.split('VG-KC-AU-20260826-123456789').length - 1, 2)
+  assert.equal(classPayload.text.split('AUD 285.10').length - 1, 2)
   for (const payload of [cakePayload, classPayload]) {
     for (const forbidden of ['INTERNAL ADMIN NOTE', 'PRIVATE EMERGENCY CONTACT', 'PRIVATE ALLERGY DETAIL', 'private_database_id']) {
       assert.doesNotMatch(payload.text, new RegExp(forbidden))
@@ -177,6 +197,45 @@ test('generic booking status and retry actions are admin-only and never trust a 
   requestBody.bodyJson.data.recipient = 'attacker@example.com'
   const status = await subject.handle({ req: requestBody, res: response() })
   assert.deepEqual(status, { ok: true, result: { status: 'not_sent', retry: 'not_needed', recipientMasked: 'a***@example.com' } })
+})
+
+test('booking email status keeps sent v1 rows final but blocks failed or uncertain v1 rows from v2 retry', async () => {
+  const payload = buildBookingConfirmationPayload({ reservation: cake(), sourceType: 'cake', from: FROM })
+  for (const [status, expectedRetry] of [
+    ['sent', 'not_needed'],
+    ['failed', 'payload_changed'],
+    ['uncertain', 'payload_changed'],
+  ]) {
+    const ledger = memoryLedger()
+    ledger.records.set(payload.eventKey, {
+      $id: `legacy-${status}`,
+      ...payload,
+      status,
+      payloadHash: 'f'.repeat(64),
+      attempts: 1,
+      firstAttemptAt: '2026-08-26T00:00:00.000Z',
+      lastErrorCode: 'resend_rate_limit_exceeded',
+      ...(status === 'sent' ? { sentAt: NOW.toISOString() } : {}),
+    })
+    const subject = handler({ reservations: { 'cake:cake-123': cake() }, ledger })
+    const responseValue = await subject.handle({
+      req: request('get-booking-email-status', 'cake', 'cake-123', undefined, 'booking-confirmed-customer'), res: response(),
+    })
+    assert.equal(responseValue.ok, true)
+    assert.equal(responseValue.result.status, status)
+    assert.equal(responseValue.result.retry, expectedRetry)
+  }
+
+  const v2Ledger = memoryLedger()
+  v2Ledger.records.set(payload.eventKey, {
+    $id: 'v2-failed', ...payload, status: 'failed', attempts: 1,
+    firstAttemptAt: '2026-08-26T00:00:00.000Z', lastErrorCode: 'resend_rate_limit_exceeded',
+  })
+  const v2Subject = handler({ reservations: { 'cake:cake-123': cake() }, ledger: v2Ledger })
+  const v2Status = await v2Subject.handle({
+    req: request('get-booking-email-status', 'cake', 'cake-123', undefined, 'booking-confirmed-customer'), res: response(),
+  })
+  assert.equal(v2Status.result.retry, 'eligible')
 })
 
 test('operator receipt retry is server-only, keeps its canonical recipient set, and has no drawer state', async () => {
