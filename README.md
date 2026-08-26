@@ -115,12 +115,15 @@ APPWRITE_SETTINGS_TABLE_ID=settings
 
 ## 이메일 알림 설정
 
-예약 신청이 Appwrite DB에 저장된 뒤 Appwrite Function이 Resend로 내부 운영자 알림 메일을 보냅니다. 고객에게는 이메일을 보내지 않습니다.
+예약 신청이 Appwrite DB에 저장된 뒤 Appwrite Function이 Resend로 내부 운영자 알림과 별도의 고객용 “예약 요청 접수” 이메일을 각각 보냅니다. 이 고객 이메일은 최종 확정이 아니며, 확인 후 별도 확정 안내가 발송된다는 내용을 포함합니다. cake는 `customerEmail`, 키즈 클래스는 `parentEmail`을 수신자로 사용합니다.
 
 ```bash
 RESEND_API_KEY=
 RESEND_FROM_EMAIL="Reservation <reservation@example.com>"
+RESEND_REPLY_TO_EMAIL=
 RESEND_TO_EMAILS="owner@example.com"
+# Server-only private ledger ID; omit only to use the source-schema default `email_deliveries`.
+APPWRITE_EMAIL_DELIVERIES_TABLE_ID=email_deliveries
 ```
 
 Function 리소스와 배포는 아래 명령으로 생성/업데이트합니다.
@@ -133,7 +136,9 @@ npm run deploy:reservation-notification
 
 기본 함수 ID는 `reservation-notification`이며 현재 운영 Appwrite 인스턴스와 호환되는 기본 런타임은 `node-16.0`입니다. 기본 이벤트는 `tablesdb.{APPWRITE_CAKE_DATABASE_ID}.tables.{APPWRITE_CAKE_RESERVATIONS_TABLE_ID}.rows.*.create`와 기존 `databases.{APPWRITE_CAKE_DATABASE_ID}.collections.{APPWRITE_CAKE_RESERVATIONS_TABLE_ID}.documents.*.create`를 순서대로 시도하며, 필요하면 `APPWRITE_RESERVATION_CREATE_EVENT`로 직접 지정할 수 있습니다.
 
-메일 발송 실패는 예약 데이터를 삭제하거나 되돌리지 않습니다. 실패 내용은 Appwrite Function 로그에 남습니다.
+운영자와 고객 이메일은 별도 Resend 요청 및 별도 `email_deliveries` ledger event로 처리됩니다. 메일 발송 실패는 예약 데이터를 삭제하거나 되돌리지 않으며, raw recipient·API key·예약 요청사항은 로그에 남기지 않습니다. 같은 신규 예약 이벤트는 pending ledger row의 unique eventKey로 한 번만 첫 발송을 claim합니다. failed/uncertain/stale pending 상태의 자동 재발송은 아직 하지 않습니다.
+
+Function runtime은 Appwrite가 주입하는 endpoint/project 값과 실행별 `x-appwrite-key`만 사용해 ledger에 접근합니다. browser나 관리자 session이 ledger를 직접 읽거나 변경하지 않도록 schema permissions는 비어 있어야 합니다.
 
 ## 예약 API와 권한
 

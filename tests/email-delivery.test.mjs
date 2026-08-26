@@ -7,8 +7,11 @@ import {
   EMAIL_DELIVERY_PENDING_LEASE_MS,
   EmailDeliveryError,
   normalizeRecipientEmail,
+  normalizeRecipientEmailSet,
   payloadHashForEmail,
   recipientHashForEmail,
+  recipientHashForEmailSet,
+  resendIdempotencyKeyForEvent,
 } from '../appwrite-functions/shared/email-delivery.js'
 import { createEmailDeliveryRepository } from '../appwrite-functions/shared/email-delivery-repository.js'
 
@@ -97,6 +100,45 @@ test('recipient identity rejects invalid, overlong, and non-string email input b
       (error) => error instanceof EmailDeliveryError && error.code === 'INVALID_RECIPIENT_EMAIL',
     )
   }
+})
+
+test('operator recipient identity canonicalizes an email set independently of input order', () => {
+  assert.deepEqual(
+    normalizeRecipientEmailSet([' SECOND@example.com ', 'first@example.com', 'second@example.com']),
+    ['first@example.com', 'second@example.com'],
+  )
+  assert.equal(
+    recipientHashForEmailSet([' SECOND@example.com ', 'first@example.com']),
+    recipientHashForEmailSet(['first@example.com', 'second@example.com']),
+  )
+  assert.throws(
+    () => normalizeRecipientEmailSet([]),
+    (error) => error instanceof EmailDeliveryError && error.code === 'INVALID_RECIPIENT_EMAIL',
+  )
+})
+
+test('provider payload hash includes a canonical multi-recipient set and event keys derive distinct safe idempotency keys', () => {
+  const first = {
+    ...payload(),
+    recipientEmail: undefined,
+    recipientEmails: ['owner@example.com', ' SECOND@example.com '],
+  }
+  const reordered = {
+    ...payload(),
+    recipientEmail: undefined,
+    recipientEmails: ['second@example.com', 'owner@example.com'],
+  }
+  assert.equal(payloadHashForEmail(first), payloadHashForEmail(reordered))
+  assert.notEqual(
+    payloadHashForEmail(first),
+    payloadHashForEmail({ ...reordered, recipientEmails: ['owner@example.com'] }),
+  )
+
+  const operatorKey = buildEmailDeliveryEventKey({ template: 'booking-received-operator', sourceType: 'cake', sourceId: 'cake-123' })
+  const customerKey = buildEmailDeliveryEventKey({ template: 'booking-received-customer', sourceType: 'cake', sourceId: 'cake-123' })
+  assert.match(resendIdempotencyKeyForEvent(operatorKey), /^verygood:[a-f0-9]{64}$/)
+  assert.equal(resendIdempotencyKeyForEvent(operatorKey), resendIdempotencyKeyForEvent(operatorKey))
+  assert.notEqual(resendIdempotencyKeyForEvent(operatorKey), resendIdempotencyKeyForEvent(customerKey))
 })
 
 test('provider payload hash is deterministic across property order and records every meaningful message field', () => {

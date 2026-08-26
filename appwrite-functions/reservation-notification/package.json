@@ -2,5 +2,8 @@
   "name": "reservation-notification",
   "version": "1.0.0",
   "type": "module",
-  "main": "src/main.js"
+  "main": "src/main.js",
+  "dependencies": {
+    "node-appwrite": "22.1.3"
+  }
 }

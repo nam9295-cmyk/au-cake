@@ -86,6 +86,16 @@ export function recipientHashForEmail(value) {
   return sha256(normalizeRecipientEmail(value))
 }
 
+export function normalizeRecipientEmailSet(values) {
+  if (!Array.isArray(values) || values.length === 0) fail('INVALID_RECIPIENT_EMAIL')
+  const normalized = values.map(normalizeRecipientEmail)
+  return [...new Set(normalized)].sort()
+}
+
+export function recipientHashForEmailSet(values) {
+  return sha256(normalizeRecipientEmailSet(values).join('\n'))
+}
+
 export function buildEmailDeliveryEventKey({ template, sourceType, sourceId } = {}) {
   if (!EMAIL_DELIVERY_TEMPLATES.includes(template) || !templateAllowsSourceType(template, sourceType)) {
     fail('INVALID_EMAIL_DELIVERY_EVENT')
@@ -94,11 +104,23 @@ export function buildEmailDeliveryEventKey({ template, sourceType, sourceId } = 
   return `${template}:${sourceType}:${sourceId}`
 }
 
+export function resendIdempotencyKeyForEvent(eventKey) {
+  if (typeof eventKey !== 'string' || !eventKey.trim() || eventKey.length > 128) {
+    fail('INVALID_EMAIL_DELIVERY_EVENT')
+  }
+  return `verygood:${sha256(eventKey)}`
+}
+
 export function payloadHashForEmail(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) fail('INVALID_EMAIL_DELIVERY_PAYLOAD')
+  const hasRecipientEmail = typeof payload.recipientEmail === 'string'
+  const hasRecipientEmails = Array.isArray(payload.recipientEmails)
+  if (hasRecipientEmail === hasRecipientEmails) fail('INVALID_EMAIL_DELIVERY_PAYLOAD')
   const canonical = {
     from: normalizedHeaderValue(payload.from, 'INVALID_EMAIL_DELIVERY_PAYLOAD'),
-    recipientEmail: normalizeRecipientEmail(payload.recipientEmail),
+    recipients: hasRecipientEmail
+      ? [normalizeRecipientEmail(payload.recipientEmail)]
+      : normalizeRecipientEmailSet(payload.recipientEmails),
     replyTo: normalizedHeaderValue(payload.replyTo, 'INVALID_EMAIL_DELIVERY_PAYLOAD', { optional: true }),
     subject: requiredPayloadString(payload, 'subject'),
     text: requiredPayloadString(payload, 'text'),
