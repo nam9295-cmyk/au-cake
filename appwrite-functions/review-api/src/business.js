@@ -281,7 +281,7 @@ export function assertReviewInviteSource(sourceType, source) {
   return source
 }
 
-function recoverInviteToken(invite, sourceType, sourceReservationId, tokenEncryptionKey) {
+export function recoverReviewInviteToken(invite, sourceType, sourceReservationId, tokenEncryptionKey) {
   const inviteId = invite?.$id || invite?.id
   if (!ENVELOPE_ID_PATTERN.test(inviteId || '')) return null
   try {
@@ -317,7 +317,7 @@ export async function getReviewInviteLifecycle(repository, input, {
   if (!Number.isNaN(expiresAt.getTime()) && expiresAt.getTime() <= now.getTime()) {
     return { state: 'expired', source, invite }
   }
-  if (!Number.isNaN(expiresAt.getTime()) && recoverInviteToken(invite, sourceType, sourceReservationId, tokenEncryptionKey)) {
+  if (!Number.isNaN(expiresAt.getTime()) && recoverReviewInviteToken(invite, sourceType, sourceReservationId, tokenEncryptionKey)) {
     return { state: 'active', source, invite }
   }
   return { state: 'legacy_invite_unrecoverable', source, invite }
@@ -402,7 +402,7 @@ export async function issueReviewInvite(repository, input, {
       if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= now.getTime()) {
         fail('REVIEW_INVITE_EXPIRED', 409)
       }
-      const recoveredToken = recoverInviteToken(existingInvite, sourceType, sourceReservationId, tokenEncryptionKey)
+      const recoveredToken = recoverReviewInviteToken(existingInvite, sourceType, sourceReservationId, tokenEncryptionKey)
       if (!recoveredToken) fail('REVIEW_INVITE_UNRECOVERABLE', 409)
       try { await repository.rollbackTransaction(transaction) } catch { /* no mutations were staged */ }
       return { token: recoveredToken, expiresAt: existingInvite.expiresAt }
@@ -464,7 +464,7 @@ export async function issueReviewInvite(repository, input, {
           fail('REVIEW_INVITE_EXPIRED', 409)
         }
         try {
-          const recoveredToken = recoverInviteToken(currentInvite, sourceType, sourceReservationId, tokenEncryptionKey)
+          const recoveredToken = recoverReviewInviteToken(currentInvite, sourceType, sourceReservationId, tokenEncryptionKey)
           if (recoveredToken) {
           return { token: recoveredToken, expiresAt: currentInvite.expiresAt }
           }

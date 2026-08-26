@@ -1,14 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Copy, Mail } from 'lucide-react'
 import { appwriteConfig, functions } from './lib/appwrite'
 import { copyAdminRewardMessage } from './lib/admin-reviews'
 import { canCreateReviewInvite, reviewInviteErrorMessage } from './lib/review-messages'
 import {
   copyReviewInviteRequest,
-  getReviewInviteEmailStatus,
   sendReviewInviteEmail,
-  type ReviewInviteEmailResult,
 } from './lib/review-repository'
+import {
+  getReviewEmailStatus,
+  retryReviewEmail,
+  type ReviewEmailDeliveryResult,
+} from './lib/review-email-retry'
 
 export function ReviewInviteButton({
   sourceType,
@@ -21,7 +24,7 @@ export function ReviewInviteButton({
 }) {
   const [issuing, setIssuing] = useState(false)
   const [loadingStatus, setLoadingStatus] = useState(true)
-  const [delivery, setDelivery] = useState<ReviewInviteEmailResult | null>(null)
+  const [delivery, setDelivery] = useState<ReviewEmailDeliveryResult | null>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const issuingRef = useRef(false)
@@ -31,30 +34,35 @@ export function ReviewInviteButton({
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current)
   }, [])
 
+  const refresh = useCallback(() => getReviewEmailStatus(functions, appwriteConfig.reviewApiFunctionId, {
+      emailKind: 'review-invite-customer', sourceType, reservationId: sourceReservationId,
+    }), [sourceReservationId, sourceType])
+
   useEffect(() => {
     let current = true
     if (!canCreateReviewInvite(sourceType, status)) return () => { current = false }
-    getReviewInviteEmailStatus(functions, appwriteConfig.reviewApiFunctionId, sourceType, sourceReservationId)
+    refresh()
       .then((result) => { if (current) setDelivery(result) })
       .catch((statusError) => { if (current) setError(reviewInviteErrorMessage(statusError)) })
       .finally(() => { if (current) setLoadingStatus(false) })
     return () => { current = false }
-  }, [sourceType, sourceReservationId, status])
+  }, [refresh, sourceType, sourceReservationId, status])
 
   if (!canCreateReviewInvite(sourceType, status)) return null
 
   const deliveryStatus = delivery?.status
-  const recipientMissing = delivery?.recipientAvailable === false
+  const recipientMissing = delivery?.safeErrorCode === 'recipient_recovery_unavailable'
   const copyAllowed = !loadingStatus && !issuing && !['used', 'expired', 'legacy_invite_unrecoverable'].includes(deliveryStatus || '')
   const sendAllowed = !loadingStatus && !issuing && Boolean(delivery) && !recipientMissing && deliveryStatus === 'not_sent'
-  const statusNotice = deliveryStatus === 'sent' || deliveryStatus === 'already_sent'
+  const retryAllowed = !loadingStatus && !issuing && !recipientMissing && delivery?.retry === 'eligible'
+  const statusNotice = deliveryStatus === 'sent'
     ? 'Review email sent'
     : deliveryStatus === 'pending'
       ? 'Email send in progress'
       : deliveryStatus === 'failed'
-        ? 'Review email could not be sent'
-        : deliveryStatus === 'uncertain'
-          ? 'Email delivery status is uncertain'
+        ? retryAllowed ? 'Review email could not be sent' : 'Review email could not be sent. Use the message copy option instead.'
+      : deliveryStatus === 'uncertain'
+          ? retryAllowed ? 'Email delivery status is uncertain' : 'Email delivery status is uncertain. Do not resend automatically.'
           : deliveryStatus === 'used'
             ? 'Review already submitted'
             : deliveryStatus === 'expired'
@@ -73,7 +81,7 @@ export function ReviewInviteButton({
     setSuccess('')
     try {
       const result = await sendReviewInviteEmail(functions, appwriteConfig.reviewApiFunctionId, sourceType, sourceReservationId)
-      setDelivery(result)
+      setDelivery(await refresh())
       if (result.status !== 'sent' && result.status !== 'already_sent') {
         setError(result.status === 'failed' ? 'Review email could not be sent' : 'Email delivery status is uncertain')
         return
@@ -83,6 +91,25 @@ export function ReviewInviteButton({
       toastTimerRef.current = window.setTimeout(() => setSuccess(''), 2500)
     } catch (sendError) {
       setError(reviewInviteErrorMessage(sendError))
+    } finally {
+      issuingRef.current = false
+      setIssuing(false)
+    }
+  }
+
+  async function retryReviewEmailSafely() {
+    if (!retryAllowed || issuingRef.current) return
+    issuingRef.current = true
+    setIssuing(true)
+    setError('')
+    setSuccess('')
+    try {
+      await retryReviewEmail(functions, appwriteConfig.reviewApiFunctionId, {
+        emailKind: 'review-invite-customer', sourceType, reservationId: sourceReservationId,
+      })
+      setDelivery(await refresh())
+    } catch (retryError) {
+      setError(reviewInviteErrorMessage(retryError))
     } finally {
       issuingRef.current = false
       setIssuing(false)
@@ -119,6 +146,9 @@ export function ReviewInviteButton({
         <button className="secondary-button" type="button" disabled={!copyAllowed} onClick={copyReviewRequest}>
           <Copy size={16} /> {issuing ? '리뷰 요청 준비 중...' : 'Copy review request'}
         </button>
+        {retryAllowed && <button className="secondary-button" type="button" disabled={issuing} onClick={retryReviewEmailSafely}>
+          <Mail size={16} /> {issuing ? 'Retrying…' : 'Retry email'}
+        </button>}
       </div>
       {statusNotice && <p className="notice-line" role="status">{statusNotice}</p>}
       {error && <p className="error-text review-invite-error" role="alert">{error}</p>}

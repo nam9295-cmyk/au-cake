@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import {
   buildBookingConfirmationPayload,
+  buildBookingDeliveryPayload,
   createReservationNotificationHandler,
   createRuntimeReservationRepository,
   ResendTransportError,
@@ -65,26 +66,37 @@ function memoryLedger() {
       records.set(identity.eventKey, delivery)
       return { kind: 'created', delivery }
     },
-    async markAttempt(delivery, now) { Object.assign(delivery, { attempts: delivery.attempts + 1, lastAttemptAt: now.toISOString(), updatedAt: now.toISOString() }); return delivery },
+    async markAttempt(delivery, now) { Object.assign(delivery, {
+      attempts: delivery.attempts + 1,
+      ...(delivery.firstAttemptAt ? {} : { firstAttemptAt: now.toISOString() }),
+      lastAttemptAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    }); return delivery },
     async markSent(delivery, { now, providerMessageId }) { Object.assign(delivery, { status: 'sent', sentAt: now.toISOString(), updatedAt: now.toISOString(), providerMessageId, lastErrorCode: null }); return delivery },
     async markFailed(delivery, { now, errorCode }) { Object.assign(delivery, { status: 'failed', updatedAt: now.toISOString(), lastErrorCode: errorCode }); return delivery },
     async markUncertain(delivery, { now, errorCode }) { Object.assign(delivery, { status: 'uncertain', updatedAt: now.toISOString(), lastErrorCode: errorCode }); return delivery },
   }
 }
 
-function request(action, sourceType, reservationId, headers = { 'x-appwrite-user-id': 'admin-1' }) {
-  return { bodyJson: { action, data: { sourceType, reservationId } }, headers }
+function request(action, sourceType, reservationId, headers = { 'x-appwrite-user-id': 'admin-1' }, emailKind) {
+  return { bodyJson: { action, data: { sourceType, reservationId, ...(emailKind ? { emailKind } : {}) } }, headers }
 }
 
 function response() { return { json(value) { return value } } }
 
-function handler({ reservations, ledger = memoryLedger(), send = async () => ({ kind: 'accepted', providerMessageId: 'message-123' }) } = {}) {
+function handler({
+  reservations,
+  ledger = memoryLedger(),
+  retryClaims = { async getByEventKey() { return null }, async getOrCreateClaim(identity) { return { kind: 'created', claim: { $id: 'claim-1', ...identity } } }, async markCompleted() {} },
+  send = async () => ({ kind: 'accepted', providerMessageId: 'message-123' }),
+  env = ENV,
+} = {}) {
   const reads = []
   return {
     reads,
     ledger,
     handle: createReservationNotificationHandler({
-      env: ENV,
+      env,
       now: () => NOW,
       createReservationRepository: () => ({
         async getReservation(sourceType, reservationId) {
@@ -93,6 +105,7 @@ function handler({ reservations, ledger = memoryLedger(), send = async () => ({ 
         },
       }),
       createLedgerRepository: () => ledger,
+      createRetryClaimRepository: () => retryClaims,
       createTransport: () => ({ send }),
     }),
   }
@@ -125,6 +138,94 @@ test('confirmation payloads are separate, customer-safe final confirmations', ()
   assert.match(sanitized.html, /&lt;b&gt; FORGED/)
   assert.doesNotMatch(sanitized.html, /<script>bad\(\)<\/script>/)
   assert.doesNotMatch(sanitized.text, /^Total: AUD 0\.00$/m)
+})
+
+test('admin safe-retry reuses the existing booking confirmation event only after a retryable first failure', async () => {
+  let sends = 0
+  const keys = []
+  const subject = handler({
+    reservations: { 'cake:cake-123': cake() },
+    send: async (payload) => {
+      sends += 1
+      keys.push(payload.idempotencyKey)
+      if (sends === 1) throw new ResendTransportError('failed', 'resend_invalid_api_key')
+      return { kind: 'accepted', providerMessageId: 'message-123' }
+    },
+  })
+  const first = await subject.handle({ req: request('send-booking-confirmation', 'cake', 'cake-123'), res: response() })
+  assert.equal(first.result.status, 'failed')
+  const retry = await subject.handle({
+    req: request('retry-booking-email', 'cake', 'cake-123', undefined, 'booking-confirmed-customer'),
+    res: response(),
+  })
+  assert.deepEqual(retry, { ok: true, result: { status: 'sent', sentAt: NOW.toISOString(), recipientMasked: 'a***@example.com' } })
+  assert.equal(sends, 2)
+  assert.equal(keys[0], keys[1])
+  const delivery = subject.ledger.records.get('booking-confirmed-customer:cake:cake-123')
+  assert.equal(delivery.attempts, 2)
+  assert.equal(delivery.firstAttemptAt, NOW.toISOString())
+})
+
+test('generic booking status and retry actions are admin-only and never trust a client event key or recipient', async () => {
+  const subject = handler({ reservations: { 'cake:cake-123': cake() } })
+  const unauthenticated = await subject.handle({
+    req: request('get-booking-email-status', 'cake', 'cake-123', {}, 'booking-received-customer'), res: response(),
+  })
+  assert.deepEqual(unauthenticated, { ok: false, code: 'BOOKING_CONFIRMATION_UNAUTHORIZED' })
+  const requestBody = request('get-booking-email-status', 'cake', 'cake-123', undefined, 'booking-received-customer')
+  requestBody.bodyJson.data.eventKey = 'booking-confirmed-customer:cake:attacker'
+  requestBody.bodyJson.data.recipient = 'attacker@example.com'
+  const status = await subject.handle({ req: requestBody, res: response() })
+  assert.deepEqual(status, { ok: true, result: { status: 'not_sent', retry: 'not_needed', recipientMasked: 'a***@example.com' } })
+})
+
+test('operator receipt retry is server-only, keeps its canonical recipient set, and has no drawer state', async () => {
+  const reservation = cake({ status: '예약신청' })
+  const payload = buildBookingDeliveryPayload({ reservation, role: 'operator', from: FROM, operatorRecipients: ['second@example.com', 'owner@example.com'] })
+  const ledger = memoryLedger()
+  ledger.records.set(payload.eventKey, {
+    $id: 'delivery-operator', ...payload, status: 'failed', attempts: 1,
+    firstAttemptAt: '2026-08-26T00:00:00.000Z', lastErrorCode: 'resend_rate_limit_exceeded',
+  })
+  let sent
+  const subject = handler({
+    reservations: { 'cake:cake-123': reservation }, ledger, env: { ...ENV, RESEND_TO_EMAILS: 'owner@example.com,second@example.com' },
+    send: async (message) => { sent = message; return { kind: 'accepted', providerMessageId: 'message-operator' } },
+  })
+  const result = await subject.handle({
+    req: request('retry-booking-email', 'cake', 'cake-123', undefined, 'booking-received-operator'), res: response(),
+  })
+  assert.equal(result.ok, true)
+  assert.equal(result.result.status, 'sent')
+  assert.deepEqual(sent.to, ['owner@example.com', 'second@example.com'])
+  assert.equal(sent.idempotencyKey, payload.idempotencyKey)
+})
+
+test('booking retry fails closed without a provider call if stored recipient or payload identity has changed', async () => {
+  for (const patch of [{ pickupTime: '14:00' }, { customerEmail: 'changed@example.com' }]) {
+    const original = cake()
+    const payload = buildBookingConfirmationPayload({ reservation: original, sourceType: 'cake', from: FROM })
+    const ledger = memoryLedger()
+    ledger.records.set(payload.eventKey, {
+      $id: 'delivery-1', ...payload, status: 'uncertain', attempts: 1,
+      firstAttemptAt: '2026-08-26T00:00:00.000Z',
+    })
+    let calls = 0
+    const subject = handler({
+      reservations: { 'cake:cake-123': cake(patch) }, ledger,
+      send: async () => { calls += 1; return { kind: 'accepted', providerMessageId: 'message-123' } },
+    })
+    const status = await subject.handle({
+      req: request('get-booking-email-status', 'cake', 'cake-123', undefined, 'booking-confirmed-customer'), res: response(),
+    })
+    assert.equal(status.ok, true)
+    assert.equal(status.result.retry, patch.pickupTime ? 'payload_changed' : 'recipient_changed')
+    const retry = await subject.handle({
+      req: request('retry-booking-email', 'cake', 'cake-123', undefined, 'booking-confirmed-customer'), res: response(),
+    })
+    assert.equal(retry.result.status, 'uncertain')
+    assert.equal(calls, 0)
+  }
 })
 
 test('runtime reservation reads use only the dynamic x-appwrite-key and the selected source table', async () => {

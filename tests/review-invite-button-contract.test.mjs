@@ -9,7 +9,9 @@ test('review invite admin action keeps copy and makes email the primary action',
   assert.match(source, /Copy review request/)
   assert.match(source, /sendReviewInviteEmail\(/)
   assert.match(source, /copyReviewInviteRequest\(/)
-  assert.match(source, /getReviewInviteEmailStatus\(/)
+  assert.match(source, /getReviewEmailStatus\(/)
+  assert.match(source, /retryReviewEmail\(/)
+  assert.match(source, /Retry email/)
   assert.doesNotMatch(source, /createReviewInvite\(/)
 })
 

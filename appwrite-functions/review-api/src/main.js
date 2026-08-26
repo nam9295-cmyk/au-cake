@@ -22,6 +22,7 @@ import { resolveReviewCouponHmacSecret } from './coupon-digest.js'
 import { resolveReviewCouponEncryptionKey } from './coupon-envelope.js'
 import { resolveReviewInviteTokenEncryptionKey } from './invite-token-envelope.js'
 import { createEmailDeliveryRepository } from '../shared/email-delivery/email-delivery-repository.js'
+import { createEmailDeliveryRetryClaimRepository } from '../shared/email-delivery/email-delivery-retry-claim-repository.js'
 import { createResendTransport } from '../shared/email-delivery/resend-transport.js'
 import {
   copyReviewInviteRequest,
@@ -29,6 +30,7 @@ import {
   sendReviewInviteEmail,
 } from './review-invite-actions.js'
 import { createReviewRewardPostCommit } from './review-reward-email.js'
+import { getReviewEmailStatus, retryReviewEmail } from './review-email-retry-actions.js'
 
 const APPWRITE_RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 
@@ -71,6 +73,7 @@ export function resolveReviewConfig(env = process.env) {
     reviewPhotoCleanupId: configuredResourceId(env, 'APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID', 'review_photo_cleanup'),
     reviewPhotosBucketId: configuredResourceId(env, 'APPWRITE_REVIEW_PHOTOS_BUCKET_ID', 'review-photos'),
     emailDeliveriesId: configuredResourceId(env, 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID', 'email_deliveries'),
+    emailDeliveryRetryClaimsId: configuredResourceId(env, 'APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID', 'email_delivery_retry_claims'),
   }
 }
 
@@ -323,6 +326,14 @@ export function createReviewEmailDeliveryRepository(databases, config = resolveR
   })
 }
 
+export function createReviewEmailDeliveryRetryClaimRepository(databases, config = resolveReviewConfig()) {
+  return createEmailDeliveryRetryClaimRepository({
+    databases,
+    databaseId: config.cakeDatabaseId,
+    collectionId: config.emailDeliveryRetryClaimsId,
+  })
+}
+
 export function createReviewPhotoStorage(storage, config = resolveReviewConfig()) {
   return {
     async createPrivatePhoto({ fileId, name, buffer }) {
@@ -390,6 +401,8 @@ const REVIEW_ACTIONS = new Set([
   'send-review-invite-email',
   'copy-review-invite-request',
   'get-review-invite-email-status',
+  'get-review-email-status',
+  'retry-review-email',
 ])
 
 export function safeActionForLog(action) {
@@ -447,6 +460,8 @@ const defaultServices = {
   sendInviteEmail: sendReviewInviteEmail,
   copyInviteRequest: copyReviewInviteRequest,
   getInviteEmailStatus: getReviewInviteEmailStatus,
+  getEmailStatus: getReviewEmailStatus,
+  retryEmail: retryReviewEmail,
 }
 
 export async function handleReviewRequest(body, headers, env = process.env, services = defaultServices, repository, photoStorage, options = {}) {
@@ -483,6 +498,7 @@ export async function handleReviewRequest(body, headers, env = process.env, serv
   if (![
     'create-invite', 'list-admin-reviews', 'moderate-review', 'cleanup-photo-files', 'copy-review-reward-message',
     'send-review-invite-email', 'copy-review-invite-request', 'get-review-invite-email-status',
+    'get-review-email-status', 'retry-review-email',
   ].includes(action)) {
     throw new ReviewApiError('UNKNOWN_ACTION', 404)
   }
@@ -524,6 +540,40 @@ export async function handleReviewRequest(body, headers, env = process.env, serv
       deliveryRepository: options.deliveryRepository,
       request: data,
       tokenEncryptionKey: options.tokenEncryptionKey,
+    })
+  }
+  if (action === 'get-review-email-status') {
+    return services.getEmailStatus({
+      repository,
+      deliveryRepository: options.deliveryRepository,
+      retryClaimRepository: options.retryClaimRepository,
+      request: data,
+      tokenEncryptionKey: options.tokenEncryptionKey,
+      encryptionKey: options.encryptionKey,
+      from: options.resendFromEmail,
+      replyTo: options.resendReplyToEmail,
+      reviewOrigin: options.reviewOrigin,
+      cakeOrderUrl: options.cakeOrderUrl,
+      now: options.now,
+    })
+  }
+  if (action === 'retry-review-email') {
+    return services.retryEmail({
+      repository,
+      deliveryRepository: options.deliveryRepository,
+      retryClaimRepository: options.retryClaimRepository,
+      transport: options.transport,
+      request: data,
+      claimedByUserId: userId,
+      tokenEncryptionKey: options.tokenEncryptionKey,
+      encryptionKey: options.encryptionKey,
+      from: options.resendFromEmail,
+      replyTo: options.resendReplyToEmail,
+      reviewOrigin: options.reviewOrigin,
+      cakeOrderUrl: options.cakeOrderUrl,
+      now: options.now,
+      log: options.log,
+      error: options.error,
     })
   }
   if (action === 'list-admin-reviews') return services.listAdmin(repository, data)
@@ -591,6 +641,7 @@ export default async ({ req, res, log, error }) => {
     const databases = new Databases(client)
     const repository = createReviewRepository(databases, config)
     const deliveryRepository = createReviewEmailDeliveryRepository(databases, config)
+    const retryClaimRepository = createReviewEmailDeliveryRetryClaimRepository(databases, config)
     const photoStorage = createReviewPhotoStorage(new Storage(client), config)
     const photoUrlForReview = createPublicReviewPhotoUrlBuilder(process.env, config)
     const transport = createResendTransport({
@@ -600,6 +651,7 @@ export default async ({ req, res, log, error }) => {
     const postCommit = createReviewRewardPostCommit({
       repository,
       deliveryRepository,
+      retryClaimRepository,
       transport,
       encryptionKey,
       from: emailRuntime.from,
@@ -618,6 +670,7 @@ export default async ({ req, res, log, error }) => {
       resendFromEmail: emailRuntime.from,
       resendReplyToEmail: emailRuntime.replyTo,
       reviewOrigin: emailRuntime.reviewOrigin,
+      cakeOrderUrl: new URL('/', emailRuntime.reviewOrigin).toString(),
       log,
       error,
       postCommit,

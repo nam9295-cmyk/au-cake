@@ -1051,6 +1051,8 @@ test('main routing separates public and admin actions without exposing internal 
     async uploadPhoto(_repo, _storage, token, input) { calls.push(['upload', token, input]); return { hasPhoto: true } },
     async removePhoto(_repo, _storage, token) { calls.push(['remove', token]); return { hasPhoto: false } },
     async cleanupPhotos() { calls.push(['cleanup']); return { processed: 0, deleted: 0, retained: 0, failed: 0 } },
+    async getEmailStatus(options) { calls.push(['email-status', options.request, options.claimedByUserId]); return { status: 'failed', retry: 'eligible' } },
+    async retryEmail(options) { calls.push(['email-retry', options.request, options.claimedByUserId]); return { status: 'sent', retry: 'not_needed' } },
   }
   await handleReviewRequest({ action: 'load-invite', data: { token: 'token' } }, {}, {}, services)
   await handleReviewRequest(
@@ -1080,6 +1082,18 @@ test('main routing separates public and admin actions without exposing internal 
   assert.equal(calls.at(-1)[0], 'cleanup')
   await assert.rejects(() => handleReviewRequest({ action: 'cleanup-photo-files' }, {}, { REVIEW_ADMIN_USER_IDS: 'admin-1' }, services),
     (error) => error instanceof ReviewApiError && error.code === 'REVIEW_ADMIN_UNAUTHORIZED')
+  await assert.rejects(() => handleReviewRequest({
+    action: 'retry-review-email', data: { emailKind: 'review-invite-customer', sourceType: 'cake', reservationId: 'cake-123' },
+  }, {}, { REVIEW_ADMIN_USER_IDS: 'admin-1' }, services),
+  (error) => error instanceof ReviewApiError && error.code === 'REVIEW_ADMIN_UNAUTHORIZED')
+  await handleReviewRequest({
+    action: 'retry-review-email', data: { emailKind: 'review-invite-customer', sourceType: 'cake', reservationId: 'cake-123', eventKey: 'spoofed' },
+  }, { 'x-appwrite-user-id': 'admin-1' }, { REVIEW_ADMIN_USER_IDS: 'admin-1' }, services, undefined, undefined, {
+    deliveryRepository: {}, retryClaimRepository: {}, transport: {}, tokenEncryptionKey: Buffer.alloc(32), encryptionKey: Buffer.alloc(32),
+  })
+  assert.deepEqual(calls.at(-1), ['email-retry', {
+    emailKind: 'review-invite-customer', sourceType: 'cake', reservationId: 'cake-123', eventKey: 'spoofed',
+  }, 'admin-1'])
   await assert.rejects(() => handleReviewRequest({ action: 'unknown' }, {}, {}, services),
     (error) => error instanceof ReviewApiError && error.code === 'UNKNOWN_ACTION')
 })

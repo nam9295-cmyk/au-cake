@@ -253,6 +253,58 @@ function recipientAvailability(reservation, sourceType) {
   }
 }
 
+export async function rebuildReviewRewardEmailPayload({
+  repository,
+  reviewId,
+  encryptionKey,
+  from,
+  replyTo = null,
+  cakeOrderUrl,
+} = {}) {
+  const eventKey = `review-reward-customer:review:${plainTextCell(reviewId, 36)}`
+  let review
+  let coupon
+  try {
+    if (!APPWRITE_ID.test(reviewId || '')) throw new Error('INVALID_REVIEW_ID')
+    review = await repository.getReview(reviewId)
+    if (!review || recordId(review) !== reviewId || !APPWRITE_ID.test(review.couponId || '')) {
+      throw new Error('MISSING_REWARD_REVIEW')
+    }
+    coupon = await repository.getCoupon(review.couponId)
+    if (!coupon || recordId(coupon) !== review.couponId || coupon.sourceReviewId !== reviewId ||
+        !['cake', 'class'].includes(review.sourceType) || !APPWRITE_ID.test(review.sourceReservationId || '') ||
+        coupon.status !== 'active' || coupon.rewardPercent !== review.rewardPercent || ![5, 10].includes(review.rewardPercent)) {
+      throw new Error('INVALID_REWARD_COUPON')
+    }
+  } catch {
+    return { kind: 'unavailable', safeErrorCode: 'coupon_recovery_unavailable', eventKey }
+  }
+  let couponCode
+  try {
+    couponCode = decryptReviewCouponCode({ envelope: coupon, couponId: review.couponId, reviewId, key: encryptionKey })
+  } catch {
+    return { kind: 'unavailable', safeErrorCode: 'coupon_recovery_unavailable', eventKey }
+  }
+  let reservation
+  try {
+    reservation = await repository.getSource(review.sourceType, review.sourceReservationId)
+    if (!reservation || recordId(reservation) !== review.sourceReservationId) throw new Error('MISSING_REWARD_SOURCE')
+    if (!recipientAvailability(reservation, review.sourceType).available) throw new Error('INVALID_REWARD_RECIPIENT')
+  } catch {
+    return { kind: 'unavailable', safeErrorCode: 'recipient_recovery_unavailable', eventKey }
+  }
+  try {
+    return {
+      kind: 'ready',
+      payload: buildReviewRewardEmailPayload({
+        review, coupon, reservation, couponCode, from, replyTo, cakeOrderUrl,
+      }),
+    }
+  } catch {
+    return { kind: 'unavailable', safeErrorCode: 'payload_recovery_unavailable', eventKey }
+  }
+}
+
 export async function attemptReviewRewardEmail({
   repository,
   deliveryRepository,
