@@ -271,6 +271,7 @@ test('archive source manifest includes the shared ledger/transport source withou
     'appwrite-functions/shared/email-delivery-sender.js',
     'appwrite-functions/shared/email-delivery-retry-claim-repository.js',
     'appwrite-functions/shared/email-delivery-retry.js',
+    'appwrite-functions/shared/sydney-calendar.js',
   ])
   for (const forbidden of ['node_modules', '.env', 'secret', 'collection.permissions']) {
     assert.equal(JSON.stringify({ ARCHIVE_SOURCE_ENTRIES, ARCHIVE_SHARED_SOURCE_PATHS, DEPLOYMENT_OPERATIONS }).includes(forbidden), false)
@@ -329,7 +330,11 @@ test('review API archive contains the shared ledger, transport, encrypted invite
       'shared/email-delivery/email-delivery-sender.js',
       'shared/email-delivery/email-delivery-retry-claim-repository.js',
       'shared/email-delivery/email-delivery-retry.js',
+      'shared/sydney-calendar.js',
     ]) assert.match(listed.stdout, new RegExp(`(?:^|\\n)\\./?${entry.replace(/[-/]/g, '\\$&')}(?:\\n|$)`))
+    const calendar = spawnSync('tar', ['-xOzf', archive.path, './shared/sydney-calendar.js'], { encoding: 'utf8' })
+    assert.equal(calendar.status, 0, calendar.stderr)
+    assert.match(calendar.stdout, /export const SYDNEY_TIME_ZONE/)
   } finally {
     await archive.cleanup()
   }

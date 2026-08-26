@@ -38,7 +38,10 @@ export async function createReviewApiArchive({ repositoryRoot = process.cwd(), f
     const sharedTargetDirectory = join(stagingDirectory, 'shared/email-delivery')
     await mkdir(sharedTargetDirectory, { recursive: true })
     for (const sourcePath of ARCHIVE_SHARED_SOURCE_PATHS) {
-      await cp(resolve(root, sourcePath), join(sharedTargetDirectory, basename(sourcePath)))
+      const targetDirectory = basename(sourcePath) === 'sydney-calendar.js'
+        ? join(stagingDirectory, 'shared')
+        : sharedTargetDirectory
+      await cp(resolve(root, sourcePath), join(targetDirectory, basename(sourcePath)))
     }
     await execFileAsync('tar', ['-czf', archivePath, '-C', stagingDirectory, '.'])
     return {

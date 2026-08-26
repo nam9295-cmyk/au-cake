@@ -136,6 +136,60 @@ Function 리소스와 배포는 아래 명령으로 생성/업데이트합니다
 npm run deploy:reservation-notification
 ```
 
+### D-1 예약 리마인더
+
+`booking-reminder`는 기존 예약 접수/확정 Function과 분리된 private
+scheduled Function입니다. schedule은 `0 * * * *`이지만 cron timezone에
+의존하지 않고, Function 내부에서 Australia/Sydney 현지 시각
+**10:00–10:59**일 때만 scan합니다. 따라서 DST UTC+10/UTC+11 전환에도
+Sydney 기준 “내일”의 Cake 확정 픽업과 Kids Class `Confirmed` first/Advanced
+session에 각각 한 번만 Korean-first bilingual reminder를 보냅니다.
+
+Cake logical delivery key에는 pickup date를, Class key에는 session kind와
+session date를 포함합니다. 일정이 새 날짜로 변경되면 새 날짜에 대한
+reminder는 별도 event가 되며, 같은 10시 hour의 scheduler 재실행은 private
+`email_deliveries` first-send claim으로 중복 전송되지 않습니다. 직전 source
+row re-read에서 취소, 완료, 날짜/시간 변경, 또는 유효하지 않은 recipient를
+발견하면 ledger/provider 호출 없이 skip합니다. 고객 note, admin memo,
+emergency contact, detailed allergy, internal ID, review/coupon 정보는
+reminder에 포함하지 않습니다.
+
+```bash
+# Deployment source validation only: no Appwrite, Resend, or schema write.
+npm run test:booking-reminder
+node scripts/deploy-booking-reminder.mjs --dry-run
+```
+
+Required server/deploy variables are `APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`,
+`APPWRITE_API_KEY`, `APPWRITE_CAKE_DATABASE_ID`, `RESEND_API_KEY`, and
+`RESEND_FROM_EMAIL`. Runtime also uses the normal Function-provided
+`APPWRITE_FUNCTION_API_ENDPOINT`, `APPWRITE_FUNCTION_PROJECT_ID`, and dynamic
+`x-appwrite-key`; it never falls back to an `APPWRITE_API_KEY`. Optional
+`RESEND_REPLY_TO_EMAIL`, Kids database/table IDs, and the delivery-table ID use
+the existing server-only settings.
+
+`BOOKING_REMINDER_MODE=dry-run` is the default and may query/revalidate
+candidates but never writes `email_deliveries` or calls Resend. `send` is an
+explicit production opt-in only after the rollout checks below. No automatic
+retry, late catch-up, or D-3 coupon reminder is part of this Function.
+
+Production rollout (not performed by this repository command):
+
+1. Apply and wait for the source-schema indexes
+   `status_pickupDate_idx`, `status_classDate_idx`, and
+   `status_advancedClassDate_idx` to become available.
+2. Deploy the Function with `BOOKING_REMINDER_MODE=dry-run` and verify a
+   controlled scheduled execution summary at Sydney 10am.
+3. Confirm the Function has only database/document read-write scopes, no
+   browser execute permission, no event triggers, and uses the private
+   `email_deliveries` collection.
+4. Explicitly change the Function variable to `BOOKING_REMINDER_MODE=send` and
+   observe the next Sydney 10am execution without logging recipient data.
+
+Rollback is independent of booking, confirmation, review, coupon, and SMS
+flows: switch the Function back to `dry-run` or disable its schedule. Preserve
+any existing ledger rows as audit records; do not delete or backfill them.
+
 이 명령에 사용하는 `APPWRITE_API_KEY`에는 최소 `functions.read`, `functions.write` 스코프가 필요합니다. 배포 후 실행 로그까지 CLI에서 확인하려면 `execution.read`도 추가하세요.
 
 기본 함수 ID는 `reservation-notification`이며 현재 운영 Appwrite 인스턴스와 호환되는 기본 런타임은 `node-16.0`입니다. 기본 이벤트는 `tablesdb.{APPWRITE_CAKE_DATABASE_ID}.tables.{APPWRITE_CAKE_RESERVATIONS_TABLE_ID}.rows.*.create`와 기존 `databases.{APPWRITE_CAKE_DATABASE_ID}.collections.{APPWRITE_CAKE_RESERVATIONS_TABLE_ID}.documents.*.create`를 순서대로 시도하며, 필요하면 `APPWRITE_RESERVATION_CREATE_EVENT`로 직접 지정할 수 있습니다.

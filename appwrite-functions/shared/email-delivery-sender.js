@@ -17,6 +17,7 @@ function deliveryIdentity(message) {
     sourceType: message.sourceType,
     sourceId: message.sourceId,
     template: message.template,
+    ...(message.occurrence === undefined ? {} : { occurrence: message.occurrence }),
     recipientHash: message.recipientHash,
     payloadHash: message.payloadHash,
   }

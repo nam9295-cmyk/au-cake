@@ -22,6 +22,7 @@ export const ARCHIVE_SHARED_SOURCE_PATHS = Object.freeze([
   'appwrite-functions/shared/email-delivery-sender.js',
   'appwrite-functions/shared/email-delivery-retry-claim-repository.js',
   'appwrite-functions/shared/email-delivery-retry.js',
+  'appwrite-functions/shared/sydney-calendar.js',
 ])
 
 export const DEPLOYMENT_OPERATIONS = Object.freeze([

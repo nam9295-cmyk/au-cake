@@ -131,6 +131,7 @@ test('email delivery ledger schema is private, avoids raw recipient PII, and has
       'booking-confirmed-customer',
       'review-invite-customer',
       'review-reward-customer',
+      'booking-reminder-d1-customer',
     ],
   })
   assert.deepEqual(attribute(deliveries, 'status'), {
@@ -170,6 +171,23 @@ test('email delivery ledger schema is private, avoids raw recipient PII, and has
     key: 'updatedAt', type: 'string', size: 40, required: true,
   })
   assert.equal(deliveries.attributes.some(({ key }) => key === 'recipientEmail'), false)
+})
+
+test('D-1 reminder uses the private common delivery template enum without adding recipient PII', () => {
+  for (const collection of [REVIEW_COLLECTIONS.emailDeliveries, REVIEW_COLLECTIONS.emailDeliveryRetryClaims]) {
+    assert.equal(attribute(collection, 'template').elements.includes('booking-reminder-d1-customer'), true)
+    assert.equal(collection.publicPermissions.length, 0)
+    assert.equal(collection.adminPermissions.length, 0)
+  }
+})
+
+test('setup source declares only the D-1 scanner composite candidate indexes', () => {
+  const setupSource = readFileSync(resolve(repositoryRoot, 'scripts/setup-appwrite.mjs'), 'utf8')
+  for (const source of [
+    "{ key: 'status_pickupDate_idx', attributes: ['status', 'pickupDate'] }",
+    "{ key: 'status_classDate_idx', attributes: ['status', 'classDate'] }",
+    "{ key: 'status_advancedClassDate_idx', attributes: ['status', 'advancedClassDate'] }",
+  ]) assert.match(setupSource, new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
 })
 
 test('one-use email retry claims are private and uniquely keyed by the logical email event', () => {

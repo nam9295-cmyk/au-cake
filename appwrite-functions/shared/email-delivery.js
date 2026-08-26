@@ -15,6 +15,7 @@ export const EMAIL_DELIVERY_TEMPLATES = Object.freeze([
   'booking-confirmed-customer',
   'review-invite-customer',
   'review-reward-customer',
+  'booking-reminder-d1-customer',
 ])
 
 export const EMAIL_DELIVERY_STATUSES = Object.freeze(['pending', 'sent', 'failed', 'uncertain'])
@@ -57,6 +58,7 @@ const TEMPLATE_SOURCE_TYPES = Object.freeze({
   'booking-confirmed-customer': Object.freeze(['cake', 'class']),
   'review-invite-customer': Object.freeze(['cake', 'class']),
   'review-reward-customer': Object.freeze(['review']),
+  'booking-reminder-d1-customer': Object.freeze(['cake', 'class']),
 })
 
 export class EmailDeliveryError extends Error {
@@ -122,11 +124,22 @@ export function recipientHashForEmailSet(values) {
   return sha256(normalizeRecipientEmailSet(values).join('\n'))
 }
 
-export function buildEmailDeliveryEventKey({ template, sourceType, sourceId } = {}) {
+function reminderOccurrence(sourceType, occurrence) {
+  if (typeof occurrence !== 'string') fail('INVALID_EMAIL_DELIVERY_EVENT')
+  if (sourceType === 'cake' && /^\d{4}-\d{2}-\d{2}$/.test(occurrence)) return occurrence
+  if (sourceType === 'class' && /^(first|advanced):\d{4}-\d{2}-\d{2}$/.test(occurrence)) return occurrence
+  fail('INVALID_EMAIL_DELIVERY_EVENT')
+}
+
+export function buildEmailDeliveryEventKey({ template, sourceType, sourceId, occurrence } = {}) {
   if (!EMAIL_DELIVERY_TEMPLATES.includes(template) || !templateAllowsSourceType(template, sourceType)) {
     fail('INVALID_EMAIL_DELIVERY_EVENT')
   }
   if (!APPWRITE_ID.test(sourceId || '')) fail('INVALID_EMAIL_DELIVERY_SOURCE_ID')
+  if (template === 'booking-reminder-d1-customer') {
+    return `${template}:${sourceType}:${sourceId}:${reminderOccurrence(sourceType, occurrence)}`
+  }
+  if (occurrence !== undefined) fail('INVALID_EMAIL_DELIVERY_EVENT')
   return `${template}:${sourceType}:${sourceId}`
 }
 

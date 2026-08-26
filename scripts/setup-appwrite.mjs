@@ -299,6 +299,7 @@ const reservationIndexes = [
   { key: 'reservationNumber_idx', attributes: ['reservationNumber'] },
   { key: 'pickupDate_idx', attributes: ['pickupDate'] },
   { key: 'status_idx', attributes: ['status'] },
+  { key: 'status_pickupDate_idx', attributes: ['status', 'pickupDate'] },
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'cacaoPercent_idx', attributes: ['cacaoPercent'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
@@ -314,6 +315,8 @@ const classReservationIndexes = [
   { key: 'classDate_idx', attributes: ['classDate'] },
   { key: 'advancedClassDate_idx', attributes: ['advancedClassDate'] },
   { key: 'status_idx', attributes: ['status'] },
+  { key: 'status_classDate_idx', attributes: ['status', 'classDate'] },
+  { key: 'status_advancedClassDate_idx', attributes: ['status', 'advancedClassDate'] },
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
 ]
