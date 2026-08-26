@@ -7,6 +7,8 @@ export const FUNCTION_SCOPES = Object.freeze([...EMAIL_DELIVERY_REQUIRED_FUNCTIO
 export const ARCHIVE_SHARED_SOURCE_PATHS = Object.freeze([
   'appwrite-functions/shared/email-delivery.js',
   'appwrite-functions/shared/email-delivery-repository.js',
+  'appwrite-functions/shared/resend-transport.js',
+  'appwrite-functions/shared/email-delivery-sender.js',
 ])
 
 export const REQUIRED_APPLY_ENVIRONMENT = Object.freeze([

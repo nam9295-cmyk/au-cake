@@ -1,4 +1,3 @@
-import https from 'node:https'
 import { Client, Databases } from 'node-appwrite'
 import {
   buildEmailDeliveryEventKey,
@@ -10,6 +9,8 @@ import {
   resendIdempotencyKeyForEvent,
 } from '../shared/email-delivery/email-delivery.js'
 import { createEmailDeliveryRepository } from '../shared/email-delivery/email-delivery-repository.js'
+import { createResendTransport as createSharedResendTransport, ResendTransportError } from '../shared/email-delivery/resend-transport.js'
+import { deliverEmail, deliverEmails } from '../shared/email-delivery/email-delivery-sender.js'
 import { parseStoredOrderLines } from '../shared/reservation-api/business.js'
 
 const APPWRITE_RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
@@ -947,241 +948,21 @@ export function buildBookingConfirmationPayload({ reservation, sourceType, from,
   }
 }
 
-export class ResendTransportError extends Error {
-  constructor(kind, code) {
-    super(code)
-    this.name = 'ResendTransportError'
-    this.kind = kind
-    this.code = code
-  }
-}
+export { ResendTransportError }
 
-function safeResendErrorCode(statusCode) {
-  return Number.isInteger(statusCode) ? `resend_http_${statusCode}` : 'resend_network_uncertain'
-}
-
-const RESEND_IDEMPOTENCY_ERROR_CODES = Object.freeze(new Set([
-  'invalid_idempotent_request',
-  'concurrent_idempotent_requests',
-  'invalid_idempotency_key',
-]))
-
-function resendProviderErrorCode(value) {
-  if (!value || typeof value !== 'object') return null
-  for (const key of ['error', 'name', 'code']) {
-    const candidate = value[key]
-    if (typeof candidate === 'string' && RESEND_IDEMPOTENCY_ERROR_CODES.has(candidate)) return candidate
-  }
-  return null
-}
-
-function resendErrorForStatus(statusCode, providerErrorCode = null) {
-  if (statusCode === 409 && providerErrorCode === 'invalid_idempotent_request') {
-    return new ResendTransportError('failed', 'resend_invalid_idempotent_request')
-  }
-  if (statusCode === 409 && providerErrorCode === 'concurrent_idempotent_requests') {
-    return new ResendTransportError('uncertain', 'resend_concurrent_idempotent_requests')
-  }
-  if (statusCode === 400 && providerErrorCode === 'invalid_idempotency_key') {
-    return new ResendTransportError('failed', 'resend_invalid_idempotency_key')
-  }
-  return new ResendTransportError(
-    isClearlyRejectedResendStatus(statusCode) ? 'failed' : 'uncertain',
-    safeResendErrorCode(statusCode),
-  )
-}
-
-function resendProviderErrorCodeFromJson(responseBody) {
-  try {
-    return resendProviderErrorCode(JSON.parse(responseBody))
-  } catch {
-    return null
-  }
-}
-
-function isClearlyRejectedResendStatus(statusCode) {
-  return Number.isInteger(statusCode) && statusCode >= 400 && statusCode < 500 && ![408, 409].includes(statusCode)
-}
-
-function classifyResendError(error) {
-  if (error instanceof ResendTransportError) return error
-  const statusCode = Number(error?.statusCode)
-  return resendErrorForStatus(
-    Number.isInteger(statusCode) ? statusCode : undefined,
-    resendProviderErrorCode(error),
-  )
-}
-
-async function postJson(url, payload, headers) {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify(payload)
-    const request = https.request(
-      url,
-      {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-        },
-      },
-      (response) => {
-        let responseBody = ''
-        response.setEncoding('utf8')
-        response.on('data', (chunk) => {
-          if (responseBody.length + chunk.length > 65_536) {
-            request.destroy(new Error('Resend API response was too large.'))
-            return
-          }
-          responseBody += chunk
-        })
-        response.on('end', () => {
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            try {
-              resolve(JSON.parse(responseBody))
-            } catch {
-              resolve({})
-            }
-            return
-          }
-
-          reject(resendErrorForStatus(
-            response.statusCode,
-            resendProviderErrorCodeFromJson(responseBody),
-          ))
-        })
-      },
-    )
-
-    request.setTimeout(10_000, () => request.destroy(new ResendTransportError('uncertain', 'resend_timeout')))
-    request.on('error', reject)
-    request.write(body)
-    request.end()
+export function createResendTransport(options = {}) {
+  return createSharedResendTransport({
+    ...options,
+    userAgent: 'verygood-reservation-notification/1.0',
   })
 }
 
-export function createResendTransport({ apiKey, post = postJson } = {}) {
-  if (typeof apiKey !== 'string' || !apiKey.trim() || typeof post !== 'function') {
-    throw new Error('INVALID_RESEND_TRANSPORT_CONFIGURATION')
-  }
-  return {
-    async send(message) {
-      try {
-        const result = await post(
-          'https://api.resend.com/emails',
-          {
-            from: message.from,
-            to: message.to,
-            ...(message.replyTo ? { reply_to: message.replyTo } : {}),
-            subject: message.subject,
-            text: message.text,
-            html: message.html,
-          },
-          {
-            Authorization: `Bearer ${apiKey}`,
-            'Idempotency-Key': message.idempotencyKey,
-            'User-Agent': 'verygood-reservation-notification/1.0',
-          },
-        )
-        if (typeof result?.id !== 'string' || !result.id.trim() || result.id.length > 128) {
-          throw new ResendTransportError('uncertain', 'resend_invalid_success_response')
-        }
-        return { kind: 'accepted', providerMessageId: result.id.trim() }
-      } catch (sendError) {
-        throw classifyResendError(sendError)
-      }
-    },
-  }
+export function deliverBookingEmail(options = {}) {
+  return deliverEmail({ ...options, logLabel: 'Booking email delivery' })
 }
 
-function existingDeliveryStatus(decision) {
-  switch (decision?.kind) {
-    case 'already_sent': return 'already_sent'
-    case 'in_progress': return 'in_progress'
-    case 'retryable': return 'retry_deferred'
-    case 'identity_mismatch': return 'identity_mismatch'
-    case 'reconciliation_required': return 'reconciliation_required'
-    default: return 'reconciliation_required'
-  }
-}
-
-function deliveryIdentity(message) {
-  return {
-    eventKey: message.eventKey,
-    sourceType: message.sourceType,
-    sourceId: message.sourceId,
-    template: message.template,
-    recipientHash: message.recipientHash,
-    payloadHash: message.payloadHash,
-  }
-}
-
-export async function deliverBookingEmail({ payload, repository, transport, now = new Date(), log = () => {}, error = () => {} } = {}) {
-  if (!payload) return { status: 'skipped_invalid_recipient' }
-  let claim
-  try {
-    claim = await repository.getOrCreatePending(deliveryIdentity(payload), now)
-  } catch {
-    error(`Booking email ledger failure: ${payload.eventKey}`)
-    return { status: 'ledger_error' }
-  }
-  if (claim.kind !== 'created') {
-    const status = existingDeliveryStatus(claim.decision)
-    return {
-      status,
-      ...(status === 'already_sent' && typeof claim.delivery?.sentAt === 'string' ? { sentAt: claim.delivery.sentAt } : {}),
-    }
-  }
-
-  let attempted
-  try {
-    attempted = await repository.markAttempt(claim.delivery, now)
-  } catch {
-    error(`Booking email attempt recording failed: ${payload.eventKey}`)
-    return { status: 'ledger_error' }
-  }
-
-  try {
-    const result = await transport.send(payload)
-    if (result?.kind !== 'accepted' || typeof result.providerMessageId !== 'string') {
-      throw new ResendTransportError('uncertain', 'resend_invalid_success_response')
-    }
-    const sent = await repository.markSent(attempted, { now, providerMessageId: result.providerMessageId })
-    log(`Booking email delivery sent: ${payload.eventKey}`)
-    return {
-      status: 'sent',
-      providerMessageId: result.providerMessageId,
-      ...(typeof sent?.sentAt === 'string' ? { sentAt: sent.sentAt } : { sentAt: now.toISOString() }),
-    }
-  } catch (sendError) {
-    const classified = classifyResendError(sendError)
-    try {
-      if (classified.kind === 'failed') {
-        await repository.markFailed(attempted, { now, errorCode: classified.code })
-        error(`Booking email delivery failed: ${payload.eventKey} (${classified.code})`)
-        return { status: 'failed' }
-      }
-      await repository.markUncertain(attempted, { now, errorCode: classified.code })
-      error(`Booking email delivery uncertain: ${payload.eventKey} (${classified.code})`)
-      return { status: 'uncertain' }
-    } catch {
-      error(`Booking email ledger result recording failed: ${payload.eventKey}`)
-      return { status: 'ledger_error' }
-    }
-  }
-}
-
-export async function deliverBookingEmails({ payloads, repository, transport, now = new Date(), log = () => {}, error = () => {} } = {}) {
-  const deliveries = await Promise.allSettled(
-    (payloads || []).map((payload) => deliverBookingEmail({ payload, repository, transport, now, log, error })),
-  )
-  return deliveries.map((delivery, index) => {
-    if (delivery.status === 'fulfilled') return delivery.value
-    try {
-      error(`Booking email delivery unexpected: ${plainTextCell(payloads?.[index]?.eventKey).slice(0, 128) || 'unknown'}`)
-    } catch {}
-    return { status: 'delivery_error' }
-  })
+export function deliverBookingEmails(options = {}) {
+  return deliverEmails({ ...options, logLabel: 'Booking email delivery' })
 }
 
 function runtimeResourceId(env, key, fallback) {

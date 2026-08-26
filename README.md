@@ -164,6 +164,9 @@ Review API Function의 기본 ID는 `review-api`입니다. 운영에서 다른 I
 - exact HTTPS origins allowed to request private admin photo previews: `REVIEW_FRONTEND_ORIGINS`
 - coupon lookup secret shared by Review API and Reservation API: `REVIEW_COUPON_HMAC_SECRET`
 - separate 32-byte AES key used only by Review API to recover active coupon messages: `REVIEW_COUPON_ENCRYPTION_KEY`
+- separate 32-byte AES key used only by Review API to recover active review invitation links: `REVIEW_INVITE_TOKEN_ENCRYPTION_KEY`
+- review invitation email sender: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, optional `RESEND_REPLY_TO_EMAIL`
+- private email ledger: `APPWRITE_EMAIL_DELIVERIES_TABLE_ID` (defaults to `email_deliveries`)
 
 두 쿠폰 키는 서로 다른 값이어야 하며 공백이나 padding 없는 canonical base64url이어야 합니다. 아래 명령을 각각 한 번씩 실행해 서로 다른 값을 생성하세요.
 
@@ -171,7 +174,9 @@ Review API Function의 기본 ID는 `review-api`입니다. 운영에서 다른 I
 node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
 ```
 
-`REVIEW_COUPON_HMAC_SECRET`은 Review API와 Reservation API에 같은 값으로 설정하고, `REVIEW_COUPON_ENCRYPTION_KEY`는 Review API에만 설정합니다. 활성 쿠폰이 남아 있는 동안 어느 키도 회전하지 마세요. 암호화 키를 잃거나 바꾸면 기존 활성 쿠폰의 관리자 `리워드 메시지 복사` 기능을 복구할 수 없습니다.
+`REVIEW_COUPON_HMAC_SECRET`은 Review API와 Reservation API에 같은 값으로 설정하고, `REVIEW_COUPON_ENCRYPTION_KEY`와 `REVIEW_INVITE_TOKEN_ENCRYPTION_KEY`는 서로 다른 Review API 전용 값으로 설정합니다. 활성 쿠폰 또는 활성 리뷰 링크가 남아 있는 동안 어떤 암호화 키도 회전하지 마세요. 키를 잃거나 바꾸면 각각 기존 관리자 리워드 메시지 또는 리뷰 링크 복구가 fail-closed 됩니다.
+
+완료된 cake(`픽업완료`) 또는 class(`Completed`) 예약에서만 관리자 drawer의 **Send review email**로 한 통의 한국어 우선/영어 병기 리뷰 요청을 보냅니다. 이 메일은 긍정적인 후기나 별점에 대한 보상이 아니라 honest review에 대한 안내이며, 텍스트 후기는 다음 cake order 5%, 사진 후기는 10%입니다. 개인 링크는 발급 시점부터 Sydney calendar 30일, 후기 작성 뒤 발급되는 쿠폰은 발급 시점부터 30일이며 다음 cake order에 한 번 사용할 수 있습니다. **Copy review request**는 계속 제공되며 동일한 암호화된 active link만 복구합니다. sent/pending/failed/uncertain은 자동 재발송하지 않습니다.
 
 `APPWRITE_ADMIN_USER_IDS`는 schema 리소스 권한을 설정하는 `setup:appwrite` 전용이고, Review API의 관리자 요청 판정과 Function 환경변수에는 반드시 별도의 `REVIEW_ADMIN_USER_IDS`를 사용합니다. `REVIEW_ADMIN_USER_IDS`는 비어 있지 않은 comma-separated Appwrite user ID 목록이어야 하며, 배포 전에 형식 검증과 중복 제거를 거칩니다. 배포 작업자의 `APPWRITE_API_KEY`에는 `functions.read`와 `functions.write`만 필요하며 Function runtime 변수로 전달하지 않습니다.
 
@@ -189,4 +194,4 @@ npm run deploy:review-api
 
 사진 정규화 dependency인 `sharp@0.34.5`는 Node 18.17 이상이 필요하고 Node 16을 지원하지 않으므로 Review API 기본 runtime은 `node-20.0`이며, 지원 여부 fallback도 `node-20.0`과 `node-18.0`까지만 허용합니다. 운영 Appwrite가 두 runtime을 모두 지원하지 않으면 배포를 강행하지 말고 Appwrite runtime을 먼저 업그레이드해야 합니다.
 
-운영 rollout 순서는 반드시 **review schema 적용/검증 → Review Function deployment `ready` 확인 → 일부러 잘못된 요청으로 no-write smoke 확인 → frontend 배포** 순서입니다. 실제 schema apply, Function 배포, smoke, frontend 전환은 각각 production 승인 후 진행하며 이 로컬 작업만으로 live apply하지 않습니다.
+리뷰 초대 링크 recovery rollout 순서는 반드시 **optional `review_invites` encrypted-envelope attribute 생성/available 확인 → private `email_deliveries` schema/permission 확인 → Review Function secret/runtime variable 설정 및 deployment `ready` 확인 → 일부러 잘못된 요청으로 no-write smoke 확인 → frontend 배포** 순서입니다. 이전 Function/frontend로 rollback하더라도 기존 `tokenHash` 기반 review submit은 유지됩니다. 실제 schema apply, Function 배포, smoke, frontend 전환은 각각 production 승인 후 진행하며 이 로컬 작업만으로 live apply하지 않습니다.

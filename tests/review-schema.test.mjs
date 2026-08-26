@@ -71,15 +71,27 @@ test('review resource ids use safe defaults and server ids override Vite ids', (
   )
 })
 
-test('review invite schema stores only hashed tokens and has both required unique constraints', () => {
+test('review invite schema keeps recoverable token envelopes private and optional for legacy rows', () => {
   const invites = REVIEW_COLLECTIONS.reviewInvites
   assert.deepEqual(invites.publicPermissions, [])
-  assert.deepEqual(invites.adminPermissions, ['read', 'update', 'delete'])
+  assert.deepEqual(invites.adminPermissions, [])
   assert.deepEqual(attribute(invites, 'sourceType'), {
     key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class'],
   })
   assert.deepEqual(attribute(invites, 'tokenHash'), {
     key: 'tokenHash', type: 'string', size: 64, required: true,
+  })
+  assert.deepEqual(attribute(invites, 'tokenCiphertext'), {
+    key: 'tokenCiphertext', type: 'string', size: 64, required: false,
+  })
+  assert.deepEqual(attribute(invites, 'tokenIv'), {
+    key: 'tokenIv', type: 'string', size: 16, required: false,
+  })
+  assert.deepEqual(attribute(invites, 'tokenAuthTag'), {
+    key: 'tokenAuthTag', type: 'string', size: 22, required: false,
+  })
+  assert.deepEqual(attribute(invites, 'tokenEncryptionVersion'), {
+    key: 'tokenEncryptionVersion', type: 'integer', required: false, min: 1, max: 1,
   })
   assert.deepEqual(attribute(invites, 'usedAt'), {
     key: 'usedAt', type: 'string', size: 40, required: false,
@@ -92,7 +104,7 @@ test('review invite schema stores only hashed tokens and has both required uniqu
   })
   assert.deepEqual(
     invites.attributes.map(({ key }) => key),
-    ['sourceType', 'sourceReservationId', 'sourceReservationNumber', 'tokenHash', 'expiresAt', 'usedAt', 'pendingPhotoFileId', 'pendingPhotoUploadedAt', 'photoUploadCount', 'createdByUserId', 'createdAt'],
+    ['sourceType', 'sourceReservationId', 'sourceReservationNumber', 'tokenHash', 'tokenCiphertext', 'tokenIv', 'tokenAuthTag', 'tokenEncryptionVersion', 'expiresAt', 'usedAt', 'pendingPhotoFileId', 'pendingPhotoUploadedAt', 'photoUploadCount', 'createdByUserId', 'createdAt'],
   )
   assert.deepEqual(index(invites, 'tokenHash_unique'), {
     key: 'tokenHash_unique', attributes: ['tokenHash'], type: 'unique',

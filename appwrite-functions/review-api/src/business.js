@@ -1,6 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { digestReviewCouponCode, resolveReviewCouponHmacSecret } from './coupon-digest.js'
 import { decryptReviewCouponCode, encryptReviewCouponCode, resolveReviewCouponEncryptionKey } from './coupon-envelope.js'
+import { decryptReviewInviteToken, encryptReviewInviteToken } from './invite-token-envelope.js'
 
 const SYDNEY_TIME_ZONE = 'Australia/Sydney'
 export const REVIEW_INVITE_VALID_DAYS = 30
@@ -8,6 +9,7 @@ export const REVIEW_REWARD_VALID_DAYS = 30
 const COUPON_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const REVIEW_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/
 const OPAQUE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
+const ENVELOPE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/
 const REWARD_LAST4_PATTERN = /^[A-Z2-9]{4}$/
 const REWARD_STATUSES = new Set(['active', 'redeemed', 'expired', 'revoked'])
 const UNAVAILABLE_REWARD_SUMMARY = Object.freeze({
@@ -274,6 +276,53 @@ function sourceIsCompleted(sourceType, source) {
   return sourceType === 'cake' ? source?.status === '픽업완료' : source?.status === 'Completed'
 }
 
+export function assertReviewInviteSource(sourceType, source) {
+  if (!validateSourceType(sourceType) || !sourceIsCompleted(sourceType, source)) fail('REVIEW_SOURCE_NOT_COMPLETED')
+  return source
+}
+
+function recoverInviteToken(invite, sourceType, sourceReservationId, tokenEncryptionKey) {
+  const inviteId = invite?.$id || invite?.id
+  if (!ENVELOPE_ID_PATTERN.test(inviteId || '')) return null
+  try {
+    const token = decryptReviewInviteToken({
+      envelope: invite,
+      inviteId,
+      sourceType,
+      sourceReservationId,
+      key: tokenEncryptionKey,
+      ErrorClass: ReviewApiError,
+    })
+    return secureHashEqual(invite.tokenHash, hashSecret(token)) ? token : null
+  } catch {
+    return null
+  }
+}
+
+export async function getReviewInviteLifecycle(repository, input, {
+  now = new Date(),
+  tokenEncryptionKey,
+} = {}) {
+  const sourceType = input?.sourceType
+  const sourceReservationId = typeof input?.sourceReservationId === 'string' ? input.sourceReservationId.trim() : ''
+  if (!validateSourceType(sourceType) || !sourceReservationId) fail('REVIEW_SOURCE_NOT_COMPLETED')
+  const source = assertReviewInviteSource(sourceType, await repository.getSource(sourceType, sourceReservationId))
+  const [invite, review] = await Promise.all([
+    repository.findInviteBySource(sourceType, sourceReservationId),
+    repository.findReviewBySource(sourceType, sourceReservationId),
+  ])
+  if (review || invite?.usedAt) return { state: 'used', source, invite }
+  if (!invite) return { state: 'not_sent', source, invite: null }
+  const expiresAt = new Date(invite.expiresAt)
+  if (!Number.isNaN(expiresAt.getTime()) && expiresAt.getTime() <= now.getTime()) {
+    return { state: 'expired', source, invite }
+  }
+  if (!Number.isNaN(expiresAt.getTime()) && recoverInviteToken(invite, sourceType, sourceReservationId, tokenEncryptionKey)) {
+    return { state: 'active', source, invite }
+  }
+  return { state: 'legacy_invite_unrecoverable', source, invite }
+}
+
 export function assertReviewAdmin(headers = {}, env = process.env) {
   const userId = headers['x-appwrite-user-id']
   const allowlist = String(env.REVIEW_ADMIN_USER_IDS || '').split(',').map((id) => id.trim()).filter(Boolean)
@@ -331,26 +380,37 @@ export async function issueReviewInvite(repository, input, {
   tokenFactory = generateReviewToken,
   idFactory = () => randomBytes(18).toString('hex'),
   isConflict = (error) => error?.code === 409,
-  storage,
+  tokenEncryptionKey,
 } = {}) {
   const sourceType = input?.sourceType
   const sourceReservationId = typeof input?.sourceReservationId === 'string' ? input.sourceReservationId.trim() : ''
   if (!validateSourceType(sourceType) || !sourceReservationId) fail('REVIEW_SOURCE_NOT_COMPLETED')
 
   const transaction = await repository.beginTransaction()
-  let rotatedPhoto
-  let rotatedInviteId
+  let proposedInviteId
   let proposedToken
   let proposedData
   let commitAttempted = false
   try {
-    const source = await repository.getSource(sourceType, sourceReservationId, transaction)
-    if (!sourceIsCompleted(sourceType, source)) fail('REVIEW_SOURCE_NOT_COMPLETED')
+    const source = assertReviewInviteSource(sourceType, await repository.getSource(sourceType, sourceReservationId, transaction))
     const existingInvite = await repository.findInviteBySource(sourceType, sourceReservationId, transaction)
     const existingReview = await repository.findReviewBySource(sourceType, sourceReservationId, transaction)
     if (existingInvite?.usedAt || existingReview) fail('REVIEW_ALREADY_SUBMITTED', 409)
 
+    if (existingInvite) {
+      const expiresAt = new Date(existingInvite.expiresAt)
+      if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= now.getTime()) {
+        fail('REVIEW_INVITE_EXPIRED', 409)
+      }
+      const recoveredToken = recoverInviteToken(existingInvite, sourceType, sourceReservationId, tokenEncryptionKey)
+      if (!recoveredToken) fail('REVIEW_INVITE_UNRECOVERABLE', 409)
+      try { await repository.rollbackTransaction(transaction) } catch { /* no mutations were staged */ }
+      return { token: recoveredToken, expiresAt: existingInvite.expiresAt }
+    }
+
     proposedToken = tokenFactory()
+    proposedInviteId = idFactory()
+    if (!ENVELOPE_ID_PATTERN.test(proposedInviteId || '')) fail('INVALID_REVIEW_INVITE_ENVELOPE')
     proposedData = {
       sourceType,
       sourceReservationId,
@@ -359,46 +419,33 @@ export async function issueReviewInvite(repository, input, {
       expiresAt: addSydneyCalendarDays(now, REVIEW_INVITE_VALID_DAYS).toISOString(),
       createdByUserId,
       createdAt: now.toISOString(),
+      ...encryptReviewInviteToken({
+        token: proposedToken,
+        inviteId: proposedInviteId,
+        sourceType,
+        sourceReservationId,
+        key: tokenEncryptionKey,
+        ErrorClass: ReviewApiError,
+      }),
     }
-    if (existingInvite) {
-      rotatedPhoto = existingInvite.pendingPhotoFileId
-      rotatedInviteId = existingInvite.$id || existingInvite.id
-      if (rotatedPhoto) {
-        await enqueuePhotoCleanupIntent(repository, {
-          fileId: rotatedPhoto, inviteId: rotatedInviteId, reason: 'rotation', status: 'pending', attempts: 0, now,
-        }, transaction)
-      }
-      await repository.updateInvite(rotatedInviteId, {
-        ...proposedData,
-        pendingPhotoFileId: null,
-        pendingPhotoUploadedAt: null,
-      }, transaction)
-    } else {
-      await repository.createInvite({ ...proposedData, photoUploadCount: 0 }, transaction, idFactory())
-    }
+    await repository.createInvite({ ...proposedData, photoUploadCount: 0 }, transaction, proposedInviteId)
     commitAttempted = true
     await repository.commitTransaction(transaction)
-    await cleanupPhotoFileDurably(repository, storage, {
-      fileId: rotatedPhoto, inviteId: rotatedInviteId, reason: 'rotation', now, intentExists: Boolean(rotatedPhoto),
-    })
     return { token: proposedToken, expiresAt: proposedData.expiresAt }
   } catch (error) {
     try { await repository.rollbackTransaction(transaction) } catch { /* already rolled back or committed */ }
     if (error instanceof ReviewApiError) throw error
 
-    if (commitAttempted && rotatedInviteId) {
+    if (commitAttempted && proposedInviteId) {
       let currentInvite
       try {
         currentInvite = repository.getInvite
-          ? await repository.getInvite(rotatedInviteId)
+          ? await repository.getInvite(proposedInviteId)
           : await repository.findInviteBySource(sourceType, sourceReservationId)
       } catch {
         fail('REVIEW_INVITE_UNCERTAIN', 503)
       }
       if (currentInvite && secureHashEqual(currentInvite.tokenHash, proposedData.tokenHash)) {
-        await cleanupPhotoFileDurably(repository, storage, {
-          fileId: rotatedPhoto, inviteId: rotatedInviteId, reason: 'rotation', now, intentExists: Boolean(rotatedPhoto),
-        })
         return { token: proposedToken, expiresAt: proposedData.expiresAt }
       }
       fail('REVIEW_INVITE_CHANGED', 409)
@@ -411,6 +458,22 @@ export async function issueReviewInvite(repository, input, {
         repository.findReviewBySource(sourceType, sourceReservationId),
       ])
       if (currentInvite?.usedAt || currentReview) fail('REVIEW_ALREADY_SUBMITTED', 409)
+      if (currentInvite) {
+        const expiresAt = new Date(currentInvite.expiresAt)
+        if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= now.getTime()) {
+          fail('REVIEW_INVITE_EXPIRED', 409)
+        }
+        try {
+          const recoveredToken = recoverInviteToken(currentInvite, sourceType, sourceReservationId, tokenEncryptionKey)
+          if (recoveredToken) {
+          return { token: recoveredToken, expiresAt: currentInvite.expiresAt }
+          }
+          fail('REVIEW_INVITE_UNRECOVERABLE', 409)
+        } catch (recoveryError) {
+          if (recoveryError instanceof ReviewApiError) throw recoveryError
+          fail('REVIEW_INVITE_UNRECOVERABLE', 409)
+        }
+      }
     } catch (classificationError) {
       if (classificationError instanceof ReviewApiError) throw classificationError
     }

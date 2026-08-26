@@ -275,7 +275,7 @@ export function ReservationDrawer({
           <textarea value={memo} onChange={(event) => setMemo(event.target.value)} />
         </label>
 
-        <ReviewInviteButton sourceType="cake" sourceReservationId={reservation.id} customerName={reservation.customerName} status={reservation.status} />
+        <ReviewInviteButton key={`cake-review-invite-${reservation.id}`} sourceType="cake" sourceReservationId={reservation.id} status={reservation.status} />
         <BookingConfirmationEmailButton
           key={`cake-confirmation-${reservation.id}`}
           sourceType="cake"

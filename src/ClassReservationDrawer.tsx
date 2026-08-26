@@ -33,7 +33,7 @@ export function ClassReservationDrawer({ reservation, onClose, onSave, onCopy }:
           <div><dt>동의</dt><dd>Parent {reservation.parentConsent ? 'yes' : 'no'} / Photo {reservation.photoConsent ? 'yes' : 'no'} / Cancellation {reservation.cancellationAgreement ? 'yes' : 'no'}</dd></div>
         </dl>
         <label>관리자 메모<textarea value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
-        <ReviewInviteButton sourceType="class" sourceReservationId={reservation.id} customerName={reservation.parentName} status={reservation.status} />
+        <ReviewInviteButton key={`class-review-invite-${reservation.id}`} sourceType="class" sourceReservationId={reservation.id} status={reservation.status} />
         <BookingConfirmationEmailButton key={`class-confirmation-${reservation.id}`} sourceType="class" reservationId={reservation.id} status={reservation.status} recipientEmail={reservation.parentEmail} />
         <div className="button-row"><button className="secondary-button" type="button" onClick={() => onCopy(buildClassPaymentMessage(reservation))}>결제 안내 복사</button><button className="secondary-button" type="button" onClick={() => onCopy(buildClassConfirmationMessage(reservation))}>확정 안내 복사</button><button className="primary-button" type="button" onClick={() => onSave(reservation.id, { adminMemo: memo })}>메모 저장</button></div>
         <div className="sms-preview"><pre>{buildClassConfirmationMessage(reservation)}</pre></div>

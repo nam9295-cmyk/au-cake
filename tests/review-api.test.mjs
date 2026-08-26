@@ -32,10 +32,12 @@ import {
 } from '../appwrite-functions/review-api/src/main.js'
 import { digestReviewCouponCode, resolveReviewCouponHmacSecret } from '../appwrite-functions/review-api/src/coupon-digest.js'
 import { decryptReviewCouponCode } from '../appwrite-functions/review-api/src/coupon-envelope.js'
+import { encryptReviewInviteToken } from '../appwrite-functions/review-api/src/invite-token-envelope.js'
 
 const hmacSecret = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
 const encryptionKeyEncoded = 'ERERERERERERERERERERERERERERERERERERERERERE'
 const encryptionKey = Buffer.from(encryptionKeyEncoded, 'base64url')
+const inviteTokenEncryptionKey = Buffer.from('IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI', 'base64url')
 
 function submitReview(repository, token, input, options = {}) {
   return submitReviewCore(repository, token, input, { hmacSecret, encryptionKey, ...options })
@@ -503,10 +505,10 @@ function makeStatefulAtomicRepository(initialInvite, expectedCommits = 2) {
       const invite = view(transaction).invite
       return invite?.tokenHash === tokenHash ? structuredClone(invite) : null
     },
-    async createInvite(data, transaction) {
+    async createInvite(data, transaction, id = 'invite-1') {
       assert.ok(transaction, 'createInvite must be transactional')
       const tx = transactions.get(transaction.id)
-      tx.snapshot.invite = { $id: 'invite-1', ...data }
+      tx.snapshot.invite = { $id: id, ...data }
       tx.operations.push(() => { state.invite = structuredClone(tx.snapshot.invite) })
     },
     async updateInvite(id, data, transaction) {
@@ -543,32 +545,29 @@ function makeStatefulAtomicRepository(initialInvite, expectedCommits = 2) {
   }
 }
 
-test('concurrent invite rotations return exactly one link and persist its matching hash', async () => {
+test('concurrent requests cannot rotate a legacy hash-only invite', async () => {
   const repository = makeStatefulAtomicRepository({
     $id: 'invite-1', sourceType: 'cake', sourceReservationId: 'cake-1',
     tokenHash: hashSecret('old-token'), expiresAt: '2026-08-01T00:00:00.000Z',
   })
-  const options = (token) => ({ now: fixedNow, hmacSecret, tokenFactory: () => token, isConflict: (error) => error.code === 409 })
+  const options = (token) => ({ now: fixedNow, hmacSecret, tokenFactory: () => token, tokenEncryptionKey: inviteTokenEncryptionKey, isConflict: (error) => error.code === 409 })
   const results = await Promise.allSettled([
     issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, options('rotation-a')),
     issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, options('rotation-b')),
   ])
-  const successes = results.filter(({ status }) => status === 'fulfilled')
-  const failures = results.filter(({ status }) => status === 'rejected')
-  assert.equal(successes.length, 1)
-  assert.equal(failures.length, 1)
-  assert.equal(failures[0].reason.code, 'REVIEW_INVITE_CHANGED')
-  assert.equal(repository.state.invite.tokenHash, hashSecret(successes[0].value.token))
+  assert.equal(results.every(({ status }) => status === 'rejected'), true)
+  assert.equal(results.every(({ reason }) => reason.code === 'REVIEW_INVITE_UNRECOVERABLE'), true)
+  assert.equal(repository.state.invite.tokenHash, hashSecret('old-token'))
 })
 
-test('concurrent invite rotation and submit produce only one terminal state', async () => {
+test('a legacy invite request cannot invalidate a concurrently submitted review link', async () => {
   const repository = makeStatefulAtomicRepository({
     $id: 'invite-1', sourceType: 'cake', sourceReservationId: 'cake-1', sourceReservationNumber: 'VG-C-PRIVATE',
     tokenHash: hashSecret(OLD_TOKEN), expiresAt: '2026-08-01T00:00:00.000Z',
   })
   const results = await Promise.allSettled([
     issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
-      now: fixedNow, hmacSecret, tokenFactory: () => NEW_TOKEN, isConflict: (error) => error.code === 409,
+      now: fixedNow, hmacSecret, tokenFactory: () => NEW_TOKEN, tokenEncryptionKey: inviteTokenEncryptionKey, isConflict: (error) => error.code === 409,
     }),
     submitReview(repository, OLD_TOKEN, { rating: 5, body: 'Great', publishConsent: true }, {
       now: fixedNow, hmacSecret, isConflict: (error) => error.code === 409,
@@ -577,9 +576,9 @@ test('concurrent invite rotation and submit produce only one terminal state', as
   ])
   assert.equal(results.filter(({ status }) => status === 'fulfilled').length, 1)
   const loser = results.find(({ status }) => status === 'rejected').reason
-  assert.ok(['REVIEW_INVITE_CHANGED', 'REVIEW_ALREADY_SUBMITTED'].includes(loser.code))
+  assert.ok(['REVIEW_INVITE_UNRECOVERABLE', 'REVIEW_ALREADY_SUBMITTED'].includes(loser.code))
   assert.equal(Boolean(repository.state.coupon), Boolean(repository.state.review))
-  assert.notEqual(Boolean(repository.state.coupon), repository.state.invite.tokenHash === hashSecret(NEW_TOKEN))
+  assert.notEqual(repository.state.invite.tokenHash, hashSecret(NEW_TOKEN))
 })
 
 test('admin authorization uses exact REVIEW_ADMIN_USER_IDS matches', () => {
@@ -590,15 +589,16 @@ test('admin authorization uses exact REVIEW_ADMIN_USER_IDS matches', () => {
   }
 })
 
-test('invite issuance verifies cake and class completion and persists hash only', async () => {
+test('invite issuance verifies cake and class completion and persists a recoverable encrypted token', async () => {
   for (const [sourceType, sourceReservationId] of [['cake', 'cake-1'], ['class', 'class-1']]) {
     const repository = makeRepository()
-    const result = await issueReviewInvite(repository, { sourceType, sourceReservationId }, { now: fixedNow, hmacSecret, createdByUserId: 'admin-1' })
+    const result = await issueReviewInvite(repository, { sourceType, sourceReservationId }, { now: fixedNow, hmacSecret, createdByUserId: 'admin-1', tokenEncryptionKey: inviteTokenEncryptionKey })
     assert.match(result.token, /^[A-Za-z0-9_-]{43}$/)
     assert.equal(result.expiresAt, '2026-08-18T00:00:00.000Z')
     const persisted = repository.calls.find(([name]) => name === 'createInvite')[1]
     assert.equal(persisted.tokenHash, hashSecret(result.token))
     assert.equal(JSON.stringify(persisted).includes(result.token), false)
+    assert.equal(persisted.tokenEncryptionVersion, 1)
     assert.equal(persisted.sourceReservationNumber, sourceType === 'cake' ? 'VG-C-PRIVATE' : 'VG-KC-PRIVATE')
   }
 })
@@ -617,22 +617,17 @@ test('invite issuance hides missing, invalid and incomplete sources behind one e
     (error) => error instanceof ReviewApiError && error.code === 'REVIEW_SOURCE_NOT_COMPLETED')
 })
 
-test('invite issuance rotates an existing unused invite in place without persisting the raw token', async () => {
+test('invite issuance rejects a legacy hash-only invite instead of rotating it', async () => {
   const oldToken = 'old-token'
   const repository = makeRepository({ existingInvite: {
     $id: 'invite-existing', sourceType: 'cake', sourceReservationId: 'cake-1',
     tokenHash: hashSecret(oldToken), expiresAt: '2026-07-20T00:00:00.000Z',
   } })
-  const result = await issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
-    now: fixedNow, createdByUserId: 'admin-1', tokenFactory: () => 'new-token',
-  })
-  assert.deepEqual(result, { token: 'new-token', expiresAt: '2026-08-18T00:00:00.000Z' })
+  await assert.rejects(() => issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
+    now: fixedNow, createdByUserId: 'admin-1', tokenFactory: () => NEW_TOKEN, tokenEncryptionKey: inviteTokenEncryptionKey,
+  }), (error) => error instanceof ReviewApiError && error.code === 'REVIEW_INVITE_UNRECOVERABLE')
   assert.equal(repository.calls.some(([name]) => name === 'createInvite'), false)
-  const update = repository.calls.find(([name]) => name === 'updateInvite')
-  assert.equal(update[1], 'invite-existing')
-  assert.equal(update[2].tokenHash, hashSecret('new-token'))
-  assert.equal(update[2].expiresAt, '2026-08-18T00:00:00.000Z')
-  assert.equal(JSON.stringify(update[2]).includes('new-token'), false)
+  assert.equal(repository.calls.some(([name]) => name === 'updateInvite'), false)
 })
 
 test('invite issuance rejects used invites and sources with submitted reviews', async () => {
@@ -647,22 +642,26 @@ test('invite issuance rejects used invites and sources with submitted reviews', 
   }
 })
 
-test('invite transaction conflict does not rotate again or invalidate the winning invite', async () => {
+test('invite transaction conflict with an unrecoverable concurrent winner fails closed', async () => {
   const conflict = Object.assign(new Error('unique conflict'), { code: 409 })
   const repository = makeRepository()
   let sourceQueries = 0
   repository.findInviteBySource = async (sourceType, sourceReservationId) => {
     repository.calls.push(['findInviteBySource', sourceType, sourceReservationId])
     sourceQueries += 1
-    return sourceQueries === 1 ? null : { $id: 'concurrent-invite' }
+    return sourceQueries === 1 ? null : {
+      $id: 'concurrent-invite', sourceType, sourceReservationId,
+      tokenHash: hashSecret(OLD_TOKEN), expiresAt: '2026-08-18T00:00:00.000Z',
+    }
   }
   repository.createInvite = async (data) => { repository.calls.push(['createInvite', data]); throw conflict }
   let generated = 0
   await assert.rejects(() => issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
     now: fixedNow,
-    tokenFactory: () => { generated += 1; return 'losing-token' },
+    tokenFactory: () => { generated += 1; return NEW_TOKEN },
+    tokenEncryptionKey: inviteTokenEncryptionKey,
     isConflict: (error) => error.code === 409,
-  }), (error) => error instanceof ReviewApiError && error.code === 'REVIEW_INVITE_CHANGED')
+  }), (error) => error instanceof ReviewApiError && error.code === 'REVIEW_INVITE_UNRECOVERABLE')
   assert.equal(sourceQueries, 2)
   assert.equal(generated, 1)
   assert.equal(repository.calls.some(([name]) => name === 'updateInvite'), false)
@@ -674,22 +673,21 @@ test('invite transaction conflict with an empty exact requery returns a stable c
   repository.createInvite = async () => { throw conflict }
   await assert.rejects(() => issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
     now: fixedNow, isConflict: (error) => error.code === 409,
+    tokenEncryptionKey: inviteTokenEncryptionKey,
   }), (error) => error instanceof ReviewApiError && error.code === 'REVIEW_INVITE_CHANGED')
 })
 
-test('rotating an invite invalidates the old token and makes only the new token valid', async () => {
+test('a legacy invite remains valid for submission when a new link cannot be recovered', async () => {
   const state = { $id: 'invite-1', sourceType: 'cake', sourceReservationId: 'cake-1', tokenHash: hashSecret(OLD_TOKEN), expiresAt: '2026-08-01T00:00:00.000Z' }
   const repository = makeRepository()
   repository.findInviteBySource = async () => state
   repository.findReviewBySource = async () => null
   repository.updateInvite = async (_id, data) => Object.assign(state, data)
   repository.findInviteByTokenHash = async (tokenHash) => state.tokenHash === tokenHash ? state : null
-  await issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
-    now: fixedNow, tokenFactory: () => NEW_TOKEN,
-  })
-  await assert.rejects(() => loadReviewInvite(repository, OLD_TOKEN, { now: fixedNow, hmacSecret }),
-    (error) => error instanceof ReviewApiError && error.code === 'REVIEW_INVITE_INVALID')
-  assert.equal((await loadReviewInvite(repository, NEW_TOKEN, { now: fixedNow, hmacSecret })).sourceType, 'cake')
+  await assert.rejects(() => issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
+    now: fixedNow, tokenFactory: () => NEW_TOKEN, tokenEncryptionKey: inviteTokenEncryptionKey,
+  }), (error) => error instanceof ReviewApiError && error.code === 'REVIEW_INVITE_UNRECOVERABLE')
+  assert.equal((await loadReviewInvite(repository, OLD_TOKEN, { now: fixedNow, hmacSecret })).sourceType, 'cake')
 })
 
 test('load invite verifies hash, expiry and unused state and exposes generic context only', async () => {
@@ -1060,99 +1058,25 @@ test('submit transaction rechecks source completion and writes no review or coup
   assert.equal(repository.calls.some(([name]) => name === 'rollback'), true)
 })
 
-test('invite rotation atomically clears pending photo ownership and cleans the old private file only after commit', async () => {
-  const events = []
+test('recovering an active invite preserves pending photo ownership without cleanup or mutation', async () => {
+  const envelope = encryptReviewInviteToken({
+    token: OLD_TOKEN,
+    inviteId: 'invite-existing',
+    sourceType: 'cake',
+    sourceReservationId: 'cake-1',
+    key: inviteTokenEncryptionKey,
+  })
   const repository = makeRepository({ existingInvite: {
     $id: 'invite-existing', sourceType: 'cake', sourceReservationId: 'cake-1',
-    pendingPhotoFileId: 'old-private-photo', pendingPhotoUploadedAt: fixedNow.toISOString(),
+    tokenHash: hashSecret(OLD_TOKEN), expiresAt: '2026-08-18T00:00:00.000Z',
+    pendingPhotoFileId: 'keep-private-photo', pendingPhotoUploadedAt: fixedNow.toISOString(),
+    ...envelope,
   } })
-  repository.updateInvite = async (id, data, tx) => { events.push(['update', id, data, tx]); return { $id: id, ...data } }
-  repository.commitTransaction = async (tx) => { events.push(['commit', tx]) }
-  repository.enqueuePhotoCleanup = async (entry) => { events.push(['enqueue', entry]) }
-  const storage = { async deletePhoto() { events.push(['delete']) } }
-
-  await issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
-    now: fixedNow, tokenFactory: () => NEW_TOKEN, storage,
-  })
-  const update = events.find(([name]) => name === 'update')
-  assert.equal(update[2].pendingPhotoFileId, null)
-  assert.equal(update[2].pendingPhotoUploadedAt, null)
-  assert.ok(events.findIndex(([name]) => name === 'commit') < events.findIndex(([name]) => name === 'delete'))
-})
-
-test('invite rotation conflict retains the currently attached private photo', async () => {
-  const conflict = Object.assign(new Error('commit conflict'), { code: 409 })
-  const repository = makeRepository({ existingInvite: {
-    $id: 'invite-existing', sourceType: 'cake', sourceReservationId: 'cake-1', pendingPhotoFileId: 'keep-private-photo',
-  }, commitError: conflict })
-  const storageCalls = []
-  await assert.rejects(() => issueReviewInvite(repository, {
-    sourceType: 'cake', sourceReservationId: 'cake-1',
-  }, {
-    now: fixedNow, tokenFactory: () => NEW_TOKEN,
-    storage: { async deletePhoto(id) { storageCalls.push(id) } },
-    isConflict: (error) => error.code === 409,
-  }), (error) => error instanceof ReviewApiError && error.code === 'REVIEW_INVITE_CHANGED')
-  assert.deepEqual(storageCalls, [])
-})
-
-test('invite rotation creates old-photo cleanup intent in the same transaction before unlink and commit', async () => {
-  const repository = makeRepository({ existingInvite: {
-    $id: 'invite-existing', sourceType: 'cake', sourceReservationId: 'cake-1',
-    pendingPhotoFileId: 'old-private-photo', photoUploadCount: 7,
-  } })
-  await issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
-    now: fixedNow, tokenFactory: () => NEW_TOKEN, storage: { async deletePhoto() {} },
-  })
-  const names = repository.calls.map(([name]) => name)
-  const enqueueIndex = names.indexOf('enqueueCleanup')
-  const updateIndex = names.indexOf('updateInvite')
-  const commitIndex = names.indexOf('commit')
-  assert.ok(enqueueIndex < updateIndex && updateIndex < commitIndex)
-  assert.deepEqual(repository.calls[enqueueIndex].slice(1), [{
-    fileId: 'old-private-photo', inviteId: 'invite-existing', reason: 'rotation', status: 'pending', attempts: 0,
-    createdAt: fixedNow.toISOString(), updatedAt: fixedNow.toISOString(),
-  }, { id: 'tx-1' }])
-  assert.equal(repository.calls[updateIndex][2].photoUploadCount, undefined)
-  assert.deepEqual(repository.calls[updateIndex][3], { id: 'tx-1' })
-})
-
-test('invite rotation commit transport error returns the proposed token when outside refetch proves commit', async () => {
-  const repository = makeRepository({
-    existingInvite: {
-      $id: 'invite-existing', sourceType: 'cake', sourceReservationId: 'cake-1',
-      tokenHash: hashSecret(OLD_TOKEN), pendingPhotoFileId: 'old-private-photo',
-    },
-    refetchedInvite: {
-      $id: 'invite-existing', sourceType: 'cake', sourceReservationId: 'cake-1',
-      tokenHash: hashSecret(NEW_TOKEN), pendingPhotoFileId: null,
-    },
-    commitError: new Error('server committed; response lost'),
-  })
-  const deleted = []
   const result = await issueReviewInvite(repository, { sourceType: 'cake', sourceReservationId: 'cake-1' }, {
-    now: fixedNow, tokenFactory: () => NEW_TOKEN, storage: { async deletePhoto(id) { deleted.push(id) } },
+    now: fixedNow, tokenFactory: () => NEW_TOKEN, tokenEncryptionKey: inviteTokenEncryptionKey,
   })
-  assert.deepEqual(result, { token: NEW_TOKEN, expiresAt: '2026-08-18T00:00:00.000Z' })
-  assert.deepEqual(deleted, ['old-private-photo'])
-})
-
-test('invite rotation commit uncertainty never deletes old photo and returns stable uncertainty', async () => {
-  const repository = makeRepository({
-    existingInvite: {
-      $id: 'invite-existing', sourceType: 'cake', sourceReservationId: 'cake-1',
-      tokenHash: hashSecret(OLD_TOKEN), pendingPhotoFileId: 'old-private-photo',
-    },
-    refetchError: new Error('outside read unavailable'),
-    commitError: new Error('transport reset'),
-  })
-  const deleted = []
-  await assert.rejects(() => issueReviewInvite(repository, {
-    sourceType: 'cake', sourceReservationId: 'cake-1',
-  }, {
-    now: fixedNow, tokenFactory: () => NEW_TOKEN, storage: { async deletePhoto(id) { deleted.push(id) } },
-  }), (error) => error instanceof ReviewApiError && error.code === 'REVIEW_INVITE_UNCERTAIN')
-  assert.deepEqual(deleted, [])
+  assert.equal(result.token, OLD_TOKEN)
+  assert.equal(repository.calls.some(([name]) => ['updateInvite', 'enqueueCleanup'].includes(name)), false)
 })
 
 test('cleanup repository mutations accept a transaction id with exact Appwrite payloads', async () => {

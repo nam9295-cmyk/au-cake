@@ -96,6 +96,8 @@ test('notification deployment dry-run is offline, redacts secrets, and declares 
   assert.deepEqual(ARCHIVE_SHARED_SOURCE_PATHS, [
     'appwrite-functions/shared/email-delivery.js',
     'appwrite-functions/shared/email-delivery-repository.js',
+    'appwrite-functions/shared/resend-transport.js',
+    'appwrite-functions/shared/email-delivery-sender.js',
   ])
   const plan = buildDryRunPlan({ RESEND_API_KEY: 'resend-secret', APPWRITE_API_KEY: 'operator-secret' })
   assert.equal(plan.network, false)
@@ -120,6 +122,8 @@ test('notification deployment dry-run is offline, redacts secrets, and declares 
     assert.equal(entries.status, 0, entries.stderr)
     assert.match(entries.stdout, /shared\/email-delivery\/email-delivery\.js/)
     assert.match(entries.stdout, /shared\/email-delivery\/email-delivery-repository\.js/)
+    assert.match(entries.stdout, /shared\/email-delivery\/resend-transport\.js/)
+    assert.match(entries.stdout, /shared\/email-delivery\/email-delivery-sender\.js/)
     assert.match(entries.stdout, /shared\/reservation-api\/business\.js/)
     assert.doesNotMatch(entries.stdout, /node_modules\//)
   } finally {

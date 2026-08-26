@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 import {
   ARCHIVE_SOURCE_ENTRIES,
+  ARCHIVE_SHARED_SOURCE_PATHS,
   DEPLOYMENT_OPERATIONS,
   FUNCTION_SCOPES,
   buildCreateFunctionPayload,
@@ -17,7 +19,10 @@ import {
 import {
   buildDeploymentPayload,
   createAndUploadArchive,
+  createReviewApiArchive,
 } from '../scripts/review-api-deploy-runtime.mjs'
+
+const repositoryRoot = fileURLToPath(new URL('..', import.meta.url))
 
 const validEnv = {
   APPWRITE_ENDPOINT: 'https://appwrite.example.com/v1',
@@ -37,6 +42,10 @@ const validEnv = {
   REVIEW_FRONTEND_ORIGINS: 'https://admin.example.test,https://www.example.test',
   REVIEW_COUPON_HMAC_SECRET: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
   REVIEW_COUPON_ENCRYPTION_KEY: 'ERERERERERERERERERERERERERERERERERERERERERE',
+  REVIEW_INVITE_TOKEN_ENCRYPTION_KEY: 'IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI',
+  RESEND_API_KEY: 'resend-secret',
+  RESEND_FROM_EMAIL: 'Verygood Chocolate <hello@verygood.example>',
+  RESEND_REPLY_TO_EMAIL: 'reply@verygood.example',
 }
 
 test('apply configuration rejects every missing or blank required server variable', () => {
@@ -50,6 +59,9 @@ test('apply configuration rejects every missing or blank required server variabl
     'REVIEW_FRONTEND_ORIGINS',
     'REVIEW_COUPON_HMAC_SECRET',
     'REVIEW_COUPON_ENCRYPTION_KEY',
+    'REVIEW_INVITE_TOKEN_ENCRYPTION_KEY',
+    'RESEND_API_KEY',
+    'RESEND_FROM_EMAIL',
   ]) {
     const missing = { ...validEnv }
     delete missing[key]
@@ -70,6 +82,16 @@ test('review coupon encryption key requires canonical unpadded base64url encodin
   }
   assert.throws(
     () => resolveDeployConfig({ ...validEnv, REVIEW_COUPON_ENCRYPTION_KEY: validEnv.REVIEW_COUPON_HMAC_SECRET }),
+    /independent/,
+  )
+})
+
+test('review invite token encryption key is canonical, server-only, and purpose-separated from coupon keys', () => {
+  for (const key of ['short', 'A'.repeat(42), 'A'.repeat(44), `${'A'.repeat(43)}=`, ` ${validEnv.REVIEW_INVITE_TOKEN_ENCRYPTION_KEY}`, `${validEnv.REVIEW_INVITE_TOKEN_ENCRYPTION_KEY} `]) {
+    assert.throws(() => resolveDeployConfig({ ...validEnv, REVIEW_INVITE_TOKEN_ENCRYPTION_KEY: key }), /REVIEW_INVITE_TOKEN_ENCRYPTION_KEY/)
+  }
+  assert.throws(
+    () => resolveDeployConfig({ ...validEnv, REVIEW_INVITE_TOKEN_ENCRYPTION_KEY: validEnv.REVIEW_COUPON_ENCRYPTION_KEY }),
     /independent/,
   )
 })
@@ -127,6 +149,10 @@ test('function variables map exact server-only IDs without VITE fallbacks', () =
     REVIEW_FRONTEND_ORIGINS: validEnv.REVIEW_FRONTEND_ORIGINS,
     REVIEW_COUPON_HMAC_SECRET: validEnv.REVIEW_COUPON_HMAC_SECRET,
     REVIEW_COUPON_ENCRYPTION_KEY: validEnv.REVIEW_COUPON_ENCRYPTION_KEY,
+    REVIEW_INVITE_TOKEN_ENCRYPTION_KEY: validEnv.REVIEW_INVITE_TOKEN_ENCRYPTION_KEY,
+    RESEND_API_KEY: validEnv.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: validEnv.RESEND_FROM_EMAIL,
+    RESEND_REPLY_TO_EMAIL: validEnv.RESEND_REPLY_TO_EMAIL,
   })
   assert.equal(resolveDeployConfig(validEnv).functionId, 'review-api')
   assert.equal(Object.keys(config.runtimeVariables).some((key) => key.startsWith('VITE_')), false)
@@ -224,17 +250,26 @@ test('review frontend origins require exact HTTPS origins and remain a nonsecret
   assert.equal(isSecretFunctionVariable('REVIEW_FRONTEND_ORIGINS'), false)
 })
 
-test('review administrator, coupon HMAC, and coupon encryption variables are secret while ordinary resource IDs are not', () => {
+test('review administrator, token/coupon keys, and Resend API key are secret while ordinary resource IDs are not', () => {
   assert.equal(isSecretFunctionVariable('REVIEW_ADMIN_USER_IDS'), true)
   assert.equal(isSecretFunctionVariable('REVIEW_COUPON_HMAC_SECRET'), true)
   assert.equal(isSecretFunctionVariable('REVIEW_COUPON_ENCRYPTION_KEY'), true)
+  assert.equal(isSecretFunctionVariable('REVIEW_INVITE_TOKEN_ENCRYPTION_KEY'), true)
+  assert.equal(isSecretFunctionVariable('RESEND_API_KEY'), true)
+  assert.equal(isSecretFunctionVariable('RESEND_FROM_EMAIL'), false)
   assert.equal(isSecretFunctionVariable('APPWRITE_REVIEWS_TABLE_ID'), false)
 })
 
-test('archive source manifest and operation plan exclude secrets, dependencies, and collection mutations', () => {
+test('archive source manifest includes the shared ledger/transport source without secrets or collection mutations', () => {
   assert.deepEqual(ARCHIVE_SOURCE_ENTRIES, ['package.json', 'package-lock.json', 'src'])
+  assert.deepEqual(ARCHIVE_SHARED_SOURCE_PATHS, [
+    'appwrite-functions/shared/email-delivery.js',
+    'appwrite-functions/shared/email-delivery-repository.js',
+    'appwrite-functions/shared/resend-transport.js',
+    'appwrite-functions/shared/email-delivery-sender.js',
+  ])
   for (const forbidden of ['node_modules', '.env', 'secret', 'collection.permissions']) {
-    assert.equal(JSON.stringify({ ARCHIVE_SOURCE_ENTRIES, DEPLOYMENT_OPERATIONS }).includes(forbidden), false)
+    assert.equal(JSON.stringify({ ARCHIVE_SOURCE_ENTRIES, ARCHIVE_SHARED_SOURCE_PATHS, DEPLOYMENT_OPERATIONS }).includes(forbidden), false)
   }
   assert.deepEqual(DEPLOYMENT_OPERATIONS, [
     'functions.get',
@@ -274,6 +309,25 @@ test('archive helper always cleans its temporary directory when upload fails', a
   ])
 })
 
+test('review API archive contains the shared ledger, transport, and encrypted invite sources', async () => {
+  const archive = await createReviewApiArchive({ repositoryRoot })
+  try {
+    const listed = spawnSync('tar', ['-tzf', archive.path], { encoding: 'utf8' })
+    assert.equal(listed.status, 0, listed.stderr)
+    for (const entry of [
+      'src/invite-token-envelope.js',
+      'src/review-invite-email.js',
+      'src/review-invite-actions.js',
+      'shared/email-delivery/email-delivery.js',
+      'shared/email-delivery/email-delivery-repository.js',
+      'shared/email-delivery/resend-transport.js',
+      'shared/email-delivery/email-delivery-sender.js',
+    ]) assert.match(listed.stdout, new RegExp(`(?:^|\\n)\\./?${entry.replace(/[-/]/g, '\\$&')}(?:\\n|$)`))
+  } finally {
+    await archive.cleanup()
+  }
+})
+
 test('dry-run plan is safe, masked, secret-free, and declares boundaries', () => {
   const plan = buildDryRunPlan(validEnv)
   const serialized = JSON.stringify(plan)
@@ -290,6 +344,9 @@ test('dry-run plan is safe, masked, secret-free, and declares boundaries', () =>
     'REVIEW_FRONTEND_ORIGINS',
     'REVIEW_COUPON_HMAC_SECRET',
     'REVIEW_COUPON_ENCRYPTION_KEY',
+    'REVIEW_INVITE_TOKEN_ENCRYPTION_KEY',
+    'RESEND_API_KEY',
+    'RESEND_FROM_EMAIL',
   ])
   assert.deepEqual(plan.function.scopes, FUNCTION_SCOPES)
   assert.deepEqual(plan.function.variableNames, Object.keys(resolveDeployConfig(validEnv).runtimeVariables))
@@ -297,6 +354,8 @@ test('dry-run plan is safe, masked, secret-free, and declares boundaries', () =>
   assert.equal(serialized.includes(validEnv.APPWRITE_API_KEY), false)
   assert.equal(serialized.includes(validEnv.REVIEW_COUPON_HMAC_SECRET), false)
   assert.equal(serialized.includes(validEnv.REVIEW_COUPON_ENCRYPTION_KEY), false)
+  assert.equal(serialized.includes(validEnv.REVIEW_INVITE_TOKEN_ENCRYPTION_KEY), false)
+  assert.equal(serialized.includes(validEnv.RESEND_API_KEY), false)
   assert.equal(serialized.includes(validEnv.APPWRITE_ENDPOINT), false)
   assert.equal(serialized.includes('admin_1'), false)
   assert.equal(serialized.includes('cake_reservations'), false)

@@ -16,40 +16,25 @@ import {
   parseReviewInviteExecution,
 } from '../src/lib/review-repository.js'
 
-const cakeMessage = `Hi Jenny!
-
-Thanks so much for ordering with us! We hope you enjoyed every single bite.
-We'd love to know how everything turned out.
-
-Leave us an honest review and get 5% off your next order — or make it 10% off if you add a photo or two!
-
-https://au.verygood-chocolate.com/review#cake-token
-
-Your personal review link is valid for 30 days.
-Your reward coupon will be valid for 30 days from the date it is issued.
-
--very good chocolate team-`
-
-const classMessage = `Hi Alex!
-
-Thanks so much for ordering with us! We hope you enjoyed every single bite.
-We'd love to know how everything turned out.
-
-Leave us an honest review and get 5% off your next order — or make it 10% off if you add a photo or two!
-
-https://au.verygood-chocolate.com/review#class-token
-
-Your personal review link is valid for 30 days.
-Your reward coupon will be valid for 30 days from the date it is issued.
-
--very good chocolate team-`
-
-test('cake review request matches Jenny’s exact full-string contract', () => {
-  assert.equal(buildReviewRequestMessage('cake', '  Jenny Kim  ', 'cake-token'), cakeMessage)
-})
-
-test('class review request uses the same exact full-string contract', () => {
-  assert.equal(buildReviewRequestMessage('class', 'Alex Morgan', 'class-token'), classMessage)
+test('review request copy is Korean-first bilingual text with honest-review rewards and both 30-day policies', () => {
+  const cakeMessage = buildReviewRequestMessage('cake', '  Jenny Kim  ', 'cake-token')
+  const classMessage = buildReviewRequestMessage('class', 'Alex Morgan', 'class-token')
+  for (const [message, name, token] of [[cakeMessage, 'Jenny', 'cake-token'], [classMessage, 'Alex', 'class-token']] as const) {
+    assert.match(message, new RegExp(`^\\[한국어\\]\\n\\n안녕하세요, ${name}님\\.`))
+    assert.ok(message.indexOf('[한국어]') < message.indexOf('[English]'))
+    assert.match(message, /\n---\n/)
+    assert.match(message, /좋았던 점이나 아쉬웠던 점 모두 솔직하게/)
+    assert.match(message, /텍스트 후기[\s\S]*5%/)
+    assert.match(message, /사진과 함께 남긴 후기[\s\S]*10%/)
+    assert.match(message, new RegExp(`https://au\\.verygood-chocolate\\.com/review#${token}`))
+    assert.match(message, /개인 후기 링크는 발급일로부터 30일 동안 유효합니다/)
+    assert.match(message, /리워드 쿠폰도 발급일로부터 30일 동안 사용할 수 있습니다/)
+    assert.match(message, /honest feedback/i)
+    assert.match(message, /Your personal review link is valid for 30 days/)
+    assert.match(message, /reward coupon will be valid for 30 days from the date it is issued/i)
+    assert.match(message, /once on your next cake order/i)
+    assert.doesNotMatch(message, /positive review|5-star review/i)
+  }
 })
 
 test('review links use an encoded fragment and canonical production origin by default', () => {

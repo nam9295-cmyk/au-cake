@@ -51,12 +51,16 @@ const PRIVATE_FUNCTION_ACCESS = Object.freeze({
 export const REVIEW_COLLECTIONS = Object.freeze({
   reviewInvites: Object.freeze({
     name: 'review_invites',
-    ...PRIVATE_REVIEW_ACCESS,
+    ...PRIVATE_FUNCTION_ACCESS,
     attributes: Object.freeze([
       { key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class'] },
       { key: 'sourceReservationId', type: 'string', size: 64, required: true },
       { key: 'sourceReservationNumber', type: 'string', size: 64, required: true },
       { key: 'tokenHash', type: 'string', size: 64, required: true },
+      { key: 'tokenCiphertext', type: 'string', size: 64, required: false },
+      { key: 'tokenIv', type: 'string', size: 16, required: false },
+      { key: 'tokenAuthTag', type: 'string', size: 22, required: false },
+      { key: 'tokenEncryptionVersion', type: 'integer', required: false, min: 1, max: 1 },
       { key: 'expiresAt', type: 'string', size: 40, required: true },
       { key: 'usedAt', type: 'string', size: 40, required: false },
       { key: 'pendingPhotoFileId', type: 'string', size: 64, required: false },

@@ -20,6 +20,14 @@ import {
 import { cleanupPhotoFiles, removeReviewPhoto, uploadReviewPhoto } from './photo.js'
 import { resolveReviewCouponHmacSecret } from './coupon-digest.js'
 import { resolveReviewCouponEncryptionKey } from './coupon-envelope.js'
+import { resolveReviewInviteTokenEncryptionKey } from './invite-token-envelope.js'
+import { createEmailDeliveryRepository } from '../shared/email-delivery/email-delivery-repository.js'
+import { createResendTransport } from '../shared/email-delivery/resend-transport.js'
+import {
+  copyReviewInviteRequest,
+  getReviewInviteEmailStatus,
+  sendReviewInviteEmail,
+} from './review-invite-actions.js'
 
 const APPWRITE_RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 
@@ -30,6 +38,24 @@ function configuredResourceId(env, name, fallback) {
     throw new ReviewApiError('FUNCTION_CONFIGURATION_ERROR', 500)
   }
   return value
+}
+
+function configuredReviewOrigin(env) {
+  const value = String(env.REVIEW_FRONTEND_ORIGINS || '').split(',').map((origin) => origin.trim()).find(Boolean)
+  let parsed
+  try { parsed = new URL(value) } catch { throw new ReviewApiError('FUNCTION_CONFIGURATION_ERROR', 500) }
+  if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.origin !== value) {
+    throw new ReviewApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+  }
+  return value
+}
+
+function resolveReviewInviteEmailRuntime(env) {
+  const apiKey = String(env.RESEND_API_KEY || '').trim()
+  const from = String(env.RESEND_FROM_EMAIL || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim()
+  const replyTo = String(env.RESEND_REPLY_TO_EMAIL || '').trim()
+  if (!apiKey || !from) throw new ReviewApiError('FUNCTION_CONFIGURATION_ERROR', 500)
+  return { apiKey, from, replyTo: replyTo || null, reviewOrigin: configuredReviewOrigin(env) }
 }
 
 export function resolveReviewConfig(env = process.env) {
@@ -288,6 +314,14 @@ export function createReviewRepository(databases, config = resolveReviewConfig()
   }
 }
 
+export function createReviewEmailDeliveryRepository(databases, config = resolveReviewConfig()) {
+  return createEmailDeliveryRepository({
+    databases,
+    databaseId: config.cakeDatabaseId,
+    collectionId: config.emailDeliveriesId,
+  })
+}
+
 export function createReviewPhotoStorage(storage, config = resolveReviewConfig()) {
   return {
     async createPrivatePhoto({ fileId, name, buffer }) {
@@ -352,6 +386,9 @@ const REVIEW_ACTIONS = new Set([
   'remove-photo',
   'cleanup-photo-files',
   'copy-review-reward-message',
+  'send-review-invite-email',
+  'copy-review-invite-request',
+  'get-review-invite-email-status',
 ])
 
 export function safeActionForLog(action) {
@@ -406,6 +443,9 @@ const defaultServices = {
   removePhoto: removeReviewPhoto,
   cleanupPhotos: cleanupPhotoFiles,
   copyReward: copyReviewRewardMessage,
+  sendInviteEmail: sendReviewInviteEmail,
+  copyInviteRequest: copyReviewInviteRequest,
+  getInviteEmailStatus: getReviewInviteEmailStatus,
 }
 
 export async function handleReviewRequest(body, headers, env = process.env, services = defaultServices, repository, photoStorage, options = {}) {
@@ -438,11 +478,52 @@ export async function handleReviewRequest(body, headers, env = process.env, serv
   }
   if (action === 'remove-photo') return services.removePhoto(repository, photoStorage, body.token)
 
-  if (!['create-invite', 'list-admin-reviews', 'moderate-review', 'cleanup-photo-files', 'copy-review-reward-message'].includes(action)) {
+  if (![
+    'create-invite', 'list-admin-reviews', 'moderate-review', 'cleanup-photo-files', 'copy-review-reward-message',
+    'send-review-invite-email', 'copy-review-invite-request', 'get-review-invite-email-status',
+  ].includes(action)) {
     throw new ReviewApiError('UNKNOWN_ACTION', 404)
   }
   const userId = assertReviewAdmin(headers, env)
-  if (action === 'create-invite') return services.issue(repository, data, { createdByUserId: userId, isConflict, storage: photoStorage })
+  if (action === 'create-invite') return services.issue(repository, data, {
+    createdByUserId: userId,
+    isConflict,
+    tokenEncryptionKey: options.tokenEncryptionKey,
+  })
+  if (action === 'send-review-invite-email') {
+    return services.sendInviteEmail({
+      repository,
+      deliveryRepository: options.deliveryRepository,
+      transport: options.transport,
+      request: data,
+      createdByUserId: userId,
+      tokenEncryptionKey: options.tokenEncryptionKey,
+      from: options.resendFromEmail,
+      replyTo: options.resendReplyToEmail,
+      reviewOrigin: options.reviewOrigin,
+      isConflict,
+      log: options.log,
+      error: options.error,
+    })
+  }
+  if (action === 'copy-review-invite-request') {
+    return services.copyInviteRequest({
+      repository,
+      request: data,
+      createdByUserId: userId,
+      tokenEncryptionKey: options.tokenEncryptionKey,
+      reviewOrigin: options.reviewOrigin,
+      isConflict,
+    })
+  }
+  if (action === 'get-review-invite-email-status') {
+    return services.getInviteEmailStatus({
+      repository,
+      deliveryRepository: options.deliveryRepository,
+      request: data,
+      tokenEncryptionKey: options.tokenEncryptionKey,
+    })
+  }
   if (action === 'list-admin-reviews') return services.listAdmin(repository, data)
   if (action === 'copy-review-reward-message') {
     return services.copyReward(repository, data.reviewId, {
@@ -501,16 +582,31 @@ export default async ({ req, res, log, error }) => {
     action = safeActionForLog(body.action)
     const hmacSecret = resolveReviewCouponHmacSecret(process.env, ReviewApiError)
     const encryptionKey = resolveReviewCouponEncryptionKey(process.env, ReviewApiError)
+    const tokenEncryptionKey = resolveReviewInviteTokenEncryptionKey(process.env, ReviewApiError)
+    const emailRuntime = resolveReviewInviteEmailRuntime(process.env)
     const config = resolveReviewConfig(process.env)
     const client = clientForRequest(req)
     const databases = new Databases(client)
     const repository = createReviewRepository(databases, config)
+    const deliveryRepository = createReviewEmailDeliveryRepository(databases, config)
     const photoStorage = createReviewPhotoStorage(new Storage(client), config)
     const photoUrlForReview = createPublicReviewPhotoUrlBuilder(process.env, config)
+    const transport = createResendTransport({
+      apiKey: emailRuntime.apiKey,
+      userAgent: 'verygood-review-api/1.0',
+    })
     const result = await handleReviewRequest(body, req.headers, process.env, defaultServices, repository, photoStorage, {
       hmacSecret,
       encryptionKey,
+      tokenEncryptionKey,
       photoUrlForReview,
+      deliveryRepository,
+      transport,
+      resendFromEmail: emailRuntime.from,
+      resendReplyToEmail: emailRuntime.replyTo,
+      reviewOrigin: emailRuntime.reviewOrigin,
+      log,
+      error,
     })
     log(`review-api completed: ${action}`)
     return res.json({ ok: true, result }, 200)
