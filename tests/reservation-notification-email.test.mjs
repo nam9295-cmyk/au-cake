@@ -267,6 +267,89 @@ test('operator and customer delivery failures are independent', async () => {
   assert.deepEqual(reverseOutcomes.map(({ status }) => status), ['sent', 'failed'])
 })
 
+test('a rejected customer transport promise cannot roll back a sent operator delivery or mutate the reservation', async () => {
+  const reservation = cakeReservation()
+  const originalReservation = structuredClone(reservation)
+  const repository = createMemoryRepository()
+  const calls = []
+  const outcomes = await deliverBookingEmails({
+    payloads: [message(reservation, 'operator'), message(reservation, 'customer')],
+    repository,
+    transport: {
+      async send(payload) {
+        calls.push(payload.template)
+        if (payload.template === 'booking-received-customer') return Promise.reject(new Error('unexpected customer transport failure'))
+        return { kind: 'accepted', providerMessageId: 'operator-message' }
+      },
+    },
+    now: NOW,
+  })
+
+  assert.deepEqual(outcomes.map(({ status }) => status), ['sent', 'uncertain'])
+  assert.deepEqual(calls.sort(), ['booking-received-customer', 'booking-received-operator'])
+  assert.equal(repository.records.get('booking-received-operator:cake:cake-123').status, 'sent')
+  assert.equal(repository.records.get('booking-received-customer:cake:cake-123').status, 'uncertain')
+  assert.deepEqual(reservation, originalReservation)
+})
+
+test('a rejected operator transport promise cannot roll back a sent customer delivery or mutate the reservation', async () => {
+  const reservation = cakeReservation()
+  const originalReservation = structuredClone(reservation)
+  const repository = createMemoryRepository()
+  const calls = []
+  const outcomes = await deliverBookingEmails({
+    payloads: [message(reservation, 'operator'), message(reservation, 'customer')],
+    repository,
+    transport: {
+      async send(payload) {
+        calls.push(payload.template)
+        if (payload.template === 'booking-received-operator') return Promise.reject(new Error('unexpected operator transport failure'))
+        return { kind: 'accepted', providerMessageId: 'customer-message' }
+      },
+    },
+    now: NOW,
+  })
+
+  assert.deepEqual(outcomes.map(({ status }) => status), ['uncertain', 'sent'])
+  assert.deepEqual(calls.sort(), ['booking-received-customer', 'booking-received-operator'])
+  assert.equal(repository.records.get('booking-received-operator:cake:cake-123').status, 'uncertain')
+  assert.equal(repository.records.get('booking-received-customer:cake:cake-123').status, 'sent')
+  assert.deepEqual(reservation, originalReservation)
+})
+
+test('an unexpected delivery exception returns a safe result without cancelling the paired delivery', async () => {
+  const reservation = cakeReservation()
+  const originalReservation = structuredClone(reservation)
+  const repository = createMemoryRepository()
+  const getOrCreatePending = repository.getOrCreatePending
+  repository.getOrCreatePending = async (identity, now) => {
+    const claim = await getOrCreatePending(identity, now)
+    if (identity.template === 'booking-received-operator') {
+      return Object.defineProperty({ ...claim }, 'kind', {
+        get() { throw new Error('unexpected claim object failure') },
+      })
+    }
+    return claim
+  }
+  const calls = []
+  const outcomes = await deliverBookingEmails({
+    payloads: [message(reservation, 'operator'), message(reservation, 'customer')],
+    repository,
+    transport: {
+      async send(payload) {
+        calls.push(payload.template)
+        return { kind: 'accepted', providerMessageId: 'customer-message' }
+      },
+    },
+    now: NOW,
+  })
+
+  assert.deepEqual(outcomes.map(({ status }) => status), ['delivery_error', 'sent'])
+  assert.deepEqual(calls, ['booking-received-customer'])
+  assert.equal(repository.records.get('booking-received-customer:cake:cake-123').status, 'sent')
+  assert.deepEqual(reservation, originalReservation)
+})
+
 test('stale pending and uncertain existing delivery records require reconciliation without an automatic resend', async () => {
   const payload = message(cakeReservation(), 'customer')
   let sends = 0
@@ -329,6 +412,65 @@ test('Resend transport records clear 4xx provider rejections as failed but keeps
       () => transport.send(payload),
       (error) => error instanceof ResendTransportError && error.kind === 'uncertain' && error.code === `resend_http_${statusCode}`,
     )
+  }
+})
+
+test('Resend invalid_idempotent_request is terminally failed and is not automatically retried', async () => {
+  const payload = message(cakeReservation(), 'customer')
+  const repository = createMemoryRepository()
+  let sends = 0
+  const transport = createResendTransport({
+    apiKey: 'test_resend_secret',
+    post: async () => {
+      sends += 1
+      throw { statusCode: 409, name: 'invalid_idempotent_request' }
+    },
+  })
+
+  const first = await deliverBookingEmail({ payload, repository, transport, now: NOW })
+  const second = await deliverBookingEmail({ payload, repository, transport, now: NOW })
+  assert.equal(first.status, 'failed')
+  assert.equal(second.status, 'retry_deferred')
+  assert.equal(sends, 1)
+  assert.equal(repository.records.get(payload.eventKey).lastErrorCode, 'resend_invalid_idempotent_request')
+})
+
+test('Resend concurrent_idempotent_requests remains uncertain without an automatic resend', async () => {
+  const payload = message(cakeReservation(), 'customer')
+  const repository = createMemoryRepository()
+  let sends = 0
+  const transport = createResendTransport({
+    apiKey: 'test_resend_secret',
+    post: async () => {
+      sends += 1
+      throw { statusCode: 409, error: 'concurrent_idempotent_requests' }
+    },
+  })
+
+  const first = await deliverBookingEmail({ payload, repository, transport, now: NOW })
+  const second = await deliverBookingEmail({ payload, repository, transport, now: NOW })
+  assert.equal(first.status, 'uncertain')
+  assert.equal(second.status, 'reconciliation_required')
+  assert.equal(sends, 1)
+  assert.equal(repository.records.get(payload.eventKey).lastErrorCode, 'resend_concurrent_idempotent_requests')
+})
+
+test('Resend invalid_idempotency_key is failed while timeout and 5xx outcomes remain uncertain', async () => {
+  const cases = [
+    { id: 'cake-401', failure: { statusCode: 400, code: 'invalid_idempotency_key' }, status: 'failed', errorCode: 'resend_invalid_idempotency_key' },
+    { id: 'cake-402', failure: new ResendTransportError('uncertain', 'resend_timeout'), status: 'uncertain', errorCode: 'resend_timeout' },
+    { id: 'cake-403', failure: { statusCode: 500, code: 'internal_server_error' }, status: 'uncertain', errorCode: 'resend_http_500' },
+  ]
+  for (const testCase of cases) {
+    const payload = message(cakeReservation({ $id: testCase.id }), 'customer')
+    const repository = createMemoryRepository()
+    const transport = createResendTransport({
+      apiKey: 'test_resend_secret',
+      post: async () => { throw testCase.failure },
+    })
+    const result = await deliverBookingEmail({ payload, repository, transport, now: NOW })
+    assert.equal(result.status, testCase.status)
+    assert.equal(repository.records.get(payload.eventKey).lastErrorCode, testCase.errorCode)
   }
 })
 

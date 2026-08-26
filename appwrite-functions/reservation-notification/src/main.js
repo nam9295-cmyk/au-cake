@@ -827,6 +827,45 @@ function safeResendErrorCode(statusCode) {
   return Number.isInteger(statusCode) ? `resend_http_${statusCode}` : 'resend_network_uncertain'
 }
 
+const RESEND_IDEMPOTENCY_ERROR_CODES = Object.freeze(new Set([
+  'invalid_idempotent_request',
+  'concurrent_idempotent_requests',
+  'invalid_idempotency_key',
+]))
+
+function resendProviderErrorCode(value) {
+  if (!value || typeof value !== 'object') return null
+  for (const key of ['error', 'name', 'code']) {
+    const candidate = value[key]
+    if (typeof candidate === 'string' && RESEND_IDEMPOTENCY_ERROR_CODES.has(candidate)) return candidate
+  }
+  return null
+}
+
+function resendErrorForStatus(statusCode, providerErrorCode = null) {
+  if (statusCode === 409 && providerErrorCode === 'invalid_idempotent_request') {
+    return new ResendTransportError('failed', 'resend_invalid_idempotent_request')
+  }
+  if (statusCode === 409 && providerErrorCode === 'concurrent_idempotent_requests') {
+    return new ResendTransportError('uncertain', 'resend_concurrent_idempotent_requests')
+  }
+  if (statusCode === 400 && providerErrorCode === 'invalid_idempotency_key') {
+    return new ResendTransportError('failed', 'resend_invalid_idempotency_key')
+  }
+  return new ResendTransportError(
+    isClearlyRejectedResendStatus(statusCode) ? 'failed' : 'uncertain',
+    safeResendErrorCode(statusCode),
+  )
+}
+
+function resendProviderErrorCodeFromJson(responseBody) {
+  try {
+    return resendProviderErrorCode(JSON.parse(responseBody))
+  } catch {
+    return null
+  }
+}
+
 function isClearlyRejectedResendStatus(statusCode) {
   return Number.isInteger(statusCode) && statusCode >= 400 && statusCode < 500 && ![408, 409].includes(statusCode)
 }
@@ -834,10 +873,10 @@ function isClearlyRejectedResendStatus(statusCode) {
 function classifyResendError(error) {
   if (error instanceof ResendTransportError) return error
   const statusCode = Number(error?.statusCode)
-  if (isClearlyRejectedResendStatus(statusCode)) {
-    return new ResendTransportError('failed', safeResendErrorCode(statusCode))
-  }
-  return new ResendTransportError('uncertain', safeResendErrorCode(Number.isInteger(statusCode) ? statusCode : undefined))
+  return resendErrorForStatus(
+    Number.isInteger(statusCode) ? statusCode : undefined,
+    resendProviderErrorCode(error),
+  )
 }
 
 async function postJson(url, payload, headers) {
@@ -873,11 +912,9 @@ async function postJson(url, payload, headers) {
             return
           }
 
-          reject(new ResendTransportError(
-            isClearlyRejectedResendStatus(response.statusCode)
-              ? 'failed'
-              : 'uncertain',
-            safeResendErrorCode(response.statusCode),
+          reject(resendErrorForStatus(
+            response.statusCode,
+            resendProviderErrorCodeFromJson(responseBody),
           ))
         })
       },
@@ -992,7 +1029,16 @@ export async function deliverBookingEmail({ payload, repository, transport, now 
 }
 
 export async function deliverBookingEmails({ payloads, repository, transport, now = new Date(), log = () => {}, error = () => {} } = {}) {
-  return Promise.all((payloads || []).map((payload) => deliverBookingEmail({ payload, repository, transport, now, log, error })))
+  const deliveries = await Promise.allSettled(
+    (payloads || []).map((payload) => deliverBookingEmail({ payload, repository, transport, now, log, error })),
+  )
+  return deliveries.map((delivery, index) => {
+    if (delivery.status === 'fulfilled') return delivery.value
+    try {
+      error(`Booking email delivery unexpected: ${plainTextCell(payloads?.[index]?.eventKey).slice(0, 128) || 'unknown'}`)
+    } catch {}
+    return { status: 'delivery_error' }
+  })
 }
 
 function runtimeResourceId(env, key, fallback) {
