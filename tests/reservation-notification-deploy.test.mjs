@@ -30,6 +30,7 @@ const validEnv = {
   RESEND_API_KEY: 'resend-secret',
   RESEND_FROM_EMAIL: 'Verygood Chocolate <hello@verygood.example>',
   RESEND_TO_EMAILS: 'owner@example.com, second@example.com',
+  REVIEW_ADMIN_USER_IDS: 'admin_1, admin_2,admin_1',
 }
 
 test('notification runtime imports the authoritative stored-order parser through its packaged wrapper', () => {
@@ -51,7 +52,7 @@ test('canonical npm test executes the notification deploy packaging regression',
   assert.match(packageJson.scripts['test:reservation-notification-deploy'], /reservation-notification-deploy\.test\.mjs/)
 })
 
-test('notification deployment config grants only the dynamic ledger database/document scopes', () => {
+test('notification deployment config grants only dynamic database/document scopes and exact administrator execution', () => {
   assert.deepEqual(FUNCTION_SCOPES, [
     'databases.read',
     'databases.write',
@@ -61,15 +62,22 @@ test('notification deployment config grants only the dynamic ledger database/doc
   assert.deepEqual(resolveDeployConfig(validEnv).runtimeVariables, {
     MARKET: 'AU',
     APPWRITE_CAKE_DATABASE_ID: 'cake_db',
+    APPWRITE_KIDS_DATABASE_ID: 'cake_db',
+    APPWRITE_CAKE_RESERVATIONS_TABLE_ID: 'reservations',
+    APPWRITE_KIDS_RESERVATIONS_TABLE_ID: 'class_reservations',
     APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
+    REVIEW_ADMIN_USER_IDS: 'admin_1,admin_2',
     RESEND_API_KEY: 'resend-secret',
     RESEND_FROM_EMAIL: 'Verygood Chocolate <hello@verygood.example>',
     RESEND_TO_EMAILS: 'owner@example.com, second@example.com',
     RESEND_REPLY_TO_EMAIL: '',
   })
-  assert.deepEqual(buildFunctionPayload('node-16.0', ['tablesdb.cake_db.tables.reservations.rows.*.create']), {
+  assert.deepEqual(resolveDeployConfig(validEnv).adminExecuteRoles, ['user:admin_1', 'user:admin_2'])
+  assert.throws(() => resolveDeployConfig({ ...validEnv, REVIEW_ADMIN_USER_IDS: '' }), /REVIEW_ADMIN_USER_IDS/)
+  assert.throws(() => resolveDeployConfig({ ...validEnv, REVIEW_ADMIN_USER_IDS: 'admin_1,bad id' }), /REVIEW_ADMIN_USER_IDS/)
+  assert.deepEqual(buildFunctionPayload('node-16.0', ['tablesdb.cake_db.tables.reservations.rows.*.create'], ['user:admin_1']), {
     name: 'Reservation Notification',
-    execute: [],
+    execute: ['user:admin_1'],
     timeout: 15,
     enabled: true,
     logging: true,
@@ -80,6 +88,7 @@ test('notification deployment config grants only the dynamic ledger database/doc
     events: ['tablesdb.cake_db.tables.reservations.rows.*.create'],
   })
   assert.equal(isSecretFunctionVariable('RESEND_API_KEY'), true)
+  assert.equal(isSecretFunctionVariable('REVIEW_ADMIN_USER_IDS'), true)
   assert.equal(isSecretFunctionVariable('APPWRITE_EMAIL_DELIVERIES_TABLE_ID'), false)
 })
 
@@ -102,6 +111,8 @@ test('notification deployment dry-run is offline, redacts secrets, and declares 
   const commandPlan = JSON.parse(result.stdout)
   assert.equal(commandPlan.network, false)
   assert.deepEqual(commandPlan.function.scopes, FUNCTION_SCOPES)
+  assert.equal(commandPlan.function.anonymousExecution, false)
+  assert.equal(commandPlan.function.exactAdminExecution, true)
 
   const archive = await createNotificationArchive({ repositoryRoot })
   try {

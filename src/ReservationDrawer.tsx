@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Clipboard } from 'lucide-react'
 import { OrderDetailRows } from './components/ProductDetailRows'
 import { ReviewInviteButton } from './ReviewInviteButton'
+import { BookingConfirmationEmailButton } from './BookingConfirmationEmailButton'
 import { buildAdminReservationUpdate } from './lib/admin-reservation-edit'
 import {
   CAKE_SIZE_OPTIONS,
@@ -275,6 +276,13 @@ export function ReservationDrawer({
         </label>
 
         <ReviewInviteButton sourceType="cake" sourceReservationId={reservation.id} customerName={reservation.customerName} status={reservation.status} />
+        <BookingConfirmationEmailButton
+          key={`cake-confirmation-${reservation.id}`}
+          sourceType="cake"
+          reservationId={reservation.id}
+          status={reservation.status}
+          recipientEmail={reservation.customerEmail}
+        />
         <div className="button-row">
           <button className="secondary-button" type="button" onClick={() => onCopy(draftReservation)}>
             <Clipboard size={16} /> 확정 문자 복사

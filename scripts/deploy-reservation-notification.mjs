@@ -64,7 +64,7 @@ function isRetryableFunctionConfigError(error) {
 async function ensureFunction() {
   let lastError
   for (const events of reservationCreateEventGroups) {
-    const functionPayload = buildFunctionPayload(config.runtime, events)
+    const functionPayload = buildFunctionPayload(config.runtime, events, config.adminExecuteRoles)
     try {
       await functions.get({ functionId: config.functionId })
       await functions.update({ functionId: config.functionId, ...functionPayload })

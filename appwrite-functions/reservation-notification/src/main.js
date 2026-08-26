@@ -18,6 +18,14 @@ const BOOKING_RECEIPT_TEMPLATES = Object.freeze({
   operator: 'booking-received-operator',
   customer: 'booking-received-customer',
 })
+const BOOKING_CONFIRMATION_TEMPLATE = 'booking-confirmed-customer'
+const BOOKING_CONFIRMATION_TEMPLATE_VERSION = 'v1'
+const BOOKING_CONFIRMATION_ALLOWED_STATUSES = Object.freeze({
+  cake: '예약확정',
+  class: 'Confirmed',
+})
+const CAKE_PICKUP_LOCATION = 'https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw'
+const CLASS_LOCATION = '1 Bundil Blvd, Melrose Park, Sydney'
 
 const MARKET_CONFIG = {
   KR: {
@@ -406,11 +414,15 @@ function escapeHtml(value) {
 }
 
 function readReservation(req) {
-  const body = req.bodyJson && typeof req.bodyJson === 'object' ? req.bodyJson : parseBody(req.bodyRaw)
+  const body = readRequestBody(req)
   if (!body) return null
 
   // Appwrite event payloads can arrive either as the document itself, or wrapped.
   return body.reservation || body.document || body.row || body.payload || body
+}
+
+function readRequestBody(req) {
+  return req?.bodyJson && typeof req.bodyJson === 'object' ? req.bodyJson : parseBody(req?.bodyRaw)
 }
 
 function parseBody(bodyRaw) {
@@ -814,6 +826,127 @@ export function buildBookingDeliveryPayload({
   }
 }
 
+function confirmationCakeRows(reservation, config) {
+  const rows = customerCakeRows(reservation, config)
+  return rows.map(([label, value]) => label === 'Pick-up location'
+    ? ['Pick-up location', CAKE_PICKUP_LOCATION]
+    : [label, value])
+}
+
+function confirmationClassRows(reservation, config) {
+  const rows = customerClassRows(reservation, config)
+  return [
+    ...rows.map(([label, value]) => label === 'Location' ? ['Location', CLASS_LOCATION] : [label, value]),
+    ['Payment', 'We will contact you if any payment details still need attention.'],
+    ['Preparation', 'Please arrive 5 minutes early. Tie back long hair; clothes may get chocolate or cream on them.'],
+  ]
+}
+
+function confirmationEmailCopy(reservation, sourceType) {
+  if (sourceType === 'class') {
+    return {
+      subject: 'Your Verygood Kids Class booking is confirmed',
+      greetingName: reservation.parentName,
+      heading: 'Your kids class booking is CONFIRMED',
+      confirmation: 'Your booking is confirmed. Please arrive ready for the session and let us know promptly if allergy information changes.',
+      followUp: 'Reply to this email if you have a question before the class.',
+    }
+  }
+  return {
+    subject: 'Your Verygood Chocolate booking is confirmed',
+    greetingName: reservation.customerName,
+    heading: 'Your booking is CONFIRMED',
+    confirmation: 'Your booking is CONFIRMED. We look forward to seeing you at collection.',
+    followUp: 'Reply to this email if you have a question about your booking.',
+  }
+}
+
+function confirmationRows(reservation, sourceType, config) {
+  return sourceType === 'class'
+    ? confirmationClassRows(reservation, config)
+    : confirmationCakeRows(reservation, config)
+}
+
+function buildBookingConfirmationText(reservation, sourceType, config) {
+  const copy = confirmationEmailCopy(reservation, sourceType)
+  return [
+    copy.subject,
+    '',
+    `Hi ${plainTextCell(copy.greetingName)},`,
+    '',
+    copy.confirmation,
+    '',
+    'Booking details',
+    ...confirmationRows(reservation, sourceType, config).map(([label, value]) => `${plainTextCell(label)}: ${plainTextCell(value)}`),
+    '',
+    copy.followUp,
+  ].join('\n')
+}
+
+function buildBookingConfirmationHtml(reservation, sourceType, config) {
+  const copy = confirmationEmailCopy(reservation, sourceType)
+  const safeRows = confirmationRows(reservation, sourceType, config).map(([label, value]) => `
+    <tr>
+      <th style="width: 42%; padding: 10px 12px; border: 1px solid #e8ded5; background: #fbf6ef; text-align: left; vertical-align: top;">${escapeHtml(plainTextCell(label))}</th>
+      <td style="padding: 10px 12px; border: 1px solid #e8ded5; vertical-align: top;">${escapeHtml(plainTextCell(value))}</td>
+    </tr>`).join('')
+  return `
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55; max-width: 640px; margin: 0 auto;">
+      <h1 style="font-size: 22px; line-height: 1.3; margin: 0 0 16px;">${escapeHtml(copy.heading)}</h1>
+      <p style="margin: 0 0 16px;">Hi ${escapeHtml(plainTextCell(copy.greetingName))},</p>
+      <p style="margin: 0 0 20px;">${escapeHtml(copy.confirmation)}</p>
+      <div style="border: 1px solid #e8ded5; border-radius: 8px; overflow: hidden; margin: 0 0 20px;">
+        <div style="padding: 12px; background: #5b2417; color: #ffffff; font-weight: 700;">Booking details</div>
+        <table style="border-collapse: collapse; width: 100%;"><tbody>${safeRows}</tbody></table>
+      </div>
+      <p style="margin: 0;">${escapeHtml(copy.followUp)}</p>
+    </div>
+  `
+}
+
+export function buildBookingConfirmationPayload({ reservation, sourceType, from, replyTo = null } = {}) {
+  if (!reservation || !['cake', 'class'].includes(sourceType) || sourceTypeForReservation(reservation) !== sourceType) {
+    throw new Error('INVALID_BOOKING_CONFIRMATION_PAYLOAD')
+  }
+  const sourceId = sourceIdForReservation(reservation)
+  const recipient = normalizeRecipientEmail(sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)
+  const config = getConfig(reservation)
+  const copy = confirmationEmailCopy(reservation, sourceType)
+  const normalizedFrom = safeHeaderValue(from, 'RESEND_FROM_EMAIL')
+  const normalizedReplyTo = replyTo === null || replyTo === undefined || !String(replyTo).trim()
+    ? null
+    : normalizeRecipientEmail(replyTo)
+  const templateVersion = `${BOOKING_CONFIRMATION_TEMPLATE}-${sourceType}-${BOOKING_CONFIRMATION_TEMPLATE_VERSION}`
+  const eventKey = buildEmailDeliveryEventKey({ template: BOOKING_CONFIRMATION_TEMPLATE, sourceType, sourceId })
+  const text = buildBookingConfirmationText(reservation, sourceType, config)
+  const html = buildBookingConfirmationHtml(reservation, sourceType, config)
+  return {
+    from: normalizedFrom,
+    to: [recipient],
+    replyTo: normalizedReplyTo,
+    subject: copy.subject,
+    text,
+    html,
+    template: BOOKING_CONFIRMATION_TEMPLATE,
+    templateVersion,
+    eventKey,
+    sourceType,
+    sourceId,
+    recipientHash: recipientHashForEmail(recipient),
+    payloadHash: payloadHashForEmail({
+      from: normalizedFrom,
+      recipientEmail: recipient,
+      replyTo: normalizedReplyTo,
+      subject: copy.subject,
+      text,
+      html,
+      template: BOOKING_CONFIRMATION_TEMPLATE,
+      templateVersion,
+    }),
+    idempotencyKey: resendIdempotencyKeyForEvent(eventKey),
+  }
+}
+
 export class ResendTransportError extends Error {
   constructor(kind, code) {
     super(code)
@@ -992,7 +1125,13 @@ export async function deliverBookingEmail({ payload, repository, transport, now 
     error(`Booking email ledger failure: ${payload.eventKey}`)
     return { status: 'ledger_error' }
   }
-  if (claim.kind !== 'created') return { status: existingDeliveryStatus(claim.decision) }
+  if (claim.kind !== 'created') {
+    const status = existingDeliveryStatus(claim.decision)
+    return {
+      status,
+      ...(status === 'already_sent' && typeof claim.delivery?.sentAt === 'string' ? { sentAt: claim.delivery.sentAt } : {}),
+    }
+  }
 
   let attempted
   try {
@@ -1007,9 +1146,13 @@ export async function deliverBookingEmail({ payload, repository, transport, now 
     if (result?.kind !== 'accepted' || typeof result.providerMessageId !== 'string') {
       throw new ResendTransportError('uncertain', 'resend_invalid_success_response')
     }
-    await repository.markSent(attempted, { now, providerMessageId: result.providerMessageId })
+    const sent = await repository.markSent(attempted, { now, providerMessageId: result.providerMessageId })
     log(`Booking email delivery sent: ${payload.eventKey}`)
-    return { status: 'sent', providerMessageId: result.providerMessageId }
+    return {
+      status: 'sent',
+      providerMessageId: result.providerMessageId,
+      ...(typeof sent?.sentAt === 'string' ? { sentAt: sent.sentAt } : { sentAt: now.toISOString() }),
+    }
   } catch (sendError) {
     const classified = classifyResendError(sendError)
     try {
@@ -1064,13 +1207,181 @@ export function createRuntimeEmailDeliveryRepository({ req, env = process.env, c
   })
 }
 
+export function assertBookingConfirmationAdmin(headers = {}, env = process.env) {
+  const userId = headers['x-appwrite-user-id']
+  const allowlist = String(env.REVIEW_ADMIN_USER_IDS || '').split(',').map((id) => id.trim()).filter(Boolean)
+  if (typeof userId !== 'string' || !allowlist.includes(userId)) {
+    const error = new Error('BOOKING_CONFIRMATION_UNAUTHORIZED')
+    error.code = 'BOOKING_CONFIRMATION_UNAUTHORIZED'
+    throw error
+  }
+  return userId
+}
+
+export function createRuntimeReservationRepository({ req, env = process.env, createDatabases } = {}) {
+  const endpoint = String(env.APPWRITE_FUNCTION_API_ENDPOINT || '').trim()
+  const projectId = String(env.APPWRITE_FUNCTION_PROJECT_ID || '').trim()
+  const apiKey = req?.headers?.['x-appwrite-key']
+  if (!endpoint || !projectId || typeof apiKey !== 'string' || !apiKey.trim()) {
+    throw new Error('BOOKING_CONFIRMATION_CONFIGURATION_ERROR')
+  }
+  const databases = createDatabases
+    ? createDatabases({ endpoint, projectId, apiKey })
+    : new Databases(new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey))
+  if (typeof databases.getDocument !== 'function') throw new Error('BOOKING_CONFIRMATION_CONFIGURATION_ERROR')
+  const cakeDatabaseId = runtimeResourceId(env, 'APPWRITE_CAKE_DATABASE_ID')
+  const classDatabaseId = runtimeResourceId(env, 'APPWRITE_KIDS_DATABASE_ID', cakeDatabaseId)
+  const cakeReservationsId = runtimeResourceId(env, 'APPWRITE_CAKE_RESERVATIONS_TABLE_ID', 'reservations')
+  const classReservationsId = runtimeResourceId(env, 'APPWRITE_KIDS_RESERVATIONS_TABLE_ID', 'class_reservations')
+  return {
+    async getReservation(sourceType, reservationId) {
+      if (!['cake', 'class'].includes(sourceType) || !APPWRITE_RESOURCE_ID.test(reservationId || '')) {
+        throw new Error('BOOKING_CONFIRMATION_INVALID_RESERVATION')
+      }
+      return databases.getDocument({
+        databaseId: sourceType === 'class' ? classDatabaseId : cakeDatabaseId,
+        collectionId: sourceType === 'class' ? classReservationsId : cakeReservationsId,
+        documentId: reservationId,
+      })
+    },
+  }
+}
+
+function manualActionData(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return null
+  if (typeof body.action !== 'string') return null
+  return body
+}
+
+function confirmationActionInput(body) {
+  const data = body?.data
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null
+  const { sourceType, reservationId } = data
+  if (!['cake', 'class'].includes(sourceType) || !APPWRITE_RESOURCE_ID.test(reservationId || '')) return null
+  return { sourceType, reservationId }
+}
+
+function isReservationConfirmed(reservation, sourceType) {
+  return reservation?.status === BOOKING_CONFIRMATION_ALLOWED_STATUSES[sourceType]
+}
+
+function maskRecipientEmail(value) {
+  const email = normalizeRecipientEmail(value)
+  const [local, domain] = email.split('@')
+  return `${local.slice(0, 1)}***@${domain}`
+}
+
+function confirmationResult(delivery, recipientMasked) {
+  switch (delivery?.status) {
+    case 'sent':
+      return { status: 'sent', ...(delivery.sentAt ? { sentAt: delivery.sentAt } : {}), recipientMasked }
+    case 'already_sent':
+      return { status: 'already_sent', ...(delivery.sentAt ? { sentAt: delivery.sentAt } : {}), recipientMasked }
+    case 'in_progress':
+      return { status: 'pending', recipientMasked }
+    case 'uncertain':
+    case 'reconciliation_required':
+      return { status: 'uncertain', recipientMasked }
+    default:
+      return { status: 'failed', recipientMasked }
+  }
+}
+
+function confirmationStatusResult(delivery, recipientMasked) {
+  const recipient = recipientMasked ? { recipientMasked } : {}
+  if (!delivery) return { status: 'not_sent', ...recipient }
+  if (delivery.status === 'sent') return { status: 'sent', ...(typeof delivery.sentAt === 'string' ? { sentAt: delivery.sentAt } : {}), ...recipient }
+  if (delivery.status === 'pending') return { status: 'pending', ...recipient }
+  if (delivery.status === 'uncertain') return { status: 'uncertain', ...recipient }
+  return { status: 'failed', ...recipient }
+}
+
+async function handleBookingConfirmationAction({ body, req, res, env, createReservationRepository, createLedgerRepository, createTransport, now, log, error }) {
+  try {
+    assertBookingConfirmationAdmin(req?.headers, env)
+  } catch {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_UNAUTHORIZED' })
+  }
+  if (!['send-booking-confirmation', 'get-booking-confirmation-status'].includes(body.action)) {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_INVALID_ACTION' })
+  }
+  const input = confirmationActionInput(body)
+  if (!input) return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_INVALID_REQUEST' })
+
+  let reservation
+  try {
+    const reservations = createReservationRepository({ req, env })
+    reservation = await reservations.getReservation(input.sourceType, input.reservationId)
+  } catch {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_RESERVATION_UNAVAILABLE' })
+  }
+  if (!reservation || sourceTypeForReservation(reservation) !== input.sourceType) {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_NOT_FOUND' })
+  }
+
+  if (body.action === 'get-booking-confirmation-status') {
+    try {
+      const eventKey = buildEmailDeliveryEventKey({
+        template: BOOKING_CONFIRMATION_TEMPLATE,
+        sourceType: input.sourceType,
+        sourceId: sourceIdForReservation(reservation),
+      })
+      const repository = createLedgerRepository({ req, env })
+      let recipientMasked = null
+      try {
+        recipientMasked = maskRecipientEmail(input.sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)
+      } catch {}
+      return res.json({ ok: true, result: confirmationStatusResult(await repository.getByEventKey(eventKey), recipientMasked) })
+    } catch {
+      return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_STATUS_UNAVAILABLE' })
+    }
+  }
+
+  if (body.action !== 'send-booking-confirmation') {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_INVALID_ACTION' })
+  }
+  if (!isReservationConfirmed(reservation, input.sourceType)) {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_STATUS_INVALID' })
+  }
+
+  let recipientMasked
+  try {
+    recipientMasked = maskRecipientEmail(input.sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)
+  } catch {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_EMAIL_UNAVAILABLE' })
+  }
+
+  let payload
+  let repository
+  let transport
+  try {
+    payload = buildBookingConfirmationPayload({ reservation, sourceType: input.sourceType, from: env.RESEND_FROM_EMAIL, replyTo: env.RESEND_REPLY_TO_EMAIL || null })
+    repository = createLedgerRepository({ req, env })
+    transport = createTransport({ apiKey: env.RESEND_API_KEY })
+  } catch {
+    error(`Booking confirmation configuration unavailable: ${input.sourceType}:${input.reservationId}`)
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_UNAVAILABLE' })
+  }
+
+  const delivery = await deliverBookingEmail({ payload, repository, transport, now: now(), log, error })
+  return res.json({ ok: true, result: confirmationResult(delivery, recipientMasked) })
+}
+
 export function createReservationNotificationHandler({
   env = process.env,
   createLedgerRepository = createRuntimeEmailDeliveryRepository,
+  createReservationRepository = createRuntimeReservationRepository,
   createTransport = createResendTransport,
   now = () => new Date(),
 } = {}) {
   return async ({ req, res, log = () => {}, error = () => {} }) => {
+    const body = readRequestBody(req)
+    const actionRequest = manualActionData(body)
+    if (actionRequest) {
+      return handleBookingConfirmationAction({
+        body: actionRequest, req, res, env, createReservationRepository, createLedgerRepository, createTransport, now, log, error,
+      })
+    }
     const reservation = readReservation(req)
     const apiKey = env.RESEND_API_KEY
     const from = env.RESEND_FROM_EMAIL

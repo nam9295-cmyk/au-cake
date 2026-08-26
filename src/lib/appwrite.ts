@@ -67,6 +67,7 @@ export const appwriteConfig = {
   reviewApiFunctionId: import.meta.env.VITE_REVIEW_API_FUNCTION_ID || 'review-api',
   reviewApiDirectUrl: import.meta.env.VITE_REVIEW_API_DIRECT_URL || '',
   reservationApiFunctionId: import.meta.env.VITE_RESERVATION_API_FUNCTION_ID || 'reservation-api',
+  reservationNotificationFunctionId: import.meta.env.VITE_RESERVATION_NOTIFY_FUNCTION_ID || '',
   reservationApiMode: normalizeReservationApiMode(import.meta.env.VITE_RESERVATION_API_MODE),
   adminEmails: (import.meta.env.VITE_ADMIN_EMAILS || 'nam9295@gmail.com')
     .split(',')

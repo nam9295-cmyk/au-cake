@@ -14,6 +14,7 @@ export const REQUIRED_APPLY_ENVIRONMENT = Object.freeze([
   'APPWRITE_PROJECT_ID',
   'APPWRITE_API_KEY',
   'APPWRITE_CAKE_DATABASE_ID',
+  'REVIEW_ADMIN_USER_IDS',
   'RESEND_API_KEY',
   'RESEND_FROM_EMAIL',
   'RESEND_TO_EMAILS',
@@ -52,8 +53,16 @@ function market(env) {
   return value
 }
 
+function adminUserIds(env) {
+  const ids = [...new Set(required(env, 'REVIEW_ADMIN_USER_IDS').split(',').map((id) => id.trim()).filter(Boolean))]
+  if (ids.length === 0 || ids.some((id) => !RESOURCE_ID.test(id))) {
+    throw new Error('REVIEW_ADMIN_USER_IDS must contain valid comma-separated Appwrite user IDs.')
+  }
+  return ids
+}
+
 export function isSecretFunctionVariable(key) {
-  return key === 'RESEND_API_KEY'
+  return key === 'RESEND_API_KEY' || key === 'REVIEW_ADMIN_USER_IDS'
 }
 
 export function maskValue(value) {
@@ -68,17 +77,23 @@ export function resolveDeployConfig(env = {}) {
   const classDatabaseId = resourceId(env, 'APPWRITE_KIDS_DATABASE_ID', cakeDatabaseId)
   const cakeReservationsId = resourceId(env, 'APPWRITE_CAKE_RESERVATIONS_TABLE_ID', 'reservations')
   const classReservationsId = resourceId(env, 'APPWRITE_KIDS_RESERVATIONS_TABLE_ID', 'class_reservations')
+  const admins = adminUserIds(env)
   return {
     endpoint: endpoint(env),
     projectId: resourceId(env, 'APPWRITE_PROJECT_ID'),
     apiKey: required(env, 'APPWRITE_API_KEY'),
     functionId: resourceId(env, 'APPWRITE_RESERVATION_NOTIFY_FUNCTION_ID', 'reservation-notification'),
     runtime: runtime(env),
+    adminExecuteRoles: admins.map((id) => `user:${id}`),
     eventResources: { cakeDatabaseId, classDatabaseId, cakeReservationsId, classReservationsId },
     runtimeVariables: {
       MARKET: market(env),
       APPWRITE_CAKE_DATABASE_ID: cakeDatabaseId,
+      APPWRITE_KIDS_DATABASE_ID: classDatabaseId,
+      APPWRITE_CAKE_RESERVATIONS_TABLE_ID: cakeReservationsId,
+      APPWRITE_KIDS_RESERVATIONS_TABLE_ID: classReservationsId,
       APPWRITE_EMAIL_DELIVERIES_TABLE_ID: resourceId(env, 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID', 'email_deliveries'),
+      REVIEW_ADMIN_USER_IDS: admins.join(','),
       RESEND_API_KEY: required(env, 'RESEND_API_KEY'),
       RESEND_FROM_EMAIL: required(env, 'RESEND_FROM_EMAIL'),
       RESEND_TO_EMAILS: required(env, 'RESEND_TO_EMAILS'),
@@ -105,10 +120,10 @@ export function buildReservationCreateEventGroups(resources, env = {}) {
   ]
 }
 
-export function buildFunctionPayload(runtimeName, events) {
+export function buildFunctionPayload(runtimeName, events, execute = []) {
   return {
     name: 'Reservation Notification',
-    execute: [],
+    execute: [...execute],
     timeout: 15,
     enabled: true,
     logging: true,
@@ -124,7 +139,11 @@ export function buildDryRunPlan(env = {}) {
   const variableValues = {
     MARKET: env.MARKET || 'AU',
     APPWRITE_CAKE_DATABASE_ID: env.APPWRITE_CAKE_DATABASE_ID,
+    APPWRITE_KIDS_DATABASE_ID: env.APPWRITE_KIDS_DATABASE_ID || env.APPWRITE_CAKE_DATABASE_ID,
+    APPWRITE_CAKE_RESERVATIONS_TABLE_ID: env.APPWRITE_CAKE_RESERVATIONS_TABLE_ID || 'reservations',
+    APPWRITE_KIDS_RESERVATIONS_TABLE_ID: env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID || 'class_reservations',
     APPWRITE_EMAIL_DELIVERIES_TABLE_ID: env.APPWRITE_EMAIL_DELIVERIES_TABLE_ID || 'email_deliveries',
+    REVIEW_ADMIN_USER_IDS: env.REVIEW_ADMIN_USER_IDS,
     RESEND_API_KEY: env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: env.RESEND_FROM_EMAIL,
     RESEND_TO_EMAILS: env.RESEND_TO_EMAILS,
@@ -143,6 +162,8 @@ export function buildDryRunPlan(env = {}) {
       source: 'appwrite-functions/reservation-notification/{package.json,package-lock.json,src/**,shared/**}',
       sharedSources: [...ARCHIVE_SHARED_SOURCE_PATHS],
       scopes: [...FUNCTION_SCOPES],
+      anonymousExecution: false,
+      exactAdminExecution: true,
       variableNames: Object.keys(variableValues),
       maskedVariables: Object.fromEntries(Object.entries(variableValues).map(([key, value]) => [key, maskValue(value)])),
     },

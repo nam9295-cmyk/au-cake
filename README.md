@@ -140,6 +140,10 @@ npm run deploy:reservation-notification
 
 Function runtime은 Appwrite가 주입하는 endpoint/project 값과 실행별 `x-appwrite-key`만 사용해 ledger에 접근합니다. browser나 관리자 session이 ledger를 직접 읽거나 변경하지 않도록 schema permissions는 비어 있어야 합니다.
 
+최종 확정 이메일은 status 변경의 부수효과가 아닙니다. 관리자 drawer에서 cake는 실제 저장 상태가 `예약확정`, class는 `Confirmed`인 뒤에만 **Send confirmation email** 버튼으로 명시적으로 요청합니다. Function은 browser가 보낸 예약 ID와 source type만 받고, `REVIEW_ADMIN_USER_IDS`의 Appwrite user ID allowlist와 `x-appwrite-user-id`를 확인한 후 최신 reservation row를 다시 읽습니다. `booking-confirmed-customer:{sourceType}:{reservationId}` ledger event가 이미 `sent`, `pending`, `failed`, `uncertain`이면 자동 재발송하지 않습니다. 기존 문자/결제 안내 복사 기능은 이 버튼과 독립적으로 유지됩니다.
+
+이 관리자 action을 rollout할 때는 `REVIEW_ADMIN_USER_IDS`와 `VITE_RESERVATION_NOTIFY_FUNCTION_ID`를 설정하고, notification Function execute permission을 해당 정확한 Appwrite user IDs로만 배포해야 합니다. anonymous execution은 허용하지 않습니다.
+
 ## 예약 API와 권한
 
 신규 설치는 우선 `VITE_RESERVATION_API_MODE=off`, `APPWRITE_RESERVATION_WRITE_MODE=direct`로 기존 저장 흐름을 유지합니다. 서버 검증 Function을 배포하고 조회/저장을 단계별로 확인한 뒤에만 공개 DB 생성 권한을 닫습니다.
