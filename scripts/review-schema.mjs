@@ -43,6 +43,11 @@ const PRIVATE_REVIEW_ACCESS = Object.freeze({
   adminPermissions: Object.freeze(['read', 'update', 'delete']),
 })
 
+const PRIVATE_FUNCTION_ACCESS = Object.freeze({
+  publicPermissions: Object.freeze([]),
+  adminPermissions: Object.freeze([]),
+})
+
 export const REVIEW_COLLECTIONS = Object.freeze({
   reviewInvites: Object.freeze({
     name: 'review_invites',
@@ -161,7 +166,7 @@ export const REVIEW_COLLECTIONS = Object.freeze({
   }),
   emailDeliveries: Object.freeze({
     name: 'email_deliveries',
-    ...PRIVATE_REVIEW_ACCESS,
+    ...PRIVATE_FUNCTION_ACCESS,
     attributes: Object.freeze([
       { key: 'eventKey', type: 'string', size: 128, required: true },
       { key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class', 'review', 'system'] },
@@ -390,6 +395,43 @@ export function validateCollectionDefinition(collectionId, current, {
   )
 }
 
+const LEGACY_DIRECT_ADMIN_PERMISSION = /^(read|update|delete)\("user:([A-Za-z0-9][A-Za-z0-9._-]{0,35})"\)$/
+const LEGACY_DIRECT_ADMIN_ACTIONS = Object.freeze(['read', 'update', 'delete'])
+
+export function emailDeliveryLegacyPermissionMigration(current, expected) {
+  if (
+    expected?.name !== 'email_deliveries' ||
+    !sameUnorderedValues(expected.permissions || [], []) ||
+    expected.documentSecurity !== false ||
+    expected.enabled !== true ||
+    current?.name !== expected.name ||
+    current.documentSecurity !== expected.documentSecurity ||
+    current.enabled !== expected.enabled
+  ) return null
+
+  const permissions = current.$permissions || current.permissions || []
+  if (!Array.isArray(permissions) || permissions.length === 0 || permissions.length % LEGACY_DIRECT_ADMIN_ACTIONS.length !== 0) {
+    return null
+  }
+
+  const actionsByUserId = new Map()
+  for (const permission of permissions) {
+    const match = LEGACY_DIRECT_ADMIN_PERMISSION.exec(permission)
+    if (!match) return null
+    const [, action, userId] = match
+    const actions = actionsByUserId.get(userId) || new Set()
+    if (actions.has(action)) return null
+    actions.add(action)
+    actionsByUserId.set(userId, actions)
+  }
+  if (actionsByUserId.size === 0) return null
+  for (const actions of actionsByUserId.values()) {
+    if (!sameUnorderedValues([...actions], LEGACY_DIRECT_ADMIN_ACTIONS)) return null
+  }
+
+  return { reason: 'revoke_legacy_direct_admin_crud_permissions' }
+}
+
 export async function ensureStrictCollection({
   databaseId,
   collectionId,
@@ -399,6 +441,8 @@ export async function ensureStrictCollection({
   enabled = true,
   getCollection,
   createCollection,
+  updateCollection,
+  migrateExisting,
   isMissing,
   isConflict,
 }) {
@@ -412,7 +456,30 @@ export async function ensureStrictCollection({
 
   try {
     const current = await getExactCollection()
-    validate(current)
+    try {
+      validate(current)
+    } catch (validationError) {
+      if (typeof migrateExisting !== 'function' || !migrateExisting(current, {
+        name,
+        permissions,
+        documentSecurity,
+        enabled,
+      }) || typeof updateCollection !== 'function') {
+        throw validationError
+      }
+      await updateCollection({
+        databaseId,
+        collectionId,
+        name,
+        permissions,
+        documentSecurity,
+        enabled,
+        purge: true,
+      })
+      const updated = await getExactCollection()
+      validate(updated)
+      return 'updated'
+    }
     return 'existing'
   } catch (error) {
     if (!isMissing(error)) throw error

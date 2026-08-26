@@ -10,6 +10,7 @@ import {
   assertExactAvailableKeySet,
   buildReviewSetupPlan,
   canEnableReviewPhotoTransformations,
+  emailDeliveryLegacyPermissionMigration,
   ensureStrictCollection,
   parseAdminUserIds,
   reviewPhotoBucketMismatches,
@@ -104,7 +105,7 @@ test('review invite schema stores only hashed tokens and has both required uniqu
 test('email delivery ledger schema is private, avoids raw recipient PII, and has a unique event key', () => {
   const deliveries = REVIEW_COLLECTIONS.emailDeliveries
   assert.deepEqual(deliveries.publicPermissions, [])
-  assert.deepEqual(deliveries.adminPermissions, ['read', 'update', 'delete'])
+  assert.deepEqual(deliveries.adminPermissions, [])
   assert.deepEqual(attribute(deliveries, 'sourceType'), {
     key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class', 'review', 'system'],
   })
@@ -622,6 +623,70 @@ test('strict collection ensure rejects mismatched collection after a concurrent 
     /collection reviews definition mismatch \(name=wrong-reviews\)/,
   )
   assert.equal(getCount, 2)
+})
+
+test('the scoped email delivery migration revokes only the legacy direct-admin CRUD policy', async () => {
+  const expected = {
+    databaseId: 'cake_db',
+    collectionId: 'email_deliveries',
+    name: 'email_deliveries',
+    permissions: [],
+    documentSecurity: false,
+  }
+  let current = {
+    name: 'email_deliveries',
+    $permissions: [
+      'read("user:admin-a")',
+      'update("user:admin-a")',
+      'delete("user:admin-a")',
+    ],
+    documentSecurity: false,
+    enabled: true,
+  }
+  const updates = []
+
+  const result = await ensureStrictCollection({
+    ...expected,
+    getCollection: async () => current,
+    createCollection: async () => { throw new Error('must not create') },
+    updateCollection: async (params) => {
+      updates.push(params)
+      current = { ...current, ...params, $permissions: params.permissions }
+    },
+    migrateExisting: emailDeliveryLegacyPermissionMigration,
+    isMissing: () => false,
+    isConflict: () => false,
+  })
+
+  assert.equal(result, 'updated')
+  assert.deepEqual(updates, [{
+    databaseId: 'cake_db',
+    collectionId: 'email_deliveries',
+    name: 'email_deliveries',
+    permissions: [],
+    documentSecurity: false,
+    enabled: true,
+    purge: true,
+  }])
+
+  for (const unsafePermissions of [
+    ['read("any")'],
+    ['create("user:admin-a")'],
+    ['read("user:admin-a")', 'update("user:admin-a")'],
+  ]) {
+    assert.equal(emailDeliveryLegacyPermissionMigration({
+      name: 'email_deliveries',
+      $permissions: unsafePermissions,
+      documentSecurity: false,
+      enabled: true,
+    }, expected), null)
+  }
+})
+
+test('setup wires the scoped migration only for email_deliveries', () => {
+  const source = readFileSync(resolve(repositoryRoot, 'scripts/setup-appwrite.mjs'), 'utf8')
+  assert.match(source, /resource\.key === 'emailDeliveries' \? emailDeliveryLegacyPermissionMigration : undefined/)
+  assert.match(source, /updateCollection: \(params\) => databases\.updateCollection\(params\)/)
 })
 
 test('complete exact-set validation fails closed when Appwrite total exceeds returned resources', () => {

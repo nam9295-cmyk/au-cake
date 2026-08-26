@@ -14,6 +14,7 @@ import {
   assertCompleteExactAvailableKeySet,
   buildReviewSetupPlan,
   canEnableReviewPhotoTransformations,
+  emailDeliveryLegacyPermissionMigration,
   ensureStrictCollection,
   parseAdminUserIds,
   RESERVATION_MULTI_LINE_ATTRIBUTES,
@@ -100,6 +101,7 @@ const reviewCollectionPermissions = Object.fromEntries(
 )
 const reviewPhotoPermissions = permissionsForPrivateReviewResource(REVIEW_PHOTO_BUCKET)
 const reviewCollectionResources = REVIEW_COLLECTION_RESOURCE_KEYS.map(([key, idKey]) => ({
+  key,
   id: reviewResourceIds[idKey],
   definition: REVIEW_COLLECTIONS[key],
   permissions: reviewCollectionPermissions[key],
@@ -382,10 +384,13 @@ async function ensureCollection(targetDatabaseId, collectionId, name, permission
       documentSecurity,
       getCollection: (params) => databases.getCollection(params),
       createCollection: (params) => databases.createCollection(params),
+      updateCollection: (params) => databases.updateCollection(params),
+      migrateExisting: options.migrateExisting,
       isMissing,
       isConflict,
     })
-    console.log(`${outcome === 'created' ? 'created' : 'exists '} collection ${collectionId}`)
+    const action = outcome === 'created' ? 'created' : outcome === 'updated' ? 'updated' : 'exists '
+    console.log(`${action} collection ${collectionId}`)
     return
   }
 
@@ -761,7 +766,11 @@ for (const resource of reviewCollectionResources) {
     resource.id,
     resource.definition.name,
     resource.permissions,
-    { strict: true, documentSecurity: false },
+    {
+      strict: true,
+      documentSecurity: false,
+      migrateExisting: resource.key === 'emailDeliveries' ? emailDeliveryLegacyPermissionMigration : undefined,
+    },
   )
 }
 await ensureReviewPhotoBucket()
