@@ -6,6 +6,7 @@ export const REVIEW_RESOURCE_DEFAULTS = Object.freeze({
   reviewPhotosBucketId: 'review-photos',
   reviewPhotoCleanupCollectionId: 'review_photo_cleanup',
   emailDeliveriesCollectionId: 'email_deliveries',
+  emailDeliveryRetryClaimsCollectionId: 'email_delivery_retry_claims',
 })
 
 export function resolveReviewResourceIds(env = {}) {
@@ -35,6 +36,9 @@ export function resolveReviewResourceIds(env = {}) {
     emailDeliveriesCollectionId:
       env.APPWRITE_EMAIL_DELIVERIES_TABLE_ID ||
       REVIEW_RESOURCE_DEFAULTS.emailDeliveriesCollectionId,
+    emailDeliveryRetryClaimsCollectionId:
+      env.APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID ||
+      REVIEW_RESOURCE_DEFAULTS.emailDeliveryRetryClaimsCollectionId,
   }
 }
 
@@ -191,9 +195,41 @@ export const REVIEW_COLLECTIONS = Object.freeze({
       { key: 'recipientHash', type: 'string', size: 64, required: true },
       { key: 'payloadHash', type: 'string', size: 64, required: true },
       { key: 'attempts', type: 'integer', required: true, min: 0 },
+      { key: 'firstAttemptAt', type: 'string', size: 40, required: false },
       { key: 'providerMessageId', type: 'string', size: 128, required: false },
       { key: 'lastAttemptAt', type: 'string', size: 40, required: false },
       { key: 'sentAt', type: 'string', size: 40, required: false },
+      { key: 'lastErrorCode', type: 'string', size: 80, required: false },
+      { key: 'createdAt', type: 'string', size: 40, required: true },
+      { key: 'updatedAt', type: 'string', size: 40, required: true },
+    ]),
+    indexes: Object.freeze([
+      { key: 'eventKey_unique', attributes: ['eventKey'], type: 'unique' },
+    ]),
+  }),
+  emailDeliveryRetryClaims: Object.freeze({
+    name: 'email_delivery_retry_claims',
+    ...PRIVATE_FUNCTION_ACCESS,
+    attributes: Object.freeze([
+      { key: 'eventKey', type: 'string', size: 128, required: true },
+      { key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class', 'review', 'system'] },
+      { key: 'sourceId', type: 'string', size: 64, required: true },
+      {
+        key: 'template',
+        type: 'enum',
+        required: true,
+        elements: [
+          'booking-received-operator',
+          'booking-received-customer',
+          'booking-confirmed-customer',
+          'review-invite-customer',
+          'review-reward-customer',
+        ],
+      },
+      { key: 'status', type: 'enum', required: true, elements: ['pending', 'sent', 'failed', 'uncertain'] },
+      { key: 'claimedByUserId', type: 'string', size: 64, required: true },
+      { key: 'claimedAt', type: 'string', size: 40, required: true },
+      { key: 'completedAt', type: 'string', size: 40, required: false },
       { key: 'lastErrorCode', type: 'string', size: 80, required: false },
       { key: 'createdAt', type: 'string', size: 40, required: true },
       { key: 'updatedAt', type: 'string', size: 40, required: true },
@@ -211,6 +247,7 @@ export const REVIEW_COLLECTION_RESOURCE_KEYS = Object.freeze([
   Object.freeze(['manualCoupons', 'manualCouponsCollectionId']),
   Object.freeze(['reviewPhotoCleanup', 'reviewPhotoCleanupCollectionId']),
   Object.freeze(['emailDeliveries', 'emailDeliveriesCollectionId']),
+  Object.freeze(['emailDeliveryRetryClaims', 'emailDeliveryRetryClaimsCollectionId']),
 ])
 
 export const RESERVATION_REVIEW_AUDIT_ATTRIBUTES = Object.freeze([

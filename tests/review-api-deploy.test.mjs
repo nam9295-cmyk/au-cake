@@ -38,6 +38,7 @@ const validEnv = {
   APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'review_photo_cleanup',
   APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'review-photos',
   APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
+  APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: 'email_delivery_retry_claims',
   REVIEW_ADMIN_USER_IDS: 'admin_1, admin_2,admin_1',
   REVIEW_FRONTEND_ORIGINS: 'https://admin.example.test,https://www.example.test',
   REVIEW_COUPON_HMAC_SECRET: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
@@ -145,6 +146,7 @@ test('function variables map exact server-only IDs without VITE fallbacks', () =
     APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'review_photo_cleanup',
     APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'review-photos',
     APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
+    APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: 'email_delivery_retry_claims',
     REVIEW_ADMIN_USER_IDS: 'admin_1,admin_2',
     REVIEW_FRONTEND_ORIGINS: validEnv.REVIEW_FRONTEND_ORIGINS,
     REVIEW_COUPON_HMAC_SECRET: validEnv.REVIEW_COUPON_HMAC_SECRET,
@@ -267,6 +269,8 @@ test('archive source manifest includes the shared ledger/transport source withou
     'appwrite-functions/shared/email-delivery-repository.js',
     'appwrite-functions/shared/resend-transport.js',
     'appwrite-functions/shared/email-delivery-sender.js',
+    'appwrite-functions/shared/email-delivery-retry-claim-repository.js',
+    'appwrite-functions/shared/email-delivery-retry.js',
   ])
   for (const forbidden of ['node_modules', '.env', 'secret', 'collection.permissions']) {
     assert.equal(JSON.stringify({ ARCHIVE_SOURCE_ENTRIES, ARCHIVE_SHARED_SOURCE_PATHS, DEPLOYMENT_OPERATIONS }).includes(forbidden), false)
@@ -323,6 +327,8 @@ test('review API archive contains the shared ledger, transport, encrypted invite
       'shared/email-delivery/email-delivery-repository.js',
       'shared/email-delivery/resend-transport.js',
       'shared/email-delivery/email-delivery-sender.js',
+      'shared/email-delivery/email-delivery-retry-claim-repository.js',
+      'shared/email-delivery/email-delivery-retry.js',
     ]) assert.match(listed.stdout, new RegExp(`(?:^|\\n)\\./?${entry.replace(/[-/]/g, '\\$&')}(?:\\n|$)`))
   } finally {
     await archive.cleanup()

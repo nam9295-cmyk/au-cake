@@ -66,6 +66,7 @@ test('notification deployment config grants only dynamic database/document scope
     APPWRITE_CAKE_RESERVATIONS_TABLE_ID: 'reservations',
     APPWRITE_KIDS_RESERVATIONS_TABLE_ID: 'class_reservations',
     APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
+    APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: 'email_delivery_retry_claims',
     REVIEW_ADMIN_USER_IDS: 'admin_1,admin_2',
     RESEND_API_KEY: 'resend-secret',
     RESEND_FROM_EMAIL: 'Verygood Chocolate <hello@verygood.example>',
@@ -98,6 +99,8 @@ test('notification deployment dry-run is offline, redacts secrets, and declares 
     'appwrite-functions/shared/email-delivery-repository.js',
     'appwrite-functions/shared/resend-transport.js',
     'appwrite-functions/shared/email-delivery-sender.js',
+    'appwrite-functions/shared/email-delivery-retry-claim-repository.js',
+    'appwrite-functions/shared/email-delivery-retry.js',
   ])
   const plan = buildDryRunPlan({ RESEND_API_KEY: 'resend-secret', APPWRITE_API_KEY: 'operator-secret' })
   assert.equal(plan.network, false)
@@ -124,6 +127,8 @@ test('notification deployment dry-run is offline, redacts secrets, and declares 
     assert.match(entries.stdout, /shared\/email-delivery\/email-delivery-repository\.js/)
     assert.match(entries.stdout, /shared\/email-delivery\/resend-transport\.js/)
     assert.match(entries.stdout, /shared\/email-delivery\/email-delivery-sender\.js/)
+    assert.match(entries.stdout, /shared\/email-delivery\/email-delivery-retry-claim-repository\.js/)
+    assert.match(entries.stdout, /shared\/email-delivery\/email-delivery-retry\.js/)
     assert.match(entries.stdout, /shared\/reservation-api\/business\.js/)
     assert.doesNotMatch(entries.stdout, /node_modules\//)
   } finally {

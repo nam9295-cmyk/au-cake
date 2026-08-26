@@ -20,6 +20,8 @@ export const ARCHIVE_SHARED_SOURCE_PATHS = Object.freeze([
   'appwrite-functions/shared/email-delivery-repository.js',
   'appwrite-functions/shared/resend-transport.js',
   'appwrite-functions/shared/email-delivery-sender.js',
+  'appwrite-functions/shared/email-delivery-retry-claim-repository.js',
+  'appwrite-functions/shared/email-delivery-retry.js',
 ])
 
 export const DEPLOYMENT_OPERATIONS = Object.freeze([
@@ -54,6 +56,7 @@ const ID_VARIABLES = Object.freeze({
   APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'review_photo_cleanup',
   APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'review-photos',
   APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
+  APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: 'email_delivery_retry_claims',
 })
 
 const PRESERVED_FUNCTION_FIELDS = Object.freeze([
@@ -196,7 +199,7 @@ export function resolveDeployConfig(env = {}) {
   const collectionIds = Object.fromEntries(
     Object.entries(ID_VARIABLES).map(([key, fallback]) => [
       key,
-      key === 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID'
+      key === 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID' || key === 'APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID'
         ? optionalResourceId(env, key, fallback)
         : resourceId(env, key, fallback),
     ]),

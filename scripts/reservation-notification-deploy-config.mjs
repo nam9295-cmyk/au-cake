@@ -9,6 +9,8 @@ export const ARCHIVE_SHARED_SOURCE_PATHS = Object.freeze([
   'appwrite-functions/shared/email-delivery-repository.js',
   'appwrite-functions/shared/resend-transport.js',
   'appwrite-functions/shared/email-delivery-sender.js',
+  'appwrite-functions/shared/email-delivery-retry-claim-repository.js',
+  'appwrite-functions/shared/email-delivery-retry.js',
 ])
 
 export const REQUIRED_APPLY_ENVIRONMENT = Object.freeze([
@@ -95,6 +97,7 @@ export function resolveDeployConfig(env = {}) {
       APPWRITE_CAKE_RESERVATIONS_TABLE_ID: cakeReservationsId,
       APPWRITE_KIDS_RESERVATIONS_TABLE_ID: classReservationsId,
       APPWRITE_EMAIL_DELIVERIES_TABLE_ID: resourceId(env, 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID', 'email_deliveries'),
+      APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: resourceId(env, 'APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID', 'email_delivery_retry_claims'),
       REVIEW_ADMIN_USER_IDS: admins.join(','),
       RESEND_API_KEY: required(env, 'RESEND_API_KEY'),
       RESEND_FROM_EMAIL: required(env, 'RESEND_FROM_EMAIL'),
@@ -145,6 +148,7 @@ export function buildDryRunPlan(env = {}) {
     APPWRITE_CAKE_RESERVATIONS_TABLE_ID: env.APPWRITE_CAKE_RESERVATIONS_TABLE_ID || 'reservations',
     APPWRITE_KIDS_RESERVATIONS_TABLE_ID: env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID || 'class_reservations',
     APPWRITE_EMAIL_DELIVERIES_TABLE_ID: env.APPWRITE_EMAIL_DELIVERIES_TABLE_ID || 'email_deliveries',
+    APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: env.APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID || 'email_delivery_retry_claims',
     REVIEW_ADMIN_USER_IDS: env.REVIEW_ADMIN_USER_IDS,
     RESEND_API_KEY: env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: env.RESEND_FROM_EMAIL,

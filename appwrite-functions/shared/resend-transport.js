@@ -13,17 +13,33 @@ function safeResendErrorCode(statusCode) {
   return Number.isInteger(statusCode) ? `resend_http_${statusCode}` : 'resend_network_uncertain'
 }
 
-const RESEND_IDEMPOTENCY_ERROR_CODES = Object.freeze(new Set([
+const RESEND_PROVIDER_ERROR_CODES = Object.freeze(new Set([
   'invalid_idempotent_request',
   'concurrent_idempotent_requests',
   'invalid_idempotency_key',
+  'validation_error',
+  'invalid_attachment',
+  'invalid_from_address',
+  'invalid_access',
+  'invalid_parameter',
+  'invalid_region',
+  'missing_required_field',
+  'not_found',
+  'method_not_allowed',
+  'security_error',
+  'missing_api_key',
+  'restricted_api_key',
+  'invalid_api_key',
+  'rate_limit_exceeded',
+  'daily_quota_exceeded',
+  'monthly_quota_exceeded',
 ]))
 
 function resendProviderErrorCode(value) {
   if (!value || typeof value !== 'object') return null
   for (const key of ['error', 'name', 'code']) {
     const candidate = value[key]
-    if (typeof candidate === 'string' && RESEND_IDEMPOTENCY_ERROR_CODES.has(candidate)) return candidate
+    if (typeof candidate === 'string' && RESEND_PROVIDER_ERROR_CODES.has(candidate)) return candidate
   }
   return null
 }
@@ -41,6 +57,15 @@ export function resendErrorForStatus(statusCode, providerErrorCode = null) {
   }
   if (statusCode === 400 && providerErrorCode === 'invalid_idempotency_key') {
     return new ResendTransportError('failed', 'resend_invalid_idempotency_key')
+  }
+  if (providerErrorCode === 'concurrent_idempotent_requests') {
+    return new ResendTransportError('uncertain', 'resend_concurrent_idempotent_requests')
+  }
+  if (providerErrorCode === 'validation_error') {
+    return new ResendTransportError('failed', `resend_validation_error_${Number.isInteger(statusCode) ? statusCode : 'unknown'}`)
+  }
+  if (providerErrorCode) {
+    return new ResendTransportError('failed', `resend_${providerErrorCode}`)
   }
   return new ResendTransportError(
     isClearlyRejectedResendStatus(statusCode) ? 'failed' : 'uncertain',

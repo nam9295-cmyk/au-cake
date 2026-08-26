@@ -124,6 +124,8 @@ RESEND_REPLY_TO_EMAIL=
 RESEND_TO_EMAILS="owner@example.com"
 # Server-only private ledger ID; omit only to use the source-schema default `email_deliveries`.
 APPWRITE_EMAIL_DELIVERIES_TABLE_ID=email_deliveries
+# Server-only private one-use Safe Retry claim ledger.
+APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID=email_delivery_retry_claims
 ```
 
 Function 리소스와 배포는 아래 명령으로 생성/업데이트합니다.
@@ -139,6 +141,27 @@ npm run deploy:reservation-notification
 운영자와 고객 이메일은 별도 Resend 요청 및 별도 `email_deliveries` ledger event로 처리됩니다. 메일 발송 실패는 예약 데이터를 삭제하거나 되돌리지 않으며, raw recipient·API key·예약 요청사항은 로그에 남기지 않습니다. 같은 신규 예약 이벤트는 pending ledger row의 unique eventKey로 한 번만 첫 발송을 claim합니다. failed/uncertain/stale pending 상태의 자동 재발송은 아직 하지 않습니다.
 
 Function runtime은 Appwrite가 주입하는 endpoint/project 값과 실행별 `x-appwrite-key`만 사용해 ledger에 접근합니다. browser나 관리자 session이 ledger를 직접 읽거나 변경하지 않도록 schema permissions는 비어 있어야 합니다.
+
+### 안전한 이메일 재시도
+
+`email_deliveries`는 장기 중복 방지/audit source of truth이며, Resend의 24시간 idempotency 보존 기간을 대체하지 않습니다. 관리자가 실패 또는 전달 여부 불명 메일에 대해 **Retry email**을 누른 경우에만, 다음을 모두 만족할 때 한 번만 안전하게 재시도합니다.
+
+- 실제 첫 provider 호출 시각인 `firstAttemptAt`부터 **23시간 미만**이어야 합니다. 정확히 23시간인 시점부터는 재시도하지 않습니다. `lastAttemptAt`은 이 기한을 연장하지 않습니다.
+- 서버가 최신 authoritative source에서 원래 payload를 다시 만들었을 때 recipientHash와 payloadHash가 저장값과 같아야 합니다.
+- 같은 eventKey에서 파생한 동일 Resend `Idempotency-Key`를 사용하며, private `email_delivery_retry_claims`의 immutable unique claim이 없어야 합니다.
+
+각 논리적 메일은 초기 발송 1회와 명시적 Safe Retry 최대 1회만 허용합니다. `sent`, fresh `pending`, terminal 오류, 이메일 주소/내용 변경, 23시간 만료, 기존 claim, 또는 legacy row의 `firstAttemptAt` 누락은 모두 재시도하지 않습니다. 자동 재시도와 Force resend는 제공하지 않으며, 이 경우 기존 SMS/메시지 복사 기능을 사용하세요. 리뷰 재시도는 같은 암호화된 링크 또는 이미 발급된 같은 쿠폰만 복구하며 예약·리뷰·쿠폰 상태를 변경하지 않습니다.
+
+Resend POST 성공 응답의 `id`(Email Resource ID)는 기존 field 이름 `providerMessageId`에만 저장합니다. 이는 RFC `Message-ID`가 아니며 browser에는 노출하지 않습니다. provider GET/webhook reconciliation과 full-access Resend key는 필요하지 않습니다.
+
+Retry 기능을 production에 적용할 때에는 기존 메일 발송을 중단하지 않도록 다음 순서를 지키세요. 실제 적용 전에는 모든 명령을 `--dry-run`으로 검토해야 합니다.
+
+1. `email_deliveries.firstAttemptAt` optional attribute를 생성하고 available 상태를 확인합니다.
+2. private `email_delivery_retry_claims` table과 unique `eventKey` index를 생성하고 public/browser permissions가 없는지 확인합니다.
+3. reservation-notification과 review-api Function을 배포합니다.
+4. 관리자 frontend를 배포합니다.
+
+기존 ledger row에는 `firstAttemptAt`을 backfill하지 않습니다. 해당 row는 retry unavailable로 fail-closed되지만 기존 발송 기능에는 영향이 없습니다. rollback 시에는 frontend와 Function만 이전 버전으로 되돌리고 audit/claim table 및 row는 삭제하지 마세요.
 
 최종 확정 이메일은 status 변경의 부수효과가 아닙니다. 관리자 drawer에서 cake는 실제 저장 상태가 `예약확정`, class는 `Confirmed`인 뒤에만 **Send confirmation email** 버튼으로 명시적으로 요청합니다. Function은 browser가 보낸 예약 ID와 source type만 받고, `REVIEW_ADMIN_USER_IDS`의 Appwrite user ID allowlist와 `x-appwrite-user-id`를 확인한 후 최신 reservation row를 다시 읽습니다. `booking-confirmed-customer:{sourceType}:{reservationId}` ledger event가 이미 `sent`, `pending`, `failed`, `uncertain`이면 자동 재발송하지 않습니다. 기존 문자/결제 안내 복사 기능은 이 버튼과 독립적으로 유지됩니다.
 
@@ -167,6 +190,7 @@ Review API Function의 기본 ID는 `review-api`입니다. 운영에서 다른 I
 - separate 32-byte AES key used only by Review API to recover active review invitation links: `REVIEW_INVITE_TOKEN_ENCRYPTION_KEY`
 - review invitation email sender: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, optional `RESEND_REPLY_TO_EMAIL`
 - private email ledger: `APPWRITE_EMAIL_DELIVERIES_TABLE_ID` (defaults to `email_deliveries`)
+- private one-use Safe Retry claim ledger: `APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID` (defaults to `email_delivery_retry_claims`)
 
 두 쿠폰 키는 서로 다른 값이어야 하며 공백이나 padding 없는 canonical base64url이어야 합니다. 아래 명령을 각각 한 번씩 실행해 서로 다른 값을 생성하세요.
 

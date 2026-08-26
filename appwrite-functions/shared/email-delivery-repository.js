@@ -92,10 +92,12 @@ export function createEmailDeliveryRepository({ databases, databaseId, collectio
     createPending,
     getOrCreatePending,
     async markAttempt(delivery, now = new Date()) {
+      const at = timestamp(now)
       return update(delivery, {
         attempts: Math.max(0, Number.isInteger(delivery.attempts) ? delivery.attempts : 0) + 1,
-        lastAttemptAt: timestamp(now),
-        updatedAt: timestamp(now),
+        ...(typeof delivery?.firstAttemptAt === 'string' && delivery.firstAttemptAt.trim() ? {} : { firstAttemptAt: at }),
+        lastAttemptAt: at,
+        updatedAt: at,
       })
     },
     async markSent(delivery, { now = new Date(), providerMessageId: messageId } = {}) {

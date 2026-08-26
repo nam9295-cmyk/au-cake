@@ -5,6 +5,7 @@ const SHA256_HEX = /^[a-f0-9]{64}$/
 const RECIPIENT_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export const EMAIL_DELIVERY_PENDING_LEASE_MS = 5 * 60 * 1000
+export const EMAIL_SAFE_RETRY_WINDOW_MS = 23 * 60 * 60 * 1000
 
 export const EMAIL_DELIVERY_SOURCE_TYPES = Object.freeze(['cake', 'class', 'review', 'system'])
 
@@ -17,6 +18,31 @@ export const EMAIL_DELIVERY_TEMPLATES = Object.freeze([
 ])
 
 export const EMAIL_DELIVERY_STATUSES = Object.freeze(['pending', 'sent', 'failed', 'uncertain'])
+
+export const EMAIL_DELIVERY_RETRYABLE_ERROR_CODES = Object.freeze(new Set([
+  'resend_missing_api_key',
+  'resend_restricted_api_key',
+  'resend_invalid_api_key',
+  'resend_validation_error_403',
+  'resend_rate_limit_exceeded',
+  'resend_daily_quota_exceeded',
+  'resend_monthly_quota_exceeded',
+]))
+
+export const EMAIL_DELIVERY_TERMINAL_ERROR_CODES = Object.freeze(new Set([
+  'resend_invalid_idempotent_request',
+  'resend_invalid_idempotency_key',
+  'resend_validation_error_400',
+  'resend_invalid_attachment',
+  'resend_invalid_from_address',
+  'resend_invalid_access',
+  'resend_invalid_parameter',
+  'resend_invalid_region',
+  'resend_missing_required_field',
+  'resend_not_found',
+  'resend_method_not_allowed',
+  'resend_security_error',
+]))
 
 export const EMAIL_DELIVERY_REQUIRED_FUNCTION_SCOPES = Object.freeze([
   'databases.read',
@@ -156,6 +182,80 @@ function timestampForPending(delivery) {
 function pendingIsFresh(delivery, now) {
   const timestamp = timestampForPending(delivery)
   return timestamp !== null && now.getTime() - timestamp >= 0 && now.getTime() - timestamp < EMAIL_DELIVERY_PENDING_LEASE_MS
+}
+
+function deliveryStatus(value) {
+  return EMAIL_DELIVERY_STATUSES.includes(value) ? value : 'uncertain'
+}
+
+function safeStoredErrorCode(value) {
+  return typeof value === 'string' && /^[A-Za-z0-9_.-]{1,80}$/.test(value) ? value : null
+}
+
+function firstAttemptTimestamp(value) {
+  const timestamp = Date.parse(value || '')
+  return Number.isFinite(timestamp) ? timestamp : null
+}
+
+function retryUntilTimestamp(delivery) {
+  const firstAttemptAt = firstAttemptTimestamp(delivery?.firstAttemptAt)
+  return firstAttemptAt === null ? null : firstAttemptAt + EMAIL_SAFE_RETRY_WINDOW_MS
+}
+
+function retryResult(status, retry, { retryUntil = null, safeErrorCode = null } = {}) {
+  return {
+    status,
+    retry,
+    ...(retryUntil === null ? {} : { retryUntil: new Date(retryUntil).toISOString() }),
+    ...(safeErrorCode ? { safeErrorCode } : {}),
+  }
+}
+
+function retryClaimIsFresh(retryClaim, now) {
+  const timestamp = Date.parse(retryClaim?.claimedAt || retryClaim?.updatedAt || retryClaim?.createdAt || '')
+  return Number.isFinite(timestamp) && now.getTime() - timestamp >= 0 && now.getTime() - timestamp < EMAIL_DELIVERY_PENDING_LEASE_MS
+}
+
+export function retryUntilForEmailDelivery(delivery) {
+  const until = retryUntilTimestamp(delivery)
+  return until === null ? null : new Date(until).toISOString()
+}
+
+export function evaluateEmailDeliveryRetry({ delivery, identity, retryClaim = null, now = new Date() } = {}) {
+  validateIdentity(identity)
+  exactDate(now)
+  if (!delivery) return retryResult('not_sent', 'not_needed')
+
+  const status = deliveryStatus(delivery.status)
+  if (delivery.eventKey !== identity.eventKey) return retryResult(status, 'manual_fallback', { safeErrorCode: 'identity_mismatch' })
+  if (delivery.recipientHash !== identity.recipientHash) return retryResult(status, 'recipient_changed', { safeErrorCode: 'recipient_changed' })
+  if (delivery.payloadHash !== identity.payloadHash) return retryResult(status, 'payload_changed', { safeErrorCode: 'payload_changed' })
+  if (status === 'sent') return retryResult('sent', 'not_needed')
+  if (status === 'pending' && pendingIsFresh(delivery, now)) return retryResult('pending', 'wait')
+
+  const retryUntil = retryUntilTimestamp(delivery)
+  if (retryUntil === null) {
+    return retryResult(status === 'pending' ? 'uncertain' : status, 'manual_fallback', {
+      safeErrorCode: 'retry_unavailable_missing_first_attempt',
+    })
+  }
+  const effectiveStatus = status === 'pending' ? 'uncertain' : status
+  const lastErrorCode = safeStoredErrorCode(delivery.lastErrorCode)
+
+  if (status === 'failed' && !EMAIL_DELIVERY_RETRYABLE_ERROR_CODES.has(lastErrorCode)) {
+    return retryResult('failed', 'terminal_error', { retryUntil, safeErrorCode: lastErrorCode || 'terminal_error' })
+  }
+  if (!['failed', 'uncertain', 'pending'].includes(status)) {
+    return retryResult(effectiveStatus, 'terminal_error', { retryUntil, safeErrorCode: lastErrorCode || 'terminal_error' })
+  }
+  if (now.getTime() >= retryUntil) return retryResult(effectiveStatus, 'expired_window', { retryUntil, safeErrorCode: lastErrorCode })
+  if (retryClaim) {
+    return retryResult(retryClaimIsFresh(retryClaim, now) ? 'pending' : 'uncertain', 'manual_fallback', {
+      retryUntil,
+      safeErrorCode: 'retry_already_claimed',
+    })
+  }
+  return retryResult(effectiveStatus, 'eligible', { retryUntil, safeErrorCode: lastErrorCode })
 }
 
 export function decideEmailDelivery(existing, identity, now = new Date()) {

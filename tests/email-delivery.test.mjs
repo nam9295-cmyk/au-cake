@@ -5,7 +5,9 @@ import {
   buildEmailDeliveryEventKey,
   decideEmailDelivery,
   EMAIL_DELIVERY_PENDING_LEASE_MS,
+  EMAIL_SAFE_RETRY_WINDOW_MS,
   EmailDeliveryError,
+  evaluateEmailDeliveryRetry,
   normalizeRecipientEmail,
   normalizeRecipientEmailSet,
   payloadHashForEmail,
@@ -190,6 +192,106 @@ test('fresh pending delivery remains in progress while stale pending requires re
   )
 })
 
+test('safe retry eligibility anchors its exact 23-hour boundary to immutable firstAttemptAt', () => {
+  assert.equal(EMAIL_SAFE_RETRY_WINDOW_MS, 23 * 60 * 60 * 1000)
+  const firstAttemptAt = '2026-08-26T00:00:00.000Z'
+  const failed = delivery('failed', { firstAttemptAt, lastAttemptAt: '2026-08-26T22:58:00.000Z', lastErrorCode: 'resend_rate_limit_exceeded' })
+
+  assert.deepEqual(
+    evaluateEmailDeliveryRetry({ delivery: failed, identity: identity(), now: new Date('2026-08-26T22:59:59.999Z') }),
+    {
+      status: 'failed', retry: 'eligible', retryUntil: '2026-08-26T23:00:00.000Z',
+      safeErrorCode: 'resend_rate_limit_exceeded',
+    },
+  )
+  assert.deepEqual(
+    evaluateEmailDeliveryRetry({ delivery: failed, identity: identity(), now: new Date('2026-08-26T23:00:00.000Z') }),
+    {
+      status: 'failed', retry: 'expired_window', retryUntil: '2026-08-26T23:00:00.000Z',
+      safeErrorCode: 'resend_rate_limit_exceeded',
+    },
+  )
+  assert.equal(
+    evaluateEmailDeliveryRetry({
+      delivery: delivery('failed', { lastErrorCode: 'resend_rate_limit_exceeded' }), identity: identity(), now: NOW,
+    }).retry,
+    'manual_fallback',
+  )
+})
+
+test('safe retry is fail-closed for sent, fresh pending, terminal errors, hash changes, and an already-used claim', () => {
+  const firstAttemptAt = '2026-08-26T00:00:00.000Z'
+  const retryable = delivery('failed', { firstAttemptAt, lastErrorCode: 'resend_invalid_api_key' })
+  assert.equal(evaluateEmailDeliveryRetry({ delivery: delivery('sent', { firstAttemptAt }), identity: identity(), now: NOW }).retry, 'not_needed')
+  assert.equal(
+    evaluateEmailDeliveryRetry({
+      delivery: delivery('pending', { firstAttemptAt, lastAttemptAt: '2026-08-26T01:00:00.000Z' }), identity: identity(), now: NOW,
+    }).retry,
+    'wait',
+  )
+  assert.equal(
+    evaluateEmailDeliveryRetry({
+      delivery: delivery('failed', { firstAttemptAt, lastErrorCode: 'resend_validation_error_400' }), identity: identity(), now: NOW,
+    }).retry,
+    'terminal_error',
+  )
+  assert.equal(
+    evaluateEmailDeliveryRetry({ delivery: retryable, identity: identity({ recipientHash: 'c'.repeat(64) }), now: NOW }).retry,
+    'recipient_changed',
+  )
+  assert.equal(
+    evaluateEmailDeliveryRetry({ delivery: retryable, identity: identity({ payloadHash: 'd'.repeat(64) }), now: NOW }).retry,
+    'payload_changed',
+  )
+  assert.equal(
+    evaluateEmailDeliveryRetry({ delivery: retryable, identity: identity(), retryClaim: { eventKey: retryable.eventKey }, now: NOW }).retry,
+    'manual_fallback',
+  )
+})
+
+test('only stale pending, uncertain, and the explicit external-fix failures are safe-retry candidates', () => {
+  const firstAttemptAt = '2026-08-26T00:00:00.000Z'
+  const now = new Date('2026-08-26T01:00:00.000Z')
+  for (const status of ['uncertain', 'pending']) {
+    const record = delivery(status, {
+      firstAttemptAt,
+      lastAttemptAt: '2026-08-26T00:50:00.000Z',
+      lastErrorCode: status === 'uncertain' ? 'resend_timeout' : null,
+    })
+    assert.equal(evaluateEmailDeliveryRetry({ delivery: record, identity: identity(), now }).retry, 'eligible')
+  }
+  for (const lastErrorCode of [
+    'resend_missing_api_key',
+    'resend_restricted_api_key',
+    'resend_invalid_api_key',
+    'resend_validation_error_403',
+    'resend_rate_limit_exceeded',
+    'resend_daily_quota_exceeded',
+    'resend_monthly_quota_exceeded',
+  ]) {
+    assert.equal(
+      evaluateEmailDeliveryRetry({
+        delivery: delivery('failed', { firstAttemptAt, lastErrorCode }), identity: identity(), now,
+      }).retry,
+      'eligible',
+    )
+  }
+  for (const lastErrorCode of [
+    'resend_validation_error_400',
+    'resend_invalid_from_address',
+    'resend_missing_required_field',
+    'resend_invalid_idempotency_key',
+    'resend_invalid_idempotent_request',
+  ]) {
+    assert.equal(
+      evaluateEmailDeliveryRetry({
+        delivery: delivery('failed', { firstAttemptAt, lastErrorCode }), identity: identity(), now,
+      }).retry,
+      'terminal_error',
+    )
+  }
+})
+
 function createConcurrentDocumentsFake() {
   const documents = []
   let listCallsBeforeCreate = 0
@@ -272,10 +374,28 @@ test('repository transition helpers persist only delivery status metadata and ne
     attempts: 1,
     createdAt: '2026-08-26T01:02:03.000Z',
     updatedAt: '2026-08-26T01:03:06.000Z',
+    firstAttemptAt: '2026-08-26T01:03:03.000Z',
     lastAttemptAt: '2026-08-26T01:03:03.000Z',
     lastErrorCode: null,
     sentAt: '2026-08-26T01:03:06.000Z',
     providerMessageId: 'email-123',
   })
   assert.equal(Object.hasOwn(sent, 'recipientEmail'), false)
+})
+
+test('repository increments attempts without extending immutable firstAttemptAt', async () => {
+  const databases = createConcurrentDocumentsFake()
+  const repository = createEmailDeliveryRepository({
+    databases,
+    databaseId: 'cake_db',
+    collectionId: 'email_deliveries',
+    idFactory: () => 'delivery-1',
+  })
+  const created = await repository.createPending(identity(), NOW)
+  const first = await repository.markAttempt(created, new Date('2026-08-26T01:03:03.000Z'))
+  const second = await repository.markAttempt(first, new Date('2026-08-26T22:59:59.000Z'))
+
+  assert.equal(second.attempts, 2)
+  assert.equal(second.firstAttemptAt, '2026-08-26T01:03:03.000Z')
+  assert.equal(second.lastAttemptAt, '2026-08-26T22:59:59.000Z')
 })
