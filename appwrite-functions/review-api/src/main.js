@@ -43,6 +43,7 @@ export function resolveReviewConfig(env = process.env) {
     reviewCouponsId: configuredResourceId(env, 'APPWRITE_REVIEW_COUPONS_TABLE_ID', 'review_coupons'),
     reviewPhotoCleanupId: configuredResourceId(env, 'APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID', 'review_photo_cleanup'),
     reviewPhotosBucketId: configuredResourceId(env, 'APPWRITE_REVIEW_PHOTOS_BUCKET_ID', 'review-photos'),
+    emailDeliveriesId: configuredResourceId(env, 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID', 'email_deliveries'),
   }
 }
 

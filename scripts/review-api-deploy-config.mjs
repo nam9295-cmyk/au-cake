@@ -43,6 +43,7 @@ const ID_VARIABLES = Object.freeze({
   APPWRITE_REVIEW_COUPONS_TABLE_ID: 'review_coupons',
   APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'review_photo_cleanup',
   APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'review-photos',
+  APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
 })
 
 const PRESERVED_FUNCTION_FIELDS = Object.freeze([
@@ -68,6 +69,11 @@ function resourceId(env, key, fallback) {
   const value = String(env[key] ?? fallback ?? '').trim()
   if (!value || !RESOURCE_ID.test(value)) throw new Error(`${key} must be a valid Appwrite resource ID.`)
   return value
+}
+
+function optionalResourceId(env, key, fallback) {
+  const value = String(env[key] ?? '').trim()
+  return value ? resourceId(env, key, fallback) : fallback
 }
 
 function endpoint(env) {
@@ -154,7 +160,12 @@ export function resolveDeployConfig(env = {}) {
   const cakeDatabaseId = resourceId(env, 'APPWRITE_CAKE_DATABASE_ID')
   const kidsDatabaseId = resourceId(env, 'APPWRITE_KIDS_DATABASE_ID')
   const collectionIds = Object.fromEntries(
-    Object.entries(ID_VARIABLES).map(([key, fallback]) => [key, resourceId(env, key, fallback)]),
+    Object.entries(ID_VARIABLES).map(([key, fallback]) => [
+      key,
+      key === 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID'
+        ? optionalResourceId(env, key, fallback)
+        : resourceId(env, key, fallback),
+    ]),
   )
 
   return {

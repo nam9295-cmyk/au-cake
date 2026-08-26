@@ -5,6 +5,7 @@ export const REVIEW_RESOURCE_DEFAULTS = Object.freeze({
   manualCouponsCollectionId: 'manual_coupons',
   reviewPhotosBucketId: 'review-photos',
   reviewPhotoCleanupCollectionId: 'review_photo_cleanup',
+  emailDeliveriesCollectionId: 'email_deliveries',
 })
 
 export function resolveReviewResourceIds(env = {}) {
@@ -31,6 +32,9 @@ export function resolveReviewResourceIds(env = {}) {
     reviewPhotoCleanupCollectionId:
       env.APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID ||
       REVIEW_RESOURCE_DEFAULTS.reviewPhotoCleanupCollectionId,
+    emailDeliveriesCollectionId:
+      env.APPWRITE_EMAIL_DELIVERIES_TABLE_ID ||
+      REVIEW_RESOURCE_DEFAULTS.emailDeliveriesCollectionId,
   }
 }
 
@@ -155,6 +159,40 @@ export const REVIEW_COLLECTIONS = Object.freeze({
       { key: 'status_createdAt_idx', attributes: ['status', 'createdAt'], orders: ['ASC', 'ASC'] },
     ]),
   }),
+  emailDeliveries: Object.freeze({
+    name: 'email_deliveries',
+    ...PRIVATE_REVIEW_ACCESS,
+    attributes: Object.freeze([
+      { key: 'eventKey', type: 'string', size: 128, required: true },
+      { key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class', 'review', 'system'] },
+      { key: 'sourceId', type: 'string', size: 64, required: true },
+      {
+        key: 'template',
+        type: 'enum',
+        required: true,
+        elements: [
+          'booking-received-operator',
+          'booking-received-customer',
+          'booking-confirmed-customer',
+          'review-invite-customer',
+          'review-reward-customer',
+        ],
+      },
+      { key: 'status', type: 'enum', required: true, elements: ['pending', 'sent', 'failed', 'uncertain'] },
+      { key: 'recipientHash', type: 'string', size: 64, required: true },
+      { key: 'payloadHash', type: 'string', size: 64, required: true },
+      { key: 'attempts', type: 'integer', required: true, min: 0 },
+      { key: 'providerMessageId', type: 'string', size: 128, required: false },
+      { key: 'lastAttemptAt', type: 'string', size: 40, required: false },
+      { key: 'sentAt', type: 'string', size: 40, required: false },
+      { key: 'lastErrorCode', type: 'string', size: 80, required: false },
+      { key: 'createdAt', type: 'string', size: 40, required: true },
+      { key: 'updatedAt', type: 'string', size: 40, required: true },
+    ]),
+    indexes: Object.freeze([
+      { key: 'eventKey_unique', attributes: ['eventKey'], type: 'unique' },
+    ]),
+  }),
 })
 
 export const REVIEW_COLLECTION_RESOURCE_KEYS = Object.freeze([
@@ -163,6 +201,7 @@ export const REVIEW_COLLECTION_RESOURCE_KEYS = Object.freeze([
   Object.freeze(['reviewCoupons', 'reviewCouponsCollectionId']),
   Object.freeze(['manualCoupons', 'manualCouponsCollectionId']),
   Object.freeze(['reviewPhotoCleanup', 'reviewPhotoCleanupCollectionId']),
+  Object.freeze(['emailDeliveries', 'emailDeliveriesCollectionId']),
 ])
 
 export const RESERVATION_REVIEW_AUDIT_ATTRIBUTES = Object.freeze([

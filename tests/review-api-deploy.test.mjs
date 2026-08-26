@@ -32,6 +32,7 @@ const validEnv = {
   APPWRITE_REVIEW_COUPONS_TABLE_ID: 'review_coupons',
   APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'review_photo_cleanup',
   APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'review-photos',
+  APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
   REVIEW_ADMIN_USER_IDS: 'admin_1, admin_2,admin_1',
   REVIEW_FRONTEND_ORIGINS: 'https://admin.example.test,https://www.example.test',
   REVIEW_COUPON_HMAC_SECRET: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
@@ -121,6 +122,7 @@ test('function variables map exact server-only IDs without VITE fallbacks', () =
     APPWRITE_REVIEW_COUPONS_TABLE_ID: 'review_coupons',
     APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'review_photo_cleanup',
     APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'review-photos',
+    APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
     REVIEW_ADMIN_USER_IDS: 'admin_1,admin_2',
     REVIEW_FRONTEND_ORIGINS: validEnv.REVIEW_FRONTEND_ORIGINS,
     REVIEW_COUPON_HMAC_SECRET: validEnv.REVIEW_COUPON_HMAC_SECRET,
@@ -128,6 +130,18 @@ test('function variables map exact server-only IDs without VITE fallbacks', () =
   })
   assert.equal(resolveDeployConfig(validEnv).functionId, 'review-api')
   assert.equal(Object.keys(config.runtimeVariables).some((key) => key.startsWith('VITE_')), false)
+})
+
+test('optional email delivery table ID falls back safely without becoming an existing deploy prerequisite', () => {
+  assert.equal(
+    resolveDeployConfig({ ...validEnv, APPWRITE_EMAIL_DELIVERIES_TABLE_ID: '   ' })
+      .runtimeVariables.APPWRITE_EMAIL_DELIVERIES_TABLE_ID,
+    'email_deliveries',
+  )
+  assert.throws(
+    () => resolveDeployConfig({ ...validEnv, APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'bad/id' }),
+    /APPWRITE_EMAIL_DELIVERIES_TABLE_ID/,
+  )
 })
 
 test('default runtime matches the self-hosted Appwrite Node 16 runtime and compatible sharp line', () => {

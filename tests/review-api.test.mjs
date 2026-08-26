@@ -168,11 +168,13 @@ test('review Function config validates explicit resource ids and retains valid o
   const config = resolveReviewConfig(base)
   assert.equal(config.cakeReservationsId, 'reservations')
   assert.equal(config.reviewInvitesId, 'review_invites')
+  assert.equal(config.emailDeliveriesId, 'email_deliveries')
   for (const env of [
     { ...base, APPWRITE_REVIEWS_TABLE_ID: '   ' },
     { ...base, APPWRITE_REVIEW_INVITES_TABLE_ID: '.invalid' },
     { ...base, APPWRITE_REVIEW_COUPONS_TABLE_ID: 'bad/id' },
     { ...base, APPWRITE_KIDS_RESERVATIONS_TABLE_ID: 'x'.repeat(37) },
+    { ...base, APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'bad/id' },
   ]) {
     assertReviewError('FUNCTION_CONFIGURATION_ERROR', () => resolveReviewConfig(env))
   }
