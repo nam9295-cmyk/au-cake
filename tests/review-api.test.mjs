@@ -1,6 +1,8 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import {
+  REVIEW_INVITE_VALID_DAYS,
+  REVIEW_REWARD_VALID_DAYS,
   REVIEW_COUPON_ANIMALS,
   REVIEW_COUPON_FRUITS,
   ReviewApiError,
@@ -117,6 +119,11 @@ test('Sydney calendar-day helper preserves local wall time across DST boundaries
   assert.equal(addSydneyCalendarDays(new Date('2026-09-03T16:30:00.000Z'), 30).toISOString(), '2026-10-03T16:30:00.000Z')
   assert.equal(addSydneyCalendarDays(new Date('2026-08-04T16:30:00.000Z'), 60).toISOString(), '2026-10-03T16:30:00.000Z')
   assert.throws(() => addSydneyCalendarDays(new Date('invalid'), 30), RangeError)
+})
+
+test('review invite and reward policies use the same explicit 30-day duration', () => {
+  assert.equal(REVIEW_INVITE_VALID_DAYS, 30)
+  assert.equal(REVIEW_REWARD_VALID_DAYS, 30)
 })
 
 test('review Function config fails closed on missing, blank, invalid, or Vite-only database ids', () => {
@@ -775,7 +782,7 @@ test('atomic submit derives the photo only from its transaction invite read and 
   assert.equal(couponData.codeLast4, result.couponCode.slice(-4))
   assert.equal(couponData.scope, 'cake')
   assert.equal(couponData.status, 'active')
-  assert.equal(couponData.expiresAt, '2026-09-17T00:00:00.000Z')
+  assert.equal(couponData.expiresAt, '2026-08-18T00:00:00.000Z')
   assert.equal(couponData.codeEncryptionVersion, 1)
   assert.deepEqual(Object.keys(couponData).sort(), [
     'codeAuthTag',

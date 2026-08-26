@@ -3,6 +3,8 @@ import { digestReviewCouponCode, resolveReviewCouponHmacSecret } from './coupon-
 import { decryptReviewCouponCode, encryptReviewCouponCode, resolveReviewCouponEncryptionKey } from './coupon-envelope.js'
 
 const SYDNEY_TIME_ZONE = 'Australia/Sydney'
+export const REVIEW_INVITE_VALID_DAYS = 30
+export const REVIEW_REWARD_VALID_DAYS = 30
 const COUPON_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const REVIEW_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/
 const OPAQUE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
@@ -354,7 +356,7 @@ export async function issueReviewInvite(repository, input, {
       sourceReservationId,
       sourceReservationNumber: source.reservationNumber,
       tokenHash: hashSecret(proposedToken),
-      expiresAt: addSydneyCalendarDays(now, 30).toISOString(),
+      expiresAt: addSydneyCalendarDays(now, REVIEW_INVITE_VALID_DAYS).toISOString(),
       createdByUserId,
       createdAt: now.toISOString(),
     }
@@ -513,7 +515,7 @@ export async function submitReview(repository, token, input, {
       key: couponEncryptionKey,
       ErrorClass: ReviewApiError,
     })
-    const couponExpiresAt = addSydneyCalendarDays(now, 60).toISOString()
+    const couponExpiresAt = addSydneyCalendarDays(now, REVIEW_REWARD_VALID_DAYS).toISOString()
 
     await repository.createReview({
       sourceType: invite.sourceType,

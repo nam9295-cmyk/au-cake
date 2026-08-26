@@ -22,7 +22,7 @@ export function buildReviewRequestMessage(
   const firstName = firstNameFromFullName(fullName)
   const link = buildReviewLink(token)
 
-  return `Hi ${firstName}!\n\nThanks so much for ordering with us! We hope you enjoyed every single bite.\nWe'd love to know how everything turned out.\n\nLeave us an honest review and get 5% off your next order — or make it 10% off if you add a photo or two!\n\n${link}\n\nYour unique code will be valid for 30 days once issued!\n\n-very good chocolate team-`
+  return `Hi ${firstName}!\n\nThanks so much for ordering with us! We hope you enjoyed every single bite.\nWe'd love to know how everything turned out.\n\nLeave us an honest review and get 5% off your next order — or make it 10% off if you add a photo or two!\n\n${link}\n\nYour personal review link is valid for 30 days.\nYour reward coupon will be valid for 30 days from the date it is issued.\n\n-very good chocolate team-`
 }
 
 export function canCreateReviewInvite(sourceType: ReviewSourceType, status: string): boolean {

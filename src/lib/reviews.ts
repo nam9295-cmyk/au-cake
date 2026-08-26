@@ -1,8 +1,8 @@
 import type { PublicReview, Review, ReviewRating, ReviewRewardPercent } from './types.js'
 
 const REVIEW_TIME_ZONE = 'Australia/Sydney'
-const INVITE_VALID_DAYS = 30
-const COUPON_VALID_DAYS = 60
+export const REVIEW_INVITE_VALID_DAYS = 30
+export const REVIEW_REWARD_VALID_DAYS = 30
 
 const sydneyDateTimeFormatter = new Intl.DateTimeFormat('en-AU', {
   timeZone: REVIEW_TIME_ZONE,
@@ -132,11 +132,11 @@ export function isReviewRating(value: unknown): value is ReviewRating {
 }
 
 export function getReviewInviteExpiresAt(createdAt: Date): Date {
-  return addSydneyCalendarDays(createdAt, INVITE_VALID_DAYS)
+  return addSydneyCalendarDays(createdAt, REVIEW_INVITE_VALID_DAYS)
 }
 
 export function getReviewCouponExpiresAt(createdAt: Date): Date {
-  return addSydneyCalendarDays(createdAt, COUPON_VALID_DAYS)
+  return addSydneyCalendarDays(createdAt, REVIEW_REWARD_VALID_DAYS)
 }
 
 export function toPublicReview(review: Review & { photoUrl?: string | null }): PublicReview {

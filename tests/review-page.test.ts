@@ -60,6 +60,8 @@ test('review copy defaults to English and provides a Korean toggle without chang
   assert.equal(REVIEW_COPY.ko.photoUploadFailed, '사진 업로드에 실패했습니다. 사진이 첨부되지 않았습니다. 제출 전에 다시 시도하거나, 사진 없이 제출하면 5% 혜택이 적용됩니다.')
   assert.equal(REVIEW_COPY.en.photoUpdateFailed, 'Photo update failed. Your existing photo is still attached.')
   assert.equal(REVIEW_COPY.ko.photoUpdateFailed, '사진 변경에 실패했습니다. 기존 사진은 그대로 첨부되어 있습니다.')
+  assert.equal(REVIEW_COPY.en.rewardValidity, 'This reward coupon is valid for 30 days from the date it is issued.')
+  assert.equal(REVIEW_COPY.ko.rewardValidity, '이 리워드 쿠폰은 발급일로부터 30일간 유효합니다.')
 })
 
 test('review publication consent defaults on while photo consent follows actual attachment state', () => {

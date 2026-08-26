@@ -1,6 +1,8 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import {
+  REVIEW_INVITE_VALID_DAYS,
+  REVIEW_REWARD_VALID_DAYS,
   calculateReviewRewardPercent,
   getReviewCouponExpiresAt,
   getReviewInviteExpiresAt,
@@ -71,16 +73,31 @@ test('runtime review rating guard accepts only integer ratings from 1 through 5'
   }
 })
 
-test('invite expiry adds 30 Australia/Sydney calendar days across daylight saving', () => {
-  const createdAt = new Date('2026-09-30T14:30:00.000Z') // 2026-10-01 00:30 in Sydney
+test('review invite and reward coupon both add 30 Australia/Sydney calendar days', () => {
+  assert.equal(REVIEW_INVITE_VALID_DAYS, 30)
+  assert.equal(REVIEW_REWARD_VALID_DAYS, 30)
 
-  assert.equal(getReviewInviteExpiresAt(createdAt).toISOString(), '2026-10-30T13:30:00.000Z')
-})
-
-test('coupon expiry adds 60 Australia/Sydney calendar days across daylight saving', () => {
-  const createdAt = new Date('2026-09-30T14:30:00.000Z') // 2026-10-01 00:30 in Sydney
-
-  assert.equal(getReviewCouponExpiresAt(createdAt).toISOString(), '2026-11-29T13:30:00.000Z')
+  for (const { name, createdAt, expiresAt } of [
+    {
+      name: 'ordinary date',
+      createdAt: '2026-06-15T14:30:00.000Z', // 2026-06-16 00:30 AEST
+      expiresAt: '2026-07-15T14:30:00.000Z',
+    },
+    {
+      name: 'DST start',
+      createdAt: '2026-09-30T14:30:00.000Z', // 2026-10-01 00:30 AEST
+      expiresAt: '2026-10-30T13:30:00.000Z', // 2026-10-31 00:30 AEDT
+    },
+    {
+      name: 'DST end',
+      createdAt: '2026-03-31T13:30:00.000Z', // 2026-04-01 00:30 AEDT
+      expiresAt: '2026-04-30T14:30:00.000Z', // 2026-05-01 00:30 AEST
+    },
+  ]) {
+    const issuedAt = new Date(createdAt)
+    assert.equal(getReviewInviteExpiresAt(issuedAt).toISOString(), expiresAt, `${name}: invite`)
+    assert.equal(getReviewCouponExpiresAt(issuedAt).toISOString(), expiresAt, `${name}: reward`)
+  }
 })
 
 test('invite expiry shifts a nonexistent Sydney 02:30 forward by the DST gap', () => {

@@ -25,7 +25,8 @@ Leave us an honest review and get 5% off your next order — or make it 10% off 
 
 https://au.verygood-chocolate.com/review#cake-token
 
-Your unique code will be valid for 30 days once issued!
+Your personal review link is valid for 30 days.
+Your reward coupon will be valid for 30 days from the date it is issued.
 
 -very good chocolate team-`
 
@@ -38,7 +39,8 @@ Leave us an honest review and get 5% off your next order — or make it 10% off 
 
 https://au.verygood-chocolate.com/review#class-token
 
-Your unique code will be valid for 30 days once issued!
+Your personal review link is valid for 30 days.
+Your reward coupon will be valid for 30 days from the date it is issued.
 
 -very good chocolate team-`
 
