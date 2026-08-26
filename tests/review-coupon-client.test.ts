@@ -27,6 +27,7 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
     reservationNumber: 'VG-C-AU-1',
     customerName: 'Customer',
     customerPhone: '0412345678',
+    customerEmail: overrides.customerEmail ?? 'customer@example.com',
     productId: 'pave-cake',
     cakeSize: '15cm',
     chocolateType: 'dark',
@@ -176,14 +177,14 @@ test('legacy reservations without complete audit fields do not crash admin rende
 
 test('cake request projection sends the exact allowlisted payload including Vanilla Fresh Cream Cake sheet and flavour', () => {
   const contaminated = {
-    customerName: 'Customer', customerPhone: '0412345678', productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm',
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: ' Customer@Example.com ', productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm',
     chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0,
     partyDecorationCount: 0, vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'nutella-chocolate-chip', quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
     requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
     promoCode: 'FOXKIWI7Q2MK', reviewCouponCode: 'forbidden', reviewCouponId: 'private', rewardPercent: 10,
   }
   assert.deepEqual(buildCakeReservationRequest(contaminated as ReservationInput), {
-    customerName: 'Customer', customerPhone: '0412345678', productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm',
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com', productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm',
     chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0,
     partyDecorationCount: 0, vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'plain', quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
     requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
@@ -240,6 +241,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
   const contaminated = {
     customerName: 'Customer',
     customerPhone: '0412345678',
+    customerEmail: ' Customer@Example.com ',
     pickupDate: '2099-07-11',
     pickupTime: '10:00',
     requestNote: 'Please confirm',
@@ -266,7 +268,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     price: 1,
   }
   assert.deepEqual(buildCakeOrderRequest(contaminated as never), {
-    customerName: 'Customer', customerPhone: '0412345678', pickupDate: '2099-07-11', pickupTime: '10:00',
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com', pickupDate: '2099-07-11', pickupTime: '10:00',
     requestNote: 'Please confirm', promoCode: 'FOXKIWI7Q2MK', privacyConsent: true,
     requestId: '11111111-1111-4111-8111-111111111111', website: '',
     orderLines: [
@@ -651,9 +653,10 @@ test('multi-line response validates static discount against eligible basis rathe
 })
 
 test('cake response parser allowlists fields and validates authoritative pricing parity', () => {
-  const contaminated = { ...reservation(), ignored: 'x', reviewCouponId: 'private', promoCode: 'FOXKIWI7Q2MK' }
+  const contaminated = { ...reservation(), customerEmail: 'customer@example.com', ignored: 'x', reviewCouponId: 'private', promoCode: 'FOXKIWI7Q2MK' }
   const parsed = parseCakeReservationResult(contaminated)
   assert.equal(parsed.totalPrice, 67.5)
+  assert.equal((parsed as unknown as { customerEmail: string }).customerEmail, 'customer@example.com')
   assert.deepEqual(getReservationPricingAudit(parsed), {
     subtotalCents: 7500, discountPercent: 10, discountCents: 750, totalPriceCents: 6750, appliedPromoCodeLast4: '2345',
   })
@@ -678,4 +681,11 @@ test('cake response parser allowlists fields and validates authoritative pricing
     { quantity: 99 }, { pickupDate: '2099-02-30' }, { pickupTime: '25:00' }, { customerPhone: '123' },
     { createdAt: 'not-a-date' }, { updatedAt: '2026-07-10' },
   ]) assert.throws(() => parseCakeReservationResult({ ...contaminated, ...invalid }), /RESERVATION_API_INVALID_RESPONSE/)
+})
+
+test('legacy cake response without customerEmail remains readable as an empty value', () => {
+  const legacyPayload = reservation()
+  delete legacyPayload.customerEmail
+  const legacy = parseCakeReservationResult(legacyPayload)
+  assert.equal((legacy as unknown as { customerEmail: string }).customerEmail, '')
 })

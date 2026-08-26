@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
@@ -361,6 +362,11 @@ test('required review attributes never declare Appwrite defaults', () => {
       assert.equal(attribute.xdefault, undefined, `${definition.id}.${attribute.key} xdefault`)
     }
   }
+})
+
+test('cake reservation schema declares customerEmail as an optional 120-character migration-safe attribute', () => {
+  const setupSource = readFileSync(resolve(repositoryRoot, 'scripts/setup-appwrite.mjs'), 'utf8')
+  assert.match(setupSource, /\{ key: 'customerEmail', type: 'string', size: 120, required: false \}/)
 })
 
 test('dry-run plan exposes review ids, private permissions, admin mapping intent, and bucket policy without secrets', () => {

@@ -102,6 +102,7 @@ const LOCAL_CLASS_BOOKED_DATES_KEY = `verygood-class-booked-dates-${MARKET.toLow
 const LOCAL_CAKE_PICKUP_OPENINGS_KEY = `verygood-cake-pickup-openings-${MARKET.toLowerCase()}`
 const LOCAL_SETTINGS_KEY = `verygood-cake-settings-${MARKET.toLowerCase()}`
 const LOCAL_ADMIN_KEY = `verygood-cake-admin-${MARKET.toLowerCase()}`
+const CUSTOMER_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 export const CAKE_ORDER_LINES_UNAVAILABLE_ERROR = 'CAKE_ORDER_LINES_UNAVAILABLE'
@@ -257,6 +258,7 @@ async function listAllDocuments(databaseId: string, collectionId: string, querie
 function normalizeReservation(reservation: Reservation): Reservation {
   return {
     ...reservation,
+    customerEmail: typeof reservation.customerEmail === 'string' ? reservation.customerEmail.trim().toLowerCase() : '',
     productId: getProductById(reservation.productId).id,
     cakeSize: normalizeCakeSize(getProductById(reservation.productId).id, reservation.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
@@ -291,6 +293,15 @@ function normalizeReservation(reservation: Reservation): Reservation {
     appliedPromoCodeLast4: reservation.appliedPromoCodeLast4,
     reviewCouponId: reservation.reviewCouponId,
   }
+}
+
+function normalizeCustomerEmail(value: unknown): string {
+  if (typeof value !== 'string') throw new Error('INVALID_EMAIL')
+  const customerEmail = value.trim().toLowerCase()
+  if (customerEmail.length === 0 || customerEmail.length > 120 || !CUSTOMER_EMAIL_PATTERN.test(customerEmail)) {
+    throw new Error('INVALID_EMAIL')
+  }
+  return customerEmail
 }
 
 type PublicReservationPayload = PublicReservation & {
@@ -793,6 +804,7 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
     reservationNumber: document.reservationNumber,
     customerName: document.customerName,
     customerPhone: document.customerPhone,
+    customerEmail: typeof document.customerEmail === 'string' ? document.customerEmail.trim().toLowerCase() : '',
     productId: getProductById(document.productId).id,
     cakeSize: normalizeCakeSize(getProductById(document.productId).id, document.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(document.productId).id, document.poundAddon || DEFAULT_POUND_ADDON),
@@ -877,6 +889,7 @@ function applyLocalFilters(reservations: Reservation[], filters?: ReservationFil
     return (
       reservation.customerName.toLowerCase().includes(search) ||
       reservation.customerPhone.includes(search) ||
+      (reservation.customerEmail || '').toLowerCase().includes(search) ||
       reservation.reservationNumber.toLowerCase().includes(search)
     )
   })
@@ -1104,6 +1117,7 @@ export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrde
 }
 
 export async function createReservation(input: ReservationInput): Promise<Reservation> {
+  const customerEmail = normalizeCustomerEmail(input.customerEmail)
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
   }
@@ -1157,6 +1171,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     reservationNumber,
     customerName: input.customerName.trim(),
     customerPhone: input.customerPhone.trim(),
+    customerEmail,
     productId: product.id,
     cakeSize,
     chocolateType,

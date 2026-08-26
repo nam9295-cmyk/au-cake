@@ -8,6 +8,7 @@ import {
   buildClassReservation,
   hashReviewCouponCode,
   normalizeReviewCouponCode,
+  publicCakeReservation,
   validateReviewCoupon,
 } from '../appwrite-functions/reservation-api/src/business.js'
 import reservationHandler, {
@@ -53,6 +54,7 @@ test('multi-line cake creation requires a valid request ID before database acces
   const input = {
     customerName: cakeInput.customerName,
     customerPhone: cakeInput.customerPhone,
+    customerEmail: cakeInput.customerEmail,
     pickupDate: cakeInput.pickupDate,
     pickupTime: cakeInput.pickupTime,
     requestNote: cakeInput.requestNote,
@@ -68,7 +70,7 @@ test('multi-line cake creation requires a valid request ID before database acces
 
 test('cake create response omits internal ids and exposes only authoritative promotion kind', () => {
   const base = {
-    $id: 'internal-reservation-id', reservationNumber: 'VG-C-AU-1', customerName: 'Customer', customerPhone: '0412345678',
+    $id: 'internal-reservation-id', reservationNumber: 'VG-C-AU-1', customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
     productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', quantity: 1,
     pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본', requestNote: '', status: '예약신청',
     paymentStatus: '입금대기', totalPriceCents: 7125, subtotalCents: 7500, discountPercent: 5, discountCents: 375,
@@ -85,10 +87,23 @@ test('cake create response omits internal ids and exposes only authoritative pro
   assert.equal(cakeReservationResponse({ ...base, reviewCouponId: undefined, discountPercent: 10, discountCents: 750, totalPriceCents: 6750 }).promotionKind, 'static')
   assert.equal(cakeReservationResponse({ ...base, reviewCouponId: undefined, appliedPromoCodeLast4: undefined, discountPercent: 0, discountCents: 0, totalPriceCents: 7500 }).promotionKind, 'none')
 })
+
+test('cake create response retains customerEmail while public lookup omits it', () => {
+  const document = {
+    reservationNumber: 'VG-C-AU-EMAIL', customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
+    productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', quantity: 1,
+    pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본', requestNote: '', status: '예약신청', paymentStatus: '입금대기',
+    totalPrice: 75, totalPriceCents: 7500, subtotalCents: 7500, discountPercent: 0, discountCents: 0, adminMemo: '',
+    createdAt: now.toISOString(), updatedAt: now.toISOString(),
+  }
+  assert.equal(cakeReservationResponse(document).customerEmail, 'customer@example.com')
+  assert.equal('customerEmail' in publicCakeReservation(document), false)
+})
 test('multi-line create responses expose only authoritative stored line pricing and aggregates', () => {
   const document = buildCakeReservation({
     customerName: cakeInput.customerName,
     customerPhone: cakeInput.customerPhone,
+    customerEmail: cakeInput.customerEmail,
     pickupDate: cakeInput.pickupDate,
     pickupTime: cakeInput.pickupTime,
     requestNote: cakeInput.requestNote,
@@ -121,6 +136,7 @@ test('create response rejects any present malformed or inconsistent stored order
   const document = buildCakeReservation({
     customerName: cakeInput.customerName,
     customerPhone: cakeInput.customerPhone,
+    customerEmail: cakeInput.customerEmail,
     pickupDate: cakeInput.pickupDate,
     pickupTime: cakeInput.pickupTime,
     requestNote: '',
@@ -159,6 +175,7 @@ const cakeInput = {
   requestId,
   customerName: 'Jenny Cake',
   customerPhone: '+61 412 345 678',
+  customerEmail: ' Jenny.Cake@Example.COM ',
   productId: 'pave-cake',
   cakeSize: '15cm',
   chocolateType: 'milk',
@@ -582,13 +599,14 @@ test('manual coupon commit uncertainty reconciles only against the dedicated man
   assert.equal(rolledBack.calls.some(([, args]) => args?.collectionId === 'review_coupons'), false)
 })
 
-test('new multi-line request IDs reject a different canonical payload', async () => {
+test('new multi-line request IDs normalize matching emails but reject a different canonical email', async () => {
   const db = createDatabaseDouble({ couponDocument: null })
   const multiRequestId = randomUUID()
   const input = {
     requestId: multiRequestId,
     customerName: cakeInput.customerName,
     customerPhone: cakeInput.customerPhone,
+    customerEmail: cakeInput.customerEmail,
     pickupDate: cakeInput.pickupDate,
     pickupTime: cakeInput.pickupTime,
     requestNote: cakeInput.requestNote,
@@ -599,11 +617,13 @@ test('new multi-line request IDs reject a different canonical payload', async ()
       { productId: 'brownie-cheesecake', quantity: 1 },
     ],
   }
-  await createCake(db, input, { now, runtimeConfig })
+  const first = await createCake(db, input, { now, runtimeConfig })
   const stored = db.documents.get(multiRequestId)
   assert.match(stored.requestFingerprint, /^[a-f0-9]{64}$/)
+  const normalizedRetry = await createCake(db, { ...input, customerEmail: 'jenny.cake@example.com' }, { now, runtimeConfig })
+  assert.equal(normalizedRetry.reservationNumber, first.reservationNumber)
   await assert.rejects(
-    () => createCake(db, { ...input, orderLines: [{ ...input.orderLines[0], quantity: 2 }, input.orderLines[1]] }, { now, runtimeConfig }),
+    () => createCake(db, { ...input, customerEmail: 'other@example.com' }, { now, runtimeConfig }),
     (error) => error instanceof ReservationApiError && error.code === 'REQUEST_ID_CONFLICT' && error.status === 409,
   )
 })
@@ -615,6 +635,7 @@ test('multi-line retries canonicalize line order before fingerprint comparison',
     requestId: multiRequestId,
     customerName: cakeInput.customerName,
     customerPhone: cakeInput.customerPhone,
+    customerEmail: cakeInput.customerEmail,
     pickupDate: cakeInput.pickupDate,
     pickupTime: cakeInput.pickupTime,
     requestNote: cakeInput.requestNote,
@@ -637,6 +658,7 @@ test('fingerprinted retry rejects pickup whitespace that fresh persistence would
     requestId: randomUUID(),
     customerName: cakeInput.customerName,
     customerPhone: cakeInput.customerPhone,
+    customerEmail: cakeInput.customerEmail,
     pickupDate: cakeInput.pickupDate,
     pickupTime: cakeInput.pickupTime,
     requestNote: '',

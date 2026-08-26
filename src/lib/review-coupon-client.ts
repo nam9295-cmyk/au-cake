@@ -266,6 +266,7 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
   const request: ReservationInput = {
     customerName: input.customerName,
     customerPhone: input.customerPhone,
+    customerEmail: input.customerEmail.trim().toLowerCase(),
     productId: input.productId,
     cakeSize: input.cakeSize,
     chocolateType: input.chocolateType,
@@ -375,7 +376,7 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
 export function buildCakeOrderRequest(input: CakeOrderRequest): CakeOrderRequest {
   const row = readPlainDataRecordSnapshot(input)
   if (!row || !hasOwnDataFields(row, [
-    'customerName', 'customerPhone', 'pickupDate', 'pickupTime', 'requestNote', 'privacyConsent',
+    'customerName', 'customerPhone', 'customerEmail', 'pickupDate', 'pickupTime', 'requestNote', 'privacyConsent',
     'requestId', 'website', 'orderLines',
   ])) throw new Error('INVALID_ORDER_REQUEST')
   if (typeof row.requestId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(row.requestId)) {
@@ -384,6 +385,7 @@ export function buildCakeOrderRequest(input: CakeOrderRequest): CakeOrderRequest
   if (
     typeof row.customerName !== 'string' ||
     typeof row.customerPhone !== 'string' ||
+    typeof row.customerEmail !== 'string' ||
     typeof row.pickupDate !== 'string' ||
     typeof row.pickupTime !== 'string' ||
     typeof row.requestNote !== 'string' ||
@@ -402,6 +404,7 @@ export function buildCakeOrderRequest(input: CakeOrderRequest): CakeOrderRequest
   return {
     customerName: row.customerName,
     customerPhone: row.customerPhone,
+    customerEmail: row.customerEmail.trim().toLowerCase(),
     pickupDate: row.pickupDate,
     pickupTime: row.pickupTime,
     requestNote: row.requestNote,
@@ -417,6 +420,18 @@ function requiredString(row: Record<string, unknown>, key: string): string {
   const descriptor = Object.getOwnPropertyDescriptor(row, key)
   if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor, 'value') || typeof descriptor.value !== 'string') invalidResponse()
   return descriptor.value as string
+}
+
+function responseCustomerEmail(row: Record<string, unknown>, { required = false } = {}): string {
+  if (!Object.hasOwn(row, 'customerEmail')) {
+    if (required) invalidResponse()
+    return ''
+  }
+  if (typeof row.customerEmail !== 'string') invalidResponse()
+  const customerEmail = row.customerEmail.trim().toLowerCase()
+  if (!customerEmail && !required) return ''
+  if (customerEmail.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) invalidResponse()
+  return customerEmail
 }
 
 function requiredFiniteNumber(row: Record<string, unknown>, key: string): number {
@@ -673,6 +688,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
   if (!Number.isSafeInteger(totalPriceCents) || totalPrice !== totalPriceCents / 100) invalidResponse()
   const customerName = requiredString(row, 'customerName')
   const customerPhone = requiredString(row, 'customerPhone')
+  const customerEmail = responseCustomerEmail(row, { required: true })
   if (customerName.trim().length < 2 || !isValidPhone(customerPhone)) invalidResponse()
 
   return {
@@ -680,6 +696,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     reservationNumber: requiredString(row, 'reservationNumber'),
     customerName,
     customerPhone,
+    customerEmail,
     productId: first.productId,
     cakeSize: first.cakeSize,
     chocolateType: first.chocolateType,
@@ -763,6 +780,7 @@ export function parseCakeReservationResult(value: unknown): Reservation {
 
   const customerName = requiredString(row, 'customerName')
   const customerPhone = requiredString(row, 'customerPhone')
+  const customerEmail = responseCustomerEmail(row)
   if (customerName.trim().length < 2 || !isValidPhone(customerPhone)) invalidResponse()
 
   return {
@@ -770,6 +788,7 @@ export function parseCakeReservationResult(value: unknown): Reservation {
     reservationNumber: requiredString(row, 'reservationNumber'),
     customerName,
     customerPhone,
+    customerEmail,
     productId,
     cakeSize,
     chocolateType,

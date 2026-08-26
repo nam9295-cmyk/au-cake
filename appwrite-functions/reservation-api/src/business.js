@@ -693,6 +693,7 @@ export function canonicalCakeRequestPayload(input) {
   if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
   const customerPhone = validateAustralianMobile(input.customerPhone)
+  const customerEmail = validateEmail(input.customerEmail)
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
   let lines
   if (Object.hasOwn(input, 'orderLines')) {
@@ -718,6 +719,7 @@ export function canonicalCakeRequestPayload(input) {
     version: 1,
     customerName,
     customerPhone,
+    customerEmail,
     pickupDate: typeof input.pickupDate === 'string' ? input.pickupDate : '',
     pickupTime: typeof input.pickupTime === 'string' ? input.pickupTime : '',
     requestNote,
@@ -890,6 +892,7 @@ export function buildCakeReservation(input, {
   if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
   const customerPhone = validateAustralianMobile(input.customerPhone)
+  const customerEmail = validateEmail(input.customerEmail)
   validatePickupDateTime(input.pickupDate, input.pickupTime, now)
 
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
@@ -913,6 +916,7 @@ export function buildCakeReservation(input, {
     reservationNumber,
     customerName,
     customerPhone,
+    customerEmail,
     productId: firstLine.productId,
     cakeSize: firstLine.cakeSize,
     chocolateType: firstLine.chocolateType,

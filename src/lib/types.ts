@@ -44,6 +44,7 @@ export type Reservation = {
   reservationNumber: string
   customerName: string
   customerPhone: string
+  customerEmail?: string
   productId: ProductId
   cakeSize: CakeSize
   chocolateType: ChocolateType
@@ -85,6 +86,7 @@ export type Reservation = {
 export type ReservationInput = {
   customerName: string
   customerPhone: string
+  customerEmail: string
   productId: ProductId
   cakeSize: CakeSize
   chocolateType: ChocolateType
@@ -127,6 +129,7 @@ export type CakeOrderLineRequest = Pick<ReservationInput,
 export type CakeOrderRequest = Pick<ReservationInput,
   | 'customerName'
   | 'customerPhone'
+  | 'customerEmail'
   | 'pickupDate'
   | 'pickupTime'
   | 'requestNote'
@@ -148,7 +151,8 @@ export type CakeOrderLineResult = CakeOrderLineRequest & {
   totalPriceCents: number
 }
 
-export type CakeOrderReservation = Reservation & {
+export type CakeOrderReservation = Omit<Reservation, 'customerEmail'> & {
+  customerEmail: string
   orderLines: CakeOrderLineResult[]
   orderLineCount: number
   orderItemCount: number

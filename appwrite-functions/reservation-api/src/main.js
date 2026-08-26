@@ -183,6 +183,7 @@ export function cakeReservationResponse(document) {
     reservationNumber: document.reservationNumber,
     customerName: document.customerName,
     customerPhone: document.customerPhone,
+    customerEmail: typeof document.customerEmail === 'string' ? document.customerEmail.trim().toLowerCase() : '',
     productId: document.productId,
     cakeSize: document.cakeSize,
     chocolateType: document.chocolateType,

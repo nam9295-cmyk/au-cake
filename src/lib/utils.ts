@@ -391,12 +391,13 @@ ${marketConfig.copy.smsFooter}`
 }
 
 export function reservationsToCsv(reservations: Reservation[]) {
-  const headers = [...marketConfig.csvHeaders, 'Order line count', 'Order item count', 'Order items']
+  const headers = [...marketConfig.csvHeaders.slice(0, 4), 'Email', ...marketConfig.csvHeaders.slice(4), 'Order line count', 'Order item count', 'Order items']
   const rows = reservations.map((reservation) => [
     reservation.createdAt,
     reservation.reservationNumber,
     reservation.customerName,
     reservation.customerPhone,
+    reservation.customerEmail || '',
     getProductById(reservation.productId).name,
     (getProductById(reservation.productId).usesSizeOptions || isCheesecakeProduct(reservation.productId)) ? formatCakeSizeLabel(reservation.cakeSize) : '-',
     getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',

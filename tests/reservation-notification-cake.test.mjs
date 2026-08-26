@@ -143,7 +143,7 @@ test('AU operator notification shows current Cupcake pack and whole-box finish',
 
 test('AU operator notification shows authoritative individual packaging pieces and fee', () => {
   const reservation = buildCakeReservation({
-    customerName: 'Customer', customerPhone: '0412345678', productId: 'cupcake-half-dozen',
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com', productId: 'cupcake-half-dozen',
     cupcakeFinish: 'basic', individualPackaging: true, quantity: 1,
     pickupDate: '2026-08-30', pickupTime: '10:00', requestNote: '', promoCode: '', privacyConsent: true,
   }, { now: new Date('2026-08-23T00:00:00.000Z'), reservationNumber: 'VG-C-AU-PACKAGING' })

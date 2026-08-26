@@ -100,3 +100,11 @@ test('admin drawer exposes options for versioned single-line orders including pa
   assert.match(reservationDrawerSource, /\{isVersionedOrder && \(/)
   assert.match(reservationDrawerSource, /<OrderDetailRows reservation=\{reservation\} language="en" \/>/)
 })
+
+test('cake admin list and drawer display customer email without altering SMS controls', () => {
+  assert.match(adminReservationsSource, /고객명, 연락처, 이메일, 예약번호/)
+  assert.match(adminReservationsSource, /reservation\.customerEmail \|\| '-'/)
+  assert.match(reservationDrawerSource, /<dt>이메일<\/dt>/)
+  assert.match(reservationDrawerSource, /reservation\.customerEmail \|\| '-'/)
+  assert.match(reservationDrawerSource, /buildSmsMessage/)
+})

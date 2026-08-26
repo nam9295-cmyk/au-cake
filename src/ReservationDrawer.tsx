@@ -114,6 +114,10 @@ export function ReservationDrawer({
             <dd>{reservation.customerPhone}</dd>
           </div>
           <div>
+            <dt>이메일</dt>
+            <dd>{reservation.customerEmail || '-'}</dd>
+          </div>
+          <div>
             <dt>요청사항</dt>
             <dd>{reservation.requestNote || '-'}</dd>
           </div>

@@ -21,6 +21,7 @@ const now = new Date('2026-07-10T00:00:00.000Z')
 const cakeInput = {
   customerName: 'Jenny Cake',
   customerPhone: '+61 412 345 678',
+  customerEmail: ' Jenny.Cake@Example.COM ',
   productId: 'pave-cake',
   cakeSize: '15cm',
   chocolateType: 'milk',
@@ -80,6 +81,18 @@ function multiCakeInput(orderLines, overrides = {}) {
   } = cakeInput
   return { ...common, orderLines, ...overrides }
 }
+
+test('cake API requires and normalizes a customer email address', () => {
+  const reservation = buildCakeReservation(cakeInput, { now, reservationNumber: 'VG-C-AU-EMAIL' })
+  assert.equal(reservation.customerEmail, 'jenny.cake@example.com')
+
+  for (const customerEmail of ['', 'not-an-email', `${'a'.repeat(109)}@example.com`]) {
+    assertApiError('INVALID_EMAIL', () => buildCakeReservation(
+      { ...cakeInput, customerEmail },
+      { now, reservationNumber: 'VG-C-AU-INVALID-EMAIL' },
+    ))
+  }
+})
 
 test('class API stores both kids course types at the existing prices', () => {
   const cakeCourse = buildClassReservation(classInput, { now, reservationNumber: 'VG-KC-AU-CAKE' })

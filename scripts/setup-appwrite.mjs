@@ -184,6 +184,8 @@ const reservationAttributes = [
   { key: 'reservationNumber', type: 'string', size: 40, required: true },
   { key: 'customerName', type: 'string', size: 80, required: true },
   { key: 'customerPhone', type: 'string', size: 40, required: true },
+  // Keep optional so historic cake reservations without email remain readable.
+  { key: 'customerEmail', type: 'string', size: 120, required: false },
   { key: 'productId', type: 'string', size: 40, required: false },
   { key: 'cakeSize', type: 'string', size: 20, required: false },
   { key: 'chocolateType', type: 'string', size: 20, required: false },
