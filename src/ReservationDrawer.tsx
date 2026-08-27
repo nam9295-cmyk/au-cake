@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Clipboard } from 'lucide-react'
 import { OrderDetailRows } from './components/ProductDetailRows'
 import { ReviewInviteButton } from './ReviewInviteButton'
+import { BookingConfirmationEmailButton } from './BookingConfirmationEmailButton'
 import { buildAdminReservationUpdate } from './lib/admin-reservation-edit'
 import {
   CAKE_SIZE_OPTIONS,
@@ -112,6 +113,10 @@ export function ReservationDrawer({
           <div>
             <dt>연락처</dt>
             <dd>{reservation.customerPhone}</dd>
+          </div>
+          <div>
+            <dt>이메일</dt>
+            <dd>{reservation.customerEmail || '-'}</dd>
           </div>
           <div>
             <dt>요청사항</dt>
@@ -270,7 +275,14 @@ export function ReservationDrawer({
           <textarea value={memo} onChange={(event) => setMemo(event.target.value)} />
         </label>
 
-        <ReviewInviteButton sourceType="cake" sourceReservationId={reservation.id} customerName={reservation.customerName} status={reservation.status} />
+        <ReviewInviteButton key={`cake-review-invite-${reservation.id}`} sourceType="cake" sourceReservationId={reservation.id} status={reservation.status} />
+        <BookingConfirmationEmailButton
+          key={`cake-confirmation-${reservation.id}`}
+          sourceType="cake"
+          reservationId={reservation.id}
+          status={reservation.status}
+          recipientEmail={reservation.customerEmail}
+        />
         <div className="button-row">
           <button className="secondary-button" type="button" onClick={() => onCopy(draftReservation)}>
             <Clipboard size={16} /> 확정 문자 복사

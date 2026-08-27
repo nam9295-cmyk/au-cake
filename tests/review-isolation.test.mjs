@@ -58,10 +58,11 @@ test('ReviewPage localizes and restores html lang and cleans up clipboard timers
   assert.match(reviewPageSource, /clearTimeout\(copyTimerRef\.current\)/)
 })
 
-test('review demo booking paths are development-only and invite copying uses the HTTP-safe fallback', () => {
+test('review demo booking paths are development-only and invite copying uses the server-issued HTTP-safe fallback', () => {
   assert.match(reviewPageSource, /import\.meta\.env\.DEV\s*&&\s*isReviewDemoMode/)
   assert.match(appSource, /reviewDemoMode=\{import\.meta\.env\.DEV\s*&&\s*import\.meta\.env\.VITE_REVIEW_DEMO_MODE === 'true'\}/)
-  assert.match(reviewInviteSource, /copyAdminRewardMessage\(buildReviewRequestMessage\(/)
+  assert.match(reviewInviteSource, /copyReviewInviteRequest\(/)
+  assert.match(reviewInviteSource, /copyAdminRewardMessage\(copy\.message\)/)
 })
 
 test('review API function id has a production-safe default when Cloudflare omits the optional override', () => {

@@ -33,6 +33,16 @@ test('ReservePage privately owns its current-time hook', () => {
   assert.doesNotMatch(appSource, /function useCurrentTime\b/)
 })
 
+test('cake reservation page requires a normalized customer email for booking details and review rewards', () => {
+  assert.match(reserveSource, /customerEmail: ''/)
+  assert.match(reserveSource, /type="email"/)
+  assert.match(reserveSource, /autoComplete="email"/)
+  assert.match(reserveSource, /maxLength=\{120\}/)
+  assert.match(reserveSource, /We’ll send your booking details and review reward to this address\./)
+  assert.match(reserveSource, /예약 안내와 리뷰 리워드를 이 주소로 보내드려요\./)
+  assert.match(reserveSource, /review reward\/coupon delivery/)
+})
+
 test('customer pages own customer display and lookup formatters', () => {
   assert.match(productDetailsSource, /export function ProductDetailRows\b/)
   assert.match(completeSource, /from '\.\.\/components\/ProductDetailRows'/)

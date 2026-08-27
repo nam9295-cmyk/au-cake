@@ -14,6 +14,7 @@ import {
   normalizeReviewCouponCode,
   parseStoredOrderLines,
   publicCakeReservation,
+  resolveCakeCustomerEmailMode,
   validateReviewCoupon,
 } from './business.js'
 import {
@@ -37,6 +38,7 @@ function reservationResourceConfig(env = process.env) {
     cakePickupOpeningsId: env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID || 'cake_pickup_openings',
     reviewCouponsId: env.APPWRITE_REVIEW_COUPONS_TABLE_ID || 'review_coupons',
     manualCouponsId: env.APPWRITE_MANUAL_COUPONS_TABLE_ID || 'manual_coupons',
+    cakeCustomerEmailMode: resolveCakeCustomerEmailMode(env.CAKE_CUSTOMER_EMAIL_MODE),
     reviewCouponHmacSecret: typeof env.REVIEW_COUPON_HMAC_SECRET === 'string' && env.REVIEW_COUPON_HMAC_SECRET.trim()
       ? resolveReviewCouponHmacSecret(env, ReservationApiError)
       : null,
@@ -117,7 +119,7 @@ async function getIdempotentDocument(databases, databaseId, collectionId, docume
 
 function cakeRequestFingerprint(input, runtimeConfig) {
   return digestCakeRequestPayload(
-    canonicalCakeRequestPayload(input),
+    canonicalCakeRequestPayload(input, { customerEmailMode: runtimeConfig.cakeCustomerEmailMode }),
     runtimeConfig.reviewCouponHmacSecret,
     ReservationApiError,
   )
@@ -172,6 +174,7 @@ async function uniqueReservationNumber(databases, databaseId, collectionId, gene
 export function cakeReservationResponse(document) {
   const discountCents = Number(document.discountCents || 0)
   const storedOrder = Object.hasOwn(document, 'orderLinesJson') ? parseStoredOrderLines(document) : null
+  const customerEmail = typeof document.customerEmail === 'string' ? document.customerEmail.trim().toLowerCase() : ''
   const promotionKind = typeof document.reviewCouponId === 'string' && document.reviewCouponId.startsWith('manual:')
     ? 'manual-coupon'
     : document.reviewCouponId
@@ -183,6 +186,7 @@ export function cakeReservationResponse(document) {
     reservationNumber: document.reservationNumber,
     customerName: document.customerName,
     customerPhone: document.customerPhone,
+    ...(customerEmail ? { customerEmail } : {}),
     productId: document.productId,
     cakeSize: document.cakeSize,
     chocolateType: document.chocolateType,
@@ -407,7 +411,11 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
   const normalizedReviewCode = reviewCouponInput(input?.promoCode)
   const safeInput = normalizedReviewCode ? { ...input, promoCode: '' } : input
   let data = {
-    ...buildCakeReservation(safeInput, { now, reservationNumber: 'pending' }),
+    ...buildCakeReservation(safeInput, {
+      now,
+      reservationNumber: 'pending',
+      customerEmailMode: runtimeConfig.cakeCustomerEmailMode,
+    }),
     requestFingerprint,
   }
   data.reservationNumber = await uniqueReservationNumber(
@@ -478,7 +486,12 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
       : reviewCoupon
     expectedReviewCouponId = pricingCoupon.id
     data = {
-      ...buildCakeReservation(safeInput, { now, reservationNumber: data.reservationNumber, reviewCoupon: pricingCoupon }),
+      ...buildCakeReservation(safeInput, {
+        now,
+        reservationNumber: data.reservationNumber,
+        reviewCoupon: pricingCoupon,
+        customerEmailMode: runtimeConfig.cakeCustomerEmailMode,
+      }),
       requestFingerprint,
     }
     await databases.createDocument({

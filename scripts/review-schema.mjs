@@ -5,6 +5,8 @@ export const REVIEW_RESOURCE_DEFAULTS = Object.freeze({
   manualCouponsCollectionId: 'manual_coupons',
   reviewPhotosBucketId: 'review-photos',
   reviewPhotoCleanupCollectionId: 'review_photo_cleanup',
+  emailDeliveriesCollectionId: 'email_deliveries',
+  emailDeliveryRetryClaimsCollectionId: 'email_delivery_retry_claims',
 })
 
 export function resolveReviewResourceIds(env = {}) {
@@ -31,6 +33,12 @@ export function resolveReviewResourceIds(env = {}) {
     reviewPhotoCleanupCollectionId:
       env.APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID ||
       REVIEW_RESOURCE_DEFAULTS.reviewPhotoCleanupCollectionId,
+    emailDeliveriesCollectionId:
+      env.APPWRITE_EMAIL_DELIVERIES_TABLE_ID ||
+      REVIEW_RESOURCE_DEFAULTS.emailDeliveriesCollectionId,
+    emailDeliveryRetryClaimsCollectionId:
+      env.APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID ||
+      REVIEW_RESOURCE_DEFAULTS.emailDeliveryRetryClaimsCollectionId,
   }
 }
 
@@ -39,15 +47,24 @@ const PRIVATE_REVIEW_ACCESS = Object.freeze({
   adminPermissions: Object.freeze(['read', 'update', 'delete']),
 })
 
+const PRIVATE_FUNCTION_ACCESS = Object.freeze({
+  publicPermissions: Object.freeze([]),
+  adminPermissions: Object.freeze([]),
+})
+
 export const REVIEW_COLLECTIONS = Object.freeze({
   reviewInvites: Object.freeze({
     name: 'review_invites',
-    ...PRIVATE_REVIEW_ACCESS,
+    ...PRIVATE_FUNCTION_ACCESS,
     attributes: Object.freeze([
       { key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class'] },
       { key: 'sourceReservationId', type: 'string', size: 64, required: true },
       { key: 'sourceReservationNumber', type: 'string', size: 64, required: true },
       { key: 'tokenHash', type: 'string', size: 64, required: true },
+      { key: 'tokenCiphertext', type: 'string', size: 64, required: false },
+      { key: 'tokenIv', type: 'string', size: 16, required: false },
+      { key: 'tokenAuthTag', type: 'string', size: 22, required: false },
+      { key: 'tokenEncryptionVersion', type: 'integer', required: false, min: 1, max: 1 },
       { key: 'expiresAt', type: 'string', size: 40, required: true },
       { key: 'usedAt', type: 'string', size: 40, required: false },
       { key: 'pendingPhotoFileId', type: 'string', size: 64, required: false },
@@ -155,6 +172,74 @@ export const REVIEW_COLLECTIONS = Object.freeze({
       { key: 'status_createdAt_idx', attributes: ['status', 'createdAt'], orders: ['ASC', 'ASC'] },
     ]),
   }),
+  emailDeliveries: Object.freeze({
+    name: 'email_deliveries',
+    ...PRIVATE_FUNCTION_ACCESS,
+    attributes: Object.freeze([
+      { key: 'eventKey', type: 'string', size: 128, required: true },
+      { key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class', 'review', 'system'] },
+      { key: 'sourceId', type: 'string', size: 64, required: true },
+      {
+        key: 'template',
+        type: 'enum',
+        required: true,
+        elements: [
+          'booking-received-operator',
+          'booking-received-customer',
+          'booking-confirmed-customer',
+          'review-invite-customer',
+          'review-reward-customer',
+          'booking-reminder-d1-customer',
+        ],
+      },
+      { key: 'status', type: 'enum', required: true, elements: ['pending', 'sent', 'failed', 'uncertain'] },
+      { key: 'recipientHash', type: 'string', size: 64, required: true },
+      { key: 'payloadHash', type: 'string', size: 64, required: true },
+      { key: 'attempts', type: 'integer', required: true, min: 0 },
+      { key: 'firstAttemptAt', type: 'string', size: 40, required: false },
+      { key: 'providerMessageId', type: 'string', size: 128, required: false },
+      { key: 'lastAttemptAt', type: 'string', size: 40, required: false },
+      { key: 'sentAt', type: 'string', size: 40, required: false },
+      { key: 'lastErrorCode', type: 'string', size: 80, required: false },
+      { key: 'createdAt', type: 'string', size: 40, required: true },
+      { key: 'updatedAt', type: 'string', size: 40, required: true },
+    ]),
+    indexes: Object.freeze([
+      { key: 'eventKey_unique', attributes: ['eventKey'], type: 'unique' },
+    ]),
+  }),
+  emailDeliveryRetryClaims: Object.freeze({
+    name: 'email_delivery_retry_claims',
+    ...PRIVATE_FUNCTION_ACCESS,
+    attributes: Object.freeze([
+      { key: 'eventKey', type: 'string', size: 128, required: true },
+      { key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class', 'review', 'system'] },
+      { key: 'sourceId', type: 'string', size: 64, required: true },
+      {
+        key: 'template',
+        type: 'enum',
+        required: true,
+        elements: [
+          'booking-received-operator',
+          'booking-received-customer',
+          'booking-confirmed-customer',
+          'review-invite-customer',
+          'review-reward-customer',
+          'booking-reminder-d1-customer',
+        ],
+      },
+      { key: 'status', type: 'enum', required: true, elements: ['pending', 'sent', 'failed', 'uncertain'] },
+      { key: 'claimedByUserId', type: 'string', size: 64, required: true },
+      { key: 'claimedAt', type: 'string', size: 40, required: true },
+      { key: 'completedAt', type: 'string', size: 40, required: false },
+      { key: 'lastErrorCode', type: 'string', size: 80, required: false },
+      { key: 'createdAt', type: 'string', size: 40, required: true },
+      { key: 'updatedAt', type: 'string', size: 40, required: true },
+    ]),
+    indexes: Object.freeze([
+      { key: 'eventKey_unique', attributes: ['eventKey'], type: 'unique' },
+    ]),
+  }),
 })
 
 export const REVIEW_COLLECTION_RESOURCE_KEYS = Object.freeze([
@@ -163,6 +248,8 @@ export const REVIEW_COLLECTION_RESOURCE_KEYS = Object.freeze([
   Object.freeze(['reviewCoupons', 'reviewCouponsCollectionId']),
   Object.freeze(['manualCoupons', 'manualCouponsCollectionId']),
   Object.freeze(['reviewPhotoCleanup', 'reviewPhotoCleanupCollectionId']),
+  Object.freeze(['emailDeliveries', 'emailDeliveriesCollectionId']),
+  Object.freeze(['emailDeliveryRetryClaims', 'emailDeliveryRetryClaimsCollectionId']),
 ])
 
 export const RESERVATION_REVIEW_AUDIT_ATTRIBUTES = Object.freeze([
@@ -351,6 +438,43 @@ export function validateCollectionDefinition(collectionId, current, {
   )
 }
 
+const LEGACY_DIRECT_ADMIN_PERMISSION = /^(read|update|delete)\("user:([A-Za-z0-9][A-Za-z0-9._-]{0,35})"\)$/
+const LEGACY_DIRECT_ADMIN_ACTIONS = Object.freeze(['read', 'update', 'delete'])
+
+export function emailDeliveryLegacyPermissionMigration(current, expected) {
+  if (
+    expected?.name !== 'email_deliveries' ||
+    !sameUnorderedValues(expected.permissions || [], []) ||
+    expected.documentSecurity !== false ||
+    expected.enabled !== true ||
+    current?.name !== expected.name ||
+    current.documentSecurity !== expected.documentSecurity ||
+    current.enabled !== expected.enabled
+  ) return null
+
+  const permissions = current.$permissions || current.permissions || []
+  if (!Array.isArray(permissions) || permissions.length === 0 || permissions.length % LEGACY_DIRECT_ADMIN_ACTIONS.length !== 0) {
+    return null
+  }
+
+  const actionsByUserId = new Map()
+  for (const permission of permissions) {
+    const match = LEGACY_DIRECT_ADMIN_PERMISSION.exec(permission)
+    if (!match) return null
+    const [, action, userId] = match
+    const actions = actionsByUserId.get(userId) || new Set()
+    if (actions.has(action)) return null
+    actions.add(action)
+    actionsByUserId.set(userId, actions)
+  }
+  if (actionsByUserId.size === 0) return null
+  for (const actions of actionsByUserId.values()) {
+    if (!sameUnorderedValues([...actions], LEGACY_DIRECT_ADMIN_ACTIONS)) return null
+  }
+
+  return { reason: 'revoke_legacy_direct_admin_crud_permissions' }
+}
+
 export async function ensureStrictCollection({
   databaseId,
   collectionId,
@@ -360,6 +484,8 @@ export async function ensureStrictCollection({
   enabled = true,
   getCollection,
   createCollection,
+  updateCollection,
+  migrateExisting,
   isMissing,
   isConflict,
 }) {
@@ -373,7 +499,30 @@ export async function ensureStrictCollection({
 
   try {
     const current = await getExactCollection()
-    validate(current)
+    try {
+      validate(current)
+    } catch (validationError) {
+      if (typeof migrateExisting !== 'function' || !migrateExisting(current, {
+        name,
+        permissions,
+        documentSecurity,
+        enabled,
+      }) || typeof updateCollection !== 'function') {
+        throw validationError
+      }
+      await updateCollection({
+        databaseId,
+        collectionId,
+        name,
+        permissions,
+        documentSecurity,
+        enabled,
+        purge: true,
+      })
+      const updated = await getExactCollection()
+      validate(updated)
+      return 'updated'
+    }
     return 'existing'
   } catch (error) {
     if (!isMissing(error)) throw error

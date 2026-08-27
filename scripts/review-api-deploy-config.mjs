@@ -1,4 +1,5 @@
 const RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
+const REVIEW_API_RUNTIME = 'node-22'
 
 export const FUNCTION_SCOPES = Object.freeze([
   'databases.read',
@@ -13,6 +14,16 @@ export const ARCHIVE_SOURCE_ENTRIES = Object.freeze([
   'package.json',
   'package-lock.json',
   'src',
+])
+
+export const ARCHIVE_SHARED_SOURCE_PATHS = Object.freeze([
+  'appwrite-functions/shared/email-delivery.js',
+  'appwrite-functions/shared/email-delivery-repository.js',
+  'appwrite-functions/shared/resend-transport.js',
+  'appwrite-functions/shared/email-delivery-sender.js',
+  'appwrite-functions/shared/email-delivery-retry-claim-repository.js',
+  'appwrite-functions/shared/email-delivery-retry.js',
+  'appwrite-functions/shared/sydney-calendar.js',
 ])
 
 export const DEPLOYMENT_OPERATIONS = Object.freeze([
@@ -33,6 +44,9 @@ export const REQUIRED_APPLY_ENVIRONMENT = Object.freeze([
   'REVIEW_FRONTEND_ORIGINS',
   'REVIEW_COUPON_HMAC_SECRET',
   'REVIEW_COUPON_ENCRYPTION_KEY',
+  'REVIEW_INVITE_TOKEN_ENCRYPTION_KEY',
+  'RESEND_API_KEY',
+  'RESEND_FROM_EMAIL',
 ])
 
 const ID_VARIABLES = Object.freeze({
@@ -43,6 +57,8 @@ const ID_VARIABLES = Object.freeze({
   APPWRITE_REVIEW_COUPONS_TABLE_ID: 'review_coupons',
   APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'review_photo_cleanup',
   APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'review-photos',
+  APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
+  APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: 'email_delivery_retry_claims',
 })
 
 const PRESERVED_FUNCTION_FIELDS = Object.freeze([
@@ -68,6 +84,11 @@ function resourceId(env, key, fallback) {
   const value = String(env[key] ?? fallback ?? '').trim()
   if (!value || !RESOURCE_ID.test(value)) throw new Error(`${key} must be a valid Appwrite resource ID.`)
   return value
+}
+
+function optionalResourceId(env, key, fallback) {
+  const value = String(env[key] ?? '').trim()
+  return value ? resourceId(env, key, fallback) : fallback
 }
 
 function endpoint(env) {
@@ -138,10 +159,33 @@ function couponEncryptionKey(env, hmacSecret) {
   return encoded
 }
 
+function reviewInviteTokenEncryptionKey(env, hmacSecret, couponKey) {
+  const encoded = typeof env.REVIEW_INVITE_TOKEN_ENCRYPTION_KEY === 'string' ? env.REVIEW_INVITE_TOKEN_ENCRYPTION_KEY : ''
+  let decoded
+  try {
+    decoded = /^[A-Za-z0-9_-]{43}$/.test(encoded) ? Buffer.from(encoded, 'base64url') : null
+  } catch {
+    decoded = null
+  }
+  if (!decoded || decoded.length !== 32 || decoded.toString('base64url') !== encoded) {
+    throw new Error('REVIEW_INVITE_TOKEN_ENCRYPTION_KEY must be canonical unpadded base64url encoding of exactly 32 bytes.')
+  }
+  if (encoded === hmacSecret || encoded === couponKey) {
+    throw new Error('REVIEW_INVITE_TOKEN_ENCRYPTION_KEY must be independent from coupon HMAC and coupon encryption keys.')
+  }
+  return encoded
+}
+
+function resendFromEmail(env) {
+  const value = required(env, 'RESEND_FROM_EMAIL')
+  if (/[\u0000-\u001F\u007F]/.test(value)) throw new Error('RESEND_FROM_EMAIL must not contain control characters.')
+  return value
+}
+
 function sharpCompatibleRuntime(env) {
-  const value = String(env.APPWRITE_REVIEW_API_RUNTIME || 'node-16.0').trim()
-  if (value !== 'node-16.0') {
-    throw new Error('APPWRITE_REVIEW_API_RUNTIME must be node-16.0 for this self-hosted Appwrite deployment.')
+  const value = String(env.APPWRITE_REVIEW_API_RUNTIME || REVIEW_API_RUNTIME).trim()
+  if (value !== REVIEW_API_RUNTIME) {
+    throw new Error(`APPWRITE_REVIEW_API_RUNTIME must be ${REVIEW_API_RUNTIME} for the Review API image pipeline.`)
   }
   return value
 }
@@ -151,10 +195,16 @@ export function resolveDeployConfig(env = {}) {
   const origins = frontendOrigins(env)
   const hmacSecret = couponHmacSecret(env)
   const encryptionKey = couponEncryptionKey(env, hmacSecret)
+  const inviteEncryptionKey = reviewInviteTokenEncryptionKey(env, hmacSecret, encryptionKey)
   const cakeDatabaseId = resourceId(env, 'APPWRITE_CAKE_DATABASE_ID')
   const kidsDatabaseId = resourceId(env, 'APPWRITE_KIDS_DATABASE_ID')
   const collectionIds = Object.fromEntries(
-    Object.entries(ID_VARIABLES).map(([key, fallback]) => [key, resourceId(env, key, fallback)]),
+    Object.entries(ID_VARIABLES).map(([key, fallback]) => [
+      key,
+      key === 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID' || key === 'APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID'
+        ? optionalResourceId(env, key, fallback)
+        : resourceId(env, key, fallback),
+    ]),
   )
 
   return {
@@ -173,6 +223,10 @@ export function resolveDeployConfig(env = {}) {
       REVIEW_FRONTEND_ORIGINS: origins,
       REVIEW_COUPON_HMAC_SECRET: hmacSecret,
       REVIEW_COUPON_ENCRYPTION_KEY: encryptionKey,
+      REVIEW_INVITE_TOKEN_ENCRYPTION_KEY: inviteEncryptionKey,
+      RESEND_API_KEY: required(env, 'RESEND_API_KEY'),
+      RESEND_FROM_EMAIL: resendFromEmail(env),
+      RESEND_REPLY_TO_EMAIL: String(env.RESEND_REPLY_TO_EMAIL || '').trim(),
     },
   }
 }
@@ -205,7 +259,9 @@ export function buildUpdateFunctionPayload(existing, runtime, publicExecuteRole)
 export function isSecretFunctionVariable(key) {
   return key === 'REVIEW_ADMIN_USER_IDS' ||
     key === 'REVIEW_COUPON_HMAC_SECRET' ||
-    key === 'REVIEW_COUPON_ENCRYPTION_KEY'
+    key === 'REVIEW_COUPON_ENCRYPTION_KEY' ||
+    key === 'REVIEW_INVITE_TOKEN_ENCRYPTION_KEY' ||
+    key === 'RESEND_API_KEY'
 }
 
 export function maskValue(value) {
@@ -226,6 +282,10 @@ export function buildDryRunPlan(env = {}) {
     REVIEW_FRONTEND_ORIGINS: env.REVIEW_FRONTEND_ORIGINS,
     REVIEW_COUPON_HMAC_SECRET: env.REVIEW_COUPON_HMAC_SECRET,
     REVIEW_COUPON_ENCRYPTION_KEY: env.REVIEW_COUPON_ENCRYPTION_KEY,
+    REVIEW_INVITE_TOKEN_ENCRYPTION_KEY: env.REVIEW_INVITE_TOKEN_ENCRYPTION_KEY,
+    RESEND_API_KEY: env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: env.RESEND_FROM_EMAIL,
+    RESEND_REPLY_TO_EMAIL: env.RESEND_REPLY_TO_EMAIL,
   }
   const admins = String(env.REVIEW_ADMIN_USER_IDS || '').split(',').map((id) => id.trim()).filter(Boolean)
 
@@ -239,7 +299,9 @@ export function buildDryRunPlan(env = {}) {
     wouldFailApply: REQUIRED_APPLY_ENVIRONMENT.some((key) => !String(env[key] || '').trim()),
     function: {
       id: maskValue(functionId),
-      source: 'appwrite-functions/review-api/{package.json,package-lock.json,src/**}',
+      runtime: REVIEW_API_RUNTIME,
+      source: 'appwrite-functions/review-api/{package.json,package-lock.json,src/**,shared/**}',
+      sharedSources: [...ARCHIVE_SHARED_SOURCE_PATHS],
       entrypoint: 'src/main.js',
       installCommand: 'npm ci --omit=dev',
       scopes: [...FUNCTION_SCOPES],

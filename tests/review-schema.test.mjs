@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
@@ -9,6 +10,7 @@ import {
   assertExactAvailableKeySet,
   buildReviewSetupPlan,
   canEnableReviewPhotoTransformations,
+  emailDeliveryLegacyPermissionMigration,
   ensureStrictCollection,
   parseAdminUserIds,
   reviewPhotoBucketMismatches,
@@ -25,6 +27,10 @@ import {
   validateAttributeDefinition,
   validateIndexDefinition,
 } from '../scripts/review-schema.mjs'
+import {
+  AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES,
+  AU_EMAIL_REMINDER_INDEXES,
+} from '../scripts/au-email-schema-contract.mjs'
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -44,6 +50,8 @@ test('review resource ids use safe defaults and server ids override Vite ids', (
     manualCouponsCollectionId: 'manual_coupons',
     reviewPhotosBucketId: 'review-photos',
     reviewPhotoCleanupCollectionId: 'review_photo_cleanup',
+    emailDeliveriesCollectionId: 'email_deliveries',
+    emailDeliveryRetryClaimsCollectionId: 'email_delivery_retry_claims',
   })
   assert.deepEqual(resolveReviewResourceIds({}), REVIEW_RESOURCE_DEFAULTS)
   assert.deepEqual(
@@ -63,19 +71,33 @@ test('review resource ids use safe defaults and server ids override Vite ids', (
       manualCouponsCollectionId: 'server_manual_coupons',
       reviewPhotosBucketId: 'server_photos',
       reviewPhotoCleanupCollectionId: 'review_photo_cleanup',
+      emailDeliveriesCollectionId: 'email_deliveries',
+      emailDeliveryRetryClaimsCollectionId: 'email_delivery_retry_claims',
     },
   )
 })
 
-test('review invite schema stores only hashed tokens and has both required unique constraints', () => {
+test('review invite schema keeps recoverable token envelopes private and optional for legacy rows', () => {
   const invites = REVIEW_COLLECTIONS.reviewInvites
   assert.deepEqual(invites.publicPermissions, [])
-  assert.deepEqual(invites.adminPermissions, ['read', 'update', 'delete'])
+  assert.deepEqual(invites.adminPermissions, [])
   assert.deepEqual(attribute(invites, 'sourceType'), {
     key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class'],
   })
   assert.deepEqual(attribute(invites, 'tokenHash'), {
     key: 'tokenHash', type: 'string', size: 64, required: true,
+  })
+  assert.deepEqual(attribute(invites, 'tokenCiphertext'), {
+    key: 'tokenCiphertext', type: 'string', size: 64, required: false,
+  })
+  assert.deepEqual(attribute(invites, 'tokenIv'), {
+    key: 'tokenIv', type: 'string', size: 16, required: false,
+  })
+  assert.deepEqual(attribute(invites, 'tokenAuthTag'), {
+    key: 'tokenAuthTag', type: 'string', size: 22, required: false,
+  })
+  assert.deepEqual(attribute(invites, 'tokenEncryptionVersion'), {
+    key: 'tokenEncryptionVersion', type: 'integer', required: false, min: 1, max: 1,
   })
   assert.deepEqual(attribute(invites, 'usedAt'), {
     key: 'usedAt', type: 'string', size: 40, required: false,
@@ -88,7 +110,7 @@ test('review invite schema stores only hashed tokens and has both required uniqu
   })
   assert.deepEqual(
     invites.attributes.map(({ key }) => key),
-    ['sourceType', 'sourceReservationId', 'sourceReservationNumber', 'tokenHash', 'expiresAt', 'usedAt', 'pendingPhotoFileId', 'pendingPhotoUploadedAt', 'photoUploadCount', 'createdByUserId', 'createdAt'],
+    ['sourceType', 'sourceReservationId', 'sourceReservationNumber', 'tokenHash', 'tokenCiphertext', 'tokenIv', 'tokenAuthTag', 'tokenEncryptionVersion', 'expiresAt', 'usedAt', 'pendingPhotoFileId', 'pendingPhotoUploadedAt', 'photoUploadCount', 'createdByUserId', 'createdAt'],
   )
   assert.deepEqual(index(invites, 'tokenHash_unique'), {
     key: 'tokenHash_unique', attributes: ['tokenHash'], type: 'unique',
@@ -96,6 +118,116 @@ test('review invite schema stores only hashed tokens and has both required uniqu
   assert.deepEqual(index(invites, 'sourceReservation_unique'), {
     key: 'sourceReservation_unique', attributes: ['sourceType', 'sourceReservationId'], type: 'unique',
   })
+})
+
+test('email delivery ledger schema is private, avoids raw recipient PII, and has a unique event key', () => {
+  const deliveries = REVIEW_COLLECTIONS.emailDeliveries
+  assert.deepEqual(deliveries.publicPermissions, [])
+  assert.deepEqual(deliveries.adminPermissions, [])
+  assert.deepEqual(attribute(deliveries, 'sourceType'), {
+    key: 'sourceType', type: 'enum', required: true, elements: ['cake', 'class', 'review', 'system'],
+  })
+  assert.deepEqual(attribute(deliveries, 'template'), {
+    key: 'template', type: 'enum', required: true,
+    elements: [
+      'booking-received-operator',
+      'booking-received-customer',
+      'booking-confirmed-customer',
+      'review-invite-customer',
+      'review-reward-customer',
+      'booking-reminder-d1-customer',
+    ],
+  })
+  assert.deepEqual(attribute(deliveries, 'status'), {
+    key: 'status', type: 'enum', required: true, elements: ['pending', 'sent', 'failed', 'uncertain'],
+  })
+  assert.deepEqual(attribute(deliveries, 'recipientHash'), {
+    key: 'recipientHash', type: 'string', size: 64, required: true,
+  })
+  assert.deepEqual(attribute(deliveries, 'payloadHash'), {
+    key: 'payloadHash', type: 'string', size: 64, required: true,
+  })
+  assert.deepEqual(attribute(deliveries, 'attempts'), {
+    key: 'attempts', type: 'integer', required: true, min: 0,
+  })
+  assert.deepEqual(attribute(deliveries, 'firstAttemptAt'), {
+    key: 'firstAttemptAt', type: 'string', size: 40, required: false,
+  })
+  assert.deepEqual(attribute(deliveries, 'lastAttemptAt'), {
+    key: 'lastAttemptAt', type: 'string', size: 40, required: false,
+  })
+  assert.deepEqual(attribute(deliveries, 'sentAt'), {
+    key: 'sentAt', type: 'string', size: 40, required: false,
+  })
+  assert.deepEqual(attribute(deliveries, 'providerMessageId'), {
+    key: 'providerMessageId', type: 'string', size: 128, required: false,
+  })
+  assert.deepEqual(attribute(deliveries, 'lastErrorCode'), {
+    key: 'lastErrorCode', type: 'string', size: 80, required: false,
+  })
+  assert.deepEqual(index(deliveries, 'eventKey_unique'), {
+    key: 'eventKey_unique', attributes: ['eventKey'], type: 'unique',
+  })
+  assert.deepEqual(attribute(deliveries, 'createdAt'), {
+    key: 'createdAt', type: 'string', size: 40, required: true,
+  })
+  assert.deepEqual(attribute(deliveries, 'updatedAt'), {
+    key: 'updatedAt', type: 'string', size: 40, required: true,
+  })
+  assert.equal(deliveries.attributes.some(({ key }) => key === 'recipientEmail'), false)
+})
+
+test('D-1 reminder uses the private common delivery template enum without adding recipient PII', () => {
+  for (const collection of [REVIEW_COLLECTIONS.emailDeliveries, REVIEW_COLLECTIONS.emailDeliveryRetryClaims]) {
+    assert.equal(attribute(collection, 'template').elements.includes('booking-reminder-d1-customer'), true)
+    assert.equal(collection.publicPermissions.length, 0)
+    assert.equal(collection.adminPermissions.length, 0)
+  }
+})
+
+test('setup reuses the D-1 scanner composite candidate index contract', () => {
+  const setupSource = readFileSync(resolve(repositoryRoot, 'scripts/setup-appwrite.mjs'), 'utf8')
+  assert.match(setupSource, /AU_EMAIL_REMINDER_INDEXES/)
+  assert.deepEqual(AU_EMAIL_REMINDER_INDEXES, {
+    cake: [{ key: 'status_pickupDate_idx', type: 'key', attributes: ['status', 'pickupDate'] }],
+    classFirst: [{ key: 'status_classDate_idx', type: 'key', attributes: ['status', 'classDate'] }],
+    classAdvanced: [{ key: 'status_advancedClassDate_idx', type: 'key', attributes: ['status', 'advancedClassDate'] }],
+  })
+})
+
+test('one-use email retry claims are private and uniquely keyed by the logical email event', () => {
+  const claims = REVIEW_COLLECTIONS.emailDeliveryRetryClaims
+  assert.deepEqual(claims.publicPermissions, [])
+  assert.deepEqual(claims.adminPermissions, [])
+  assert.deepEqual(attribute(claims, 'eventKey'), { key: 'eventKey', type: 'string', size: 128, required: true })
+  assert.deepEqual(attribute(claims, 'claimedByUserId'), { key: 'claimedByUserId', type: 'string', size: 64, required: true })
+  assert.deepEqual(attribute(claims, 'claimedAt'), { key: 'claimedAt', type: 'string', size: 40, required: true })
+  assert.deepEqual(attribute(claims, 'status'), {
+    key: 'status', type: 'enum', required: true, elements: ['pending', 'sent', 'failed', 'uncertain'],
+  })
+  assert.deepEqual(index(claims, 'eventKey_unique'), { key: 'eventKey_unique', attributes: ['eventKey'], type: 'unique' })
+  for (const forbidden of ['recipientEmail', 'payloadHash', 'couponCode', 'token']) {
+    assert.equal(claims.attributes.some(({ key }) => key === forbidden), false)
+  }
+  assert.equal(resolveReviewResourceIds({}).emailDeliveryRetryClaimsCollectionId, 'email_delivery_retry_claims')
+  assert.equal(
+    resolveReviewResourceIds({ VITE_APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: 'vite_must_not_win' }).emailDeliveryRetryClaimsCollectionId,
+    'email_delivery_retry_claims',
+  )
+})
+
+test('email delivery resource ID is server-only and cannot be selected through a Vite variable', () => {
+  assert.equal(
+    resolveReviewResourceIds({
+      VITE_APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'vite_must_not_win',
+      APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'server_deliveries',
+    }).emailDeliveriesCollectionId,
+    'server_deliveries',
+  )
+  assert.equal(
+    resolveReviewResourceIds({ VITE_APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'vite_must_not_win' }).emailDeliveriesCollectionId,
+    'email_deliveries',
+  )
 })
 
 test('reviews schema keeps DB reward bound 5..10 while API runtime owns exact 5|10 validation', () => {
@@ -250,6 +382,8 @@ test('strict review collection provisioning includes the dedicated manual coupon
     ['reviewCoupons', 'reviewCouponsCollectionId'],
     ['manualCoupons', 'manualCouponsCollectionId'],
     ['reviewPhotoCleanup', 'reviewPhotoCleanupCollectionId'],
+    ['emailDeliveries', 'emailDeliveriesCollectionId'],
+    ['emailDeliveryRetryClaims', 'emailDeliveryRetryClaimsCollectionId'],
   ])
 })
 
@@ -363,6 +497,14 @@ test('required review attributes never declare Appwrite defaults', () => {
   }
 })
 
+test('cake reservation schema declares customerEmail as an optional 120-character migration-safe attribute', () => {
+  const setupSource = readFileSync(resolve(repositoryRoot, 'scripts/setup-appwrite.mjs'), 'utf8')
+  assert.match(setupSource, /AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES/)
+  assert.deepEqual(AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES, [
+    { key: 'customerEmail', type: 'string', size: 120, required: false },
+  ])
+})
+
 test('dry-run plan exposes review ids, private permissions, admin mapping intent, and bucket policy without secrets', () => {
   const plan = buildReviewSetupPlan({
     APPWRITE_CAKE_DATABASE_ID: 'cake_db_test',
@@ -373,6 +515,8 @@ test('dry-run plan exposes review ids, private permissions, admin mapping intent
     APPWRITE_MANUAL_COUPONS_TABLE_ID: 'manual_coupons_test',
     APPWRITE_REVIEW_PHOTOS_BUCKET_ID: 'photos_test',
     APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'cleanup_test',
+    APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'deliveries_test',
+    APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: 'retry_claims_test',
     APPWRITE_ADMIN_USER_IDS: 'admin-a, admin-b',
     APPWRITE_API_KEY: 'must-not-appear',
     APPWRITE_ENDPOINT: 'https://secret-endpoint.invalid/v1',
@@ -381,7 +525,9 @@ test('dry-run plan exposes review ids, private permissions, admin mapping intent
   assert.equal(plan.mode, 'dry-run')
   assert.equal(plan.network, false)
   assert.equal(plan.databaseId, 'cake_db_test')
-  assert.deepEqual(plan.collections.map(({ id }) => id), ['invites_test', 'reviews_test', 'coupons_test', 'manual_coupons_test', 'cleanup_test'])
+  assert.deepEqual(plan.collections.map(({ id }) => id), [
+    'invites_test', 'reviews_test', 'coupons_test', 'manual_coupons_test', 'cleanup_test', 'deliveries_test', 'retry_claims_test',
+  ])
   const manualCouponsPlan = plan.collections.find(({ id }) => id === 'manual_coupons_test')
   assert.deepEqual(manualCouponsPlan.attributeKeys, REVIEW_COLLECTIONS.manualCoupons.attributes.map(({ key }) => key))
   assert.deepEqual(manualCouponsPlan.indexKeys, ['codeHash_unique', 'status_idx', 'expiresAt_idx'])
@@ -395,6 +541,9 @@ test('dry-run plan exposes review ids, private permissions, admin mapping intent
       orders: ['ASC', 'ASC', 'DESC'],
     },
   )
+  const deliveriesPlan = plan.collections.find(({ id }) => id === 'deliveries_test')
+  assert.deepEqual(deliveriesPlan.attributeKeys, REVIEW_COLLECTIONS.emailDeliveries.attributes.map(({ key }) => key))
+  assert.deepEqual(deliveriesPlan.indexKeys, ['eventKey_unique'])
   assert.equal(plan.reservationAudit.collectionId, 'reservations_test')
   assert.deepEqual(plan.reservationMultiLine, {
     collectionId: 'reservations_test',
@@ -540,6 +689,70 @@ test('strict collection ensure rejects mismatched collection after a concurrent 
     /collection reviews definition mismatch \(name=wrong-reviews\)/,
   )
   assert.equal(getCount, 2)
+})
+
+test('the scoped email delivery migration revokes only the legacy direct-admin CRUD policy', async () => {
+  const expected = {
+    databaseId: 'cake_db',
+    collectionId: 'email_deliveries',
+    name: 'email_deliveries',
+    permissions: [],
+    documentSecurity: false,
+  }
+  let current = {
+    name: 'email_deliveries',
+    $permissions: [
+      'read("user:admin-a")',
+      'update("user:admin-a")',
+      'delete("user:admin-a")',
+    ],
+    documentSecurity: false,
+    enabled: true,
+  }
+  const updates = []
+
+  const result = await ensureStrictCollection({
+    ...expected,
+    getCollection: async () => current,
+    createCollection: async () => { throw new Error('must not create') },
+    updateCollection: async (params) => {
+      updates.push(params)
+      current = { ...current, ...params, $permissions: params.permissions }
+    },
+    migrateExisting: emailDeliveryLegacyPermissionMigration,
+    isMissing: () => false,
+    isConflict: () => false,
+  })
+
+  assert.equal(result, 'updated')
+  assert.deepEqual(updates, [{
+    databaseId: 'cake_db',
+    collectionId: 'email_deliveries',
+    name: 'email_deliveries',
+    permissions: [],
+    documentSecurity: false,
+    enabled: true,
+    purge: true,
+  }])
+
+  for (const unsafePermissions of [
+    ['read("any")'],
+    ['create("user:admin-a")'],
+    ['read("user:admin-a")', 'update("user:admin-a")'],
+  ]) {
+    assert.equal(emailDeliveryLegacyPermissionMigration({
+      name: 'email_deliveries',
+      $permissions: unsafePermissions,
+      documentSecurity: false,
+      enabled: true,
+    }, expected), null)
+  }
+})
+
+test('setup wires the scoped migration only for email_deliveries', () => {
+  const source = readFileSync(resolve(repositoryRoot, 'scripts/setup-appwrite.mjs'), 'utf8')
+  assert.match(source, /resource\.key === 'emailDeliveries' \? emailDeliveryLegacyPermissionMigration : undefined/)
+  assert.match(source, /updateCollection: \(params\) => databases\.updateCollection\(params\)/)
 })
 
 test('complete exact-set validation fails closed when Appwrite total exceeds returned resources', () => {

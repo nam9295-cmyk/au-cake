@@ -1,0 +1,9 @@
+{
+  "name": "booking-reminder",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/main.js",
+  "dependencies": {
+    "node-appwrite": "22.1.3"
+  }
+}

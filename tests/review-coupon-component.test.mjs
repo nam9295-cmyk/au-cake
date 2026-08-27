@@ -28,6 +28,7 @@ test('review success passes the coupon and server-returned reward to App memory 
   assert.match(app, /onInitialPromoConsumed=\{\(\) => setPendingReviewCoupon\(''\)\}/)
   assert.doesNotMatch(app, /useState\(consumeInitialPromoCode\)/)
   assert.match(review, /href="\/reserve"/)
+  assert.match(review, /copy\.rewardValidity/)
   assert.doesNotMatch(review, /queueReviewCouponForCakeOrder/)
   assert.doesNotMatch(review + app, /couponCode[^\n]*(?:searchParams|localStorage|sessionStorage)/)
   assert.doesNotMatch(review, /href=\{[^}]*couponCode/)

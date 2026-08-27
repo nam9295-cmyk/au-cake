@@ -100,3 +100,24 @@ test('admin drawer exposes options for versioned single-line orders including pa
   assert.match(reservationDrawerSource, /\{isVersionedOrder && \(/)
   assert.match(reservationDrawerSource, /<OrderDetailRows reservation=\{reservation\} language="en" \/>/)
 })
+
+test('cake admin list and drawer display customer email without altering SMS controls', () => {
+  assert.match(adminReservationsSource, /고객명, 연락처, 이메일, 예약번호/)
+  assert.match(adminReservationsSource, /reservation\.customerEmail \|\| '-'/)
+  assert.match(reservationDrawerSource, /<dt>이메일<\/dt>/)
+  assert.match(reservationDrawerSource, /reservation\.customerEmail \|\| '-'/)
+  assert.match(reservationDrawerSource, /buildSmsMessage/)
+})
+
+test('admin drawers keep SMS/message copies and add a separate confirmation-email primary action', () => {
+  for (const drawerSource of [reservationDrawerSource, classReservationDrawerSource]) {
+    assert.match(drawerSource, /from '\.\/BookingConfirmationEmailButton'/)
+    assert.match(drawerSource, /<BookingConfirmationEmailButton/)
+  }
+  assert.match(reservationDrawerSource, /확정 문자 복사/)
+  assert.match(reservationDrawerSource, /buildSmsMessage/)
+  assert.match(classReservationDrawerSource, /결제 안내 복사/)
+  assert.match(classReservationDrawerSource, /확정 안내 복사/)
+  assert.match(classReservationDrawerSource, /buildClassPaymentMessage/)
+  assert.match(classReservationDrawerSource, /buildClassConfirmationMessage/)
+})

@@ -183,6 +183,7 @@ export function ReservePage({
     quantity: initialSelection?.quantity || 1,
     customerName: '',
     customerPhone: '',
+    customerEmail: '',
     requestNote: '',
     promoCode: initialPromoCode,
     privacy: false,
@@ -326,6 +327,7 @@ export function ReservePage({
     event.preventDefault()
     setError('')
     const phone = normalizePhone(form.customerPhone)
+    const customerEmail = form.customerEmail.trim().toLowerCase()
 
     if (!form.customerName.trim() || form.customerName.trim().length < 2) {
       setError(copy.errors.name)
@@ -333,6 +335,10 @@ export function ReservePage({
     }
     if (!isValidPhone(phone)) {
       setError(`${copy.errors.phone} ${copy.phoneHelp}`)
+      return
+    }
+    if (customerEmail.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      setError(language === 'ko' ? '유효한 이메일 주소를 입력해 주세요.' : 'Please enter a valid email address.')
       return
     }
     if (!pickupDate || pickupDate < minPickupDate) {
@@ -383,6 +389,7 @@ export function ReservePage({
       const reservationInput = {
         customerName: form.customerName,
         customerPhone: phone,
+        customerEmail,
         productId: form.productId,
         cakeSize: form.cakeSize,
         chocolateType: form.chocolateType,
@@ -426,6 +433,7 @@ export function ReservePage({
             reservationNumber: 'VG-C-AU-DEMO',
             customerName: form.customerName.trim(),
             customerPhone: phone,
+            customerEmail,
             productId: form.productId,
             cakeSize: form.cakeSize,
             chocolateType: form.chocolateType,
@@ -456,6 +464,7 @@ export function ReservePage({
           ? await createCakeOrder({
               customerName: form.customerName,
               customerPhone: phone,
+              customerEmail,
               pickupDate,
               pickupTime: selectedPickupTime,
               requestNote: form.requestNote,
@@ -621,6 +630,13 @@ export function ReservePage({
     pickupTime: copy.pickupTime,
     customerName: copy.customerName,
     phone: copy.phone,
+    email: language === 'ko' ? '이메일 주소' : 'Email address',
+    emailHelp: language === 'ko'
+      ? '예약 안내와 리뷰 리워드를 이 주소로 보내드려요.'
+      : 'We’ll send your booking details and review reward to this address.',
+    emailPrivacy: language === 'ko'
+      ? '이메일은 예약 안내와 리뷰·쿠폰 전달에 사용됩니다.'
+      : 'Your email is used for booking details and review reward/coupon delivery.',
     requestNote: copy.requestNote,
     promoCode: copy.promoCode,
     promoPlaceholder: copy.promoPlaceholder,
@@ -1267,6 +1283,19 @@ export function ReservePage({
             </div>
 
             <label>
+              {labels.email}
+              <input
+                type="email"
+                autoComplete="email"
+                maxLength={120}
+                required
+                value={form.customerEmail}
+                onChange={(event) => setForm({ ...form, customerEmail: event.target.value })}
+              />
+              <span className="field-help">{labels.emailHelp}</span>
+            </label>
+
+            <label>
               {labels.requestNote}
               <textarea
                 value={form.requestNote}
@@ -1315,7 +1344,7 @@ export function ReservePage({
                 onChange={(event) => setForm({ ...form, privacy: event.target.checked })}
               />
               <span>
-                {copy.privacyNotice}
+                {copy.privacyNotice} {labels.emailPrivacy}
               </span>
             </label>
 

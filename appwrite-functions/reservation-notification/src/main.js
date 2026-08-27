@@ -1,5 +1,41 @@
-import https from 'node:https'
+import { Client, Databases } from 'node-appwrite'
+import {
+  buildEmailDeliveryEventKey,
+  evaluateEmailDeliveryRetry,
+  normalizeRecipientEmail,
+  normalizeRecipientEmailSet,
+  payloadHashForEmail,
+  recipientHashForEmail,
+  recipientHashForEmailSet,
+  resendIdempotencyKeyForEvent,
+} from '../shared/email-delivery/email-delivery.js'
+import { createEmailDeliveryRepository } from '../shared/email-delivery/email-delivery-repository.js'
+import { createEmailDeliveryRetryClaimRepository } from '../shared/email-delivery/email-delivery-retry-claim-repository.js'
+import { createResendTransport as createSharedResendTransport, ResendTransportError } from '../shared/email-delivery/resend-transport.js'
+import { deliverEmail, deliverEmails } from '../shared/email-delivery/email-delivery-sender.js'
+import { retryEmail } from '../shared/email-delivery/email-delivery-retry.js'
 import { parseStoredOrderLines } from '../shared/reservation-api/business.js'
+
+const APPWRITE_RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
+const BOOKING_OPERATOR_RECEIPT_TEMPLATE_VERSION = 'v1'
+const BOOKING_CUSTOMER_RECEIPT_TEMPLATE_VERSION = 'v2'
+const BOOKING_RECEIPT_TEMPLATES = Object.freeze({
+  operator: 'booking-received-operator',
+  customer: 'booking-received-customer',
+})
+const BOOKING_CONFIRMATION_TEMPLATE = 'booking-confirmed-customer'
+const BOOKING_CONFIRMATION_TEMPLATE_VERSION = 'v2'
+const BOOKING_EMAIL_KINDS = Object.freeze([
+  BOOKING_RECEIPT_TEMPLATES.operator,
+  BOOKING_RECEIPT_TEMPLATES.customer,
+  BOOKING_CONFIRMATION_TEMPLATE,
+])
+const BOOKING_CONFIRMATION_ALLOWED_STATUSES = Object.freeze({
+  cake: '예약확정',
+  class: 'Confirmed',
+})
+const CAKE_PICKUP_LOCATION = 'https://maps.app.goo.gl/bSVbF8M5BCdxJeDRA?g_st=iw'
+const CLASS_LOCATION = '1 Bundil Blvd, Melrose Park, Sydney'
 
 const MARKET_CONFIG = {
   KR: {
@@ -388,11 +424,15 @@ function escapeHtml(value) {
 }
 
 function readReservation(req) {
-  const body = req.bodyJson && typeof req.bodyJson === 'object' ? req.bodyJson : parseBody(req.bodyRaw)
+  const body = readRequestBody(req)
   if (!body) return null
 
   // Appwrite event payloads can arrive either as the document itself, or wrapped.
   return body.reservation || body.document || body.row || body.payload || body
+}
+
+function readRequestBody(req) {
+  return req?.bodyJson && typeof req.bodyJson === 'object' ? req.bodyJson : parseBody(req?.bodyRaw)
 }
 
 function parseBody(bodyRaw) {
@@ -632,91 +672,777 @@ export function buildNotificationHtml(reservation) {
   return buildHtml(reservation, getConfig(reservation))
 }
 
-async function postJson(url, payload, headers) {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify(payload)
-    const request = https.request(
-      url,
-      {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-        },
-      },
-      (response) => {
-        let responseBody = ''
-        response.setEncoding('utf8')
-        response.on('data', (chunk) => {
-          if (responseBody.length + chunk.length > 65_536) {
-            request.destroy(new Error('Resend API response was too large.'))
-            return
-          }
-          responseBody += chunk
-        })
-        response.on('end', () => {
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            try {
-              resolve(JSON.parse(responseBody))
-            } catch {
-              resolve({})
-            }
-            return
-          }
+function customerCakeRows(reservation, config) {
+  const storedLines = readStoredCakeLines(reservation)
+  const lines = storedLines || [reservation]
+  const detailRows = lines.length > 1
+    ? lines.flatMap((line, index) => cakeDetailRows(line, config, ` ${index + 1}`))
+    : cakeDetailRows({ ...reservation, ...lines[0] }, config)
+  const note = plainTextCell(reservation.requestNote)
+  return [
+    ['Name', reservation.customerName],
+    ['Booking number', reservation.reservationNumber],
+    ...detailRows,
+    ['Total', formatCurrency(getReservationTotal(reservation), config)],
+    ['Pick-up date', reservation.pickupDate],
+    ['Pick-up time', reservation.pickupTime],
+    ...(note ? [['Your request', note]] : []),
+    ['Pick-up location', 'Melrose Park, Sydney. We’ll share the exact meeting details with your final confirmation.'],
+  ]
+}
 
-          reject(new Error(`Resend API failed: ${response.statusCode} ${responseBody}`))
-        })
-      },
-    )
+function customerClassRows(reservation, config) {
+  const pricing = getClassPricingAudit(reservation, config)
+  const hasAdvancedSession = Boolean(reservation.advancedClassDate && reservation.advancedClassTime)
+  return [
+    ['Parent name', reservation.parentName],
+    ['Child name', reservation.childName],
+    ['Booking number', reservation.reservationNumber],
+    ['Course', getClassTypeText(reservation, config)],
+    ['Plan', getClassCoursePlanText(reservation)],
+    ['First session', [reservation.classDate, reservation.classTime].filter(Boolean).join(' ')],
+    ...(hasAdvancedSession ? [['Advanced session', `${reservation.advancedClassDate} ${reservation.advancedClassTime}`]] : []),
+    ['Total', pricing.total],
+    ['Location', 'Melrose Park, Sydney. We’ll share the exact address with your final confirmation.'],
+  ]
+}
 
-    request.setTimeout(10_000, () => request.destroy(new Error('Resend API request timed out.')))
-    request.on('error', reject)
-    request.write(body)
-    request.end()
+const CUSTOMER_EMAIL_KOREAN_LABELS = Object.freeze({
+  Name: '예약자',
+  'Booking number': '예약번호',
+  Product: '주문 상품',
+  Size: '사이즈',
+  Layers: '케이크 시트',
+  Filling: '필링',
+  'Cake colour': '케이크 색상',
+  'Point colour': '포인트 색상',
+  Chocolate: '초콜릿',
+  Finish: '마감',
+  'Icing mix': '마감 구성',
+  Quantity: '수량',
+  'Individual packaging': '개별 포장',
+  Total: '총 금액',
+  'Pick-up date': '픽업 날짜',
+  'Pick-up time': '픽업 시간',
+  'Pick-up location': '픽업 장소',
+  'Your request': '요청사항',
+  'Parent name': '보호자',
+  'Child name': '참가자',
+  Course: '클래스',
+  Plan: '과정',
+  'First session': '첫 수업',
+  'Advanced session': 'Advanced 세션',
+  Location: '장소',
+  Payment: '결제 안내',
+  Preparation: '준비사항',
+})
+
+function customerEmailKoreanRows(rows) {
+  return rows.map(([rawLabel, value]) => {
+    const label = plainTextCell(rawLabel)
+    const match = /^(.*?)(\s+\d+)$/.exec(label)
+    const base = match ? match[1] : label
+    return [`${CUSTOMER_EMAIL_KOREAN_LABELS[base] || base}${match ? match[2] : ''}`, value]
   })
 }
 
-async function sendResendEmail({ reservation, to, from, apiKey, config }) {
-  return postJson(
-    'https://api.resend.com/emails',
-    {
-      from,
-      to,
-      subject: getSubject(reservation, config),
-      text: buildText(reservation, config),
-      html: buildHtml(reservation, config),
+function bilingualGreeting(section) {
+  const name = plainTextCell(section.greetingName)
+  return section.language === '한국어' ? `안녕하세요, ${name}님.` : `Hi ${name},`
+}
+
+function bilingualTextSection(section) {
+  return [
+    `[${section.language}]`,
+    bilingualGreeting(section),
+    '',
+    plainTextCell(section.heading),
+    '',
+    plainTextCell(section.intro),
+    '',
+    plainTextCell(section.detailsHeading),
+    ...section.rows.map(([label, value]) => `${plainTextCell(label)}: ${plainTextCell(value)}`),
+    '',
+    plainTextCell(section.followUp),
+    '',
+    ...section.signOff.map(plainTextCell),
+  ].join('\n')
+}
+
+function bilingualHtmlRows(rows) {
+  return rows.map(([label, value]) => `
+    <tr>
+      <th style="width: 42%; padding: 10px 12px; border: 1px solid #e8ded5; background: #fbf6ef; text-align: left; vertical-align: top;">${escapeHtml(plainTextCell(label))}</th>
+      <td style="padding: 10px 12px; border: 1px solid #e8ded5; vertical-align: top;">${escapeHtml(plainTextCell(value))}</td>
+    </tr>`).join('')
+}
+
+function bilingualHtmlSection(section) {
+  return `
+    <section>
+      <p style="margin: 0 0 8px; color: #6b4b3e; font-size: 13px; font-weight: 700;">[${escapeHtml(section.language)}]</p>
+      <h1 style="font-size: 22px; line-height: 1.3; margin: 0 0 16px;">${escapeHtml(plainTextCell(section.heading))}</h1>
+      <p style="margin: 0 0 16px;">${escapeHtml(bilingualGreeting(section))}</p>
+      <p style="margin: 0 0 20px;">${escapeHtml(plainTextCell(section.intro))}</p>
+      <div style="border: 1px solid #e8ded5; border-radius: 8px; overflow: hidden; margin: 0 0 20px;">
+        <div style="padding: 12px; background: #5b2417; color: #ffffff; font-weight: 700;">${escapeHtml(plainTextCell(section.detailsHeading))}</div>
+        <table style="border-collapse: collapse; width: 100%;"><tbody>${bilingualHtmlRows(section.rows)}</tbody></table>
+      </div>
+      <p style="margin: 0 0 16px;">${escapeHtml(plainTextCell(section.followUp))}</p>
+      <p style="margin: 0;">${section.signOff.map((line) => escapeHtml(plainTextCell(line))).join('<br />')}</p>
+    </section>`
+}
+
+function buildBilingualEmailText(korean, english) {
+  return [bilingualTextSection(korean), '', '--------------------', '', bilingualTextSection(english)].join('\n')
+}
+
+function buildBilingualEmailHtml(korean, english) {
+  return `
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55; max-width: 640px; margin: 0 auto;">
+      ${bilingualHtmlSection(korean)}
+      <div style="border-top: 1px solid #e8ded5; margin: 28px 0;"></div>
+      ${bilingualHtmlSection(english)}
+    </div>`
+}
+
+function customerEmailCopy(reservation) {
+  if (isClassReservation(reservation)) {
+    return {
+      subject: '[Verygood] 키즈 클래스 예약 요청이 접수됐어요 | Kids Class booking request received',
+      korean: {
+        language: '한국어', greetingName: reservation.parentName,
+        heading: '키즈 클래스 예약 요청이 접수되었습니다',
+        intro: '베리굿 키즈 클래스 예약 요청이 정상적으로 접수되었습니다.',
+        detailsHeading: '예약 내역',
+        followUp: '현재는 “예약 요청 접수” 상태입니다. 수업 및 결제 내용을 확인한 뒤 최종 확정 안내를 보내드릴게요. 수업 전 준비사항과 알러지 정보에 변경이 있으면 알려주세요.',
+        signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
+      },
+      english: {
+        language: 'English', greetingName: reservation.parentName,
+        heading: 'Your kids class booking request has been received',
+        intro: 'We’ve received your booking request. We’ll check the details and send payment details and final confirmation instructions next.',
+        detailsHeading: 'Booking details',
+        followUp: 'Please tell us promptly if allergy information changes. Your child may bring a favourite small figure, doll, LEGO, or toy if they would like to include it in the class.',
+        signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
+      },
+    }
+  }
+  return {
+    subject: '[Verygood] 케이크 예약 요청이 접수됐어요 | Cake booking request received',
+    korean: {
+      language: '한국어', greetingName: reservation.customerName,
+      heading: '케이크 예약 요청이 접수되었습니다',
+      intro: '베리굿 초콜릿 시드니에 예약해주셔서 감사합니다. 예약 요청이 정상적으로 접수되었습니다.',
+      detailsHeading: '예약 내역',
+      followUp: '현재는 “예약 요청 접수” 상태입니다. 주문 내용을 확인한 뒤 최종 예약 확정 안내를 다시 보내드릴게요.',
+      signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
     },
-    {
-      Authorization: `Bearer ${apiKey}`,
+    english: {
+      language: 'English', greetingName: reservation.customerName,
+      heading: 'Your booking request has been received',
+      intro: 'Thank you for booking with Verygood Chocolate Sydney. We’ve received your booking request.',
+      detailsHeading: 'Booking details',
+      followUp: 'Your booking is currently awaiting final confirmation. We’ll review the details and send you a final confirmation shortly.',
+      signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
     },
+  }
+}
+
+function buildCustomerReceiptText(reservation, config) {
+  const copy = customerEmailCopy(reservation)
+  const rows = isClassReservation(reservation)
+    ? customerClassRows(reservation, config)
+    : customerCakeRows(reservation, config)
+  return buildBilingualEmailText(
+    { ...copy.korean, rows: customerEmailKoreanRows(rows) },
+    { ...copy.english, rows },
   )
 }
 
-export default async ({ req, res, log, error }) => {
-  const reservation = readReservation(req)
+function buildCustomerReceiptHtml(reservation, config) {
+  const copy = customerEmailCopy(reservation)
+  const rows = isClassReservation(reservation)
+    ? customerClassRows(reservation, config)
+    : customerCakeRows(reservation, config)
+  return buildBilingualEmailHtml(
+    { ...copy.korean, rows: customerEmailKoreanRows(rows) },
+    { ...copy.english, rows },
+  )
+}
+
+function sourceIdForReservation(reservation) {
+  const sourceId = reservation?.$id || reservation?.$rowId || reservation?.id
+  if (!APPWRITE_RESOURCE_ID.test(sourceId || '')) throw new Error('INVALID_RESERVATION_SOURCE_ID')
+  return sourceId
+}
+
+function sourceTypeForReservation(reservation) {
+  return isClassReservation(reservation) ? 'class' : 'cake'
+}
+
+function safeHeaderValue(value, field) {
+  const normalized = plainTextCell(value)
+  if (!normalized) throw new Error(`INVALID_${field}`)
+  return normalized
+}
+
+export function buildBookingDeliveryPayload({
+  reservation,
+  role,
+  from,
+  operatorRecipients,
+  replyTo = null,
+} = {}) {
+  if (!reservation || (role !== 'operator' && role !== 'customer')) throw new Error('INVALID_BOOKING_DELIVERY_PAYLOAD')
+  const sourceType = sourceTypeForReservation(reservation)
+  const sourceId = sourceIdForReservation(reservation)
+  const template = BOOKING_RECEIPT_TEMPLATES[role]
+  const templateVersion = role === 'operator'
+    ? BOOKING_OPERATOR_RECEIPT_TEMPLATE_VERSION
+    : `${template}-${sourceType}-${BOOKING_CUSTOMER_RECEIPT_TEMPLATE_VERSION}`
+  const to = role === 'operator'
+    ? normalizeRecipientEmailSet(operatorRecipients)
+    : [normalizeRecipientEmail(sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)]
   const config = getConfig(reservation)
-  const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM_EMAIL
-  const to = parseRecipients(process.env.RESEND_TO_EMAILS)
-
-  if (!reservation?.reservationNumber) {
-    error('예약 알림 메일 발송 실패: 예약 데이터가 없습니다.')
-    return res.json({ ok: false, reason: 'missing_reservation' })
+  const subject = role === 'operator' ? getSubject(reservation, config) : customerEmailCopy(reservation).subject
+  const text = role === 'operator' ? buildText(reservation, config) : buildCustomerReceiptText(reservation, config)
+  const html = role === 'operator' ? buildHtml(reservation, config) : buildCustomerReceiptHtml(reservation, config)
+  const normalizedFrom = safeHeaderValue(from, 'RESEND_FROM_EMAIL')
+  const normalizedReplyTo = replyTo === null || replyTo === undefined || !String(replyTo).trim()
+    ? null
+    : normalizeRecipientEmail(replyTo)
+  const eventKey = buildEmailDeliveryEventKey({ template, sourceType, sourceId })
+  const hashInput = {
+    from: normalizedFrom,
+    ...(role === 'operator' ? { recipientEmails: to } : { recipientEmail: to[0] }),
+    replyTo: normalizedReplyTo,
+    subject,
+    text,
+    html,
+    template,
+    templateVersion,
   }
-
-  if (!apiKey || !from || to.length === 0) {
-    error('예약 알림 메일 발송 실패: RESEND_API_KEY, RESEND_FROM_EMAIL, RESEND_TO_EMAILS 설정을 확인하세요.')
-    return res.json({ ok: false, reason: 'missing_config', reservationNumber: reservation.reservationNumber })
-  }
-
-  try {
-    const result = await sendResendEmail({ reservation, to, from, apiKey, config })
-    log(`예약 알림 메일 발송 완료: ${reservation.reservationNumber} -> ${to.join(', ')}`)
-    return res.json({ ok: true, id: result.id, reservationNumber: reservation.reservationNumber })
-  } catch (sendError) {
-    error(`예약 알림 메일 발송 실패: ${reservation.reservationNumber}`)
-    error(sendError?.message || String(sendError))
-    return res.json({ ok: false, reason: 'send_failed', reservationNumber: reservation.reservationNumber })
+  return {
+    from: normalizedFrom,
+    to,
+    replyTo: normalizedReplyTo,
+    subject,
+    text,
+    html,
+    template,
+    templateVersion,
+    eventKey,
+    sourceType,
+    sourceId,
+    recipientHash: role === 'operator' ? recipientHashForEmailSet(to) : recipientHashForEmail(to[0]),
+    payloadHash: payloadHashForEmail(hashInput),
+    idempotencyKey: resendIdempotencyKeyForEvent(eventKey),
   }
 }
+
+function confirmationCakeRows(reservation, config) {
+  const rows = customerCakeRows(reservation, config)
+  return rows.map(([label, value]) => label === 'Pick-up location'
+    ? ['Pick-up location', CAKE_PICKUP_LOCATION]
+    : [label, value])
+}
+
+function confirmationClassRows(reservation, config) {
+  const rows = customerClassRows(reservation, config)
+  return [
+    ...rows.map(([label, value]) => label === 'Location' ? ['Location', CLASS_LOCATION] : [label, value]),
+    ['Payment', 'We will contact you if any payment details still need attention.'],
+    ['Preparation', 'Please arrive 5 minutes early. Tie back long hair; clothes may get chocolate or cream on them.'],
+  ]
+}
+
+function confirmationEmailCopy(reservation, sourceType) {
+  if (sourceType === 'class') {
+    return {
+      subject: '[Verygood] 키즈 클래스 예약이 확정됐어요 | Your class booking is confirmed',
+      korean: {
+        language: '한국어', greetingName: reservation.parentName,
+        heading: '키즈 클래스 예약이 최종 확정되었습니다',
+        intro: `${plainTextCell(reservation.childName)}님의 베리굿 키즈 클래스 예약이 최종 확정되었습니다. 수업 전 준비사항과 알러지 정보에 변경이 있으면 알려주세요.`,
+        detailsHeading: '예약 내역',
+        followUp: '수업 전 궁금한 점이 있으면 이 이메일 또는 기존 안내된 연락 방법으로 문의해주세요.',
+        signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
+      },
+      english: {
+        language: 'English', greetingName: reservation.parentName,
+        heading: 'Your kids class booking is CONFIRMED',
+        intro: 'Your Verygood Kids Class booking is confirmed. Please arrive ready for the session and let us know promptly if allergy information changes.',
+        detailsHeading: 'Booking details',
+        followUp: 'Reply to this email if you have a question before the class.',
+        signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
+      },
+    }
+  }
+  return {
+    subject: '[Verygood] 케이크 예약이 확정됐어요 | Your cake booking is confirmed',
+    korean: {
+      language: '한국어', greetingName: reservation.customerName,
+      heading: '예약이 최종 확정되었습니다',
+      intro: '베리굿 초콜릿 예약이 최종 확정되었습니다. 픽업 때 뵙겠습니다.',
+      detailsHeading: '예약 내역',
+      followUp: '변경사항이나 문의가 있으시면 이 이메일 또는 기존 안내된 연락 방법으로 연락해주세요.',
+      signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
+    },
+    english: {
+      language: 'English', greetingName: reservation.customerName,
+      heading: 'Your booking is CONFIRMED',
+      intro: 'Your Verygood Chocolate booking is confirmed. We look forward to seeing you at collection.',
+      detailsHeading: 'Booking details',
+      followUp: 'Reply to this email if you have a question about your booking.',
+      signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
+    },
+  }
+}
+
+function confirmationRows(reservation, sourceType, config) {
+  return sourceType === 'class'
+    ? confirmationClassRows(reservation, config)
+    : confirmationCakeRows(reservation, config)
+}
+
+function buildBookingConfirmationText(reservation, sourceType, config) {
+  const copy = confirmationEmailCopy(reservation, sourceType)
+  const rows = confirmationRows(reservation, sourceType, config)
+  return buildBilingualEmailText(
+    { ...copy.korean, rows: customerEmailKoreanRows(rows) },
+    { ...copy.english, rows },
+  )
+}
+
+function buildBookingConfirmationHtml(reservation, sourceType, config) {
+  const copy = confirmationEmailCopy(reservation, sourceType)
+  const rows = confirmationRows(reservation, sourceType, config)
+  return buildBilingualEmailHtml(
+    { ...copy.korean, rows: customerEmailKoreanRows(rows) },
+    { ...copy.english, rows },
+  )
+}
+
+export function buildBookingConfirmationPayload({ reservation, sourceType, from, replyTo = null } = {}) {
+  if (!reservation || !['cake', 'class'].includes(sourceType) || sourceTypeForReservation(reservation) !== sourceType) {
+    throw new Error('INVALID_BOOKING_CONFIRMATION_PAYLOAD')
+  }
+  const sourceId = sourceIdForReservation(reservation)
+  const recipient = normalizeRecipientEmail(sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)
+  const config = getConfig(reservation)
+  const copy = confirmationEmailCopy(reservation, sourceType)
+  const normalizedFrom = safeHeaderValue(from, 'RESEND_FROM_EMAIL')
+  const normalizedReplyTo = replyTo === null || replyTo === undefined || !String(replyTo).trim()
+    ? null
+    : normalizeRecipientEmail(replyTo)
+  const templateVersion = `${BOOKING_CONFIRMATION_TEMPLATE}-${sourceType}-${BOOKING_CONFIRMATION_TEMPLATE_VERSION}`
+  const eventKey = buildEmailDeliveryEventKey({ template: BOOKING_CONFIRMATION_TEMPLATE, sourceType, sourceId })
+  const text = buildBookingConfirmationText(reservation, sourceType, config)
+  const html = buildBookingConfirmationHtml(reservation, sourceType, config)
+  return {
+    from: normalizedFrom,
+    to: [recipient],
+    replyTo: normalizedReplyTo,
+    subject: copy.subject,
+    text,
+    html,
+    template: BOOKING_CONFIRMATION_TEMPLATE,
+    templateVersion,
+    eventKey,
+    sourceType,
+    sourceId,
+    recipientHash: recipientHashForEmail(recipient),
+    payloadHash: payloadHashForEmail({
+      from: normalizedFrom,
+      recipientEmail: recipient,
+      replyTo: normalizedReplyTo,
+      subject: copy.subject,
+      text,
+      html,
+      template: BOOKING_CONFIRMATION_TEMPLATE,
+      templateVersion,
+    }),
+    idempotencyKey: resendIdempotencyKeyForEvent(eventKey),
+  }
+}
+
+export { ResendTransportError }
+
+export function createResendTransport(options = {}) {
+  return createSharedResendTransport({
+    ...options,
+    userAgent: 'verygood-reservation-notification/1.0',
+  })
+}
+
+export function deliverBookingEmail(options = {}) {
+  return deliverEmail({ ...options, logLabel: 'Booking email delivery' })
+}
+
+export function deliverBookingEmails(options = {}) {
+  return deliverEmails({ ...options, logLabel: 'Booking email delivery' })
+}
+
+function runtimeResourceId(env, key, fallback) {
+  const value = String(env[key] || fallback || '').trim()
+  if (!APPWRITE_RESOURCE_ID.test(value)) throw new Error('EMAIL_DELIVERY_CONFIGURATION_ERROR')
+  return value
+}
+
+export function createRuntimeEmailDeliveryRepository({ req, env = process.env, createDatabases } = {}) {
+  const endpoint = String(env.APPWRITE_FUNCTION_API_ENDPOINT || '').trim()
+  const projectId = String(env.APPWRITE_FUNCTION_PROJECT_ID || '').trim()
+  const apiKey = req?.headers?.['x-appwrite-key']
+  if (!endpoint || !projectId || typeof apiKey !== 'string' || !apiKey.trim()) {
+    throw new Error('EMAIL_DELIVERY_CONFIGURATION_ERROR')
+  }
+  const databases = createDatabases
+    ? createDatabases({ endpoint, projectId, apiKey })
+    : new Databases(new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey))
+  return createEmailDeliveryRepository({
+    databases,
+    databaseId: runtimeResourceId(env, 'APPWRITE_CAKE_DATABASE_ID'),
+    collectionId: runtimeResourceId(env, 'APPWRITE_EMAIL_DELIVERIES_TABLE_ID', 'email_deliveries'),
+  })
+}
+
+export function createRuntimeEmailDeliveryRetryClaimRepository({ req, env = process.env, createDatabases } = {}) {
+  const endpoint = String(env.APPWRITE_FUNCTION_API_ENDPOINT || '').trim()
+  const projectId = String(env.APPWRITE_FUNCTION_PROJECT_ID || '').trim()
+  const apiKey = req?.headers?.['x-appwrite-key']
+  if (!endpoint || !projectId || typeof apiKey !== 'string' || !apiKey.trim()) {
+    throw new Error('EMAIL_DELIVERY_RETRY_CONFIGURATION_ERROR')
+  }
+  const databases = createDatabases
+    ? createDatabases({ endpoint, projectId, apiKey })
+    : new Databases(new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey))
+  return createEmailDeliveryRetryClaimRepository({
+    databases,
+    databaseId: runtimeResourceId(env, 'APPWRITE_CAKE_DATABASE_ID'),
+    collectionId: runtimeResourceId(env, 'APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID', 'email_delivery_retry_claims'),
+  })
+}
+
+export function assertBookingConfirmationAdmin(headers = {}, env = process.env) {
+  const userId = headers['x-appwrite-user-id']
+  const allowlist = String(env.REVIEW_ADMIN_USER_IDS || '').split(',').map((id) => id.trim()).filter(Boolean)
+  if (typeof userId !== 'string' || !allowlist.includes(userId)) {
+    const error = new Error('BOOKING_CONFIRMATION_UNAUTHORIZED')
+    error.code = 'BOOKING_CONFIRMATION_UNAUTHORIZED'
+    throw error
+  }
+  return userId
+}
+
+export function createRuntimeReservationRepository({ req, env = process.env, createDatabases } = {}) {
+  const endpoint = String(env.APPWRITE_FUNCTION_API_ENDPOINT || '').trim()
+  const projectId = String(env.APPWRITE_FUNCTION_PROJECT_ID || '').trim()
+  const apiKey = req?.headers?.['x-appwrite-key']
+  if (!endpoint || !projectId || typeof apiKey !== 'string' || !apiKey.trim()) {
+    throw new Error('BOOKING_CONFIRMATION_CONFIGURATION_ERROR')
+  }
+  const databases = createDatabases
+    ? createDatabases({ endpoint, projectId, apiKey })
+    : new Databases(new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey))
+  if (typeof databases.getDocument !== 'function') throw new Error('BOOKING_CONFIRMATION_CONFIGURATION_ERROR')
+  const cakeDatabaseId = runtimeResourceId(env, 'APPWRITE_CAKE_DATABASE_ID')
+  const classDatabaseId = runtimeResourceId(env, 'APPWRITE_KIDS_DATABASE_ID', cakeDatabaseId)
+  const cakeReservationsId = runtimeResourceId(env, 'APPWRITE_CAKE_RESERVATIONS_TABLE_ID', 'reservations')
+  const classReservationsId = runtimeResourceId(env, 'APPWRITE_KIDS_RESERVATIONS_TABLE_ID', 'class_reservations')
+  return {
+    async getReservation(sourceType, reservationId) {
+      if (!['cake', 'class'].includes(sourceType) || !APPWRITE_RESOURCE_ID.test(reservationId || '')) {
+        throw new Error('BOOKING_CONFIRMATION_INVALID_RESERVATION')
+      }
+      return databases.getDocument({
+        databaseId: sourceType === 'class' ? classDatabaseId : cakeDatabaseId,
+        collectionId: sourceType === 'class' ? classReservationsId : cakeReservationsId,
+        documentId: reservationId,
+      })
+    },
+  }
+}
+
+function manualActionData(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return null
+  if (typeof body.action !== 'string') return null
+  return body
+}
+
+function bookingEmailActionInput(body, { requireEmailKind = false } = {}) {
+  const data = body?.data
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null
+  const { sourceType, reservationId, emailKind } = data
+  if (!['cake', 'class'].includes(sourceType) || !APPWRITE_RESOURCE_ID.test(reservationId || '')) return null
+  if (requireEmailKind && !BOOKING_EMAIL_KINDS.includes(emailKind)) return null
+  return { sourceType, reservationId, ...(requireEmailKind ? { emailKind } : {}) }
+}
+
+function isReservationConfirmed(reservation, sourceType) {
+  return reservation?.status === BOOKING_CONFIRMATION_ALLOWED_STATUSES[sourceType]
+}
+
+function maskRecipientEmail(value) {
+  const email = normalizeRecipientEmail(value)
+  const [local, domain] = email.split('@')
+  return `${local.slice(0, 1)}***@${domain}`
+}
+
+function confirmationResult(delivery, recipientMasked) {
+  switch (delivery?.status) {
+    case 'sent':
+      return { status: 'sent', ...(delivery.sentAt ? { sentAt: delivery.sentAt } : {}), recipientMasked }
+    case 'already_sent':
+      return { status: 'already_sent', ...(delivery.sentAt ? { sentAt: delivery.sentAt } : {}), recipientMasked }
+    case 'in_progress':
+      return { status: 'pending', recipientMasked }
+    case 'uncertain':
+    case 'reconciliation_required':
+      return { status: 'uncertain', recipientMasked }
+    default:
+      return { status: 'failed', recipientMasked }
+  }
+}
+
+function confirmationStatusResult(delivery, recipientMasked) {
+  const recipient = recipientMasked ? { recipientMasked } : {}
+  if (!delivery) return { status: 'not_sent', ...recipient }
+  if (delivery.status === 'sent') return { status: 'sent', ...(typeof delivery.sentAt === 'string' ? { sentAt: delivery.sentAt } : {}), ...recipient }
+  if (delivery.status === 'pending') return { status: 'pending', ...recipient }
+  if (delivery.status === 'uncertain') return { status: 'uncertain', ...recipient }
+  return { status: 'failed', ...recipient }
+}
+
+function bookingEmailPayload({ reservation, sourceType, emailKind, env }) {
+  if (emailKind === BOOKING_CONFIRMATION_TEMPLATE) {
+    return buildBookingConfirmationPayload({
+      reservation, sourceType, from: env.RESEND_FROM_EMAIL, replyTo: env.RESEND_REPLY_TO_EMAIL || null,
+    })
+  }
+  return buildBookingDeliveryPayload({
+    reservation,
+    role: emailKind === BOOKING_RECEIPT_TEMPLATES.operator ? 'operator' : 'customer',
+    from: env.RESEND_FROM_EMAIL,
+    operatorRecipients: parseRecipients(env.RESEND_TO_EMAILS),
+    replyTo: env.RESEND_REPLY_TO_EMAIL || null,
+  })
+}
+
+function maskPayloadRecipient(payload) {
+  return payload?.to?.length === 1 ? maskRecipientEmail(payload.to[0]) : null
+}
+
+function bookingEmailStatusResult(delivery, payload, retryClaim, now) {
+  const decision = evaluateEmailDeliveryRetry({
+    delivery,
+    identity: payload,
+    retryClaim,
+    now,
+  })
+  return {
+    status: decision.status,
+    retry: decision.retry,
+    ...(delivery?.sentAt && decision.status === 'sent' ? { sentAt: delivery.sentAt } : {}),
+    ...(delivery?.lastAttemptAt ? { lastAttemptAt: delivery.lastAttemptAt } : {}),
+    ...(decision.retryUntil ? { retryUntil: decision.retryUntil } : {}),
+    ...(maskPayloadRecipient(payload) ? { recipientMasked: maskPayloadRecipient(payload) } : {}),
+    ...(decision.safeErrorCode ? { safeErrorCode: decision.safeErrorCode } : {}),
+  }
+}
+
+function bookingEmailRetryResult(delivery, recipientMasked) {
+  return {
+    status: delivery.status,
+    ...(typeof delivery.sentAt === 'string' ? { sentAt: delivery.sentAt } : {}),
+    ...(recipientMasked ? { recipientMasked } : {}),
+  }
+}
+
+async function handleBookingEmailAction({
+  body,
+  req,
+  res,
+  env,
+  createReservationRepository,
+  createLedgerRepository,
+  createRetryClaimRepository,
+  createTransport,
+  now,
+  log,
+  error,
+}) {
+  try {
+    assertBookingConfirmationAdmin(req?.headers, env)
+  } catch {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_UNAUTHORIZED' })
+  }
+  const isLegacyConfirmationAction = ['send-booking-confirmation', 'get-booking-confirmation-status'].includes(body.action)
+  const isGenericAction = ['get-booking-email-status', 'retry-booking-email'].includes(body.action)
+  if (!isLegacyConfirmationAction && !isGenericAction) {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_INVALID_ACTION' })
+  }
+  const input = bookingEmailActionInput(body, { requireEmailKind: isGenericAction })
+  if (!input) return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_INVALID_REQUEST' })
+  const emailKind = isGenericAction ? input.emailKind : BOOKING_CONFIRMATION_TEMPLATE
+
+  let reservation
+  try {
+    const reservations = createReservationRepository({ req, env })
+    reservation = await reservations.getReservation(input.sourceType, input.reservationId)
+  } catch {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_RESERVATION_UNAVAILABLE' })
+  }
+  if (!reservation || sourceTypeForReservation(reservation) !== input.sourceType) {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_NOT_FOUND' })
+  }
+
+  if (body.action === 'get-booking-confirmation-status') {
+    try {
+      const eventKey = buildEmailDeliveryEventKey({
+        template: BOOKING_CONFIRMATION_TEMPLATE,
+        sourceType: input.sourceType,
+        sourceId: sourceIdForReservation(reservation),
+      })
+      const repository = createLedgerRepository({ req, env })
+      let recipientMasked = null
+      try {
+        recipientMasked = maskRecipientEmail(input.sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)
+      } catch {}
+      return res.json({ ok: true, result: confirmationStatusResult(await repository.getByEventKey(eventKey), recipientMasked) })
+    } catch {
+      return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_STATUS_UNAVAILABLE' })
+    }
+  }
+
+  if ((body.action === 'send-booking-confirmation' ||
+       (body.action === 'retry-booking-email' && emailKind === BOOKING_CONFIRMATION_TEMPLATE)) &&
+      !isReservationConfirmed(reservation, input.sourceType)) {
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_STATUS_INVALID' })
+  }
+
+  let payload
+  let recipientMasked
+  let repository
+  let transport
+  try {
+    payload = bookingEmailPayload({ reservation, sourceType: input.sourceType, emailKind, env })
+    recipientMasked = maskPayloadRecipient(payload)
+    repository = createLedgerRepository({ req, env })
+    transport = createTransport({ apiKey: env.RESEND_API_KEY })
+  } catch {
+    error(`Booking email configuration unavailable: ${input.sourceType}:${input.reservationId}:${emailKind}`)
+    return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_UNAVAILABLE' })
+  }
+
+  if (body.action === 'get-booking-email-status') {
+    try {
+      const delivery = await repository.getByEventKey(payload.eventKey)
+      let retryClaim = null
+      if (delivery) {
+        const claimRepository = createRetryClaimRepository({ req, env })
+        retryClaim = await claimRepository.getByEventKey(payload.eventKey)
+      }
+      return res.json({ ok: true, result: bookingEmailStatusResult(delivery, payload, retryClaim, now()) })
+    } catch {
+      return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_STATUS_UNAVAILABLE' })
+    }
+  }
+
+  if (body.action === 'retry-booking-email') {
+    let retryClaimRepository
+    let delivery
+    try {
+      delivery = await repository.getByEventKey(payload.eventKey)
+      retryClaimRepository = createRetryClaimRepository({ req, env })
+    } catch {
+      return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_RETRY_UNAVAILABLE' })
+    }
+    const deliveryResult = await retryEmail({
+      payload,
+      delivery,
+      deliveryRepository: repository,
+      retryClaimRepository,
+      claimedByUserId: assertBookingConfirmationAdmin(req?.headers, env),
+      transport,
+      now: now(),
+      log,
+      error,
+      logLabel: 'Booking email retry',
+    })
+    return res.json({ ok: true, result: bookingEmailRetryResult(deliveryResult, recipientMasked) })
+  }
+
+  const delivery = await deliverBookingEmail({ payload, repository, transport, now: now(), log, error })
+  return res.json({ ok: true, result: confirmationResult(delivery, recipientMasked) })
+}
+
+export function createReservationNotificationHandler({
+  env = process.env,
+  createLedgerRepository = createRuntimeEmailDeliveryRepository,
+  createRetryClaimRepository = createRuntimeEmailDeliveryRetryClaimRepository,
+  createReservationRepository = createRuntimeReservationRepository,
+  createTransport = createResendTransport,
+  now = () => new Date(),
+} = {}) {
+  return async ({ req, res, log = () => {}, error = () => {} }) => {
+    const body = readRequestBody(req)
+    const actionRequest = manualActionData(body)
+    if (actionRequest) {
+      return handleBookingEmailAction({
+        body: actionRequest, req, res, env, createReservationRepository, createLedgerRepository, createRetryClaimRepository, createTransport, now, log, error,
+      })
+    }
+    const reservation = readReservation(req)
+    const apiKey = env.RESEND_API_KEY
+    const from = env.RESEND_FROM_EMAIL
+    const operatorRecipients = parseRecipients(env.RESEND_TO_EMAILS)
+    const replyTo = env.RESEND_REPLY_TO_EMAIL || null
+
+    if (!reservation?.reservationNumber) {
+      error('예약 알림 메일 발송 실패: 예약 데이터가 없습니다.')
+      return res.json({ ok: false, reason: 'missing_reservation' })
+    }
+    if (!apiKey || !from || operatorRecipients.length === 0) {
+      error('예약 알림 메일 발송 실패: RESEND_API_KEY, RESEND_FROM_EMAIL, RESEND_TO_EMAILS 설정을 확인하세요.')
+      return res.json({ ok: false, reason: 'missing_config', reservationNumber: reservation.reservationNumber })
+    }
+
+    let operatorPayload
+    try {
+      operatorPayload = buildBookingDeliveryPayload({ reservation, role: 'operator', from, operatorRecipients, replyTo })
+    } catch {
+      error(`예약 알림 메일 발송 실패: ${plainTextCell(reservation.reservationNumber)}의 운영자 발송 구성이 유효하지 않습니다.`)
+      return res.json({ ok: false, reason: 'invalid_operator_delivery', reservationNumber: reservation.reservationNumber })
+    }
+
+    let customerPayload = null
+    try {
+      customerPayload = buildBookingDeliveryPayload({ reservation, role: 'customer', from, operatorRecipients, replyTo })
+    } catch {
+      error(`예약 고객 이메일을 발송하지 않았습니다: ${plainTextCell(reservation.reservationNumber)}의 고객 이메일이 없습니다 또는 유효하지 않습니다.`)
+    }
+
+    let repository
+    let transport
+    try {
+      repository = createLedgerRepository({ req, env })
+      transport = createTransport({ apiKey })
+    } catch {
+      error(`예약 알림 메일 발송 실패: ${plainTextCell(reservation.reservationNumber)}의 delivery ledger 설정을 확인하세요.`)
+      return res.json({ ok: false, reason: 'delivery_ledger_unavailable', reservationNumber: reservation.reservationNumber })
+    }
+
+    const [operator, customer] = await deliverBookingEmails({
+      payloads: [operatorPayload, customerPayload], repository, transport, now: now(), log, error,
+    })
+    return res.json({
+      ok: true,
+      reservationNumber: reservation.reservationNumber,
+      ...(operator.status === 'sent' ? { id: operator.providerMessageId } : {}),
+      deliveries: { operator, customer },
+    })
+  }
+}
+
+export default createReservationNotificationHandler()

@@ -20,6 +20,7 @@ import {
   type AdminReviewStatus,
 } from './lib/admin-reviews'
 import { isAdminLoggedIn } from './lib/repository'
+import { ReviewRewardEmailRetry } from './ReviewRewardEmailRetry'
 
 const FILTERS: Array<{ value: AdminReviewFilter; label: string }> = [
   { value: 'pending', label: '대기' },
@@ -316,6 +317,7 @@ export default function AdminReviewsPage({
                   >
                     {copying ? '복사 중…' : '리워드 메시지 복사'}
                   </button>
+                  {!demoMode && <ReviewRewardEmailRetry reviewId={review.id} />}
                 </section>
                 {review.hasPhoto && (
                   demoMode ? (

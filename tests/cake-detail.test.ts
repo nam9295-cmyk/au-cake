@@ -148,6 +148,7 @@ test('Lemon Cake supports two or more identical packs with simple quantity multi
   const reservation = buildCakeReservation({
     customerName: 'Lemon Quantity',
     customerPhone: '0412345678',
+    customerEmail: 'lemon@example.com',
     ...selection,
     pickupDate: '2026-08-01',
     pickupTime: '10:00',

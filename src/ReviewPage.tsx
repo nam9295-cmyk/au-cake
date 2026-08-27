@@ -465,6 +465,7 @@ export default function ReviewPage({ onOrderCake }: { onOrderCake: (couponCode: 
             </div>
             {copyError && <p className="review-error" role="alert">{copy.copyError}</p>}
             <p>{copy.expires}: {formatCouponExpiry(success.couponExpiresAt, language)}</p>
+            <p>{copy.rewardValidity}</p>
             <div className="review-ticket-actions">
               <a className="review-primary" href="/reserve" onClick={orderAgain}>{copy.order}</a>
               <a className="review-secondary" href="/">{copy.home}</a>

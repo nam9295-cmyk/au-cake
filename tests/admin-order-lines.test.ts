@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getReservationByNumber, toReservation, toReservationList, updateReservation } from '../src/lib/repository.js'
+import { createReservation, getReservationByNumber, listReservations, toReservation, toReservationList, updateReservation } from '../src/lib/repository.js'
 
 const lines = [
   {
@@ -36,6 +36,30 @@ test('admin Appwrite hydration preserves every validated stored order line and a
   assert.equal(reservation.orderItemCount, 2)
   assert.equal(reservation.totalPriceCents, 13000)
   assert.equal(reservation.totalPrice, 130)
+})
+
+test('admin hydration safely represents historical cake reservations without customer email', async () => {
+  const reservation = toReservation(document as never)
+  assert.equal(reservation.customerEmail, '')
+  assert.equal(toReservationList([document as never])[0]?.customerEmail, '')
+
+  await withLocalReservations([reservation], async () => {
+    const rows = await listReservations({
+      pickupDate: '', status: '', paymentStatus: '', cacaoPercent: '', search: reservation.reservationNumber,
+    })
+    assert.equal(rows[0]?.customerEmail, '')
+  })
+})
+
+test('admin local search includes normalized customer email', async () => {
+  const reservation = toReservation({ ...document, customerEmail: ' Customer@Example.COM ' } as never)
+  await withLocalReservations([reservation], async () => {
+    const rows = await listReservations({
+      pickupDate: '', status: '', paymentStatus: '', cacaoPercent: '', search: 'CUSTOMER@EXAMPLE.COM',
+    })
+    assert.equal(rows.length, 1)
+    assert.equal(rows[0]?.customerEmail, 'customer@example.com')
+  })
 })
 
 test('admin Appwrite hydration keeps only the approved pre-price-update Pave, Vanilla and Buttercream lines readable', () => {
@@ -267,6 +291,31 @@ test('repository update rejects multi-line repricing even when called outside th
     const stored = JSON.parse(localStorage.getItem(localReservationsKey) || '[]')
     assert.equal(stored[0].quantity, 1)
     assert.equal(stored[0].totalPriceCents, 13000)
+  })
+})
+
+test('local demo reservation storage normalizes and retains the required customer email', async () => {
+  await withLocalReservations([], async () => {
+    await assert.rejects(
+      createReservation({
+        customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'not-an-email',
+        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        chocolateIcingCount: 0, quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
+        requestNote: '', privacyConsent: true,
+      }),
+      /INVALID_EMAIL/,
+    )
+    const reservation = await createReservation({
+      customerName: 'Customer',
+      customerPhone: '0412345678',
+      customerEmail: ' Customer@Example.COM ',
+      productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+      chocolateIcingCount: 0, quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
+      requestNote: '', privacyConsent: true,
+    })
+    const stored = JSON.parse(localStorage.getItem(localReservationsKey) || '[]')
+    assert.equal(reservation.customerEmail, 'customer@example.com')
+    assert.equal(stored[0]?.customerEmail, 'customer@example.com')
   })
 })
 

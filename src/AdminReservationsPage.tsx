@@ -179,7 +179,7 @@ export function AdminReservationsPage({
         <label className="search-field">
           <Search size={16} />
           <input
-            placeholder="고객명, 연락처, 예약번호"
+            placeholder="고객명, 연락처, 이메일, 예약번호"
             value={filters.search}
             onChange={(event) => updateFilters({ ...filters, search: event.target.value })}
           />
@@ -194,6 +194,7 @@ export function AdminReservationsPage({
               <th>예약번호</th>
               <th>예약자</th>
               <th>연락처</th>
+              <th>이메일</th>
               <th>제품</th>
               <th>사이즈</th>
               <th>카카오</th>
@@ -215,6 +216,7 @@ export function AdminReservationsPage({
                 <td>{reservation.reservationNumber}</td>
                 <td>{reservation.customerName}</td>
                 <td>{reservation.customerPhone}</td>
+                <td>{reservation.customerEmail || '-'}</td>
                 <td>
                   {reservation.orderLines?.length ? (
                     <ul className="admin-order-lines">
@@ -276,7 +278,7 @@ export function AdminReservationsPage({
             ))}
             {reservations.length === 0 && (
               <tr>
-                <td colSpan={16} className="empty-cell">
+                <td colSpan={17} className="empty-cell">
                   표시할 예약이 없습니다.
                 </td>
               </tr>

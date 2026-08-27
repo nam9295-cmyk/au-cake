@@ -233,6 +233,7 @@ test('catalog base, size and paid option prices stay equal to the Reservation AP
     const serverReservation = buildCakeReservation({
       customerName: 'Catalog Contract',
       customerPhone: '0412345678',
+      customerEmail: 'catalog@example.com',
       productId,
       cakeSize: options.cakeSize || '15cm',
       chocolateType: options.chocolateType || 'dark',

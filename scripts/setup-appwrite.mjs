@@ -14,6 +14,7 @@ import {
   assertCompleteExactAvailableKeySet,
   buildReviewSetupPlan,
   canEnableReviewPhotoTransformations,
+  emailDeliveryLegacyPermissionMigration,
   ensureStrictCollection,
   parseAdminUserIds,
   RESERVATION_MULTI_LINE_ATTRIBUTES,
@@ -29,6 +30,10 @@ import {
   validateAttributeDefinition,
   validateIndexDefinition,
 } from './review-schema.mjs'
+import {
+  AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES,
+  AU_EMAIL_REMINDER_INDEXES,
+} from './au-email-schema-contract.mjs'
 
 if (process.argv.slice(2).includes('--dry-run')) {
   console.log(JSON.stringify(buildReviewSetupPlan(process.env), null, 2))
@@ -100,6 +105,7 @@ const reviewCollectionPermissions = Object.fromEntries(
 )
 const reviewPhotoPermissions = permissionsForPrivateReviewResource(REVIEW_PHOTO_BUCKET)
 const reviewCollectionResources = REVIEW_COLLECTION_RESOURCE_KEYS.map(([key, idKey]) => ({
+  key,
   id: reviewResourceIds[idKey],
   definition: REVIEW_COLLECTIONS[key],
   permissions: reviewCollectionPermissions[key],
@@ -184,6 +190,8 @@ const reservationAttributes = [
   { key: 'reservationNumber', type: 'string', size: 40, required: true },
   { key: 'customerName', type: 'string', size: 80, required: true },
   { key: 'customerPhone', type: 'string', size: 40, required: true },
+  // Keep optional so historic cake reservations without email remain readable.
+  ...AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES,
   { key: 'productId', type: 'string', size: 40, required: false },
   { key: 'cakeSize', type: 'string', size: 20, required: false },
   { key: 'chocolateType', type: 'string', size: 20, required: false },
@@ -295,6 +303,7 @@ const reservationIndexes = [
   { key: 'reservationNumber_idx', attributes: ['reservationNumber'] },
   { key: 'pickupDate_idx', attributes: ['pickupDate'] },
   { key: 'status_idx', attributes: ['status'] },
+  ...AU_EMAIL_REMINDER_INDEXES.cake,
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'cacaoPercent_idx', attributes: ['cacaoPercent'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
@@ -310,6 +319,8 @@ const classReservationIndexes = [
   { key: 'classDate_idx', attributes: ['classDate'] },
   { key: 'advancedClassDate_idx', attributes: ['advancedClassDate'] },
   { key: 'status_idx', attributes: ['status'] },
+  ...AU_EMAIL_REMINDER_INDEXES.classFirst,
+  ...AU_EMAIL_REMINDER_INDEXES.classAdvanced,
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
 ]
@@ -380,10 +391,13 @@ async function ensureCollection(targetDatabaseId, collectionId, name, permission
       documentSecurity,
       getCollection: (params) => databases.getCollection(params),
       createCollection: (params) => databases.createCollection(params),
+      updateCollection: (params) => databases.updateCollection(params),
+      migrateExisting: options.migrateExisting,
       isMissing,
       isConflict,
     })
-    console.log(`${outcome === 'created' ? 'created' : 'exists '} collection ${collectionId}`)
+    const action = outcome === 'created' ? 'created' : outcome === 'updated' ? 'updated' : 'exists '
+    console.log(`${action} collection ${collectionId}`)
     return
   }
 
@@ -759,7 +773,11 @@ for (const resource of reviewCollectionResources) {
     resource.id,
     resource.definition.name,
     resource.permissions,
-    { strict: true, documentSecurity: false },
+    {
+      strict: true,
+      documentSecurity: false,
+      migrateExisting: resource.key === 'emailDeliveries' ? emailDeliveryLegacyPermissionMigration : undefined,
+    },
   )
 }
 await ensureReviewPhotoBucket()

@@ -9,6 +9,7 @@ const cakeReservation: Reservation = {
   reservationNumber: 'VG-C-AU-1',
   customerName: '=HYPERLINK("https://example.test")',
   customerPhone: '0412345678',
+  customerEmail: 'customer@example.com',
   productId: 'pave-cake',
   cakeSize: '15cm',
   chocolateType: 'dark',
@@ -63,6 +64,16 @@ test('cake CSV neutralises spreadsheet formulas including leading control charac
   assert.match(csv, /"'=HYPERLINK\(""https:\/\/example\.test""\)"/)
   assert.match(csv, /"'\t\+SUM\(1,2\)"/)
   assert.match(csv, /"'@IMPORTDATA\(""https:\/\/example\.test""\)"/)
+})
+
+test('cake CSV includes customer email while retaining legacy reservations without it', () => {
+  const csv = reservationsToCsv([cakeReservation])
+  assert.match(csv.split('\n')[0] || '', /"Email"/)
+  assert.match(csv.split('\n')[1] || '', /"customer@example\.com"/)
+
+  const legacy = { ...cakeReservation }
+  delete legacy.customerEmail
+  assert.doesNotThrow(() => reservationsToCsv([legacy]))
 })
 
 test('cake CSV preserves legacy cupcake count finishing and omits retired chocolate finish', () => {
