@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import test, { after } from 'node:test'
 import { Databases, Functions } from 'appwrite'
 
 const root = resolve(new URL('..', import.meta.url).pathname)
-const outputDirectory = mkdtempSync(join(tmpdir(), 'au-cake-repository-capability-'))
+// The external package resolves from this generated module's ancestor chain.
+// Nesting it under root makes that chain identical to this test module's.
+const outputDirectory = mkdtempSync(join(root, '.au-cake-repository-capability-'))
 let importSequence = 0
 
 after(() => rmSync(outputDirectory, { recursive: true, force: true }))
