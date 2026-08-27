@@ -17,11 +17,12 @@ function block(source, startText, endText) {
   return source.slice(start, end)
 }
 
-test('repository capability gate fails closed and caches only the strict health result', () => {
+test('repository capability gate fails closed, shares in-flight checks, and only caches successful health results', () => {
   assert.match(repository, /export function supportsCakeOrderLines\(\): Promise<boolean>/)
   assert.match(repository, /if \(!shouldUseReservationApi\('all'\)\) return Promise\.resolve\(false\)/)
   assert.match(repository, /executeReservationApi\('health', undefined, parseReservationApiCapabilities\)/)
-  assert.match(repository, /\.catch\(\(\) => false\)/)
+  assert.match(repository, /cakeOrderLinesCapability === capability/)
+  assert.match(repository, /cakeOrderLinesCapability = null/)
 })
 
 test('repository multi-line create is function-only with no local or direct Appwrite fallback', () => {
