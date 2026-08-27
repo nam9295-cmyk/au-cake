@@ -39,7 +39,7 @@ Take and retain a production schema, index, and permission snapshot first. Every
 | Cake reservations index | `status_pickupDate_idx` on `status`, `pickupDate` | Must be available before reminder send mode. |
 | Class reservations indexes | `status_classDate_idx` on `status`, `classDate`; `status_advancedClassDate_idx` on `status`, `advancedClassDate` | Must be available before reminder send mode. |
 
-The ledger/claim tables and review envelope fields are intended to be Function-only; browser users, authenticated users, and direct admin browser sessions have no direct CRUD. The schema helper may tighten a partial legacy ledger permission pattern, so manually verify no independent integration relies on that old access before applying.
+The ledger/claim tables and review envelope fields are intended to be Function-only; browser users, authenticated users, and direct admin browser sessions have no direct CRUD.
 
 There is no source migration that deletes, renames, makes required, or backfills an existing customer/review field. Existing encrypted coupon schema is reused. On rollback, retain additive schema and ledger audit rows; never delete customer data.
 
@@ -116,12 +116,11 @@ No Resend full-access/reconciliation key, provider GET credential, or webhook cr
 
 ### Phase 1 — additive Appwrite schema only
 
-1. Add optional Cake `customerEmail`, then wait for `available`.
-2. Add optional review invite envelope fields, then wait for `available`.
-3. Create and permission-check private `email_deliveries` with unique event key.
-4. Create and permission-check private retry claims with unique event key.
-5. Create the three reminder query indexes and wait for `available`.
-6. Verify old frontend/function behavior remains healthy. Do not delete/rename/backfill/rotate data.
+1. **Do not run `setup:appwrite` for this release.** It manages broader application state and is not production migration-safe here.
+2. Run `npm run migrate:au-email-schema` first. Confirm the exact target project/databases/tables, review the CREATE/EXISTS_MATCH/DRIFT output, and proceed only when it reports `"safeToApply": true`.
+3. Run `npm run migrate:au-email-schema -- --apply --market=AU`. The guarded script repeats its complete preflight before any write, then creates only the optional Cake/review fields, private delivery/retry tables, and three reminder indexes documented above.
+4. Wait until every created attribute/index is `available` and manually confirm both new tables remain private.
+5. Verify old frontend/function behavior remains healthy. Do not delete, rename, backfill, rotate, or use this migration to correct drift.
 
 ### Phase 2 — Functions, one at a time
 

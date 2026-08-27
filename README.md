@@ -79,6 +79,22 @@ cleanup ledger의 reason은 `replacement | remove | rotation | uncertain_attach 
 
 Cake booking requests require a normalized customer email, but the Appwrite `reservations.customerEmail` string attribute (maximum 120 characters) must remain **optional** so historical reservations without an email continue to load. For production, apply this compatibility migration in this exact order: (1) create and wait for the optional attribute to become available, (2) verify the schema, (3) deploy the reservation API/backend, then (4) deploy the frontend. Do not deploy the frontend before the attribute is available.
 
+### AU email production schema migration
+
+**DO NOT use setup:appwrite for this AU email production rollout.** `setup:appwrite` manages broader application state and is not production migration-safe for this release.
+
+The dedicated migration is additive-only: optional Cake `customerEmail`, optional review-invite token envelope fields, the private delivery/retry-claim tables, and the three D-1 reminder composite indexes. It never updates, deletes, renames, replaces, backfills, or writes Appwrite documents.
+
+```bash
+# Default: dry-run. With no complete target configuration it stays offline and writes nothing.
+npm run migrate:au-email-schema
+
+# Only after the read-only preflight reports "safeToApply": true.
+npm run migrate:au-email-schema -- --apply --market=AU
+```
+
+`--apply` repeats the full preflight before any write. A missing or mismatched attribute/index/table permission is a drift error and results in zero mutations. Creation is resumable: a later run skips already matching additive resources and creates only remaining missing resources. Never use this script to correct drift; resolve drift manually first.
+
 리뷰 쿠폰 digest에는 server-only `REVIEW_COUPON_HMAC_SECRET` 하나만 사용합니다. 최소 32 random bytes를 padding 없는 canonical base64url로 인코딩한 값을 만들고, **Review API(발급)와 Reservation API(사용)에 글자 하나까지 동일한 값**을 설정하세요. 예시는 `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`로 생성할 수 있습니다. 이 값은 `VITE_*`로 노출하거나 저장소에 채워 넣지 않으며 `.env.example`은 빈 값만 둡니다. 이미 발급되어 `active`인 쿠폰이 하나라도 있으면 secret을 회전하지 마세요. 회전하면 기존 쿠폰 digest를 다시 찾을 수 없습니다. 두 Function 배포 dry-run은 변수 이름과 masked 값만 보여 주며 원문 secret을 출력하지 않습니다.
 
 이 명령은 실제 Appwrite 리소스를 변경합니다. production migration은 별도 승인과 백업/롤백 확인 후에만 실행하세요. 로컬 스키마 검증에는 네트워크를 사용하지 않는 `npm run test:review-schema`를 사용합니다.

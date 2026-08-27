@@ -30,6 +30,10 @@ import {
   validateAttributeDefinition,
   validateIndexDefinition,
 } from './review-schema.mjs'
+import {
+  AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES,
+  AU_EMAIL_REMINDER_INDEXES,
+} from './au-email-schema-contract.mjs'
 
 if (process.argv.slice(2).includes('--dry-run')) {
   console.log(JSON.stringify(buildReviewSetupPlan(process.env), null, 2))
@@ -187,7 +191,7 @@ const reservationAttributes = [
   { key: 'customerName', type: 'string', size: 80, required: true },
   { key: 'customerPhone', type: 'string', size: 40, required: true },
   // Keep optional so historic cake reservations without email remain readable.
-  { key: 'customerEmail', type: 'string', size: 120, required: false },
+  ...AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES,
   { key: 'productId', type: 'string', size: 40, required: false },
   { key: 'cakeSize', type: 'string', size: 20, required: false },
   { key: 'chocolateType', type: 'string', size: 20, required: false },
@@ -299,7 +303,7 @@ const reservationIndexes = [
   { key: 'reservationNumber_idx', attributes: ['reservationNumber'] },
   { key: 'pickupDate_idx', attributes: ['pickupDate'] },
   { key: 'status_idx', attributes: ['status'] },
-  { key: 'status_pickupDate_idx', attributes: ['status', 'pickupDate'] },
+  ...AU_EMAIL_REMINDER_INDEXES.cake,
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'cacaoPercent_idx', attributes: ['cacaoPercent'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
@@ -315,8 +319,8 @@ const classReservationIndexes = [
   { key: 'classDate_idx', attributes: ['classDate'] },
   { key: 'advancedClassDate_idx', attributes: ['advancedClassDate'] },
   { key: 'status_idx', attributes: ['status'] },
-  { key: 'status_classDate_idx', attributes: ['status', 'classDate'] },
-  { key: 'status_advancedClassDate_idx', attributes: ['status', 'advancedClassDate'] },
+  ...AU_EMAIL_REMINDER_INDEXES.classFirst,
+  ...AU_EMAIL_REMINDER_INDEXES.classAdvanced,
   { key: 'paymentStatus_idx', attributes: ['paymentStatus'] },
   { key: 'createdAt_idx', attributes: ['createdAt'] },
 ]

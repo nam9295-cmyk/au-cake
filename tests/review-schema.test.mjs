@@ -27,6 +27,10 @@ import {
   validateAttributeDefinition,
   validateIndexDefinition,
 } from '../scripts/review-schema.mjs'
+import {
+  AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES,
+  AU_EMAIL_REMINDER_INDEXES,
+} from '../scripts/au-email-schema-contract.mjs'
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -181,13 +185,14 @@ test('D-1 reminder uses the private common delivery template enum without adding
   }
 })
 
-test('setup source declares only the D-1 scanner composite candidate indexes', () => {
+test('setup reuses the D-1 scanner composite candidate index contract', () => {
   const setupSource = readFileSync(resolve(repositoryRoot, 'scripts/setup-appwrite.mjs'), 'utf8')
-  for (const source of [
-    "{ key: 'status_pickupDate_idx', attributes: ['status', 'pickupDate'] }",
-    "{ key: 'status_classDate_idx', attributes: ['status', 'classDate'] }",
-    "{ key: 'status_advancedClassDate_idx', attributes: ['status', 'advancedClassDate'] }",
-  ]) assert.match(setupSource, new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.match(setupSource, /AU_EMAIL_REMINDER_INDEXES/)
+  assert.deepEqual(AU_EMAIL_REMINDER_INDEXES, {
+    cake: [{ key: 'status_pickupDate_idx', type: 'key', attributes: ['status', 'pickupDate'] }],
+    classFirst: [{ key: 'status_classDate_idx', type: 'key', attributes: ['status', 'classDate'] }],
+    classAdvanced: [{ key: 'status_advancedClassDate_idx', type: 'key', attributes: ['status', 'advancedClassDate'] }],
+  })
 })
 
 test('one-use email retry claims are private and uniquely keyed by the logical email event', () => {
@@ -494,7 +499,10 @@ test('required review attributes never declare Appwrite defaults', () => {
 
 test('cake reservation schema declares customerEmail as an optional 120-character migration-safe attribute', () => {
   const setupSource = readFileSync(resolve(repositoryRoot, 'scripts/setup-appwrite.mjs'), 'utf8')
-  assert.match(setupSource, /\{ key: 'customerEmail', type: 'string', size: 120, required: false \}/)
+  assert.match(setupSource, /AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES/)
+  assert.deepEqual(AU_EMAIL_CAKE_RESERVATION_ATTRIBUTES, [
+    { key: 'customerEmail', type: 'string', size: 120, required: false },
+  ])
 })
 
 test('dry-run plan exposes review ids, private permissions, admin mapping intent, and bucket policy without secrets', () => {
