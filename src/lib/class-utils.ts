@@ -254,100 +254,19 @@ export function getClassSlotAvailability(classDate: string, reservations: ClassB
   }
 }
 
-type ActiveClassSlot = {
-  classTime: string | null
-  durationMinutes: number
-}
-
-function isValidClassDate(value: unknown): value is string {
-  if (typeof value !== 'string') return false
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-  if (!match) return false
-
-  const year = Number(match[1])
-  const month = Number(match[2])
-  const day = Number(match[3])
-  const date = new Date(0)
-  date.setUTCHours(0, 0, 0, 0)
-  date.setUTCFullYear(year, month - 1, day)
-  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
-}
-
-function classTimeToMinutes(value: unknown) {
-  if (typeof value !== 'string') return null
-  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value)
-  return match ? Number(match[1]) * 60 + Number(match[2]) : null
-}
-
-function isKnownClassSessionTime(value: string): value is (typeof CLASS_SESSION_TIMES)[number] {
-  return CLASS_SESSION_TIMES.some((classTime) => classTime === value)
-}
-
-function activeClassSlotForDate(entry: unknown, classDate: string): ActiveClassSlot | null {
-  if (typeof entry === 'string') {
-    return entry === classDate && isValidClassDate(entry)
-      ? { classTime: null, durationMinutes: CLASS_SESSION_DURATION_MINUTES }
-      : null
-  }
-  if (!entry || typeof entry !== 'object') return null
-
-  const slot = entry as Record<string, unknown>
-  if (slot.status === 'Cancelled' || slot.classDate !== classDate || !isValidClassDate(slot.classDate)) return null
-  const durationMinutes = Number.isInteger(slot.durationMinutes) && Number(slot.durationMinutes) > 0
-    ? Number(slot.durationMinutes)
-    : CLASS_SESSION_DURATION_MINUTES
-  if (slot.classTime === undefined || slot.classTime === null || slot.classTime === '') return { classTime: null, durationMinutes }
-  if (typeof slot.classTime !== 'string') return null
-  if (!slot.classTime.trim()) return null
-  if (classTimeToMinutes(slot.classTime) === null) return null
-  return { classTime: slot.classTime, durationMinutes }
-}
-
-function hasExactCakePickupOpening(
-  pickupDate: string,
-  pickupTime: string,
-  pickupOpenings: readonly CakePickupOpening[],
-) {
-  if (!Array.isArray(pickupOpenings)) return false
-  return pickupOpenings.some((opening: unknown) => {
-    if (!opening || typeof opening !== 'object') return false
-    const candidate = opening as Record<string, unknown>
-    return candidate.pickupDate === pickupDate && candidate.pickupTime === pickupTime
-  })
-}
-
 export function isCakePickupBlockedByClass(
-  pickupDate: string,
-  pickupTime: string,
-  bookedSlots: readonly ClassBookedSlot[],
-  pickupOpenings: readonly CakePickupOpening[] = [],
+  _pickupDate: string,
+  _pickupTime: string,
+  _bookedSlots: readonly ClassBookedSlot[],
+  _pickupOpenings: readonly CakePickupOpening[] = [],
 ) {
-  if (!isValidClassDate(pickupDate)) return false
-  const pickupMinutes = classTimeToMinutes(pickupTime)
-  if (pickupMinutes === null) return false
-  if (hasExactCakePickupOpening(pickupDate, pickupTime, pickupOpenings)) return false
-
-  const entries = Array.isArray(bookedSlots) ? bookedSlots : []
-  const activeSlots = entries
-    .map((entry) => activeClassSlotForDate(entry, pickupDate))
-    .filter((slot): slot is ActiveClassSlot => slot !== null)
-
-  if (activeSlots.some((slot) => slot.classTime === null)) return true
-
-  const bookedSessionTimes = new Set(
-    activeSlots
-      .map((slot) => slot.classTime)
-      .filter((classTime): classTime is string => classTime !== null && isKnownClassSessionTime(classTime)),
-  )
-  if (CLASS_SESSION_TIMES.every((classTime) => bookedSessionTimes.has(classTime))) return true
-
-  return activeSlots.some((slot) => {
-    if (slot.classTime === null) return false
-    const classStartMinutes = classTimeToMinutes(slot.classTime)
-    return classStartMinutes !== null
-      && pickupMinutes >= classStartMinutes
-      && pickupMinutes <= classStartMinutes + slot.durationMinutes
-  })
+  // Cake pickup follows its own daily schedule; Kids Class occupancy remains
+  // visible to class booking only and does not suppress Cake time slots.
+  void _pickupDate
+  void _pickupTime
+  void _bookedSlots
+  void _pickupOpenings
+  return false
 }
 
 export function filterCakePickupTimesForClass(

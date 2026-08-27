@@ -3,15 +3,27 @@ type PickupWindow = Readonly<{
   close: string
 }>
 
-export const AU_CAKE_PICKUP_ALLOWED_WEEKDAYS = [5, 6, 0] as const
+type PickupClosedInterval = Readonly<{
+  start: string
+  end: string
+}>
+
+export const AU_CAKE_PICKUP_ALLOWED_WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const
 
 export const AU_CAKE_PICKUP_SCHEDULE = Object.freeze({
   timezone: 'Australia/Sydney',
   intervalMinutes: 15,
   weekdays: Object.freeze({
     0: Object.freeze({ open: '08:00', close: '20:00' }),
-    5: Object.freeze({ open: '18:00', close: '20:00' }),
+    1: Object.freeze({ open: '08:00', close: '20:00' }),
+    2: Object.freeze({ open: '08:00', close: '20:00' }),
+    3: Object.freeze({ open: '08:00', close: '20:00' }),
+    4: Object.freeze({ open: '08:00', close: '20:00' }),
+    5: Object.freeze({ open: '08:00', close: '20:00' }),
     6: Object.freeze({ open: '08:00', close: '20:00' }),
+  }),
+  closedIntervals: Object.freeze({
+    '2026-08-29': Object.freeze([{ start: '09:30', end: '12:00' }]),
   }),
 })
 
@@ -37,6 +49,17 @@ function formatTime(minutes: number) {
   return `${hour}:${minute}`
 }
 
+function isClosedInterval(dateValue: string, pickupMinutes: number) {
+  const intervals = AU_CAKE_PICKUP_SCHEDULE.closedIntervals[
+    dateValue as keyof typeof AU_CAKE_PICKUP_SCHEDULE.closedIntervals
+  ] as readonly PickupClosedInterval[] | undefined
+  return intervals?.some((interval) => {
+    const start = timeMinutes(interval.start)
+    const end = timeMinutes(interval.end)
+    return start !== null && end !== null && pickupMinutes >= start && pickupMinutes < end
+  }) === true
+}
+
 function pickupWindowForDate(dateValue: string): PickupWindow | null {
   const weekday = isoWeekday(dateValue)
   if (weekday === null || !Object.hasOwn(AU_CAKE_PICKUP_SCHEDULE.weekdays, weekday)) return null
@@ -52,7 +75,7 @@ export function getAuCakePickupTimeOptions(dateValue: string) {
 
   const options: string[] = []
   for (let minutes = openMinutes; minutes <= closeMinutes; minutes += AU_CAKE_PICKUP_SCHEDULE.intervalMinutes) {
-    options.push(formatTime(minutes))
+    if (!isClosedInterval(dateValue, minutes)) options.push(formatTime(minutes))
   }
   return options
 }
@@ -68,4 +91,5 @@ export function isAuCakePickupServiceTime(dateValue: string, timeValue: string) 
     && pickupMinutes >= openMinutes
     && pickupMinutes <= closeMinutes
     && (pickupMinutes - openMinutes) % AU_CAKE_PICKUP_SCHEDULE.intervalMinutes === 0
+    && !isClosedInterval(dateValue, pickupMinutes)
 }

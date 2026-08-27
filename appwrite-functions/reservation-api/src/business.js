@@ -96,16 +96,20 @@ const PROMOTIONS = [
 export const MAX_RESERVATION_QUANTITY = 5
 export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
-const SCHOOL_PICKUP_START_MINUTES = 15 * 60
-const SHORT_SCHOOL_PICKUP_END_MINUTES = 15 * 60 + 30
-const LONG_SCHOOL_PICKUP_END_MINUTES = 17 * 60 + 30
 export const AU_CAKE_PICKUP_SCHEDULE = Object.freeze({
   timezone: MARKET_TIMEZONE,
   intervalMinutes: 15,
   weekdays: Object.freeze({
     0: Object.freeze({ open: '08:00', close: '20:00' }),
-    5: Object.freeze({ open: '18:00', close: '20:00' }),
+    1: Object.freeze({ open: '08:00', close: '20:00' }),
+    2: Object.freeze({ open: '08:00', close: '20:00' }),
+    3: Object.freeze({ open: '08:00', close: '20:00' }),
+    4: Object.freeze({ open: '08:00', close: '20:00' }),
+    5: Object.freeze({ open: '08:00', close: '20:00' }),
     6: Object.freeze({ open: '08:00', close: '20:00' }),
+  }),
+  closedIntervals: Object.freeze({
+    '2026-08-29': Object.freeze([{ start: '09:30', end: '12:00' }]),
   }),
 })
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
@@ -409,25 +413,10 @@ function zonedTimestamp(dateValue, timeValue) {
   return Object.entries(target).every(([key, value]) => resolved[key] === value) ? timestamp : null
 }
 
-export function isSchoolPickupWindowClosed(dateValue, timeValue) {
-  if (!isValidDateValue(dateValue)) return false
-  const match = /^(\d{2}):(\d{2})$/.exec(timeValue || '')
-  if (!match) return false
-
-  const weekday = new Date(`${dateValue}T00:00:00.000Z`).getUTCDay()
-  const hour = Number(match[1])
-  const minute = Number(match[2])
-  if (hour > 23 || minute > 59) return false
-  const pickupMinutes = hour * 60 + minute
-  const endMinutes = weekday === 2 || weekday === 4
-    ? LONG_SCHOOL_PICKUP_END_MINUTES
-    : weekday === 1 || weekday === 3 || weekday === 5
-      ? SHORT_SCHOOL_PICKUP_END_MINUTES
-      : null
-
-  return endMinutes !== null
-    && pickupMinutes >= SCHOOL_PICKUP_START_MINUTES
-    && pickupMinutes <= endMinutes
+export function isSchoolPickupWindowClosed(_dateValue, _timeValue) {
+  // Daily customer availability is now defined exclusively by the pickup
+  // schedule and its explicit date closures.
+  return false
 }
 
 export function isCakePickupServiceTime(dateValue, timeValue) {
@@ -444,11 +433,18 @@ export function isCakePickupServiceTime(dateValue, timeValue) {
   const pickupMinutes = hour * 60 + minute
   const openMinutes = minutes(window.open)
   const closeMinutes = minutes(window.close)
+  const closedIntervals = AU_CAKE_PICKUP_SCHEDULE.closedIntervals[dateValue] || []
+  const isSpeciallyClosed = closedIntervals.some((interval) => {
+    const start = minutes(interval.start)
+    const end = minutes(interval.end)
+    return start !== null && end !== null && pickupMinutes >= start && pickupMinutes < end
+  })
   return openMinutes !== null
     && closeMinutes !== null
     && pickupMinutes >= openMinutes
     && pickupMinutes <= closeMinutes
     && (pickupMinutes - openMinutes) % AU_CAKE_PICKUP_SCHEDULE.intervalMinutes === 0
+    && !isSpeciallyClosed
 }
 
 function validatePickupDateTime(dateValue, timeValue, now) {
@@ -473,7 +469,6 @@ function validatePickupDateTime(dateValue, timeValue, now) {
   )
   if (isTooSoon) fail('PICKUP_TIME_TOO_SOON')
   if (!isCakePickupServiceTime(dateValue, timeValue)) fail('PICKUP_TIME_UNAVAILABLE', 409)
-  if (isSchoolPickupWindowClosed(dateValue, timeValue)) fail('PICKUP_TIME_UNAVAILABLE', 409)
 }
 
 function normalizeChocolateIcingCount(productId, value) {
@@ -1103,21 +1098,10 @@ function minutes(value) {
   return Number(match[1]) * 60 + Number(match[2])
 }
 
-export function isCakePickupBlocked(pickupDate, pickupTime, bookedSlots, pickupOpenings = []) {
-  if (pickupOpenings.some((opening) => opening.pickupDate === pickupDate && opening.pickupTime === pickupTime)) return false
-  const pickupMinutes = minutes(pickupTime)
-  if (pickupMinutes === null) return false
-  const slots = bookedSlots.filter((slot) => slot.classDate === pickupDate)
-  if (slots.some((slot) => slot.classTime === undefined || slot.classTime === null || slot.classTime === '')) return true
-  const knownTimes = new Set(slots.map((slot) => slot.classTime).filter((time) => CLASS_SESSION_TIMES.includes(time)))
-  if (CLASS_SESSION_TIMES.every((time) => knownTimes.has(time))) return true
-  return slots.some((slot) => {
-    const start = minutes(slot.classTime)
-    const durationMinutes = Number.isInteger(slot.durationMinutes) && slot.durationMinutes > 0
-      ? slot.durationMinutes
-      : CLASS_SESSION_DURATION_MINUTES
-    return start !== null && pickupMinutes >= start && pickupMinutes <= start + durationMinutes
-  })
+export function isCakePickupBlocked(_pickupDate, _pickupTime, _bookedSlots, _pickupOpenings = []) {
+  // Kids Class reservations retain their own booking rules, but do not close
+  // the independently requested Cake pickup schedule.
+  return false
 }
 
 export function matchesLookupPhone(storedPhone, suppliedPhone) {

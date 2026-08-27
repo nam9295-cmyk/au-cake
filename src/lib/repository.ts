@@ -45,7 +45,6 @@ import {
   filterClassReservationsForAdmin,
   generateClassReservationNumber,
   getClassDurationMinutes,
-  isCakePickupBlockedByClass,
   type CakePickupOpening,
   type ClassBookedSlot,
 } from './class-utils'
@@ -79,7 +78,6 @@ import {
   generateReservationNumber,
   isCakePickupServiceTime,
   isPickupTimeAllowed,
-  isSchoolPickupWindowClosed,
   isValidPhone,
   normalizePhone,
   PICKUP_TIME_TOO_SOON_ERROR,
@@ -1108,18 +1106,8 @@ export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrde
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
   }
-  if (isSchoolPickupWindowClosed(input.pickupDate, input.pickupTime)) {
-    throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
-  }
   if (!isPickupTimeAllowed(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_TOO_SOON_ERROR)
-  }
-  const [classBookedSlots, cakePickupOpenings] = await Promise.all([
-    listClassBookedSlots(input.pickupDate),
-    listCakePickupOpenings(input.pickupDate),
-  ])
-  if (isCakePickupBlockedByClass(input.pickupDate, input.pickupTime, classBookedSlots, cakePickupOpenings)) {
-    throw new Error(PICKUP_TIME_CLASS_CONFLICT_ERROR)
   }
   return executeReservationApi<CakeOrderReservation>('create-cake', buildCakeOrderRequest(input), parseCakeOrderResult)
 }
@@ -1129,19 +1117,8 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
   }
-  if (isSchoolPickupWindowClosed(input.pickupDate, input.pickupTime)) {
-    throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
-  }
   if (!isPickupTimeAllowed(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_TOO_SOON_ERROR)
-  }
-
-  const [classBookedSlots, cakePickupOpenings] = await Promise.all([
-    listClassBookedSlots(input.pickupDate),
-    listCakePickupOpenings(input.pickupDate),
-  ])
-  if (isCakePickupBlockedByClass(input.pickupDate, input.pickupTime, classBookedSlots, cakePickupOpenings)) {
-    throw new Error(PICKUP_TIME_CLASS_CONFLICT_ERROR)
   }
 
   if (shouldUseReservationApi('all')) {

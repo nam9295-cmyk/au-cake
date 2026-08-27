@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { PickupDatePicker } from '../components/WeekendDatePicker'
 import { BankAccountBox } from '../components/BankAccountBox'
@@ -74,21 +74,11 @@ import {
 } from '../lib/i18n'
 import {
   CAKE_ORDER_LINES_UNAVAILABLE_ERROR,
-  PICKUP_TIME_CLASS_CONFLICT_ERROR,
   createCakeOrder,
   createReservation,
-  listCakePickupOpenings,
-  listClassBookedSlots,
 } from '../lib/repository'
 import { trackEvent } from '../lib/analytics'
 import type { CacaoPercent, CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, StoreSettings, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from '../lib/types'
-import {
-  filterCakePickupTimesForClass,
-  isCakePickupBlockedByClass,
-  isCakePickupDateUnavailable,
-  type CakePickupOpening,
-  type ClassBookedSlot,
-} from '../lib/class-utils'
 import {
   customerTimeOptionsForDate,
   firstCustomerPickupDate,
@@ -96,7 +86,6 @@ import {
   generateRequestId,
   isCakePickupServiceTime,
   isPickupTimeAllowed,
-  isSchoolPickupWindowClosed,
   PICKUP_TIME_TOO_SOON_ERROR,
   PICKUP_TIME_UNAVAILABLE_ERROR,
   isValidPhone,
@@ -200,26 +189,6 @@ export function ReservePage({
   const [showCakeSelector, setShowCakeSelector] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [pickupAvailability, setPickupAvailability] = useState<{
-    dataDate: string
-    loading: boolean
-    error: boolean
-    bookedSlots: ClassBookedSlot[]
-    pickupOpenings: CakePickupOpening[]
-  }>({
-    dataDate: '',
-    loading: true,
-    error: false,
-    bookedSlots: [],
-    pickupOpenings: [],
-  })
-  const [pickupCalendarAvailability, setPickupCalendarAvailability] = useState<{
-    loading: boolean
-    error: boolean
-    bookedSlots: ClassBookedSlot[]
-    pickupOpenings: CakePickupOpening[]
-  }>({ loading: true, error: false, bookedSlots: [], pickupOpenings: [] })
-  const [pickupAvailabilityRefetchKey, setPickupAvailabilityRefetchKey] = useState(0)
 
   useEffect(() => {
     if (initialPromoCode) onInitialPromoConsumed()
@@ -228,100 +197,8 @@ export function ReservePage({
   const minPickupDate = useMemo(() => firstCustomerPickupDate(settings, now), [settings, now])
   const pickupDate = form.pickupDate && form.pickupDate >= minPickupDate ? form.pickupDate : minPickupDate
   const baseTimes = useMemo(() => customerTimeOptionsForDate(pickupDate, settings, now), [pickupDate, settings, now])
-  const pickupAvailabilityIsCurrent = pickupAvailability.dataDate === pickupDate
-  const pickupAvailabilityLoading = pickupAvailability.loading || !pickupAvailabilityIsCurrent
-  const pickupAvailabilityError = pickupAvailabilityIsCurrent && pickupAvailability.error
-  const times = useMemo(() => {
-    if (pickupAvailabilityLoading || pickupAvailabilityError) return []
-    return filterCakePickupTimesForClass(
-      pickupDate,
-      baseTimes,
-      pickupAvailability.bookedSlots,
-      pickupAvailability.pickupOpenings,
-    )
-  }, [
-    baseTimes,
-    pickupAvailability.bookedSlots,
-    pickupAvailability.pickupOpenings,
-    pickupAvailabilityError,
-    pickupAvailabilityLoading,
-    pickupDate,
-  ])
+  const times = baseTimes
   const selectedPickupTime = times.includes(form.pickupTime) ? form.pickupTime : times[0] || ''
-  const isPickupCalendarDateDisabled = useCallback((date: string) => {
-    const dateTimes = customerTimeOptionsForDate(date, settings, now)
-    if (pickupCalendarAvailability.loading) return true
-    if (pickupCalendarAvailability.error) return dateTimes.length === 0
-    return isCakePickupDateUnavailable(
-      date,
-      dateTimes,
-      pickupCalendarAvailability.bookedSlots,
-      pickupCalendarAvailability.pickupOpenings,
-    )
-  }, [now, pickupCalendarAvailability, settings])
-
-  const refetchPickupAvailability = useCallback(() => {
-    setPickupAvailability({
-      dataDate: '',
-      loading: true,
-      error: false,
-      bookedSlots: [],
-      pickupOpenings: [],
-    })
-    setPickupCalendarAvailability((current) => ({ ...current, loading: true, error: false }))
-    setPickupAvailabilityRefetchKey((key) => key + 1)
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-
-    Promise.all([
-      listClassBookedSlots(pickupDate),
-      listCakePickupOpenings(pickupDate),
-    ])
-      .then(([bookedSlots, pickupOpenings]) => {
-        if (cancelled) return
-        setPickupAvailability({
-          dataDate: pickupDate,
-          loading: false,
-          error: false,
-          bookedSlots,
-          pickupOpenings,
-        })
-      })
-      .catch(() => {
-        if (cancelled) return
-        setPickupAvailability({
-          dataDate: pickupDate,
-          loading: false,
-          error: true,
-          bookedSlots: [],
-          pickupOpenings: [],
-        })
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [pickupAvailabilityRefetchKey, pickupDate])
-
-  useEffect(() => {
-    let cancelled = false
-
-    Promise.all([listClassBookedSlots(), listCakePickupOpenings()])
-      .then(([bookedSlots, pickupOpenings]) => {
-        if (cancelled) return
-        setPickupCalendarAvailability({ loading: false, error: false, bookedSlots, pickupOpenings })
-      })
-      .catch(() => {
-        if (cancelled) return
-        setPickupCalendarAvailability({ loading: false, error: true, bookedSlots: [], pickupOpenings: [] })
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [pickupAvailabilityRefetchKey])
 
   async function submitReservation(event: React.FormEvent) {
     event.preventDefault()
@@ -345,15 +222,11 @@ export function ReservePage({
       setError(copy.errors.pickupDate)
       return
     }
-    if (pickupAvailabilityLoading || pickupAvailabilityError) {
-      setError(copy.pickupAvailabilityError)
-      return
-    }
     if (!selectedPickupTime) {
       setError(copy.errors.pickupTime)
       return
     }
-    if (!isCakePickupServiceTime(pickupDate, selectedPickupTime) || isSchoolPickupWindowClosed(pickupDate, selectedPickupTime)) {
+    if (!isCakePickupServiceTime(pickupDate, selectedPickupTime)) {
       setError(copy.errors.pickupTimeUnavailable)
       return
     }
@@ -361,15 +234,7 @@ export function ReservePage({
       setError(copy.errors.pickupLeadTime)
       return
     }
-    if (isCakePickupBlockedByClass(
-      pickupDate,
-      selectedPickupTime,
-      pickupAvailability.bookedSlots,
-      pickupAvailability.pickupOpenings,
-    )) {
-      setError(copy.errors.pickupTimeUnavailable)
-      return
-    }
+
     if (!isMultiOrder && (form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY)) {
       setError(copy.errors.quantity(MAX_RESERVATION_QUANTITY))
       return
@@ -499,12 +364,8 @@ export function ReservePage({
       onComplete(reservation)
       navigate('complete')
     } catch (submitError) {
-      if (submitError instanceof Error && (
-        submitError.message === PICKUP_TIME_CLASS_CONFLICT_ERROR ||
-        submitError.message === PICKUP_TIME_UNAVAILABLE_ERROR
-      )) {
+      if (submitError instanceof Error && submitError.message === PICKUP_TIME_UNAVAILABLE_ERROR) {
         setError(copy.errors.pickupTimeUnavailable)
-        refetchPickupAvailability()
       } else if (submitError instanceof Error && submitError.message === PICKUP_TIME_TOO_SOON_ERROR) {
         setError(copy.errors.pickupLeadTime)
       } else if (submitError instanceof Error && submitError.message === CAKE_ORDER_LINES_UNAVAILABLE_ERROR) {
@@ -1209,10 +1070,8 @@ export function ReservePage({
                   value={pickupDate}
                   locale={language === 'ko' ? 'ko-KR' : 'en-AU'}
                   availabilityNote={language === 'ko'
-                    ? '케이크 픽업 · 금 18:00–20:00 · 토·일 08:00–20:00'
-                    : 'Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00'}
-                  loading={pickupCalendarAvailability.loading}
-                  isDateDisabled={isPickupCalendarDateDisabled}
+                    ? '케이크 픽업 · 매일 08:00–20:00'
+                    : 'Cake pick-up · Every day 08:00–20:00'}
                   onChange={(nextDate) => setForm({
                     ...form,
                     pickupDate: nextDate,
@@ -1225,15 +1084,11 @@ export function ReservePage({
                 <select
                   value={selectedPickupTime}
                   onChange={(event) => setForm({ ...form, pickupTime: event.target.value })}
-                  disabled={pickupAvailabilityLoading || pickupAvailabilityError || times.length === 0}
+                  disabled={times.length === 0}
                 >
                   {times.length === 0 && (
                     <option value="" disabled>
-                      {pickupAvailabilityLoading
-                        ? copy.pickupAvailabilityChecking
-                        : pickupAvailabilityError
-                          ? copy.pickupAvailabilityError
-                          : copy.pickupAvailabilityNone}
+                      {copy.pickupAvailabilityNone}
                     </option>
                   )}
                   {baseTimes.map((time) => (
@@ -1246,16 +1101,7 @@ export function ReservePage({
             </div>
 
             <div aria-live="polite">
-              {pickupAvailabilityLoading ? (
-                <p className="field-help">{copy.pickupAvailabilityChecking}</p>
-              ) : pickupAvailabilityError ? (
-                <>
-                  <p className="error-text">{copy.pickupAvailabilityError}</p>
-                  <button className="text-button" type="button" onClick={refetchPickupAvailability}>
-                    {copy.pickupAvailabilityRetry}
-                  </button>
-                </>
-              ) : times.length === 0 ? (
+              {times.length === 0 ? (
                 <p className="field-help">{copy.pickupAvailabilityNone}</p>
               ) : null}
             </div>
@@ -1355,7 +1201,7 @@ export function ReservePage({
             <button
               className="primary-button full-width"
               type="submit"
-              disabled={submitting || pickupAvailabilityLoading || pickupAvailabilityError || !selectedPickupTime}
+              disabled={submitting || !selectedPickupTime}
             >
               {submitting ? copy.submitting : copy.reserveCta}
             </button>

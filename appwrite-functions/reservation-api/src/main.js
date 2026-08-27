@@ -8,7 +8,6 @@ import {
   generateCakeReservationNumber,
   generateClassReservationNumber,
   hashReviewCouponCode,
-  isCakePickupBlocked,
   matchesLookupPhone,
   normalizeAustralianMobile,
   normalizeReviewCouponCode,
@@ -35,7 +34,7 @@ function reservationResourceConfig(env = process.env) {
     settingsId: env.APPWRITE_SETTINGS_TABLE_ID || 'settings',
     classReservationsId: env.APPWRITE_KIDS_RESERVATIONS_TABLE_ID || 'class_reservations',
     classBookedDatesId: env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID || 'class_booked_dates',
-    cakePickupOpeningsId: env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID || 'cake_pickup_openings',
+
     reviewCouponsId: env.APPWRITE_REVIEW_COUPONS_TABLE_ID || 'review_coupons',
     manualCouponsId: env.APPWRITE_MANUAL_COUPONS_TABLE_ID || 'manual_coupons',
     cakeCustomerEmailMode: resolveCakeCustomerEmailMode(env.CAKE_CUSTOMER_EMAIL_MODE),
@@ -79,10 +78,6 @@ function requestBody(req) {
   const body = req.bodyJson
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new ReservationApiError('INVALID_REQUEST')
   return body
-}
-
-function isMissingCollection(error) {
-  return error instanceof AppwriteException && error.code === 404 && error.type === 'collection_not_found'
 }
 
 function isConflict(error) {
@@ -137,24 +132,6 @@ function assertRequiredMatchingRequestFingerprint(document, fingerprint) {
     throw new ReservationApiError('REQUEST_ID_CONFLICT', 409)
   }
   assertMatchingRequestFingerprint(document, fingerprint)
-}
-
-async function listCakePickupOpenings(databases, pickupDate) {
-  try {
-    const result = await databases.listDocuments({
-      databaseId: config.cakeDatabaseId,
-      collectionId: config.cakePickupOpeningsId,
-      queries: [Query.equal('pickupDate', pickupDate), Query.limit(100)],
-      total: false,
-    })
-    return result.documents.map((document) => ({
-      pickupDate: document.pickupDate,
-      pickupTime: document.pickupTime,
-    }))
-  } catch (error) {
-    if (isMissingCollection(error)) return []
-    throw error
-  }
 }
 
 async function uniqueReservationNumber(databases, databaseId, collectionId, generate) {
@@ -424,19 +401,6 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
     runtimeConfig.cakeReservationsId,
     () => generateCakeReservationNumber(now),
   )
-
-  const [bookedResult, pickupOpenings] = await Promise.all([
-    databases.listDocuments({
-      databaseId: runtimeConfig.kidsDatabaseId,
-      collectionId: runtimeConfig.classBookedDatesId,
-      queries: [Query.equal('classDate', data.pickupDate), Query.limit(100)],
-      total: false,
-    }),
-    listCakePickupOpenings(databases, data.pickupDate),
-  ])
-  if (isCakePickupBlocked(data.pickupDate, data.pickupTime, bookedResult.documents, pickupOpenings)) {
-    throw new ReservationApiError('PICKUP_TIME_CLASS_CONFLICT', 409)
-  }
 
   if (!normalizedReviewCode) {
     let document

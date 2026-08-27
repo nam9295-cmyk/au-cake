@@ -33,6 +33,27 @@ test('ReservePage privately owns its current-time hook', () => {
   assert.doesNotMatch(appSource, /function useCurrentTime\b/)
 })
 
+test('Cake reservation availability is self-contained and does not wait for Class or legacy-opening reads', () => {
+  assert.match(reserveSource, /Cake pick-up · Every day 08:00–20:00/)
+  assert.match(reserveSource, /케이크 픽업 · 매일 08:00–20:00/)
+  assert.doesNotMatch(reserveSource, /(?:listClassBookedSlots|listCakePickupOpenings|filterCakePickupTimesForClass|isCakePickupBlockedByClass|isCakePickupDateUnavailable)/)
+  assert.doesNotMatch(reserveSource, /(?:pickupAvailabilityLoading|pickupAvailabilityError|pickupAvailabilityRefetchKey)/)
+})
+
+test('Cake submission paths do not await Class, school-window, or legacy-opening availability', () => {
+  const createCakeOrderSource = repositorySource.slice(
+    repositorySource.indexOf('export async function createCakeOrder'),
+    repositorySource.indexOf('export async function createReservation'),
+  )
+  const createReservationSource = repositorySource.slice(
+    repositorySource.indexOf('export async function createReservation'),
+    repositorySource.indexOf('export function toReservationList'),
+  )
+  for (const source of [createCakeOrderSource, createReservationSource]) {
+    assert.doesNotMatch(source, /(?:listClassBookedSlots|listCakePickupOpenings|isCakePickupBlockedByClass|isSchoolPickupWindowClosed)/)
+  }
+})
+
 test('cake reservation page requires a normalized customer email for booking details and review rewards', () => {
   assert.match(reserveSource, /customerEmail: ''/)
   assert.match(reserveSource, /type="email"/)
