@@ -217,12 +217,20 @@ let cakeOrderLinesCapability: Promise<boolean> | null = null
 
 export function supportsCakeOrderLines(): Promise<boolean> {
   if (!shouldUseReservationApi('all')) return Promise.resolve(false)
-  if (!cakeOrderLinesCapability) {
-    cakeOrderLinesCapability = executeReservationApi('health', undefined, parseReservationApiCapabilities)
-      .then(() => true)
-      .catch(() => false)
-  }
-  return cakeOrderLinesCapability
+  if (cakeOrderLinesCapability) return cakeOrderLinesCapability
+
+  const capability = executeReservationApi('health', undefined, parseReservationApiCapabilities)
+    .then(() => true)
+    .catch(() => {
+      // A transient or malformed health result must not permanently disable
+      // multi-line orders for the rest of this browser module's lifetime.
+      // Preserve a newer in-flight/successful check if one ever replaces this
+      // promise before the failure handler settles.
+      if (cakeOrderLinesCapability === capability) cakeOrderLinesCapability = null
+      return false
+    })
+  cakeOrderLinesCapability = capability
+  return capability
 }
 
 export async function loginReadOnlyCalendar(pin: string) {
