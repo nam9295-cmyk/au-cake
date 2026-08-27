@@ -615,14 +615,15 @@ test('cake API applies the Sydney 20:00 next-day pickup cutoff', () => {
   ))
 })
 
-test('cake API authoritatively enforces Friday evening and weekend 15-minute pick-ups', () => {
+test('cake API authoritatively enforces daily 15-minute Cake pickup windows and the bounded closure', () => {
   for (const [pickupDate, pickupTime] of [
-    ['2026-08-28', '18:00'],
-    ['2026-08-28', '20:00'],
+    ['2026-08-27', '08:00'],
+    ['2026-08-27', '15:15'],
+    ['2026-08-27', '20:00'],
     ['2026-08-29', '08:00'],
+    ['2026-08-29', '09:15'],
+    ['2026-08-29', '12:00'],
     ['2026-08-29', '20:00'],
-    ['2026-08-30', '08:00'],
-    ['2026-08-30', '20:00'],
   ]) {
     assert.equal(isCakePickupServiceTime(pickupDate, pickupTime), true, `${pickupDate} ${pickupTime}`)
     assert.doesNotThrow(() => buildCakeReservation(
@@ -632,12 +633,15 @@ test('cake API authoritatively enforces Friday evening and weekend 15-minute pic
   }
 
   for (const [pickupDate, pickupTime, errorCode] of [
-    ['2026-08-27', '18:00', 'PICKUP_TIME_UNAVAILABLE'],
-    ['2026-08-28', '17:45', 'PICKUP_TIME_UNAVAILABLE'],
-    ['2026-08-28', '20:15', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-27', '07:45', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-27', '20:15', 'PICKUP_TIME_UNAVAILABLE'],
     ['2026-08-29', '07:45', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-29', '09:30', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-29', '09:45', 'PICKUP_TIME_UNAVAILABLE'],
+    ['2026-08-29', '11:45', 'PICKUP_TIME_UNAVAILABLE'],
     ['2026-08-29', '20:15', 'PICKUP_TIME_UNAVAILABLE'],
-    ['2026-08-29', '18:07', 'INVALID_PICKUP_TIME'],
+    ['2026-08-29', '09:29', 'INVALID_PICKUP_TIME'],
+    ['2026-08-29', '11:59', 'INVALID_PICKUP_TIME'],
   ]) {
     assert.equal(isCakePickupServiceTime(pickupDate, pickupTime), false, `${pickupDate} ${pickupTime}`)
     assertApiError(errorCode, () => buildCakeReservation(
@@ -673,55 +677,18 @@ test('class API derives price and protected fields and validates the second chil
   assertApiError('CONSENT_REQUIRED', () => buildClassReservation({ ...classInput, privacyConsent: false }, { now }))
 })
 
-test('pickup blocking honours class session windows and explicit openings', () => {
-  const slots = [{ classDate: '2026-07-11', classTime: '13:00' }]
-  assert.equal(isCakePickupBlocked('2026-07-11', '14:30', slots), true)
-  assert.equal(isCakePickupBlocked('2026-07-11', '15:00', slots), true)
-  assert.equal(isCakePickupBlocked('2026-07-11', '15:30', slots), false)
-  assert.equal(
-    isCakePickupBlocked('2026-07-11', '14:30', slots, [{ pickupDate: '2026-07-11', pickupTime: '14:30' }]),
-    false,
-  )
-})
-
-test('server pickup blocking uses slot duration with 120-minute legacy fallback', () => {
-  assert.equal(isCakePickupBlocked('2026-07-11', '11:30', [{ classDate: '2026-07-11', classTime: '10:00', durationMinutes: 90 }]), true)
-  assert.equal(isCakePickupBlocked('2026-07-11', '12:00', [{ classDate: '2026-07-11', classTime: '10:00', durationMinutes: 90 }]), false)
-  assert.equal(isCakePickupBlocked('2026-07-11', '12:30', [{ classDate: '2026-07-11', classTime: '10:00', durationMinutes: 150 }]), true)
-  assert.equal(isCakePickupBlocked('2026-07-11', '12:00', [{ classDate: '2026-07-11', classTime: '10:00' }]), true)
-})
-
-test('pickup blocking honours a real 11:00 class outside the standard session list', () => {
-  const slots = [{ classDate: '2026-07-25', classTime: '11:00' }]
-  assert.equal(isCakePickupBlocked('2026-07-25', '10:30', slots), false)
-  assert.equal(isCakePickupBlocked('2026-07-25', '11:00', slots), true)
-  assert.equal(isCakePickupBlocked('2026-07-25', '12:30', slots), true)
-  assert.equal(isCakePickupBlocked('2026-07-25', '13:00', slots), true)
-  assert.equal(isCakePickupBlocked('2026-07-25', '13:30', slots), false)
-})
-
-test('pickup blocking ignores malformed non-standard class times', () => {
-  const malformedSlots = [
-    { classDate: '2026-07-25', classTime: '09:99' },
-    { classDate: '2026-07-25', classTime: '25:00' },
-    { classDate: '2026-07-25', classTime: ' ' },
-    { classDate: '2026-07-25', classTime: 123 },
-    { classDate: '2026-07-25', classTime: 0 },
-    { classDate: '2026-07-25', classTime: false },
-  ]
-  assert.equal(isCakePickupBlocked('2026-07-25', '11:00', malformedSlots), false)
-})
-
-test('canonical full-day blocking still permits only an exact cake opening', () => {
+test('Kids Class occupancy and legacy cake openings do not close Cake pickup', () => {
   const slots = ['10:00', '13:00', '16:00'].map((classTime) => ({ classDate: '2026-07-25', classTime }))
-  assert.equal(isCakePickupBlocked('2026-07-25', '19:00', slots), true)
+  assert.equal(isCakePickupBlocked('2026-07-25', '10:00', slots), false)
+  assert.equal(isCakePickupBlocked('2026-07-25', '14:30', slots), false)
+  assert.equal(isCakePickupBlocked('2026-07-25', '19:00', slots), false)
   assert.equal(
     isCakePickupBlocked('2026-07-25', '19:00', slots, [{ pickupDate: '2026-07-25', pickupTime: '19:00' }]),
     false,
   )
   assert.equal(
     isCakePickupBlocked('2026-07-25', '19:30', slots, [{ pickupDate: '2026-07-25', pickupTime: '19:00' }]),
-    true,
+    false,
   )
 })
 

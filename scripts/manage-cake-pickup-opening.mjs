@@ -164,7 +164,7 @@ function parseSlot(value) {
     throw new Error(`존재하지 않는 Gregorian 날짜입니다: ${pickupDate}`)
   }
   if (!isValidPickupTime(pickupTime)) {
-    throw new Error(`픽업 시간은 10:00~20:00 사이의 30분 단위여야 합니다: ${pickupTime}`)
+    throw new Error(`픽업 시간은 08:00~20:00 사이의 15분 단위여야 합니다: ${pickupTime}`)
   }
 
   return { pickupDate, pickupTime }
@@ -191,7 +191,7 @@ function isValidPickupTime(value) {
   const hour = Number(match[1])
   const minute = Number(match[2])
   const totalMinutes = hour * 60 + minute
-  return (minute === 0 || minute === 30) && totalMinutes >= 10 * 60 && totalMinutes <= 20 * 60
+  return minute % 15 === 0 && totalMinutes >= 8 * 60 && totalMinutes <= 20 * 60
 }
 
 function loadDotEnvLocal() {

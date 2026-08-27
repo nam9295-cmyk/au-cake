@@ -300,13 +300,13 @@ test('class CSV exports parent child safety consent payment and admin fields', (
   assert.match(csv, /Subtotal cents,Discount percent,Discount cents,Total price cents/)
 })
 
-test('pickup conflicts use each booked slot duration and keep a safe 120-minute legacy fallback', () => {
+test('Cake pickup remains open regardless of Kids Class slot duration', () => {
   const basic = [{ classDate: '2026-07-25', classTime: '10:00', durationMinutes: 90 }]
-  assert.equal(isCakePickupBlockedByClass('2026-07-25', '11:30', basic), true)
+  assert.equal(isCakePickupBlockedByClass('2026-07-25', '11:30', basic), false)
   assert.equal(isCakePickupBlockedByClass('2026-07-25', '12:00', basic), false)
   const extended = [{ classDate: '2026-07-25', classTime: '10:00', durationMinutes: 150 }]
-  assert.equal(isCakePickupBlockedByClass('2026-07-25', '12:30', extended), true)
+  assert.equal(isCakePickupBlockedByClass('2026-07-25', '12:30', extended), false)
   assert.equal(isCakePickupBlockedByClass('2026-07-25', '13:00', extended), false)
   const legacy = [{ classDate: '2026-07-25', classTime: '10:00' }]
-  assert.equal(isCakePickupBlockedByClass('2026-07-25', '12:00', legacy), true)
+  assert.equal(isCakePickupBlockedByClass('2026-07-25', '12:00', legacy), false)
 })

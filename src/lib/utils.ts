@@ -123,9 +123,6 @@ export const PICKUP_CUTOFF_HOUR = 20
 export const LATE_ORDER_NEXT_DAY_START_MINUTES = 12 * 60
 export const PICKUP_TIME_TOO_SOON_ERROR = 'PICKUP_TIME_TOO_SOON'
 export const PICKUP_TIME_UNAVAILABLE_ERROR = 'PICKUP_TIME_UNAVAILABLE'
-const SCHOOL_PICKUP_START_MINUTES = 15 * 60
-const SHORT_SCHOOL_PICKUP_END_MINUTES = 15 * 60 + 30
-const LONG_SCHOOL_PICKUP_END_MINUTES = 17 * 60 + 30
 
 function zonedDateTimeParts(date: Date) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -193,22 +190,11 @@ function zonedPickupTimestamp(dateValue: string, timeValue: string) {
   return Object.entries(target).every(([key, value]) => resolved[key as keyof typeof resolved] === value) ? timestamp : null
 }
 
-export function isSchoolPickupWindowClosed(dateValue: string, timeValue: string) {
-  if (marketConfig.market !== 'AU' || zonedPickupTimestamp(dateValue, timeValue) === null) return false
-
-  const [year, month, day] = dateValue.split('-').map(Number)
-  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
-  const [hour, minute] = timeValue.split(':').map(Number)
-  const pickupMinutes = hour * 60 + minute
-  const endMinutes = weekday === 2 || weekday === 4
-    ? LONG_SCHOOL_PICKUP_END_MINUTES
-    : weekday === 1 || weekday === 3 || weekday === 5
-      ? SHORT_SCHOOL_PICKUP_END_MINUTES
-      : null
-
-  return endMinutes !== null
-    && pickupMinutes >= SCHOOL_PICKUP_START_MINUTES
-    && pickupMinutes <= endMinutes
+export function isSchoolPickupWindowClosed(_dateValue: string, _timeValue: string) {
+  // Daily Cake pickup availability is determined by the shared schedule only.
+  void _dateValue
+  void _timeValue
+  return false
 }
 
 export function isCakePickupServiceTime(dateValue: string, timeValue: string) {
@@ -220,7 +206,6 @@ export function isCakePickupServiceTime(dateValue: string, timeValue: string) {
 export function isPickupTimeAllowed(dateValue: string, timeValue: string, now = new Date()) {
   if (zonedPickupTimestamp(dateValue, timeValue) === null) return false
   if (!isCakePickupServiceTime(dateValue, timeValue)) return false
-  if (isSchoolPickupWindowClosed(dateValue, timeValue)) return false
 
   const today = dateInputValue(now)
   const tomorrow = addDaysToInputValue(today, 1)
