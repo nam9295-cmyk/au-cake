@@ -191,7 +191,11 @@ function isValidPickupTime(value) {
   const hour = Number(match[1])
   const minute = Number(match[2])
   const totalMinutes = hour * 60 + minute
-  return minute % 15 === 0 && totalMinutes >= 8 * 60 && totalMinutes <= 20 * 60
+  return hour <= 23
+    && minute <= 59
+    && minute % 15 === 0
+    && totalMinutes >= 8 * 60
+    && totalMinutes <= 20 * 60
 }
 
 function loadDotEnvLocal() {
