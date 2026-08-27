@@ -40,6 +40,20 @@ test('Cake reservation availability is self-contained and does not wait for Clas
   assert.doesNotMatch(reserveSource, /(?:pickupAvailabilityLoading|pickupAvailabilityError|pickupAvailabilityRefetchKey)/)
 })
 
+test('Cake submission paths do not await Class, school-window, or legacy-opening availability', () => {
+  const createCakeOrderSource = repositorySource.slice(
+    repositorySource.indexOf('export async function createCakeOrder'),
+    repositorySource.indexOf('export async function createReservation'),
+  )
+  const createReservationSource = repositorySource.slice(
+    repositorySource.indexOf('export async function createReservation'),
+    repositorySource.indexOf('export function toReservationList'),
+  )
+  for (const source of [createCakeOrderSource, createReservationSource]) {
+    assert.doesNotMatch(source, /(?:listClassBookedSlots|listCakePickupOpenings|isCakePickupBlockedByClass|isSchoolPickupWindowClosed)/)
+  }
+})
+
 test('cake reservation page requires a normalized customer email for booking details and review rewards', () => {
   assert.match(reserveSource, /customerEmail: ''/)
   assert.match(reserveSource, /type="email"/)

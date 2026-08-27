@@ -1286,7 +1286,7 @@ test('calendar API returns only sanitised events for the requested month', async
   assert.equal(JSON.stringify(result).includes('0412345678'), false)
 })
 
-test('cake creation returns the original document when the same request ID is retried', async () => {
+test('cake creation is idempotent without reading Class or legacy Cake-opening collections', async () => {
   const requestId = 'f65f7e08-20f7-4b4a-b12a-6b42c043b268'
   const documents = new Map()
   let creates = 0
@@ -1296,7 +1296,8 @@ test('cake creation returns the original document when the same request ID is re
       if (!document) throw new AppwriteException('Not found', 404, 'document_not_found')
       return document
     },
-    async listDocuments() {
+    async listDocuments({ collectionId }) {
+      assert.equal(collectionId, 'reservations')
       return { documents: [] }
     },
     async createDocument({ documentId, data }) {
@@ -1315,9 +1316,8 @@ test('cake creation returns the original document when the same request ID is re
     pickupDate: '2099-07-11',
   }
   const runtimeConfig = {
-    cakeDatabaseId: 'verygood_cake_au', kidsDatabaseId: 'verygood_cake_au',
-    cakeReservationsId: 'reservations', classBookedDatesId: 'class_booked_dates',
-    cakePickupOpeningsId: 'cake_pickup_openings', reviewCouponsId: 'review_coupons', manualCouponsId: 'manual_coupons',
+    cakeDatabaseId: 'verygood_cake_au', cakeReservationsId: 'reservations',
+    reviewCouponsId: 'review_coupons', manualCouponsId: 'manual_coupons',
     reviewCouponHmacSecret: Buffer.alloc(32, 7),
   }
   const first = await createCake(databases, { ...futureCakeInput, requestId }, { runtimeConfig })
