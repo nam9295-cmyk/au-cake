@@ -6,19 +6,16 @@ const calendar = readFileSync(new URL('../src/components/WeekendDatePicker.tsx',
 const reserve = readFileSync(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const siteChrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
 
-test('cake reserve uses the shared compact calendar and keeps class conflict filtering authoritative', () => {
+test('cake reserve uses the shared compact calendar and a Cake-only availability contract', () => {
   assert.match(reserve, /<PickupDatePicker/)
   assert.doesNotMatch(reserve, /type="date"/)
-  assert.match(reserve, /filterCakePickupTimesForClass/)
-  assert.match(reserve, /isCakePickupDateUnavailable/)
-  assert.match(reserve, /listClassBookedSlots\(\)/)
-  assert.match(reserve, /listCakePickupOpenings\(\)/)
+  assert.doesNotMatch(reserve, /(?:filterCakePickupTimesForClass|isCakePickupDateUnavailable|listClassBookedSlots|listCakePickupOpenings)/)
   assert.match(calendar, /weekendsOnly/)
   assert.match(calendar, /allowedWeekdays/)
   assert.match(calendar, /PickupDatePicker[\s\S]*AU_CAKE_PICKUP_ALLOWED_WEEKDAYS/)
   assert.match(calendar, /isDateDisabled/)
-  assert.match(reserve, /Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
-  assert.match(reserve, /케이크 픽업 · 금 18:00–20:00 · 토·일 08:00–20:00/)
+  assert.match(reserve, /Cake pick-up · Every day 08:00–20:00/)
+  assert.match(reserve, /케이크 픽업 · 매일 08:00–20:00/)
   assert.match(siteChrome, /pickup-location-hours/)
   assert.match(siteChrome, /copy\.pickupHours\[0\]/)
 })
