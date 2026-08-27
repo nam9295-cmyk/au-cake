@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
@@ -172,19 +173,28 @@ test('optional email delivery table ID falls back safely without becoming an exi
   )
 })
 
-test('default runtime matches the self-hosted Appwrite Node 16 runtime and compatible sharp line', () => {
-  assert.equal(resolveDeployConfig(validEnv).runtime, 'node-16.0')
+test('review deployment targets exact node-22 without a Node 16 or Node 20 fallback', () => {
+  assert.equal(resolveDeployConfig(validEnv).runtime, 'node-22')
   assert.equal(
-    resolveDeployConfig({ ...validEnv, APPWRITE_REVIEW_API_RUNTIME: 'node-16.0' }).runtime,
-    'node-16.0',
+    resolveDeployConfig({ ...validEnv, APPWRITE_REVIEW_API_RUNTIME: 'node-22' }).runtime,
+    'node-22',
   )
-  assert.throws(
-    () => resolveDeployConfig({ ...validEnv, APPWRITE_REVIEW_API_RUNTIME: 'node-14.0' }),
-    /APPWRITE_REVIEW_API_RUNTIME/,
-  )
-  assert.deepEqual(buildRuntimeCandidates('node-16.0', {
-    Node200: 'node-20.0', Node180: 'node-18.0', Node160: 'node-16.0',
-  }), ['node-16.0'])
+  for (const runtime of ['node-16.0', 'node-20.0', 'node-22.0']) {
+    assert.throws(
+      () => resolveDeployConfig({ ...validEnv, APPWRITE_REVIEW_API_RUNTIME: runtime }),
+      /APPWRITE_REVIEW_API_RUNTIME/,
+    )
+  }
+  assert.deepEqual(buildRuntimeCandidates('node-22', {
+    Node220: 'node-22', Node200: 'node-20.0', Node160: 'node-16.0',
+  }), ['node-22'])
+  assert.equal(buildDryRunPlan(validEnv).function.runtime, 'node-22')
+})
+
+test('review archive declares the Node 22 and fixed sharp production contract', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../appwrite-functions/review-api/package.json', import.meta.url), 'utf8'))
+  assert.deepEqual(manifest.engines, { node: '>=22 <23' })
+  assert.equal(manifest.dependencies.sharp, '0.35.4')
 })
 
 test('dynamic function key scopes cover only required database/document and file operations', () => {

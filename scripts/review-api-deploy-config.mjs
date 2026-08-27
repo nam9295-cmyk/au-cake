@@ -1,4 +1,5 @@
 const RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
+const REVIEW_API_RUNTIME = 'node-22'
 
 export const FUNCTION_SCOPES = Object.freeze([
   'databases.read',
@@ -182,9 +183,9 @@ function resendFromEmail(env) {
 }
 
 function sharpCompatibleRuntime(env) {
-  const value = String(env.APPWRITE_REVIEW_API_RUNTIME || 'node-16.0').trim()
-  if (value !== 'node-16.0') {
-    throw new Error('APPWRITE_REVIEW_API_RUNTIME must be node-16.0 for this self-hosted Appwrite deployment.')
+  const value = String(env.APPWRITE_REVIEW_API_RUNTIME || REVIEW_API_RUNTIME).trim()
+  if (value !== REVIEW_API_RUNTIME) {
+    throw new Error(`APPWRITE_REVIEW_API_RUNTIME must be ${REVIEW_API_RUNTIME} for the Review API image pipeline.`)
   }
   return value
 }
@@ -298,6 +299,7 @@ export function buildDryRunPlan(env = {}) {
     wouldFailApply: REQUIRED_APPLY_ENVIRONMENT.some((key) => !String(env[key] || '').trim()),
     function: {
       id: maskValue(functionId),
+      runtime: REVIEW_API_RUNTIME,
       source: 'appwrite-functions/review-api/{package.json,package-lock.json,src/**,shared/**}',
       sharedSources: [...ARCHIVE_SHARED_SOURCE_PATHS],
       entrypoint: 'src/main.js',
