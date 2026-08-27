@@ -79,6 +79,19 @@ cleanup ledger의 reason은 `replacement | remove | rotation | uncertain_attach 
 
 Cake booking requests require a normalized customer email, but the Appwrite `reservations.customerEmail` string attribute (maximum 120 characters) must remain **optional** so historical reservations without an email continue to load. For production, apply this compatibility migration in this exact order: (1) create and wait for the optional attribute to become available, (2) verify the schema, (3) deploy the reservation API/backend, then (4) deploy the frontend. Do not deploy the frontend before the attribute is available.
 
+### Controlled Cake customer-email API/frontend cutover
+
+`CAKE_CUSTOMER_EMAIL_MODE` is a **server-only** Reservation API variable. Its safe default is `required`; unset, empty, or invalid runtime values also behave as `required`. The only temporary alternative is exact lowercase `compat`, which accepts an old Cake request only when the `customerEmail` key is omitted. It still rejects an empty, null, or malformed supplied email, writes no placeholder, and omits the field from that legacy response. A supplied valid email is normalized, stored, and returned as usual.
+
+Use this state machine only for the controlled recovery cutover:
+
+1. Set `CAKE_CUSTOMER_EMAIL_MODE=compat`, then deploy and activate the recovery `reservation-api`. Appwrite Function variable changes take effect only on the next deployment.
+2. Deploy the recovery frontend, which continues to require and send a valid customer email.
+3. Run controlled Cake single-item, Cake multi-item, and Class booking smoke tests.
+4. Set `CAKE_CUSTOMER_EMAIL_MODE=required`, then redeploy and activate `reservation-api` again.
+
+`compat` must be returned to `required` after rollout. It is not a long-term validation mode. Cake reservations created during the temporary legacy window without an email remain valid bookings, but cannot use customer email confirmation/review flows; existing SMS and copy fallbacks remain available.
+
 ### AU email production schema migration
 
 **DO NOT use setup:appwrite for this AU email production rollout.** `setup:appwrite` manages broader application state and is not production migration-safe for this release.

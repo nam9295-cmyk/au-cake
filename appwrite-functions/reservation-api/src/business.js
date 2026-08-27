@@ -310,6 +310,17 @@ function validateEmail(value) {
   return email
 }
 
+export function resolveCakeCustomerEmailMode(value) {
+  return String(value ?? '').trim() === 'compat' ? 'compat' : 'required'
+}
+
+function cakeCustomerEmail(input, customerEmailMode) {
+  if (resolveCakeCustomerEmailMode(customerEmailMode) === 'compat' && !Object.hasOwn(input, 'customerEmail')) {
+    return undefined
+  }
+  return validateEmail(input.customerEmail)
+}
+
 export function isValidDateValue(value) {
   if (typeof value !== 'string') return false
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
@@ -687,13 +698,13 @@ export function normalizeCakeOrderLines(orderLines) {
   return normalized
 }
 
-export function canonicalCakeRequestPayload(input) {
+export function canonicalCakeRequestPayload(input, { customerEmailMode = 'required' } = {}) {
   if (!isPlainObject(input)) fail('INVALID_REQUEST')
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
   if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
   const customerPhone = validateAustralianMobile(input.customerPhone)
-  const customerEmail = validateEmail(input.customerEmail)
+  const customerEmail = cakeCustomerEmail(input, customerEmailMode)
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
   let lines
   if (Object.hasOwn(input, 'orderLines')) {
@@ -719,7 +730,7 @@ export function canonicalCakeRequestPayload(input) {
     version: 1,
     customerName,
     customerPhone,
-    customerEmail,
+    ...(customerEmail === undefined ? {} : { customerEmail }),
     pickupDate: typeof input.pickupDate === 'string' ? input.pickupDate : '',
     pickupTime: typeof input.pickupTime === 'string' ? input.pickupTime : '',
     requestNote,
@@ -886,13 +897,14 @@ export function buildCakeReservation(input, {
   now = new Date(),
   reservationNumber = generateCakeReservationNumber(now),
   reviewCoupon,
+  customerEmailMode = 'required',
 } = {}) {
   if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
   if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
   const customerPhone = validateAustralianMobile(input.customerPhone)
-  const customerEmail = validateEmail(input.customerEmail)
+  const customerEmail = cakeCustomerEmail(input, customerEmailMode)
   validatePickupDateTime(input.pickupDate, input.pickupTime, now)
 
   const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
@@ -916,7 +928,7 @@ export function buildCakeReservation(input, {
     reservationNumber,
     customerName,
     customerPhone,
-    customerEmail,
+    ...(customerEmail === undefined ? {} : { customerEmail }),
     productId: firstLine.productId,
     cakeSize: firstLine.cakeSize,
     chocolateType: firstLine.chocolateType,
