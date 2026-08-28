@@ -140,7 +140,7 @@ test('Signature Gâteau au Chocolat compact editorial exposes only its verified 
   )
   assert.equal(compactEnglish.storageAndServing, undefined)
   assert.equal(compactKorean.storageAndServing, undefined)
-  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'pave-chocolate-cake,vanilla-fresh-cream-cake')
+  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'pave-chocolate-cake,fresh-strawberry-vanilla-cream-cake')
 
   const approvedCopy = JSON.stringify({ compactEnglish, compactKorean })
   assert.match(approvedCopy, /Signature Gâteau au Chocolat|시그니처 갸또 쇼콜라/)
@@ -197,7 +197,7 @@ test('Lemon compact editorial exposes only the verified fresh lemon, syrup, glaz
   )
   assert.equal(compactEnglish.storageAndServing, undefined)
   assert.equal(compactKorean.storageAndServing, undefined)
-  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'chocolate-cupcakes,vanilla-fresh-cream-cake')
+  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'chocolate-cupcakes,fresh-strawberry-vanilla-cream-cake')
 
   const approvedCopy = JSON.stringify({ compactEnglish, compactKorean })
   assert.doesNotMatch(approvedCopy, /fresh lemon cream|레몬 크림/i)
@@ -426,7 +426,7 @@ test('Buttercream compact editorial preserves the approved Italian meringue, but
     compactEnglish.ingredientsAndAllergens?.contact,
     'Please contact us before ordering for someone with a food allergy.',
   )
-  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'pave-chocolate-cake,vanilla-fresh-cream-cake')
+  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'pave-chocolate-cake,fresh-strawberry-vanilla-cream-cake')
 
   const approvedCopy = JSON.stringify({ compactEnglish, compactKorean })
   assert.doesNotMatch(approvedCopy, /100% milk butter|100% Australian butter|Australian dairy butter|Aussi butter|Aussi milk butter|Cacao 100%|100% cacao|organic cocoa|fresh milk buttercream|couverture chocolate buttercream/i)
@@ -502,7 +502,7 @@ test('compact editorial data does not duplicate live product prices or expose un
 test('all compact editorial related product preferences resolve through the current AU catalogue', () => {
   const catalogueSlugs = new Set(getAuCakeCatalogCards('en').map((card) => card.slug))
 
-  for (const cakeSlug of ['pave-chocolate-cake', 'vanilla-fresh-cream-cake', 'buttercream-cake', 'chocolate-cupcakes', 'lemon-cake', 'signature-gateau-au-chocolat', 'brownie-cheesecake']) {
+  for (const cakeSlug of ['pave-chocolate-cake', 'buttercream-cake', 'fresh-strawberry-vanilla-cream-cake', 'fresh-strawberry-chocolate-cream-cake', 'chocolate-cupcakes', 'lemon-cake', 'signature-gateau-au-chocolat', 'brownie-cheesecake']) {
     const editorial = getCakeEditorialBySlug(cakeSlug, 'en')
     assert.ok(editorial)
     assert.equal(editorial.relatedProductSlugs.length, 2)

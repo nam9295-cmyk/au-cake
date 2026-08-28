@@ -41,6 +41,7 @@ import {
 } from './lib/cake-detail'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
 import { getAuCakeCatalogCards, type CakeCatalogCard } from './lib/cake-catalog'
+import { formatCurrentCakeSizeLabel, getCurrentWholeCakeSizeOptions, isCurrentWholeCakeProduct } from './lib/cake-serving'
 import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-editorial'
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
@@ -303,7 +304,14 @@ export default function CakeDetailPage({
     setActiveImage((current) => (current + direction + galleryCount) % galleryCount)
   }
 
-  const sizeOptions = CAKE_SIZE_OPTIONS.filter((option) => Object.hasOwn(product.sizePrices, option.value))
+  const isCurrentWholeCake = isCurrentWholeCakeProduct(product.id)
+  const sizeOptions = isCurrentWholeCake
+    ? getCurrentWholeCakeSizeOptions(product.id).map((value) => ({
+        value,
+        label: formatCurrentCakeSizeLabel(product.id, value) || value,
+        price: product.sizePrices[value],
+      }))
+    : CAKE_SIZE_OPTIONS.filter((option) => Object.hasOwn(product.sizePrices, option.value))
   const packSize = getFreshLemonCupcakePackSize(product.id) || 0
   const productChoiceLabel = detail.id === 'cupcake'
     ? language === 'ko' ? '구성' : 'Pack Size'
@@ -433,13 +441,19 @@ export default function CakeDetailPage({
                     onClick={() => updateSelection({ cakeSize: option.value })}
                     key={option.value}
                   >
-                    <strong>{formatCakeSizeLabel(option.value)}</strong>
-                    <span>{formatCurrency(product.sizePrices[option.value] || option.price)}</span>
+                    <strong>{formatCurrentCakeSizeLabel(product.id, option.value) || formatCakeSizeLabel(option.value)}</strong>
+                    <span>{formatCurrency(product.sizePrices[option.value] ?? option.price ?? product.price)}</span>
                   </OptionButton>
                 ))}
               </div>
             </fieldset>
           )}
+            {isCurrentWholeCake && (
+              <details className="cake-detail-serving-guide">
+                <summary>{language === 'ko' ? '케이크마다 권장 인원수가 다른 이유' : 'Why do serving sizes vary?'}</summary>
+                <p>{language === 'ko' ? '케이크 스타일과 권장 1인분 크기에 따라 인원수가 달라집니다. 시그니처 갸또 케이크는 진하고 밀도감이 높아 작은 조각으로, 제누아즈 케이크는 보다 넉넉한 기념일용 조각으로 안내합니다.' : 'Serving guides vary by cake style and portion size. Our Signature Gâteau cakes are rich and dense, so they are usually served in smaller slices, while genoise cakes are typically cut into larger celebration portions.'}</p>
+              </details>
+            )}
 
           {product.usesPoundAddonOptions && (
             <fieldset className="cake-detail-fieldset">
@@ -634,7 +648,7 @@ export default function CakeDetailPage({
           editorial={editorial}
           language={language}
           slug={slug}
-          selectedSizeLabel={formatCakeSizeLabel(selection.cakeSize)}
+          selectedSizeLabel={formatCurrentCakeSizeLabel(selection.productId, selection.cakeSize) || formatCakeSizeLabel(selection.cakeSize)}
           selectedUnitPrice={formatCurrency(selectedUnitPrice)}
           estimatedTotal={formatCurrency(total)}
           detailAccordions={detail.accordions}

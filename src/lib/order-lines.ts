@@ -1,6 +1,5 @@
 import {
   CUPCAKE_PACK_SIZE,
-  formatCakeSizeLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
   formatVanillaCakeFlavor,
@@ -18,6 +17,7 @@ import {
   normalizeVanillaCakePointColor,
   usesReservationChocolateType,
 } from './constants.js'
+import { formatStoredCakeSizeLabel } from './cake-serving.js'
 import { marketConfig } from './market.js'
 import type { CakeOrderLineRequest, CakeOrderLineResult, Reservation } from './types.js'
 import { getIndividualPackagingPieceCount } from './individual-packaging.js'
@@ -92,7 +92,7 @@ function formatHistoricalVanillaSheet(value: ReservationOrderLine['vanillaCakeSh
 export function formatOrderLineSummary(line: ReservationOrderLine) {
   const product = getProductById(line.productId)
   const details: string[] = [product.name]
-  if (product.usesSizeOptions || isCheesecakeProduct(product.id)) details.push(formatCakeSizeLabel(line.cakeSize))
+  if (product.usesSizeOptions || isCheesecakeProduct(product.id)) details.push(formatStoredCakeSizeLabel(product.id, line.cakeSize))
   if (isCreamLayerCakeProduct(product.id)) {
     if (product.id === 'buttercream-cake') {
       details.push('Signature Gâteau au Chocolat layers')

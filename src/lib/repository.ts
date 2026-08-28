@@ -32,6 +32,7 @@ import {
   normalizeReservationChocolateType,
   normalizePoundAddon,
 } from './constants'
+import { normalizeStoredCakeSize } from './cake-serving'
 import type { ReservationPriceOptions } from './constants'
 import {
   INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
@@ -266,7 +267,7 @@ function normalizeReservation(reservation: Reservation): Reservation {
     ...reservation,
     customerEmail: typeof reservation.customerEmail === 'string' ? reservation.customerEmail.trim().toLowerCase() : '',
     productId: getProductById(reservation.productId).id,
-    cakeSize: normalizeCakeSize(getProductById(reservation.productId).id, reservation.cakeSize),
+    cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
     ...(reservation.cupcakeFinish === undefined ? {} : {
       cupcakeFinish: normalizeCupcakeFinish(getProductById(reservation.productId).id, reservation.cupcakeFinish),
@@ -362,7 +363,7 @@ function normalizePublicOrderLine(
   const poundAddon = normalizePoundAddon(product.id, line.poundAddon || DEFAULT_POUND_ADDON)
   const normalized = {
     productId: product.id,
-    cakeSize: normalizeCakeSize(product.id, line.cakeSize),
+    cakeSize: normalizeStoredCakeSize(line.cakeSize),
     chocolateType: normalizeReservationChocolateType(product.id, line.chocolateType || DEFAULT_CHOCOLATE_TYPE, poundAddon),
     poundAddon,
     ...(Object.hasOwn(line, 'cupcakeFinish') ? {
@@ -517,7 +518,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
   const poundAddon = normalizePoundAddon(product.id, reservation.poundAddon || DEFAULT_POUND_ADDON)
   const topProjection = {
     productId: product.id,
-    cakeSize: normalizeCakeSize(product.id, reservation.cakeSize),
+    cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
     chocolateType: normalizeReservationChocolateType(
       product.id,
       reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
@@ -812,7 +813,7 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
     customerPhone: document.customerPhone,
     customerEmail: typeof document.customerEmail === 'string' ? document.customerEmail.trim().toLowerCase() : '',
     productId: getProductById(document.productId).id,
-    cakeSize: normalizeCakeSize(getProductById(document.productId).id, document.cakeSize),
+    cakeSize: normalizeStoredCakeSize(document.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(document.productId).id, document.poundAddon || DEFAULT_POUND_ADDON),
     chocolateType: normalizeReservationChocolateType(
       getProductById(document.productId).id,

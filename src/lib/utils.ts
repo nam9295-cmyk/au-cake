@@ -1,6 +1,5 @@
 import {
   CUPCAKE_PACK_SIZE,
-  formatCakeSizeLabel,
   formatCacaoLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
@@ -18,6 +17,7 @@ import {
 } from './constants.js'
 import { marketConfig } from './market.js'
 import { formatCupcakeFinishText } from './i18n.js'
+import { formatStoredCakeSizeLabel } from './cake-serving.js'
 import { formatOrderLineSummary, getReservationItemCount, getReservationLineCount, getReservationOrderLines } from './order-lines.js'
 import { getAuCakePickupTimeOptions, isAuCakePickupServiceTime } from './pickup-schedule.js'
 import type { Reservation, StoreSettings } from './types.js'
@@ -344,7 +344,7 @@ Thank you for your order ${reservation.customerName}. (${reservation.customerPho
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${(product.usesSizeOptions || isCheesecakeProduct(product.id)) ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
+${(product.usesSizeOptions || isCheesecakeProduct(product.id)) ? `${labels.size}: ${formatStoredCakeSizeLabel(product.id, reservation.cakeSize)}\n` : ''}${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 ${formatAuCreamCakeDetails(reservation)}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${formatIndividualPackaging(reservation, marketConfig.locale.startsWith('ko'))}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 Total: ${formatCurrency(reservation.totalPriceCents === undefined ? reservation.totalPrice : reservation.totalPriceCents / 100)}
@@ -362,7 +362,7 @@ ${labels.body}
 
 ${labels.reservationNumber}: ${reservation.reservationNumber}
 ${labels.productName}: ${product.name}
-${(product.usesSizeOptions || isCheesecakeProduct(product.id)) ? `${labels.size}: ${formatCakeSizeLabel(reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
+${(product.usesSizeOptions || isCheesecakeProduct(product.id)) ? `${labels.size}: ${formatStoredCakeSizeLabel(product.id, reservation.cakeSize)}\n` : ''}${product.usesCacaoOptions ? `${labels.cacao}: ${formatCacaoLabel(reservation.cacaoPercent)}\n` : ''}${usesReservationChocolateType(product.id, reservation.poundAddon) ? `Chocolate: ${formatChocolateTypeLabel(reservation.chocolateType)}\n` : ''}${product.usesPoundAddonOptions ? `Finish: ${formatPoundAddonLabel(reservation.poundAddon)}\n` : ''}${isFreshLemonCupcakeProduct(product.id) ? formatLemonIcingMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${isCupcakeProduct(product.id) ? formatCupcakeFinishMix(reservation, marketConfig.locale.startsWith('ko')) : ''}${labels.pickupDate}: ${reservation.pickupDate}
 ${labels.pickupTime}: ${reservation.pickupTime}
 ${labels.quantity}: ${reservation.quantity}${marketConfig.copy.quantityUnit}
 ${labels.customerName}: ${reservation.customerName}
@@ -384,7 +384,7 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.customerPhone,
     reservation.customerEmail || '',
     getProductById(reservation.productId).name,
-    (getProductById(reservation.productId).usesSizeOptions || isCheesecakeProduct(reservation.productId)) ? formatCakeSizeLabel(reservation.cakeSize) : '-',
+    (getProductById(reservation.productId).usesSizeOptions || isCheesecakeProduct(reservation.productId)) ? formatStoredCakeSizeLabel(reservation.productId, reservation.cakeSize) : '-',
     getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
     usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
     getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',

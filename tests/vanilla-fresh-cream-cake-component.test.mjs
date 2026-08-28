@@ -11,13 +11,13 @@ const detail = readFileSync(new URL('../src/lib/cake-detail.ts', import.meta.url
 const detailPage = readFileSync(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
 
 
-test('Vanilla Fresh Cream Cake uses its supplied photos across hero, catalogue and Quick View', () => {
-  assert.match(catalog, /defaultProductId:\s*'vanilla-fresh-cream-cake'/)
-  assert.match(catalog, /id:\s*'vanilla-fresh-cream'[\s\S]*?isPhotoComingSoon:\s*false/)
+test('Strawberry Whole Cakes use the native photo-coming placeholder without invented image URLs', () => {
+  assert.match(catalog, /defaultProductId:\s*'fresh-strawberry-vanilla-cream-cake'/)
+  assert.match(catalog, /id:\s*'fresh-strawberry-vanilla-cream'[\s\S]*?isPhotoComingSoon:\s*true/)
   assert.match(home, /import \{ getAuPublicContent, getPublicCakePage \} from '\.\.\/lib\/public-content'/)
-  assert.match(home, /'vanilla-fresh-cream-cake':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
-  assert.match(home, /image:\s*getPublicCakePage\('vanilla-fresh-cream-cake'\)\?\.imagePath/)
-  assert.match(home, /label:\s*'Vanilla Fresh Cream Cake'/)
+  assert.match(home, /'fresh-strawberry-vanilla-cream-cake':\s*''/)
+  assert.match(home, /'fresh-strawberry-chocolate-cream-cake':\s*''/)
+  assert.doesNotMatch(home, /label:\s*'Vanilla Fresh Cream Cake'/)
   assert.match(home, /href=\{`\/cakes\/\$\{card\.slug\}`\}/)
   assert.match(home, /navigateToCake\(card\.slug\)/)
 })
@@ -36,7 +36,7 @@ test('reservation selection uses the safe photo-coming silhouette for Vanilla an
 })
 
 test('Vanilla Fresh Cream Cake selects its size without retired flavour controls, while Buttercream shares point colours', () => {
-  assert.match(reserve, /!isVanillaFreshCreamCakeProduct\(selectedProduct\.id\)\s*&&\s*<span>\{optionText\.description\}<\/span>/)
+  assert.match(reserve, /option\.description && !isVanillaFreshCreamCakeProduct\(selectedProduct\.id\)\s*&&\s*<span>\{option\.description\}<\/span>/)
   assert.match(reserve, /selectedProduct\.usesSizeOptions && \(/)
   assert.match(reserve, /isCakePointColorProduct\(selectedProduct\.id\) && \(/)
   assert.doesNotMatch(reserve, /name="vanillaCakeFlavor"/)
@@ -47,13 +47,13 @@ test('Vanilla Fresh Cream Cake selects its size without retired flavour controls
   assert.doesNotMatch(reserve, /VANILLA_CAKE_SHEET_OPTIONS\.map/)
 })
 
-test('Vanilla Fresh Cream Cake catalogue card exists only for the AU market', () => {
-  assert.match(catalog, /id:\s*'vanilla-fresh-cream'/)
+test('Strawberry Whole Cake catalogue cards exist only for the AU market', () => {
+  assert.match(catalog, /id:\s*'fresh-strawberry-vanilla-cream'/)
   assert.match(home, /marketConfig\.market === 'AU'[\s\S]*?getAuCakeCatalogCards\(language\)/)
 })
 
-test('AU catalogue cards follow the final seven-product order', () => {
-  const order = ['pave', 'vanilla-fresh-cream', 'buttercream', 'cupcake', 'signature-gateau', 'fresh-lemon-cupcakes', 'brownie-cheesecake']
+test('AU catalogue cards follow the final eight-product order', () => {
+  const order = ['pave', 'buttercream', 'fresh-strawberry-vanilla-cream', 'fresh-strawberry-chocolate-cream', 'cupcake', 'signature-gateau', 'fresh-lemon-cupcakes', 'brownie-cheesecake']
   const positions = order.map((id) => catalog.indexOf(`id: '${id}'`))
   assert.equal(positions.every((position) => position >= 0), true)
   assert.deepEqual([...positions].sort((left, right) => left - right), positions)

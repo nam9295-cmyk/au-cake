@@ -26,9 +26,20 @@ const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
   'vanilla-fresh-cream-cake': '/products/details/vanillacake-quickview.webp',
   'buttercream-cake': '/products/details/buttercream-cake-quick-view.webp',
+  'fresh-strawberry-vanilla-cream-cake': '',
+  'fresh-strawberry-chocolate-cream-cake': '',
   'chocolate-cupcakes': '/products/details/chocolate-cupcakes2-sydney.webp',
   'signature-gateau-au-chocolat': '/products/details/chocolate-pound-cake-quick-view.webp',
   'brownie-cheesecake': '/products/details/brownie-cheese-quick-view.webp',
+}
+
+const heroVisuals: Partial<Record<CakeCatalogImageKey, { image?: string; tagKey: string; className: string }>> = {
+  'pave-cake': { image: heroCake2Img, tagKey: 'first', className: 'hero-cake-two' },
+  'buttercream-cake': { tagKey: 'buttercream', className: 'hero-cake-six' },
+  'chocolate-cupcakes': { tagKey: 'cupcakes', className: 'hero-cake-seven' },
+  'signature-gateau-au-chocolat': { image: heroCake3Img, tagKey: 'pound', className: 'hero-cake-three' },
+  'lemon-cake': { image: getPublicCakePage('lemon-cake')?.imagePath, tagKey: 'lemon', className: 'hero-cake-four' },
+  'brownie-cheesecake': { image: '/products/brownie-cheese-sydney.webp', tagKey: 'brownie', className: 'hero-cake-one' },
 }
 
 export function HomePage({
@@ -54,15 +65,24 @@ export function HomePage({
   const [heroPaused, setHeroPaused] = useState(false)
   const [quickViewCardId, setQuickViewCardId] = useState<string | null>(null)
   const [quickViewOpener, setQuickViewOpener] = useState<HTMLButtonElement | null>(null)
-  const heroCakes = [
+  const legacyHeroCakes = [
     { image: '/products/brownie-cheese-sydney.webp', label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
     { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
-    { image: getPublicCakePage('vanilla-fresh-cream-cake')?.imagePath, label: 'Vanilla Fresh Cream Cake', tagKey: 'vanilla', className: 'hero-cake-five' },
     { image: getPublicCakePage('buttercream-cake')?.imagePath, label: 'Buttercream Cake', tagKey: 'buttercream', className: 'hero-cake-six' },
     { image: getPublicCakePage('chocolate-cupcakes')?.imagePath, label: 'Chocolate Cupcakes', tagKey: 'cupcakes', className: 'hero-cake-seven' },
   ]
+  const heroCakes = marketConfig.market === 'AU'
+    ? getAuCakeCatalogCards(language)
+      .filter((card) => !card.isPhotoComingSoon)
+      .map((card) => ({
+        image: heroVisuals[card.imageKey]?.image || card.imagePath,
+        label: card.name,
+        tagKey: heroVisuals[card.imageKey]?.tagKey || 'first',
+        className: heroVisuals[card.imageKey]?.className || 'hero-cake-two',
+      }))
+    : legacyHeroCakes
 
   useEffect(() => {
     if (heroPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -77,6 +97,7 @@ export function HomePage({
     {
       id: 'pound-cupcake',
       slug: 'chocolate-pound-cake-and-cupcakes',
+      group: 'more-cakes',
       productId: 'pound-cake' as ProductId,
       imageKey: 'pound-cake' as const,
       imagePath: '/products/chocolate-pound-cake-sydney.webp',
@@ -94,6 +115,7 @@ export function HomePage({
     {
       id: 'pave',
       slug: 'pave-chocolate-cake',
+      group: 'whole-cakes',
       productId: 'pave-cake' as ProductId,
       imageKey: 'pave-cake' as const,
       imagePath: '/products/pave-chocolate-cake-sydney.webp',
@@ -107,6 +129,7 @@ export function HomePage({
     {
       id: 'cheesecake',
       slug: 'chocolatiers-basque-cheesecake',
+      group: 'more-cakes',
       productId: 'choco-basque-cheesecake' as ProductId,
       imageKey: 'basque-cheesecake' as const,
       imagePath: '/products/chocolatiers-basque-cheesecake-sydney.webp',
@@ -124,6 +147,7 @@ export function HomePage({
     {
       id: 'fresh-lemon-cupcakes',
       slug: 'lemon-cake',
+      group: 'more-cakes',
       productId: 'fresh-lemon-cupcakes-12' as ProductId,
       imageKey: 'lemon-cake' as const,
       imagePath: '/products/lemon-cake-sydney.webp',

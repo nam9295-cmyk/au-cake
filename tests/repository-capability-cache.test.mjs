@@ -78,7 +78,7 @@ function cakeOrderInput() {
     orderLines: [
       {
         productId: 'pave-cake',
-        cakeSize: '15cm',
+        cakeSize: '6in',
         chocolateType: 'dark',
         poundAddon: 'none',
         cupcakeFinish: 'basic',

@@ -119,9 +119,11 @@ export function applyPromoDiscount(total: number, productId: ProductId, code?: s
 export const PRODUCTS = marketConfig.products
 
 export type ProductGroupId =
-  | 'pave'
   | 'vanilla-fresh-cream'
+  | 'pave'
   | 'buttercream'
+  | 'fresh-strawberry-vanilla-cream'
+  | 'fresh-strawberry-chocolate-cream'
   | 'cupcake'
   | 'signature-gateau'
   | 'fresh-lemon-cupcakes'
@@ -146,8 +148,9 @@ const KR_PRODUCT_GROUPS: ProductGroup[] = [
 
 export const PRODUCT_GROUPS: ProductGroup[] = marketConfig.market === 'AU' ? [
   { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
-  { id: 'vanilla-fresh-cream', defaultProductId: 'vanilla-fresh-cream-cake', productIds: ['vanilla-fresh-cream-cake'] },
   { id: 'buttercream', defaultProductId: 'buttercream-cake', productIds: ['buttercream-cake'] },
+  { id: 'fresh-strawberry-vanilla-cream', defaultProductId: 'fresh-strawberry-vanilla-cream-cake', productIds: ['fresh-strawberry-vanilla-cream-cake'] },
+  { id: 'fresh-strawberry-chocolate-cream', defaultProductId: 'fresh-strawberry-chocolate-cream-cake', productIds: ['fresh-strawberry-chocolate-cream-cake'] },
   { id: 'cupcake', defaultProductId: 'cupcake-dozen', productIds: ['cupcake-half-dozen', 'cupcake-dozen'] },
   { id: 'signature-gateau', defaultProductId: 'pound-cake', productIds: ['pound-cake'] },
   {
@@ -163,6 +166,11 @@ export const PRODUCT_GROUPS: ProductGroup[] = marketConfig.market === 'AU' ? [
 ] : KR_PRODUCT_GROUPS
 
 const LEGACY_AU_PRODUCT_GROUPS: ProductGroup[] = [
+  {
+    id: 'vanilla-fresh-cream',
+    defaultProductId: 'vanilla-fresh-cream-cake',
+    productIds: ['vanilla-fresh-cream-cake'],
+  },
   {
     id: 'cheesecake',
     defaultProductId: 'choco-basque-cheesecake',
@@ -379,7 +387,9 @@ export function formatCakeSizeLabel(cakeSize?: CakeSize) {
 export function normalizeCakeSize(productId: ProductId, cakeSize?: CakeSize) {
   const product = getProductById(productId)
   if (!product.usesSizeOptions) return DEFAULT_CAKE_SIZE
-  return getCakeSizeOption(cakeSize).value
+  if (cakeSize && Object.hasOwn(product.sizePrices, cakeSize)) return cakeSize
+  const firstConfiguredSize = Object.keys(product.sizePrices)[0] as CakeSize | undefined
+  return firstConfiguredSize || DEFAULT_CAKE_SIZE
 }
 
 export function getChocolateTypeOption(chocolateType?: ChocolateType) {

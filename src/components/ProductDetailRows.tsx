@@ -1,7 +1,6 @@
 import {
   CUPCAKE_PACK_SIZE,
   formatCacaoLabel,
-  formatCakeSizeLabel,
   formatVanillaCakeFlavor,
   formatVanillaCakeSheet,
   getFreshLemonCupcakePackSize,
@@ -19,6 +18,7 @@ import {
 import { cakeCopy, formatChocolateTypeText, formatCupcakeFinishText, formatPoundAddonText, formatVanillaCakePointColorText, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 import { formatCurrency } from '../lib/utils'
+import { formatStoredCakeSizeLabel } from '../lib/cake-serving'
 import type { CakeOrderLineRequest, CakeOrderLineResult, PublicReservation, Reservation } from '../lib/types'
 import { getIndividualPackagingPieceCount } from '../lib/individual-packaging'
 
@@ -106,7 +106,7 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
       {(product.usesSizeOptions || isCheesecakeProduct(product.id)) && (
         <div>
           <dt>{copy.size}</dt>
-          <dd>{formatCakeSizeLabel(reservation.cakeSize)}</dd>
+          <dd>{formatStoredCakeSizeLabel(product.id, reservation.cakeSize)}</dd>
         </div>
       )}
       {isCreamLayerCakeProduct(product.id) && (

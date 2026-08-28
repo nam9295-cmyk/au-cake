@@ -11,11 +11,12 @@ import type { CakeDetailSelection } from '../src/lib/cake-detail.js'
 import { getAuCakeCatalogCards } from '../src/lib/cake-catalog.js'
 import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 
-test('seven public sale slugs resolve to independent reusable detail contracts', () => {
+test('eight public sale slugs resolve to independent reusable detail contracts', () => {
   const details = [
     getCakeDetailBySlug('pave-chocolate-cake', 'en'),
-    getCakeDetailBySlug('vanilla-fresh-cream-cake', 'en'),
     getCakeDetailBySlug('buttercream-cake', 'en'),
+    getCakeDetailBySlug('fresh-strawberry-vanilla-cream-cake', 'en'),
+    getCakeDetailBySlug('fresh-strawberry-chocolate-cream-cake', 'en'),
     getCakeDetailBySlug('chocolate-cupcakes', 'en'),
     getCakeDetailBySlug('signature-gateau-au-chocolat', 'en'),
     getCakeDetailBySlug('lemon-cake', 'en'),
@@ -24,21 +25,23 @@ test('seven public sale slugs resolve to independent reusable detail contracts',
 
   assert.deepEqual(details.map((detail) => detail?.slug), [
     'pave-chocolate-cake',
-    'vanilla-fresh-cream-cake',
     'buttercream-cake',
+    'fresh-strawberry-vanilla-cream-cake',
+    'fresh-strawberry-chocolate-cream-cake',
     'chocolate-cupcakes',
     'signature-gateau-au-chocolat',
     'lemon-cake',
     'brownie-cheesecake',
   ])
-  assert.deepEqual(details.map((detail) => detail?.gallery.length), [7, 2, 3, 3, 5, 4, 3])
+  assert.deepEqual(details.map((detail) => detail?.gallery.length), [7, 3, 0, 0, 3, 5, 4, 3])
   assert.deepEqual(details[0]?.gallery.slice(0, 4), ['pave-side', 'pave-quick-view', 'pave-previous', 'pave-hero'])
-  assert.deepEqual(details[2]?.gallery, ['buttercream-side', 'buttercream-detail', 'buttercream-quick-view'])
-  assert.deepEqual(details[3]?.gallery, ['cupcake-side', 'cupcake-detail', 'cupcake-hero'])
-  assert.deepEqual(details[4]?.gallery, ['signature-gateau-side', 'signature-gateau-detail', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'])
-  assert.deepEqual(details[6]?.gallery, ['brownie-side', 'brownie-detail', 'brownie-quick-view'])
-  assert.equal(details[2]?.isPhotoComingSoon, false)
-  assert.equal(details[6]?.isPhotoComingSoon, false)
+  assert.deepEqual(details[1]?.gallery, ['buttercream-side', 'buttercream-detail', 'buttercream-quick-view'])
+  assert.deepEqual(details[4]?.gallery, ['cupcake-side', 'cupcake-detail', 'cupcake-hero'])
+  assert.deepEqual(details[5]?.gallery, ['signature-gateau-side', 'signature-gateau-detail', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'])
+  assert.deepEqual(details[7]?.gallery, ['brownie-side', 'brownie-detail', 'brownie-quick-view'])
+  assert.equal(details[2]?.isPhotoComingSoon, true)
+  assert.equal(details[3]?.isPhotoComingSoon, true)
+  assert.equal(details[7]?.isPhotoComingSoon, false)
   assert.equal(getCakeDetailBySlug('not-a-cake', 'en'), null)
 })
 
@@ -50,12 +53,6 @@ test('sale detail badges mirror the first three Quick View features', () => {
       assert.deepEqual(detail.trustPoints, card.features.slice(0, 3), card.slug)
     }
   }
-
-  assert.deepEqual(getCakeDetailBySlug('vanilla-fresh-cream-cake', 'en')?.trustPoints, [
-    'Signature Gâteau au Chocolat layers',
-    'Vanilla fresh cream with real vanilla bean',
-    'Real vanilla bean with visible vanilla bean specks',
-  ])
 
   assert.deepEqual(getCakeDetailBySlug('brownie-cheesecake', 'en')?.trustPoints, [
     'Dark chocolate brownie base',
@@ -117,13 +114,15 @@ test('Cupcake and Signature detail selections remain independent and normalize h
   assert.equal(getCakeDetailBySlug('chocolatiers-basque-cheesecake', 'en')?.isLegacy, true)
 })
 
-test('cream cake details create plain chocolate-sheet selections and keep Buttercream point colours separate', () => {
-  const vanilla = createCakeDetailSelection('vanilla-fresh-cream-cake')
+test('current Strawberry cakes create inch selections and keep Buttercream cake colours separate', () => {
+  const strawberryVanilla = createCakeDetailSelection('fresh-strawberry-vanilla-cream-cake')
+  const strawberryChocolate = createCakeDetailSelection('fresh-strawberry-chocolate-cream-cake')
   const buttercream = createCakeDetailSelection('buttercream-cake')
-  assert.equal(vanilla?.vanillaCakeSheet, 'chocolate')
-  assert.equal(vanilla?.vanillaCakeFlavor, 'plain')
-  assert.equal(buttercream?.vanillaCakeSheet, 'chocolate')
-  assert.equal(buttercream?.vanillaCakeFlavor, 'plain')
+  assert.equal(strawberryVanilla?.productId, 'fresh-strawberry-vanilla-cream-cake')
+  assert.equal(strawberryChocolate?.productId, 'fresh-strawberry-chocolate-cream-cake')
+  assert.equal(strawberryVanilla?.cakeSize, '6in')
+  assert.equal(strawberryChocolate?.cakeSize, '6in')
+  assert.equal(buttercream?.cakeSize, '6in')
 
   const blueButtercream = selectCakeDetailProduct({
     ...buttercream!,

@@ -5,7 +5,7 @@ import { readFile, stat } from 'node:fs/promises'
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const cakesSource = await readFile(new URL('../src/CakesPage.tsx', import.meta.url), 'utf8')
 
-test('home catalogue renders its seven cards from the shared AU cake catalog', () => {
+test('home catalogue renders its eight cards from the shared AU cake catalog', () => {
   assert.match(homeSource, /getAuCakeCatalogCards\(language\)/)
   assert.doesNotMatch(homeSource, /const catalogCards = \[/)
 })
@@ -44,25 +44,14 @@ test('new Lemon Cake catalogue photo is also used in the home hero', () => {
   assert.doesNotMatch(homeSource, /import freshLemonCupcakesHeroImg/)
 })
 
-test('home hero cycles the seven current sale cakes every three seconds', () => {
-  const heroCakes = homeSource.match(/const heroCakes = \[([\s\S]*?)\n  \]/)?.[1]
-
-  assert.ok(heroCakes, 'hero cake list must be present')
-  assert.equal((heroCakes.match(/label:/g) || []).length, 7)
-  for (const label of [
-    'Pave Chocolate Cake',
-    'Vanilla Fresh Cream Cake',
-    'Buttercream Cake',
-    'Chocolate Cupcakes',
-    'Signature Gâteau au Chocolat',
-    'Lemon Cake',
-    'Brownie Cheesecake',
-  ]) assert.match(heroCakes, new RegExp(`label: '${label}'`))
-  assert.match(heroCakes, /image:\s*getPublicCakePage\('buttercream-cake'\)\?\.imagePath/)
-  assert.match(heroCakes, /image:\s*getPublicCakePage\('chocolate-cupcakes'\)\?\.imagePath/)
-  assert.match(heroCakes, /image:\s*'\/products\/brownie-cheese-sydney\.webp'/)
-  assert.doesNotMatch(heroCakes, /image:\s*getPublicCakePage\('brownie-cheesecake'\)\?\.imagePath/)
-  assert.doesNotMatch(heroCakes, /basqueCheesecakeHeroImg|Chocolatier's Basque/)
+test('home hero cycles only sale cakes with available images every three seconds', () => {
+  assert.match(homeSource, /getAuCakeCatalogCards\(language\)\n\s*\.filter\(\(card\) => !card\.isPhotoComingSoon\)/)
+  assert.match(homeSource, /\.map\(\(card\) => \(\{[\s\S]*?label: card\.name/)
+  assert.match(homeSource, /heroVisuals\[card\.imageKey\]\?\.image \|\| card\.imagePath/)
+  assert.match(homeSource, /'pave-cake': \{ image: heroCake2Img/)
+  assert.match(homeSource, /'signature-gateau-au-chocolat': \{ image: heroCake3Img/)
+  assert.match(homeSource, /'brownie-cheesecake': \{ image: '\/products\/brownie-cheese-sydney\.webp'/)
+  assert.doesNotMatch(homeSource, /label: 'Vanilla Fresh Cream Cake'|vanillacake-hero/)
   assert.match(homeSource, /window\.setInterval\([\s\S]*?\}, 3000\)/)
 })
 

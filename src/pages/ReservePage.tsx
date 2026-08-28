@@ -52,6 +52,7 @@ import {
 
   usesReservationChocolateType,
 } from '../lib/constants'
+import { formatCurrentCakeSizeLabel, getCurrentWholeCakeSizeOptions } from '../lib/cake-serving'
 import {
   normalizeReviewCouponCode,
   getPromoEntryState,
@@ -153,10 +154,12 @@ export function ReservePage({
   const isMultiOrder = orderSelections !== null
   const [requestId] = useState(generateRequestId)
   const copy = cakeCopy(language)
+  const initialFormProductId = initialSelection?.productId || initialProductId
+  const initialFormCakeSize = initialSelection?.cakeSize || getCurrentWholeCakeSizeOptions(initialFormProductId)[0] || DEFAULT_CAKE_SIZE as CakeSize
   const [form, setForm] = useState({
-    productId: initialSelection?.productId || initialProductId,
+    productId: initialFormProductId,
     cacaoPercent: '기본' as CacaoPercent,
-    cakeSize: initialSelection?.cakeSize || DEFAULT_CAKE_SIZE as CakeSize,
+    cakeSize: initialFormCakeSize,
     chocolateType: initialSelection?.chocolateType || DEFAULT_CHOCOLATE_TYPE as ChocolateType,
     poundAddon: initialSelection?.poundAddon || DEFAULT_POUND_ADDON as PoundAddon,
     cupcakeFinish: initialSelection?.cupcakeFinish || DEFAULT_CUPCAKE_FINISH as CupcakeFinish,
@@ -384,6 +387,23 @@ export function ReservePage({
 
   const selectedProduct = getProductById(form.productId)
   const selectedProductText = getProductText(selectedProduct.id, language)
+  const currentWholeCakeSizeOptions = getCurrentWholeCakeSizeOptions(selectedProduct.id)
+  const reserveCakeSizeOptions = currentWholeCakeSizeOptions.length
+    ? currentWholeCakeSizeOptions.map((value) => ({
+        value,
+        label: formatCurrentCakeSizeLabel(selectedProduct.id, value) || String(value),
+        price: selectedProduct.sizePrices[value] || 0,
+        description: '',
+      }))
+    : CAKE_SIZE_OPTIONS.map((option) => {
+        const optionText = getCakeSizeText(option, language)
+        return {
+          value: option.value,
+          label: optionText.label,
+          price: selectedProduct.sizePrices[option.value] || option.price,
+          description: optionText.description,
+        }
+      })
   const catalogCards = marketConfig.market === 'AU' ? getAuCakeCatalogCards(language) : []
   const selectedCatalogCard = catalogCards.find((card) => card.productId === selectedProduct.id)
   const selectedProductImage = selectedCatalogCard?.isPhotoComingSoon
@@ -507,12 +527,16 @@ export function ReservePage({
 
   function selectProduct(productId: ProductId) {
     const product = getProductById(productId)
+    const productWholeCakeSizeOptions = getCurrentWholeCakeSizeOptions(productId)
+    const cakeSize = productWholeCakeSizeOptions.includes(form.cakeSize as typeof productWholeCakeSizeOptions[number])
+      ? form.cakeSize
+      : productWholeCakeSizeOptions[0] || DEFAULT_CAKE_SIZE as CakeSize
     setShowCakeSelector(false)
     setForm({
       ...form,
       productId,
       cacaoPercent: product.usesCacaoOptions ? form.cacaoPercent : '기본',
-      cakeSize: product.usesSizeOptions ? form.cakeSize : DEFAULT_CAKE_SIZE,
+      cakeSize: product.usesSizeOptions ? cakeSize : DEFAULT_CAKE_SIZE,
       chocolateType: usesReservationChocolateType(product.id, form.poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
       poundAddon: product.usesPoundAddonOptions ? form.poundAddon : DEFAULT_POUND_ADDON,
       chocolateIcingCount: normalizeChocolateIcingCount(productId, form.chocolateIcingCount),
@@ -640,7 +664,7 @@ export function ReservePage({
               {(selectedProduct.usesSizeOptions || isCheesecakeProduct(selectedProduct.id)) && (
                 <div>
                   <dt>{labels.size}</dt>
-                  <dd>{formatCakeSizeLabel(form.cakeSize)}</dd>
+                  <dd>{formatCurrentCakeSizeLabel(selectedProduct.id, form.cakeSize) || formatCakeSizeLabel(form.cakeSize)}</dd>
                 </div>
               )}
               {isCreamLayerCakeProduct(selectedProduct.id) && (
@@ -913,8 +937,7 @@ export function ReservePage({
               <fieldset>
               <legend>{labels.sizeSelect}</legend>
               <div className="choice-list">
-                {CAKE_SIZE_OPTIONS.map((option) => {
-                  const optionText = getCakeSizeText(option, language)
+                {reserveCakeSizeOptions.map((option) => {
                   return (
                     <label className="choice-item" key={option.value}>
                       <input
@@ -925,9 +948,9 @@ export function ReservePage({
                       />
                       <span className="choice-copy">
                         <strong>
-                          {optionText.label} · {formatCurrency(selectedProduct.sizePrices[option.value] || option.price)}
+                          {option.label} · {formatCurrency(option.price)}
                         </strong>
-                        {!isVanillaFreshCreamCakeProduct(selectedProduct.id) && <span>{optionText.description}</span>}
+                        {option.description && !isVanillaFreshCreamCakeProduct(selectedProduct.id) && <span>{option.description}</span>}
                       </span>
                     </label>
                   )

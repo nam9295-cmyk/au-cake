@@ -17,6 +17,7 @@ import {
   normalizeReservationChocolateType,
   toCurrencyCents,
 } from './constants.js'
+import { getHistoricalWholeCakeUnitPrice, isHistoricalWholeCakeSize } from './cake-serving.js'
 import type {
   CacaoPercent,
   CakeSize,
@@ -211,7 +212,11 @@ export function buildAdminReservationUpdate(
   }
   const productId = (edits.productId || reservation.productId) as ProductId
   const poundAddon = normalizePoundAddon(productId, (edits.poundAddon || reservation.poundAddon || DEFAULT_POUND_ADDON) as PoundAddon)
-  const cakeSize = normalizeCakeSize(productId, (edits.cakeSize || reservation.cakeSize || DEFAULT_CAKE_SIZE) as CakeSize)
+  const requestedCakeSize = (edits.cakeSize || reservation.cakeSize || DEFAULT_CAKE_SIZE) as CakeSize
+  const preservesHistoricalWholeCakeSize = productId === reservation.productId
+    && isHistoricalWholeCakeSize(reservation.productId, reservation.cakeSize)
+    && isHistoricalWholeCakeSize(productId, requestedCakeSize)
+  const cakeSize = preservesHistoricalWholeCakeSize ? requestedCakeSize : normalizeCakeSize(productId, requestedCakeSize)
   const chocolateType = normalizeReservationChocolateType(
     productId,
     (edits.chocolateType || reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE) as ChocolateType,
@@ -237,11 +242,8 @@ export function buildAdminReservationUpdate(
     edits.cupcakeFinish ?? reservation.cupcakeFinish ?? DEFAULT_CUPCAKE_FINISH,
   )
   const cacaoPercent = (edits.cacaoPercent || reservation.cacaoPercent || '기본') as CacaoPercent
-  const originalTotalPrice = getReservationPrice(
-    productId,
-    { cacaoPercent, cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, ...cupcakeFinishCounts },
-    quantity,
-  ) + (isLegacyCupcake ? getCupcakeFinishSurcharge(productId, cupcakeFinishCounts.vanillaCreamCount, cupcakeFinishCounts.partyDecorationCount) * quantity : 0)
+  const historicalUnitPrice = getHistoricalWholeCakeUnitPrice(productId, cakeSize)
+  const originalTotalPrice = (historicalUnitPrice === null ? getReservationPrice(productId, { cacaoPercent, cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, ...cupcakeFinishCounts }, quantity) : historicalUnitPrice / 100 * quantity) + (isLegacyCupcake ? getCupcakeFinishSurcharge(productId, cupcakeFinishCounts.vanillaCreamCount, cupcakeFinishCounts.partyDecorationCount) * quantity : 0)
   const promoKind = reservationPromoKind(reservation)
   const hasPriceAffectingEdit = REVIEW_COUPON_PRICE_FIELDS
     .filter((field) => field !== 'totalPrice' && field !== 'totalPriceCents')

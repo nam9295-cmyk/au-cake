@@ -13,7 +13,6 @@ import {
   DEFAULT_SETTINGS,
   PAYMENT_STATUSES,
   RESERVATION_STATUSES,
-  formatCakeSizeLabel,
   formatCacaoLabel,
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
@@ -27,6 +26,7 @@ import {
   listReservations,
   updateReservation,
 } from './lib/repository'
+import { formatStoredCakeSizeLabel } from './lib/cake-serving'
 import { formatOrderLineSummary, getReservationItemCount } from './lib/order-lines'
 import type {
   Reservation,
@@ -54,7 +54,7 @@ function reservationCacaoText(reservation: Reservation) {
 
 function reservationCakeSizeText(reservation: Reservation) {
   const product = getProductById(reservation.productId)
-  return product.usesSizeOptions || isCheesecakeProduct(product.id) ? formatCakeSizeLabel(reservation.cakeSize) : '-'
+  return product.usesSizeOptions || isCheesecakeProduct(product.id) ? formatStoredCakeSizeLabel(product.id, reservation.cakeSize) : '-'
 }
 
 function reservationChocolateText(reservation: Reservation) {

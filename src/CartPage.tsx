@@ -17,6 +17,7 @@ import {
   usesReservationChocolateType,
 } from './lib/constants'
 import { getCakeDetailSelectionTotal } from './lib/cake-detail'
+import { formatCurrentCakeSizeLabel } from './lib/cake-serving'
 import { getCartEstimatedPricing, type CartLine } from './lib/cart'
 import {
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
@@ -58,7 +59,7 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
       {(product.usesSizeOptions || isCheesecakeProduct(product.id)) && (
         <div>
           <dt>{copy.size}</dt>
-          <dd>{formatCakeSizeLabel(selection.cakeSize)}</dd>
+          <dd>{formatCurrentCakeSizeLabel(product.id, selection.cakeSize) || formatCakeSizeLabel(selection.cakeSize)}</dd>
         </div>
       )}
       {product.usesPoundAddonOptions && (
