@@ -2,6 +2,7 @@ import { digestReviewCouponCode } from './coupon-digest.js'
 import {
   ACTIVE_CAKE_ORDER_PRODUCT_IDS,
   isActiveCakeOrderProductId,
+  isCompatCakeOrderProductId,
   isStoredCakeOrderProductId,
 } from './active-cake-products.js'
 
@@ -48,7 +49,14 @@ export const VANILLA_CAKE_FLAVORS = new Set(['plain'])
 const LEGACY_VANILLA_CAKE_FLAVORS = new Set(['triple-berry', 'nutella-chocolate-chip'])
 export const VANILLA_CAKE_POINT_COLORS = new Set(['pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'])
 const CREAM_LAYER_CAKE_PRODUCT_IDS = new Set(['vanilla-fresh-cream-cake', 'buttercream-cake'])
+const STRAWBERRY_CREAM_CAKE_PRODUCT_IDS = new Set([
+  'fresh-strawberry-vanilla-cream-cake',
+  'fresh-strawberry-chocolate-cream-cake',
+])
 export const CAKE_SIZE_LABELS = {
+  '6in': '6"',
+  '8in': '8"',
+  '10in': '10"',
   '15cm': '6" | serves 8',
   '19cm': '7.5" | serves 14',
   '22cm': '9" | serves 22',
@@ -131,19 +139,34 @@ const ADVANCED_CLASS_SCHOOL_YEARS = new Set(['Year 2', 'Year 3', 'Year 4', 'Year
 const PRODUCTS = {
   'pave-cake': {
     basePrice: 79,
-    sizePrices: { '15cm': 79, '19cm': 99, '22cm': 137 },
+    sizePrices: { '6in': 79, '8in': 109, '10in': 159 },
+    legacySizePrices: { '15cm': 79, '19cm': 99, '22cm': 137 },
     usesSize: true,
     usesFinish: false,
   },
   'vanilla-fresh-cream-cake': {
     basePrice: 69,
-    sizePrices: { '15cm': 69, '19cm': 89, '22cm': 119 },
+    sizePrices: {},
+    legacySizePrices: { '15cm': 69, '19cm': 89, '22cm': 119 },
     usesSize: true,
     usesFinish: false,
   },
   'buttercream-cake': {
     basePrice: 74,
-    sizePrices: { '15cm': 74, '19cm': 94, '22cm': 128 },
+    sizePrices: { '6in': 75, '8in': 99, '10in': 145 },
+    legacySizePrices: { '15cm': 74, '19cm': 94, '22cm': 128 },
+    usesSize: true,
+    usesFinish: false,
+  },
+  'fresh-strawberry-vanilla-cream-cake': {
+    basePrice: 69,
+    sizePrices: { '6in': 69, '8in': 89, '10in': 129 },
+    usesSize: true,
+    usesFinish: false,
+  },
+  'fresh-strawberry-chocolate-cream-cake': {
+    basePrice: 72,
+    sizePrices: { '6in': 72, '8in': 95, '10in': 135 },
     usesSize: true,
     usesFinish: false,
   },
@@ -316,6 +339,10 @@ function validateEmail(value) {
 
 export function resolveCakeCustomerEmailMode(value) {
   return String(value ?? '').trim() === 'compat' ? 'compat' : 'required'
+}
+
+export function resolveCakeCatalogMode(value) {
+  return value === 'compat' ? 'compat' : 'required'
 }
 
 function cakeCustomerEmail(input, customerEmailMode) {
@@ -528,16 +555,25 @@ function normalizeCakeOptions(input, {
   allowStoredProduct = false,
   allowLegacyCupcakeCounts = false,
   allowLegacyCreamCakeOptions = false,
+  cakeCatalogMode = 'compat',
 } = {}) {
   const isAllowedProduct = allowStoredProduct
     ? isStoredCakeOrderProductId(input.productId)
-    : isActiveCakeOrderProductId(input.productId)
+    : (isActiveCakeOrderProductId(input.productId)
+      || (resolveCakeCatalogMode(cakeCatalogMode) === 'compat' && isCompatCakeOrderProductId(input.productId)))
   if (!isAllowedProduct || !Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
   const product = PRODUCTS[input.productId]
 
-  const cakeSize = product.usesSize && Object.hasOwn(product.sizePrices, input.cakeSize)
-    ? input.cakeSize
-    : '15cm'
+  const canUseLegacySize = allowStoredProduct || resolveCakeCatalogMode(cakeCatalogMode) === 'compat'
+  const hasCurrentSize = product.usesSize && Object.hasOwn(product.sizePrices, input.cakeSize)
+  const hasLegacySize = product.usesSize && canUseLegacySize && Object.hasOwn(product.legacySizePrices || {}, input.cakeSize)
+  const cakeSize = !product.usesSize
+    ? '15cm'
+    : hasCurrentSize || hasLegacySize
+      ? input.cakeSize
+      : input.cakeSize === undefined || input.cakeSize === null || input.cakeSize === ''
+        ? (canUseLegacySize && Object.keys(product.legacySizePrices || {}).at(0)) || Object.keys(product.sizePrices).at(0)
+        : fail('INVALID_CAKE_SIZE')
   const poundAddon = product.usesFinish && Object.hasOwn(FINISH_PRICES, input.poundAddon)
     ? input.poundAddon
     : 'none'
@@ -583,6 +619,15 @@ const LEGACY_ORDER_LINE_IDENTITY_KEYS = [
 ]
 const ORDER_LINE_IDENTITY_KEYS = [...LEGACY_ORDER_LINE_IDENTITY_KEYS, 'individualPackaging']
 const ORDER_LINE_INPUT_KEYS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity'])
+const CAKE_ORDER_REQUEST_KEYS = new Set([
+  'customerName', 'customerPhone', 'customerEmail', 'pickupDate', 'pickupTime', 'requestNote',
+  'promoCode', 'privacyConsent', 'requestId', 'website', 'orderLines',
+])
+const LEGACY_SINGLE_CAKE_INPUT_KEYS = new Set([
+  ...CAKE_ORDER_REQUEST_KEYS,
+  ...ORDER_LINE_INPUT_KEYS,
+  'cacaoPercent',
+])
 const LEGACY_ORDER_LINE_FIELDS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity', 'cacaoPercent'])
 const PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
   ...LEGACY_ORDER_LINE_IDENTITY_KEYS,
@@ -626,6 +671,25 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null
 }
 
+function hasOnlyKnownStrawberryPayloadFields(input, allowedKeys) {
+  return Reflect.ownKeys(input).every((key) => typeof key === 'string' && allowedKeys.has(key))
+}
+
+function assertKnownStrawberryPayloadFields(input) {
+  if (Object.hasOwn(input, 'orderLines')) {
+    if (!Array.isArray(input.orderLines)) return
+    if (input.orderLines.some((line) => isPlainObject(line) && STRAWBERRY_CREAM_CAKE_PRODUCT_IDS.has(line.productId))
+      && !hasOnlyKnownStrawberryPayloadFields(input, CAKE_ORDER_REQUEST_KEYS)) {
+      fail('INVALID_ORDER_LINE')
+    }
+    return
+  }
+  if (STRAWBERRY_CREAM_CAKE_PRODUCT_IDS.has(input.productId)
+    && !hasOnlyKnownStrawberryPayloadFields(input, LEGACY_SINGLE_CAKE_INPUT_KEYS)) {
+    fail('INVALID_ORDER_LINE')
+  }
+}
+
 function normalizedCakeLine(input, quantity, options) {
   const {
     cakeSize,
@@ -667,7 +731,7 @@ function canonicalOrderLineKey(line) {
   return JSON.stringify(ORDER_LINE_IDENTITY_KEYS.map((key) => line[key]))
 }
 
-export function normalizeCakeOrderLines(orderLines) {
+export function normalizeCakeOrderLines(orderLines, { cakeCatalogMode = 'compat' } = {}) {
   if (!Array.isArray(orderLines) || orderLines.length === 0) fail('INVALID_ORDER_LINE')
   const normalized = []
   const positions = new Map()
@@ -678,7 +742,7 @@ export function normalizeCakeOrderLines(orderLines) {
     if (!Number.isInteger(input.quantity) || input.quantity < 1 || input.quantity > MAX_RESERVATION_QUANTITY) {
       fail('INVALID_QUANTITY')
     }
-    const line = normalizedCakeLine(input, input.quantity)
+    const line = normalizedCakeLine(input, input.quantity, { cakeCatalogMode })
     const key = canonicalOrderLineKey(line)
     const existingPosition = positions.get(key)
     if (existingPosition === undefined) {
@@ -693,8 +757,9 @@ export function normalizeCakeOrderLines(orderLines) {
   return normalized
 }
 
-export function canonicalCakeRequestPayload(input, { customerEmailMode = 'required' } = {}) {
+export function canonicalCakeRequestPayload(input, { customerEmailMode = 'required', cakeCatalogMode = 'compat' } = {}) {
   if (!isPlainObject(input)) fail('INVALID_REQUEST')
+  assertKnownStrawberryPayloadFields(input)
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
   if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
@@ -704,11 +769,11 @@ export function canonicalCakeRequestPayload(input, { customerEmailMode = 'requir
   let lines
   if (Object.hasOwn(input, 'orderLines')) {
     if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
-    lines = normalizeCakeOrderLines(input.orderLines)
+    lines = normalizeCakeOrderLines(input.orderLines, { cakeCatalogMode })
   } else {
     const quantity = Number(input.quantity)
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
-    lines = [normalizedCakeLine(input, quantity)]
+    lines = [normalizedCakeLine(input, quantity, { cakeCatalogMode })]
   }
   const promoText = input.promoCode === undefined
     ? ''
@@ -747,7 +812,7 @@ function unitPriceForCakeLine(line) {
   if (CUPCAKE_PRODUCT_IDS.has(line.productId) && Object.hasOwn(line, 'cupcakeFinish')) {
     return CUPCAKE_FINISH_PRICES_CENTS[line.productId][line.cupcakeFinish]
   }
-  return Math.round((product.usesSize ? product.sizePrices[line.cakeSize] : product.basePrice) * 100)
+  return Math.round((product.usesSize ? (product.sizePrices[line.cakeSize] ?? product.legacySizePrices?.[line.cakeSize]) : product.basePrice) * 100)
     + Math.round((product.usesFinish ? FINISH_PRICES[line.poundAddon] : 0) * 100)
     + line.chocolateIcingCount * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS
     + line.vanillaCreamCount * CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS
@@ -893,8 +958,10 @@ export function buildCakeReservation(input, {
   reservationNumber = generateCakeReservationNumber(now),
   reviewCoupon,
   customerEmailMode = 'required',
+  cakeCatalogMode = 'compat',
 } = {}) {
   if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
+  assertKnownStrawberryPayloadFields(input)
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
   if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
@@ -906,11 +973,11 @@ export function buildCakeReservation(input, {
   let normalizedLines
   if (Object.hasOwn(input, 'orderLines')) {
     if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
-    normalizedLines = normalizeCakeOrderLines(input.orderLines)
+    normalizedLines = normalizeCakeOrderLines(input.orderLines, { cakeCatalogMode })
   } else {
     const quantity = Number(input.quantity)
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
-    normalizedLines = [normalizedCakeLine(input, quantity)]
+    normalizedLines = [normalizedCakeLine(input, quantity, { cakeCatalogMode })]
   }
   const pricing = priceCakeOrderLines(normalizedLines, input.promoCode, now, reviewCoupon)
   const firstLine = pricing.lines[0]

@@ -27,6 +27,8 @@ const CAKE_PRODUCT_LABELS = Object.freeze({
   'pave-cake': 'Pave Chocolate Cake',
   'vanilla-fresh-cream-cake': 'Vanilla Fresh Cream Cake',
   'buttercream-cake': 'Buttercream Cake',
+  'fresh-strawberry-vanilla-cream-cake': 'Fresh Strawberry Vanilla Cream Cake',
+  'fresh-strawberry-chocolate-cream-cake': 'Fresh Strawberry Chocolate Cream Cake',
   'pound-cake': 'Signature Gâteau au Chocolat',
   'cupcake-half-dozen': 'Chocolate Cupcakes (Half Dozen)',
   'cupcake-dozen': 'Chocolate Cupcakes (Dozen)',
@@ -35,6 +37,9 @@ const CAKE_SIZE_LABELS = Object.freeze({
   '15cm': '6\" | serves 8',
   '19cm': '7.5\" | serves 14',
   '22cm': '9\" | serves 22',
+  '6in': '6\"',
+  '8in': '8\"',
+  '10in': '10\"',
 })
 const CLASS_TYPE_LABELS = Object.freeze({
   'school-holiday-private-cake-class': 'Basic Cake Class',

@@ -38,6 +38,53 @@ test('admin Appwrite hydration preserves every validated stored order line and a
   assert.equal(reservation.totalPrice, 130)
 })
 
+test('admin Appwrite hydration retains a current Strawberry Whole Cake line with its inch key', () => {
+  const line = {
+    productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in', chocolateType: 'dark', poundAddon: 'none',
+    chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink', quantity: 1,
+    unitPriceCents: 8900, subtotalCents: 8900, discountPercent: 0, discountCents: 0, totalPriceCents: 8900,
+  }
+  const reservation = toReservation({
+    ...document,
+    productId: line.productId, cakeSize: line.cakeSize, chocolateType: line.chocolateType, poundAddon: line.poundAddon,
+    chocolateIcingCount: line.chocolateIcingCount, vanillaCreamCount: line.vanillaCreamCount, partyDecorationCount: line.partyDecorationCount,
+    vanillaCakeSheet: line.vanillaCakeSheet, vanillaCakeFlavor: line.vanillaCakeFlavor, quantity: 1,
+    totalPrice: 89, totalPriceCents: 8900, subtotalCents: 8900, discountBasisCents: 0, discountPercent: 0, discountCents: 0,
+    orderLinesJson: JSON.stringify({ version: 1, lines: [line] }), orderLineCount: 1, orderItemCount: 1,
+  } as never)
+  assert.equal(reservation.productId, 'fresh-strawberry-vanilla-cream-cake')
+  assert.equal(reservation.cakeSize, '8in')
+  assert.equal(reservation.orderLines?.[0]?.unitPriceCents, 8900)
+})
+
+test('admin Appwrite hydration retains current Pave and Buttercream inch pricing', () => {
+  for (const [productId, cakeSize, unitPriceCents] of [
+    ['pave-cake', '8in', 10900],
+    ['buttercream-cake', '10in', 14500],
+  ] as const) {
+    const line = {
+      productId, cakeSize, chocolateType: 'dark', poundAddon: 'none',
+      chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+      vanillaCakeSheet: productId === 'buttercream-cake' ? 'chocolate' : 'vanilla',
+      vanillaCakeFlavor: productId === 'buttercream-cake' ? 'plain' : 'triple-berry',
+      vanillaCakePointColor: 'pink', quantity: 1,
+      unitPriceCents, subtotalCents: unitPriceCents, discountPercent: 0, discountCents: 0, totalPriceCents: unitPriceCents,
+    }
+    const reservation = toReservation({
+      ...document,
+      productId, cakeSize, chocolateType: line.chocolateType, poundAddon: line.poundAddon,
+      chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+      vanillaCakeSheet: line.vanillaCakeSheet, vanillaCakeFlavor: line.vanillaCakeFlavor, quantity: 1,
+      totalPrice: unitPriceCents / 100, totalPriceCents: unitPriceCents, subtotalCents: unitPriceCents,
+      discountBasisCents: 0, discountPercent: 0, discountCents: 0,
+      orderLinesJson: JSON.stringify({ version: 1, lines: [line] }), orderLineCount: 1, orderItemCount: 1,
+    } as never)
+    assert.equal(reservation.cakeSize, cakeSize)
+    assert.equal(reservation.orderLines?.[0]?.unitPriceCents, unitPriceCents)
+  }
+})
+
 test('admin hydration safely represents historical cake reservations without customer email', async () => {
   const reservation = toReservation(document as never)
   assert.equal(reservation.customerEmail, '')

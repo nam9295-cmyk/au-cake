@@ -1,4 +1,4 @@
-import { marketConfig, PAYMENT_STATUSES, RESERVATION_STATUSES } from './market.js'
+import { AU_CAKE_SIZE_LABELS, marketConfig, PAYMENT_STATUSES, RESERVATION_STATUSES } from './market.js'
 import type { CacaoPercent, CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
 
 export const PRODUCT_NAME = marketConfig.copy.productName
@@ -117,6 +117,16 @@ export function applyPromoDiscount(total: number, productId: ProductId, code?: s
 }
 
 export const PRODUCTS = marketConfig.products
+
+// The public AU catalogue changes in its own frontend rollout. Admin and
+// lookup readers must nevertheless understand current Reservation API order
+// lines as soon as the backend is in compatibility mode.
+const CURRENT_WHOLE_CAKE_SIZE_PRICES: Partial<Record<ProductId, Partial<Record<CakeSize, number>>>> = {
+  'pave-cake': { '6in': 79, '8in': 109, '10in': 159 },
+  'buttercream-cake': { '6in': 75, '8in': 99, '10in': 145 },
+  'fresh-strawberry-vanilla-cream-cake': { '6in': 69, '8in': 89, '10in': 129 },
+  'fresh-strawberry-chocolate-cream-cake': { '6in': 72, '8in': 95, '10in': 135 },
+}
 
 export type ProductGroupId =
   | 'pave'
@@ -373,12 +383,15 @@ export function getCakeSizeOption(cakeSize?: CakeSize) {
 }
 
 export function formatCakeSizeLabel(cakeSize?: CakeSize) {
+  if (cakeSize === '6in' || cakeSize === '8in' || cakeSize === '10in') return AU_CAKE_SIZE_LABELS[cakeSize]
   return getCakeSizeOption(cakeSize).label
 }
 
 export function normalizeCakeSize(productId: ProductId, cakeSize?: CakeSize) {
   const product = getProductById(productId)
   if (!product.usesSizeOptions) return DEFAULT_CAKE_SIZE
+  if (cakeSize && Object.hasOwn(CURRENT_WHOLE_CAKE_SIZE_PRICES[product.id] || {}, cakeSize)) return cakeSize
+  if (cakeSize && Object.hasOwn(product.sizePrices, cakeSize)) return cakeSize
   return getCakeSizeOption(cakeSize).value
 }
 
@@ -474,7 +487,9 @@ export function getReservationUnitPrice(
   const chocolateType = normalizeChocolateType(product.id, options.chocolateType)
   const poundAddon = normalizePoundAddon(product.id, options.poundAddon)
   const cupcakePrice = getCupcakeFinishPrice(product.id, options.cupcakeFinish)
-  const sizePrice = cupcakePrice ?? (product.usesSizeOptions ? product.sizePrices[cakeSize] || getCakeSizeOption(cakeSize).price : product.price)
+  const sizePrice = cupcakePrice ?? (product.usesSizeOptions
+    ? (CURRENT_WHOLE_CAKE_SIZE_PRICES[product.id]?.[cakeSize] ?? product.sizePrices[cakeSize] ?? getCakeSizeOption(cakeSize).price)
+    : product.price)
   const cacaoOption = CACAO_OPTIONS.find((item) => item.value === options.cacaoPercent)
   const chocolateOption = getChocolateTypeOption(chocolateType)
   const addonOption = getPoundAddonOption(poundAddon)

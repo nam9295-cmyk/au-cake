@@ -130,6 +130,39 @@ test('AU operator notification preserves historical Vanilla sheet and flavour', 
   assert.equal(rows.Filling, undefined)
 })
 
+test('AU booking emails render current Strawberry Whole Cakes by name and inch without legacy cream options', () => {
+  const cases = [
+    ['fresh-strawberry-vanilla-cream-cake', 'Fresh Strawberry Vanilla Cream Cake', '8in'],
+    ['fresh-strawberry-chocolate-cream-cake', 'Fresh Strawberry Chocolate Cream Cake', '10in'],
+  ]
+  for (const [productId, productName, cakeSize] of cases) {
+    const reservation = {
+      $id: `cake-${cakeSize}`, reservationNumber: `VG-C-AU-${cakeSize}`, customerName: 'Customer', customerEmail: 'customer@example.com',
+      customerPhone: '0400000000', productId, cakeSize, quantity: 1, chocolateType: 'milk', poundAddon: 'vanilla-cream',
+      vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'blue',
+      pickupDate: '2026-09-12', pickupTime: '10:30', requestNote: '', totalPriceCents: 8900, status: '예약확정',
+    }
+    const rows = rowsByLabel(reservation)
+    assert.equal(rows.Product, productName)
+    assert.equal(rows.Size, cakeSize === '8in' ? '8"' : '10"')
+    assert.equal(rows.Layers, undefined)
+    assert.equal(rows.Filling, undefined)
+    assert.equal(rows['Point colour'], undefined)
+
+    const receipt = notification.buildBookingDeliveryPayload({
+      reservation, role: 'customer', from: 'Verygood Chocolate <hello@verygood.example>', operatorRecipients: ['owner@example.com'],
+    })
+    const confirmation = notification.buildBookingConfirmationPayload({
+      reservation, sourceType: 'cake', from: 'Verygood Chocolate <hello@verygood.example>',
+    })
+    for (const payload of [receipt, confirmation]) {
+      assert.match(payload.text, new RegExp(productName))
+      assert.match(payload.text, new RegExp(`Size: ${cakeSize === '8in' ? '8' : '10'}\\"`))
+      assert.match(payload.text, /Quantity: 1ea/)
+    }
+  }
+})
+
 test('AU operator notification shows current Cupcake pack and whole-box finish', () => {
   const rows = rowsByLabel({
     reservationNumber: 'VG-C-AU-CUPCAKE-HALF', productId: 'cupcake-half-dozen', cupcakeFinish: 'chocolate-buttercream',

@@ -213,6 +213,21 @@ test('Cake and Class D-1 payloads are Korean-first bilingual allowlists with per
   assert.doesNotMatch(first.text, /PRIVATE ALLERGY DETAIL|PRIVATE EMERGENCY CONTACT|PRIVATE ADMIN MEMO|private_database_id/)
 })
 
+test('Cake D-1 reminders render current Strawberry names and inch sizes', () => {
+  for (const [productId, productName, cakeSize] of [
+    ['fresh-strawberry-vanilla-cream-cake', 'Fresh Strawberry Vanilla Cream Cake', '8in'],
+    ['fresh-strawberry-chocolate-cream-cake', 'Fresh Strawberry Chocolate Cream Cake', '10in'],
+  ]) {
+    const payload = buildCakeReminderPayload({
+      reservation: cakeReservation({ productId, cakeSize, quantity: 1 }),
+      from: FROM,
+    })
+    assert.match(payload.text, new RegExp(productName))
+    assert.match(payload.text, new RegExp(`${cakeSize === '8in' ? '8' : '10'}\\"`))
+    assert.match(payload.text, /× 1/)
+  }
+})
+
 test('Cake reminder uses the canonical stored multi-line order projection without leaking stored private fields', () => {
   const lines = [
     { productId: 'pound-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 4500, subtotalCents: 4500, discountPercent: 0, discountCents: 0, totalPriceCents: 4500 },

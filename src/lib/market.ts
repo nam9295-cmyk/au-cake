@@ -22,10 +22,13 @@ type CakeSizeConfig = {
   price: number
 }
 
-export const AU_CAKE_SIZE_LABELS: Record<'15cm' | '19cm' | '22cm', string> = {
+export const AU_CAKE_SIZE_LABELS: Record<'15cm' | '19cm' | '22cm' | '6in' | '8in' | '10in', string> = {
   '15cm': '6" | serves 8',
   '19cm': '7.5" | serves 14',
   '22cm': '9" | serves 22',
+  '6in': '6"',
+  '8in': '8"',
+  '10in': '10"',
 }
 
 type CacaoConfig = {
@@ -394,6 +397,30 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         usesChocolateTypeOptions: false,
         usesPoundAddonOptions: false,
         sizePrices: { '15cm': 74, '19cm': 94, '22cm': 128 },
+      },
+      'fresh-strawberry-vanilla-cream-cake': {
+        id: 'fresh-strawberry-vanilla-cream-cake',
+        name: 'Fresh Strawberry Vanilla Cream Cake',
+        description: 'Fresh Strawberry Vanilla Cream Cake',
+        price: 69,
+        priceNote: 'Choose a size',
+        usesCacaoOptions: false,
+        usesSizeOptions: true,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: { '6in': 69, '8in': 89, '10in': 129 },
+      },
+      'fresh-strawberry-chocolate-cream-cake': {
+        id: 'fresh-strawberry-chocolate-cream-cake',
+        name: 'Fresh Strawberry Chocolate Cream Cake',
+        description: 'Fresh Strawberry Chocolate Cream Cake',
+        price: 72,
+        priceNote: 'Choose a size',
+        usesCacaoOptions: false,
+        usesSizeOptions: true,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: { '6in': 72, '8in': 95, '10in': 135 },
       },
       'pound-cake': {
         id: 'pound-cake',

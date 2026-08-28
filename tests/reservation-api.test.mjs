@@ -12,6 +12,7 @@ import {
   matchesLookupPhone,
   parseStoredOrderLines,
   publicCakeReservation,
+  resolveCakeCatalogMode,
   serializeStoredOrderLines,
 } from '../appwrite-functions/reservation-api/src/business.js'
 import { calendarLogin, listCalendarEvents, createCake, createClass, lookupCake } from '../appwrite-functions/reservation-api/src/main.js'
@@ -213,6 +214,102 @@ test('cake API preserves Pave CakeSize IDs and approved prices', () => {
     assert.equal(reservation.totalPrice, expectedPrice)
     assert.equal(reservation.totalPriceCents, expectedPrice * 100)
   }
+})
+
+test('Whole Cake catalog separates current inch pricing, compat centimetre pricing, and stored history', () => {
+  assert.equal(resolveCakeCatalogMode(undefined), 'required')
+  assert.equal(resolveCakeCatalogMode(''), 'required')
+  assert.equal(resolveCakeCatalogMode('required'), 'required')
+  assert.equal(resolveCakeCatalogMode('compat'), 'compat')
+  assert.equal(resolveCakeCatalogMode('COMPAT'), 'required')
+
+  const currentPrices = [
+    ['pave-cake', [['6in', 7900], ['8in', 10900], ['10in', 15900]]],
+    ['buttercream-cake', [['6in', 7500], ['8in', 9900], ['10in', 14500]]],
+    ['fresh-strawberry-vanilla-cream-cake', [['6in', 6900], ['8in', 8900], ['10in', 12900]]],
+    ['fresh-strawberry-chocolate-cream-cake', [['6in', 7200], ['8in', 9500], ['10in', 13500]]],
+  ]
+  for (const [productId, prices] of currentPrices) {
+    for (const [cakeSize, unitPriceCents] of prices) {
+      const reservation = buildCakeReservation({
+        ...cakeInput,
+        productId,
+        cakeSize,
+        quantity: 2,
+        vanillaCakeSheet: 'chocolate',
+        vanillaCakeFlavor: 'triple-berry',
+        vanillaCakePointColor: 'blue',
+      }, { now, reservationNumber: `CURRENT-${productId}-${cakeSize}`, cakeCatalogMode: 'required' })
+      assert.equal(reservation.totalPriceCents, unitPriceCents * 2)
+      const storedLine = JSON.parse(reservation.orderLinesJson).lines[0]
+      assert.equal(storedLine.unitPriceCents, unitPriceCents)
+      if (productId.startsWith('fresh-strawberry-')) {
+        assert.deepEqual(
+          [storedLine.vanillaCakeSheet, storedLine.vanillaCakeFlavor, storedLine.vanillaCakePointColor],
+          ['vanilla', 'triple-berry', 'pink'],
+        )
+      }
+    }
+  }
+
+  for (const productId of ['pave-cake', 'buttercream-cake', 'fresh-strawberry-vanilla-cream-cake', 'fresh-strawberry-chocolate-cream-cake']) {
+    for (const cakeSize of ['7in', '9in', '11in']) {
+      assertApiError('INVALID_CAKE_SIZE', () => buildCakeReservation(
+        { ...cakeInput, productId, cakeSize },
+        { now, reservationNumber: `INVALID-${productId}-${cakeSize}`, cakeCatalogMode: 'required' },
+      ))
+    }
+  }
+  assertApiError('INVALID_PRODUCT', () => buildCakeReservation(
+    { ...cakeInput, productId: 'fresh-strawberry-unknown-cake', cakeSize: '6in' },
+    { now, reservationNumber: 'INVALID-STRAWBERRY', cakeCatalogMode: 'required' },
+  ))
+
+  for (const priceClaim of [{ unitPrice: 1 }, { total: 1 }, { serves: 999 }, { forgedOption: 'yes' }]) {
+    assertApiError('INVALID_ORDER_LINE', () => buildCakeReservation(
+      { ...cakeInput, productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '6in', ...priceClaim },
+      { now, reservationNumber: `STRAWBERRY-UNKNOWN-${Object.keys(priceClaim)[0]}`, cakeCatalogMode: 'required' },
+    ))
+  }
+  assertApiError('INVALID_PRODUCT', () => buildCakeReservation(
+    { ...cakeInput, productId: 'vanilla-fresh-cream-cake', cakeSize: '15cm' },
+    { now, reservationNumber: 'REQUIRED-LEGACY-VANILLA', cakeCatalogMode: 'required' },
+  ))
+  assertApiError('INVALID_CAKE_SIZE', () => buildCakeReservation(
+    { ...cakeInput, productId: 'pave-cake', cakeSize: '15cm' },
+    { now, reservationNumber: 'REQUIRED-LEGACY-PAVE', cakeCatalogMode: 'required' },
+  ))
+
+  const compatPrices = [
+    ['pave-cake', [['15cm', 7900], ['19cm', 9900], ['22cm', 13700]]],
+    ['buttercream-cake', [['15cm', 7400], ['19cm', 9400], ['22cm', 12800]]],
+    ['vanilla-fresh-cream-cake', [['15cm', 6900], ['19cm', 8900], ['22cm', 11900]]],
+  ]
+  for (const [productId, prices] of compatPrices) {
+    for (const [cakeSize, unitPriceCents] of prices) {
+      const reservation = buildCakeReservation(
+        { ...cakeInput, productId, cakeSize },
+        { now, reservationNumber: `COMPAT-${productId}-${cakeSize}`, cakeCatalogMode: 'compat' },
+      )
+      assert.equal(reservation.totalPriceCents, unitPriceCents)
+      assert.deepEqual(parseStoredOrderLines(reservation).lines.map((line) => [line.productId, line.cakeSize, line.unitPriceCents]), [
+        [productId, cakeSize, unitPriceCents],
+      ])
+    }
+  }
+
+  const secondary = buildCakeReservation(
+    { ...cakeInput, productId: 'cupcake-dozen', cupcakeFinish: 'basic' },
+    { now, reservationNumber: 'REQUIRED-SECONDARY', cakeCatalogMode: 'required' },
+  )
+  assert.equal(secondary.totalPriceCents, 5500)
+
+  assertApiError('INVALID_ORDER_LINE', () => buildCakeReservation(multiCakeInput([{
+    productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '6in', quantity: 1, unitPriceCents: 1,
+  }]), { now, reservationNumber: 'TAMPERED-PRICE', cakeCatalogMode: 'required' }))
+  assertApiError('INVALID_ORDER_LINE', () => buildCakeReservation(multiCakeInput([{
+    productId: 'fresh-strawberry-chocolate-cream-cake', cakeSize: '8in', quantity: 1, serves: 999,
+  }]), { now, reservationNumber: 'TAMPERED-SERVES', cakeCatalogMode: 'required' }))
 })
 
 test('cake API persists new Vanilla Fresh Cream Cake orders with chocolate sheets and plain fresh cream', () => {
