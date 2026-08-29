@@ -199,3 +199,10 @@ test('mobile cake catalogue cards reduce copy without changing the public source
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-card-description,\s*\.cakes-index-card-option\s*\{[^}]*display:\s*none/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-copy h3\s*\{[^}]*overflow-wrap:\s*anywhere/s)
 })
+
+test('mobile Home and cakes catalogue photography fills more of each two-column card', async () => {
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap img\s*\{[^}]*width:\s*116%[^}]*max-width:\s*none[^}]*max-height:\s*190px/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-image img\s*\{[^}]*padding:\s*0/s)
+})

@@ -8944,8 +8944,9 @@ label.vanilla-point-color-card {
   }
 
   .product-section .cake-catalog-group-products .product-image-wrap img {
-    width: 100%;
-    max-height: 174px;
+    width: 116%;
+    max-width: none;
+    max-height: 190px;
   }
 
   .product-section .cake-catalog-group-products .product-card-title {
@@ -8973,7 +8974,7 @@ label.vanilla-point-color-card {
   }
 
   .cakes-index-image img {
-    padding: 12px;
+    padding: 0;
   }
 
   .cakes-index-number {
