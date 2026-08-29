@@ -89,21 +89,26 @@ function productSchema(cake, path) {
 }
 
 function cakeFallback(cake, path) {
+  const isLegacy = cake.schema === 'webpage-only'
   const image = imageFor(cake)
   const legacyActions = cake.slug === 'chocolate-pound-cake-and-cupcakes'
     ? '<p><a href="/cakes/signature-gateau-au-chocolat">Signature Gâteau au Chocolat</a> · <a href="/cakes/chocolate-cupcakes">Chocolate Cupcakes</a></p>'
     : cake.slug === 'chocolatiers-basque-cheesecake'
       ? '<p><a href="/cakes">View current cakes</a></p>'
-      : '<p><a href="/reserve">Request this cake</a></p>'
+      : cake.slug === 'vanilla-fresh-cream-cake'
+        ? '<p><a href="/cakes">View current cakes</a></p>'
+        : '<p><a href="/reserve">Request this cake</a></p>'
+  const productDetails = isLegacy ? '' : `
+        <p><strong>Price guide:</strong> ${escapeHtml(cake.priceSummary)}</p>
+        <p><strong>Options:</strong> ${escapeHtml(cake.optionSummary)}</p>
+        <p>Made to order for pre-arranged pickup in Melrose Park, Sydney. Availability is checked after your request and payment is confirmed separately.</p>`
   return `
       <main class="seo-fallback">
         <p><a href="/cakes">View all cakes</a></p>
         <h1>${escapeHtml(cake.name)}</h1>
         ${image ? `<p><img src="${image}" alt="${escapeHtml(cake.imageAlt)}" width="${cake.imageWidth}" height="${cake.imageHeight}" loading="eager" decoding="async" /></p>` : ''}
         <p>${escapeHtml(cake.description)}</p>
-        <p><strong>Price guide:</strong> ${escapeHtml(cake.priceSummary)}</p>
-        <p><strong>Options:</strong> ${escapeHtml(cake.optionSummary)}</p>
-        <p>Made to order for pre-arranged pickup in Melrose Park, Sydney. Availability is checked after your request and payment is confirmed separately.</p>
+        ${productDetails}
         ${legacyActions}
       </main>`
 }
@@ -117,6 +122,7 @@ function cakePageConfig(cake, robots = 'index, follow') {
     description: cake.description,
     robots,
     ogType: isWebPageOnly ? 'website' : 'product',
+    ...(image ? {} : { omitImage: true }),
     ...(image ? { image, imageType: cake.imageType, imageWidth: cake.imageWidth, imageHeight: cake.imageHeight } : {}),
     structuredData: isWebPageOnly
       ? [
@@ -323,11 +329,15 @@ function upsertHeadTag(html, pattern, tag) {
   return pattern.test(html) ? html.replace(pattern, tag) : html.replace('</head>', `    ${tag}\n  </head>`)
 }
 
+function removeHeadTag(html, pattern) {
+  return html.replace(pattern, '')
+}
+
 function renderPage(template, path, config) {
   const canonical = canonicalFor(path)
   const title = escapeHtml(config.title)
   const description = escapeHtml(config.description)
-  const image = config.image || defaultSocialImageUrl
+  const image = config.omitImage ? null : config.image || defaultSocialImageUrl
   const imageType = config.imageType || defaultSocialImage.type
   const imageWidth = config.imageWidth || defaultSocialImage.width
   const imageHeight = config.imageHeight || defaultSocialImage.height
@@ -345,11 +355,19 @@ function renderPage(template, path, config) {
 
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:type"[\s\S]*?\/>/, `<meta property="og:type" content="${config.ogType || 'website'}" />`)
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:site_name"[\s\S]*?\/>/, `<meta property="og:site_name" content="${brand}" />`)
-  rendered = upsertHeadTag(rendered, /<meta\s+property="og:image"[\s\S]*?\/>/, `<meta property="og:image" content="${image}" />`)
-  rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:type"[\s\S]*?\/>/, `<meta property="og:image:type" content="${imageType}" />`)
-  rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:width"[\s\S]*?\/>/, `<meta property="og:image:width" content="${imageWidth}" />`)
-  rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:height"[\s\S]*?\/>/, `<meta property="og:image:height" content="${imageHeight}" />`)
-  rendered = upsertHeadTag(rendered, /<meta\s+name="twitter:image"[\s\S]*?\/>/, `<meta name="twitter:image" content="${image}" />`)
+  if (image) {
+    rendered = upsertHeadTag(rendered, /<meta\s+property="og:image"[\s\S]*?\/>/, `<meta property="og:image" content="${image}" />`)
+    rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:type"[\s\S]*?\/>/, `<meta property="og:image:type" content="${imageType}" />`)
+    rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:width"[\s\S]*?\/>/, `<meta property="og:image:width" content="${imageWidth}" />`)
+    rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:height"[\s\S]*?\/>/, `<meta property="og:image:height" content="${imageHeight}" />`)
+    rendered = upsertHeadTag(rendered, /<meta\s+name="twitter:image"[\s\S]*?\/>/, `<meta name="twitter:image" content="${image}" />`)
+  } else {
+    rendered = removeHeadTag(rendered, /\s*<meta\s+property="og:image"[\s\S]*?\/>/)
+    rendered = removeHeadTag(rendered, /\s*<meta\s+property="og:image:type"[\s\S]*?\/>/)
+    rendered = removeHeadTag(rendered, /\s*<meta\s+property="og:image:width"[\s\S]*?\/>/)
+    rendered = removeHeadTag(rendered, /\s*<meta\s+property="og:image:height"[\s\S]*?\/>/)
+    rendered = removeHeadTag(rendered, /\s*<meta\s+name="twitter:image"[\s\S]*?\/>/)
+  }
   rendered = upsertHeadTag(rendered, /<meta\s+name="twitter:card"[\s\S]*?\/>/, '<meta name="twitter:card" content="summary_large_image" />')
 
   if (config.structuredData?.length) {

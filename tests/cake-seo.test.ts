@@ -18,12 +18,13 @@ function productOffer(path: string) {
   return offer
 }
 
-test('home and seven sale cake detail routes use AU self canonicals', () => {
+test('home and eight sale cake detail routes use AU self canonicals', () => {
   const paths = [
     '/',
     '/cakes',
     '/cakes/pave-chocolate-cake',
-    '/cakes/vanilla-fresh-cream-cake',
+    '/cakes/fresh-strawberry-vanilla-cream-cake',
+    '/cakes/fresh-strawberry-chocolate-cream-cake',
     '/cakes/buttercream-cake',
     '/cakes/chocolate-cupcakes',
     '/cakes/signature-gateau-au-chocolat',
@@ -41,7 +42,7 @@ test('home and seven sale cake detail routes use AU self canonicals', () => {
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
   assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
-  assert.equal(config.description, 'Order cakes made with chocolatier-grade couverture chocolate for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.00.')
+  assert.equal(config.description, 'Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney: Pave, buttercream, fresh strawberry cream cakes, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake.')
   assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList', 'FAQPage'])
   const organization = config.structuredData?.find((entry) => entry['@type'] === 'Organization')
   const faq = config.structuredData?.find((entry) => entry['@type'] === 'FAQPage')
@@ -115,23 +116,25 @@ test('product runtime metadata carries descriptive copy and complete image attri
     const config = getSeoConfig('/cakes/' + slug)
     assert.equal(config.title, page.title)
     assert.equal(config.description, page.description)
-    assert.equal(config.imageType, page.imageType)
-    assert.equal(config.imageWidth, page.imageWidth)
-    assert.equal(config.imageHeight, page.imageHeight)
+    assert.equal(config.imageType, page.imagePath ? page.imageType : undefined)
+    assert.equal(config.imageWidth, page.imagePath ? page.imageWidth : undefined)
+    assert.equal(config.imageHeight, page.imagePath ? page.imageHeight : undefined)
     const entity = config.structuredData?.[0]
     assert.equal(entity?.description, page.description)
+    assert.equal(entity?.image, page.imagePath ? `${SITE_URL}${page.imagePath}` : undefined)
   }
 })
 
-test('seven sale cakes use one Offer at the visible starting price', () => {
+test('eight sale cakes use one Offer at the visible starting price', () => {
   const expectations = new Map([
     ['/cakes/pave-chocolate-cake', { name: 'Pave Chocolate Cake', price: 79 }],
-    ['/cakes/vanilla-fresh-cream-cake', { name: 'Vanilla Fresh Cream Cake', price: 69 }],
-    ['/cakes/buttercream-cake', { name: 'Buttercream Cake', price: 74 }],
+    ['/cakes/buttercream-cake', { name: 'Buttercream Cake', price: 75 }],
+    ['/cakes/fresh-strawberry-vanilla-cream-cake', { name: 'Fresh Strawberry Vanilla Cream Cake', price: 65 }],
+    ['/cakes/fresh-strawberry-chocolate-cream-cake', { name: 'Fresh Strawberry Chocolate Cream Cake', price: 69 }],
     ['/cakes/chocolate-cupcakes', { name: 'Chocolate Cupcakes', price: 31 }],
     ['/cakes/signature-gateau-au-chocolat', { name: 'Signature Gâteau au Chocolat', price: 45 }],
     ['/cakes/lemon-cake', { name: 'Lemon Cake', price: 36 }],
-    ['/cakes/brownie-cheesecake', { name: 'Brownie Cheesecake', price: 55 }],
+    ['/cakes/brownie-cheesecake', { name: 'Brownie Cheesecake', price: 58 }],
   ])
 
   for (const [path, expected] of expectations) {
@@ -164,16 +167,17 @@ test('legacy grouped and Basque pages are noindex WebPage compatibility views', 
   assert.deepEqual(structuredTypes('/cakes/chocolatiers-basque-cheesecake'), ['WebPage', 'BreadcrumbList'])
 })
 
-test('cake catalogue exposes seven canonical detail pages in product order', () => {
+test('cake catalogue exposes eight canonical detail pages in product order', () => {
   const config = getSeoConfig('/cakes')
   const itemList = config.structuredData?.find((entry) => entry['@type'] === 'ItemList')
   assert.ok(itemList)
   const items = itemList.itemListElement as Array<Record<string, unknown>>
-  assert.equal(items.length, 7)
+  assert.equal(items.length, 8)
   assert.deepEqual(items.map((item) => item.url), [
     `${SITE_URL}/cakes/pave-chocolate-cake`,
-    `${SITE_URL}/cakes/vanilla-fresh-cream-cake`,
     `${SITE_URL}/cakes/buttercream-cake`,
+    `${SITE_URL}/cakes/fresh-strawberry-vanilla-cream-cake`,
+    `${SITE_URL}/cakes/fresh-strawberry-chocolate-cream-cake`,
     `${SITE_URL}/cakes/chocolate-cupcakes`,
     `${SITE_URL}/cakes/signature-gateau-au-chocolat`,
     `${SITE_URL}/cakes/lemon-cake`,
@@ -181,13 +185,14 @@ test('cake catalogue exposes seven canonical detail pages in product order', () 
   ])
 })
 
-test('Vanilla Product publishes its supplied product image', () => {
+test('legacy Vanilla page remains a noindex compatibility view without Product Offer JSON-LD', () => {
   const config = getSeoConfig('/cakes/vanilla-fresh-cream-cake')
-  const product = config.structuredData?.find((entry) => entry['@type'] === 'Product')
-  assert.ok(product)
-  const image = `${SITE_URL}/products/vanilla-cake-sydney.webp`
-  assert.equal(config.image, image)
-  assert.equal(product.image, image)
+  assert.equal(config.noindex, true)
+  assert.equal(config.canonical, `${SITE_URL}/cakes/vanilla-fresh-cream-cake`)
+  assert.deepEqual(structuredTypes('/cakes/vanilla-fresh-cream-cake'), ['WebPage', 'BreadcrumbList'])
+  assert.equal(config.structuredData?.some((entry) => entry['@type'] === 'Product'), false)
+  assert.equal(JSON.stringify(config.structuredData).includes('offers'), false)
+  assert.equal(config.ogType, 'website')
 })
 
 test('Brownie Product publishes the supplied Brownie image with its actual dimensions', () => {

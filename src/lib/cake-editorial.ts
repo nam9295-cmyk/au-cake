@@ -120,7 +120,7 @@ const PAVE_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
   en: {
     layout: 'compact',
     highlights: [
-      { title: 'Four chocolate layers' },
+      { title: 'SIGNATURE GÂTEAU LAYERS', body: 'Rich, dense chocolate gâteau layers made for a deeper chocolate bite.' },
       { title: 'Smooth pavé ganache' },
       { title: '57.9% dark couverture chocolate' },
     ],
@@ -156,7 +156,7 @@ const PAVE_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
   ko: {
     layout: 'compact',
     highlights: [
-      { title: '초콜릿 케이크 4단' },
+      { title: '시그니처 갸또 쇼콜라 시트', body: '진하고 밀도감 있는 초콜릿 갸또 시트를 사용합니다.' },
       { title: '부드러운 파베 가나슈' },
       { title: '57.9% 다크 커버춰 초콜릿' },
     ],
@@ -188,6 +188,64 @@ const PAVE_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
       'signature-gateau-au-chocolat',
       'brownie-cheesecake',
     ],
+  },
+}
+
+const STRAWBERRY_VANILLA_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
+  en: {
+    layout: 'compact',
+    highlights: [
+      { title: 'FRESH STRAWBERRIES', body: 'Fresh strawberries are layered through the cake and finished on top.' },
+      { title: 'REAL VANILLA FRESH CREAM', body: 'Fresh cream made with real vanilla bean.' },
+      { title: 'SOFT GENOISE LAYERS', body: 'Soft genoise layers made for fresh cream and fresh strawberries.' },
+    ],
+    orderingNotice: { title: 'Made to order · Melrose Park pick-up', body: 'No payment is taken now. Our team confirms availability before sending payment details.' },
+    details: { title: 'Cake details', items: ['Soft genoise cake layers', 'Vanilla fresh cream', 'Fresh strawberries between the layers', 'Fresh strawberries on top'] },
+    ingredientsAndAllergens: { title: 'Ingredients & allergens', ingredientsLabel: 'Key ingredients', ingredients: 'Fresh strawberries, vanilla fresh cream, real vanilla bean and genoise cake.', allergenLabel: 'Allergen note', allergens: 'Please contact us before ordering for current allergen information.', contact: 'Please contact us before ordering for someone with a food allergy.' },
+    pickupAndConfirmation: { title: 'Pick-up & order confirmation' },
+    relatedProductSlugs: ['pave-chocolate-cake', 'buttercream-cake'],
+  },
+  ko: {
+    layout: 'compact',
+    highlights: [
+      { title: '신선한 생딸기', body: '케이크 사이와 윗면에 생딸기를 풍성하게 더합니다.' },
+      { title: '실제 바닐라빈 생크림', body: '실제 바닐라빈을 사용한 향긋한 바닐라 생크림.' },
+      { title: '부드러운 제누아즈 시트', body: '생크림과 생딸기에 잘 어울리는 부드러운 제누아즈 시트를 사용합니다.' },
+    ],
+    orderingNotice: { title: '주문 후 제작 · Melrose Park 픽업', body: '지금 결제되지 않습니다. 베리굿 팀이 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.' },
+    details: { title: '케이크 상세', items: ['부드러운 제누아즈 시트', '바닐라 생크림', '시트 사이의 생딸기', '윗면의 생딸기'] },
+    ingredientsAndAllergens: { title: '재료 및 알레르기 안내', ingredientsLabel: '주요 재료', ingredients: '신선한 생딸기, 바닐라 생크림, 실제 바닐라빈, 제누아즈 케이크.', allergenLabel: '알레르기 안내', allergens: '현재 알레르기 정보는 주문 전 문의해 주세요.', contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.' },
+    pickupAndConfirmation: { title: '픽업 및 주문 확정' },
+    relatedProductSlugs: ['pave-chocolate-cake', 'buttercream-cake'],
+  },
+}
+
+const STRAWBERRY_CHOCOLATE_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
+  en: {
+    layout: 'compact',
+    highlights: [
+      { title: 'FRESH STRAWBERRIES', body: 'Fresh strawberries layered through the cake and finished on top.' },
+      { title: 'CHOCOLATE FRESH CREAM', body: 'Smooth chocolate fresh cream paired with fresh strawberries.' },
+      { title: 'SOFT GENOISE LAYERS', body: 'Soft genoise layers made for fresh cream and fresh strawberries.' },
+    ],
+    orderingNotice: { title: 'Made to order · Melrose Park pick-up', body: 'No payment is taken now. Our team confirms availability before sending payment details.' },
+    details: { title: 'Cake details', items: ['Soft genoise cake layers', 'Chocolate fresh cream', 'Fresh strawberries between the layers', 'Fresh strawberries on top'] },
+    ingredientsAndAllergens: { title: 'Ingredients & allergens', ingredientsLabel: 'Key ingredients', ingredients: 'Fresh strawberries, chocolate fresh cream and genoise cake.', allergenLabel: 'Allergen note', allergens: 'Please contact us before ordering for current allergen information.', contact: 'Please contact us before ordering for someone with a food allergy.' },
+    pickupAndConfirmation: { title: 'Pick-up & order confirmation' },
+    relatedProductSlugs: ['pave-chocolate-cake', 'buttercream-cake'],
+  },
+  ko: {
+    layout: 'compact',
+    highlights: [
+      { title: '신선한 생딸기', body: '케이크 사이와 윗면에 생딸기를 더합니다.' },
+      { title: '초코 생크림', body: '생딸기와 잘 어울리는 부드러운 초코 생크림.' },
+      { title: '부드러운 제누아즈 시트', body: '생크림과 생딸기에 잘 어울리는 부드러운 제누아즈 시트를 사용합니다.' },
+    ],
+    orderingNotice: { title: '주문 후 제작 · Melrose Park 픽업', body: '지금 결제되지 않습니다. 베리굿 팀이 제작 가능 여부를 확인한 뒤 결제 정보를 안내합니다.' },
+    details: { title: '케이크 상세', items: ['부드러운 제누아즈 시트', '초코 생크림', '시트 사이의 생딸기', '윗면의 생딸기'] },
+    ingredientsAndAllergens: { title: '재료 및 알레르기 안내', ingredientsLabel: '주요 재료', ingredients: '신선한 생딸기, 초코 생크림, 제누아즈 케이크.', allergenLabel: '알레르기 안내', allergens: '현재 알레르기 정보는 주문 전 문의해 주세요.', contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.' },
+    pickupAndConfirmation: { title: '픽업 및 주문 확정' },
+    relatedProductSlugs: ['pave-chocolate-cake', 'buttercream-cake'],
   },
 }
 
@@ -233,7 +291,7 @@ const LEMON_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
     },
     relatedProductSlugs: [
       'chocolate-cupcakes',
-      'vanilla-fresh-cream-cake',
+      'fresh-strawberry-vanilla-cream-cake',
     ],
   },
   ko: {
@@ -277,7 +335,7 @@ const LEMON_EDITORIAL: Record<Language, CompactCakeEditorialContent> = {
     },
     relatedProductSlugs: [
       'chocolate-cupcakes',
-      'vanilla-fresh-cream-cake',
+      'fresh-strawberry-vanilla-cream-cake',
     ],
   },
 }
@@ -325,7 +383,7 @@ const SIGNATURE_GATEAU_EDITORIAL: Record<Language, CompactCakeEditorialContent> 
     },
     relatedProductSlugs: [
       'pave-chocolate-cake',
-      'vanilla-fresh-cream-cake',
+      'fresh-strawberry-vanilla-cream-cake',
     ],
   },
   ko: {
@@ -370,7 +428,7 @@ const SIGNATURE_GATEAU_EDITORIAL: Record<Language, CompactCakeEditorialContent> 
     },
     relatedProductSlugs: [
       'pave-chocolate-cake',
-      'vanilla-fresh-cream-cake',
+      'fresh-strawberry-vanilla-cream-cake',
     ],
   },
 }
@@ -404,7 +462,6 @@ const BROWNIE_CHEESECAKE_EDITORIAL: Record<Language, CompactCakeEditorialContent
         'Two-layer bake — The brownie and cheesecake are baked together to create two distinct layers in every slice.',
         'Basic — Enjoy the brownie and cheesecake layers in their classic form.',
         'Pave chocolate on top — Finished with smooth pave chocolate on top for a richer chocolate finish.',
-        'Full pave finish — Fully finished with pave chocolate and topped with one Eiffel Tower chocolate.',
       ],
     },
     ingredientsAndAllergens: {
@@ -451,7 +508,6 @@ const BROWNIE_CHEESECAKE_EDITORIAL: Record<Language, CompactCakeEditorialContent
         '두 가지 층을 한 번에 — 브라우니와 치즈케이크를 함께 구워 한 조각 안에서 두 개의 뚜렷한 층을 즐길 수 있습니다.',
         '기본 마감 — 브라우니와 치즈케이크의 기본 조합 그대로 즐길 수 있습니다.',
         '파베 초콜릿 on top — 윗면에 부드러운 파베 초콜릿을 더해 더욱 진한 초콜릿 풍미로 마무리합니다.',
-        '전체 파베 마감 — 파베 초콜릿으로 전체를 마감하고 에펠탑 초콜릿 하나를 올려 완성합니다.',
       ],
     },
     ingredientsAndAllergens: {
@@ -685,6 +741,10 @@ const BUTTERCREAM_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
   en: {
     quickFacts: [
       {
+        title: 'SIGNATURE GÂTEAU LAYERS',
+        body: 'Rich, dense chocolate gâteau layers made for a deeper chocolate bite.',
+      },
+      {
         title: 'Italian meringue',
         body: 'The foundation of the buttercream finish.',
       },
@@ -777,7 +837,7 @@ const BUTTERCREAM_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
     },
     relatedProductSlugs: [
       'pave-chocolate-cake',
-      'vanilla-fresh-cream-cake',
+      'fresh-strawberry-vanilla-cream-cake',
     ],
     finalCta: {
       eyebrow: 'Made to order in Sydney',
@@ -787,6 +847,10 @@ const BUTTERCREAM_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
   },
   ko: {
     quickFacts: [
+      {
+        title: '시그니처 갸또 쇼콜라 시트',
+        body: '진하고 밀도감 있는 초콜릿 갸또 시트를 사용합니다.',
+      },
       {
         title: '이탈리안 머랭',
         body: '버터크림의 기본이 되는 머랭입니다.',
@@ -880,7 +944,7 @@ const BUTTERCREAM_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
     },
     relatedProductSlugs: [
       'pave-chocolate-cake',
-      'vanilla-fresh-cream-cake',
+      'fresh-strawberry-vanilla-cream-cake',
     ],
     finalCta: {
       eyebrow: '시드니 주문 제작',
@@ -1137,7 +1201,7 @@ function toCompactEditorial(
 }
 
 export function getCakeEditorialBySlug(
-  slug: 'pave-chocolate-cake' | 'vanilla-fresh-cream-cake' | 'buttercream-cake' | 'chocolate-cupcakes' | 'lemon-cake' | 'signature-gateau-au-chocolat' | 'brownie-cheesecake',
+  slug: 'pave-chocolate-cake' | 'vanilla-fresh-cream-cake' | 'buttercream-cake' | 'fresh-strawberry-vanilla-cream-cake' | 'fresh-strawberry-chocolate-cream-cake' | 'chocolate-cupcakes' | 'lemon-cake' | 'signature-gateau-au-chocolat' | 'brownie-cheesecake',
   language: Language,
 ): CompactCakeEditorialContent
 export function getCakeEditorialBySlug(
@@ -1154,6 +1218,8 @@ export function getCakeEditorialBySlug(
   if (slug === 'brownie-cheesecake') return BROWNIE_CHEESECAKE_EDITORIAL[language]
   if (slug === 'vanilla-fresh-cream-cake') return toCompactEditorial(VANILLA_EDITORIAL[language], language)
   if (slug === 'buttercream-cake') return toCompactEditorial(BUTTERCREAM_EDITORIAL[language], language)
+  if (slug === 'fresh-strawberry-vanilla-cream-cake') return STRAWBERRY_VANILLA_EDITORIAL[language]
+  if (slug === 'fresh-strawberry-chocolate-cream-cake') return STRAWBERRY_CHOCOLATE_EDITORIAL[language]
   if (slug === 'chocolate-cupcakes') return toCompactEditorial(CUPCAKES_EDITORIAL[language], language)
   return null
 }

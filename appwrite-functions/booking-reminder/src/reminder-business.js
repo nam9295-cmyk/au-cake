@@ -27,6 +27,8 @@ const CAKE_PRODUCT_LABELS = Object.freeze({
   'pave-cake': 'Pave Chocolate Cake',
   'vanilla-fresh-cream-cake': 'Vanilla Fresh Cream Cake',
   'buttercream-cake': 'Buttercream Cake',
+  'fresh-strawberry-vanilla-cream-cake': 'Fresh Strawberry Vanilla Cream Cake',
+  'fresh-strawberry-chocolate-cream-cake': 'Fresh Strawberry Chocolate Cream Cake',
   'pound-cake': 'Signature Gâteau au Chocolat',
   'cupcake-half-dozen': 'Chocolate Cupcakes (Half Dozen)',
   'cupcake-dozen': 'Chocolate Cupcakes (Dozen)',
@@ -35,6 +37,14 @@ const CAKE_SIZE_LABELS = Object.freeze({
   '15cm': '6\" | serves 8',
   '19cm': '7.5\" | serves 14',
   '22cm': '9\" | serves 22',
+  '6in': '6\"',
+  '8in': '8\"',
+  '10in': '10\"',
+})
+const CHOCOLATE_EXTRA_LABELS = Object.freeze({
+  'eiffel-6': { label: 'Eiffel Tower Chocolates · 6 pieces', priceCents: 1000 },
+  'pave-100g': { label: 'Pavé Chocolate · 100g tub', priceCents: 1200 },
+  combo: { label: 'Chocolate Extra Set', priceCents: 2000 },
 })
 const CLASS_TYPE_LABELS = Object.freeze({
   'school-holiday-private-cake-class': 'Basic Cake Class',
@@ -79,7 +89,13 @@ function compactCakeLineSummary(line) {
   const quantity = Number.isInteger(Number(line?.quantity)) && Number(line.quantity) > 0
     ? Math.min(99, Math.floor(Number(line.quantity)))
     : 1
-  return [product, size, `× ${quantity}`].filter(Boolean).join(' · ')
+  const chocolateExtra = CHOCOLATE_EXTRA_LABELS[line?.chocolateExtra]
+  return [
+    product,
+    size,
+    `× ${quantity}`,
+    ...(chocolateExtra ? [chocolateExtra.label, `AUD ${(chocolateExtra.priceCents / 100).toFixed(2)}`] : []),
+  ].filter(Boolean).join(' · ')
 }
 
 function compactCakeOrderSummary(reservation) {

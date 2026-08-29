@@ -32,7 +32,9 @@ import {
   normalizeReservationChocolateType,
   normalizePoundAddon,
 } from './constants'
+import { normalizeStoredCakeSize } from './cake-serving'
 import type { ReservationPriceOptions } from './constants'
+import { getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras'
 import {
   INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
@@ -105,7 +107,7 @@ const CUSTOMER_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export const PICKUP_TIME_CLASS_CONFLICT_ERROR = 'PICKUP_TIME_CLASS_CONFLICT'
 export const CAKE_ORDER_LINES_UNAVAILABLE_ERROR = 'CAKE_ORDER_LINES_UNAVAILABLE'
 
-type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'individualPackaging' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'discountBasisCents' | 'orderLines' | 'orderLineCount' | 'orderItemCount' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
+type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'chocolateExtra' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'individualPackaging' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'discountBasisCents' | 'orderLines' | 'orderLineCount' | 'orderItemCount' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
   $id: string
   $createdAt?: string
   $updatedAt?: string
@@ -266,7 +268,8 @@ function normalizeReservation(reservation: Reservation): Reservation {
     ...reservation,
     customerEmail: typeof reservation.customerEmail === 'string' ? reservation.customerEmail.trim().toLowerCase() : '',
     productId: getProductById(reservation.productId).id,
-    cakeSize: normalizeCakeSize(getProductById(reservation.productId).id, reservation.cakeSize),
+    chocolateExtra: normalizeChocolateExtra(getProductById(reservation.productId).id, reservation.chocolateExtra),
+    cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
     ...(reservation.cupcakeFinish === undefined ? {} : {
       cupcakeFinish: normalizeCupcakeFinish(getProductById(reservation.productId).id, reservation.cupcakeFinish),
@@ -362,7 +365,8 @@ function normalizePublicOrderLine(
   const poundAddon = normalizePoundAddon(product.id, line.poundAddon || DEFAULT_POUND_ADDON)
   const normalized = {
     productId: product.id,
-    cakeSize: normalizeCakeSize(product.id, line.cakeSize),
+    chocolateExtra: normalizeChocolateExtra(product.id, line.chocolateExtra),
+    cakeSize: normalizeStoredCakeSize(line.cakeSize),
     chocolateType: normalizeReservationChocolateType(product.id, line.chocolateType || DEFAULT_CHOCOLATE_TYPE, poundAddon),
     poundAddon,
     ...(Object.hasOwn(line, 'cupcakeFinish') ? {
@@ -382,6 +386,7 @@ function normalizePublicOrderLine(
   for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity'] as const) {
     if (line[key] !== normalized[key]) throw new Error('INVALID_RESERVATION_RESPONSE')
   }
+  if (line.chocolateExtra !== undefined && line.chocolateExtra !== normalized.chocolateExtra) throw new Error('INVALID_RESERVATION_RESPONSE')
   if (Object.hasOwn(line, 'cupcakeFinish') && line.cupcakeFinish !== normalized.cupcakeFinish) throw new Error('INVALID_RESERVATION_RESPONSE')
   if (line.vanillaCakePointColor !== undefined && line.vanillaCakePointColor !== normalized.vanillaCakePointColor) {
     throw new Error('INVALID_RESERVATION_RESPONSE')
@@ -406,6 +411,9 @@ function normalizePublicOrderLine(
     throw new Error('INVALID_RESERVATION_RESPONSE')
   }
   const unitPriceCents = normalizedLineUnitPriceCents(product.id, normalized, legacyCupcakeCounts)
+  const chocolateExtraCents = Object.hasOwn(priced, 'chocolateExtraCents')
+    ? priced.chocolateExtraCents as number
+    : 0
   const subtotalCents = priced.subtotalCents as number
   const discountCents = priced.discountCents as number
   const totalPriceCents = priced.totalPriceCents as number
@@ -415,14 +423,17 @@ function normalizePublicOrderLine(
   const expectedPackagingPieces = normalized.individualPackaging
     ? getIndividualPackagingPieceCount(product.id, line.quantity)
     : 0
-  if (!isApprovedStoredUnitPriceCents(product.id, normalized.cakeSize, unitPriceCents, approvedUnitPriceCents, allowHistoricalUnitPrice)
-    || priced.subtotalCents !== approvedUnitPriceCents * line.quantity
+  if (!Number.isSafeInteger(chocolateExtraCents) || chocolateExtraCents < 0
+    || chocolateExtraCents !== Math.round(getChocolateExtraPrice(normalized.chocolateExtra) * 100)
+    || !isApprovedStoredUnitPriceCents(product.id, normalized.cakeSize, unitPriceCents, approvedUnitPriceCents, allowHistoricalUnitPrice)
+    || priced.subtotalCents !== approvedUnitPriceCents * line.quantity + chocolateExtraCents
     || individualPackagingPieces !== expectedPackagingPieces
     || totalPriceCents !== subtotalCents - discountCents + individualPackagingFeeCents
     || ![0, 5, 10].includes(priced.discountPercent!)) throw new Error('INVALID_RESERVATION_RESPONSE')
   return {
     ...normalized,
     ...Object.fromEntries(priceKeys.map((key) => [key, priced[key]])),
+    chocolateExtraCents,
     ...(hasPackagingFields ? { individualPackagingPieces, individualPackagingFeeCents } : {}),
   }
 }
@@ -432,6 +443,7 @@ function orderLineIdentityKey(line: CakeOrderLineRequest) {
     line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.cupcakeFinish || '', line.chocolateIcingCount,
     line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
     normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
+    normalizeChocolateExtra(line.productId, line.chocolateExtra),
     line.individualPackaging === true,
   ])
 }
@@ -517,7 +529,8 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
   const poundAddon = normalizePoundAddon(product.id, reservation.poundAddon || DEFAULT_POUND_ADDON)
   const topProjection = {
     productId: product.id,
-    cakeSize: normalizeCakeSize(product.id, reservation.cakeSize),
+    chocolateExtra: normalizeChocolateExtra(product.id, reservation.chocolateExtra),
+    cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
     chocolateType: normalizeReservationChocolateType(
       product.id,
       reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
@@ -548,6 +561,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'quantity'] as const) {
       if (topProjection[key] !== first[key]) throw new Error('INVALID_RESERVATION_RESPONSE')
     }
+    if (topProjection.chocolateExtra !== first.chocolateExtra) throw new Error('INVALID_RESERVATION_RESPONSE')
   }
 
   const aggregateKeys = ['subtotalCents', 'discountBasisCents', 'discountPercent', 'discountCents', 'totalPriceCents'] as const
@@ -661,6 +675,14 @@ const STORED_ORDER_LINE_KEYS = new Set([
   ...PRE_PACKAGING_STORED_ORDER_LINE_KEYS,
   'individualPackaging', 'individualPackagingPieces', 'individualPackagingFeeCents',
 ])
+const CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
+  ...PRE_PACKAGING_STORED_ORDER_LINE_KEYS,
+  'chocolateExtra', 'chocolateExtraCents',
+])
+const CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS = new Set([
+  ...STORED_ORDER_LINE_KEYS,
+  'chocolateExtra', 'chocolateExtraCents',
+])
 const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...PRE_PACKAGING_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
 const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
 const SAFE_PROMO_LAST4_PATTERN = /^[A-Z0-9]{4}$/
@@ -689,14 +711,24 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
     || !(payload as { lines: unknown[] }).lines.length) invalidStoredOrder()
   const rawLines = (payload as { lines: unknown[] }).lines
   const packagingVersions = new Set<boolean>()
+  const chocolateExtraVersions = new Set<boolean>()
   const orderLines = rawLines.map((rawLine): CakeOrderLineResult => {
     if (!rawLine || typeof rawLine !== 'object' || Array.isArray(rawLine)) invalidStoredOrder()
     const keys = Reflect.ownKeys(rawLine)
     const hasPackagingFields = keys.length === STORED_ORDER_LINE_KEYS.size
-    const hasCupcakeFinish = hasPackagingFields || keys.length === PRE_PACKAGING_STORED_ORDER_LINE_KEYS.size
-    packagingVersions.add(hasPackagingFields)
-    const allowedKeys = hasPackagingFields
-      ? STORED_ORDER_LINE_KEYS
+    const hasChocolateExtraPrePackagingFields = keys.length === CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS.size
+    const hasChocolateExtraPackagingFields = keys.length === CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS.size
+    const hasChocolateExtraFields = hasChocolateExtraPrePackagingFields || hasChocolateExtraPackagingFields
+    const hasCurrentPackagingFields = hasPackagingFields || hasChocolateExtraPackagingFields
+    const hasCupcakeFinish = hasCurrentPackagingFields || hasChocolateExtraPrePackagingFields || keys.length === PRE_PACKAGING_STORED_ORDER_LINE_KEYS.size
+    packagingVersions.add(hasCurrentPackagingFields)
+    chocolateExtraVersions.add(hasChocolateExtraFields)
+    const allowedKeys = hasChocolateExtraPackagingFields
+      ? CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS
+      : hasChocolateExtraPrePackagingFields
+        ? CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS
+        : hasPackagingFields
+          ? STORED_ORDER_LINE_KEYS
       : hasCupcakeFinish
         ? PRE_PACKAGING_STORED_ORDER_LINE_KEYS
         : keys.length === PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS.size
@@ -715,7 +747,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
       invalidStoredOrder()
     }
   })
-  if (packagingVersions.size !== 1) invalidStoredOrder()
+  if (packagingVersions.size !== 1 || chocolateExtraVersions.size !== 1) invalidStoredOrder()
   const hasPackagingFields = packagingVersions.has(true)
   const safeSum = (values: number[]) => {
     let sum = 0
@@ -812,7 +844,8 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
     customerPhone: document.customerPhone,
     customerEmail: typeof document.customerEmail === 'string' ? document.customerEmail.trim().toLowerCase() : '',
     productId: getProductById(document.productId).id,
-    cakeSize: normalizeCakeSize(getProductById(document.productId).id, document.cakeSize),
+    chocolateExtra: 'none',
+    cakeSize: normalizeStoredCakeSize(document.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(document.productId).id, document.poundAddon || DEFAULT_POUND_ADDON),
     chocolateType: normalizeReservationChocolateType(
       getProductById(document.productId).id,
@@ -860,6 +893,7 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
     ? {
         ...reservation,
         ...storedOrder,
+        chocolateExtra: storedOrder.orderLines?.[0]?.chocolateExtra || 'none',
         ...(storedOrder.orderLines?.[0]?.individualPackaging !== undefined ? {
           individualPackaging: storedOrder.orderLines[0].individualPackaging,
         } : {}),

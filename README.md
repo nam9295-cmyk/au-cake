@@ -92,6 +92,19 @@ Use this state machine only for the controlled recovery cutover:
 
 `compat` must be returned to `required` after rollout. It is not a long-term validation mode. Cake reservations created during the temporary legacy window without an email remain valid bookings, but cannot use customer email confirmation/review flows; existing SMS and copy fallbacks remain available.
 
+### Controlled Whole Cake catalogue API/frontend cutover
+
+`CAKE_CATALOG_MODE` is a **server-only** Reservation API variable. Its safe default is `required`; unset, empty, or invalid runtime values also behave as `required`. `required` accepts the current Whole Cake IDs and `6in`/`8in`/`10in` keys while leaving all current secondary Cake products on their unchanged contracts. The only temporary alternative is exact lowercase `compat`, which also accepts the legacy Whole Cake centimetre submissions at their legacy price table. It never changes the stored-order compatibility reader.
+
+Changing an Appwrite Function variable is applied by the existing Reservation API deployment flow and requires a new function deployment. Use this rollout sequence only after backend and frontend work are approved:
+
+1. Set `CAKE_CATALOG_MODE=compat`, then deploy and activate `reservation-api`.
+2. Deploy the new frontend.
+3. Run controlled Whole Cake smoke tests using both legacy and new contracts during the compatibility window.
+4. Set `CAKE_CATALOG_MODE=required`, then redeploy and activate `reservation-api` again.
+
+`compat` must be returned to `required` after rollout. Do not run schema migration for this catalogue change.
+
 ### AU email production schema migration
 
 **DO NOT use setup:appwrite for this AU email production rollout.** `setup:appwrite` manages broader application state and is not production migration-safe for this release.

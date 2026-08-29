@@ -16,8 +16,9 @@ const indexPath = fileURLToPath(new URL('../index.html', import.meta.url))
 const site = 'https://au.verygood-chocolate.com'
 const cakeSlugs = [
   'pave-chocolate-cake',
-  'vanilla-fresh-cream-cake',
   'buttercream-cake',
+  'fresh-strawberry-vanilla-cream-cake',
+  'fresh-strawberry-chocolate-cream-cake',
   'chocolate-cupcakes',
   'signature-gateau-au-chocolat',
   'lemon-cake',
@@ -73,7 +74,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
     new RegExp('<title>' + escapeRegExp(auPublicPages.home.title) + '</title>'),
   )
   assert.match(home, /<h1>Made-to-Order Chocolate Cakes in Sydney<\/h1>/)
-  assert.match(home, /Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31\.00/)
+  assert.match(home, /Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney/)
   assert.match(home, /Signature Gâteau au Chocolat/)
   assert.match(home, /Brownie Cheesecake/)
   assert.match(home, /Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
@@ -85,7 +86,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   assert.match(catalogue, /<h1>Choose Your Cake<\/h1>/)
 
   const generatedSitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
-  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, 11)
+  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, 12)
   for (const path of ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']) {
     assert.match(generatedSitemap, new RegExp(`<loc>${(path === '/' ? site : `${site}${path}`).replaceAll('.', '\\.')}</loc>`), path)
   }
@@ -158,12 +159,13 @@ test('cake generator uses the final per-page schema contract and real product We
   const { dist } = await generate()
   const expectations = new Map([
     ['pave-chocolate-cake', { type: 'Product', price: 79, og: 'product', image: 'pave-chocolate-cake-sydney.webp' }],
-    ['vanilla-fresh-cream-cake', { type: 'Product', price: 69, og: 'product', image: 'vanilla-cake-sydney.webp' }],
-    ['buttercream-cake', { type: 'Product', price: 74, og: 'product', image: 'buttercream-cake-sydney.webp' }],
+    ['buttercream-cake', { type: 'Product', price: 75, og: 'product', image: 'buttercream-cake-sydney.webp' }],
+    ['fresh-strawberry-vanilla-cream-cake', { type: 'Product', price: 65, og: 'product', image: 'fresh-strawberry-vanilla-cream-cake-sydney.webp' }],
+    ['fresh-strawberry-chocolate-cream-cake', { type: 'Product', price: 69, og: 'product', image: 'fresh-strawberry-chocolate-cream-cake-sydney.webp' }],
     ['chocolate-cupcakes', { type: 'Product', price: 31, og: 'product', image: 'chocolate-cupcakes-sydney.webp' }],
     ['signature-gateau-au-chocolat', { type: 'Product', price: 45, og: 'product', image: 'signature-gateau-au-chocolat-sydney.webp' }],
     ['lemon-cake', { type: 'Product', price: 36, og: 'product', image: 'lemon-cake-sydney.webp' }],
-    ['brownie-cheesecake', { type: 'Product', price: 55, og: 'product', image: 'brownie-cheesecake-sydney.webp' }],
+    ['brownie-cheesecake', { type: 'Product', price: 58, og: 'product', image: 'brownie-cheesecake-sydney.webp' }],
   ])
 
   for (const [slug, expected] of expectations) {
@@ -175,15 +177,19 @@ test('cake generator uses the final per-page schema contract and real product We
     assert.match(html, new RegExp('<title>' + escapeRegExp(page.title) + '</title>'))
     assert.equal(product?.description, page.description)
     assert.match(html, new RegExp(escapeRegExp(page.description)))
-    assert.match(html, new RegExp('<meta property="og:image:type" content="' + page.imageType + '"'))
-    assert.match(html, new RegExp('<meta property="og:image:width" content="' + page.imageWidth + '"'))
-    assert.match(html, new RegExp('<meta property="og:image:height" content="' + page.imageHeight + '"'))
+    if (expected.image) {
+      assert.match(html, new RegExp('<meta property="og:image:type" content="' + page.imageType + '"'))
+      assert.match(html, new RegExp('<meta property="og:image:width" content="' + page.imageWidth + '"'))
+      assert.match(html, new RegExp('<meta property="og:image:height" content="' + page.imageHeight + '"'))
+    } else {
+      assert.doesNotMatch(html, /<meta property="og:image(?::(?:type|width|height))?"/)
+      assert.equal(Object.hasOwn(product, 'image'), false, slug)
+    }
     assert.equal(product.offers['@type'], 'Offer', slug)
     assert.equal(product.offers.price, expected.price, slug)
     assert.equal(data.some((entry) => entry['@type'] === 'AggregateOffer' || entry['@type'] === 'ProductGroup'), false, slug)
     assert.match(html, new RegExp(`<meta property="og:type" content="${expected.og}"`), slug)
     if (expected.image) assert.match(html, new RegExp(expected.image), slug)
-    else assert.equal(Object.hasOwn(product, 'image'), false, slug)
   }
 
   const combined = await readFile(join(dist, 'cakes', 'chocolate-pound-cake-and-cupcakes.html'), 'utf8')
@@ -204,10 +210,11 @@ test('cake generator uses the final per-page schema contract and real product We
   const vanillaHtml = await readFile(join(dist, 'cakes', 'vanilla-fresh-cream-cake.html'), 'utf8')
   assert.match(paveHtml, /Choose a size · dark chocolate only/)
   assert.doesNotMatch(paveHtml, /milk chocolate/i)
-  assert.match(vanillaHtml, /Signature Gâteau au Chocolat/)
-  assert.doesNotMatch(vanillaHtml, /100% fresh milk/)
-  assert.match(vanillaHtml, /real vanilla bean/)
-  assert.match(vanillaHtml, /products\/vanilla-cake-sydney\.webp/)
+  assert.deepEqual(jsonLd(vanillaHtml).map((entry) => entry['@type']), ['WebPage', 'BreadcrumbList'])
+  assert.match(vanillaHtml, /<meta name="robots" content="noindex, nofollow"/)
+  assert.doesNotMatch(vanillaHtml, /"@type":"Offer"/)
+  assert.doesNotMatch(vanillaHtml, /Choose a size|AUD \d+\.\d{2}|Request/i)
+  assert.match(vanillaHtml, /href="\/cakes">View current cakes<\/a>/)
 })
 
 test('all indexable artifacts keep canonical brand, schema, canonical URLs, and English-only indexing', async () => {
@@ -291,7 +298,7 @@ test('llms text exposes only grounded public catalogue and ordering facts', asyn
   assert.match(llms, /^# verygood chocolate Sydney/m)
   assert.match(llms, /Choose a size · dark chocolate only/)
   assert.doesNotMatch(llms, /dark or milk|milk chocolate/i)
-  assert.match(llms, /vanilla fresh cream made with real vanilla bean/i)
+  assert.match(llms, /vanilla fresh cream and fresh strawberries/i)
   assert.match(llms, /chocolatier-grade couverture chocolate/)
   assert.match(llms, /freshly squeezed lemon juice/)
   assert.match(llms, /fresh lemon zest/)

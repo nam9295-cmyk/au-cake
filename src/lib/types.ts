@@ -1,10 +1,12 @@
 export type CacaoPercent = '기본' | '70' | '80.5' | '100'
 
-export type CakeSize = 'mini' | 'size-1' | '15cm' | '17cm' | '19cm' | '22cm'
+export type CakeSize = 'mini' | 'size-1' | '6in' | '8in' | '10in' | '15cm' | '17cm' | '19cm' | '22cm'
 
 export type ChocolateType = 'dark' | 'milk'
 
 export type PoundAddon = 'none' | 'extra-chocolate' | 'vanilla-cream'
+
+export type ChocolateExtra = 'none' | 'eiffel-6' | 'pave-100g' | 'combo'
 
 export type CupcakeFinish = 'basic' | 'vanilla-fresh-cream' | 'chocolate-buttercream'
 
@@ -20,6 +22,8 @@ export type ProductId =
   | 'pave-cake'
   | 'vanilla-fresh-cream-cake'
   | 'buttercream-cake'
+  | 'fresh-strawberry-vanilla-cream-cake'
+  | 'fresh-strawberry-chocolate-cream-cake'
   | 'pound-cake'
   | 'cupcake-half-dozen'
   | 'cupcake-dozen'
@@ -47,6 +51,7 @@ export type Reservation = {
   customerEmail?: string
   productId: ProductId
   cakeSize: CakeSize
+  chocolateExtra?: ChocolateExtra
   chocolateType: ChocolateType
   poundAddon: PoundAddon
   cupcakeFinish?: CupcakeFinish
@@ -88,6 +93,7 @@ export type ReservationInput = {
   customerPhone: string
   customerEmail: string
   productId: ProductId
+  chocolateExtra?: ChocolateExtra
   cakeSize: CakeSize
   chocolateType: ChocolateType
   poundAddon: PoundAddon
@@ -111,6 +117,7 @@ export type ReservationInput = {
 }
 
 export type CakeOrderLineRequest = Pick<ReservationInput,
+  | 'chocolateExtra'
   | 'productId'
   | 'cakeSize'
   | 'chocolateType'
@@ -143,6 +150,7 @@ export type CakeOrderRequest = Pick<ReservationInput,
 
 export type CakeOrderLineResult = CakeOrderLineRequest & {
   unitPriceCents: number
+  chocolateExtraCents?: number
   subtotalCents: number
   discountPercent: 0 | 5 | 10
   discountCents: number
@@ -165,8 +173,10 @@ export type ReservationApiCapabilities = {
 
 export type PublicReservation = Pick<
   Reservation,
+  | 'chocolateExtra'
   | 'reservationNumber'
   | 'productId'
+  | 'chocolateExtra'
   | 'cakeSize'
   | 'chocolateType'
   | 'poundAddon'

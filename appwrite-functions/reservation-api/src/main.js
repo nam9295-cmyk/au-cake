@@ -13,6 +13,7 @@ import {
   normalizeReviewCouponCode,
   parseStoredOrderLines,
   publicCakeReservation,
+  resolveCakeCatalogMode,
   resolveCakeCustomerEmailMode,
   validateReviewCoupon,
 } from './business.js'
@@ -37,6 +38,7 @@ function reservationResourceConfig(env = process.env) {
 
     reviewCouponsId: env.APPWRITE_REVIEW_COUPONS_TABLE_ID || 'review_coupons',
     manualCouponsId: env.APPWRITE_MANUAL_COUPONS_TABLE_ID || 'manual_coupons',
+    cakeCatalogMode: resolveCakeCatalogMode(env.CAKE_CATALOG_MODE),
     cakeCustomerEmailMode: resolveCakeCustomerEmailMode(env.CAKE_CUSTOMER_EMAIL_MODE),
     reviewCouponHmacSecret: typeof env.REVIEW_COUPON_HMAC_SECRET === 'string' && env.REVIEW_COUPON_HMAC_SECRET.trim()
       ? resolveReviewCouponHmacSecret(env, ReservationApiError)
@@ -114,7 +116,10 @@ async function getIdempotentDocument(databases, databaseId, collectionId, docume
 
 function cakeRequestFingerprint(input, runtimeConfig) {
   return digestCakeRequestPayload(
-    canonicalCakeRequestPayload(input, { customerEmailMode: runtimeConfig.cakeCustomerEmailMode }),
+    canonicalCakeRequestPayload(input, {
+      customerEmailMode: runtimeConfig.cakeCustomerEmailMode,
+      cakeCatalogMode: runtimeConfig.cakeCatalogMode,
+    }),
     runtimeConfig.reviewCouponHmacSecret,
     ReservationApiError,
   )
@@ -392,6 +397,7 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
       now,
       reservationNumber: 'pending',
       customerEmailMode: runtimeConfig.cakeCustomerEmailMode,
+      cakeCatalogMode: runtimeConfig.cakeCatalogMode,
     }),
     requestFingerprint,
   }
@@ -455,6 +461,7 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
         reservationNumber: data.reservationNumber,
         reviewCoupon: pricingCoupon,
         customerEmailMode: runtimeConfig.cakeCustomerEmailMode,
+        cakeCatalogMode: runtimeConfig.cakeCatalogMode,
       }),
       requestFingerprint,
     }

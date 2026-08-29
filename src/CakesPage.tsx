@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { getAuCakeCatalogCards } from './lib/cake-catalog'
 import type { Language } from './lib/i18n'
 import { getPublicRoutePage } from './lib/public-content'
@@ -23,7 +24,9 @@ export default function CakesPage({
       </header>
       <section className="cakes-index-grid" aria-label={language === 'ko' ? '케이크 목록' : 'Cake catalogue'}>
         {cards.map((card, index) => (
-          <article className="cakes-index-card" key={card.slug}>
+          <Fragment key={card.slug}>
+            {(index === 0 || card.group !== cards[index - 1]?.group) && <h2 className="cakes-index-group-heading">{card.group === 'whole-cakes' ? 'WHOLE CAKES' : 'MORE CAKES'}</h2>}
+            <article className="cakes-index-card">
             <a
               href={`/cakes/${card.slug}`}
               className="cakes-index-image"
@@ -68,6 +71,7 @@ export default function CakesPage({
               </a>
             </div>
           </article>
+          </Fragment>
         ))}
       </section>
     </main>

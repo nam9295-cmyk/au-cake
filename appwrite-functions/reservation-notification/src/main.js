@@ -48,6 +48,8 @@ const MARKET_CONFIG = {
       'pave-cake': '생초콜릿 파베 케이크',
       'vanilla-fresh-cream-cake': '바닐라 생크림 케이크',
       'buttercream-cake': '버터크림 케이크',
+      'fresh-strawberry-vanilla-cream-cake': '프레시 딸기 바닐라 크림 케이크',
+      'fresh-strawberry-chocolate-cream-cake': '프레시 딸기 초콜릿 크림 케이크',
       'pound-cake': '시그니처 갸또 쇼콜라',
       'cupcake-half-dozen': '초콜릿 컵케이크',
       'cupcake-dozen': '초콜릿 컵케이크',
@@ -70,6 +72,9 @@ const MARKET_CONFIG = {
       '17cm': '6.7 inch / 17cm',
       '19cm': '7.5 inch / 19cm',
       '22cm': '8.7 inch / 22cm',
+      '6in': '6 inch',
+      '8in': '8 inch',
+      '10in': '10 inch',
     },
     chocolateLabels: {
       dark: 'Dark chocolate',
@@ -153,6 +158,8 @@ const MARKET_CONFIG = {
       'pave-cake': 'Pave Chocolate Cake',
       'vanilla-fresh-cream-cake': 'vanilla fresh cream cake',
       'buttercream-cake': 'Buttercream Cake',
+      'fresh-strawberry-vanilla-cream-cake': 'Fresh Strawberry Vanilla Cream Cake',
+      'fresh-strawberry-chocolate-cream-cake': 'Fresh Strawberry Chocolate Cream Cake',
       'pound-cake': 'Signature Gâteau au Chocolat',
       'cupcake-half-dozen': 'Chocolate Cupcakes',
       'cupcake-dozen': 'Chocolate Cupcakes',
@@ -174,6 +181,9 @@ const MARKET_CONFIG = {
       '15cm': '6" | serves 8',
       '19cm': '7.5" | serves 14',
       '22cm': '9" | serves 22',
+      '6in': '6"',
+      '8in': '8"',
+      '10in': '10"',
     },
     chocolateLabels: {
       dark: 'Dark chocolate',
@@ -351,6 +361,24 @@ function getPoundAddonText(reservation, config) {
   return config.poundAddonLabels[poundAddon] || config.poundAddonLabels[reservation.poundAddon] || reservation.poundAddon || '-'
 }
 
+function getChocolateExtraText(reservation, config) {
+  const labels = config.currency === 'AUD'
+    ? {
+        'eiffel-6': 'Eiffel Tower Chocolates · 6 pieces',
+        'pave-100g': 'Pavé Chocolate · 100g tub',
+        combo: 'Chocolate Extra Set',
+      }
+    : {
+        'eiffel-6': '에펠탑 초콜릿 · 6개',
+        'pave-100g': '파베 초콜릿 · 100g 통',
+        combo: '초콜릿 추가 세트',
+      }
+  const prices = { 'eiffel-6': 10, 'pave-100g': 12, combo: 20 }
+  const chocolateExtra = reservation.chocolateExtra
+  if (!Object.hasOwn(labels, chocolateExtra) || !Object.hasOwn(prices, chocolateExtra)) return null
+  return `${labels[chocolateExtra]} · ${formatCurrency(prices[chocolateExtra], config)}`
+}
+
 function getIcingMixText(reservation, config) {
   if (reservation.productId === 'cupcake-half-dozen' || reservation.productId === 'cupcake-dozen') {
     if (['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'].includes(reservation.cupcakeFinish)) {
@@ -513,6 +541,7 @@ function readStoredCakeLines(reservation) {
 function cakeDetailRows(reservation, config, suffix = '') {
   const quantity = getQuantity(reservation)
   const label = (value) => `${value}${suffix}`
+  const chocolateExtra = getChocolateExtraText(reservation, config)
   return [
     [label(config.labels.product), getProductName(reservation, config)],
     [label(config.labels.size), getCakeSizeText(reservation, config)],
@@ -535,6 +564,7 @@ function cakeDetailRows(reservation, config, suffix = '') {
     [label(config.labels.chocolate), getChocolateText(reservation, config)],
     [label(config.labels.finish), getPoundAddonText(reservation, config)],
     [label(config.labels.icingMix), getIcingMixText(reservation, config)],
+    ...(chocolateExtra ? [[label(config.currency === 'AUD' ? 'Chocolate extra' : '초콜릿 추가'), chocolateExtra]] : []),
     [label(config.labels.quantity), `${quantity}${config.quantityUnit}`],
     ...(reservation.individualPackaging === true ? [[
       label(config.currency === 'AUD' ? 'Individual packaging' : '개별 포장'),

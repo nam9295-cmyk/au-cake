@@ -9,7 +9,7 @@ import { SpringClassCampaignDialog } from '../components/SpringClassCampaignDial
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
-import { getAuCakeCatalogCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
+import { getAuCakeCatalogCards, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
 import { DEFAULT_CAKE_SIZE, PRODUCTS, formatCakeSizeLabel } from '../lib/constants'
 import { cakeCopy, getProductFeatures, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
@@ -26,9 +26,20 @@ const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
   'vanilla-fresh-cream-cake': '/products/details/vanillacake-quickview.webp',
   'buttercream-cake': '/products/details/buttercream-cake-quick-view.webp',
+  'fresh-strawberry-vanilla-cream-cake': '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp',
+  'fresh-strawberry-chocolate-cream-cake': '/products/fresh-strawberry-chocolate-cream-cake-sydney.webp',
   'chocolate-cupcakes': '/products/details/chocolate-cupcakes2-sydney.webp',
   'signature-gateau-au-chocolat': '/products/details/chocolate-pound-cake-quick-view.webp',
   'brownie-cheesecake': '/products/details/brownie-cheese-quick-view.webp',
+}
+
+const heroVisuals: Partial<Record<CakeCatalogImageKey, { image?: string; tagKey: string; className: string }>> = {
+  'pave-cake': { image: heroCake2Img, tagKey: 'first', className: 'hero-cake-two' },
+  'buttercream-cake': { tagKey: 'buttercream', className: 'hero-cake-six' },
+  'chocolate-cupcakes': { tagKey: 'cupcakes', className: 'hero-cake-seven' },
+  'signature-gateau-au-chocolat': { image: heroCake3Img, tagKey: 'pound', className: 'hero-cake-three' },
+  'lemon-cake': { image: getPublicCakePage('lemon-cake')?.imagePath, tagKey: 'lemon', className: 'hero-cake-four' },
+  'brownie-cheesecake': { image: '/products/brownie-cheese-sydney.webp', tagKey: 'brownie', className: 'hero-cake-one' },
 }
 
 export function HomePage({
@@ -48,21 +59,30 @@ export function HomePage({
 }) {
   const copy = cakeCopy(language)
   const orderingSteps = publicHomeContent?.orderingSteps ?? null
-  const [activeHeroCake, setActiveHeroCake] = useState(1)
+  const [activeHeroCake, setActiveHeroCake] = useState(() => marketConfig.market === 'AU' ? 0 : 1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
   const [heroPaused, setHeroPaused] = useState(false)
   const [quickViewCardId, setQuickViewCardId] = useState<string | null>(null)
   const [quickViewOpener, setQuickViewOpener] = useState<HTMLButtonElement | null>(null)
-  const heroCakes = [
+  const legacyHeroCakes = [
     { image: '/products/brownie-cheese-sydney.webp', label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
     { image: heroCake3Img, label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
     { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
-    { image: getPublicCakePage('vanilla-fresh-cream-cake')?.imagePath, label: 'Vanilla Fresh Cream Cake', tagKey: 'vanilla', className: 'hero-cake-five' },
     { image: getPublicCakePage('buttercream-cake')?.imagePath, label: 'Buttercream Cake', tagKey: 'buttercream', className: 'hero-cake-six' },
     { image: getPublicCakePage('chocolate-cupcakes')?.imagePath, label: 'Chocolate Cupcakes', tagKey: 'cupcakes', className: 'hero-cake-seven' },
   ]
+  const heroCakes = marketConfig.market === 'AU'
+    ? getAuHomeHeroCards(language)
+      .filter((card) => !card.isPhotoComingSoon)
+      .map((card) => ({
+        image: heroVisuals[card.imageKey]?.image || card.imagePath,
+        label: card.name,
+        tagKey: heroVisuals[card.imageKey]?.tagKey || 'first',
+        className: heroVisuals[card.imageKey]?.className || 'hero-cake-two',
+      }))
+    : legacyHeroCakes
 
   useEffect(() => {
     if (heroPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -77,6 +97,7 @@ export function HomePage({
     {
       id: 'pound-cupcake',
       slug: 'chocolate-pound-cake-and-cupcakes',
+      group: 'more-cakes',
       productId: 'pound-cake' as ProductId,
       imageKey: 'pound-cake' as const,
       imagePath: '/products/chocolate-pound-cake-sydney.webp',
@@ -94,6 +115,7 @@ export function HomePage({
     {
       id: 'pave',
       slug: 'pave-chocolate-cake',
+      group: 'whole-cakes',
       productId: 'pave-cake' as ProductId,
       imageKey: 'pave-cake' as const,
       imagePath: '/products/pave-chocolate-cake-sydney.webp',
@@ -107,6 +129,7 @@ export function HomePage({
     {
       id: 'cheesecake',
       slug: 'chocolatiers-basque-cheesecake',
+      group: 'more-cakes',
       productId: 'choco-basque-cheesecake' as ProductId,
       imageKey: 'basque-cheesecake' as const,
       imagePath: '/products/chocolatiers-basque-cheesecake-sydney.webp',
@@ -119,11 +142,12 @@ export function HomePage({
         ? ['글루텐 프리', formatCakeSizeLabel(DEFAULT_CAKE_SIZE), '기본 AUD 55', '파베 on top +AUD 10', '에펠탑 마감 +AUD 15']
         : ['Gluten-free', formatCakeSizeLabel(DEFAULT_CAKE_SIZE), 'Classic AUD 55', 'Pave chocolate on top +AUD 10', 'Eiffel Tower finish +AUD 15'],
       priceLabel: `${language === 'ko' ? 'AUD 55부터' : 'From AUD 55'}`,
-      optionLabel: language === 'ko' ? '세 가지 마감 선택' : 'Three finishing options',
+      optionLabel: language === 'ko' ? '두 가지 마감 선택' : 'Two finishing options',
     },
     {
       id: 'fresh-lemon-cupcakes',
       slug: 'lemon-cake',
+      group: 'more-cakes',
       productId: 'fresh-lemon-cupcakes-12' as ProductId,
       imageKey: 'lemon-cake' as const,
       imagePath: '/products/lemon-cake-sydney.webp',

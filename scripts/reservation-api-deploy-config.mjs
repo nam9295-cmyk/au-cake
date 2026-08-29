@@ -67,6 +67,13 @@ function cakeCustomerEmailMode(env) {
   throw new Error('CAKE_CUSTOMER_EMAIL_MODE must be required or compat.')
 }
 
+function cakeCatalogMode(env) {
+  const value = String(env.CAKE_CATALOG_MODE ?? '').trim()
+  if (!value) return 'required'
+  if (value === 'required' || value === 'compat') return value
+  throw new Error('CAKE_CATALOG_MODE must be required or compat.')
+}
+
 function couponHmacSecret(env) {
   const encoded = typeof env.REVIEW_COUPON_HMAC_SECRET === 'string' ? env.REVIEW_COUPON_HMAC_SECRET : ''
   let decoded
@@ -104,6 +111,7 @@ export function resolveDeployConfig(env = {}) {
       APPWRITE_CAKE_DATABASE_ID: cakeDatabaseId,
       APPWRITE_KIDS_DATABASE_ID: kidsDatabaseId,
       ...Object.fromEntries(Object.entries(ID_VARIABLES).map(([key, fallback]) => [key, resourceId(env, key, fallback)])),
+      CAKE_CATALOG_MODE: cakeCatalogMode(env),
       CAKE_CUSTOMER_EMAIL_MODE: cakeCustomerEmailMode(env),
       CALENDAR_VIEW_PIN: pin,
       CALENDAR_TOKEN_SECRET: tokenSecret,
@@ -160,6 +168,7 @@ export function buildDryRunPlan(env = {}) {
     APPWRITE_CAKE_DATABASE_ID: env.APPWRITE_CAKE_DATABASE_ID,
     APPWRITE_KIDS_DATABASE_ID: env.APPWRITE_KIDS_DATABASE_ID,
     ...Object.fromEntries(Object.entries(ID_VARIABLES).map(([key, fallback]) => [key, env[key] || fallback])),
+    CAKE_CATALOG_MODE: cakeCatalogMode(env),
     CAKE_CUSTOMER_EMAIL_MODE: cakeCustomerEmailMode(env),
     CALENDAR_VIEW_PIN: env.CALENDAR_VIEW_PIN,
     CALENDAR_TOKEN_SECRET: env.CALENDAR_TOKEN_SECRET,

@@ -26,7 +26,7 @@ const productStartingPrices = Object.fromEntries(
 test('AU public content owns the approved homepage contract', () => {
   assert.equal(content.home.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(content.home.h1, 'Made-to-Order Chocolate Cakes in Sydney')
-  assert.equal(content.home.description, 'Order cakes made with chocolatier-grade couverture chocolate for pre-arranged pickup in Melrose Park, Sydney. Pave, fresh cream, buttercream, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake from AUD 31.00.')
+  assert.equal(content.home.description, 'Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney: Pave, buttercream, fresh strawberry cream cakes, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake.')
   assert.equal(content.home.pickup, 'Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00')
   assert.match(content.home.orderingSteps[3], /Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
   assert.match(content.home.faq[0].answer, /Friday 18:00–20:00 and Saturday–Sunday 08:00–20:00/)
@@ -41,29 +41,26 @@ test('AU customer copy replaces small-batch claims with chocolatier-grade couver
   assert.doesNotMatch(publicContentText, /small[- ]batch/i)
   assert.match(publicContentText, /chocolatier-grade couverture chocolate/i)
   assert.doesNotMatch(htmlShell, /small[- ]batch/i)
-  assert.match(htmlShell, /chocolatier-grade couverture chocolate/i)
+  assert.match(JSON.stringify(content.site), /chocolatier-grade couverture chocolate/i)
   for (const [path, source] of customerCopySources) {
     assert.doesNotMatch(source, /small[- ]batch|소량/i, path)
     assert.match(source, /chocolatier-grade couverture chocolate|쇼콜라티에용 커버춰 초콜릿/i, path)
   }
 })
 
-test('AU public product copy and price summaries use the approved copy and two-decimal money', () => {
-  const vanilla = cakePages['vanilla-fresh-cream-cake']
+test('AU public product copy and price summaries use current Whole Cake copy and two-decimal money', () => {
+  const strawberryVanilla = cakePages['fresh-strawberry-vanilla-cream-cake']
   const buttercream = cakePages['buttercream-cake']
   const lemon = cakePages['lemon-cake']
   const brownie = cakePages['brownie-cheesecake']
 
-  assert.match(vanilla.description, /Signature Gâteau au Chocolat/)
-  assert.doesNotMatch(vanilla.description, /100% fresh milk/)
-  assert.match(vanilla.description, /real vanilla bean/)
-  assert.match(vanilla.description, /vanilla bean specks/)
-  assert.equal(vanilla.optionSummary, 'Choose a size · Vanilla fresh cream with real vanilla bean')
+  assert.match(strawberryVanilla.description, /Real vanilla bean/)
+  assert.match(strawberryVanilla.description, /fresh strawberries/)
+  assert.equal(strawberryVanilla.optionSummary, 'Choose a size')
 
-  assert.match(buttercream.description, /organic cocoa/)
-  assert.match(buttercream.description, /fresh milk/)
-  assert.match(buttercream.description, /chocolatier-grade couverture chocolate/)
-  assert.match(buttercream.description, /not added chocolate flavouring/)
+  assert.match(buttercream.description, /Italian meringue/)
+  assert.match(buttercream.description, /real butter/)
+  assert.match(buttercream.description, /cocoa powder/)
   assert.equal(buttercream.optionSummary, 'Choose a size and cake colour · Chocolate Buttercream included')
 
   assert.equal(
@@ -81,7 +78,7 @@ test('AU public product copy and price summaries use the approved copy and two-d
   }
 })
 
-test('HTML shell fallback uses the current seven-cake homepage description', () => {
+test('HTML shell fallback uses the current eight-cake homepage description', () => {
   assert.ok(htmlShell.includes(content.home.description))
   assert.equal(htmlShell.includes('chocolate Basque cheesecake, pound cake and cupcakes'), false)
 })
@@ -89,17 +86,22 @@ test('HTML shell fallback uses the current seven-cake homepage description', () 
 test('AU cake pages own starting prices and final schema modes', () => {
   assert.deepEqual(productStartingPrices, {
     'pave-chocolate-cake': 79,
-    'vanilla-fresh-cream-cake': 69,
-    'buttercream-cake': 74,
+    'buttercream-cake': 75,
+    'fresh-strawberry-vanilla-cream-cake': 65,
+    'fresh-strawberry-chocolate-cream-cake': 69,
     'chocolate-cupcakes': 31,
     'signature-gateau-au-chocolat': 45,
     'lemon-cake': 36,
-    'brownie-cheesecake': 55,
+    'brownie-cheesecake': 58,
   })
   assert.equal(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'].schema, 'webpage-only')
   assert.equal(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'].startingPrice, null)
   assert.equal(Object.hasOwn(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'], 'aggregateOffer'), false)
   assert.equal(Object.hasOwn(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'], 'product'), false)
+  assert.equal(content.legacyCakePages['vanilla-fresh-cream-cake'].schema, 'webpage-only')
+  assert.equal(content.legacyCakePages['vanilla-fresh-cream-cake'].startingPrice, null)
+  assert.equal(Object.hasOwn(content.legacyCakePages['vanilla-fresh-cream-cake'], 'product'), false)
+  assert.equal(Object.hasOwn(content.legacyCakePages['vanilla-fresh-cream-cake'], 'aggregateOffer'), false)
 })
 
 test('AU public content has no guide output and includes every known direct-access noindex route', () => {
