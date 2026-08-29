@@ -274,12 +274,14 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     orderLines: [
       {
         productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        chocolateExtra: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 2,
       },
       {
         productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        chocolateExtra: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 1,

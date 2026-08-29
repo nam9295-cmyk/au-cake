@@ -361,6 +361,24 @@ function getPoundAddonText(reservation, config) {
   return config.poundAddonLabels[poundAddon] || config.poundAddonLabels[reservation.poundAddon] || reservation.poundAddon || '-'
 }
 
+function getChocolateExtraText(reservation, config) {
+  const labels = config.currency === 'AUD'
+    ? {
+        'eiffel-6': 'Eiffel Tower Chocolates · 6 pieces',
+        'pave-100g': 'Pavé Chocolate · 100g tub',
+        combo: 'Chocolate Extra Set',
+      }
+    : {
+        'eiffel-6': '에펠탑 초콜릿 · 6개',
+        'pave-100g': '파베 초콜릿 · 100g 통',
+        combo: '초콜릿 추가 세트',
+      }
+  const prices = { 'eiffel-6': 10, 'pave-100g': 12, combo: 20 }
+  const chocolateExtra = reservation.chocolateExtra
+  if (!Object.hasOwn(labels, chocolateExtra) || !Object.hasOwn(prices, chocolateExtra)) return null
+  return `${labels[chocolateExtra]} · ${formatCurrency(prices[chocolateExtra], config)}`
+}
+
 function getIcingMixText(reservation, config) {
   if (reservation.productId === 'cupcake-half-dozen' || reservation.productId === 'cupcake-dozen') {
     if (['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'].includes(reservation.cupcakeFinish)) {
@@ -523,6 +541,7 @@ function readStoredCakeLines(reservation) {
 function cakeDetailRows(reservation, config, suffix = '') {
   const quantity = getQuantity(reservation)
   const label = (value) => `${value}${suffix}`
+  const chocolateExtra = getChocolateExtraText(reservation, config)
   return [
     [label(config.labels.product), getProductName(reservation, config)],
     [label(config.labels.size), getCakeSizeText(reservation, config)],
@@ -545,6 +564,7 @@ function cakeDetailRows(reservation, config, suffix = '') {
     [label(config.labels.chocolate), getChocolateText(reservation, config)],
     [label(config.labels.finish), getPoundAddonText(reservation, config)],
     [label(config.labels.icingMix), getIcingMixText(reservation, config)],
+    ...(chocolateExtra ? [[label(config.currency === 'AUD' ? 'Chocolate extra' : '초콜릿 추가'), chocolateExtra]] : []),
     [label(config.labels.quantity), `${quantity}${config.quantityUnit}`],
     ...(reservation.individualPackaging === true ? [[
       label(config.currency === 'AUD' ? 'Individual packaging' : '개별 포장'),

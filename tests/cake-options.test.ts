@@ -84,7 +84,7 @@ test('AU cake chooser follows the final seven-product order and keeps Basque leg
       {
         id: 'brownie-cheesecake',
         defaultProductId: 'brownie-cheesecake',
-        productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+        productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
       },
     ],
   )
@@ -197,21 +197,22 @@ test('Buttercream Cake uses Signature Gâteau layers, real chocolate ingredients
   }
 })
 
-test('Brownie Cheesecake keeps the three approved fixed finishing prices', () => {
+test('Brownie Cheesecake keeps two current prices while retaining the historical Eiffel price', () => {
   const brownie = getProductById('brownie-cheesecake')
   const paveBrownie = getProductById('pave-brownie-cheesecake')
   const eiffelBrownie = getProductById('eiffel-tower-brownie-cheesecake')
 
   assert.equal(brownie.name, 'Brownie Cheesecake')
-  assert.equal(brownie.price, 55)
-  assert.equal(paveBrownie.price, 65)
+  assert.equal(brownie.price, 58)
+  assert.equal(paveBrownie.price, 68)
   assert.equal(eiffelBrownie.price, 70)
-  for (const productId of ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'] as const) {
+  for (const productId of ['brownie-cheesecake', 'pave-brownie-cheesecake'] as const) {
     const product = getProductById(productId as ProductId)
     assert.equal(product.usesSizeOptions, false)
     assert.equal(product.usesPoundAddonOptions, false)
     assert.equal(getReservationUnitPrice(productId as ProductId), product.price)
   }
+  assert.equal(getReservationUnitPrice('eiffel-tower-brownie-cheesecake'), 70)
 })
 
 test('Lemon Cake variants use fixed pack prices and the twelve pack is Most Popular', () => {

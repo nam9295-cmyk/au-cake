@@ -19,6 +19,7 @@ import {
   usesReservationChocolateType,
 } from './constants.js'
 import { marketConfig } from './market.js'
+import { formatChocolateExtra } from './chocolate-extras.js'
 import type { CakeOrderLineRequest, CakeOrderLineResult, Reservation } from './types.js'
 import { getIndividualPackagingPieceCount } from './individual-packaging.js'
 
@@ -30,7 +31,7 @@ function cupcakeFinishLabel(value: CakeOrderLineRequest['cupcakeFinish']) {
 
 export type ReservationOrderLine = CakeOrderLineRequest & Partial<Pick<
   CakeOrderLineResult,
-  'unitPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'totalPriceCents'
+  'unitPriceCents' | 'chocolateExtraCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'totalPriceCents'
 >>
 
 export function getReservationOrderLines(reservation: Reservation): ReservationOrderLine[] {
@@ -46,6 +47,7 @@ export function getReservationOrderLines(reservation: Reservation): ReservationO
     partyDecorationCount: reservation.partyDecorationCount || 0,
     vanillaCakeSheet: reservation.vanillaCakeSheet || 'vanilla',
     vanillaCakeFlavor: reservation.vanillaCakeFlavor || 'triple-berry',
+    chocolateExtra: reservation.chocolateExtra || 'none',
     ...(isCakePointColorProduct(reservation.productId)
       ? { vanillaCakePointColor: normalizeVanillaCakePointColor(reservation.productId, reservation.vanillaCakePointColor) }
       : {}),
@@ -122,6 +124,10 @@ export function formatOrderLineSummary(line: ReservationOrderLine) {
       const counts = normalizeCupcakeFinishCounts(product.id, line.vanillaCreamCount, line.partyDecorationCount)
       details.push(`Basic ${CUPCAKE_PACK_SIZE - counts.vanillaCreamCount - counts.partyDecorationCount} / Vanilla cream ${counts.vanillaCreamCount} / Party decoration ${counts.partyDecorationCount}`)
     }
+  }
+  if (line.chocolateExtra && line.chocolateExtra !== 'none') {
+    const extraPrice = line.chocolateExtraCents
+    details.push(`${formatChocolateExtra(line.chocolateExtra, 'en')}${Number.isSafeInteger(extraPrice) ? ` · ${formatLinePrice(extraPrice as number)}` : ''}`)
   }
   if (line.individualPackaging) {
     const pieces = line.individualPackagingPieces ?? getIndividualPackagingPieceCount(line.productId, line.quantity)

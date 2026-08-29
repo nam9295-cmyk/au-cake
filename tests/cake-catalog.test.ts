@@ -59,7 +59,7 @@ const expectedCatalog = [
     id: 'brownie-cheesecake',
     slug: 'brownie-cheesecake',
     defaultProductId: 'brownie-cheesecake',
-    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
   },
 ] as const
 
@@ -94,7 +94,7 @@ test('AU sale catalogue exposes the final seven independent products in customer
         id: 'brownie-cheesecake',
         slug: 'brownie-cheesecake',
         defaultProductId: 'brownie-cheesecake',
-        productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+        productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
       },
     ],
   )
@@ -148,7 +148,7 @@ test('catalog cards expose separated Cupcake and Signature names in English and 
       ['cupcake', 'From AUD 31.00'],
       ['signature-gateau', 'AUD 45.00'],
       ['fresh-lemon-cupcakes', 'From AUD 36.00'],
-      ['brownie-cheesecake', 'From AUD 55.00'],
+      ['brownie-cheesecake', 'From AUD 58.00'],
     ],
   )
 })
@@ -214,7 +214,6 @@ const serverPriceCases: Array<{
   { productId: 'buttercream-cake', options: { cakeSize: '22cm' } },
   { productId: 'brownie-cheesecake' },
   { productId: 'pave-brownie-cheesecake' },
-  { productId: 'eiffel-tower-brownie-cheesecake' },
   { productId: 'fresh-lemon-cupcakes-6' },
   { productId: 'fresh-lemon-cupcakes-6', options: { chocolateIcingCount: 3 } },
   { productId: 'fresh-lemon-cupcakes-8' },

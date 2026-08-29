@@ -132,7 +132,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     id: 'brownie-cheesecake',
     slug: 'brownie-cheesecake',
     defaultProductId: 'brownie-cheesecake',
-    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
     imageKey: 'brownie-cheesecake',
     isPhotoComingSoon: false,
     priceMode: 'from',

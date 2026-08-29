@@ -64,7 +64,7 @@ test('sale detail badges mirror the first three Quick View features', () => {
   ])
 })
 
-test('Brownie Cheesecake keeps its 15cm three-finish sales contract while customer copy explains the baked two-layer dessert', () => {
+test('Brownie Cheesecake keeps its 15cm two-finish sales contract while customer copy explains the baked two-layer dessert', () => {
   const english = getCakeDetailBySlug('brownie-cheesecake', 'en')
   const korean = getCakeDetailBySlug('brownie-cheesecake', 'ko')
 
@@ -76,8 +76,8 @@ test('Brownie Cheesecake keeps its 15cm three-finish sales contract while custom
     korean?.description,
     '진한 다크초콜릿 브라우니 베이스 위에 부드럽게 구운 바스크 치즈케이크를 올린 2층 디저트입니다. 브라우니와 치즈케이크의 서로 다른 매력을 한 조각에서 함께 즐길 수 있습니다.',
   )
-  assert.deepEqual(english?.productIds, ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'])
-  assert.equal(english?.optionLabel, 'Three finishing options')
+  assert.deepEqual(english?.productIds, ['brownie-cheesecake', 'pave-brownie-cheesecake'])
+  assert.equal(english?.optionLabel, 'Basic or pave chocolate on top · +AUD 10')
   assert.equal(korean?.optionLabel, '6" | serves 8')
   assert.equal(english?.gallery.join(','), 'brownie-side,brownie-detail,brownie-quick-view')
 })

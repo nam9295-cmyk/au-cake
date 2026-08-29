@@ -104,10 +104,10 @@ test('Buttercream and Brownie Cheesecake cart lines add, update, and remove inde
   const added = addCartLine(addCartLine([], buttercream), brownie)
 
   assert.equal(added.length, 2)
-  assert.equal(getCartEstimatedSubtotal(added), 159)
+  assert.equal(getCartEstimatedSubtotal(added), 162)
   const updated = updateCartLineQuantity(added, added[0].lineKey, 2)
   assert.equal(updated[0].selection.quantity, 2)
-  assert.equal(getCartEstimatedSubtotal(updated), 253)
+  assert.equal(getCartEstimatedSubtotal(updated), 256)
   assert.deepEqual(removeCartLine(updated, updated[1].lineKey), [updated[0]])
 })
 

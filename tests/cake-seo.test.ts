@@ -131,7 +131,7 @@ test('seven sale cakes use one Offer at the visible starting price', () => {
     ['/cakes/chocolate-cupcakes', { name: 'Chocolate Cupcakes', price: 31 }],
     ['/cakes/signature-gateau-au-chocolat', { name: 'Signature Gâteau au Chocolat', price: 45 }],
     ['/cakes/lemon-cake', { name: 'Lemon Cake', price: 36 }],
-    ['/cakes/brownie-cheesecake', { name: 'Brownie Cheesecake', price: 55 }],
+    ['/cakes/brownie-cheesecake', { name: 'Brownie Cheesecake', price: 58 }],
   ])
 
   for (const [path, expected] of expectations) {

@@ -126,7 +126,7 @@ test('multi-line create responses expose only authoritative stored line pricing 
     totalPriceCents: line.totalPriceCents,
   })), [
     { productId: 'pave-cake', quantity: 2, unitPriceCents: 7900, subtotalCents: 15800, totalPriceCents: 15800 },
-    { productId: 'brownie-cheesecake', quantity: 1, unitPriceCents: 5500, subtotalCents: 5500, totalPriceCents: 5500 },
+    { productId: 'brownie-cheesecake', quantity: 1, unitPriceCents: 5800, subtotalCents: 5800, totalPriceCents: 5800 },
   ])
   assert.equal('requestFingerprint' in response, false)
   assert.equal(JSON.stringify(response).includes('private'), false)

@@ -58,6 +58,28 @@ test('admin Appwrite hydration retains a current Strawberry Whole Cake line with
   assert.equal(reservation.orderLines?.[0]?.unitPriceCents, 8900)
 })
 
+test('admin Appwrite hydration retains a selected Chocolate Extra without repricing the cake unit', () => {
+  const line = {
+    productId: 'pave-cake', cakeSize: '6in', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
+    chocolateIcingCount: 0, chocolateExtra: 'combo', chocolateExtraCents: 2000,
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink',
+    quantity: 2, unitPriceCents: 7900, subtotalCents: 17800, discountPercent: 0, discountCents: 0, totalPriceCents: 17800,
+  }
+  const reservation = toReservation({
+    ...document,
+    $id: 'reservation-chocolate-extra', productId: line.productId, cakeSize: line.cakeSize, chocolateType: line.chocolateType,
+    poundAddon: line.poundAddon, cupcakeFinish: line.cupcakeFinish, quantity: line.quantity,
+    totalPrice: 178, totalPriceCents: 17800, subtotalCents: 17800, discountBasisCents: 0, discountPercent: 0, discountCents: 0,
+    orderLinesJson: JSON.stringify({ version: 1, lines: [line] }), orderLineCount: 1, orderItemCount: 2,
+  } as never)
+
+  assert.equal(reservation.chocolateExtra, 'combo')
+  assert.deepEqual(
+    [reservation.orderLines?.[0]?.chocolateExtra, reservation.orderLines?.[0]?.chocolateExtraCents, reservation.orderLines?.[0]?.unitPriceCents, reservation.orderLines?.[0]?.totalPriceCents],
+    ['combo', 2000, 7900, 17800],
+  )
+})
+
 test('admin Appwrite hydration retains current Pave and Buttercream inch pricing', () => {
   for (const [productId, cakeSize, unitPriceCents] of [
     ['pave-cake', '8in', 10900],

@@ -163,6 +163,30 @@ test('AU booking emails render current Strawberry Whole Cakes by name and inch w
   }
 })
 
+test('AU booking emails render selected Chocolate Extras separately from the cake finish', () => {
+  const reservation = buildCakeReservation({
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
+    productId: 'pave-cake', cakeSize: '6in', chocolateExtra: 'combo', quantity: 2,
+    pickupDate: '2026-09-12', pickupTime: '10:30', requestNote: '', promoCode: '', privacyConsent: true,
+  }, { now: new Date('2026-09-01T00:00:00.000Z'), reservationNumber: 'VG-C-AU-EXTRA-EMAIL' })
+  reservation.$id = 'cake-extra-email'
+  const rows = rowsByLabel(reservation)
+
+  assert.equal(rows['Chocolate extra'], 'Chocolate Extra Set · AUD 20.00')
+  assert.equal(rows.Total, 'AUD 178.00')
+
+  const receipt = notification.buildBookingDeliveryPayload({
+    reservation, role: 'customer', from: 'Verygood Chocolate <hello@verygood.example>', operatorRecipients: ['owner@example.com'],
+  })
+  const confirmation = notification.buildBookingConfirmationPayload({
+    reservation, sourceType: 'cake', from: 'Verygood Chocolate <hello@verygood.example>',
+  })
+  for (const payload of [receipt, confirmation]) {
+    assert.match(payload.text, /Chocolate extra: Chocolate Extra Set · AUD 20\.00/)
+    assert.match(payload.text, /Total: AUD 178\.00/)
+  }
+})
+
 test('AU operator notification shows current Cupcake pack and whole-box finish', () => {
   const rows = rowsByLabel({
     reservationNumber: 'VG-C-AU-CUPCAKE-HALF', productId: 'cupcake-half-dozen', cupcakeFinish: 'chocolate-buttercream',

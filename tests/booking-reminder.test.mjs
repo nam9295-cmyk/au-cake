@@ -12,6 +12,7 @@ import {
   buildClassReminderPayload,
   createBookingReminderRunner,
 } from '../appwrite-functions/booking-reminder/src/reminder-business.js'
+import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 import {
   createBookingReminderHandler,
   createRuntimeBookingReminderRepository,
@@ -249,6 +250,18 @@ test('Cake reminder uses the canonical stored multi-line order projection withou
   assert.match(payload.text, /Signature Gâteau au Chocolat/)
   assert.match(payload.text, /Pave Chocolate Cake/)
   assert.doesNotMatch(payload.text, /0400000000/)
+})
+
+test('Cake D-1 reminder includes a selected Chocolate Extra from the canonical stored order line', () => {
+  const reservation = buildCakeReservation({
+    customerName: 'Alice', customerPhone: '0412345678', customerEmail: 'alice@example.com',
+    productId: 'pave-cake', cakeSize: '6in', chocolateExtra: 'combo', quantity: 2,
+    pickupDate: '2026-09-12', pickupTime: '10:30', requestNote: '', promoCode: '', privacyConsent: true,
+  }, { now: new Date('2026-09-01T00:00:00.000Z'), reservationNumber: 'VG-C-AU-EXTRA-REMINDER' })
+  const payload = buildCakeReminderPayload({ reservation: { ...reservation, $id: 'cake-extra' }, from: FROM })
+
+  assert.match(payload.text, /Pave Chocolate Cake · 6" · × 2 · Chocolate Extra Set · AUD 20\.00/)
+  assert.match(payload.html, /Chocolate Extra Set · AUD 20\.00/)
 })
 
 test('send mode re-reads candidates, delivers valid Cake and Class sessions once, and isolates invalid rows', async () => {

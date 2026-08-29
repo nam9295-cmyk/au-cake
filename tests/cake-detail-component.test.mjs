@@ -94,7 +94,7 @@ test('editorial-enabled cakes use the shared detail after the protected Hero whi
   assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail|ButtercreamDetailPage|ButtercreamEditorialDetail|CupcakeDetailPage|CupcakeEditorialDetail|LemonDetailPage|LemonEditorialDetail|SignatureGateauDetailPage|SignatureGateauEditorialDetail|BrownieDetailPage|BrownieEditorialDetail/)
 })
 
-test('Brownie Cheesecake uses the shared compact editorial while retaining its three current finish choices', () => {
+test('Brownie Cheesecake uses the shared compact editorial while retaining its two current finish choices', () => {
   assert.match(editorialDataSource, /BROWNIE_CHEESECAKE_EDITORIAL/)
   assert.match(detailSource, /detail\.id === 'brownie-cheesecake'[\s\S]*?'Choose a finish'/)
   assert.match(reserveSource, /selectedProductGroup\.id === 'brownie-cheesecake'[\s\S]*?'Choose a finish'/)

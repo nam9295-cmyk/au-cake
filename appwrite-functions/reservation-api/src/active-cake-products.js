@@ -15,7 +15,6 @@ export const CURRENT_SECONDARY_CAKE_ORDER_PRODUCT_IDS = Object.freeze([
   'fresh-lemon-cupcakes-16',
   'brownie-cheesecake',
   'pave-brownie-cheesecake',
-  'eiffel-tower-brownie-cheesecake',
 ])
 
 export const ACTIVE_CAKE_ORDER_PRODUCT_IDS = Object.freeze([
@@ -30,6 +29,7 @@ export const COMPAT_CAKE_ORDER_PRODUCT_IDS = Object.freeze([
 
 export const STORED_CAKE_ORDER_PRODUCT_IDS = Object.freeze([
   ...COMPAT_CAKE_ORDER_PRODUCT_IDS,
+  'eiffel-tower-brownie-cheesecake',
   'choco-basque-cheesecake',
   'pave-choco-basque-cheesecake',
   'eiffel-tower-basque-cheesecake',

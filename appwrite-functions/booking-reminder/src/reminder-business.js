@@ -41,6 +41,11 @@ const CAKE_SIZE_LABELS = Object.freeze({
   '8in': '8\"',
   '10in': '10\"',
 })
+const CHOCOLATE_EXTRA_LABELS = Object.freeze({
+  'eiffel-6': { label: 'Eiffel Tower Chocolates · 6 pieces', priceCents: 1000 },
+  'pave-100g': { label: 'Pavé Chocolate · 100g tub', priceCents: 1200 },
+  combo: { label: 'Chocolate Extra Set', priceCents: 2000 },
+})
 const CLASS_TYPE_LABELS = Object.freeze({
   'school-holiday-private-cake-class': 'Basic Cake Class',
   'cupcake-chocolate-class': 'Basic Cupcakes & Chocolate Class',
@@ -84,7 +89,13 @@ function compactCakeLineSummary(line) {
   const quantity = Number.isInteger(Number(line?.quantity)) && Number(line.quantity) > 0
     ? Math.min(99, Math.floor(Number(line.quantity)))
     : 1
-  return [product, size, `× ${quantity}`].filter(Boolean).join(' · ')
+  const chocolateExtra = CHOCOLATE_EXTRA_LABELS[line?.chocolateExtra]
+  return [
+    product,
+    size,
+    `× ${quantity}`,
+    ...(chocolateExtra ? [chocolateExtra.label, `AUD ${(chocolateExtra.priceCents / 100).toFixed(2)}`] : []),
+  ].filter(Boolean).join(' · ')
 }
 
 function compactCakeOrderSummary(reservation) {

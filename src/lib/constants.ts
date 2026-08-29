@@ -124,8 +124,8 @@ export const PRODUCTS = marketConfig.products
 const CURRENT_WHOLE_CAKE_SIZE_PRICES: Partial<Record<ProductId, Partial<Record<CakeSize, number>>>> = {
   'pave-cake': { '6in': 79, '8in': 109, '10in': 159 },
   'buttercream-cake': { '6in': 75, '8in': 99, '10in': 145 },
-  'fresh-strawberry-vanilla-cream-cake': { '6in': 69, '8in': 89, '10in': 129 },
-  'fresh-strawberry-chocolate-cream-cake': { '6in': 72, '8in': 95, '10in': 135 },
+  'fresh-strawberry-vanilla-cream-cake': { '6in': 65, '8in': 89, '10in': 129 },
+  'fresh-strawberry-chocolate-cream-cake': { '6in': 69, '8in': 95, '10in': 135 },
 }
 
 export type ProductGroupId =
@@ -168,7 +168,7 @@ export const PRODUCT_GROUPS: ProductGroup[] = marketConfig.market === 'AU' ? [
   {
     id: 'brownie-cheesecake',
     defaultProductId: 'brownie-cheesecake',
-    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
   },
 ] : KR_PRODUCT_GROUPS
 

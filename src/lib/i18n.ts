@@ -112,7 +112,7 @@ const koProductFeatures: Partial<Record<ProductId, string[]>> = {
   'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '쇼콜라티에 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 마감', '+AUD 10.00 마감 추가'],
   'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15.00 마감 추가'],
-  'brownie-cheesecake': ['다크초콜릿 브라우니 베이스', '위에는 바스크 치즈케이크', '두 가지 디저트를 한 번에', AU_CAKE_SIZE_LABELS['15cm'], '세 가지 마감 선택'],
+  'brownie-cheesecake': ['다크초콜릿 브라우니 베이스', '위에는 바스크 치즈케이크', '두 가지 디저트를 한 번에', AU_CAKE_SIZE_LABELS['15cm'], '두 가지 마감 선택'],
   'pave-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 on top', '+AUD 10.00 마감 추가'],
   'eiffel-tower-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15.00 마감 추가'],
   'fresh-lemon-cupcakes-4': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],

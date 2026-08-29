@@ -119,7 +119,7 @@ export function HomePage({
         ? ['글루텐 프리', formatCakeSizeLabel(DEFAULT_CAKE_SIZE), '기본 AUD 55', '파베 on top +AUD 10', '에펠탑 마감 +AUD 15']
         : ['Gluten-free', formatCakeSizeLabel(DEFAULT_CAKE_SIZE), 'Classic AUD 55', 'Pave chocolate on top +AUD 10', 'Eiffel Tower finish +AUD 15'],
       priceLabel: `${language === 'ko' ? 'AUD 55부터' : 'From AUD 55'}`,
-      optionLabel: language === 'ko' ? '세 가지 마감 선택' : 'Three finishing options',
+      optionLabel: language === 'ko' ? '두 가지 마감 선택' : 'Two finishing options',
     },
     {
       id: 'fresh-lemon-cupcakes',
