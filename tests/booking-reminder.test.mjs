@@ -12,6 +12,7 @@ import {
   buildClassReminderPayload,
   createBookingReminderRunner,
 } from '../appwrite-functions/booking-reminder/src/reminder-business.js'
+import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 import {
   createBookingReminderHandler,
   createRuntimeBookingReminderRepository,
@@ -213,6 +214,21 @@ test('Cake and Class D-1 payloads are Korean-first bilingual allowlists with per
   assert.doesNotMatch(first.text, /PRIVATE ALLERGY DETAIL|PRIVATE EMERGENCY CONTACT|PRIVATE ADMIN MEMO|private_database_id/)
 })
 
+test('Cake D-1 reminders render current Strawberry names and inch sizes', () => {
+  for (const [productId, productName, cakeSize] of [
+    ['fresh-strawberry-vanilla-cream-cake', 'Fresh Strawberry Vanilla Cream Cake', '8in'],
+    ['fresh-strawberry-chocolate-cream-cake', 'Fresh Strawberry Chocolate Cream Cake', '10in'],
+  ]) {
+    const payload = buildCakeReminderPayload({
+      reservation: cakeReservation({ productId, cakeSize, quantity: 1 }),
+      from: FROM,
+    })
+    assert.match(payload.text, new RegExp(productName))
+    assert.match(payload.text, new RegExp(`${cakeSize === '8in' ? '8' : '10'}\\"`))
+    assert.match(payload.text, /× 1/)
+  }
+})
+
 test('Cake reminder uses the canonical stored multi-line order projection without leaking stored private fields', () => {
   const lines = [
     { productId: 'pound-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', quantity: 1, unitPriceCents: 4500, subtotalCents: 4500, discountPercent: 0, discountCents: 0, totalPriceCents: 4500 },
@@ -234,6 +250,18 @@ test('Cake reminder uses the canonical stored multi-line order projection withou
   assert.match(payload.text, /Signature Gâteau au Chocolat/)
   assert.match(payload.text, /Pave Chocolate Cake/)
   assert.doesNotMatch(payload.text, /0400000000/)
+})
+
+test('Cake D-1 reminder includes a selected Chocolate Extra from the canonical stored order line', () => {
+  const reservation = buildCakeReservation({
+    customerName: 'Alice', customerPhone: '0412345678', customerEmail: 'alice@example.com',
+    productId: 'pave-cake', cakeSize: '6in', chocolateExtra: 'combo', quantity: 2,
+    pickupDate: '2026-09-12', pickupTime: '10:30', requestNote: '', promoCode: '', privacyConsent: true,
+  }, { now: new Date('2026-09-01T00:00:00.000Z'), reservationNumber: 'VG-C-AU-EXTRA-REMINDER' })
+  const payload = buildCakeReminderPayload({ reservation: { ...reservation, $id: 'cake-extra' }, from: FROM })
+
+  assert.match(payload.text, /Pave Chocolate Cake · 6" · × 2 · Chocolate Extra Set · AUD 20\.00/)
+  assert.match(payload.html, /Chocolate Extra Set · AUD 20\.00/)
 })
 
 test('send mode re-reads candidates, delivers valid Cake and Class sessions once, and isolates invalid rows', async () => {

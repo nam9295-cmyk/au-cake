@@ -22,10 +22,13 @@ type CakeSizeConfig = {
   price: number
 }
 
-export const AU_CAKE_SIZE_LABELS: Record<'15cm' | '19cm' | '22cm', string> = {
+export const AU_CAKE_SIZE_LABELS: Record<'15cm' | '19cm' | '22cm' | '6in' | '8in' | '10in', string> = {
   '15cm': '6" | serves 8',
   '19cm': '7.5" | serves 14',
   '22cm': '9" | serves 22',
+  '6in': '6"',
+  '8in': '8"',
+  '10in': '10"',
 }
 
 type CacaoConfig = {
@@ -395,6 +398,30 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         usesPoundAddonOptions: false,
         sizePrices: { '15cm': 74, '19cm': 94, '22cm': 128 },
       },
+      'fresh-strawberry-vanilla-cream-cake': {
+        id: 'fresh-strawberry-vanilla-cream-cake',
+        name: 'Fresh Strawberry Vanilla Cream Cake',
+        description: 'Fresh Strawberry Vanilla Cream Cake',
+        price: 65,
+        priceNote: 'Choose a size',
+        usesCacaoOptions: false,
+        usesSizeOptions: true,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: { '6in': 65, '8in': 89, '10in': 129 },
+      },
+      'fresh-strawberry-chocolate-cream-cake': {
+        id: 'fresh-strawberry-chocolate-cream-cake',
+        name: 'Fresh Strawberry Chocolate Cream Cake',
+        description: 'Fresh Strawberry Chocolate Cream Cake',
+        price: 69,
+        priceNote: 'Choose a size',
+        usesCacaoOptions: false,
+        usesSizeOptions: true,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: { '6in': 69, '8in': 95, '10in': 135 },
+      },
       'pound-cake': {
         id: 'pound-cake',
         name: 'Signature Gâteau au Chocolat',
@@ -471,7 +498,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         id: 'brownie-cheesecake',
         name: 'Brownie Cheesecake',
         description: 'A rich dark chocolate brownie base topped with a baked Basque-style cheesecake layer. Two contrasting textures come together in one chocolate-and-cheesecake dessert.',
-        price: 55,
+        price: 58,
         priceNote: AU_CAKE_SIZE_LABELS['15cm'],
         usesCacaoOptions: false,
         usesSizeOptions: false,
@@ -483,7 +510,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         id: 'pave-brownie-cheesecake',
         name: 'Brownie Cheesecake · Pave chocolate on top',
         description: 'Dark chocolate brownie and Basque-style cheesecake finished with smooth pave chocolate on top.',
-        price: 65,
+        price: 68,
         priceNote: AU_CAKE_SIZE_LABELS['15cm'],
         usesCacaoOptions: false,
         usesSizeOptions: false,
@@ -593,7 +620,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], "Chocolatier's Basque cheesecake", 'Smooth, rich centre'],
       'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Pave chocolate on top', '+AUD 10.00 finish upgrade'],
       'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Fully covered with pave chocolate', '+AUD 15.00 finish upgrade'],
-      'brownie-cheesecake': ['Dark chocolate brownie base', 'Basque cheesecake on top', 'Two desserts in one', AU_CAKE_SIZE_LABELS['15cm'], 'Three finishing options'],
+      'brownie-cheesecake': ['Dark chocolate brownie base', 'Basque cheesecake on top', 'Two desserts in one', AU_CAKE_SIZE_LABELS['15cm'], 'Two finishing options'],
       'pave-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Pave chocolate on top', '+AUD 10.00 finish upgrade'],
       'eiffel-tower-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], 'Fully covered with pave chocolate', '+AUD 15.00 finish upgrade'],
       'fresh-lemon-cupcakes-4': ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'],

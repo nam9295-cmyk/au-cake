@@ -28,7 +28,7 @@ test('typed cake page helpers expose seven sale pages and noindex legacy pages',
   assert.equal(getStartingPrice('signature-gateau-au-chocolat'), 45)
   assert.equal(getStartingPrice('lemon-cake'), 36)
   assert.equal(getStartingPrice('vanilla-fresh-cream-cake'), 69)
-  assert.equal(getStartingPrice('brownie-cheesecake'), 55)
+  assert.equal(getStartingPrice('brownie-cheesecake'), 58)
   assert.equal(getStartingPrice('chocolatiers-basque-cheesecake'), null)
   assert.equal(getStartingPrice('chocolate-pound-cake-and-cupcakes'), null)
   assert.equal(getCakePublicPage('chocolate-pound-cake-and-cupcakes')?.schema, 'webpage-only')

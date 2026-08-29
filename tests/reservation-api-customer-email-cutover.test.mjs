@@ -8,6 +8,7 @@ import {
   buildCakeReservation,
   buildClassReservation,
   canonicalCakeRequestPayload,
+  resolveCakeCatalogMode,
   resolveCakeCustomerEmailMode,
 } from '../appwrite-functions/reservation-api/src/business.js'
 import { digestCakeRequestPayload } from '../appwrite-functions/reservation-api/src/coupon-digest.js'
@@ -71,7 +72,7 @@ const deployEnv = {
   CALENDAR_TOKEN_SECRET: 'a-calendar-secret-that-is-at-least-32-characters',
 }
 
-function runtimeConfig(cakeCustomerEmailMode) {
+function runtimeConfig(cakeCustomerEmailMode, cakeCatalogMode = cakeCustomerEmailMode === 'compat' ? 'compat' : 'required') {
   return {
     cakeDatabaseId: 'verygood_cake_au',
     kidsDatabaseId: 'verygood_cake_au',
@@ -84,6 +85,7 @@ function runtimeConfig(cakeCustomerEmailMode) {
     manualCouponsId: 'manual_coupons',
     reviewCouponHmacSecret: hmacSecret,
     cakeCustomerEmailMode,
+    cakeCatalogMode,
   }
 }
 
@@ -153,6 +155,24 @@ test('reservation runtime config reads only the server-side Cake customer-email 
       CAKE_CUSTOMER_EMAIL_MODE: value,
       VITE_CAKE_CUSTOMER_EMAIL_MODE: 'compat',
     }).cakeCustomerEmailMode, expected)
+  }
+})
+
+test('Cake catalog mode defaults fail-safe to required and never reads a VITE variable', () => {
+  for (const [value, expected] of [
+    [undefined, 'required'],
+    ['', 'required'],
+    ['required', 'required'],
+    ['compat', 'compat'],
+    ['COMPAT', 'required'],
+    ['legacy', 'required'],
+  ]) {
+    assert.equal(resolveCakeCatalogMode(value), expected)
+    assert.equal(resolveReservationConfig({
+      REVIEW_COUPON_HMAC_SECRET: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      CAKE_CATALOG_MODE: value,
+      VITE_CAKE_CATALOG_MODE: 'compat',
+    }).cakeCatalogMode, expected)
   }
 })
 
@@ -271,6 +291,16 @@ test('reservation deployment accepts only the explicit server-side Cake customer
   assert.equal(plan.function.maskedVariables.CAKE_CUSTOMER_EMAIL_MODE, 'co…at')
 })
 
+test('reservation deployment wires the server-only Whole Cake catalog mode', () => {
+  assert.equal(resolveDeployConfig(deployEnv).runtimeVariables.CAKE_CATALOG_MODE, 'required')
+  assert.equal(resolveDeployConfig({ ...deployEnv, CAKE_CATALOG_MODE: 'compat' }).runtimeVariables.CAKE_CATALOG_MODE, 'compat')
+  assert.throws(() => resolveDeployConfig({ ...deployEnv, CAKE_CATALOG_MODE: 'COMPAT' }), /CAKE_CATALOG_MODE/)
+  assert.throws(() => buildDryRunPlan({ ...deployEnv, CAKE_CATALOG_MODE: 'legacy' }), /CAKE_CATALOG_MODE/)
+  const plan = buildDryRunPlan({ ...deployEnv, CAKE_CATALOG_MODE: 'compat' })
+  assert.equal(plan.function.variableNames.includes('CAKE_CATALOG_MODE'), true)
+  assert.equal(plan.function.maskedVariables.CAKE_CATALOG_MODE, 'co…at')
+})
+
 test('the recovery frontend parser keeps customerEmail required', () => {
   const currentParser = readFileSync('src/lib/review-coupon-client.ts', 'utf8')
   assert.match(currentParser, /responseCustomerEmail\(row, \{ required: true \}\)/)
@@ -281,7 +311,11 @@ test('cutover environment and README keep compat server-only and explicitly temp
   const readme = readFileSync('README.md', 'utf8')
   assert.match(example, /^CAKE_CUSTOMER_EMAIL_MODE=required$/m)
   assert.equal(example.includes('VITE_CAKE_CUSTOMER_EMAIL_MODE'), false)
+  assert.match(example, /^CAKE_CATALOG_MODE=required$/m)
+  assert.equal(example.includes('VITE_CAKE_CATALOG_MODE'), false)
   assert.match(readme, /CAKE_CUSTOMER_EMAIL_MODE=compat/)
   assert.match(readme, /CAKE_CUSTOMER_EMAIL_MODE=required/)
   assert.match(readme, /must be returned to `required` after rollout/i)
+  assert.match(readme, /CAKE_CATALOG_MODE=compat/)
+  assert.match(readme, /CAKE_CATALOG_MODE=required/)
 })
