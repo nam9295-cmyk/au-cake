@@ -87,12 +87,12 @@ test('AU cake pages own starting prices and final schema modes', () => {
   assert.deepEqual(productStartingPrices, {
     'pave-chocolate-cake': 79,
     'buttercream-cake': 75,
-    'fresh-strawberry-vanilla-cream-cake': 69,
-    'fresh-strawberry-chocolate-cream-cake': 72,
+    'fresh-strawberry-vanilla-cream-cake': 65,
+    'fresh-strawberry-chocolate-cream-cake': 69,
     'chocolate-cupcakes': 31,
     'signature-gateau-au-chocolat': 45,
     'lemon-cake': 36,
-    'brownie-cheesecake': 55,
+    'brownie-cheesecake': 58,
   })
   assert.equal(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'].schema, 'webpage-only')
   assert.equal(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'].startingPrice, null)

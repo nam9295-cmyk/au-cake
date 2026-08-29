@@ -6,6 +6,8 @@ export type ChocolateType = 'dark' | 'milk'
 
 export type PoundAddon = 'none' | 'extra-chocolate' | 'vanilla-cream'
 
+
+export type ChocolateExtra = 'none' | 'eiffel-6' | 'pave-100g' | 'combo'
 export type CupcakeFinish = 'basic' | 'vanilla-fresh-cream' | 'chocolate-buttercream'
 
 export type VanillaCakeSheet = 'vanilla' | 'chocolate'
@@ -49,6 +51,7 @@ export type Reservation = {
   customerEmail?: string
   productId: ProductId
   cakeSize: CakeSize
+  chocolateExtra?: ChocolateExtra
   chocolateType: ChocolateType
   poundAddon: PoundAddon
   cupcakeFinish?: CupcakeFinish
@@ -90,6 +93,7 @@ export type ReservationInput = {
   customerPhone: string
   customerEmail: string
   productId: ProductId
+  chocolateExtra?: ChocolateExtra
   cakeSize: CakeSize
   chocolateType: ChocolateType
   poundAddon: PoundAddon
@@ -113,6 +117,7 @@ export type ReservationInput = {
 }
 
 export type CakeOrderLineRequest = Pick<ReservationInput,
+  | 'chocolateExtra'
   | 'productId'
   | 'cakeSize'
   | 'chocolateType'
@@ -167,6 +172,7 @@ export type ReservationApiCapabilities = {
 
 export type PublicReservation = Pick<
   Reservation,
+  | 'chocolateExtra'
   | 'reservationNumber'
   | 'productId'
   | 'cakeSize'

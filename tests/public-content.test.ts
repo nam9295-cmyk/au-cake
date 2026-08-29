@@ -27,9 +27,9 @@ test('typed cake page helpers expose eight sale pages and noindex legacy pages',
   assert.equal(getStartingPrice('chocolate-cupcakes'), 31)
   assert.equal(getStartingPrice('signature-gateau-au-chocolat'), 45)
   assert.equal(getStartingPrice('lemon-cake'), 36)
-  assert.equal(getStartingPrice('fresh-strawberry-vanilla-cream-cake'), 69)
-  assert.equal(getStartingPrice('fresh-strawberry-chocolate-cream-cake'), 72)
-  assert.equal(getStartingPrice('brownie-cheesecake'), 55)
+  assert.equal(getStartingPrice('fresh-strawberry-vanilla-cream-cake'), 65)
+  assert.equal(getStartingPrice('fresh-strawberry-chocolate-cream-cake'), 69)
+  assert.equal(getStartingPrice('brownie-cheesecake'), 58)
   assert.equal(getStartingPrice('chocolatiers-basque-cheesecake'), null)
   assert.equal(getStartingPrice('chocolate-pound-cake-and-cupcakes'), null)
   assert.equal(getStartingPrice('vanilla-fresh-cream-cake'), null)
@@ -59,4 +59,12 @@ test('typed route lists name known direct-access and noindex boundaries', () => 
     '/admin/classes',
     '/admin/reviews',
   ])
+})
+
+test('Brownie public content sells only Basic and Pave finishes at the current prices', () => {
+  const brownie = getCakePublicPage('brownie-cheesecake')
+  assert.equal(brownie?.priceSummary, 'From AUD 58.00. Basic AUD 58.00 or pave chocolate on top AUD 68.00 (+AUD 10.00).')
+  assert.equal(brownie?.optionSummary, '6 inch serves 8 · two finishing options')
+  assert.equal(brownie?.cardOptionLabel, 'Basic or pave chocolate on top · +AUD 10')
+  assert.doesNotMatch(JSON.stringify(brownie), /Eiffel|three finishing options/i)
 })

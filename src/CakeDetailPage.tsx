@@ -40,8 +40,9 @@ import {
   type CakeDetailSelection,
 } from './lib/cake-detail'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
+import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraOption, isChocolateExtraEligibleProduct } from './lib/chocolate-extras'
 import { getAuCakeCatalogCards, type CakeCatalogCard } from './lib/cake-catalog'
-import { formatCurrentCakeSizeLabel, getCurrentWholeCakeSizeOptions, isCurrentWholeCakeProduct } from './lib/cake-serving'
+import { formatCurrentCakeSizeLabel, getCakeServingGuideCopy, getCurrentWholeCakeSizeOptions, isCurrentWholeCakeProduct } from './lib/cake-serving'
 import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-editorial'
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
@@ -80,6 +81,10 @@ const detailImages: Record<CakeDetailImageKey, string> = {
   'signature-gateau-quick-view': '/products/details/chocolate-pound-cake-quick-view.webp',
   'signature-gateau-previous': '/products/details/chocolate-pound-cake-previous.webp',
   'signature-gateau-hero': poundHeroImg,
+  'fresh-strawberry-vanilla-cream-side': '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp',
+  'fresh-strawberry-vanilla-cream-detail': '/products/details/fresh-strawberry-vanilla-cream-cake-detail-01.webp',
+  'fresh-strawberry-chocolate-cream-side': '/products/fresh-strawberry-chocolate-cream-cake-sydney.webp',
+  'fresh-strawberry-chocolate-cream-detail': '/products/details/fresh-strawberry-chocolate-cream-cake-detail-01.webp',
   'brownie-side': '/products/brownie-cheesecake-sydney.webp',
   'brownie-detail': '/products/details/brownie-cheesecake-detail-01.webp',
   'brownie-quick-view': '/products/details/brownie-cheese-quick-view.webp',
@@ -118,6 +123,10 @@ const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height:
   'signature-gateau-quick-view': { width: 1080, height: 1012 },
   'signature-gateau-previous': { width: 1080, height: 1012 },
   'signature-gateau-hero': { width: 1080, height: 1012 },
+  'fresh-strawberry-vanilla-cream-side': { width: 1080, height: 1012 },
+  'fresh-strawberry-vanilla-cream-detail': { width: 1080, height: 1012 },
+  'fresh-strawberry-chocolate-cream-side': { width: 1080, height: 1012 },
+  'fresh-strawberry-chocolate-cream-detail': { width: 1080, height: 1012 },
   'brownie-side': { width: 1080, height: 1012 },
   'brownie-detail': { width: 1080, height: 1012 },
   'brownie-quick-view': { width: 1080, height: 1012 },
@@ -254,6 +263,7 @@ export default function CakeDetailPage({
 
   const product = getProductById(selection.productId)
   const productText = getProductText(selection.productId, language)
+  const selectedChocolateExtra = getChocolateExtraOption(selection.chocolateExtra)
   const productTotal = getCakeDetailSelectionTotal(selection)
   const individualPackagingPricing = getIndividualPackagingPricing([{
     productId: selection.productId,
@@ -414,6 +424,12 @@ export default function CakeDetailPage({
                 {detail.productIds.map((productId) => {
                   const optionText = getProductText(productId, language)
                   const cupcakePackSize = getCupcakePackSize(productId)
+                  const optionPrice = cupcakePackSize
+                    ? getCupcakeFinishPrice(productId, 'basic') || 0
+                    : getProductById(productId).price
+                  const extraFromBase = detail.id === 'brownie-cheesecake'
+                    ? optionPrice - getProductById(detail.productIds[0]!).price
+                    : 0
                   return (
                     <OptionButton
                       active={selection.productId === productId}
@@ -423,7 +439,7 @@ export default function CakeDetailPage({
                       <strong>{cupcakePackSize
                         ? language === 'ko' ? `${cupcakePackSize === 6 ? '하프 더즌' : '더즌'} · ${cupcakePackSize}개` : `${cupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${cupcakePackSize} cupcakes`
                         : optionText.name}</strong>
-                      <span>{formatCurrency(cupcakePackSize ? getCupcakeFinishPrice(productId, 'basic') || 0 : getProductById(productId).price)}</span>
+                      <span>{formatCurrency(optionPrice)}{extraFromBase > 0 ? ` (+${formatCurrency(extraFromBase)})` : ''}</span>
                     </OptionButton>
                   )
                 })}
@@ -450,8 +466,8 @@ export default function CakeDetailPage({
           )}
             {isCurrentWholeCake && (
               <details className="cake-detail-serving-guide">
-                <summary>{language === 'ko' ? '케이크마다 권장 인원수가 다른 이유' : 'Why do serving sizes vary?'}</summary>
-                <p>{language === 'ko' ? '케이크 스타일과 권장 1인분 크기에 따라 인원수가 달라집니다. 시그니처 갸또 케이크는 진하고 밀도감이 높아 작은 조각으로, 제누아즈 케이크는 보다 넉넉한 기념일용 조각으로 안내합니다.' : 'Serving guides vary by cake style and portion size. Our Signature Gâteau cakes are rich and dense, so they are usually served in smaller slices, while genoise cakes are typically cut into larger celebration portions.'}</p>
+                <summary>{getCakeServingGuideCopy(language).title}</summary>
+                <p>{getCakeServingGuideCopy(language).body}</p>
               </details>
             )}
 
@@ -550,6 +566,25 @@ export default function CakeDetailPage({
                   </OptionButton>
                 ))}
               </div>
+            </fieldset>
+          )}
+
+          {isChocolateExtraEligibleProduct(product.id) && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '초콜릿 추가 구성' : 'CHOCOLATE EXTRAS'}</legend>
+              <div className="cake-detail-options is-stacked">
+                {CHOCOLATE_EXTRA_OPTIONS.map((option) => (
+                  <OptionButton
+                    active={selection.chocolateExtra === option.value}
+                    onClick={() => updateSelection({ chocolateExtra: option.value })}
+                    key={option.value}
+                  >
+                    <strong>{language === 'ko' ? option.labelKo : option.label}</strong>
+                    <span>{option.price > 0 ? `+${formatCurrency(option.price)}` : language === 'ko' ? '선택 안 함' : 'No extra'}</span>
+                  </OptionButton>
+                ))}
+              </div>
+              <p className="cake-detail-extra-help">{language === 'ko' ? selectedChocolateExtra.descriptionKo : selectedChocolateExtra.description}</p>
             </fieldset>
           )}
 

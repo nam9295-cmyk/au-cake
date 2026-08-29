@@ -32,6 +32,7 @@ import {
   type Language,
 } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
+import { formatChocolateExtra, getChocolateExtraOption } from './lib/chocolate-extras'
 
 type CartPageProps = {
   language: Language
@@ -50,6 +51,7 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
   const cupcakePackSize = getCupcakePackSize(product.id)
   const cupcakeFinish = CUPCAKE_FINISH_OPTIONS.find((option) => option.value === selection.cupcakeFinish) || CUPCAKE_FINISH_OPTIONS[0]
   const chocolateIcingCount = normalizeChocolateIcingCount(product.id, selection.chocolateIcingCount)
+  const chocolateExtra = getChocolateExtraOption(selection.chocolateExtra)
   const packagingPieces = selection.individualPackaging
     ? getIndividualPackagingPieceCount(product.id, selection.quantity)
     : 0
@@ -72,6 +74,12 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
         <div>
           <dt>{copy.chocolate}</dt>
           <dd>{formatChocolateTypeText(selection.chocolateType, language)}</dd>
+        </div>
+      )}
+      {chocolateExtra.value !== 'none' && (
+        <div>
+          <dt>{language === 'ko' ? '초콜릿 추가 구성' : 'Chocolate extras'}</dt>
+          <dd>{formatChocolateExtra(chocolateExtra.value, language)} · +{formatCurrency(chocolateExtra.price)}</dd>
         </div>
       )}
       {isCreamLayerCakeProduct(product.id) && (

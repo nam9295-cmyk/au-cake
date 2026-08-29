@@ -45,7 +45,8 @@ test('new Lemon Cake catalogue photo is also used in the home hero', () => {
 })
 
 test('home hero cycles only sale cakes with available images every three seconds', () => {
-  assert.match(homeSource, /getAuCakeCatalogCards\(language\)\n\s*\.filter\(\(card\) => !card\.isPhotoComingSoon\)/)
+  assert.match(homeSource, /getAuHomeHeroCards\(language\)\n\s*\.filter\(\(card\) => !card\.isPhotoComingSoon\)/)
+  assert.match(homeSource, /const \[activeHeroCake, setActiveHeroCake\] = useState\(\(\) => marketConfig\.market === 'AU' \? 0 : 1\)/)
   assert.match(homeSource, /\.map\(\(card\) => \(\{[\s\S]*?label: card\.name/)
   assert.match(homeSource, /heroVisuals\[card\.imageKey\]\?\.image \|\| card\.imagePath/)
   assert.match(homeSource, /'pave-cake': \{ image: heroCake2Img/)

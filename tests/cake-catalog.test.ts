@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
+import * as cakeCatalogModule from '../src/lib/cake-catalog.js'
 // Reservation API business rules are deployed as JavaScript; this contract test imports the runtime module with --allowJs.
 import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 import {
@@ -62,7 +63,7 @@ const expectedCatalog = [
     id: 'brownie-cheesecake',
     slug: 'brownie-cheesecake',
     defaultProductId: 'brownie-cheesecake',
-    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
   },
 ] as const
 
@@ -80,6 +81,29 @@ test('AU sale catalogue exposes the final eight independent products in customer
   assert.equal(getCakeCatalogEntryBySlug('chocolatiers-basque-cheesecake'), null)
 })
 
+test('AU home hero prioritizes the two Strawberry cakes, Pave, then Brownie before the remaining catalogue', () => {
+  const getAuHomeHeroCards = (cakeCatalogModule as unknown as {
+    getAuHomeHeroCards?: (language: 'en' | 'ko') => readonly { id: string }[]
+  }).getAuHomeHeroCards
+
+  assert.equal(typeof getAuHomeHeroCards, 'function')
+  if (!getAuHomeHeroCards) return
+
+  assert.deepEqual(
+    getAuHomeHeroCards('en').map((card) => card.id),
+    [
+      'fresh-strawberry-vanilla-cream',
+      'fresh-strawberry-chocolate-cream',
+      'pave',
+      'brownie-cheesecake',
+      'buttercream',
+      'cupcake',
+      'signature-gateau',
+      'fresh-lemon-cupcakes',
+    ],
+  )
+})
+
 test('AU cake catalog owns eight unique public slugs and stable backend product IDs', () => {
   const catalog = getAuCakeCatalog()
   assert.deepEqual(
@@ -93,6 +117,7 @@ test('AU cake catalog owns eight unique public slugs and stable backend product 
   assert.equal(getCakeCatalogEntryByProductId('pound-cake')?.id, 'signature-gateau')
   assert.equal(getCakeCatalogEntryByProductId('buttercream-cake')?.id, 'buttercream')
   assert.equal(getCakeCatalogEntryByProductId('brownie-cheesecake')?.id, 'brownie-cheesecake')
+  assert.equal(getCakeCatalogEntryByProductId('eiffel-tower-brownie-cheesecake'), null)
   assert.equal(getCakeCatalogEntryByProductId('vanilla-fresh-cream-cake'), null)
   assert.equal(getCakeCatalogEntryByProductId('choco-basque-cheesecake'), null)
 })
@@ -112,6 +137,16 @@ test('catalog cards expose separated Cupcake and Signature names in English and 
   ])
   assert.equal(english.find((card) => card.id === 'buttercream')?.isPhotoComingSoon, false)
   assert.equal(english.find((card) => card.id === 'buttercream')?.imagePath, '/products/buttercream-cake-sydney.webp')
+  assert.equal(english.find((card) => card.id === 'fresh-strawberry-vanilla-cream')?.isPhotoComingSoon, false)
+  assert.equal(
+    english.find((card) => card.id === 'fresh-strawberry-vanilla-cream')?.imagePath,
+    '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp',
+  )
+  assert.equal(english.find((card) => card.id === 'fresh-strawberry-chocolate-cream')?.isPhotoComingSoon, false)
+  assert.equal(
+    english.find((card) => card.id === 'fresh-strawberry-chocolate-cream')?.imagePath,
+    '/products/fresh-strawberry-chocolate-cream-cake-sydney.webp',
+  )
   assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.isPhotoComingSoon, false)
   assert.equal(english.find((card) => card.id === 'brownie-cheesecake')?.imagePath, '/products/brownie-cheesecake-sydney.webp')
   assert.equal(english.find((card) => card.id === 'cupcake')?.imagePath, '/products/chocolate-cupcakes-sydney.webp')
@@ -121,14 +156,22 @@ test('catalog cards expose separated Cupcake and Signature names in English and 
     [
       ['pave', 'AUD 79.00'],
       ['buttercream', 'From AUD 75.00'],
-      ['fresh-strawberry-vanilla-cream', 'From AUD 69.00'],
-      ['fresh-strawberry-chocolate-cream', 'From AUD 72.00'],
+      ['fresh-strawberry-vanilla-cream', 'From AUD 65.00'],
+      ['fresh-strawberry-chocolate-cream', 'From AUD 69.00'],
       ['cupcake', 'From AUD 31.00'],
       ['signature-gateau', 'AUD 45.00'],
       ['fresh-lemon-cupcakes', 'From AUD 36.00'],
-      ['brownie-cheesecake', 'From AUD 55.00'],
+      ['brownie-cheesecake', 'From AUD 58.00'],
     ],
   )
+  assert.equal(english.find((card) => card.id === 'pave')?.features[0], 'Signature Gâteau layers')
+  assert.equal(english.find((card) => card.id === 'buttercream')?.features[0], 'Signature Gâteau layers')
+  assert.equal(english.find((card) => card.id === 'fresh-strawberry-vanilla-cream')?.features[2], 'Soft genoise layers')
+  assert.equal(english.find((card) => card.id === 'fresh-strawberry-chocolate-cream')?.features[2], 'Soft genoise layers')
+  assert.equal(korean.find((card) => card.id === 'pave')?.features[0], '시그니처 갸또 쇼콜라 시트')
+  assert.equal(korean.find((card) => card.id === 'buttercream')?.features[0], '시그니처 갸또 쇼콜라 시트')
+  assert.equal(korean.find((card) => card.id === 'fresh-strawberry-vanilla-cream')?.features[2], '부드러운 제누아즈 시트')
+  assert.equal(korean.find((card) => card.id === 'fresh-strawberry-chocolate-cream')?.features[2], '부드러운 제누아즈 시트')
 })
 
 test('AU catalogue cards use the canonical public image for every available photo', () => {
@@ -160,8 +203,8 @@ test('canonical Whole Cake statements match the selectable AU products', () => {
   assert.match(strawberryVanilla?.description || '', /Real vanilla bean/)
   assert.match(strawberryVanilla?.description || '', /fresh strawberries/)
   assert.match(strawberryChocolate?.description || '', /chocolate fresh cream/)
-  assert.equal(strawberryVanilla?.imagePath, '')
-  assert.equal(strawberryChocolate?.imagePath, '')
+  assert.equal(strawberryVanilla?.imagePath, '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp')
+  assert.equal(strawberryChocolate?.imagePath, '/products/fresh-strawberry-chocolate-cream-cake-sydney.webp')
 })
 
 const serverPriceCases: Array<{
@@ -179,7 +222,6 @@ const serverPriceCases: Array<{
   { productId: 'cupcake-dozen', options: { cupcakeFinish: 'chocolate-buttercream' } },
   { productId: 'brownie-cheesecake' },
   { productId: 'pave-brownie-cheesecake' },
-  { productId: 'eiffel-tower-brownie-cheesecake' },
   { productId: 'fresh-lemon-cupcakes-6' },
   { productId: 'fresh-lemon-cupcakes-6', options: { chocolateIcingCount: 3 } },
   { productId: 'fresh-lemon-cupcakes-8' },
@@ -188,7 +230,7 @@ const serverPriceCases: Array<{
   { productId: 'fresh-lemon-cupcakes-16' },
 ]
 
-test('secondary catalogue prices stay equal to the deployed Reservation API source', () => {
+test('secondary catalogue matches the deployed Reservation API except approved Brownie basic and Pave prices pending backend cutover', () => {
   const now = new Date('2026-07-26T00:00:00.000Z')
 
   for (const { productId, options = {} } of serverPriceCases) {
@@ -214,11 +256,13 @@ test('secondary catalogue prices stay equal to the deployed Reservation API sour
       website: '',
     }, { now, reservationNumber: 'VG-C-AU-CATALOG' })
 
-    assert.equal(
-      getCakeCatalogUnitPrice(productId, options),
-      serverReservation.totalPrice,
-      `${productId} ${JSON.stringify(options)}`,
-    )
+    const frontendPrice = getCakeCatalogUnitPrice(productId, options)
+    if (productId === 'brownie-cheesecake' || productId === 'pave-brownie-cheesecake') {
+      assert.equal(frontendPrice, productId === 'brownie-cheesecake' ? 58 : 68)
+      assert.equal(serverReservation.totalPrice, productId === 'brownie-cheesecake' ? 55 : 65)
+      continue
+    }
+    assert.equal(frontendPrice, serverReservation.totalPrice, `${productId} ${JSON.stringify(options)}`)
   }
 })
 
@@ -254,6 +298,6 @@ test('current Whole Cake contract matches agreed backend product, size, price an
     getReservationUnitPrice('fresh-strawberry-chocolate-cream-cake', { cakeSize: '6in' }),
     getReservationUnitPrice('fresh-strawberry-chocolate-cream-cake', { cakeSize: '8in' }),
     getReservationUnitPrice('fresh-strawberry-chocolate-cream-cake', { cakeSize: '10in' }),
-  ], [79, 109, 159, 75, 99, 145, 69, 89, 129, 72, 95, 135])
+  ], [79, 109, 159, 75, 99, 145, 65, 89, 129, 69, 95, 135])
   assert.equal(getCakeCatalogEntryByProductId('vanilla-fresh-cream-cake'), null)
 })

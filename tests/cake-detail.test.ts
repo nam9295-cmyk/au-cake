@@ -33,14 +33,16 @@ test('eight public sale slugs resolve to independent reusable detail contracts',
     'lemon-cake',
     'brownie-cheesecake',
   ])
-  assert.deepEqual(details.map((detail) => detail?.gallery.length), [7, 3, 0, 0, 3, 5, 4, 3])
+  assert.deepEqual(details.map((detail) => detail?.gallery.length), [7, 3, 2, 2, 3, 5, 4, 3])
   assert.deepEqual(details[0]?.gallery.slice(0, 4), ['pave-side', 'pave-quick-view', 'pave-previous', 'pave-hero'])
   assert.deepEqual(details[1]?.gallery, ['buttercream-side', 'buttercream-detail', 'buttercream-quick-view'])
+  assert.deepEqual(details[2]?.gallery, ['fresh-strawberry-vanilla-cream-side', 'fresh-strawberry-vanilla-cream-detail'])
+  assert.deepEqual(details[3]?.gallery, ['fresh-strawberry-chocolate-cream-side', 'fresh-strawberry-chocolate-cream-detail'])
   assert.deepEqual(details[4]?.gallery, ['cupcake-side', 'cupcake-detail', 'cupcake-hero'])
   assert.deepEqual(details[5]?.gallery, ['signature-gateau-side', 'signature-gateau-detail', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'])
   assert.deepEqual(details[7]?.gallery, ['brownie-side', 'brownie-detail', 'brownie-quick-view'])
-  assert.equal(details[2]?.isPhotoComingSoon, true)
-  assert.equal(details[3]?.isPhotoComingSoon, true)
+  assert.equal(details[2]?.isPhotoComingSoon, false)
+  assert.equal(details[3]?.isPhotoComingSoon, false)
   assert.equal(details[7]?.isPhotoComingSoon, false)
   assert.equal(getCakeDetailBySlug('not-a-cake', 'en'), null)
 })
@@ -61,7 +63,7 @@ test('sale detail badges mirror the first three Quick View features', () => {
   ])
 })
 
-test('Brownie Cheesecake keeps its 15cm three-finish sales contract while customer copy explains the baked two-layer dessert', () => {
+test('Brownie Cheesecake keeps its 15cm two-finish current sales contract while customer copy explains the baked two-layer dessert', () => {
   const english = getCakeDetailBySlug('brownie-cheesecake', 'en')
   const korean = getCakeDetailBySlug('brownie-cheesecake', 'ko')
 
@@ -73,8 +75,8 @@ test('Brownie Cheesecake keeps its 15cm three-finish sales contract while custom
     korean?.description,
     '진한 다크초콜릿 브라우니 베이스 위에 부드럽게 구운 바스크 치즈케이크를 올린 2층 디저트입니다. 브라우니와 치즈케이크의 서로 다른 매력을 한 조각에서 함께 즐길 수 있습니다.',
   )
-  assert.deepEqual(english?.productIds, ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'])
-  assert.equal(english?.optionLabel, 'Three finishing options')
+  assert.deepEqual(english?.productIds, ['brownie-cheesecake', 'pave-brownie-cheesecake'])
+  assert.equal(english?.optionLabel, 'Basic or pave chocolate on top · +AUD 10')
   assert.equal(korean?.optionLabel, '6" | serves 8')
   assert.equal(english?.gallery.join(','), 'brownie-side,brownie-detail,brownie-quick-view')
 })
@@ -164,4 +166,21 @@ test('Lemon Cake supports two or more identical packs with simple quantity multi
   assert.equal(reservation.individualPackagingPieces, 12)
   assert.equal(reservation.individualPackagingFeeCents, 600)
   assert.equal(reservation.totalPriceCents, 8100)
+})
+
+test('Chocolate Extra is an independent one-per-order-line side item for eligible cake selections', () => {
+  const pave = createCakeDetailSelection('pave-chocolate-cake')
+  const signature = createCakeDetailSelection('signature-gateau-au-chocolat')
+  const strawberry = createCakeDetailSelection('fresh-strawberry-vanilla-cream-cake')
+  assert.ok(pave)
+  assert.ok(signature)
+  assert.ok(strawberry)
+
+  const paveWithEiffel = { ...pave, cakeSize: '6in' as const, quantity: 2, chocolateExtra: 'eiffel-6' as const }
+  const signatureWithCombo = { ...signature, chocolateExtra: 'combo' as const }
+  const strawberryWithExtra = selectCakeDetailProduct({ ...strawberry, chocolateExtra: 'pave-100g' } as never, strawberry.productId)
+
+  assert.equal(getCakeDetailSelectionTotal(paveWithEiffel as never), 168)
+  assert.equal(getCakeDetailSelectionTotal(signatureWithCombo as never), 65)
+  assert.equal(strawberryWithExtra.chocolateExtra, 'none')
 })

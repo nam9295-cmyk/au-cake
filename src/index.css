@@ -7833,6 +7833,13 @@ td select {
   line-height: 1.25;
 }
 
+.cake-detail-extra-help {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .cake-detail-option span {
   flex: 0 0 auto;
   font-size: 11px;

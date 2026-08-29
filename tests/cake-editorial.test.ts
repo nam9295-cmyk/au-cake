@@ -69,7 +69,6 @@ test('Brownie Cheesecake compact editorial exposes only its verified two-layer, 
     'Two-layer bake — The brownie and cheesecake are baked together to create two distinct layers in every slice.',
     'Basic — Enjoy the brownie and cheesecake layers in their classic form.',
     'Pave chocolate on top — Finished with smooth pave chocolate on top for a richer chocolate finish.',
-    'Full pave finish — Fully finished with pave chocolate and topped with one Eiffel Tower chocolate.',
   ])
   assert.equal(
     compactEnglish.ingredientsAndAllergens?.ingredients,
@@ -290,12 +289,12 @@ test('Pave exposes the approved compact bilingual detail contract', () => {
   assert.equal(compactEnglish.layout, 'compact')
   assert.equal(compactKorean.layout, 'compact')
   assert.deepEqual(compactEnglish.highlights?.map((highlight) => highlight.title), [
-    'Four chocolate layers',
+    'SIGNATURE GÂTEAU LAYERS',
     'Smooth pavé ganache',
     '57.9% dark couverture chocolate',
   ])
   assert.deepEqual(compactKorean.highlights?.map((highlight) => highlight.title), [
-    '초콜릿 케이크 4단',
+    '시그니처 갸또 쇼콜라 시트',
     '부드러운 파베 가나슈',
     '57.9% 다크 커버춰 초콜릿',
   ])
@@ -331,6 +330,31 @@ test('Pave exposes the approved compact bilingual detail contract', () => {
   assert.doesNotMatch(compactCopy, /Celebration Story|Made for moments|Eiffel Tower|Final CTA|Medium sweetness|dense finish/i)
 })
 
+test('Whole Cake compact highlights distinguish Signature Gâteau and soft genoise layers', () => {
+  const paveEnglish = getCakeEditorialBySlug('pave-chocolate-cake', 'en')
+  const paveKorean = getCakeEditorialBySlug('pave-chocolate-cake', 'ko')
+  const buttercreamEnglish = getCakeEditorialBySlug('buttercream-cake', 'en')
+  const buttercreamKorean = getCakeEditorialBySlug('buttercream-cake', 'ko')
+  assert.ok(paveEnglish)
+  assert.ok(paveKorean)
+  assert.ok(buttercreamEnglish)
+  assert.ok(buttercreamKorean)
+  assert.equal(paveEnglish.highlights[0]?.body, 'Rich, dense chocolate gâteau layers made for a deeper chocolate bite.')
+  assert.equal(paveKorean.highlights[0]?.body, '진하고 밀도감 있는 초콜릿 갸또 시트를 사용합니다.')
+  assert.equal(buttercreamEnglish.highlights[0]?.body, 'Rich, dense chocolate gâteau layers made for a deeper chocolate bite.')
+  assert.equal(buttercreamKorean.highlights[0]?.body, '진하고 밀도감 있는 초콜릿 갸또 시트를 사용합니다.')
+
+  for (const slug of ['fresh-strawberry-vanilla-cream-cake', 'fresh-strawberry-chocolate-cream-cake'] as const) {
+    const english = getCakeEditorialBySlug(slug, 'en')
+    const korean = getCakeEditorialBySlug(slug, 'ko')
+    assert.ok(english)
+    assert.ok(korean)
+    assert.equal(english.highlights[2]?.title, 'SOFT GENOISE LAYERS')
+    assert.equal(english.highlights[2]?.body, 'Soft genoise layers made for fresh cream and fresh strawberries.')
+    assert.equal(korean.highlights[2]?.title, '부드러운 제누아즈 시트')
+    assert.equal(korean.highlights[2]?.body, '생크림과 생딸기에 잘 어울리는 부드러운 제누아즈 시트를 사용합니다.')
+  }
+})
 test('Vanilla compact editorial preserves the approved cake, cream, allergen, and related-product content', () => {
   const english = getCakeEditorialBySlug('vanilla-fresh-cream-cake', 'en')
   const korean = getCakeEditorialBySlug('vanilla-fresh-cream-cake', 'ko')
@@ -403,14 +427,14 @@ test('Buttercream compact editorial preserves the approved Italian meringue, but
   assert.equal(compactEnglish.layout, 'compact')
   assert.equal(compactKorean.layout, 'compact')
   assert.deepEqual(compactEnglish.highlights?.map((fact) => fact.title), [
+    'SIGNATURE GÂTEAU LAYERS',
     'Italian meringue',
     'Real butter',
-    'Cocoa powder',
   ])
   assert.deepEqual(compactKorean.highlights?.map((fact) => fact.title), [
+    '시그니처 갸또 쇼콜라 시트',
     '이탈리안 머랭',
     '버터 사용',
-    '코코아 파우더',
   ])
   assert.deepEqual(compactEnglish.details?.items, [
     'Signature chocolate cake — Our Signature Gâteau au Chocolat cake layers form the chocolate base.',

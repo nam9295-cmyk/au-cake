@@ -93,7 +93,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     defaultProductId: 'fresh-strawberry-vanilla-cream-cake',
     productIds: ['fresh-strawberry-vanilla-cream-cake'],
     imageKey: 'fresh-strawberry-vanilla-cream-cake',
-    isPhotoComingSoon: true,
+    isPhotoComingSoon: false,
     priceMode: 'from',
   },
   {
@@ -103,7 +103,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     defaultProductId: 'fresh-strawberry-chocolate-cream-cake',
     productIds: ['fresh-strawberry-chocolate-cream-cake'],
     imageKey: 'fresh-strawberry-chocolate-cream-cake',
-    isPhotoComingSoon: true,
+    isPhotoComingSoon: false,
     priceMode: 'from',
   },
   {
@@ -155,7 +155,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     slug: 'brownie-cheesecake',
     group: 'more-cakes',
     defaultProductId: 'brownie-cheesecake',
-    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
     imageKey: 'brownie-cheesecake',
     isPhotoComingSoon: false,
     priceMode: 'from',
@@ -221,6 +221,20 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
 
 export function getAuCakeCatalogCards(language: Language): readonly CakeCatalogCard[] {
   return getAuCakeCatalog().map((entry) => getCakeCatalogCard(entry, language))
+}
+
+const AU_HOME_HERO_PRIORITY: readonly CakeCatalogId[] = [
+  'fresh-strawberry-vanilla-cream',
+  'fresh-strawberry-chocolate-cream',
+  'pave',
+  'brownie-cheesecake',
+]
+
+export function getAuHomeHeroCards(language: Language): readonly CakeCatalogCard[] {
+  const priority = new Map(AU_HOME_HERO_PRIORITY.map((id, index) => [id, index]))
+  return [...getAuCakeCatalogCards(language)].sort(
+    (left, right) => (priority.get(left.id) ?? AU_HOME_HERO_PRIORITY.length) - (priority.get(right.id) ?? AU_HOME_HERO_PRIORITY.length),
+  )
 }
 
 export function getCakeCatalogUnitPrice(productId: ProductId, options: ReservationPriceOptions = {}) {

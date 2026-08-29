@@ -26,7 +26,8 @@ import {
   getIndividualPackagingPieceCount,
   isIndividualPackagingEligibleProduct,
 } from './individual-packaging.js'
-import type { CakeOrderLineRequest, CakeOrderLineResult, CakeOrderRequest, CakeOrderReservation, CakeSize, CacaoPercent, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, ReservationApiCapabilities, ReservationInput, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
+import { CHOCOLATE_EXTRA_OPTIONS, isChocolateExtraEligibleProduct, normalizeChocolateExtra } from './chocolate-extras.js'
+import type { CakeOrderLineRequest, CakeOrderLineResult, CakeOrderRequest, CakeOrderReservation, CakeSize, CacaoPercent, ChocolateExtra, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, ReservationApiCapabilities, ReservationInput, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
 
 const REVIEW_COUPON_ANIMALS = ['FOX', 'CAT', 'DOG', 'OWL', 'PIG', 'BEE', 'COW', 'CUB', 'EMU', 'HEN', 'KOI', 'PUP', 'RAM', 'YAK', 'APE']
 const REVIEW_COUPON_FRUITS = ['KIWI', 'FIG', 'LIME', 'PEAR', 'PLUM', 'APPLE', 'GRAPE', 'GUAVA', 'LEMON', 'MANGO', 'MELON', 'PEACH']
@@ -39,6 +40,7 @@ const VALID_CAKE_SIZES = new Set<CakeSize>(['mini', 'size-1', '6in', '8in', '10i
 const VALID_CHOCOLATE_TYPES = new Set<ChocolateType>(['dark', 'milk'])
 const VALID_POUND_ADDONS = new Set<PoundAddon>(['none', 'extra-chocolate', 'vanilla-cream'])
 const VALID_CUPCAKE_FINISHES = new Set<CupcakeFinish>(['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'])
+const VALID_CHOCOLATE_EXTRAS = new Set<ChocolateExtra>(CHOCOLATE_EXTRA_OPTIONS.map((option) => option.value))
 const VALID_VANILLA_CAKE_SHEETS = new Set<VanillaCakeSheet>(['vanilla', 'chocolate'])
 const VALID_VANILLA_CAKE_FLAVORS = new Set<VanillaCakeFlavor>(['plain', 'triple-berry', 'nutella-chocolate-chip'])
 const VALID_VANILLA_CAKE_POINT_COLORS = new Set<VanillaCakePointColor>(['pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'])
@@ -291,6 +293,9 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     chocolateType: input.chocolateType,
     poundAddon: input.poundAddon,
     ...(isCupcakeProduct(input.productId) ? { cupcakeFinish: input.cupcakeFinish } : {}),
+    ...(isChocolateExtraEligibleProduct(input.productId) ? {
+      chocolateExtra: normalizeChocolateExtra(input.productId, input.chocolateExtra),
+    } : {}),
     chocolateIcingCount: input.chocolateIcingCount,
     vanillaCreamCount: input.vanillaCreamCount,
     partyDecorationCount: input.partyDecorationCount,
@@ -335,6 +340,9 @@ function projectCakeOrderLine(line: CakeOrderLineRequest): CakeOrderLineRequest 
     poundAddon: line.poundAddon,
     cupcakeFinish: line.cupcakeFinish,
     chocolateIcingCount: line.chocolateIcingCount,
+    ...(isChocolateExtraEligibleProduct(line.productId) ? {
+      chocolateExtra: normalizeChocolateExtra(line.productId, line.chocolateExtra),
+    } : {}),
     vanillaCreamCount: line.vanillaCreamCount,
     partyDecorationCount: line.partyDecorationCount,
     vanillaCakeSheet: normalizeVanillaCakeSheet(line.productId, line.vanillaCakeSheet),
@@ -364,6 +372,12 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
     typeof line.cakeSize !== 'string' || !VALID_CAKE_SIZES.has(line.cakeSize as CakeSize) ||
     typeof line.chocolateType !== 'string' || !VALID_CHOCOLATE_TYPES.has(line.chocolateType as ChocolateType) ||
     typeof line.poundAddon !== 'string' || !VALID_POUND_ADDONS.has(line.poundAddon as PoundAddon) ||
+    (line.chocolateExtra !== undefined && (
+      typeof line.chocolateExtra !== 'string' ||
+      !VALID_CHOCOLATE_EXTRAS.has(line.chocolateExtra as ChocolateExtra) ||
+      !isChocolateExtraEligibleProduct(line.productId as ProductId) ||
+      line.chocolateExtra !== normalizeChocolateExtra(line.productId as ProductId, line.chocolateExtra as ChocolateExtra)
+    )) ||
     typeof line.cupcakeFinish !== 'string' || !VALID_CUPCAKE_FINISHES.has(line.cupcakeFinish as CupcakeFinish) ||
     typeof line.vanillaCakeSheet !== 'string' || !VALID_VANILLA_CAKE_SHEETS.has(line.vanillaCakeSheet as VanillaCakeSheet) ||
     typeof line.vanillaCakeFlavor !== 'string' || !VALID_VANILLA_CAKE_FLAVORS.has(line.vanillaCakeFlavor as VanillaCakeFlavor) ||
@@ -500,6 +514,7 @@ function canonicalOrderLineKey(line: CakeOrderLineRequest): string {
     line.productId, line.cakeSize, line.chocolateType, line.poundAddon, line.cupcakeFinish, line.chocolateIcingCount,
     line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
     normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
+    normalizeChocolateExtra(line.productId, line.chocolateExtra),
     line.individualPackaging === true,
   ])
 }

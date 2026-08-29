@@ -212,6 +212,38 @@ test('new strawberry reservations send only the current product, size, and quant
   })
 })
 
+test('Chocolate Extra request projection is frontend-ready while Reservation API pricing remains a pending integration boundary', () => {
+  const pave = {
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: ' Customer@Example.com ',
+    productId: 'pave-cake', cakeSize: '6in', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
+    chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla',
+    vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 2, pickupDate: '2099-07-11', pickupTime: '10:00',
+    cacaoPercent: '기본', requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
+    chocolateExtra: 'combo',
+  }
+  const projected = buildCakeReservationRequest(pave as ReservationInput)
+  assert.equal(projected.chocolateExtra, 'combo')
+
+  const strawberry = buildCakeReservationRequest({
+    ...pave,
+    productId: 'fresh-strawberry-vanilla-cream-cake',
+    cakeSize: '8in',
+    chocolateExtra: 'combo',
+  } as ReservationInput)
+  assert.equal(Object.hasOwn(strawberry, 'chocolateExtra'), false)
+
+  const order = buildCakeOrderRequest({
+    customerName: pave.customerName, customerPhone: pave.customerPhone, customerEmail: pave.customerEmail,
+    pickupDate: pave.pickupDate, pickupTime: pave.pickupTime, requestNote: '', privacyConsent: true,
+    requestId: pave.requestId, website: '',
+    orderLines: [
+      { ...pave },
+      { ...pave, chocolateExtra: 'none', quantity: 1 },
+    ],
+  } as never)
+  assert.deepEqual(order.orderLines.map((line) => line.chocolateExtra), ['combo', 'none'])
+})
+
 test('multi-line Strawberry orders project only the new contract fields', () => {
   const strawberryLine = {
     productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in',
@@ -313,12 +345,14 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     orderLines: [
       {
         productId: 'pave-cake', cakeSize: '6in', chocolateType: 'dark', poundAddon: 'none',
+        chocolateExtra: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 2,
       },
       {
         productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        chocolateExtra: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 1,

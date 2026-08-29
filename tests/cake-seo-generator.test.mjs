@@ -160,12 +160,12 @@ test('cake generator uses the final per-page schema contract and real product We
   const expectations = new Map([
     ['pave-chocolate-cake', { type: 'Product', price: 79, og: 'product', image: 'pave-chocolate-cake-sydney.webp' }],
     ['buttercream-cake', { type: 'Product', price: 75, og: 'product', image: 'buttercream-cake-sydney.webp' }],
-    ['fresh-strawberry-vanilla-cream-cake', { type: 'Product', price: 69, og: 'product', image: '' }],
-    ['fresh-strawberry-chocolate-cream-cake', { type: 'Product', price: 72, og: 'product', image: '' }],
+    ['fresh-strawberry-vanilla-cream-cake', { type: 'Product', price: 65, og: 'product', image: 'fresh-strawberry-vanilla-cream-cake-sydney.webp' }],
+    ['fresh-strawberry-chocolate-cream-cake', { type: 'Product', price: 69, og: 'product', image: 'fresh-strawberry-chocolate-cream-cake-sydney.webp' }],
     ['chocolate-cupcakes', { type: 'Product', price: 31, og: 'product', image: 'chocolate-cupcakes-sydney.webp' }],
     ['signature-gateau-au-chocolat', { type: 'Product', price: 45, og: 'product', image: 'signature-gateau-au-chocolat-sydney.webp' }],
     ['lemon-cake', { type: 'Product', price: 36, og: 'product', image: 'lemon-cake-sydney.webp' }],
-    ['brownie-cheesecake', { type: 'Product', price: 55, og: 'product', image: 'brownie-cheesecake-sydney.webp' }],
+    ['brownie-cheesecake', { type: 'Product', price: 58, og: 'product', image: 'brownie-cheesecake-sydney.webp' }],
   ])
 
   for (const [slug, expected] of expectations) {

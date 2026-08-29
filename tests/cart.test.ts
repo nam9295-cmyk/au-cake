@@ -24,6 +24,7 @@ const baseSelection = (overrides: Partial<CakeDetailSelection> = {}): CakeDetail
   chocolateType: 'dark',
   poundAddon: 'none',
   cupcakeFinish: 'basic',
+  chocolateExtra: 'none',
   chocolateIcingCount: 0,
   vanillaCreamCount: 0,
   partyDecorationCount: 0,
@@ -56,6 +57,7 @@ test('cart normalizes hidden options before deriving the fixed-order quantity-fr
       '15cm',
       'dark',
       'vanilla-cream',
+      'none',
       0,
       0,
       0,
@@ -104,10 +106,10 @@ test('Buttercream and Brownie Cheesecake cart lines add, update, and remove inde
   const added = addCartLine(addCartLine([], buttercream), brownie)
 
   assert.equal(added.length, 2)
-  assert.equal(getCartEstimatedSubtotal(added), 210)
+  assert.equal(getCartEstimatedSubtotal(added), 213)
   const updated = updateCartLineQuantity(added, added[0].lineKey, 2)
   assert.equal(updated[0].selection.quantity, 2)
-  assert.equal(getCartEstimatedSubtotal(updated), 355)
+  assert.equal(getCartEstimatedSubtotal(updated), 358)
   assert.deepEqual(removeCartLine(updated, updated[1].lineKey), [updated[0]])
 })
 
@@ -418,4 +420,16 @@ test('estimated subtotal reprices every current cart selection without mutating 
   assert.equal(getCartEstimatedSubtotal([]), 0)
   assert.equal(getCartEstimatedSubtotal(lines), 371)
   assert.deepEqual(lines, snapshot)
+})
+
+test('Chocolate Extra changes cart identity, persists, and is priced once per selected order line', () => {
+  const withoutExtra = baseSelection({ productId: 'pave-cake', cakeSize: '6in', quantity: 2 })
+  const withExtra = { ...withoutExtra, chocolateExtra: 'pave-100g' } as CakeDetailSelection
+  const lines = addCartLine(addCartLine([], withoutExtra), withExtra)
+
+  assert.equal(lines.length, 2)
+  assert.notEqual(getCartLineKey(withoutExtra), getCartLineKey(withExtra))
+  assert.equal(getCartEstimatedSubtotal(lines), 328)
+  assert.match(serializeCartLines(lines), /"chocolateExtra":"pave-100g"/)
+  assert.equal(parseCartLines(serializeCartLines(lines))[1]?.selection.chocolateExtra, 'pave-100g')
 })

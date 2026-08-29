@@ -31,6 +31,28 @@ const CURRENT_SERVING_LABELS: Readonly<Record<CakeServingProfile, Readonly<Recor
     '10in': '10" | serves approx. 16–20',
   },
 }
+export type CakeServingGuideCopy = {
+  title: string
+  body: string
+}
+
+type CakeServingGuideLanguage = 'en' | 'ko'
+
+const CURRENT_WHOLE_CAKE_SERVING_GUIDE_COPY: Readonly<Record<CakeServingGuideLanguage, CakeServingGuideCopy>> = {
+  en: {
+    title: 'Why do serving sizes vary?',
+    body: 'Serving guides vary by cake sheet and portion size. Our Signature Gâteau cakes use rich, dense chocolate layers and are usually served in smaller slices, while soft genoise cakes are typically cut into larger celebration portions.',
+  },
+  ko: {
+    title: '케이크마다 권장 인원수가 다른 이유',
+    body: '케이크 시트와 권장 1인분 크기에 따라 인원수가 달라집니다. 시그니처 갸또 케이크는 진하고 밀도감 있는 초콜릿 시트로 작은 조각을, 제누아즈 케이크는 생크림과 생딸기에 잘 어울리는 부드러운 시트로 보다 넉넉한 기념일용 조각을 안내합니다.',
+  },
+}
+
+export function getCakeServingGuideCopy(language: CakeServingGuideLanguage): CakeServingGuideCopy {
+  return CURRENT_WHOLE_CAKE_SERVING_GUIDE_COPY[language]
+}
+
 
 export function isCurrentWholeCakeSize(value: CakeSize | string | undefined): value is CurrentWholeCakeSize {
   return CURRENT_WHOLE_CAKE_SIZES.includes(value as CurrentWholeCakeSize)

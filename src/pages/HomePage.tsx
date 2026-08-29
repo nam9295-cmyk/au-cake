@@ -9,7 +9,7 @@ import { SpringClassCampaignDialog } from '../components/SpringClassCampaignDial
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
-import { getAuCakeCatalogCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
+import { getAuCakeCatalogCards, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
 import { DEFAULT_CAKE_SIZE, PRODUCTS, formatCakeSizeLabel } from '../lib/constants'
 import { cakeCopy, getProductFeatures, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
@@ -26,8 +26,8 @@ const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
   'vanilla-fresh-cream-cake': '/products/details/vanillacake-quickview.webp',
   'buttercream-cake': '/products/details/buttercream-cake-quick-view.webp',
-  'fresh-strawberry-vanilla-cream-cake': '',
-  'fresh-strawberry-chocolate-cream-cake': '',
+  'fresh-strawberry-vanilla-cream-cake': '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp',
+  'fresh-strawberry-chocolate-cream-cake': '/products/fresh-strawberry-chocolate-cream-cake-sydney.webp',
   'chocolate-cupcakes': '/products/details/chocolate-cupcakes2-sydney.webp',
   'signature-gateau-au-chocolat': '/products/details/chocolate-pound-cake-quick-view.webp',
   'brownie-cheesecake': '/products/details/brownie-cheese-quick-view.webp',
@@ -59,7 +59,7 @@ export function HomePage({
 }) {
   const copy = cakeCopy(language)
   const orderingSteps = publicHomeContent?.orderingSteps ?? null
-  const [activeHeroCake, setActiveHeroCake] = useState(1)
+  const [activeHeroCake, setActiveHeroCake] = useState(() => marketConfig.market === 'AU' ? 0 : 1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
   const [heroPaused, setHeroPaused] = useState(false)
@@ -74,7 +74,7 @@ export function HomePage({
     { image: getPublicCakePage('chocolate-cupcakes')?.imagePath, label: 'Chocolate Cupcakes', tagKey: 'cupcakes', className: 'hero-cake-seven' },
   ]
   const heroCakes = marketConfig.market === 'AU'
-    ? getAuCakeCatalogCards(language)
+    ? getAuHomeHeroCards(language)
       .filter((card) => !card.isPhotoComingSoon)
       .map((card) => ({
         image: heroVisuals[card.imageKey]?.image || card.imagePath,

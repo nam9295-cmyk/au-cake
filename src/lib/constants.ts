@@ -161,7 +161,7 @@ export const PRODUCT_GROUPS: ProductGroup[] = marketConfig.market === 'AU' ? [
   {
     id: 'brownie-cheesecake',
     defaultProductId: 'brownie-cheesecake',
-    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'],
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
   },
 ] : KR_PRODUCT_GROUPS
 
@@ -175,6 +175,11 @@ const LEGACY_AU_PRODUCT_GROUPS: ProductGroup[] = [
     id: 'cheesecake',
     defaultProductId: 'choco-basque-cheesecake',
     productIds: ['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake'],
+  },
+  {
+    id: 'brownie-cheesecake',
+    defaultProductId: 'brownie-cheesecake',
+    productIds: ['eiffel-tower-brownie-cheesecake'],
   },
 ]
 

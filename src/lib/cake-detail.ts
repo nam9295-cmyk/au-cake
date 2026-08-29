@@ -32,9 +32,11 @@ import {
   getIndividualPackagingPieceCount,
   isIndividualPackagingEligibleProduct,
 } from './individual-packaging.js'
+import { DEFAULT_CHOCOLATE_EXTRA, getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras.js'
 import type {
   CakeSize,
   ChocolateType,
+  ChocolateExtra,
   CupcakeFinish,
   PoundAddon,
   ProductId,
@@ -79,11 +81,16 @@ export type CakeDetailImageKey =
   | 'brownie-side'
   | 'brownie-detail'
   | 'brownie-quick-view'
+  | 'fresh-strawberry-vanilla-cream-side'
+  | 'fresh-strawberry-vanilla-cream-detail'
+  | 'fresh-strawberry-chocolate-cream-side'
+  | 'fresh-strawberry-chocolate-cream-detail'
 
 export type CakeDetailSelection = {
   productId: ProductId
   cakeSize: CakeSize
   chocolateType: ChocolateType
+  chocolateExtra: ChocolateExtra
   poundAddon: PoundAddon
   cupcakeFinish: CupcakeFinish
   chocolateIcingCount: number
@@ -121,8 +128,8 @@ const DETAIL_GALLERIES: Record<CakeCatalogId, readonly CakeDetailImageKey[]> = {
   'fresh-lemon-cupcakes': ['lemon-side', 'lemon-quick-view', 'lemon-previous', 'lemon-hero'],
   'vanilla-fresh-cream': ['vanilla-side', 'vanilla-quick-view'],
   buttercream: ['buttercream-side', 'buttercream-detail', 'buttercream-quick-view'],
-  'fresh-strawberry-vanilla-cream': [],
-  'fresh-strawberry-chocolate-cream': [],
+  'fresh-strawberry-vanilla-cream': ['fresh-strawberry-vanilla-cream-side', 'fresh-strawberry-vanilla-cream-detail'],
+  'fresh-strawberry-chocolate-cream': ['fresh-strawberry-chocolate-cream-side', 'fresh-strawberry-chocolate-cream-detail'],
   cupcake: ['cupcake-side', 'cupcake-detail', 'cupcake-hero'],
   'signature-gateau': ['signature-gateau-side', 'signature-gateau-detail', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'],
   'brownie-cheesecake': ['brownie-side', 'brownie-detail', 'brownie-quick-view'],
@@ -263,6 +270,7 @@ export function createCakeDetailSelection(slug: string): CakeDetailSelection | n
   return selectCakeDetailProduct({
     productId: entry.defaultProductId,
     cakeSize: DEFAULT_CAKE_SIZE,
+    chocolateExtra: DEFAULT_CHOCOLATE_EXTRA,
     chocolateType: DEFAULT_CHOCOLATE_TYPE,
     poundAddon: DEFAULT_POUND_ADDON,
     cupcakeFinish: DEFAULT_CUPCAKE_FINISH,
@@ -292,6 +300,7 @@ export function selectCakeDetailProduct(
   return {
     productId: product.id,
     cakeSize: normalizeCakeSize(product.id, selection.cakeSize),
+    chocolateExtra: normalizeChocolateExtra(product.id, selection.chocolateExtra),
     poundAddon,
     chocolateType: normalizeReservationChocolateType(product.id, selection.chocolateType, poundAddon),
     chocolateIcingCount: normalizeChocolateIcingCount(product.id, selection.chocolateIcingCount),
@@ -310,7 +319,7 @@ export function selectCakeDetailProduct(
 }
 
 export function getCakeDetailSelectionTotal(selection: CakeDetailSelection) {
-  return getReservationPrice(selection.productId, {
+  const cakeTotal = getReservationPrice(selection.productId, {
     cakeSize: selection.cakeSize,
     chocolateType: selection.chocolateType,
     poundAddon: selection.poundAddon,
@@ -319,6 +328,7 @@ export function getCakeDetailSelectionTotal(selection: CakeDetailSelection) {
     vanillaCreamCount: selection.vanillaCreamCount,
     partyDecorationCount: selection.partyDecorationCount,
   }, normalizeQuantity(selection.quantity))
+  return cakeTotal + getChocolateExtraPrice(normalizeChocolateExtra(selection.productId, selection.chocolateExtra))
 }
 
 export function getCakeDetailSelectionEstimatedTotal(selection: CakeDetailSelection) {

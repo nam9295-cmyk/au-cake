@@ -113,7 +113,7 @@ const koProducts: Record<ProductId, ProductText> = {
 }
 
 const koProductFeatures: Record<ProductId, string[]> = {
-  'pave-cake': ['묵직한 초콜릿 케이크 4단', '각 층을 채운 파베 초콜릿 가나슈', '크림보다 초콜릿이 중심인 진한 맛'],
+  'pave-cake': ['시그니처 갸또 쇼콜라 시트', '각 층을 채운 파베 초콜릿 가나슈', '크림보다 초콜릿이 중심인 진한 맛'],
   'vanilla-fresh-cream-cake': ['시그니처 갸또 쇼콜라 시트', '실제 바닐라빈을 넣은 바닐라 생크림', '눈에 보이는 실제 바닐라빈', '6" · 7.5" · 9" 사이즈'],
   'buttercream-cake': ['시그니처 갸또 쇼콜라 시트', '이탈리안 머랭·실제 버터·코코아 파우더', '케이크 컬러 선택'],
   'fresh-strawberry-vanilla-cream-cake': ['케이크 사이와 윗면의 신선한 생딸기', '실제 바닐라빈 바닐라 생크림', '부드러운 제누아즈 시트'],
@@ -124,7 +124,7 @@ const koProductFeatures: Record<ProductId, string[]> = {
   'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '쇼콜라티에 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 마감', '+AUD 10.00 마감 추가'],
   'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15.00 마감 추가'],
-  'brownie-cheesecake': ['다크초콜릿 브라우니 베이스', '위에는 바스크 치즈케이크', '두 가지 디저트를 한 번에', AU_CAKE_SIZE_LABELS['15cm'], '세 가지 마감 선택'],
+  'brownie-cheesecake': ['다크초콜릿 브라우니 베이스', '위에는 바스크 치즈케이크', '두 가지 디저트를 한 번에', AU_CAKE_SIZE_LABELS['15cm'], '두 가지 마감 선택'],
   'pave-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 on top', '+AUD 10.00 마감 추가'],
   'eiffel-tower-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15.00 마감 추가'],
   'fresh-lemon-cupcakes-4': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
