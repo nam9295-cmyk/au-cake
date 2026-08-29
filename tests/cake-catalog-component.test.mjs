@@ -44,14 +44,17 @@ test('new Lemon Cake catalogue photo is also used in the home hero', () => {
   assert.doesNotMatch(homeSource, /import freshLemonCupcakesHeroImg/)
 })
 
-test('home hero cycles only sale cakes with available images every three seconds', () => {
+test('home hero uses the current canonical Signature and Brownie product photographs', () => {
   assert.match(homeSource, /getAuHomeHeroCards\(language\)\n\s*\.filter\(\(card\) => !card\.isPhotoComingSoon\)/)
   assert.match(homeSource, /const \[activeHeroCake, setActiveHeroCake\] = useState\(\(\) => marketConfig\.market === 'AU' \? 0 : 1\)/)
   assert.match(homeSource, /\.map\(\(card\) => \(\{[\s\S]*?label: card\.name/)
   assert.match(homeSource, /heroVisuals\[card\.imageKey\]\?\.image \|\| card\.imagePath/)
   assert.match(homeSource, /'pave-cake': \{ image: heroCake2Img/)
-  assert.match(homeSource, /'signature-gateau-au-chocolat': \{ image: heroCake3Img/)
-  assert.match(homeSource, /'brownie-cheesecake': \{ image: '\/products\/brownie-cheese-sydney\.webp'/)
+  assert.match(homeSource, /'signature-gateau-au-chocolat': \{ image: '\/products\/signature-gateau-au-chocolat-sydney\.webp'/)
+  assert.match(homeSource, /'brownie-cheesecake': \{ image: '\/products\/brownie-cheesecake-sydney\.webp'/)
+  assert.match(homeSource, /image: '\/products\/signature-gateau-au-chocolat-sydney\.webp', label: 'Signature Gâteau au Chocolat'/)
+  assert.match(homeSource, /image: '\/products\/brownie-cheesecake-sydney\.webp', label: 'Brownie Cheesecake'/)
+  assert.doesNotMatch(homeSource, /heroCake3Img|brownie-cheese-sydney\.webp/)
   assert.doesNotMatch(homeSource, /label: 'Vanilla Fresh Cream Cake'|vanillacake-hero/)
   assert.match(homeSource, /window\.setInterval\([\s\S]*?\}, 3000\)/)
 })
@@ -84,6 +87,7 @@ test('new catalogue photos and previous detail photos use descriptive canonical 
   assert.match(detailSource, /'cupcake-detail': '\/products\/details\/chocolate-cupcakes-detail-01\.webp'/)
   assert.match(detailSource, /'signature-gateau-side': '\/products\/signature-gateau-au-chocolat-sydney\.webp'/)
   assert.match(detailSource, /'signature-gateau-detail': '\/products\/details\/signature-gateau-au-chocolat-detail-01\.webp'/)
+  assert.match(detailSource, /'signature-gateau-previous': '\/products\/details\/signature-gateau-au-chocolat-previous-main\.webp'/)
   assert.match(detailSource, /'brownie-side': '\/products\/brownie-cheesecake-sydney\.webp'/)
   assert.match(detailSource, /'brownie-detail': '\/products\/details\/brownie-cheesecake-detail-01\.webp'/)
   assert.match(detailSource, /'brownie-quick-view': '\/products\/details\/brownie-cheese-quick-view\.webp'/)
@@ -100,6 +104,7 @@ test('new catalogue and preserved detail WebPs are present in this worktree', as
     '../public/products/buttercream-cake-sydney.webp',
     '../public/products/brownie-cheesecake-sydney.webp',
     '../public/products/details/signature-gateau-au-chocolat-detail-01.webp',
+    '../public/products/details/signature-gateau-au-chocolat-previous-main.webp',
     '../public/products/details/chocolate-cupcakes-detail-01.webp',
     '../public/products/details/buttercream-cake-detail-01.webp',
     '../public/products/details/brownie-cheesecake-detail-01.webp',
@@ -107,6 +112,8 @@ test('new catalogue and preserved detail WebPs are present in this worktree', as
     const image = await stat(new URL(path, import.meta.url))
     assert.ok(image.size > 0, path)
   }
+
+  await assert.rejects(stat(new URL('../public/products/brownie-cheese-sydney.webp', import.meta.url)))
 })
 
 test('desktop home catalogue uses four columns so eight products form two rows', async () => {

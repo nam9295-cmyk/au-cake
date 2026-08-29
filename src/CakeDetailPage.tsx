@@ -79,7 +79,7 @@ const detailImages: Record<CakeDetailImageKey, string> = {
   'signature-gateau-side': '/products/signature-gateau-au-chocolat-sydney.webp',
   'signature-gateau-detail': '/products/details/signature-gateau-au-chocolat-detail-01.webp',
   'signature-gateau-quick-view': '/products/details/chocolate-pound-cake-quick-view.webp',
-  'signature-gateau-previous': '/products/details/chocolate-pound-cake-previous.webp',
+  'signature-gateau-previous': '/products/details/signature-gateau-au-chocolat-previous-main.webp',
   'signature-gateau-hero': poundHeroImg,
   'fresh-strawberry-vanilla-cream-side': '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp',
   'fresh-strawberry-vanilla-cream-detail': '/products/details/fresh-strawberry-vanilla-cream-cake-detail-01.webp',

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties, type PointerEvent } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight, Clipboard, MessageCircleCheck, Wallet } from 'lucide-react'
 import heroCake2Img from '../assets/hero-cake-2.webp'
-import heroCake3Img from '../assets/hero-cake-3.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
@@ -37,9 +36,9 @@ const heroVisuals: Partial<Record<CakeCatalogImageKey, { image?: string; tagKey:
   'pave-cake': { image: heroCake2Img, tagKey: 'first', className: 'hero-cake-two' },
   'buttercream-cake': { tagKey: 'buttercream', className: 'hero-cake-six' },
   'chocolate-cupcakes': { tagKey: 'cupcakes', className: 'hero-cake-seven' },
-  'signature-gateau-au-chocolat': { image: heroCake3Img, tagKey: 'pound', className: 'hero-cake-three' },
+  'signature-gateau-au-chocolat': { image: '/products/signature-gateau-au-chocolat-sydney.webp', tagKey: 'pound', className: 'hero-cake-three' },
   'lemon-cake': { image: getPublicCakePage('lemon-cake')?.imagePath, tagKey: 'lemon', className: 'hero-cake-four' },
-  'brownie-cheesecake': { image: '/products/brownie-cheese-sydney.webp', tagKey: 'brownie', className: 'hero-cake-one' },
+  'brownie-cheesecake': { image: '/products/brownie-cheesecake-sydney.webp', tagKey: 'brownie', className: 'hero-cake-one' },
 }
 
 export function HomePage({
@@ -66,9 +65,9 @@ export function HomePage({
   const [quickViewCardId, setQuickViewCardId] = useState<string | null>(null)
   const [quickViewOpener, setQuickViewOpener] = useState<HTMLButtonElement | null>(null)
   const legacyHeroCakes = [
-    { image: '/products/brownie-cheese-sydney.webp', label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
+    { image: '/products/brownie-cheesecake-sydney.webp', label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
-    { image: heroCake3Img, label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
+    { image: '/products/signature-gateau-au-chocolat-sydney.webp', label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
     { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
     { image: getPublicCakePage('buttercream-cake')?.imagePath, label: 'Buttercream Cake', tagKey: 'buttercream', className: 'hero-cake-six' },
     { image: getPublicCakePage('chocolate-cupcakes')?.imagePath, label: 'Chocolate Cupcakes', tagKey: 'cupcakes', className: 'hero-cake-seven' },
