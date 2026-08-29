@@ -230,7 +230,7 @@ const serverPriceCases: Array<{
   { productId: 'fresh-lemon-cupcakes-16' },
 ]
 
-test('secondary catalogue matches the deployed Reservation API except approved Brownie basic and Pave prices pending backend cutover', () => {
+test('secondary catalogue exactly matches the deployed Reservation API final pricing', () => {
   const now = new Date('2026-07-26T00:00:00.000Z')
 
   for (const { productId, options = {} } of serverPriceCases) {
@@ -257,11 +257,6 @@ test('secondary catalogue matches the deployed Reservation API except approved B
     }, { now, reservationNumber: 'VG-C-AU-CATALOG' })
 
     const frontendPrice = getCakeCatalogUnitPrice(productId, options)
-    if (productId === 'brownie-cheesecake' || productId === 'pave-brownie-cheesecake') {
-      assert.equal(frontendPrice, productId === 'brownie-cheesecake' ? 58 : 68)
-      assert.equal(serverReservation.totalPrice, productId === 'brownie-cheesecake' ? 55 : 65)
-      continue
-    }
     assert.equal(frontendPrice, serverReservation.totalPrice, `${productId} ${JSON.stringify(options)}`)
   }
 })

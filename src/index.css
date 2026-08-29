@@ -8565,7 +8565,7 @@ label.vanilla-point-color-card {
   }
 
   .cakes-index-copy h2 {
-    font-size: clamp(36px, 12vw, 52px);
+    font-size: clamp(36px, 11vw, 52px);
   }
 }
 

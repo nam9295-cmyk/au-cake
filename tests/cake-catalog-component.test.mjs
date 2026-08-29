@@ -179,3 +179,9 @@ test('quick view photography fills its frame and mobile copy stays compact', asy
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-description\s*\{[^}]*font-size:\s*12px[^}]*line-height:\s*1\.35/s)
   assert.doesNotMatch(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-image-wrap > img\s*\{[^}]*width:\s*min\(76%,\s*280px\)/s)
 })
+
+test('mobile cake catalogue headings stay within the 390px layout budget', async () => {
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+
+  assert.match(css, /\.cakes-index-copy h2\s*\{[^}]*font-size:\s*clamp\(36px, 11vw, 52px\)/s)
+})
