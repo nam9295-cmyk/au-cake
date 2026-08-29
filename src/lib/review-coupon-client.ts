@@ -17,6 +17,7 @@ import {
   normalizeStoredVanillaCakeSheet,
   PRODUCTS,
 } from './constants.js'
+import { getCakeServingProfile, isHistoricalWholeCakeSize, isHistoricalWholeCakeUnitPrice } from './cake-serving.js'
 import { isValidPhone } from './utils.js'
 import { isActiveCakeOrderProductId, isStoredCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
 import {
@@ -265,6 +266,24 @@ export function getOptionalReservationPricingAudit(value: unknown): ReservationP
 }
 
 export function buildCakeReservationRequest(input: ReservationInput): ReservationInput {
+  if (getCakeServingProfile(input.productId) === 'genoise') {
+    const request = {
+      customerName: input.customerName,
+      customerPhone: input.customerPhone,
+      customerEmail: input.customerEmail.trim().toLowerCase(),
+      productId: input.productId,
+      cakeSize: input.cakeSize,
+      quantity: input.quantity,
+      pickupDate: input.pickupDate,
+      pickupTime: input.pickupTime,
+      requestNote: input.requestNote,
+      privacyConsent: input.privacyConsent,
+      requestId: input.requestId,
+      website: input.website,
+    } as ReservationInput
+    const promoCode = typeof input.promoCode === 'string' ? input.promoCode.trim() : ''
+    return promoCode ? { ...request, promoCode } : request
+  }
   const request: ReservationInput = {
     customerName: input.customerName,
     customerPhone: input.customerPhone,
@@ -311,6 +330,9 @@ export function parseReservationApiCapabilities(value: unknown): ReservationApiC
 }
 
 function projectCakeOrderLine(line: CakeOrderLineRequest): CakeOrderLineRequest {
+  if (getCakeServingProfile(line.productId) === 'genoise') {
+    return { productId: line.productId, cakeSize: line.cakeSize, quantity: line.quantity } as CakeOrderLineRequest
+  }
   return {
     productId: line.productId,
     cakeSize: line.cakeSize,
@@ -346,15 +368,15 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
   }
   const line = value as Record<string, unknown>
   if (
-    typeof line.productId !== 'string' || !isActiveCakeOrderProductId(line.productId) || !Object.prototype.hasOwnProperty.call(PRODUCTS, line.productId) ||
+    typeof line.productId !== 'string' || (!isActiveCakeOrderProductId(line.productId) && getCakeServingProfile(line.productId as ProductId) === null) || !Object.prototype.hasOwnProperty.call(PRODUCTS, line.productId) ||
     typeof line.cakeSize !== 'string' || !VALID_CAKE_SIZES.has(line.cakeSize as CakeSize) ||
     typeof line.chocolateType !== 'string' || !VALID_CHOCOLATE_TYPES.has(line.chocolateType as ChocolateType) ||
     typeof line.poundAddon !== 'string' || !VALID_POUND_ADDONS.has(line.poundAddon as PoundAddon) ||
     (line.chocolateExtra !== undefined && (
-      typeof line.chocolateExtra !== 'string'
-      || !VALID_CHOCOLATE_EXTRAS.has(line.chocolateExtra as ChocolateExtra)
-      || !isChocolateExtraEligibleProduct(line.productId as ProductId)
-      || line.chocolateExtra !== normalizeChocolateExtra(line.productId as ProductId, line.chocolateExtra as ChocolateExtra)
+      typeof line.chocolateExtra !== 'string' ||
+      !VALID_CHOCOLATE_EXTRAS.has(line.chocolateExtra as ChocolateExtra) ||
+      !isChocolateExtraEligibleProduct(line.productId as ProductId) ||
+      line.chocolateExtra !== normalizeChocolateExtra(line.productId as ProductId, line.chocolateExtra as ChocolateExtra)
     )) ||
     typeof line.cupcakeFinish !== 'string' || !VALID_CUPCAKE_FINISHES.has(line.cupcakeFinish as CupcakeFinish) ||
     typeof line.vanillaCakeSheet !== 'string' || !VALID_VANILLA_CAKE_SHEETS.has(line.vanillaCakeSheet as VanillaCakeSheet) ||
@@ -601,7 +623,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     if (individualPackagingPieces !== expectedPackagingPieces) invalidResponse()
     const normalizedFinishes = normalizeCupcakeFinishCounts(productId, vanillaCreamCount, partyDecorationCount)
     if (
-      cakeSize !== normalizeCakeSize(productId, cakeSize) ||
+      (cakeSize !== normalizeCakeSize(productId, cakeSize) && !isHistoricalWholeCakeSize(productId, cakeSize)) ||
       poundAddon !== normalizePoundAddon(productId, poundAddon) ||
       chocolateExtra !== normalizeChocolateExtra(productId, chocolateExtra) ||
       cupcakeFinish !== normalizeCupcakeFinish(productId, cupcakeFinish) ||
@@ -628,7 +650,8 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     if (
       !Number.isSafeInteger(authoritativeUnitPriceCents) ||
       !Number.isSafeInteger(expectedSubtotalCents) ||
-      unitPriceCents !== authoritativeUnitPriceCents ||
+      (!isHistoricalWholeCakeSize(productId, cakeSize) && unitPriceCents !== authoritativeUnitPriceCents) ||
+      (isHistoricalWholeCakeSize(productId, cakeSize) && !isHistoricalWholeCakeUnitPrice(productId, cakeSize, unitPriceCents)) ||
       chocolateExtraCents !== expectedChocolateExtraCents ||
       expectedSubtotalCents !== subtotalCents ||
       subtotalCents - discountCents + individualPackagingFeeCents !== totalPriceCents
@@ -809,7 +832,7 @@ export function parseCakeReservationResult(value: unknown): Reservation {
     : requiredSetValue(row, 'chocolateExtra', VALID_CHOCOLATE_EXTRAS)
   const normalizedFinishes = normalizeCupcakeFinishCounts(productId, vanillaCreamCount, partyDecorationCount)
   if (
-    cakeSize !== normalizeCakeSize(productId, cakeSize) ||
+    (cakeSize !== normalizeCakeSize(productId, cakeSize) && !isHistoricalWholeCakeSize(productId, cakeSize)) ||
     chocolateExtra !== normalizeChocolateExtra(productId, chocolateExtra) ||
     poundAddon !== normalizePoundAddon(productId, poundAddon) ||
     chocolateType !== normalizeReservationChocolateType(productId, chocolateType, poundAddon) ||

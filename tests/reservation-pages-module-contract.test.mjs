@@ -40,6 +40,12 @@ test('Cake reservation availability is self-contained and does not wait for Clas
   assert.doesNotMatch(reserveSource, /(?:pickupAvailabilityLoading|pickupAvailabilityError|pickupAvailabilityRefetchKey)/)
 })
 
+test('current Whole Cake reservation selector uses the shared 6in, 8in, 10in serving source', () => {
+  assert.match(reserveSource, /getCurrentWholeCakeSizeOptions/)
+  assert.match(reserveSource, /const reserveCakeSizeOptions = currentWholeCakeSizeOptions\.length/)
+  assert.match(reserveSource, /reserveCakeSizeOptions\.map/)
+})
+
 test('Cake submission paths do not await Class, school-window, or legacy-opening availability', () => {
   const createCakeOrderSource = repositorySource.slice(
     repositorySource.indexOf('export async function createCakeOrder'),

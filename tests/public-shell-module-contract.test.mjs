@@ -37,7 +37,7 @@ test('HomePage owns its catalogue and hero asset dependencies', () => {
   assert.match(homeSource, /<SiteHeader/)
   assert.match(homeSource, /<PickupLocationCard/)
   assert.match(homeSource, /image:\s*'\/products\/brownie-cheese-sydney\.webp', label: 'Brownie Cheesecake'/)
-  assert.match(homeSource, /getPublicCakePage\('vanilla-fresh-cream-cake'\)\?\.imagePath/)
+  assert.doesNotMatch(homeSource, /label:\s*'Vanilla Fresh Cream Cake'/)
 })
 
 test('fixed public overlays do not overlap or widen the document', () => {

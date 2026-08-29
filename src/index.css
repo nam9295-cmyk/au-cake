@@ -7443,6 +7443,18 @@ td select {
   font-size: 18px;
 }
 
+.cakes-index-group-heading {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 22px 24px 18px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
 .cakes-index-grid {
   display: grid;
   gap: 1px;
@@ -7772,6 +7784,19 @@ td select {
 .cake-detail-options.is-stacked {
   grid-template-columns: 1fr;
 }
+.cake-detail-serving-guide {
+  margin: -8px 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cake-detail-serving-guide summary {
+  cursor: pointer;
+  color: var(--forest-deep);
+  font-weight: 700;
+}
+
 
 .cake-detail-option {
   display: flex;
@@ -7806,6 +7831,13 @@ td select {
 .cake-detail-option strong {
   font-size: 12px;
   line-height: 1.25;
+}
+
+.cake-detail-extra-help {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .cake-detail-option span {

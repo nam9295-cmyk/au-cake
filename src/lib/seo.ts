@@ -18,6 +18,7 @@ type SeoConfig = {
   canonical?: string
   noindex?: boolean
   ogType?: 'website' | 'product'
+  omitImage?: boolean
   image?: string
   imageType?: string
   imageWidth?: number
@@ -202,6 +203,7 @@ function productFromPublicPage(pathname: string, page: PublicCakePage, noindex =
     canonical: `${SITE_URL}${pathname}`,
     ...(noindex ? { noindex: true } : {}),
     ogType: 'product',
+    ...(image ? {} : { omitImage: true }),
     ...imageAttributes,
     structuredData: [product, breadcrumb],
   }
@@ -267,6 +269,10 @@ function setMeta(selector: string, attribute: string, value: string) {
   const element = document.head.querySelector<HTMLMetaElement>(selector)
   if (element) element.setAttribute(attribute, value)
 }
+function removeMeta(selector: string) {
+  document.head.querySelector<HTMLMetaElement>(selector)?.remove()
+}
+
 
 export function getSeoConfig(pathname: string): SeoConfig {
   if (publicSeo[pathname]) return publicSeo[pathname]
@@ -292,7 +298,7 @@ export function applySeo(pathname: string) {
   const config = getSeoConfig(pathname)
   const canonical = config.canonical || `${SITE_URL}${pathname}`
   const defaultImage = publicContent.site.defaultSocialImage
-  const image = config.image || SITE_URL + defaultImage.path
+  const image = config.omitImage ? null : config.image || SITE_URL + defaultImage.path
   const imageType = config.imageType || defaultImage.type
   const imageWidth = config.imageWidth || defaultImage.width
   const imageHeight = config.imageHeight || defaultImage.height
@@ -304,13 +310,24 @@ export function applySeo(pathname: string) {
   setMeta('meta[property="og:title"]', 'content', config.title)
   setMeta('meta[property="og:description"]', 'content', config.description)
   setMeta('meta[property="og:url"]', 'content', canonical)
-  setMeta('meta[property="og:image"]', 'content', image)
-  setMeta('meta[property="og:image:type"]', 'content', imageType)
-  setMeta('meta[property="og:image:width"]', 'content', String(imageWidth))
-  setMeta('meta[property="og:image:height"]', 'content', String(imageHeight))
+  if (image) {
+    setMeta('meta[property="og:image"]', 'content', image)
+    setMeta('meta[property="og:image:type"]', 'content', imageType)
+    setMeta('meta[property="og:image:width"]', 'content', String(imageWidth))
+    setMeta('meta[property="og:image:height"]', 'content', String(imageHeight))
+  } else {
+    removeMeta('meta[property="og:image"]')
+    removeMeta('meta[property="og:image:type"]')
+    removeMeta('meta[property="og:image:width"]')
+    removeMeta('meta[property="og:image:height"]')
+  }
   setMeta('meta[name="twitter:title"]', 'content', config.title)
   setMeta('meta[name="twitter:description"]', 'content', config.description)
-  setMeta('meta[name="twitter:image"]', 'content', image)
+  if (image) {
+    setMeta('meta[name="twitter:image"]', 'content', image)
+  } else {
+    removeMeta('meta[name="twitter:image"]')
+  }
 
   const canonicalElement = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
   if (canonicalElement) canonicalElement.href = canonical

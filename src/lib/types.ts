@@ -1,6 +1,6 @@
 export type CacaoPercent = '기본' | '70' | '80.5' | '100'
 
-export type CakeSize = 'mini' | 'size-1' | '15cm' | '17cm' | '19cm' | '22cm' | '6in' | '8in' | '10in'
+export type CakeSize = 'mini' | 'size-1' | '6in' | '8in' | '10in' | '15cm' | '17cm' | '19cm' | '22cm'
 
 export type ChocolateType = 'dark' | 'milk'
 
@@ -173,6 +173,7 @@ export type ReservationApiCapabilities = {
 
 export type PublicReservation = Pick<
   Reservation,
+  | 'chocolateExtra'
   | 'reservationNumber'
   | 'productId'
   | 'chocolateExtra'

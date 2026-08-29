@@ -40,7 +40,9 @@ import {
   type CakeDetailSelection,
 } from './lib/cake-detail'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
+import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraOption, isChocolateExtraEligibleProduct } from './lib/chocolate-extras'
 import { getAuCakeCatalogCards, type CakeCatalogCard } from './lib/cake-catalog'
+import { formatCurrentCakeSizeLabel, getCakeServingGuideCopy, getCurrentWholeCakeSizeOptions, isCurrentWholeCakeProduct } from './lib/cake-serving'
 import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-editorial'
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
@@ -79,6 +81,10 @@ const detailImages: Record<CakeDetailImageKey, string> = {
   'signature-gateau-quick-view': '/products/details/chocolate-pound-cake-quick-view.webp',
   'signature-gateau-previous': '/products/details/chocolate-pound-cake-previous.webp',
   'signature-gateau-hero': poundHeroImg,
+  'fresh-strawberry-vanilla-cream-side': '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp',
+  'fresh-strawberry-vanilla-cream-detail': '/products/details/fresh-strawberry-vanilla-cream-cake-detail-01.webp',
+  'fresh-strawberry-chocolate-cream-side': '/products/fresh-strawberry-chocolate-cream-cake-sydney.webp',
+  'fresh-strawberry-chocolate-cream-detail': '/products/details/fresh-strawberry-chocolate-cream-cake-detail-01.webp',
   'brownie-side': '/products/brownie-cheesecake-sydney.webp',
   'brownie-detail': '/products/details/brownie-cheesecake-detail-01.webp',
   'brownie-quick-view': '/products/details/brownie-cheese-quick-view.webp',
@@ -117,6 +123,10 @@ const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height:
   'signature-gateau-quick-view': { width: 1080, height: 1012 },
   'signature-gateau-previous': { width: 1080, height: 1012 },
   'signature-gateau-hero': { width: 1080, height: 1012 },
+  'fresh-strawberry-vanilla-cream-side': { width: 1080, height: 1012 },
+  'fresh-strawberry-vanilla-cream-detail': { width: 1080, height: 1012 },
+  'fresh-strawberry-chocolate-cream-side': { width: 1080, height: 1012 },
+  'fresh-strawberry-chocolate-cream-detail': { width: 1080, height: 1012 },
   'brownie-side': { width: 1080, height: 1012 },
   'brownie-detail': { width: 1080, height: 1012 },
   'brownie-quick-view': { width: 1080, height: 1012 },
@@ -253,6 +263,7 @@ export default function CakeDetailPage({
 
   const product = getProductById(selection.productId)
   const productText = getProductText(selection.productId, language)
+  const selectedChocolateExtra = getChocolateExtraOption(selection.chocolateExtra)
   const productTotal = getCakeDetailSelectionTotal(selection)
   const individualPackagingPricing = getIndividualPackagingPricing([{
     productId: selection.productId,
@@ -303,7 +314,14 @@ export default function CakeDetailPage({
     setActiveImage((current) => (current + direction + galleryCount) % galleryCount)
   }
 
-  const sizeOptions = CAKE_SIZE_OPTIONS.filter((option) => Object.hasOwn(product.sizePrices, option.value))
+  const isCurrentWholeCake = isCurrentWholeCakeProduct(product.id)
+  const sizeOptions = isCurrentWholeCake
+    ? getCurrentWholeCakeSizeOptions(product.id).map((value) => ({
+        value,
+        label: formatCurrentCakeSizeLabel(product.id, value) || value,
+        price: product.sizePrices[value],
+      }))
+    : CAKE_SIZE_OPTIONS.filter((option) => Object.hasOwn(product.sizePrices, option.value))
   const packSize = getFreshLemonCupcakePackSize(product.id) || 0
   const productChoiceLabel = detail.id === 'cupcake'
     ? language === 'ko' ? '구성' : 'Pack Size'
@@ -406,6 +424,12 @@ export default function CakeDetailPage({
                 {detail.productIds.map((productId) => {
                   const optionText = getProductText(productId, language)
                   const cupcakePackSize = getCupcakePackSize(productId)
+                  const optionPrice = cupcakePackSize
+                    ? getCupcakeFinishPrice(productId, 'basic') || 0
+                    : getProductById(productId).price
+                  const extraFromBase = detail.id === 'brownie-cheesecake'
+                    ? optionPrice - getProductById(detail.productIds[0]!).price
+                    : 0
                   return (
                     <OptionButton
                       active={selection.productId === productId}
@@ -415,7 +439,7 @@ export default function CakeDetailPage({
                       <strong>{cupcakePackSize
                         ? language === 'ko' ? `${cupcakePackSize === 6 ? '하프 더즌' : '더즌'} · ${cupcakePackSize}개` : `${cupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${cupcakePackSize} cupcakes`
                         : optionText.name}</strong>
-                      <span>{formatCurrency(cupcakePackSize ? getCupcakeFinishPrice(productId, 'basic') || 0 : getProductById(productId).price)}</span>
+                      <span>{formatCurrency(optionPrice)}{extraFromBase > 0 ? ` (+${formatCurrency(extraFromBase)})` : ''}</span>
                     </OptionButton>
                   )
                 })}
@@ -433,13 +457,19 @@ export default function CakeDetailPage({
                     onClick={() => updateSelection({ cakeSize: option.value })}
                     key={option.value}
                   >
-                    <strong>{formatCakeSizeLabel(option.value)}</strong>
-                    <span>{formatCurrency(product.sizePrices[option.value] || option.price)}</span>
+                    <strong>{formatCurrentCakeSizeLabel(product.id, option.value) || formatCakeSizeLabel(option.value)}</strong>
+                    <span>{formatCurrency(product.sizePrices[option.value] ?? option.price ?? product.price)}</span>
                   </OptionButton>
                 ))}
               </div>
             </fieldset>
           )}
+            {isCurrentWholeCake && (
+              <details className="cake-detail-serving-guide">
+                <summary>{getCakeServingGuideCopy(language).title}</summary>
+                <p>{getCakeServingGuideCopy(language).body}</p>
+              </details>
+            )}
 
           {product.usesPoundAddonOptions && (
             <fieldset className="cake-detail-fieldset">
@@ -539,6 +569,25 @@ export default function CakeDetailPage({
             </fieldset>
           )}
 
+          {isChocolateExtraEligibleProduct(product.id) && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '초콜릿 추가 구성' : 'CHOCOLATE EXTRAS'}</legend>
+              <div className="cake-detail-options is-stacked">
+                {CHOCOLATE_EXTRA_OPTIONS.map((option) => (
+                  <OptionButton
+                    active={selection.chocolateExtra === option.value}
+                    onClick={() => updateSelection({ chocolateExtra: option.value })}
+                    key={option.value}
+                  >
+                    <strong>{language === 'ko' ? option.labelKo : option.label}</strong>
+                    <span>{option.price > 0 ? `+${formatCurrency(option.price)}` : language === 'ko' ? '선택 안 함' : 'No extra'}</span>
+                  </OptionButton>
+                ))}
+              </div>
+              <p className="cake-detail-extra-help">{language === 'ko' ? selectedChocolateExtra.descriptionKo : selectedChocolateExtra.description}</p>
+            </fieldset>
+          )}
+
           {isIndividualPackagingEligibleProduct(product.id) && (
             <fieldset className="cake-detail-fieldset">
               <legend>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</legend>
@@ -634,7 +683,7 @@ export default function CakeDetailPage({
           editorial={editorial}
           language={language}
           slug={slug}
-          selectedSizeLabel={formatCakeSizeLabel(selection.cakeSize)}
+          selectedSizeLabel={formatCurrentCakeSizeLabel(selection.productId, selection.cakeSize) || formatCakeSizeLabel(selection.cakeSize)}
           selectedUnitPrice={formatCurrency(selectedUnitPrice)}
           estimatedTotal={formatCurrency(total)}
           detailAccordions={detail.accordions}

@@ -193,6 +193,77 @@ test('cake request projection sends the exact allowlisted payload including Vani
   assert.equal('promoCode' in buildCakeReservationRequest({ ...contaminated, promoCode: ' ' } as ReservationInput), false)
 })
 
+
+test('new strawberry reservations send only the current product, size, and quantity choices', () => {
+  const contaminated = {
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: ' Customer@Example.com ',
+    productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in', quantity: 2,
+    chocolateType: 'dark', poundAddon: 'vanilla-cream', chocolateIcingCount: 9, vanillaCreamCount: 8,
+    partyDecorationCount: 7, vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'nutella-chocolate-chip',
+    vanillaCakePointColor: 'pink', individualPackaging: true, cacaoPercent: '100',
+    pickupDate: '2099-07-11', pickupTime: '10:00', requestNote: 'Please confirm', privacyConsent: true,
+    requestId: '11111111-1111-4111-8111-111111111111', website: '', promoCode: ' FOXKIWI7Q2MK ',
+  }
+  assert.deepEqual(buildCakeReservationRequest(contaminated as ReservationInput), {
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
+    productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in', quantity: 2,
+    pickupDate: '2099-07-11', pickupTime: '10:00', requestNote: 'Please confirm', privacyConsent: true,
+    requestId: '11111111-1111-4111-8111-111111111111', website: '', promoCode: 'FOXKIWI7Q2MK',
+  })
+})
+
+test('Chocolate Extra request projection is frontend-ready while Reservation API pricing remains a pending integration boundary', () => {
+  const pave = {
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: ' Customer@Example.com ',
+    productId: 'pave-cake', cakeSize: '6in', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
+    chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla',
+    vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 2, pickupDate: '2099-07-11', pickupTime: '10:00',
+    cacaoPercent: '기본', requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
+    chocolateExtra: 'combo',
+  }
+  const projected = buildCakeReservationRequest(pave as ReservationInput)
+  assert.equal(projected.chocolateExtra, 'combo')
+
+  const strawberry = buildCakeReservationRequest({
+    ...pave,
+    productId: 'fresh-strawberry-vanilla-cream-cake',
+    cakeSize: '8in',
+    chocolateExtra: 'combo',
+  } as ReservationInput)
+  assert.equal(Object.hasOwn(strawberry, 'chocolateExtra'), false)
+
+  const order = buildCakeOrderRequest({
+    customerName: pave.customerName, customerPhone: pave.customerPhone, customerEmail: pave.customerEmail,
+    pickupDate: pave.pickupDate, pickupTime: pave.pickupTime, requestNote: '', privacyConsent: true,
+    requestId: pave.requestId, website: '',
+    orderLines: [
+      { ...pave },
+      { ...pave, chocolateExtra: 'none', quantity: 1 },
+    ],
+  } as never)
+  assert.deepEqual(order.orderLines.map((line) => line.chocolateExtra), ['combo', 'none'])
+})
+
+test('multi-line Strawberry orders project only the new contract fields', () => {
+  const strawberryLine = {
+    productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in',
+    chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
+    chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 2,
+  }
+  const request = buildCakeOrderRequest({
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: ' Customer@Example.com ',
+    pickupDate: '2099-07-11', pickupTime: '10:00', requestNote: '', privacyConsent: true,
+    requestId: '11111111-1111-4111-8111-111111111111', website: '',
+    orderLines: [
+      strawberryLine,
+      { ...strawberryLine, productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+    ],
+  } as never)
+  assert.deepEqual(request.orderLines[0], {
+    productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in', quantity: 2,
+  })
+})
 test('reservation API capability parser enables multi-line orders only for exact numeric capability one', () => {
   assert.deepEqual(parseReservationApiCapabilities({ status: 'ready', capabilities: { cakeOrderLines: 1 } }), {
     cakeOrderLines: 1,
@@ -251,7 +322,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     website: '',
     orderLines: [
       {
-        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        productId: 'pave-cake', cakeSize: '6in', chocolateType: 'dark', poundAddon: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 2,
@@ -273,7 +344,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
     requestId: '11111111-1111-4111-8111-111111111111', website: '',
     orderLines: [
       {
-        productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+        productId: 'pave-cake', cakeSize: '6in', chocolateType: 'dark', poundAddon: 'none',
         chocolateExtra: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
@@ -434,7 +505,7 @@ test('multi-line response parser allowlists authoritative lines and validates ev
     { subtotalCents: Number.MAX_SAFE_INTEGER + 1 },
     { totalPrice: 205.004 },
     { productId: 'pound-cake' },
-  ]) assert.throws(() => parseCakeOrderResult({ ...base, ...invalid }), /RESERVATION_API_INVALID_RESPONSE/)
+  ]) assert.throws(() => parseCakeOrderResult({ ...base, ...invalid }), /RESERVATION_API_INVALID_RESPONSE/, JSON.stringify(invalid))
 
   const customPrototypeLine = Object.assign(Object.create({ custom: true }), rows[0])
   assert.throws(() => parseCakeOrderResult({ ...base, orderLines: [customPrototypeLine, rows[1]] }), /RESERVATION_API_INVALID_RESPONSE/)

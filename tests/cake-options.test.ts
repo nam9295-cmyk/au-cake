@@ -58,6 +58,7 @@ import {
 } from '../src/lib/class-utils.js'
 import { getProductFeatures, getProductText } from '../src/lib/i18n.js'
 import { normalizeAuDailyLimitText } from '../src/lib/legacy-settings.js'
+import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraPrice, isChocolateExtraEligibleProduct, normalizeChocolateExtra } from '../src/lib/chocolate-extras.js'
 
 test('legacy AU small-batch settings copy is replaced without overwriting custom admin copy', () => {
   assert.equal(
@@ -67,13 +68,14 @@ test('legacy AU small-batch settings copy is replaced without overwriting custom
   assert.equal(normalizeAuDailyLimitText('Custom seasonal announcement'), 'Custom seasonal announcement')
 })
 
-test('AU cake chooser follows the final seven-product order and keeps Basque legacy-only', () => {
+test('AU cake chooser follows the final eight-product order and keeps legacy groups out of sale navigation', () => {
   assert.deepEqual(
     PRODUCT_GROUPS.map((group) => ({ id: group.id, defaultProductId: group.defaultProductId, productIds: group.productIds })),
     [
       { id: 'pave', defaultProductId: 'pave-cake', productIds: ['pave-cake'] },
-      { id: 'vanilla-fresh-cream', defaultProductId: 'vanilla-fresh-cream-cake', productIds: ['vanilla-fresh-cream-cake'] },
       { id: 'buttercream', defaultProductId: 'buttercream-cake', productIds: ['buttercream-cake'] },
+      { id: 'fresh-strawberry-vanilla-cream', defaultProductId: 'fresh-strawberry-vanilla-cream-cake', productIds: ['fresh-strawberry-vanilla-cream-cake'] },
+      { id: 'fresh-strawberry-chocolate-cream', defaultProductId: 'fresh-strawberry-chocolate-cream-cake', productIds: ['fresh-strawberry-chocolate-cream-cake'] },
       { id: 'cupcake', defaultProductId: 'cupcake-dozen', productIds: ['cupcake-half-dozen', 'cupcake-dozen'] },
       { id: 'signature-gateau', defaultProductId: 'pound-cake', productIds: ['pound-cake'] },
       {
@@ -91,6 +93,8 @@ test('AU cake chooser follows the final seven-product order and keeps Basque leg
   assert.equal(getProductGroupByProductId('cupcake-dozen').id, 'cupcake')
   assert.equal(getProductGroupByProductId('cupcake-half-dozen' as ProductId).id, 'cupcake')
   assert.equal(getProductGroupByProductId('pound-cake').id, 'signature-gateau')
+  assert.equal(getProductGroupByProductId('fresh-strawberry-vanilla-cream-cake').id, 'fresh-strawberry-vanilla-cream')
+  assert.equal(getProductGroupByProductId('fresh-strawberry-chocolate-cream-cake').id, 'fresh-strawberry-chocolate-cream')
   assert.equal(getProductGroupByProductId('buttercream-cake').id, 'buttercream')
   assert.equal(getProductGroupByProductId('brownie-cheesecake').id, 'brownie-cheesecake')
   assert.equal(getProductGroupByProductId('vanilla-fresh-cream-cake').id, 'vanilla-fresh-cream')
@@ -166,19 +170,19 @@ test('Buttercream Cake uses Signature Gâteau layers, real chocolate ingredients
   const buttercream = getProductById('buttercream-cake')
 
   assert.equal(buttercream.name, 'Buttercream Cake')
-  assert.deepEqual(buttercream.sizePrices, { '15cm': 74, '19cm': 94, '22cm': 128 })
+  assert.deepEqual(buttercream.sizePrices, { '6in': 75, '8in': 99, '10in': 145 })
   assert.equal(buttercream.usesSizeOptions, true)
   assert.equal(buttercream.usesCacaoOptions, false)
   assert.equal(buttercream.usesChocolateTypeOptions, false)
   assert.equal(buttercream.usesPoundAddonOptions, false)
-  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '15cm' }), 74)
-  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '19cm' }), 94)
-  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '22cm' }), 128)
+  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '6in' }), 75)
+  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '8in' }), 99)
+  assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, { cakeSize: '10in' }), 145)
   assert.equal(getReservationUnitPrice('buttercream-cake' as ProductId, {
-    cakeSize: '22cm',
+    cakeSize: '10in',
     chocolateType: 'milk',
     poundAddon: 'vanilla-cream',
-  }), 128)
+  }), 145)
   assert.equal(normalizeVanillaCakeSheet('buttercream-cake', 'vanilla'), 'chocolate')
   assert.equal(normalizeVanillaCakeFlavor('buttercream-cake', 'nutella-chocolate-chip'), 'plain')
   assert.equal(normalizeVanillaCakePointColor('buttercream-cake', 'blue'), 'blue')
@@ -186,18 +190,16 @@ test('Buttercream Cake uses Signature Gâteau layers, real chocolate ingredients
   for (const language of ['en', 'ko'] as const) {
     const text = getProductText('buttercream-cake', language)
     const features = getProductFeatures('buttercream-cake', language)
-    assert.match(text.description, /Signature Gâteau au Chocolat|시그니처 갸또 쇼콜라/)
-    assert.match(text.description, /organic cocoa|유기농 코코아/i)
-    assert.match(text.description, /fresh milk|신선한 우유/i)
-    assert.match(text.description, /chocolatier-grade couverture chocolate|쇼콜라티에용 커버춰 초콜릿/i)
-    assert.match(text.description, /not added chocolate flavouring|초코 향료가 아니라/i)
+    assert.match(text.description, /Italian meringue|이탈리안 머랭/i)
+    assert.match(text.description, /real butter|실제 버터/i)
+    assert.match(text.description, /cocoa powder|코코아 파우더/i)
     assert.deepEqual(features, language === 'en'
-      ? ['Signature Gâteau au Chocolat layers', 'Proudly made with organic cocoa, fresh milk and chocolatier-grade couverture chocolate.', 'Organic cocoa for a deep, intense chocolate taste', 'Fresh milk', 'Chocolatier-grade couverture chocolate', 'Choose a cake colour']
-      : ['시그니처 갸또 쇼콜라 시트', '유기농 코코아·신선한 우유·쇼콜라티에용 커버춰 초콜릿 사용', '깊고 진한 맛을 내는 유기농 코코아', '신선한 우유', '쇼콜라티에용 커버춰 초콜릿', '케이크 컬러 선택'])
+      ? ['Signature Gâteau layers', 'Italian meringue, real butter and cocoa powder', 'Choose a cake colour']
+      : ['시그니처 갸또 쇼콜라 시트', '이탈리안 머랭·실제 버터·코코아 파우더', '케이크 컬러 선택'])
   }
 })
 
-test('Brownie Cheesecake keeps two current prices while retaining the historical Eiffel price', () => {
+test('Brownie Cheesecake keeps two approved current finishes and an Eiffel historical reader', () => {
   const brownie = getProductById('brownie-cheesecake')
   const paveBrownie = getProductById('pave-brownie-cheesecake')
   const eiffelBrownie = getProductById('eiffel-tower-brownie-cheesecake')
@@ -206,6 +208,9 @@ test('Brownie Cheesecake keeps two current prices while retaining the historical
   assert.equal(brownie.price, 58)
   assert.equal(paveBrownie.price, 68)
   assert.equal(eiffelBrownie.price, 70)
+  assert.deepEqual(PRODUCT_GROUPS.find((group) => group.id === 'brownie-cheesecake')?.productIds, ['brownie-cheesecake', 'pave-brownie-cheesecake'])
+  assert.deepEqual(getProductGroupByProductId('eiffel-tower-brownie-cheesecake').productIds, ['eiffel-tower-brownie-cheesecake'])
+  assert.equal(getReservationUnitPrice('eiffel-tower-brownie-cheesecake'), eiffelBrownie.price)
   for (const productId of ['brownie-cheesecake', 'pave-brownie-cheesecake'] as const) {
     const product = getProductById(productId as ProductId)
     assert.equal(product.usesSizeOptions, false)
@@ -397,17 +402,17 @@ test('Pave Chocolate Cake keeps its approved prices, dense four-layer copy and d
   assert.equal(paveCake.usesSizeOptions, true)
   assert.equal(paveCake.usesChocolateTypeOptions, true)
   assert.equal(paveCake.usesPoundAddonOptions, false)
-  assert.deepEqual(paveCake.sizePrices, { '15cm': 79, '19cm': 99, '22cm': 137 })
+  assert.deepEqual(paveCake.sizePrices, { '6in': 79, '8in': 109, '10in': 159 })
   assert.equal(getProductText('pave-cake', 'en').description, 'A rich four-layer chocolate cake built for a dense, chocolate-forward bite. Instead of a light sponge-and-cream style, each layer is filled with smooth pave chocolate ganache, creating a substantial cake with deep chocolate flavour from the first slice to the last.')
   assert.equal(getProductText('pave-cake', 'ko').description, '가벼운 스펀지와 크림 중심의 케이크가 아니라, 묵직한 초콜릿 케이크 시트를 4단으로 쌓고 각 층을 부드러운 파베 초콜릿 가나슈로 채웠습니다. 처음부터 끝까지 진한 초콜릿의 밀도와 묵직한 식감을 느낄 수 있는 베리굿의 시그니처 초콜릿 케이크입니다.')
-  assert.deepEqual(getProductFeatures('pave-cake', 'en'), ['Four layers of rich chocolate cake', 'Filled with smooth pave chocolate ganache', 'Dense, chocolate-forward finish', '6" · 7.5" · 9"'])
-  assert.deepEqual(getProductFeatures('pave-cake', 'ko'), ['묵직한 초콜릿 케이크 4단', '각 층을 채운 파베 초콜릿 가나슈', '크림보다 초콜릿이 중심인 진한 맛', '6" · 7.5" · 9" 사이즈'])
+  assert.deepEqual(getProductFeatures('pave-cake', 'en'), ['Signature Gâteau layers', 'Smooth pave chocolate ganache', 'Dense, chocolate-forward finish'])
+  assert.deepEqual(getProductFeatures('pave-cake', 'ko'), ['시그니처 갸또 쇼콜라 시트', '각 층을 채운 파베 초콜릿 가나슈', '크림보다 초콜릿이 중심인 진한 맛'])
   assert.equal(formatChocolateTypeLabel('dark'), 'Dark chocolate')
   assert.equal(formatChocolateTypeLabel('milk'), 'Dark chocolate')
-  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none' }), 79)
-  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '19cm', chocolateType: 'milk', poundAddon: 'extra-chocolate' }), 99)
-  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '19cm', chocolateType: 'dark', poundAddon: 'vanilla-cream' }), 99)
-  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'none' }), 137)
+  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '6in', chocolateType: 'dark', poundAddon: 'none' }), 79)
+  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '8in', chocolateType: 'milk', poundAddon: 'extra-chocolate' }), 109)
+  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '8in', chocolateType: 'dark', poundAddon: 'vanilla-cream' }), 109)
+  assert.equal(getReservationUnitPrice('pave-cake', { cakeSize: '10in', chocolateType: 'milk', poundAddon: 'none' }), 159)
 })
 
 test('AU currency display uses AUD code instead of dollar symbol', () => {
@@ -783,4 +788,53 @@ test('AU cupcake SMS shows vanilla cream and party decoration counts without cho
   assert.match(message, /Finishing mix: Basic 5 \/ Vanilla cream 4 \/ Party decoration 3/)
   assert.equal(message.includes('Finish: Extra chocolate'), false)
   assert.equal(message.includes('Chocolate: Milk chocolate'), false)
+})
+
+test('current Whole Cake serving profiles use new inch keys without reinterpreting stored cm orders', async () => {
+  const {
+    CURRENT_WHOLE_CAKE_SIZES,
+    formatCurrentCakeSizeLabel,
+    formatStoredCakeSizeLabel,
+  } = await import('../src/lib/cake-serving.js')
+
+  assert.deepEqual(CURRENT_WHOLE_CAKE_SIZES, ['6in', '8in', '10in'])
+  assert.equal(formatCurrentCakeSizeLabel('pave-cake', '8in'), '8" | serves approx. 14–18')
+  assert.equal(formatCurrentCakeSizeLabel('fresh-strawberry-vanilla-cream-cake', '8in'), '8" | serves approx. 10–14')
+  assert.equal(formatCurrentCakeSizeLabel('fresh-strawberry-chocolate-cream-cake', '10in'), '10" | serves approx. 16–20')
+  assert.equal(formatStoredCakeSizeLabel('pave-cake', '15cm'), '6" | serves 8')
+  assert.equal(formatStoredCakeSizeLabel('pave-cake', '19cm'), '7.5" | serves 14')
+  assert.equal(formatStoredCakeSizeLabel('pave-cake', '22cm'), '9" | serves 22')
+})
+
+test('Whole Cake serving disclosure explains the distinct cake sheets without changing serving ranges', async () => {
+  const serving = await import('../src/lib/cake-serving.js') as Record<string, unknown>
+  const getCakeServingGuideCopy = serving.getCakeServingGuideCopy as undefined | ((language: 'en' | 'ko') => { title: string; body: string })
+
+  assert.deepEqual(getCakeServingGuideCopy?.('en'), {
+    title: 'Why do serving sizes vary?',
+    body: 'Serving guides vary by cake sheet and portion size. Our Signature Gâteau cakes use rich, dense chocolate layers and are usually served in smaller slices, while soft genoise cakes are typically cut into larger celebration portions.',
+  })
+  assert.deepEqual(getCakeServingGuideCopy?.('ko'), {
+    title: '케이크마다 권장 인원수가 다른 이유',
+    body: '케이크 시트와 권장 1인분 크기에 따라 인원수가 달라집니다. 시그니처 갸또 케이크는 진하고 밀도감 있는 초콜릿 시트로 작은 조각을, 제누아즈 케이크는 생크림과 생딸기에 잘 어울리는 부드러운 시트로 보다 넉넉한 기념일용 조각을 안내합니다.',
+  })
+})
+
+test('Chocolate Extras use a separate current-sales contract for exactly four eligible cake products', () => {
+  assert.deepEqual(CHOCOLATE_EXTRA_OPTIONS.map(({ value, price }) => [value, price]), [
+    ['none', 0],
+    ['eiffel-6', 10],
+    ['pave-100g', 12],
+    ['combo', 20],
+  ])
+  assert.equal(getChocolateExtraPrice('combo'), 20)
+  assert.equal(isChocolateExtraEligibleProduct('pave-cake'), true)
+  assert.equal(isChocolateExtraEligibleProduct('buttercream-cake'), true)
+  assert.equal(isChocolateExtraEligibleProduct('pound-cake'), true)
+  assert.equal(isChocolateExtraEligibleProduct('brownie-cheesecake'), true)
+  assert.equal(isChocolateExtraEligibleProduct('pave-brownie-cheesecake'), true)
+  assert.equal(isChocolateExtraEligibleProduct('eiffel-tower-brownie-cheesecake'), false)
+  assert.equal(isChocolateExtraEligibleProduct('fresh-strawberry-vanilla-cream-cake'), false)
+  assert.equal(normalizeChocolateExtra('pave-cake', 'eiffel-6'), 'eiffel-6')
+  assert.equal(normalizeChocolateExtra('fresh-strawberry-vanilla-cream-cake', 'combo'), 'none')
 })

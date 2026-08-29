@@ -9,6 +9,8 @@ export type CakeCatalogId =
   | 'pave'
   | 'vanilla-fresh-cream'
   | 'buttercream'
+  | 'fresh-strawberry-vanilla-cream'
+  | 'fresh-strawberry-chocolate-cream'
   | 'cupcake'
   | 'signature-gateau'
   | 'fresh-lemon-cupcakes'
@@ -21,6 +23,8 @@ export type CakeCatalogImageKey =
   | 'pave-cake'
   | 'vanilla-fresh-cream-cake'
   | 'buttercream-cake'
+  | 'fresh-strawberry-vanilla-cream-cake'
+  | 'fresh-strawberry-chocolate-cream-cake'
   | 'chocolate-cupcakes'
   | 'signature-gateau-au-chocolat'
   | 'lemon-cake'
@@ -40,6 +44,7 @@ type LocalizedCopyMap = Record<Language, LocalizedCatalogCopy>
 
 export type CakeCatalogEntry = {
   id: CakeCatalogId
+  group: 'whole-cakes' | 'more-cakes'
   slug: string
   defaultProductId: ProductId
   productIds: readonly ProductId[]
@@ -51,6 +56,7 @@ export type CakeCatalogEntry = {
 
 export type CakeCatalogCard = LocalizedCatalogCopy & {
   id: CakeCatalogId
+  group: CakeCatalogEntry['group']
   slug: string
   productId: ProductId
   imageKey: CakeCatalogImageKey
@@ -63,6 +69,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
   {
     id: 'pave',
     slug: 'pave-chocolate-cake',
+    group: 'whole-cakes',
     defaultProductId: 'pave-cake',
     productIds: ['pave-cake'],
     imageKey: 'pave-cake',
@@ -70,17 +77,9 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     priceMode: 'fixed',
   },
   {
-    id: 'vanilla-fresh-cream',
-    slug: 'vanilla-fresh-cream-cake',
-    defaultProductId: 'vanilla-fresh-cream-cake',
-    productIds: ['vanilla-fresh-cream-cake'],
-    imageKey: 'vanilla-fresh-cream-cake',
-    isPhotoComingSoon: false,
-    priceMode: 'from',
-  },
-  {
     id: 'buttercream',
     slug: 'buttercream-cake',
+    group: 'whole-cakes',
     defaultProductId: 'buttercream-cake',
     productIds: ['buttercream-cake'],
     imageKey: 'buttercream-cake',
@@ -88,8 +87,29 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     priceMode: 'from',
   },
   {
+    id: 'fresh-strawberry-vanilla-cream',
+    slug: 'fresh-strawberry-vanilla-cream-cake',
+    group: 'whole-cakes',
+    defaultProductId: 'fresh-strawberry-vanilla-cream-cake',
+    productIds: ['fresh-strawberry-vanilla-cream-cake'],
+    imageKey: 'fresh-strawberry-vanilla-cream-cake',
+    isPhotoComingSoon: false,
+    priceMode: 'from',
+  },
+  {
+    id: 'fresh-strawberry-chocolate-cream',
+    slug: 'fresh-strawberry-chocolate-cream-cake',
+    group: 'whole-cakes',
+    defaultProductId: 'fresh-strawberry-chocolate-cream-cake',
+    productIds: ['fresh-strawberry-chocolate-cream-cake'],
+    imageKey: 'fresh-strawberry-chocolate-cream-cake',
+    isPhotoComingSoon: false,
+    priceMode: 'from',
+  },
+  {
     id: 'cupcake',
     slug: 'chocolate-cupcakes',
+    group: 'more-cakes',
     defaultProductId: 'cupcake-dozen',
     productIds: ['cupcake-half-dozen', 'cupcake-dozen'],
     imageKey: 'chocolate-cupcakes',
@@ -99,6 +119,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
   {
     id: 'signature-gateau',
     slug: 'signature-gateau-au-chocolat',
+    group: 'more-cakes',
     defaultProductId: 'pound-cake',
     productIds: ['pound-cake'],
     imageKey: 'signature-gateau-au-chocolat',
@@ -108,6 +129,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
   {
     id: 'fresh-lemon-cupcakes',
     slug: 'lemon-cake',
+    group: 'more-cakes',
     defaultProductId: 'fresh-lemon-cupcakes-12',
     productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'],
     imageKey: 'lemon-cake',
@@ -131,6 +153,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
   {
     id: 'brownie-cheesecake',
     slug: 'brownie-cheesecake',
+    group: 'more-cakes',
     defaultProductId: 'brownie-cheesecake',
     productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
     imageKey: 'brownie-cheesecake',
@@ -184,6 +207,7 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
     : language === 'ko' ? `${price}부터` : `From ${price}`
 
   return {
+    group: entry.group,
     id: entry.id,
     slug: entry.slug,
     productId: entry.defaultProductId,
@@ -197,6 +221,20 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
 
 export function getAuCakeCatalogCards(language: Language): readonly CakeCatalogCard[] {
   return getAuCakeCatalog().map((entry) => getCakeCatalogCard(entry, language))
+}
+
+const AU_HOME_HERO_PRIORITY: readonly CakeCatalogId[] = [
+  'fresh-strawberry-vanilla-cream',
+  'fresh-strawberry-chocolate-cream',
+  'pave',
+  'brownie-cheesecake',
+]
+
+export function getAuHomeHeroCards(language: Language): readonly CakeCatalogCard[] {
+  const priority = new Map(AU_HOME_HERO_PRIORITY.map((id, index) => [id, index]))
+  return [...getAuCakeCatalogCards(language)].sort(
+    (left, right) => (priority.get(left.id) ?? AU_HOME_HERO_PRIORITY.length) - (priority.get(right.id) ?? AU_HOME_HERO_PRIORITY.length),
+  )
 }
 
 export function getCakeCatalogUnitPrice(productId: ProductId, options: ReservationPriceOptions = {}) {

@@ -15,6 +15,7 @@ const cartSource = await readFile(new URL('../src/CartPage.tsx', import.meta.url
 const i18nSource = await readFile(new URL('../src/lib/i18n.ts', import.meta.url), 'utf8')
 const marketSource = await readFile(new URL('../src/lib/market.ts', import.meta.url), 'utf8')
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+const chocolateExtrasSource = await readFile(new URL('../src/lib/chocolate-extras.ts', import.meta.url), 'utf8').catch(() => '')
 
 test('home catalogue opens shared cake detail routes instead of skipping to the request form', () => {
   assert.match(homeSource, /navigateToCake\(card\.slug\)/)
@@ -94,10 +95,11 @@ test('editorial-enabled cakes use the shared detail after the protected Hero whi
   assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail|ButtercreamDetailPage|ButtercreamEditorialDetail|CupcakeDetailPage|CupcakeEditorialDetail|LemonDetailPage|LemonEditorialDetail|SignatureGateauDetailPage|SignatureGateauEditorialDetail|BrownieDetailPage|BrownieEditorialDetail/)
 })
 
-test('Brownie Cheesecake uses the shared compact editorial while retaining its two current finish choices', () => {
+test('Brownie Cheesecake uses the shared compact editorial with two current finish choices and a visible Pave surcharge', () => {
   assert.match(editorialDataSource, /BROWNIE_CHEESECAKE_EDITORIAL/)
   assert.match(detailSource, /detail\.id === 'brownie-cheesecake'[\s\S]*?'Choose a finish'/)
   assert.match(reserveSource, /selectedProductGroup\.id === 'brownie-cheesecake'[\s\S]*?'Choose a finish'/)
+  assert.match(detailSource, /detail\.id === 'brownie-cheesecake'[\s\S]*?extraFromBase/)
 })
 
 test('Signature Gâteau au Chocolat uses the shared compact editorial while retaining its current finish and chocolate controls', () => {
@@ -320,4 +322,21 @@ test('detail template has explicit narrow-screen layout and accessible controls'
   assert.match(detailSource, /aria-label=/)
   assert.match(cssSource, /@media \(max-width: 760px\)[\s\S]*\.cake-detail-hero/)
   assert.match(cssSource, /\.cake-detail-option:focus-visible/)
+})
+
+test('Chocolate Extras are separate compact purchase controls, not cake toppings or retired Eiffel finishes', () => {
+  assert.match(chocolateExtrasSource, /'eiffel-6'/)
+  assert.match(chocolateExtrasSource, /'pave-100g'/)
+  assert.match(chocolateExtrasSource, /'combo'/)
+  assert.match(chocolateExtrasSource, /Rich, smooth pavé chocolate to enjoy by the spoonful/)
+  assert.match(chocolateExtrasSource, /부드럽고 진한 파베 초콜릿을 그대로 떠먹거나/)
+  assert.doesNotMatch(chocolateExtrasSource, /topping|cake decoration|on top of the cake/i)
+  assert.match(detailSource, /CHOCOLATE_EXTRA_OPTIONS\.map/)
+  assert.doesNotMatch(chocolateExtrasSource, /eiffel-tower-brownie-cheesecake/)
+  assert.match(detailSource, /CHOCOLATE EXTRAS/)
+  assert.match(detailSource, /초콜릿 추가 구성/)
+  assert.match(reserveSource, /CHOCOLATE_EXTRA_OPTIONS\.map/)
+  assert.match(reserveSource, /chocolateExtra: form\.chocolateExtra/)
+  assert.match(reserveSource, /chocolateExtra: selection\.chocolateExtra/)
+  assert.match(cartSource, /formatChocolateExtra/)
 })

@@ -7,6 +7,7 @@ import {
 } from './cake-detail.js'
 import { isCakePointColorProduct } from './constants.js'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './individual-packaging.js'
+import { DEFAULT_CHOCOLATE_EXTRA, normalizeChocolateExtra } from './chocolate-extras.js'
 import type {
   CakeSize,
   ChocolateType,
@@ -49,6 +50,7 @@ export function getCartLineKey(selection: CakeDetailSelection) {
     normalized.cakeSize,
     normalized.chocolateType,
     normalized.poundAddon,
+    normalized.chocolateExtra,
     normalized.chocolateIcingCount,
     normalized.vanillaCreamCount,
     normalized.partyDecorationCount,
@@ -156,6 +158,7 @@ function toPersistedSelection(selection: CakeDetailSelection): CakeDetailSelecti
     cakeSize: normalized.cakeSize,
     chocolateType: normalized.chocolateType,
     poundAddon: normalized.poundAddon,
+    chocolateExtra: normalized.chocolateExtra,
     cupcakeFinish: normalized.cupcakeFinish,
     chocolateIcingCount: normalized.chocolateIcingCount,
     vanillaCreamCount: normalized.vanillaCreamCount,
@@ -192,6 +195,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     cakeSize,
     chocolateType,
     poundAddon,
+    chocolateExtra,
     cupcakeFinish,
     chocolateIcingCount,
     vanillaCreamCount,
@@ -208,6 +212,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     typeof cakeSize !== 'string' ||
     typeof chocolateType !== 'string' ||
     typeof poundAddon !== 'string' ||
+    (chocolateExtra !== undefined && typeof chocolateExtra !== 'string') ||
     (cupcakeFinish !== undefined && typeof cupcakeFinish !== 'string') ||
     typeof chocolateIcingCount !== 'number' || !Number.isFinite(chocolateIcingCount) ||
     typeof vanillaCreamCount !== 'number' || !Number.isFinite(vanillaCreamCount) ||
@@ -227,6 +232,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     cakeSize: cakeSize as CakeSize,
     chocolateType: chocolateType as ChocolateType,
     poundAddon: poundAddon as PoundAddon,
+    chocolateExtra: normalizeChocolateExtra(productId as ProductId, typeof chocolateExtra === 'string' ? chocolateExtra : DEFAULT_CHOCOLATE_EXTRA),
     cupcakeFinish: (typeof cupcakeFinish === 'string' ? cupcakeFinish : DEFAULT_CUPCAKE_FINISH) as CakeDetailSelection['cupcakeFinish'],
     chocolateIcingCount,
     vanillaCreamCount,

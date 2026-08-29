@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import { PickupDatePicker } from '../components/WeekendDatePicker'
 import { BankAccountBox } from '../components/BankAccountBox'
 import { SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
-import { type CakeDetailSelection } from '../lib/cake-detail'
+import { getCakeDetailSelectionTotal, type CakeDetailSelection } from '../lib/cake-detail'
 import { getAuCakeCatalogCards } from '../lib/cake-catalog'
 import {
   getIndividualPackagingPieceCount,
@@ -11,6 +11,7 @@ import {
   isIndividualPackagingEligibleProduct,
 } from '../lib/individual-packaging'
 import { marketConfig } from '../lib/market'
+import { CHOCOLATE_EXTRA_OPTIONS, DEFAULT_CHOCOLATE_EXTRA, formatChocolateExtra, getChocolateExtraOption, getChocolateExtraPrice, isChocolateExtraEligibleProduct, normalizeChocolateExtra } from '../lib/chocolate-extras'
 import { type Page } from '../lib/app-routes'
 import {
   CAKE_SIZE_OPTIONS,
@@ -52,6 +53,7 @@ import {
 
   usesReservationChocolateType,
 } from '../lib/constants'
+import { formatCurrentCakeSizeLabel, getCurrentWholeCakeSizeOptions } from '../lib/cake-serving'
 import {
   normalizeReviewCouponCode,
   getPromoEntryState,
@@ -78,7 +80,7 @@ import {
   createReservation,
 } from '../lib/repository'
 import { trackEvent } from '../lib/analytics'
-import type { CacaoPercent, CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, StoreSettings, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from '../lib/types'
+import type { CacaoPercent, CakeSize, ChocolateExtra, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, StoreSettings, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from '../lib/types'
 import {
   customerTimeOptionsForDate,
   firstCustomerPickupDate,
@@ -153,12 +155,15 @@ export function ReservePage({
   const isMultiOrder = orderSelections !== null
   const [requestId] = useState(generateRequestId)
   const copy = cakeCopy(language)
+  const initialFormProductId = initialSelection?.productId || initialProductId
+  const initialFormCakeSize = initialSelection?.cakeSize || getCurrentWholeCakeSizeOptions(initialFormProductId)[0] || DEFAULT_CAKE_SIZE as CakeSize
   const [form, setForm] = useState({
-    productId: initialSelection?.productId || initialProductId,
+    productId: initialFormProductId,
     cacaoPercent: '기본' as CacaoPercent,
-    cakeSize: initialSelection?.cakeSize || DEFAULT_CAKE_SIZE as CakeSize,
+    cakeSize: initialFormCakeSize,
     chocolateType: initialSelection?.chocolateType || DEFAULT_CHOCOLATE_TYPE as ChocolateType,
     poundAddon: initialSelection?.poundAddon || DEFAULT_POUND_ADDON as PoundAddon,
+    chocolateExtra: normalizeChocolateExtra(initialFormProductId, initialSelection?.chocolateExtra || DEFAULT_CHOCOLATE_EXTRA) as ChocolateExtra,
     cupcakeFinish: initialSelection?.cupcakeFinish || DEFAULT_CUPCAKE_FINISH as CupcakeFinish,
     chocolateIcingCount: initialSelection?.chocolateIcingCount || 0,
     vanillaCreamCount: initialSelection?.vanillaCreamCount || 0,
@@ -259,6 +264,7 @@ export function ReservePage({
         cakeSize: form.cakeSize,
         chocolateType: form.chocolateType,
         poundAddon: form.poundAddon,
+        chocolateExtra: form.chocolateExtra,
         cupcakeFinish: form.cupcakeFinish,
         chocolateIcingCount: form.chocolateIcingCount,
         vanillaCreamCount: form.vanillaCreamCount,
@@ -303,6 +309,7 @@ export function ReservePage({
             cakeSize: form.cakeSize,
             chocolateType: form.chocolateType,
             poundAddon: form.poundAddon,
+            chocolateExtra: form.chocolateExtra,
             cupcakeFinish: form.cupcakeFinish,
             chocolateIcingCount: form.chocolateIcingCount,
             vanillaCreamCount: form.vanillaCreamCount,
@@ -342,6 +349,7 @@ export function ReservePage({
                 cakeSize: selection.cakeSize,
                 chocolateType: selection.chocolateType,
                 poundAddon: selection.poundAddon,
+                chocolateExtra: selection.chocolateExtra,
                 cupcakeFinish: selection.cupcakeFinish,
                 chocolateIcingCount: selection.chocolateIcingCount,
                 vanillaCreamCount: selection.vanillaCreamCount,
@@ -384,6 +392,23 @@ export function ReservePage({
 
   const selectedProduct = getProductById(form.productId)
   const selectedProductText = getProductText(selectedProduct.id, language)
+  const currentWholeCakeSizeOptions = getCurrentWholeCakeSizeOptions(selectedProduct.id)
+  const reserveCakeSizeOptions = currentWholeCakeSizeOptions.length
+    ? currentWholeCakeSizeOptions.map((value) => ({
+        value,
+        label: formatCurrentCakeSizeLabel(selectedProduct.id, value) || String(value),
+        price: selectedProduct.sizePrices[value] || 0,
+        description: '',
+      }))
+    : CAKE_SIZE_OPTIONS.map((option) => {
+        const optionText = getCakeSizeText(option, language)
+        return {
+          value: option.value,
+          label: optionText.label,
+          price: selectedProduct.sizePrices[option.value] || option.price,
+          description: optionText.description,
+        }
+      })
   const catalogCards = marketConfig.market === 'AU' ? getAuCakeCatalogCards(language) : []
   const selectedCatalogCard = catalogCards.find((card) => card.productId === selectedProduct.id)
   const selectedProductImage = selectedCatalogCard?.isPhotoComingSoon
@@ -410,9 +435,9 @@ export function ReservePage({
     vanillaCakeFlavor: form.vanillaCakeFlavor,
     }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
-  const singleSelectionPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity)
+  const singleSelectionPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity) + getChocolateExtraPrice(form.chocolateExtra)
   const currentPrice = orderSelections
-    ? orderSelections.reduce((sum, selection) => sum + getReservationPrice(selection.productId, selection, selection.quantity), 0)
+    ? orderSelections.reduce((sum, selection) => sum + getCakeDetailSelectionTotal(selection), 0)
     : singleSelectionPrice
   const packagingPricing = orderSelections
     ? getIndividualPackagingPricing(orderSelections.map((selection) => ({
@@ -507,14 +532,19 @@ export function ReservePage({
 
   function selectProduct(productId: ProductId) {
     const product = getProductById(productId)
+    const productWholeCakeSizeOptions = getCurrentWholeCakeSizeOptions(productId)
+    const cakeSize = productWholeCakeSizeOptions.includes(form.cakeSize as typeof productWholeCakeSizeOptions[number])
+      ? form.cakeSize
+      : productWholeCakeSizeOptions[0] || DEFAULT_CAKE_SIZE as CakeSize
     setShowCakeSelector(false)
     setForm({
       ...form,
       productId,
       cacaoPercent: product.usesCacaoOptions ? form.cacaoPercent : '기본',
-      cakeSize: product.usesSizeOptions ? form.cakeSize : DEFAULT_CAKE_SIZE,
+      cakeSize: product.usesSizeOptions ? cakeSize : DEFAULT_CAKE_SIZE,
       chocolateType: usesReservationChocolateType(product.id, form.poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
       poundAddon: product.usesPoundAddonOptions ? form.poundAddon : DEFAULT_POUND_ADDON,
+      chocolateExtra: normalizeChocolateExtra(productId, form.chocolateExtra),
       chocolateIcingCount: normalizeChocolateIcingCount(productId, form.chocolateIcingCount),
       cupcakeFinish: normalizeCupcakeFinish(productId, form.cupcakeFinish),
       vanillaCreamCount: 0,
@@ -539,6 +569,12 @@ export function ReservePage({
       ...form,
       poundAddon,
       chocolateType: usesReservationChocolateType(form.productId, poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
+    })
+  }
+  function selectChocolateExtra(chocolateExtra: ChocolateExtra) {
+    setForm({
+      ...form,
+      chocolateExtra: normalizeChocolateExtra(form.productId, chocolateExtra),
     })
   }
 
@@ -640,7 +676,7 @@ export function ReservePage({
               {(selectedProduct.usesSizeOptions || isCheesecakeProduct(selectedProduct.id)) && (
                 <div>
                   <dt>{labels.size}</dt>
-                  <dd>{formatCakeSizeLabel(form.cakeSize)}</dd>
+                  <dd>{formatCurrentCakeSizeLabel(selectedProduct.id, form.cakeSize) || formatCakeSizeLabel(form.cakeSize)}</dd>
                 </div>
               )}
               {isCreamLayerCakeProduct(selectedProduct.id) && (
@@ -675,6 +711,12 @@ export function ReservePage({
                   <dd>{formatPoundAddonText(form.poundAddon, language)}</dd>
                 </div>
               )}
+              {isChocolateExtraEligibleProduct(selectedProduct.id) && form.chocolateExtra !== 'none' && (
+                <div>
+                  <dt>{language === 'ko' ? '초콜릿 추가 구성' : 'Chocolate extras'}</dt>
+                  <dd>{formatChocolateExtra(form.chocolateExtra, language)} · +{formatCurrency(getChocolateExtraOption(form.chocolateExtra).price)}</dd>
+                </div>
+              )}
               <div>
                 <dt>{labels.options}</dt>
                 <dd>{selectedProductText.priceNote}</dd>
@@ -704,9 +746,12 @@ export function ReservePage({
                   {orderSelections.map((selection, index) => (
                     <li key={`${selection.productId}-${index}`}>
                       <span>{getProductText(selection.productId, language).name}</span>
-                      <strong>{selection.quantity}{copy.quantityUnit} · {formatCurrency(getReservationPrice(selection.productId, selection, selection.quantity))}</strong>
+                      <strong>{selection.quantity}{copy.quantityUnit} · {formatCurrency(getCakeDetailSelectionTotal(selection))}</strong>
                       {selection.individualPackaging && (
                         <small>{language === 'ko' ? '개별 포장' : 'Individual packaging'} · {getIndividualPackagingPieceCount(selection.productId, selection.quantity)} {language === 'ko' ? '개' : 'pieces'}</small>
+                      )}
+                      {selection.chocolateExtra !== 'none' && (
+                        <small>{language === 'ko' ? '초콜릿 추가 구성' : 'Chocolate extras'} · {formatChocolateExtra(selection.chocolateExtra, language)} · +{formatCurrency(getChocolateExtraOption(selection.chocolateExtra).price)}</small>
                       )}
                     </li>
                   ))}
@@ -913,8 +958,7 @@ export function ReservePage({
               <fieldset>
               <legend>{labels.sizeSelect}</legend>
               <div className="choice-list">
-                {CAKE_SIZE_OPTIONS.map((option) => {
-                  const optionText = getCakeSizeText(option, language)
+                {reserveCakeSizeOptions.map((option) => {
                   return (
                     <label className="choice-item" key={option.value}>
                       <input
@@ -925,9 +969,9 @@ export function ReservePage({
                       />
                       <span className="choice-copy">
                         <strong>
-                          {optionText.label} · {formatCurrency(selectedProduct.sizePrices[option.value] || option.price)}
+                          {option.label} · {formatCurrency(option.price)}
                         </strong>
-                        {!isVanillaFreshCreamCakeProduct(selectedProduct.id) && <span>{optionText.description}</span>}
+                        {option.description && !isVanillaFreshCreamCakeProduct(selectedProduct.id) && <span>{option.description}</span>}
                       </span>
                     </label>
                   )
@@ -1040,6 +1084,31 @@ export function ReservePage({
                 </div>
               </fieldset>
             )}
+            {isChocolateExtraEligibleProduct(selectedProduct.id) && (
+              <fieldset>
+                <legend>{language === 'ko' ? '초콜릿 추가 구성' : 'CHOCOLATE EXTRAS'}</legend>
+                <div className="choice-list">
+                  {CHOCOLATE_EXTRA_OPTIONS.map((option) => (
+                    <label className="choice-item" key={option.value}>
+                      <input
+                        type="radio"
+                        name="chocolateExtra"
+                        checked={form.chocolateExtra === option.value}
+                        onChange={() => selectChocolateExtra(option.value)}
+                      />
+                      <span className="choice-copy">
+                        <strong>
+                          {language === 'ko' ? option.labelKo : option.label}
+                          {option.price > 0 && ` (+${formatCurrency(option.price)})`}
+                        </strong>
+                        <span>{language === 'ko' ? option.descriptionKo : option.description}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
 
             <fieldset>
               <legend>{labels.quantity}</legend>

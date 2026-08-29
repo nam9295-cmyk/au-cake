@@ -17,6 +17,7 @@ import {
   usesReservationChocolateType,
 } from './lib/constants'
 import { getCakeDetailSelectionTotal } from './lib/cake-detail'
+import { formatCurrentCakeSizeLabel } from './lib/cake-serving'
 import { getCartEstimatedPricing, type CartLine } from './lib/cart'
 import {
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
@@ -31,6 +32,7 @@ import {
   type Language,
 } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
+import { formatChocolateExtra, getChocolateExtraOption } from './lib/chocolate-extras'
 
 type CartPageProps = {
   language: Language
@@ -49,6 +51,7 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
   const cupcakePackSize = getCupcakePackSize(product.id)
   const cupcakeFinish = CUPCAKE_FINISH_OPTIONS.find((option) => option.value === selection.cupcakeFinish) || CUPCAKE_FINISH_OPTIONS[0]
   const chocolateIcingCount = normalizeChocolateIcingCount(product.id, selection.chocolateIcingCount)
+  const chocolateExtra = getChocolateExtraOption(selection.chocolateExtra)
   const packagingPieces = selection.individualPackaging
     ? getIndividualPackagingPieceCount(product.id, selection.quantity)
     : 0
@@ -58,7 +61,7 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
       {(product.usesSizeOptions || isCheesecakeProduct(product.id)) && (
         <div>
           <dt>{copy.size}</dt>
-          <dd>{formatCakeSizeLabel(selection.cakeSize)}</dd>
+          <dd>{formatCurrentCakeSizeLabel(product.id, selection.cakeSize) || formatCakeSizeLabel(selection.cakeSize)}</dd>
         </div>
       )}
       {product.usesPoundAddonOptions && (
@@ -71,6 +74,12 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
         <div>
           <dt>{copy.chocolate}</dt>
           <dd>{formatChocolateTypeText(selection.chocolateType, language)}</dd>
+        </div>
+      )}
+      {chocolateExtra.value !== 'none' && (
+        <div>
+          <dt>{language === 'ko' ? '초콜릿 추가 구성' : 'Chocolate extras'}</dt>
+          <dd>{formatChocolateExtra(chocolateExtra.value, language)} · +{formatCurrency(chocolateExtra.price)}</dd>
         </div>
       )}
       {isCreamLayerCakeProduct(product.id) && (
