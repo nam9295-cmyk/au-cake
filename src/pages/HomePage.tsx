@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties, type PointerEvent } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight, Clipboard, MessageCircleCheck, Wallet } from 'lucide-react'
 import heroCake2Img from '../assets/hero-cake-2.webp'
-import heroCake3Img from '../assets/hero-cake-3.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
@@ -9,7 +8,7 @@ import { SpringClassCampaignDialog } from '../components/SpringClassCampaignDial
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
-import { getAuCakeCatalogCards, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
+import { getAuCakeCatalogGroups, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
 import { DEFAULT_CAKE_SIZE, PRODUCTS, formatCakeSizeLabel } from '../lib/constants'
 import { cakeCopy, getProductFeatures, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
@@ -26,8 +25,8 @@ const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
   'vanilla-fresh-cream-cake': '/products/details/vanillacake-quickview.webp',
   'buttercream-cake': '/products/details/buttercream-cake-quick-view.webp',
-  'fresh-strawberry-vanilla-cream-cake': '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp',
-  'fresh-strawberry-chocolate-cream-cake': '/products/fresh-strawberry-chocolate-cream-cake-sydney.webp',
+  'fresh-strawberry-vanilla-cream-cake': '/products/details/fresh-strawberry-vanilla-cream-cake-detail-01.webp',
+  'fresh-strawberry-chocolate-cream-cake': '/products/details/fresh-strawberry-chocolate-cream-cake-detail-01.webp',
   'chocolate-cupcakes': '/products/details/chocolate-cupcakes2-sydney.webp',
   'signature-gateau-au-chocolat': '/products/details/chocolate-pound-cake-quick-view.webp',
   'brownie-cheesecake': '/products/details/brownie-cheese-quick-view.webp',
@@ -37,9 +36,9 @@ const heroVisuals: Partial<Record<CakeCatalogImageKey, { image?: string; tagKey:
   'pave-cake': { image: heroCake2Img, tagKey: 'first', className: 'hero-cake-two' },
   'buttercream-cake': { tagKey: 'buttercream', className: 'hero-cake-six' },
   'chocolate-cupcakes': { tagKey: 'cupcakes', className: 'hero-cake-seven' },
-  'signature-gateau-au-chocolat': { image: heroCake3Img, tagKey: 'pound', className: 'hero-cake-three' },
+  'signature-gateau-au-chocolat': { image: '/products/signature-gateau-au-chocolat-sydney.webp', tagKey: 'pound', className: 'hero-cake-three' },
   'lemon-cake': { image: getPublicCakePage('lemon-cake')?.imagePath, tagKey: 'lemon', className: 'hero-cake-four' },
-  'brownie-cheesecake': { image: '/products/brownie-cheese-sydney.webp', tagKey: 'brownie', className: 'hero-cake-one' },
+  'brownie-cheesecake': { image: '/products/brownie-cheesecake-sydney.webp', tagKey: 'brownie', className: 'hero-cake-one' },
 }
 
 export function HomePage({
@@ -66,9 +65,9 @@ export function HomePage({
   const [quickViewCardId, setQuickViewCardId] = useState<string | null>(null)
   const [quickViewOpener, setQuickViewOpener] = useState<HTMLButtonElement | null>(null)
   const legacyHeroCakes = [
-    { image: '/products/brownie-cheese-sydney.webp', label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
+    { image: '/products/brownie-cheesecake-sydney.webp', label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
     { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
-    { image: heroCake3Img, label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
+    { image: '/products/signature-gateau-au-chocolat-sydney.webp', label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
     { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
     { image: getPublicCakePage('buttercream-cake')?.imagePath, label: 'Buttercream Cake', tagKey: 'buttercream', className: 'hero-cake-six' },
     { image: getPublicCakePage('chocolate-cupcakes')?.imagePath, label: 'Chocolate Cupcakes', tagKey: 'cupcakes', className: 'hero-cake-seven' },
@@ -163,11 +162,61 @@ export function HomePage({
       optionLabel: language === 'ko' ? '구성 수량만 선택' : 'Choose a pack size',
     },
   ]
+  const catalogGroups = marketConfig.market === 'AU' ? getAuCakeCatalogGroups(language) : []
   const catalogCards = marketConfig.market === 'AU'
-    ? getAuCakeCatalogCards(language)
+    ? catalogGroups.flatMap((group) => group.cards)
     : legacyKrCatalogCards
   const quickViewCard = catalogCards.find((card) => card.id === quickViewCardId) || null
   const closeQuickView = useCallback(() => setQuickViewCardId(null), [])
+
+  const renderCatalogCard = (card: CakeCatalogCard) => (
+    <article className="product-card" key={card.id}>
+      <button
+        className="product-card-quick-view"
+        type="button"
+        aria-haspopup="dialog"
+        aria-label={language === 'ko' ? `${card.name} 빠른 미리보기` : `Quick view ${card.name}`}
+        onClick={(event) => {
+          setQuickViewOpener(event.currentTarget)
+          setQuickViewCardId(card.id)
+        }}
+      >
+        <span className="product-image-wrap">
+          {card.isPhotoComingSoon ? (
+            <VanillaFreshCreamCakeSilhouette productName={card.name} />
+          ) : (
+            <img
+              src={card.imagePath}
+              alt={card.name}
+              width={1080}
+              height={1012}
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          {card.id === 'cheesecake' && (
+            <img
+              className="gluten-free-stamp"
+              src={glutenFreeStampImg}
+              alt=""
+            />
+          )}
+        </span>
+        <strong className="product-card-title">{card.name}</strong>
+        <span className="product-card-price">{card.priceLabel}</span>
+      </button>
+      <a
+        className="secondary-button full-width"
+        href={`/cakes/${card.slug}`}
+        onClick={(event) => {
+          event.preventDefault()
+          navigateToCake(card.slug)
+        }}
+      >
+        {language === 'ko' ? '옵션 선택' : 'Choose options'}
+      </a>
+    </article>
+  )
 
   const rotateHeroCake = useCallback((direction: 1 | -1) => {
     setActiveHeroCake((current) => (current + direction + heroCakes.length) % heroCakes.length)
@@ -340,56 +389,31 @@ export function HomePage({
 
         <section className="content-section product-section">
           <h2>{copy.productSectionTitle}</h2>
-          <div className="product-grid">
-            {catalogCards.map((card) => (
-              <article className="product-card" key={card.id}>
-                <button
-                  className="product-card-quick-view"
-                  type="button"
-                  aria-haspopup="dialog"
-                  aria-label={language === 'ko' ? `${card.name} 빠른 미리보기` : `Quick view ${card.name}`}
-                  onClick={(event) => {
-                    setQuickViewOpener(event.currentTarget)
-                    setQuickViewCardId(card.id)
-                  }}
-                >
-                  <span className="product-image-wrap">
-                    {card.isPhotoComingSoon ? (
-                      <VanillaFreshCreamCakeSilhouette productName={card.name} />
-                    ) : (
-                      <img
-                        src={card.imagePath}
-                        alt={card.name}
-                        width={1080}
-                        height={1012}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    )}
-                    {card.id === 'cheesecake' && (
-                      <img
-                        className="gluten-free-stamp"
-                        src={glutenFreeStampImg}
-                        alt=""
-                      />
-                    )}
-                  </span>
-                  <strong className="product-card-title">{card.name}</strong>
-                  <span className="product-card-price">{card.priceLabel}</span>
-                </button>
-                <a
-                  className="secondary-button full-width"
-                  href={`/cakes/${card.slug}`}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    navigateToCake(card.slug)
-                  }}
-                >
-                  {language === 'ko' ? '옵션 선택' : 'Choose options'}
-                </a>
-              </article>
-            ))}
-          </div>
+          {marketConfig.market === 'AU' ? (
+            <div className="cake-catalog-groups">
+              {catalogGroups.map((group) => {
+                const headingId = `home-cake-group-${group.id}`
+                return (
+                  <section className="cake-catalog-group" aria-labelledby={headingId} key={group.id}>
+                    <header className="cake-catalog-group-header">
+                      <span className="cake-catalog-group-number" aria-hidden="true">{group.number}</span>
+                      <div>
+                        <h3 id={headingId}>{group.title}</h3>
+                        <p>{group.description}</p>
+                      </div>
+                    </header>
+                    <div className="cake-catalog-group-products">
+                      {group.cards.map(renderCatalogCard)}
+                    </div>
+                  </section>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="product-grid">
+              {catalogCards.map(renderCatalogCard)}
+            </div>
+          )}
         </section>
 
         <section className="content-section policy-section" id={publicHomeContent ? 'how-ordering-works' : 'reservation-guide'}>

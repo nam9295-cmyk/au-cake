@@ -1,5 +1,5 @@
-import { Fragment } from 'react'
-import { getAuCakeCatalogCards } from './lib/cake-catalog'
+import type { MouseEvent } from 'react'
+import { getAuCakeCatalogGroups } from './lib/cake-catalog'
 import type { Language } from './lib/i18n'
 import { getPublicRoutePage } from './lib/public-content'
 
@@ -10,8 +10,13 @@ export default function CakesPage({
   language: Language
   onOpenCake: (slug: string) => void
 }) {
-  const cards = getAuCakeCatalogCards(language)
+  const groups = getAuCakeCatalogGroups(language)
   const publicPage = getPublicRoutePage('/cakes')!
+
+  const openCake = (event: MouseEvent<HTMLAnchorElement>, slug: string) => {
+    event.preventDefault()
+    onOpenCake(slug)
+  }
 
   return (
     <main className="cakes-index-page">
@@ -22,58 +27,72 @@ export default function CakesPage({
           ? '사진과 옵션, 가격을 확인한 뒤 원하는 케이크를 요청할 수 있어요.'
           : publicPage.intro}</p>
       </header>
-      <section className="cakes-index-grid" aria-label={language === 'ko' ? '케이크 목록' : 'Cake catalogue'}>
-        {cards.map((card, index) => (
-          <Fragment key={card.slug}>
-            {(index === 0 || card.group !== cards[index - 1]?.group) && <h2 className="cakes-index-group-heading">{card.group === 'whole-cakes' ? 'WHOLE CAKES' : 'MORE CAKES'}</h2>}
-            <article className="cakes-index-card">
-            <a
-              href={`/cakes/${card.slug}`}
-              className="cakes-index-image"
-              onClick={(event) => {
-                event.preventDefault()
-                onOpenCake(card.slug)
-              }}
-            >
-              {card.isPhotoComingSoon ? (
-                <span className="cakes-index-coming-soon">
-                  <b>COMING SOON</b>
-                  <small>{language === 'ko' ? '사진 준비 중 · 주문 가능' : 'Photo pending · Available to request'}</small>
-                </span>
-              ) : (
-                <img
-                  src={card.imagePath}
-                  alt={card.name}
-                  width={1080}
-                  height={1012}
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                />
-              )}
-              <span className="cakes-index-number">0{index + 1}</span>
-            </a>
-            <div className="cakes-index-copy">
-              <h2>{card.name}</h2>
-              <p>{card.description}</p>
-              <div>
-                <strong>{card.priceLabel}</strong>
-                <span>{card.optionLabel}</span>
+      <div className="cakes-index-groups" aria-label={language === 'ko' ? '케이크 목록' : 'Cake catalogue'}>
+        {groups.map((group, groupIndex) => {
+          const headingId = `cakes-index-group-${group.id}`
+          return (
+            <section className="cakes-index-group" aria-labelledby={headingId} key={group.id}>
+              <header className="cake-catalog-group-header cakes-index-group-header">
+                <span className="cake-catalog-group-number" aria-hidden="true">{group.number}</span>
+                <div>
+                  <h2 id={headingId}>{group.title}</h2>
+                  <p>{group.description}</p>
+                </div>
+              </header>
+              <div className="cake-catalog-group-products cakes-index-group-products">
+                {group.cards.map((card, cardIndex) => {
+                  const productNumber = groupIndex * 2 + cardIndex + 1
+                  return (
+                    <article className="cakes-index-card" key={card.slug}>
+                      <a
+                        href={`/cakes/${card.slug}`}
+                        className="cakes-index-image"
+                        onClick={(event) => openCake(event, card.slug)}
+                      >
+                        {card.isPhotoComingSoon ? (
+                          <span className="cakes-index-coming-soon">
+                            <b>COMING SOON</b>
+                            <small>{language === 'ko' ? '사진 준비 중 · 주문 가능' : 'Photo pending · Available to request'}</small>
+                          </span>
+                        ) : (
+                          <img
+                            src={card.imagePath}
+                            alt={card.name}
+                            width={1080}
+                            height={1012}
+                            loading={productNumber === 1 ? 'eager' : 'lazy'}
+                            decoding="async"
+                          />
+                        )}
+                        <span className="cakes-index-number">{String(productNumber).padStart(2, '0')}</span>
+                      </a>
+                      <div className="cakes-index-copy">
+                        <h3>
+                          <a href={`/cakes/${card.slug}`} onClick={(event) => openCake(event, card.slug)}>
+                            {card.name}
+                          </a>
+                        </h3>
+                        <p className="cakes-index-card-description">{card.description}</p>
+                        <div className="cakes-index-card-price">
+                          <strong>{card.priceLabel}</strong>
+                          <span className="cakes-index-card-option">{card.optionLabel}</span>
+                        </div>
+                        <a
+                          href={`/cakes/${card.slug}`}
+                          className="secondary-button"
+                          onClick={(event) => openCake(event, card.slug)}
+                        >
+                          {language === 'ko' ? '상세 보기' : 'View details'}
+                        </a>
+                      </div>
+                    </article>
+                  )
+                })}
               </div>
-              <a
-                href={`/cakes/${card.slug}`}
-                className="secondary-button"
-                onClick={(event) => {
-                  event.preventDefault()
-                  onOpenCake(card.slug)
-                }}
-              >
-                {language === 'ko' ? '상세 보기' : 'View details'}
-              </a>
-            </div>
-          </article>
-          </Fragment>
-        ))}
-      </section>
+            </section>
+          )
+        })}
+      </div>
     </main>
   )
 }

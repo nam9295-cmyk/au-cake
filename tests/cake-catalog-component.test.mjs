@@ -5,9 +5,12 @@ import { readFile, stat } from 'node:fs/promises'
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const cakesSource = await readFile(new URL('../src/CakesPage.tsx', import.meta.url), 'utf8')
 
-test('home catalogue renders its eight cards from the shared AU cake catalog', () => {
-  assert.match(homeSource, /getAuCakeCatalogCards\(language\)/)
+test('Home and cakes page render the same four groups from the shared AU cake catalogue', () => {
+  assert.match(homeSource, /getAuCakeCatalogGroups\(language\)/)
+  assert.match(cakesSource, /getAuCakeCatalogGroups\(language\)/)
   assert.doesNotMatch(homeSource, /const catalogCards = \[/)
+  assert.doesNotMatch(homeSource, /\['pave',\s*'buttercream'/)
+  assert.doesNotMatch(cakesSource, /\['pave',\s*'buttercream'/)
 })
 
 test('catalogue cards render their canonical image paths', () => {
@@ -44,14 +47,17 @@ test('new Lemon Cake catalogue photo is also used in the home hero', () => {
   assert.doesNotMatch(homeSource, /import freshLemonCupcakesHeroImg/)
 })
 
-test('home hero cycles only sale cakes with available images every three seconds', () => {
+test('home hero uses the current canonical Signature and Brownie product photographs', () => {
   assert.match(homeSource, /getAuHomeHeroCards\(language\)\n\s*\.filter\(\(card\) => !card\.isPhotoComingSoon\)/)
   assert.match(homeSource, /const \[activeHeroCake, setActiveHeroCake\] = useState\(\(\) => marketConfig\.market === 'AU' \? 0 : 1\)/)
   assert.match(homeSource, /\.map\(\(card\) => \(\{[\s\S]*?label: card\.name/)
   assert.match(homeSource, /heroVisuals\[card\.imageKey\]\?\.image \|\| card\.imagePath/)
   assert.match(homeSource, /'pave-cake': \{ image: heroCake2Img/)
-  assert.match(homeSource, /'signature-gateau-au-chocolat': \{ image: heroCake3Img/)
-  assert.match(homeSource, /'brownie-cheesecake': \{ image: '\/products\/brownie-cheese-sydney\.webp'/)
+  assert.match(homeSource, /'signature-gateau-au-chocolat': \{ image: '\/products\/signature-gateau-au-chocolat-sydney\.webp'/)
+  assert.match(homeSource, /'brownie-cheesecake': \{ image: '\/products\/brownie-cheesecake-sydney\.webp'/)
+  assert.match(homeSource, /image: '\/products\/signature-gateau-au-chocolat-sydney\.webp', label: 'Signature Gâteau au Chocolat'/)
+  assert.match(homeSource, /image: '\/products\/brownie-cheesecake-sydney\.webp', label: 'Brownie Cheesecake'/)
+  assert.doesNotMatch(homeSource, /heroCake3Img|brownie-cheese-sydney\.webp/)
   assert.doesNotMatch(homeSource, /label: 'Vanilla Fresh Cream Cake'|vanillacake-hero/)
   assert.match(homeSource, /window\.setInterval\([\s\S]*?\}, 3000\)/)
 })
@@ -63,6 +69,8 @@ test('quick view uses dedicated replaceable detail-shot files', () => {
   assert.match(homeSource, /'lemon-cake':\s*'\/products\/details\/lemon-cake-quick-view\.webp'/)
   assert.match(homeSource, /'vanilla-fresh-cream-cake':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
   assert.match(homeSource, /'buttercream-cake':\s*'\/products\/details\/buttercream-cake-quick-view\.webp'/)
+  assert.match(homeSource, /'fresh-strawberry-vanilla-cream-cake':\s*'\/products\/details\/fresh-strawberry-vanilla-cream-cake-detail-01\.webp'/)
+  assert.match(homeSource, /'fresh-strawberry-chocolate-cream-cake':\s*'\/products\/details\/fresh-strawberry-chocolate-cream-cake-detail-01\.webp'/)
   assert.match(homeSource, /'chocolate-cupcakes':\s*'\/products\/details\/chocolate-cupcakes2-sydney\.webp'/)
   assert.match(homeSource, /'brownie-cheesecake':\s*'\/products\/details\/brownie-cheese-quick-view\.webp'/)
   assert.match(homeSource, /imageUrl=\{quickViewImages\[quickViewCard\.imageKey\]\}/)
@@ -84,6 +92,7 @@ test('new catalogue photos and previous detail photos use descriptive canonical 
   assert.match(detailSource, /'cupcake-detail': '\/products\/details\/chocolate-cupcakes-detail-01\.webp'/)
   assert.match(detailSource, /'signature-gateau-side': '\/products\/signature-gateau-au-chocolat-sydney\.webp'/)
   assert.match(detailSource, /'signature-gateau-detail': '\/products\/details\/signature-gateau-au-chocolat-detail-01\.webp'/)
+  assert.match(detailSource, /'signature-gateau-previous': '\/products\/details\/signature-gateau-au-chocolat-previous-main\.webp'/)
   assert.match(detailSource, /'brownie-side': '\/products\/brownie-cheesecake-sydney\.webp'/)
   assert.match(detailSource, /'brownie-detail': '\/products\/details\/brownie-cheesecake-detail-01\.webp'/)
   assert.match(detailSource, /'brownie-quick-view': '\/products\/details\/brownie-cheese-quick-view\.webp'/)
@@ -100,6 +109,7 @@ test('new catalogue and preserved detail WebPs are present in this worktree', as
     '../public/products/buttercream-cake-sydney.webp',
     '../public/products/brownie-cheesecake-sydney.webp',
     '../public/products/details/signature-gateau-au-chocolat-detail-01.webp',
+    '../public/products/details/signature-gateau-au-chocolat-previous-main.webp',
     '../public/products/details/chocolate-cupcakes-detail-01.webp',
     '../public/products/details/buttercream-cake-detail-01.webp',
     '../public/products/details/brownie-cheesecake-detail-01.webp',
@@ -107,13 +117,16 @@ test('new catalogue and preserved detail WebPs are present in this worktree', as
     const image = await stat(new URL(path, import.meta.url))
     assert.ok(image.size > 0, path)
   }
+
+  await assert.rejects(stat(new URL('../public/products/brownie-cheese-sydney.webp', import.meta.url)))
 })
 
-test('desktop home catalogue uses four columns so eight products form two rows', async () => {
+test('every catalogue category keeps its two products in a flexible two-column grid', async () => {
   const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
-  assert.match(css, /@media \(min-width: 1100px\)[\s\S]*?\.product-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/)
-  assert.doesNotMatch(css, /@media \(min-width: 1100px\)[\s\S]*?\.product-grid\s*\{[^}]*grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/)
+  assert.match(css, /\.cake-catalog-group-products\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cake-catalog-group-products\s*\{[^}]*gap:\s*1[02]px/s)
+  assert.doesNotMatch(css, /\.cake-catalog-group-products\s*\{[^}]*width:\s*\d+px/s)
 })
 
 test('home catalogue cards show only image, title, price, and one action', async () => {
@@ -180,8 +193,16 @@ test('quick view photography fills its frame and mobile copy stays compact', asy
   assert.doesNotMatch(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-image-wrap > img\s*\{[^}]*width:\s*min\(76%,\s*280px\)/s)
 })
 
-test('mobile cake catalogue headings stay within the 390px layout budget', async () => {
+test('mobile cake catalogue cards reduce copy without changing the public source', async () => {
   const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
-  assert.match(css, /\.cakes-index-copy h2\s*\{[^}]*font-size:\s*clamp\(36px, 11vw, 52px\)/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-card-description,\s*\.cakes-index-card-option\s*\{[^}]*display:\s*none/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-copy h3\s*\{[^}]*overflow-wrap:\s*anywhere/s)
+})
+
+test('mobile Home and cakes catalogue photography fills more of each two-column card', async () => {
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap img\s*\{[^}]*width:\s*116%[^}]*max-width:\s*none[^}]*max-height:\s*190px/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-image img\s*\{[^}]*padding:\s*0/s)
 })
