@@ -66,6 +66,8 @@ test('quick view uses dedicated replaceable detail-shot files', () => {
   assert.match(homeSource, /'lemon-cake':\s*'\/products\/details\/lemon-cake-quick-view\.webp'/)
   assert.match(homeSource, /'vanilla-fresh-cream-cake':\s*'\/products\/details\/vanillacake-quickview\.webp'/)
   assert.match(homeSource, /'buttercream-cake':\s*'\/products\/details\/buttercream-cake-quick-view\.webp'/)
+  assert.match(homeSource, /'fresh-strawberry-vanilla-cream-cake':\s*'\/products\/details\/fresh-strawberry-vanilla-cream-cake-detail-01\.webp'/)
+  assert.match(homeSource, /'fresh-strawberry-chocolate-cream-cake':\s*'\/products\/details\/fresh-strawberry-chocolate-cream-cake-detail-01\.webp'/)
   assert.match(homeSource, /'chocolate-cupcakes':\s*'\/products\/details\/chocolate-cupcakes2-sydney\.webp'/)
   assert.match(homeSource, /'brownie-cheesecake':\s*'\/products\/details\/brownie-cheese-quick-view\.webp'/)
   assert.match(homeSource, /imageUrl=\{quickViewImages\[quickViewCard\.imageKey\]\}/)

@@ -10,12 +10,12 @@ const catalog = readFileSync(new URL('../src/lib/cake-catalog.ts', import.meta.u
 const detail = readFileSync(new URL('../src/lib/cake-detail.ts', import.meta.url), 'utf8')
 const detailPage = readFileSync(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
 
-test('Strawberry Whole Cakes use supplied images in catalogue, Quick View and detail gallery', () => {
+test('Strawberry Whole Cakes use supplied card images, Quick View close-ups and detail galleries', () => {
   assert.match(catalog, /defaultProductId:\s*'fresh-strawberry-vanilla-cream-cake'/)
   assert.match(catalog, /id:\s*'fresh-strawberry-vanilla-cream'[\s\S]*?isPhotoComingSoon:\s*false/)
   assert.match(home, /import \{ getAuPublicContent, getPublicCakePage \} from '\.\.\/lib\/public-content'/)
-  assert.match(home, /'fresh-strawberry-vanilla-cream-cake':\s*'\/products\/fresh-strawberry-vanilla-cream-cake-sydney\.webp'/)
-  assert.match(home, /'fresh-strawberry-chocolate-cream-cake':\s*'\/products\/fresh-strawberry-chocolate-cream-cake-sydney\.webp'/)
+  assert.match(home, /'fresh-strawberry-vanilla-cream-cake':\s*'\/products\/details\/fresh-strawberry-vanilla-cream-cake-detail-01\.webp'/)
+  assert.match(home, /'fresh-strawberry-chocolate-cream-cake':\s*'\/products\/details\/fresh-strawberry-chocolate-cream-cake-detail-01\.webp'/)
   assert.match(detail, /'fresh-strawberry-vanilla-cream':\s*\['fresh-strawberry-vanilla-cream-side',\s*'fresh-strawberry-vanilla-cream-detail'\]/)
   assert.match(detail, /'fresh-strawberry-chocolate-cream':\s*\['fresh-strawberry-chocolate-cream-side',\s*'fresh-strawberry-chocolate-cream-detail'\]/)
   assert.match(detailPage, /'fresh-strawberry-vanilla-cream-side':\s*'\/products\/fresh-strawberry-vanilla-cream-cake-sydney\.webp'/)
