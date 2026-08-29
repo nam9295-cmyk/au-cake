@@ -52,22 +52,15 @@ test('Vanilla Fresh Cream Cake selects its size without retired flavour controls
 
 test('Strawberry Whole Cake catalogue cards exist only for the AU market', () => {
   assert.match(catalog, /id:\s*'fresh-strawberry-vanilla-cream'/)
-  assert.match(home, /marketConfig\.market === 'AU'[\s\S]*?getAuCakeCatalogCards\(language\)/)
+  assert.match(home, /marketConfig\.market === 'AU'[\s\S]*?getAuCakeCatalogGroups\(language\)/)
 })
 
-test('AU catalogue cards follow the final eight-product order', () => {
-  const order = ['pave', 'buttercream', 'fresh-strawberry-vanilla-cream', 'fresh-strawberry-chocolate-cream', 'cupcake', 'signature-gateau', 'fresh-lemon-cupcakes', 'brownie-cheesecake']
-  const positions = order.map((id) => catalog.indexOf(`id: '${id}'`))
-  assert.equal(positions.every((position) => position >= 0), true)
-  assert.deepEqual([...positions].sort((left, right) => left - right), positions)
+test('AU catalogue grouping declares the final eight-product presentation order', () => {
+  const groups = catalog.slice(catalog.indexOf('const AU_CAKE_CATALOG_GROUPS'))
+  assert.match(groups, /catalogIds: \['pave', 'buttercream'\][\s\S]*catalogIds: \['signature-gateau', 'cupcake'\][\s\S]*catalogIds: \['fresh-strawberry-vanilla-cream', 'fresh-strawberry-chocolate-cream'\][\s\S]*catalogIds: \['fresh-lemon-cupcakes', 'brownie-cheesecake'\]/)
 })
 
-test('catalogue stacks on mobile and uses four desktop columns for the growing product range', () => {
-  const tabletStart = css.indexOf('@media (min-width: 768px) {')
-  const desktopStart = css.indexOf('@media (min-width: 1100px)')
-  const tabletCss = css.slice(tabletStart, desktopStart)
-  const desktopCss = css.slice(desktopStart, css.indexOf('@media (max-width: 900px)'))
-  assert.match(css.slice(0, tabletStart), /\.product-grid\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*1fr;/)
-  assert.match(tabletCss, /\.product-grid\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/)
-  assert.match(desktopCss, /\.product-grid\s*\{\s*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\);/)
+test('grouped catalogue stays two-column on mobile, tablet and desktop', () => {
+  assert.match(css, /\.cake-catalog-group-products\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s)
+  assert.doesNotMatch(css, /\.cake-catalog-group-products\s*\{[^}]*grid-template-columns:\s*1fr/s)
 })

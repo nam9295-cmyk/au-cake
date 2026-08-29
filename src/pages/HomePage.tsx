@@ -8,7 +8,7 @@ import { SpringClassCampaignDialog } from '../components/SpringClassCampaignDial
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
-import { getAuCakeCatalogCards, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
+import { getAuCakeCatalogGroups, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
 import { DEFAULT_CAKE_SIZE, PRODUCTS, formatCakeSizeLabel } from '../lib/constants'
 import { cakeCopy, getProductFeatures, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
@@ -162,11 +162,61 @@ export function HomePage({
       optionLabel: language === 'ko' ? '구성 수량만 선택' : 'Choose a pack size',
     },
   ]
+  const catalogGroups = marketConfig.market === 'AU' ? getAuCakeCatalogGroups(language) : []
   const catalogCards = marketConfig.market === 'AU'
-    ? getAuCakeCatalogCards(language)
+    ? catalogGroups.flatMap((group) => group.cards)
     : legacyKrCatalogCards
   const quickViewCard = catalogCards.find((card) => card.id === quickViewCardId) || null
   const closeQuickView = useCallback(() => setQuickViewCardId(null), [])
+
+  const renderCatalogCard = (card: CakeCatalogCard) => (
+    <article className="product-card" key={card.id}>
+      <button
+        className="product-card-quick-view"
+        type="button"
+        aria-haspopup="dialog"
+        aria-label={language === 'ko' ? `${card.name} 빠른 미리보기` : `Quick view ${card.name}`}
+        onClick={(event) => {
+          setQuickViewOpener(event.currentTarget)
+          setQuickViewCardId(card.id)
+        }}
+      >
+        <span className="product-image-wrap">
+          {card.isPhotoComingSoon ? (
+            <VanillaFreshCreamCakeSilhouette productName={card.name} />
+          ) : (
+            <img
+              src={card.imagePath}
+              alt={card.name}
+              width={1080}
+              height={1012}
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          {card.id === 'cheesecake' && (
+            <img
+              className="gluten-free-stamp"
+              src={glutenFreeStampImg}
+              alt=""
+            />
+          )}
+        </span>
+        <strong className="product-card-title">{card.name}</strong>
+        <span className="product-card-price">{card.priceLabel}</span>
+      </button>
+      <a
+        className="secondary-button full-width"
+        href={`/cakes/${card.slug}`}
+        onClick={(event) => {
+          event.preventDefault()
+          navigateToCake(card.slug)
+        }}
+      >
+        {language === 'ko' ? '옵션 선택' : 'Choose options'}
+      </a>
+    </article>
+  )
 
   const rotateHeroCake = useCallback((direction: 1 | -1) => {
     setActiveHeroCake((current) => (current + direction + heroCakes.length) % heroCakes.length)
@@ -339,56 +389,31 @@ export function HomePage({
 
         <section className="content-section product-section">
           <h2>{copy.productSectionTitle}</h2>
-          <div className="product-grid">
-            {catalogCards.map((card) => (
-              <article className="product-card" key={card.id}>
-                <button
-                  className="product-card-quick-view"
-                  type="button"
-                  aria-haspopup="dialog"
-                  aria-label={language === 'ko' ? `${card.name} 빠른 미리보기` : `Quick view ${card.name}`}
-                  onClick={(event) => {
-                    setQuickViewOpener(event.currentTarget)
-                    setQuickViewCardId(card.id)
-                  }}
-                >
-                  <span className="product-image-wrap">
-                    {card.isPhotoComingSoon ? (
-                      <VanillaFreshCreamCakeSilhouette productName={card.name} />
-                    ) : (
-                      <img
-                        src={card.imagePath}
-                        alt={card.name}
-                        width={1080}
-                        height={1012}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    )}
-                    {card.id === 'cheesecake' && (
-                      <img
-                        className="gluten-free-stamp"
-                        src={glutenFreeStampImg}
-                        alt=""
-                      />
-                    )}
-                  </span>
-                  <strong className="product-card-title">{card.name}</strong>
-                  <span className="product-card-price">{card.priceLabel}</span>
-                </button>
-                <a
-                  className="secondary-button full-width"
-                  href={`/cakes/${card.slug}`}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    navigateToCake(card.slug)
-                  }}
-                >
-                  {language === 'ko' ? '옵션 선택' : 'Choose options'}
-                </a>
-              </article>
-            ))}
-          </div>
+          {marketConfig.market === 'AU' ? (
+            <div className="cake-catalog-groups">
+              {catalogGroups.map((group) => {
+                const headingId = `home-cake-group-${group.id}`
+                return (
+                  <section className="cake-catalog-group" aria-labelledby={headingId} key={group.id}>
+                    <header className="cake-catalog-group-header">
+                      <span className="cake-catalog-group-number" aria-hidden="true">{group.number}</span>
+                      <div>
+                        <h3 id={headingId}>{group.title}</h3>
+                        <p>{group.description}</p>
+                      </div>
+                    </header>
+                    <div className="cake-catalog-group-products">
+                      {group.cards.map(renderCatalogCard)}
+                    </div>
+                  </section>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="product-grid">
+              {catalogCards.map(renderCatalogCard)}
+            </div>
+          )}
         </section>
 
         <section className="content-section policy-section" id={publicHomeContent ? 'how-ordering-works' : 'reservation-guide'}>

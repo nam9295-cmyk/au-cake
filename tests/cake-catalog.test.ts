@@ -6,6 +6,7 @@ import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/
 import {
   getAuCakeCatalog,
   getAuCakeCatalogCards,
+  getAuCakeCatalogGroups,
   getCakeCatalogEntryByProductId,
   getCakeCatalogEntryBySlug,
   getCakeCatalogUnitPrice,
@@ -120,6 +121,69 @@ test('AU cake catalog owns eight unique public slugs and stable backend product 
   assert.equal(getCakeCatalogEntryByProductId('eiffel-tower-brownie-cheesecake'), null)
   assert.equal(getCakeCatalogEntryByProductId('vanilla-fresh-cream-cake'), null)
   assert.equal(getCakeCatalogEntryByProductId('choco-basque-cheesecake'), null)
+})
+
+test('AU catalogue groups own the exact bilingual four-by-two presentation contract', () => {
+  const english = getAuCakeCatalogGroups('en')
+  const korean = getAuCakeCatalogGroups('ko')
+
+  assert.deepEqual(
+    english.map(({ id, number, title, description, cards }) => ({
+      id,
+      number,
+      title,
+      description,
+      productIds: cards.map((card) => card.id),
+    })),
+    [
+      {
+        id: 'signature-gateau',
+        number: '01',
+        title: 'SIGNATURE GÂTEAU',
+        description: 'Rich chocolate cakes built on our signature gâteau layers.',
+        productIds: ['pave', 'buttercream'],
+      },
+      {
+        id: 'gateau-daily',
+        number: '02',
+        title: 'GÂTEAU DAILY',
+        description: 'Everyday chocolate cakes made for easy sharing and simple moments.',
+        productIds: ['signature-gateau', 'cupcake'],
+      },
+      {
+        id: 'fresh-cream-cakes',
+        number: '03',
+        title: 'FRESH CREAM CAKES',
+        description: 'Soft genoise layers with fresh cream and fresh strawberries.',
+        productIds: ['fresh-strawberry-vanilla-cream', 'fresh-strawberry-chocolate-cream'],
+      },
+      {
+        id: 'tea-time-refresh',
+        number: '04',
+        title: 'TEA TIME & REFRESH',
+        description: 'Easy treats for sharing, gifting and afternoon tea.',
+        productIds: ['fresh-lemon-cupcakes', 'brownie-cheesecake'],
+      },
+    ],
+  )
+
+  assert.deepEqual(
+    korean.map(({ title, description }) => ({ title, description })),
+    [
+      { title: '시그니처 갸또', description: '진하고 밀도감 있는 시그니처 갸또 쇼콜라 시트로 완성한 케이크.' },
+      { title: '갸또 데일리', description: '매일 부담 없이 즐기고 나누기 좋은 초콜릿 케이크.' },
+      { title: '프레시 생크림 케이크', description: '부드러운 제누아즈 시트에 생크림과 생딸기를 더한 케이크.' },
+      { title: '티타임 & 리프레시', description: '티타임과 가벼운 디저트 시간에 함께하기 좋은 케이크.' },
+    ],
+  )
+
+  assert.equal(english.length, 4)
+  assert.ok(english.every((group) => group.cards.length === 2))
+  const currentIds = english.flatMap((group) => group.cards.map((card) => card.id))
+  assert.equal(currentIds.length, 8)
+  assert.equal(new Set(currentIds).size, 8)
+  assert.equal(currentIds.includes('vanilla-fresh-cream'), false)
+  assert.equal(getAuCakeCatalog().flatMap((entry) => entry.productIds).includes('eiffel-tower-brownie-cheesecake'), false)
 })
 
 test('catalog cards expose separated Cupcake and Signature names in English and Korean', () => {

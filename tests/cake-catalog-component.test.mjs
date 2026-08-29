@@ -5,9 +5,12 @@ import { readFile, stat } from 'node:fs/promises'
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const cakesSource = await readFile(new URL('../src/CakesPage.tsx', import.meta.url), 'utf8')
 
-test('home catalogue renders its eight cards from the shared AU cake catalog', () => {
-  assert.match(homeSource, /getAuCakeCatalogCards\(language\)/)
+test('Home and cakes page render the same four groups from the shared AU cake catalogue', () => {
+  assert.match(homeSource, /getAuCakeCatalogGroups\(language\)/)
+  assert.match(cakesSource, /getAuCakeCatalogGroups\(language\)/)
   assert.doesNotMatch(homeSource, /const catalogCards = \[/)
+  assert.doesNotMatch(homeSource, /\['pave',\s*'buttercream'/)
+  assert.doesNotMatch(cakesSource, /\['pave',\s*'buttercream'/)
 })
 
 test('catalogue cards render their canonical image paths', () => {
@@ -118,11 +121,12 @@ test('new catalogue and preserved detail WebPs are present in this worktree', as
   await assert.rejects(stat(new URL('../public/products/brownie-cheese-sydney.webp', import.meta.url)))
 })
 
-test('desktop home catalogue uses four columns so eight products form two rows', async () => {
+test('every catalogue category keeps its two products in a flexible two-column grid', async () => {
   const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
-  assert.match(css, /@media \(min-width: 1100px\)[\s\S]*?\.product-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/)
-  assert.doesNotMatch(css, /@media \(min-width: 1100px\)[\s\S]*?\.product-grid\s*\{[^}]*grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/)
+  assert.match(css, /\.cake-catalog-group-products\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cake-catalog-group-products\s*\{[^}]*gap:\s*1[02]px/s)
+  assert.doesNotMatch(css, /\.cake-catalog-group-products\s*\{[^}]*width:\s*\d+px/s)
 })
 
 test('home catalogue cards show only image, title, price, and one action', async () => {
@@ -189,8 +193,9 @@ test('quick view photography fills its frame and mobile copy stays compact', asy
   assert.doesNotMatch(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-image-wrap > img\s*\{[^}]*width:\s*min\(76%,\s*280px\)/s)
 })
 
-test('mobile cake catalogue headings stay within the 390px layout budget', async () => {
+test('mobile cake catalogue cards reduce copy without changing the public source', async () => {
   const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
-  assert.match(css, /\.cakes-index-copy h2\s*\{[^}]*font-size:\s*clamp\(36px, 11vw, 52px\)/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-card-description,\s*\.cakes-index-card-option\s*\{[^}]*display:\s*none/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-copy h3\s*\{[^}]*overflow-wrap:\s*anywhere/s)
 })

@@ -65,6 +65,31 @@ export type CakeCatalogCard = LocalizedCatalogCopy & {
   priceLabel: string
 }
 
+export type CakeCatalogGroupId =
+  | 'signature-gateau'
+  | 'gateau-daily'
+  | 'fresh-cream-cakes'
+  | 'tea-time-refresh'
+
+type LocalizedCatalogGroupCopy = {
+  title: string
+  description: string
+}
+
+type CakeCatalogGroupDefinition = {
+  id: CakeCatalogGroupId
+  number: string
+  copy: Record<Language, LocalizedCatalogGroupCopy>
+  catalogIds: readonly CakeCatalogId[]
+}
+
+export type CakeCatalogGroup = LocalizedCatalogGroupCopy & {
+  id: CakeCatalogGroupId
+  number: string
+  catalogIds: readonly CakeCatalogId[]
+  cards: readonly CakeCatalogCard[]
+}
+
 const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
   {
     id: 'pave',
@@ -162,6 +187,69 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
   },
 ]
 
+const AU_CAKE_CATALOG_GROUPS: readonly CakeCatalogGroupDefinition[] = [
+  {
+    id: 'signature-gateau',
+    number: '01',
+    copy: {
+      en: {
+        title: 'SIGNATURE GÂTEAU',
+        description: 'Rich chocolate cakes built on our signature gâteau layers.',
+      },
+      ko: {
+        title: '시그니처 갸또',
+        description: '진하고 밀도감 있는 시그니처 갸또 쇼콜라 시트로 완성한 케이크.',
+      },
+    },
+    catalogIds: ['pave', 'buttercream'],
+  },
+  {
+    id: 'gateau-daily',
+    number: '02',
+    copy: {
+      en: {
+        title: 'GÂTEAU DAILY',
+        description: 'Everyday chocolate cakes made for easy sharing and simple moments.',
+      },
+      ko: {
+        title: '갸또 데일리',
+        description: '매일 부담 없이 즐기고 나누기 좋은 초콜릿 케이크.',
+      },
+    },
+    catalogIds: ['signature-gateau', 'cupcake'],
+  },
+  {
+    id: 'fresh-cream-cakes',
+    number: '03',
+    copy: {
+      en: {
+        title: 'FRESH CREAM CAKES',
+        description: 'Soft genoise layers with fresh cream and fresh strawberries.',
+      },
+      ko: {
+        title: '프레시 생크림 케이크',
+        description: '부드러운 제누아즈 시트에 생크림과 생딸기를 더한 케이크.',
+      },
+    },
+    catalogIds: ['fresh-strawberry-vanilla-cream', 'fresh-strawberry-chocolate-cream'],
+  },
+  {
+    id: 'tea-time-refresh',
+    number: '04',
+    copy: {
+      en: {
+        title: 'TEA TIME & REFRESH',
+        description: 'Easy treats for sharing, gifting and afternoon tea.',
+      },
+      ko: {
+        title: '티타임 & 리프레시',
+        description: '티타임과 가벼운 디저트 시간에 함께하기 좋은 케이크.',
+      },
+    },
+    catalogIds: ['fresh-lemon-cupcakes', 'brownie-cheesecake'],
+  },
+]
+
 export function getAuCakeCatalog(): readonly CakeCatalogEntry[] {
   return marketConfig.market === 'AU' ? AU_CAKE_CATALOG : []
 }
@@ -221,6 +309,24 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
 
 export function getAuCakeCatalogCards(language: Language): readonly CakeCatalogCard[] {
   return getAuCakeCatalog().map((entry) => getCakeCatalogCard(entry, language))
+}
+
+export function getAuCakeCatalogGroups(language: Language): readonly CakeCatalogGroup[] {
+  if (marketConfig.market !== 'AU') return []
+
+  const cardsById = new Map(getAuCakeCatalogCards(language).map((card) => [card.id, card]))
+
+  return AU_CAKE_CATALOG_GROUPS.map((group) => ({
+    id: group.id,
+    number: group.number,
+    catalogIds: group.catalogIds,
+    ...group.copy[language],
+    cards: group.catalogIds.map((catalogId) => {
+      const card = cardsById.get(catalogId)
+      if (!card) throw new Error(`Missing AU cake catalogue card: ${catalogId}`)
+      return card
+    }),
+  }))
 }
 
 const AU_HOME_HERO_PRIORITY: readonly CakeCatalogId[] = [

@@ -778,6 +778,59 @@ main {
   gap: 48px;
 }
 
+.cake-catalog-groups {
+  display: grid;
+  gap: clamp(58px, 7vw, 88px);
+}
+
+.cake-catalog-group {
+  min-width: 0;
+}
+
+.cake-catalog-group-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cake-catalog-group-number {
+  padding-top: 5px;
+  color: var(--berry-emphasis);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.cake-catalog-group-header h2,
+.cake-catalog-group-header h3 {
+  margin: 0;
+  color: var(--forest-deep);
+  font-family: var(--font-sans);
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.cake-catalog-group-header p {
+  max-width: 640px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cake-catalog-group-products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(18px, 3vw, 34px);
+}
+
 .product-card {
   position: relative;
   display: grid;
@@ -7443,36 +7496,34 @@ td select {
   font-size: 18px;
 }
 
-.cakes-index-group-heading {
-  grid-column: 1 / -1;
-  margin: 0;
-  padding: 22px 24px 18px;
-  background: var(--surface);
-  color: var(--text);
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+.cakes-index-groups {
+  display: grid;
+  gap: clamp(64px, 8vw, 104px);
 }
 
-.cakes-index-grid {
-  display: grid;
+.cakes-index-group-header {
+  margin-bottom: 24px;
+}
+
+.cakes-index-group-products {
   gap: 1px;
+  overflow: hidden;
   border: 1px solid var(--border);
   background: var(--border);
 }
 
 .cakes-index-card {
-  display: grid;
-  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
-  min-height: 480px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--surface-soft);
 }
 
 .cakes-index-image {
   display: block;
   position: relative;
-  min-height: 480px;
+  aspect-ratio: 1.08 / 1;
+  min-height: 0;
   overflow: hidden;
   border: 0;
   background: #e9e4dc;
@@ -7507,7 +7558,7 @@ td select {
   display: grid;
   place-content: center;
   height: 100%;
-  min-height: 480px;
+  min-height: 0;
   padding: 40px;
   color: var(--forest);
   text-align: center;
@@ -7525,40 +7576,53 @@ td select {
 }
 
 .cakes-index-copy {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  padding: clamp(36px, 6vw, 84px);
+  padding: clamp(24px, 3.4vw, 42px);
 }
 
-.cakes-index-copy h2 {
-  max-width: 720px;
+.cakes-index-copy h3 {
+  max-width: 620px;
+  margin: 0;
   color: var(--forest-deep);
-  font-size: clamp(38px, 5vw, 68px);
+  font-size: clamp(28px, 3.2vw, 46px);
+  line-height: 0.98;
 }
 
-.cakes-index-copy>p {
+.cakes-index-copy h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cakes-index-copy h3 a:hover,
+.cakes-index-copy h3 a:focus-visible {
+  color: var(--berry-emphasis);
+}
+
+.cakes-index-card-description {
   max-width: 650px;
+  margin-top: 18px;
   color: var(--muted);
 }
 
-.cakes-index-copy>div {
+.cakes-index-card-price {
   display: grid;
   gap: 7px;
   width: 100%;
-  margin: 22px 0 28px;
+  margin: auto 0 24px;
   padding: 18px 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
 
-.cakes-index-copy>div strong {
+.cakes-index-card-price strong {
   color: var(--forest-deep);
   font-size: 24px;
 }
 
-.cakes-index-copy>div span {
+.cakes-index-card-price span {
   color: var(--muted);
   font-size: 13px;
 }
@@ -8545,27 +8609,21 @@ label.vanilla-point-color-card {
     font-size: clamp(48px, 16vw, 68px);
   }
 
-  .cakes-index-grid {
-    width: calc(100% + 32px);
-    margin-left: -16px;
-  }
-
   .cakes-index-card {
-    grid-template-columns: 1fr;
     min-height: 0;
   }
 
   .cakes-index-image,
   .cakes-index-coming-soon {
-    min-height: 350px;
+    min-height: 0;
   }
 
   .cakes-index-copy {
-    padding: 30px 20px 40px;
+    padding: 18px 14px 20px;
   }
 
-  .cakes-index-copy h2 {
-    font-size: clamp(36px, 11vw, 52px);
+  .cakes-index-copy h3 {
+    font-size: clamp(16px, 4.5vw, 20px);
   }
 }
 
@@ -8839,6 +8897,125 @@ label.vanilla-point-color-card {
   font-size: 15px;
   font-weight: 700;
   line-height: 1.2;
+}
+
+@media (max-width: 767px) {
+  .cake-catalog-groups,
+  .cakes-index-groups {
+    gap: 54px;
+  }
+
+  .cake-catalog-group-header {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 13px;
+  }
+
+  .cake-catalog-group-number {
+    padding-top: 3px;
+    font-size: 10px;
+  }
+
+  .cake-catalog-group-header h2,
+  .cake-catalog-group-header h3 {
+    font-size: clamp(19px, 5.8vw, 24px);
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .cake-catalog-group-header p {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .cake-catalog-group-products {
+    gap: 12px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card {
+    gap: 10px;
+  }
+
+  .product-section .cake-catalog-group-products .product-image-wrap {
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+  }
+
+  .product-section .cake-catalog-group-products .product-image-wrap img {
+    width: 100%;
+    max-height: 174px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-title {
+    min-height: 3.3em;
+    font-size: clamp(14px, 3.8vw, 16px);
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-price {
+    font-size: 12px;
+  }
+
+  .product-section .cake-catalog-group-products .secondary-button {
+    min-height: 42px;
+    height: auto;
+    padding: 8px 6px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  .cakes-index-group-products {
+    gap: 1px;
+  }
+
+  .cakes-index-image img {
+    padding: 12px;
+  }
+
+  .cakes-index-number {
+    top: 10px;
+    left: 10px;
+    font-size: 10px;
+  }
+
+  .cakes-index-copy {
+    padding: 14px 10px 16px;
+  }
+
+  .cakes-index-copy h3 {
+    min-height: 3.25em;
+    font-size: clamp(14px, 4vw, 17px);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+  }
+
+  .cakes-index-card-description,
+  .cakes-index-card-option {
+    display: none;
+  }
+
+  .cakes-index-card-price {
+    margin: 14px 0 12px;
+    padding: 11px 0;
+  }
+
+  .cakes-index-card-price strong {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .cakes-index-copy .secondary-button {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 5px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+  }
 }
 
 .product-card:hover .product-image-wrap img,
