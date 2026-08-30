@@ -46,7 +46,7 @@ import { formatCurrentCakeSizeLabel, getCakeServingGuideCopy, getCurrentWholeCak
 import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-editorial'
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
-import type { ProductId } from './lib/types'
+import type { ChocolateExtra, PoundAddon, ProductId } from './lib/types'
 
 const detailImages: Record<CakeDetailImageKey, string> = {
   'pound-side': '/products/chocolate-pound-cake-sydney.webp',
@@ -88,6 +88,38 @@ const detailImages: Record<CakeDetailImageKey, string> = {
   'brownie-side': '/products/brownie-cheesecake-sydney.webp',
   'brownie-detail': '/products/details/brownie-cheesecake-detail-01.webp',
   'brownie-quick-view': '/products/details/brownie-cheese-quick-view.webp',
+}
+
+type OptionPreviewImage = {
+  src: string
+  alt: string
+  altKo: string
+}
+
+const poundFinishPreviewImages: Record<PoundAddon, OptionPreviewImage> = {
+  none: {
+    src: detailImages['signature-gateau-side'],
+    alt: 'Signature Gâteau au Chocolat with the basic finish',
+    altKo: '기본 마감 시그니처 갸또 쇼콜라',
+  },
+  'extra-chocolate': {
+    src: detailImages['signature-gateau-quick-view'],
+    alt: 'Close view of the extra chocolate finish',
+    altKo: '초콜릿 추가 마감 확대 모습',
+  },
+  'vanilla-cream': {
+    src: detailImages['vanilla-side'],
+    alt: 'Cake finished with vanilla cream',
+    altKo: '바닐라 크림으로 마감한 케이크',
+  },
+}
+
+const chocolateExtraPreviewImages: Partial<Record<ChocolateExtra, OptionPreviewImage>> = {
+  'eiffel-6': {
+    src: eiffelChocolateImg,
+    alt: 'Packaged Eiffel Tower chocolate',
+    altKo: '포장된 에펠탑 초콜릿',
+  },
 }
 
 const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height: number }> = {
@@ -203,6 +235,39 @@ function OptionButton({
   )
 }
 
+function OptionPhotoPreview({
+  image,
+  eyebrow,
+  label,
+  description,
+  language,
+}: {
+  image: OptionPreviewImage
+  eyebrow: string
+  label: string
+  description: string
+  language: Language
+}) {
+  return (
+    <div className="cake-detail-option-preview" aria-live="polite">
+      <img
+        key={image.src}
+        src={image.src}
+        alt={language === 'ko' ? image.altKo : image.alt}
+        width={112}
+        height={88}
+        loading="eager"
+        decoding="async"
+      />
+      <div className="cake-detail-option-preview-copy">
+        <span>{eyebrow}</span>
+        <strong>{label}</strong>
+        <p className="cake-detail-extra-help">{description}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function CakeDetailPage({
   slug,
   language,
@@ -264,6 +329,9 @@ export default function CakeDetailPage({
   const product = getProductById(selection.productId)
   const productText = getProductText(selection.productId, language)
   const selectedChocolateExtra = getChocolateExtraOption(selection.chocolateExtra)
+  const selectedFinishOption = POUND_ADDON_OPTIONS.find((option) => option.value === selection.poundAddon) || POUND_ADDON_OPTIONS[0]
+  const selectedFinishPreview = poundFinishPreviewImages[selection.poundAddon]
+  const selectedChocolateExtraPreview = chocolateExtraPreviewImages[selection.chocolateExtra]
   const productTotal = getCakeDetailSelectionTotal(selection)
   const individualPackagingPricing = getIndividualPackagingPricing([{
     productId: selection.productId,
@@ -474,6 +542,13 @@ export default function CakeDetailPage({
           {product.usesPoundAddonOptions && (
             <fieldset className="cake-detail-fieldset">
               <legend>{language === 'ko' ? '마감 선택' : 'Choose a finish'}</legend>
+              <OptionPhotoPreview
+                image={selectedFinishPreview}
+                eyebrow={language === 'ko' ? '현재 선택한 마감' : 'Selected finish'}
+                label={selectedFinishOption.label}
+                description={selectedFinishOption.description}
+                language={language}
+              />
               <div className="cake-detail-options">
                 {POUND_ADDON_OPTIONS.map((option) => (
                   <OptionButton
@@ -584,7 +659,17 @@ export default function CakeDetailPage({
                   </OptionButton>
                 ))}
               </div>
-              <p className="cake-detail-extra-help">{language === 'ko' ? selectedChocolateExtra.descriptionKo : selectedChocolateExtra.description}</p>
+              {selection.chocolateExtra !== 'none' && selectedChocolateExtraPreview ? (
+                <OptionPhotoPreview
+                  image={selectedChocolateExtraPreview}
+                  eyebrow={language === 'ko' ? '현재 선택한 추가 구성' : 'Selected extra'}
+                  label={language === 'ko' ? selectedChocolateExtra.labelKo : selectedChocolateExtra.label}
+                  description={language === 'ko' ? selectedChocolateExtra.descriptionKo : selectedChocolateExtra.description}
+                  language={language}
+                />
+              ) : (
+                <p className="cake-detail-extra-help">{language === 'ko' ? selectedChocolateExtra.descriptionKo : selectedChocolateExtra.description}</p>
+              )}
             </fieldset>
           )}
 

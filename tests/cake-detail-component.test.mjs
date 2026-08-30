@@ -111,6 +111,26 @@ test('Signature Gâteau au Chocolat uses the shared compact editorial while reta
   assert.match(detailSource, /Choose chocolate/)
 })
 
+test('finish and Chocolate Extra selections expose compact responsive photo previews without replacing the gallery', () => {
+  assert.match(detailSource, /const poundFinishPreviewImages: Record<PoundAddon, OptionPreviewImage>/)
+  assert.match(detailSource, /const chocolateExtraPreviewImages: Partial<Record<ChocolateExtra, OptionPreviewImage>>/)
+  assert.match(detailSource, /selectedFinishPreview = poundFinishPreviewImages\[selection\.poundAddon\]/)
+  assert.match(detailSource, /selectedChocolateExtraPreview = chocolateExtraPreviewImages\[selection\.chocolateExtra\]/)
+  assert.match(detailSource, /function OptionPhotoPreview[\s\S]*width=\{112\}[\s\S]*height=\{88\}/)
+  assert.match(detailSource, /<OptionPhotoPreview/)
+  assert.match(detailSource, /selection\.chocolateExtra !== 'none'/)
+  assert.match(detailSource, /cake-detail-extra-help/)
+
+  assert.match(cssSource, /\.cake-detail-option-preview\s*\{[^}]*grid-template-columns:\s*112px minmax\(0, 1fr\)/s)
+  assert.match(cssSource, /\.cake-detail-option-preview img\s*\{[^}]*width:\s*112px[^}]*height:\s*88px/s)
+  assert.match(cssSource, /\.cake-detail-options \+ \.cake-detail-option-preview\s*\{[^}]*margin-top:\s*10px/s)
+  assert.match(cssSource, /@keyframes cake-detail-option-preview-enter/)
+
+  const mobileCss = cssSource.slice(cssSource.lastIndexOf('@media (max-width: 760px)'))
+  assert.match(mobileCss, /\.cake-detail-option-preview\s*\{[^}]*grid-template-columns:\s*88px minmax\(0, 1fr\)/s)
+  assert.match(mobileCss, /\.cake-detail-option-preview img\s*\{[^}]*width:\s*88px[^}]*height:\s*69px/s)
+})
+
 test('Lemon uses the shared compact editorial while retaining its current pack, finishing, and individual packaging controls', () => {
   assert.match(editorialDataSource, /'lemon-cake'/)
   assert.match(detailSource, /isFreshLemonCupcakeProduct\(product\.id\)/)
