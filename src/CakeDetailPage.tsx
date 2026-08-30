@@ -332,6 +332,7 @@ export default function CakeDetailPage({
   const selectedFinishOption = POUND_ADDON_OPTIONS.find((option) => option.value === selection.poundAddon) || POUND_ADDON_OPTIONS[0]
   const selectedFinishPreview = poundFinishPreviewImages[selection.poundAddon]
   const selectedChocolateExtraPreview = chocolateExtraPreviewImages[selection.chocolateExtra]
+  const usesSignatureDesktopLayout = detail.id === 'signature-gateau'
   const productTotal = getCakeDetailSelectionTotal(selection)
   const individualPackagingPricing = getIndividualPackagingPricing([{
     productId: selection.productId,
@@ -396,6 +397,22 @@ export default function CakeDetailPage({
     : detail.id === 'brownie-cheesecake'
     ? language === 'ko' ? '마감 선택' : 'Choose a finish'
     : language === 'ko' ? '종류 선택' : 'Choose a style'
+  const productIntroDetail = detail
+
+  function renderProductIntro(className: string) {
+    return (
+      <div className={className}>
+        <p className="cake-detail-eyebrow">{language === 'ko' ? 'Sydney · 주문 제작' : 'Sydney · Made to order'}</p>
+        <h1>{productIntroDetail.name}</h1>
+        <p className="cake-detail-price cake-detail-price-primary" aria-live="polite">{formatCurrency(total)}</p>
+        <p className="cake-detail-description">{productIntroDetail.description}</p>
+
+        <div className="cake-detail-badges" aria-label={language === 'ko' ? '주문 안내' : 'Order notes'}>
+          {productIntroDetail.trustPoints.map((point) => <span key={point}>{point}</span>)}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <main className="cake-detail-page">
@@ -406,8 +423,12 @@ export default function CakeDetailPage({
         </button>
       </nav>
 
-      <section className="cake-detail-hero" aria-labelledby="cake-detail-title">
+      <section
+        className={`cake-detail-hero${usesSignatureDesktopLayout ? ' is-signature-three-column' : ''}`}
+        aria-label={detail.name}
+      >
         <div className="cake-detail-gallery">
+          {usesSignatureDesktopLayout && renderProductIntro('cake-detail-intro is-desktop-gallery-intro')}
           <div className="cake-detail-main-image">
             {currentImageKey ? (
               <img
@@ -476,14 +497,8 @@ export default function CakeDetailPage({
         </div>
 
         <aside className="cake-detail-purchase">
-          <p className="cake-detail-eyebrow">{language === 'ko' ? 'Sydney · 주문 제작' : 'Sydney · Made to order'}</p>
-          <h1 id="cake-detail-title">{detail.name}</h1>
-          <p className="cake-detail-price" aria-live="polite">{formatCurrency(total)}</p>
-          <p className="cake-detail-description">{detail.description}</p>
-
-          <div className="cake-detail-badges" aria-label={language === 'ko' ? '주문 안내' : 'Order notes'}>
-            {detail.trustPoints.map((point) => <span key={point}>{point}</span>)}
-          </div>
+          <div className="cake-detail-configurator">
+          {renderProductIntro('cake-detail-intro is-standard-intro')}
 
           {detail.productIds.length > 1 && (
             <fieldset className="cake-detail-fieldset">
@@ -693,6 +708,11 @@ export default function CakeDetailPage({
             </fieldset>
           )}
 
+          </div>
+          <div className="cake-detail-checkout">
+            <div className="cake-detail-checkout-card">
+          <p className="cake-detail-checkout-price" aria-live="polite">{formatCurrency(total)}</p>
+
           <fieldset className="cake-detail-fieldset">
             <legend>{language === 'ko' ? '수량' : 'Quantity'}</legend>
             <div className="cake-detail-quantity">
@@ -719,7 +739,13 @@ export default function CakeDetailPage({
           <div className="cake-detail-order-summary">
             <div>
               <span>{language === 'ko' ? '선택 상품' : 'Your selection'}</span>
-              <strong>{productText.name}</strong>
+              <strong className="cake-detail-order-product">{productText.name}</strong>
+              {usesSignatureDesktopLayout && (
+                <div className="cake-detail-order-options">
+                  <span>{selectedFinishOption.label}</span>
+                  <span>{language === 'ko' ? selectedChocolateExtra.labelKo : selectedChocolateExtra.label}</span>
+                </div>
+              )}
               {individualPackagingPricing.individualPackagingDiscountCents > 0 && (
                 <p className="cake-detail-packaging-discount">
                   <span>{language === 'ko' ? '포장 할인' : 'Packaging discount'}</span>
@@ -743,6 +769,7 @@ export default function CakeDetailPage({
               </button>
             </div>
           )}
+            </div>
           {compactOrderingNotice ? (
             <section className="cake-detail-ordering-notice" aria-label={language === 'ko' ? '주문 및 픽업 안내' : 'Ordering and pick-up'}>
               <span className="cake-detail-ordering-notice-label">
@@ -758,8 +785,9 @@ export default function CakeDetailPage({
               {language === 'ko'
                 ? '지금 결제되지 않습니다. 베리굿 팀이 가능 여부를 확인한 뒤 결제 정보를 안내합니다.'
                 : 'No payment is taken now. Our team will confirm availability and send payment details.'}
-            </p>
-          )}
+              </p>
+            )}
+          </div>
         </aside>
       </section>
 

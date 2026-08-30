@@ -1,56 +1,71 @@
-# Design QA · Option photo previews
+# Design QA · Signature Gâteau desktop three-column layout
 
 ## Evidence
 
-- Source visual truth: Penpot file `dfb31d12-cc0a-8037-8008-8f880a08662a`, page `dfb31d12-cc0a-8037-8008-8f880a08662b`, board `18cd9072-a005-80d5-8008-8f890e607959` at `https://very-server.tailb0ea56.ts.net:8443/#/workspace?team-id=fed5d05c-d2ab-8130-8008-424548f7172e&file-id=dfb31d12-cc0a-8037-8008-8f880a08662a&page-id=dfb31d12-cc0a-8037-8008-8f880a08662b`
-- Source screenshot: `/tmp/au-cake-option-preview-qa/source-penpot.png`
-- Desktop implementation screenshot: `/tmp/au-cake-option-preview-qa/implementation-desktop.png`
-- Mobile implementation screenshot: `/tmp/au-cake-option-preview-qa/implementation-mobile-390.png`
-- Normalized focused comparison: `/tmp/au-cake-option-preview-qa/comparison-focused-final.png`
-- Route: `http://127.0.0.1:4173/cakes/signature-gateau-au-chocolat`
-- State: Vanilla cream finish and Eiffel Tower Chocolates selected. Basic and Extra chocolate finishes plus None, Pavé, and Chocolate Extra Set were also exercised.
+- Source visual truth: Penpot board `AU Cake · Desktop 3-column layout · 2026-08-30` (`b8f47740-b341-802f-8008-8f92673d4a95`) in file `dfb31d12-cc0a-8037-8008-8f880a08662a`.
+- Source screenshot: `/tmp/au-cake-signature-three-column-qa/au-cake-penpot-three-column.png`.
+- Desktop implementation screenshot: `/tmp/au-cake-signature-three-column-qa/au-cake-signature-intro-left-final.png`.
+- Selected-state screenshot: `/tmp/au-cake-signature-three-column-qa/au-cake-signature-intro-left-selected-final.png`.
+- Mobile screenshot: `/tmp/au-cake-signature-three-column-qa/au-cake-signature-intro-left-mobile-final.png`.
+- Source/implementation comparison: `/tmp/au-cake-signature-three-column-qa/au-cake-intro-left-comparison.png`.
+- Route: `http://127.0.0.1:4173/cakes/signature-gateau-au-chocolat` through the existing SSH tunnel.
 
 ## Viewport and normalization
 
-- Source capture: 1440 × 693 px, Penpot canvas shown at 46%, browser density 1.
-- Desktop implementation: 1440 × 749 px CSS viewport, browser density 1.
-- Mobile implementation: 390 × 1000 px iframe CSS viewport at density 1; evidence cropped to the visible 390 × 693 px content region.
-- Focused comparison places the source board, desktop purchase-panel region, and mobile content region in one browser-rendered image. Browser chrome and surrounding grey iframe stage were excluded from the focused crops.
+- Penpot export: 1660 × 1250 px at density 1.
+- Desktop implementation: 1440 × 1000 CSS px at device pixel ratio 2; screenshot normalized to 1440 × 1000 px by the browser capture API.
+- Mobile implementation: 390 × 844 CSS px at device pixel ratio 2; screenshot normalized to 390 × 844 px by the browser capture API.
+- The comparison scales the Penpot board and implementation to the same 1000 px height and aligns their top edges. Existing site chrome is present only in the implementation and is treated as a protected product constraint.
+
+## State and interactions
+
+- Initial state: Basic finish, no Chocolate Extra, quantity 1.
+- Selected state: Vanilla cream and Eiffel Tower Chocolates · 6 pieces.
+- Re-tested Vanilla cream and Eiffel selection after moving the product introduction; both preview images, selected buttons, price, and checkout summary updated together.
+- Desktop layout metrics at 1440 px: hero tracks `518.492px 425.164px 321.461px`; vertical gallery rail `72px`; option preview `112 × 88px`; sticky checkout `top: 72px`; document width `1440px` with no horizontal overflow.
+- Mobile layout metrics at 390 px: desktop intro `display: none`; standard intro `display: block`; no horizontal overflow.
+- The local page displayed no application error surface during the tested flow. Direct console collection is not exposed by the connected browser API.
 
 ## Fidelity review
 
-- Fonts and typography: Existing Work Sans family, weights, uppercase labels, line heights, and hierarchy remain consistent with both the source guidance and the AU Cake UI.
-- Spacing and layout rhythm: The desktop preview uses a 112 × 88 px image in the purchase fieldset; mobile uses 88 × 69 px. The selected-extra preview now has a 10 px separation from the final option button.
-- Colors and tokens: Existing forest, canvas, border, muted-text, and cream-teal tokens are reused. No new gradient, radius, or shadow language was introduced.
-- Image quality and fidelity: Only existing real product photography is used. Finish images are temporary swap targets while the final 112 × 88 assets are being prepared. Eiffel uses the existing correct product photograph. None, Pavé, and Combo remain text-only until accurate photographs are supplied.
-- Copy and content: Selected labels and existing product descriptions are reused without changing pricing or option names. The main gallery remains unchanged.
-- Responsiveness and accessibility: Fixed dimensions prevent layout shift; the image transition is 160 ms and disabled for reduced motion. Existing `aria-pressed` controls remain intact and preview images have language-aware alt text.
+- Fonts and typography: Existing Work Sans regular/bold is preserved. The title remains a two-line hierarchy at 1440 px.
+- Spacing and layout rhythm: Gallery, configurator, and checkout form three clear columns above 1200 px. The approved follow-up moves the eyebrow, title, description, and badges above the left gallery, so the centre column begins directly with `Choose a finish` and the previous empty space under the right-side introduction is removed. Vertical thumbnails remove the empty horizontal strip, and the checkout remains visible while the option column scrolls.
+- Colors and visual tokens: Existing forest, cream, mint, border, and muted tokens are reused; no new gradient, radius system, or shadow language was introduced.
+- Image quality and fidelity: Existing real cake and Eiffel product photography is used. The gallery content is unchanged. Finish preview stays 112 × 88 px.
+- Copy and content: Existing product, option, price, and ordering copy is retained. The desktop checkout summary exposes the selected finish and Chocolate Extra without duplicating the product title.
+- Responsive behavior: The three-column selectors are scoped to `detail.id === 'signature-gateau'` and `@media (min-width: 1200px)`. Existing 980 px tablet and 760 px mobile rules remain intact. At 390 px, the desktop duplicate is hidden, the original introduction remains in the configurator flow, and the page has no horizontal overflow.
+- Accessibility: Existing fieldsets, legends, `aria-pressed`, live regions, alt text, quantity labels, and add-to-order status remain present in the browser accessibility snapshot.
 
 ## Findings
 
-- No actionable P0, P1, or P2 findings remain.
-- P3 / expected follow-up: Replace the temporary finish images and add accurate Pavé and Combo photographs when the final 112 × 88 assets are delivered.
+- No actionable desktop or mobile P0, P1, or P2 findings remain in the combined comparison and responsive captures.
+- P3: final 112 × 88 option photographs can replace the temporary finish crops when supplied.
 
 ## Comparison history
 
-1. Initial desktop comparison found a P2 spacing issue: the selected Chocolate Extra preview touched the final option button and read as part of that control.
-2. Added `.cake-detail-options + .cake-detail-option-preview { margin-top: 10px; }` and a regression assertion.
-3. Re-captured desktop and 390 px mobile states. The preview blocks now match the source separation and no P0/P1/P2 differences remain.
+1. The first full comparison found a P2 title-wrap mismatch: the implementation used three lines while the Penpot source used two.
+2. The first focused comparison found a P2 CTA-shape mismatch and redundant product title in the sticky checkout summary.
+3. Reduced the Signature desktop title to `clamp(36px, 2.8vw, 40px)`, removed the redundant desktop product title, and scoped the CTA to a square corner.
+4. Re-captured both initial and Vanilla/Eiffel states. The revised desktop comparison has no actionable P0/P1/P2 findings.
+5. Following review, moved the complete product introduction above the left gallery for Signature desktop only. The centre now starts with finish selection, while tablet/mobile retain the original reading order.
+6. Captured the updated 1440 px initial/selected states and a true 390 px mobile state. The responsive pass has no horizontal overflow or duplicate visible introduction.
 
-## Runtime checks
+## Automated verification
 
-- Primary interactions tested: Basic finish, Extra chocolate finish, Vanilla cream finish, None, Eiffel Tower Chocolates, Pavé Chocolate, and Chocolate Extra Set.
-- Extra chocolate correctly reveals `Choose chocolate`; Basic hides it.
-- Missing-photo extras correctly retain text-only help instead of showing a misleading placeholder.
-- Browser console checked: no application errors. Only unrelated Chrome-extension warnings were present.
+- `npm run test:cake`: 275 AU tests and 3 KR boundary tests passed.
+- `npm run lint`: passed.
+- `npm run build`: passed; Vite emitted the pre-existing large-chunk advisory only.
+- `git diff --check`: passed before the final report update.
 
 ## Implementation checklist
 
-- [x] Keep the product gallery unchanged.
-- [x] Add one selection-aware finish preview.
-- [x] Add one selection-aware Chocolate Extra preview when an accurate image exists.
-- [x] Preserve text-only fallback for missing images.
-- [x] Verify desktop and 390 px mobile layouts.
-- [ ] Swap in the final option-photo files when supplied.
+- [x] Scope the layout to Signature Gâteau and desktop ≥ 1200 px.
+- [x] Keep the gallery content unchanged and use vertical thumbnails.
+- [x] Keep the 112 × 88 finish preview.
+- [x] Render Chocolate Extras in a 2 × 2 desktop grid.
+- [x] Keep quantity, selected options, CTA, and notice in a sticky checkout.
+- [x] Preserve tablet/mobile rules and other cake detail layouts.
+- [x] Verify desktop interactions and compare source/implementation together.
+- [x] Capture the current implementation at a true 390 px browser viewport.
 
 final result: passed

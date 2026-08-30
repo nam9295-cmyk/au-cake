@@ -111,6 +111,29 @@ test('Signature Gâteau au Chocolat uses the shared compact editorial while reta
   assert.match(detailSource, /Choose chocolate/)
 })
 
+test('Signature Gâteau alone uses the approved three-column desktop purchase layout', () => {
+  assert.match(detailSource, /const usesSignatureDesktopLayout = detail\.id === 'signature-gateau'/)
+  assert.match(detailSource, /cake-detail-gallery[\s\S]*cake-detail-configurator[\s\S]*cake-detail-checkout/)
+  assert.match(detailSource, /is-signature-three-column/)
+  assert.match(detailSource, /cake-detail-order-product/)
+  assert.match(detailSource, /renderProductIntro\('cake-detail-intro is-desktop-gallery-intro'\)[\s\S]*cake-detail-main-image/)
+  assert.match(detailSource, /cake-detail-configurator[\s\S]*renderProductIntro\('cake-detail-intro is-standard-intro'\)/)
+
+  const desktopCss = cssSource.slice(cssSource.indexOf('@media (min-width: 1200px)'))
+  assert.match(desktopCss, /\.cake-detail-hero\.is-signature-three-column\s*\{[^}]*grid-template-columns:[^}]*minmax\(0, 1fr\)[^}]*minmax\(380px, 0\.82fr\)[^}]*minmax\(300px, 0\.62fr\)/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.cake-detail-thumbnails\s*\{[^}]*grid-template-columns:\s*1fr/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.cake-detail-options\.is-stacked\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.cake-detail-checkout\s*\{[^}]*position:\s*sticky[^}]*top:\s*72px/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.cake-detail-configurator h1\s*\{[^}]*font-size:\s*clamp\(36px, 2\.8vw, 40px\)/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.cake-detail-order-product\s*\{[^}]*display:\s*none/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.cake-detail-request\s*\{[^}]*border-radius:\s*0/s)
+  assert.match(cssSource, /\.is-desktop-gallery-intro\s*\{[^}]*display:\s*none/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.is-desktop-gallery-intro\s*\{[^}]*display:\s*block[^}]*grid-column:\s*1 \/ -1/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.is-standard-intro\s*\{[^}]*display:\s*none/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.cake-detail-main-image\s*\{[^}]*grid-row:\s*2/s)
+  assert.match(desktopCss, /\.is-signature-three-column \.cake-detail-image-count\s*\{[^}]*grid-row:\s*3/s)
+})
+
 test('finish and Chocolate Extra selections expose compact responsive photo previews without replacing the gallery', () => {
   assert.match(detailSource, /const poundFinishPreviewImages: Record<PoundAddon, OptionPreviewImage>/)
   assert.match(detailSource, /const chocolateExtraPreviewImages: Partial<Record<ChocolateExtra, OptionPreviewImage>>/)
