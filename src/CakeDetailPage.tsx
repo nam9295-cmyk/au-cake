@@ -539,7 +539,12 @@ export default function CakeDetailPage({
                       <strong>{cupcakePackSize
                         ? language === 'ko' ? `${cupcakePackSize === 6 ? '하프 더즌' : '더즌'} · ${cupcakePackSize}개` : `${cupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${cupcakePackSize} cupcakes`
                         : optionText.name}</strong>
-                      <span>{formatCurrency(optionPrice)}{extraFromBase > 0 ? ` (+${formatCurrency(extraFromBase)})` : ''}</span>
+                      <span>
+                        {formatCurrency(optionPrice)}
+                        {extraFromBase > 0 && (
+                          <span className="cake-detail-option-surcharge">(+{formatCurrency(extraFromBase)})</span>
+                        )}
+                      </span>
                     </OptionButton>
                   )
                 })}

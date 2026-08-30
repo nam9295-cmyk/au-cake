@@ -7979,6 +7979,12 @@ td select {
   font-size: 11px;
 }
 
+.cake-detail-option .cake-detail-option-surcharge {
+  display: block;
+  margin-top: 2px;
+  text-align: right;
+}
+
 .vanilla-point-color-grid {
   display: grid;
   grid-template-columns: repeat(4, 40px);
