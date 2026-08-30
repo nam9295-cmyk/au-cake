@@ -8541,12 +8541,12 @@ label.vanilla-point-color-card {
 }
 
 @media (min-width: 1200px) {
-  .cake-detail-hero.is-signature-three-column {
+  .cake-detail-hero.is-desktop-three-column {
     grid-template-columns: minmax(0, 1fr) minmax(380px, 0.82fr) minmax(300px, 0.62fr);
     gap: clamp(24px, 2.6vw, 40px);
   }
 
-  .is-signature-three-column .cake-detail-gallery {
+  .is-desktop-three-column .cake-detail-gallery {
     display: grid;
     grid-template-columns: 72px minmax(0, 1fr);
     grid-template-rows: auto auto auto;
@@ -8554,28 +8554,28 @@ label.vanilla-point-color-card {
     align-items: start;
   }
 
-  .is-signature-three-column .is-desktop-gallery-intro {
+  .is-desktop-three-column .is-desktop-gallery-intro {
     display: block;
     grid-column: 1 / -1;
     grid-row: 1;
   }
 
-  .is-signature-three-column .is-standard-intro {
+  .is-desktop-three-column .is-standard-intro {
     display: none;
   }
 
-  .is-signature-three-column .cake-detail-main-image {
+  .is-desktop-three-column .cake-detail-main-image {
     grid-column: 2;
     grid-row: 2;
     width: 100%;
     max-height: 600px;
   }
 
-  .is-signature-three-column .cake-detail-main-image > img {
+  .is-desktop-three-column .cake-detail-main-image > img {
     padding: clamp(18px, 2.5vw, 34px);
   }
 
-  .is-signature-three-column .cake-detail-thumbnails {
+  .is-desktop-three-column .cake-detail-thumbnails {
     grid-column: 1;
     grid-row: 2;
     grid-template-columns: 1fr;
@@ -8583,28 +8583,28 @@ label.vanilla-point-color-card {
     margin-top: 0;
   }
 
-  .is-signature-three-column .cake-detail-image-count {
+  .is-desktop-three-column .cake-detail-image-count {
     grid-column: 2;
     grid-row: 3;
     margin-top: 0;
   }
 
-  .is-signature-three-column .cake-detail-purchase {
+  .is-desktop-three-column .cake-detail-purchase {
     display: contents;
   }
 
-  .is-signature-three-column .cake-detail-configurator {
+  .is-desktop-three-column .cake-detail-configurator {
     grid-column: 2;
     min-width: 0;
   }
 
-  .is-signature-three-column .cake-detail-configurator h1 {
+  .is-desktop-three-column .cake-detail-configurator h1 {
     margin-bottom: 14px;
     font-size: clamp(36px, 2.8vw, 40px);
     line-height: 0.92;
   }
 
-  .is-signature-three-column .is-desktop-gallery-intro h1 {
+  .is-desktop-three-column .is-desktop-gallery-intro h1 {
     margin-bottom: 14px;
     color: var(--forest-deep);
     font-size: clamp(36px, 2.8vw, 40px);
@@ -8612,56 +8612,56 @@ label.vanilla-point-color-card {
     overflow-wrap: anywhere;
   }
 
-  .is-signature-three-column .is-desktop-gallery-intro .cake-detail-eyebrow {
+  .is-desktop-three-column .is-desktop-gallery-intro .cake-detail-eyebrow {
     margin-bottom: 10px;
   }
 
-  .is-signature-three-column .is-desktop-gallery-intro .cake-detail-description {
+  .is-desktop-three-column .is-desktop-gallery-intro .cake-detail-description {
     max-width: 520px;
   }
 
-  .is-signature-three-column .is-desktop-gallery-intro .cake-detail-badges {
+  .is-desktop-three-column .is-desktop-gallery-intro .cake-detail-badges {
     margin-bottom: 0;
   }
 
-  .is-signature-three-column .cake-detail-price-primary {
+  .is-desktop-three-column .cake-detail-price-primary {
     display: none;
   }
 
-  .is-signature-three-column .cake-detail-description {
+  .is-desktop-three-column .cake-detail-description {
     margin-bottom: 16px;
     font-size: 13px;
     line-height: 1.45;
   }
 
-  .is-signature-three-column .cake-detail-badges {
+  .is-desktop-three-column .cake-detail-badges {
     margin-bottom: 12px;
   }
 
-  .is-signature-three-column .cake-detail-fieldset {
+  .is-desktop-three-column .cake-detail-fieldset {
     padding: 14px 0;
   }
 
-  .is-signature-three-column .cake-detail-fieldset legend {
+  .is-desktop-three-column .cake-detail-fieldset legend {
     margin-bottom: 10px;
     font-size: 12px;
   }
 
-  .is-signature-three-column .cake-detail-options.is-stacked {
+  .is-desktop-three-column .cake-detail-options.is-stacked {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .is-signature-three-column .cake-detail-option {
+  .is-desktop-three-column .cake-detail-option {
     min-height: 48px;
     padding: 9px 11px;
   }
 
-  .is-signature-three-column .cake-detail-option-preview {
+  .is-desktop-three-column .cake-detail-option-preview {
     margin-bottom: 8px;
     padding: 8px;
   }
 
-  .is-signature-three-column .cake-detail-checkout {
+  .is-desktop-three-column .cake-detail-checkout {
     position: sticky;
     top: 72px;
     grid-column: 3;
@@ -8669,13 +8669,13 @@ label.vanilla-point-color-card {
     min-width: 0;
   }
 
-  .is-signature-three-column .cake-detail-checkout-card {
+  .is-desktop-three-column .cake-detail-checkout-card {
     padding: 18px;
     border: 2px solid var(--forest-deep);
     background: rgba(255, 255, 255, 0.42);
   }
 
-  .is-signature-three-column .cake-detail-checkout-price {
+  .is-desktop-three-column .cake-detail-checkout-price {
     display: block;
     margin: 0;
     color: var(--forest-deep);
@@ -8683,37 +8683,37 @@ label.vanilla-point-color-card {
     font-weight: 700;
   }
 
-  .is-signature-three-column .cake-detail-checkout .cake-detail-fieldset {
+  .is-desktop-three-column .cake-detail-checkout .cake-detail-fieldset {
     padding: 16px 0;
   }
 
-  .is-signature-three-column .cake-detail-checkout .cake-detail-quantity {
+  .is-desktop-three-column .cake-detail-checkout .cake-detail-quantity {
     width: 100%;
     grid-template-columns: 44px minmax(44px, 1fr) 44px;
   }
 
-  .is-signature-three-column .cake-detail-order-summary {
+  .is-desktop-three-column .cake-detail-order-summary {
     display: grid;
     gap: 8px;
     margin-top: 0;
     padding: 16px 0;
   }
 
-  .is-signature-three-column .cake-detail-order-summary > strong {
+  .is-desktop-three-column .cake-detail-order-summary > strong {
     display: none;
   }
 
-  .is-signature-three-column .cake-detail-order-product {
+  .is-desktop-three-column.has-compact-option-summary .cake-detail-order-product {
     display: none;
   }
 
-  .is-signature-three-column .cake-detail-order-options {
+  .is-desktop-three-column .cake-detail-order-options {
     display: grid;
     gap: 4px;
     margin-top: 7px;
   }
 
-  .is-signature-three-column .cake-detail-order-options span {
+  .is-desktop-three-column .cake-detail-order-options span {
     color: var(--muted);
     font-size: 12px;
     font-weight: 400;
@@ -8722,26 +8722,26 @@ label.vanilla-point-color-card {
     text-transform: none;
   }
 
-  .is-signature-three-column .cake-detail-request {
+  .is-desktop-three-column .cake-detail-request {
     min-height: 54px;
     border-radius: 0;
   }
 
-  .is-signature-three-column .cake-detail-ordering-notice {
+  .is-desktop-three-column .cake-detail-ordering-notice {
     grid-template-columns: minmax(0, 1fr);
     gap: 6px;
     padding: 15px 16px 15px 14px;
   }
 
-  .is-signature-three-column .cake-detail-ordering-notice-label {
+  .is-desktop-three-column .cake-detail-ordering-notice-label {
     font-size: 10px;
   }
 
-  .is-signature-three-column .cake-detail-ordering-notice strong {
+  .is-desktop-three-column .cake-detail-ordering-notice strong {
     font-size: 15px;
   }
 
-  .is-signature-three-column .cake-detail-ordering-notice p {
+  .is-desktop-three-column .cake-detail-ordering-notice p {
     font-size: 12px;
   }
 }

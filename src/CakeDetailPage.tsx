@@ -349,7 +349,7 @@ export default function CakeDetailPage({
   const selectedFinishOption = POUND_ADDON_OPTIONS.find((option) => option.value === selection.poundAddon) || POUND_ADDON_OPTIONS[0]
   const selectedFinishPreview = poundFinishPreviewImages[selection.poundAddon]
   const selectedChocolateExtraPreview = chocolateExtraPreviewImages[selection.chocolateExtra]
-  const usesSignatureDesktopLayout = detail.id === 'signature-gateau'
+  const showsSignatureOrderOptions = detail.id === 'signature-gateau'
   const productTotal = getCakeDetailSelectionTotal(selection)
   const individualPackagingPricing = getIndividualPackagingPricing([{
     productId: selection.productId,
@@ -441,11 +441,11 @@ export default function CakeDetailPage({
       </nav>
 
       <section
-        className={`cake-detail-hero${usesSignatureDesktopLayout ? ' is-signature-three-column' : ''}`}
+        className={`cake-detail-hero is-desktop-three-column${showsSignatureOrderOptions ? ' has-compact-option-summary' : ''}`}
         aria-label={detail.name}
       >
         <div className="cake-detail-gallery">
-          {usesSignatureDesktopLayout && renderProductIntro('cake-detail-intro is-desktop-gallery-intro')}
+          {renderProductIntro('cake-detail-intro is-desktop-gallery-intro')}
           <div className="cake-detail-main-image">
             {currentImageKey ? (
               <img
@@ -775,7 +775,7 @@ export default function CakeDetailPage({
             <div>
               <span>{language === 'ko' ? '선택 상품' : 'Your selection'}</span>
               <strong className="cake-detail-order-product">{productText.name}</strong>
-              {usesSignatureDesktopLayout && (
+              {showsSignatureOrderOptions && (
                 <div className="cake-detail-order-options">
                   <span>{selectedFinishOption.label}</span>
                   <span>{language === 'ko' ? selectedChocolateExtra.labelKo : selectedChocolateExtra.label}</span>
