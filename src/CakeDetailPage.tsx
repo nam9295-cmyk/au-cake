@@ -48,6 +48,7 @@ import {
   getCakePointColorPreviewBackground,
   getCakeSizePreviewKey,
   getCakeSizePreviewScale,
+  getCakeSizePreviewTransformOrigin,
   selectCakeDetailProduct,
   type CakeDetailImageKey,
   type CakeDetailSelection,
@@ -292,6 +293,7 @@ function OptionPhotoPreview({
   background,
   fit = 'cover',
   scale = 1,
+  transformOrigin = 'center bottom',
 }: {
   image: OptionPreviewImage
   eyebrow: string
@@ -301,6 +303,7 @@ function OptionPhotoPreview({
   background?: string
   fit?: 'cover' | 'contain'
   scale?: number
+  transformOrigin?: 'center center' | 'center bottom'
 }) {
   return (
     <div className="cake-detail-option-preview" aria-live="polite">
@@ -316,7 +319,10 @@ function OptionPhotoPreview({
           height={88}
           loading="eager"
           decoding="async"
-          style={{ '--cake-option-preview-scale': scale } as CSSProperties}
+          style={{
+            '--cake-option-preview-scale': scale,
+            '--cake-option-preview-origin': transformOrigin,
+          } as CSSProperties}
         />
       </div>
       <div className="cake-detail-option-preview-copy">
@@ -395,6 +401,7 @@ export default function CakeDetailPage({
   const cakeSizePreviewKey = getCakeSizePreviewKey(product.id)
   const selectedCakeSizePreview = cakeSizePreviewKey ? cakeSizePreviewImages[cakeSizePreviewKey] : null
   const selectedCakeSizePreviewScale = getCakeSizePreviewScale(selection.cakeSize)
+  const selectedCakeSizePreviewTransformOrigin = getCakeSizePreviewTransformOrigin(cakeSizePreviewKey)
   const selectedPointColor = VANILLA_CAKE_POINT_COLOR_OPTIONS.find(
     (option) => option.value === selection.vanillaCakePointColor,
   ) || VANILLA_CAKE_POINT_COLOR_OPTIONS[0]
@@ -637,6 +644,7 @@ export default function CakeDetailPage({
                   background={cakeSizePreviewBackground}
                   fit="contain"
                   scale={selectedCakeSizePreviewScale}
+                  transformOrigin={selectedCakeSizePreviewTransformOrigin}
                 />
               )}
               <div className="cake-detail-options">

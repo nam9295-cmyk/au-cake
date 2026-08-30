@@ -64,6 +64,7 @@ import * as cakeDetailPreview from '../src/lib/cake-detail.js'
 type CakeDetailPreviewApi = {
   getCakeSizePreviewKey?: (productId: ProductId) => 'pave' | 'buttercream' | 'strawberry-vanilla' | 'strawberry-chocolate' | null
   getCakeSizePreviewScale?: (cakeSize: string) => number
+  getCakeSizePreviewTransformOrigin?: (previewKey: 'pave' | 'buttercream' | 'strawberry-vanilla' | 'strawberry-chocolate' | null) => 'center center' | 'center bottom'
   getCakePointColorPreviewBackground?: (pointColor: string) => string
 }
 
@@ -195,6 +196,18 @@ test('current whole-cake preview scale increases for each selectable size', () =
   assert.equal(getCakeSizePreviewScale('8in'), 1.15)
   assert.equal(getCakeSizePreviewScale('10in'), 1.3)
   assert.equal(getCakeSizePreviewScale('15cm'), 1)
+})
+
+test('Pave alone grows from its centre while the other cake previews keep their baseline', () => {
+  const { getCakeSizePreviewTransformOrigin } = cakeDetailPreviewApi
+  assert.equal(typeof getCakeSizePreviewTransformOrigin, 'function')
+  if (!getCakeSizePreviewTransformOrigin) throw new Error('Cake size preview transform origin is unavailable')
+
+  assert.equal(getCakeSizePreviewTransformOrigin('pave'), 'center center')
+  assert.equal(getCakeSizePreviewTransformOrigin('buttercream'), 'center bottom')
+  assert.equal(getCakeSizePreviewTransformOrigin('strawberry-vanilla'), 'center bottom')
+  assert.equal(getCakeSizePreviewTransformOrigin('strawberry-chocolate'), 'center bottom')
+  assert.equal(getCakeSizePreviewTransformOrigin(null), 'center bottom')
 })
 
 test('point-colour preview backgrounds soften the exact selected swatch against cream', () => {

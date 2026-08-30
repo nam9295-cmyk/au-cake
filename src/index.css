@@ -7878,7 +7878,7 @@ td select {
 .cake-detail-option-preview-media.is-contained img {
   object-fit: contain;
   transform: scale(var(--cake-option-preview-scale, 1));
-  transform-origin: center bottom;
+  transform-origin: var(--cake-option-preview-origin, center bottom);
   transition: transform 160ms ease;
 }
 

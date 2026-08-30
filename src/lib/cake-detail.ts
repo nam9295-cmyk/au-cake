@@ -75,6 +75,12 @@ export function getCakeSizePreviewScale(cakeSize: CakeSize | string): number {
   return 1
 }
 
+export function getCakeSizePreviewTransformOrigin(
+  previewKey: CakeSizePreviewKey | null,
+): 'center center' | 'center bottom' {
+  return previewKey === 'pave' ? 'center center' : 'center bottom'
+}
+
 export function getCakePointColorPreviewBackground(
   pointColor: VanillaCakePointColor | string | undefined,
 ): string {

@@ -217,12 +217,13 @@ test('current whole-cake sizes map every supplied cut-out to the matching produc
 
 test('current whole-cake previews keep one frame while size and Buttercream point colour change', () => {
   assert.match(detailSource, /getCakeSizePreviewScale\(selection\.cakeSize\)/)
+  assert.match(detailSource, /getCakeSizePreviewTransformOrigin\(cakeSizePreviewKey\)/)
   assert.match(detailSource, /getCakePointColorPreviewBackground\(selection\.vanillaCakePointColor\)/)
   assert.match(detailSource, /eyebrow=\{language === 'ko' \? '선택한 사이즈' : 'Selected size'\}/)
   assert.match(detailSource, /fit="contain"/)
 
   assert.match(cssSource, /\.cake-detail-option-preview-media\s*\{[^}]*width:\s*112px[^}]*height:\s*88px[^}]*overflow:\s*hidden/s)
-  assert.match(cssSource, /\.cake-detail-option-preview-media\.is-contained img\s*\{[^}]*object-fit:\s*contain[^}]*transform:\s*scale\(var\(--cake-option-preview-scale, 1\)\)[^}]*transform-origin:\s*center bottom/s)
+  assert.match(cssSource, /\.cake-detail-option-preview-media\.is-contained img\s*\{[^}]*object-fit:\s*contain[^}]*transform:\s*scale\(var\(--cake-option-preview-scale, 1\)\)[^}]*transform-origin:\s*var\(--cake-option-preview-origin, center bottom\)/s)
   const mobileCss = cssSource.slice(cssSource.lastIndexOf('@media (max-width: 760px)'))
   assert.match(mobileCss, /\.cake-detail-option-preview-media\s*\{[^}]*width:\s*88px[^}]*height:\s*69px/s)
 })
