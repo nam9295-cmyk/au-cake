@@ -33,7 +33,9 @@ import {
   isIndividualPackagingEligibleProduct,
 } from './individual-packaging.js'
 import { DEFAULT_CHOCOLATE_EXTRA, getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras.js'
+import { DEFAULT_BROWNIE_CREAM_OPTION, normalizeBrownieCreamOption } from './brownie-cream.js'
 import type {
+  BrownieCreamOption,
   CakeSize,
   ChocolateType,
   ChocolateExtra,
@@ -91,6 +93,7 @@ export type CakeDetailSelection = {
   cakeSize: CakeSize
   chocolateType: ChocolateType
   chocolateExtra: ChocolateExtra
+  brownieCreamOption: BrownieCreamOption
   poundAddon: PoundAddon
   cupcakeFinish: CupcakeFinish
   chocolateIcingCount: number
@@ -271,6 +274,7 @@ export function createCakeDetailSelection(slug: string): CakeDetailSelection | n
     productId: entry.defaultProductId,
     cakeSize: DEFAULT_CAKE_SIZE,
     chocolateExtra: DEFAULT_CHOCOLATE_EXTRA,
+    brownieCreamOption: DEFAULT_BROWNIE_CREAM_OPTION,
     chocolateType: DEFAULT_CHOCOLATE_TYPE,
     poundAddon: DEFAULT_POUND_ADDON,
     cupcakeFinish: DEFAULT_CUPCAKE_FINISH,
@@ -301,6 +305,7 @@ export function selectCakeDetailProduct(
     productId: product.id,
     cakeSize: normalizeCakeSize(product.id, selection.cakeSize),
     chocolateExtra: normalizeChocolateExtra(product.id, selection.chocolateExtra),
+    brownieCreamOption: normalizeBrownieCreamOption(product.id, selection.brownieCreamOption),
     poundAddon,
     chocolateType: normalizeReservationChocolateType(product.id, selection.chocolateType, poundAddon),
     chocolateIcingCount: normalizeChocolateIcingCount(product.id, selection.chocolateIcingCount),
@@ -324,6 +329,7 @@ export function getCakeDetailSelectionTotal(selection: CakeDetailSelection) {
     chocolateType: selection.chocolateType,
     poundAddon: selection.poundAddon,
     cupcakeFinish: selection.cupcakeFinish,
+    brownieCreamOption: selection.brownieCreamOption,
     chocolateIcingCount: selection.chocolateIcingCount,
     vanillaCreamCount: selection.vanillaCreamCount,
     partyDecorationCount: selection.partyDecorationCount,

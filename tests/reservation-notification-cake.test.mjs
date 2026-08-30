@@ -187,6 +187,25 @@ test('AU booking emails render selected Chocolate Extras separately from the cak
   }
 })
 
+test('AU Brownie Cheesecake emails render Fresh cream separately with the authoritative AUD 20 surcharge', () => {
+  const reservation = buildCakeReservation({
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
+    productId: 'brownie-cheesecake', brownieCreamOption: 'fresh-cream', quantity: 1,
+    pickupDate: '2026-09-12', pickupTime: '10:30', requestNote: '', promoCode: '', privacyConsent: true,
+  }, { now: new Date('2026-09-01T00:00:00.000Z'), reservationNumber: 'VG-C-AU-BROWNIE-CREAM-EMAIL' })
+  reservation.$id = 'cake-brownie-cream-email'
+  const rows = rowsByLabel(reservation)
+
+  assert.equal(rows['Fresh cream'], 'Added · +AUD 20.00')
+  assert.equal(rows.Total, 'AUD 105.00')
+
+  const receipt = notification.buildBookingDeliveryPayload({
+    reservation, role: 'customer', from: 'Verygood Chocolate <hello@verygood.example>', operatorRecipients: ['owner@example.com'],
+  })
+  assert.match(receipt.text, /생크림: Added · \+AUD 20\.00/)
+  assert.match(receipt.text, /Fresh cream: Added · \+AUD 20\.00/)
+})
+
 test('AU operator notification shows current Cupcake pack and whole-box finish', () => {
   const rows = rowsByLabel({
     reservationNumber: 'VG-C-AU-CUPCAKE-HALF', productId: 'cupcake-half-dozen', cupcakeFinish: 'chocolate-buttercream',

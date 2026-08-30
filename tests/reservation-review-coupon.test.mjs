@@ -111,7 +111,7 @@ test('multi-line create responses expose only authoritative stored line pricing 
     privacyConsent: true,
     orderLines: [
       { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 2 },
-      { productId: 'brownie-cheesecake', quantity: 1 },
+      { productId: 'brownie-cheesecake', brownieCreamOption: 'none', quantity: 1 },
     ],
   }, { now, reservationNumber: 'VG-C-AU-MULTI' })
   const response = cakeReservationResponse({ $id: 'private', ...document, requestFingerprint: 'f'.repeat(64) })
@@ -126,7 +126,7 @@ test('multi-line create responses expose only authoritative stored line pricing 
     totalPriceCents: line.totalPriceCents,
   })), [
     { productId: 'pave-cake', quantity: 2, unitPriceCents: 7900, subtotalCents: 15800, totalPriceCents: 15800 },
-    { productId: 'brownie-cheesecake', quantity: 1, unitPriceCents: 5800, subtotalCents: 5800, totalPriceCents: 5800 },
+    { productId: 'brownie-cheesecake', quantity: 1, unitPriceCents: 8500, subtotalCents: 8500, totalPriceCents: 8500 },
   ])
   assert.equal('requestFingerprint' in response, false)
   assert.equal(JSON.stringify(response).includes('private'), false)
@@ -144,7 +144,7 @@ test('create response rejects any present malformed or inconsistent stored order
     privacyConsent: true,
     orderLines: [
       { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
-      { productId: 'brownie-cheesecake', quantity: 1 },
+      { productId: 'brownie-cheesecake', brownieCreamOption: 'none', quantity: 1 },
     ],
   }, { now, reservationNumber: 'VG-C-AU-CORRUPT' })
   for (const corrupted of [
@@ -614,7 +614,7 @@ test('new multi-line request IDs normalize matching emails but reject a differen
     privacyConsent: true,
     orderLines: [
       { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
-      { productId: 'brownie-cheesecake', quantity: 1 },
+      { productId: 'brownie-cheesecake', brownieCreamOption: 'none', quantity: 1 },
     ],
   }
   const first = await createCake(db, input, { now, runtimeConfig })
@@ -643,7 +643,7 @@ test('multi-line retries canonicalize line order before fingerprint comparison',
     privacyConsent: true,
     orderLines: [
       { productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'milk', poundAddon: 'none', quantity: 1 },
-      { productId: 'brownie-cheesecake', quantity: 1 },
+      { productId: 'brownie-cheesecake', brownieCreamOption: 'none', quantity: 1 },
     ],
   }
   const first = await createCake(db, input, { now, runtimeConfig })

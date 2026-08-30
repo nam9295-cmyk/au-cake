@@ -426,11 +426,11 @@ test('stored legacy Vanilla flavours and pre-colour Buttercream fields remain re
 
 test('cake API sells current Brownie Cheesecake variants while historical variants remain readable', () => {
   const prices = [
-    ['brownie-cheesecake', 58],
-    ['pave-brownie-cheesecake', 68],
+    ['brownie-cheesecake', 85],
+    ['pave-brownie-cheesecake', 95],
   ]
   for (const [productId, totalPrice] of prices) {
-    const reservation = buildCakeReservation({ ...cakeInput, productId }, {
+    const reservation = buildCakeReservation({ ...cakeInput, productId, brownieCreamOption: 'none' }, {
       now,
       reservationNumber: `VG-C-AU-${productId}`,
     })
@@ -476,14 +476,29 @@ test('cake API sells current Brownie Cheesecake variants while historical varian
   assert.deepEqual(parseStoredOrderLines(eiffelHistorical).lines, [eiffelHistoricalLine])
 })
 
+
+
+test('cake API rejects stale Brownie clients without the explicit finish marker before pricing', () => {
+  for (const productId of ['brownie-cheesecake', 'pave-brownie-cheesecake']) {
+    assertApiError('INVALID_BROWNIE_CREAM_OPTION', () => buildCakeReservation(
+      { ...cakeInput, productId },
+      { now, reservationNumber: `STALE-${productId}` },
+    ))
+    assertApiError('INVALID_BROWNIE_CREAM_OPTION', () => buildCakeReservation(multiCakeInput([
+      { productId, quantity: 1 },
+      { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+    ]), { now, reservationNumber: `STALE-MULTI-${productId}` }))
+  }
+})
+
 test('cake API prices Brownie Cheesecake variants and the approved Cupcake pack-and-finish table', () => {
   const basicBrownie = buildCakeReservation(
-    { ...cakeInput, productId: 'brownie-cheesecake', cakeSize: '22cm', poundAddon: 'extra-chocolate' },
-    { now, reservationNumber: 'VG-C-AU-CHEESE-58' },
+    { ...cakeInput, productId: 'brownie-cheesecake', cakeSize: '22cm', poundAddon: 'extra-chocolate', brownieCreamOption: 'none' },
+    { now, reservationNumber: 'VG-C-AU-CHEESE-85' },
   )
   const paveBrownie = buildCakeReservation(
-    { ...cakeInput, productId: 'pave-brownie-cheesecake' },
-    { now, reservationNumber: 'VG-C-AU-CHEESE-68' },
+    { ...cakeInput, productId: 'pave-brownie-cheesecake', brownieCreamOption: 'none' },
+    { now, reservationNumber: 'VG-C-AU-CHEESE-95' },
   )
   const cupcakeCases = [
     ['cupcake-half-dozen', 'basic', 31],
@@ -494,10 +509,10 @@ test('cake API prices Brownie Cheesecake variants and the approved Cupcake pack-
     ['cupcake-dozen', 'chocolate-buttercream', 73],
   ]
 
-  assert.equal(basicBrownie.totalPrice, 58)
   assert.equal(basicBrownie.cakeSize, '15cm')
   assert.equal(basicBrownie.poundAddon, 'none')
-  assert.equal(paveBrownie.totalPrice, 68)
+  assert.equal(basicBrownie.totalPrice, 85)
+  assert.equal(paveBrownie.totalPrice, 95)
   for (const [productId, cupcakeFinish, price] of cupcakeCases) {
     const cupcakes = buildCakeReservation({
       ...cakeInput,
@@ -518,6 +533,47 @@ test('cake API prices Brownie Cheesecake variants and the approved Cupcake pack-
   }
 })
 
+test('cake API validates, prices, stores, and publishes Brownie Fresh cream per cake for single and multi-line orders', () => {
+  const freshCream = buildCakeReservation({
+    ...cakeInput,
+    productId: 'brownie-cheesecake',
+    brownieCreamOption: 'fresh-cream',
+    quantity: 2,
+  }, { now, reservationNumber: 'VG-C-AU-BROWNIE-FRESH-CREAM' })
+  const [freshCreamLine] = parseStoredOrderLines(freshCream).lines
+
+  assert.equal(freshCream.totalPriceCents, 21000)
+  assert.equal(freshCreamLine.brownieCreamOption, 'fresh-cream')
+  assert.equal(freshCreamLine.unitPriceCents, 10500)
+  assert.equal(publicCakeReservation(freshCream).orderLines[0].brownieCreamOption, 'fresh-cream')
+
+  const order = buildCakeReservation(multiCakeInput([
+    { productId: 'brownie-cheesecake', brownieCreamOption: 'none', quantity: 1 },
+    { productId: 'brownie-cheesecake', brownieCreamOption: 'fresh-cream', quantity: 1 },
+  ]), { now, reservationNumber: 'VG-C-AU-BROWNIE-CREAM-MULTI' })
+  assert.equal(order.orderLineCount, 2)
+  assert.equal(order.totalPriceCents, 19000)
+  assert.deepEqual(
+    parseStoredOrderLines(order).lines.map((line) => [line.brownieCreamOption, line.unitPriceCents]),
+    [['none', 8500], ['fresh-cream', 10500]],
+  )
+
+  assertApiError('INVALID_BROWNIE_CREAM_OPTION', () => buildCakeReservation({
+    ...cakeInput,
+    productId: 'brownie-cheesecake',
+    brownieCreamOption: 'custard',
+  }, { now, reservationNumber: 'VG-C-AU-BROWNIE-CREAM-INVALID' }))
+
+  const ineligible = buildCakeReservation({
+    ...cakeInput,
+    productId: 'pave-brownie-cheesecake',
+    brownieCreamOption: 'fresh-cream',
+  }, { now, reservationNumber: 'VG-C-AU-BROWNIE-CREAM-INELIGIBLE' })
+  const [paveLine] = parseStoredOrderLines(ineligible).lines
+  assert.equal(ineligible.totalPriceCents, 9500)
+  assert.equal(Object.hasOwn(paveLine, 'brownieCreamOption'), false)
+})
+
 test('cake API authoritatively stores and prices Chocolate Extras once per order line', () => {
   const eligibleCases = [
     ['pave-cake', '6in', 'eiffel-6', 7900, 1000],
@@ -525,12 +581,13 @@ test('cake API authoritatively stores and prices Chocolate Extras once per order
     ['pave-cake', '6in', 'combo', 7900, 2000],
     ['buttercream-cake', '8in', 'eiffel-6', 9900, 1000],
     ['pound-cake', '15cm', 'pave-100g', 4500, 1200],
-    ['brownie-cheesecake', '15cm', 'combo', 5800, 2000],
-    ['pave-brownie-cheesecake', '15cm', 'eiffel-6', 6800, 1000],
+    ['brownie-cheesecake', '15cm', 'combo', 8500, 2000],
+    ['pave-brownie-cheesecake', '15cm', 'eiffel-6', 9500, 1000],
   ]
   for (const [productId, cakeSize, chocolateExtra, unitPriceCents, chocolateExtraCents] of eligibleCases) {
     const reservation = buildCakeReservation({
       ...cakeInput, productId, cakeSize, chocolateExtra,
+      ...(productId === 'brownie-cheesecake' || productId === 'pave-brownie-cheesecake' ? { brownieCreamOption: 'none' } : {}),
       ...(productId === 'buttercream-cake' ? {
         vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'plain', vanillaCakePointColor: 'blue',
       } : {}),
@@ -766,14 +823,14 @@ test('cake API applies Lemoni promo only to Fresh Lemon Cupcakes and records an 
     { now, reservationNumber: 'VG-C-AU-PROMO-LEMONI' },
   )
   const brownie = buildCakeReservation(
-    { ...cakeInput, productId: 'brownie-cheesecake', promoCode: 'lemoni' },
+    { ...cakeInput, productId: 'brownie-cheesecake', brownieCreamOption: 'none', promoCode: 'lemoni' },
     { now, reservationNumber: 'VG-C-AU-LEMONI-BROWNIE' },
   )
 
   assert.equal(lemon.totalPrice, 40.5)
   assert.equal(lemon.totalPriceCents, 4050)
   assert.match(lemon.requestNote, /^\[Promo lemoni\] 10% discount applied: 45\.00 -> 40\.50/)
-  assert.equal(brownie.totalPrice, 58)
+  assert.equal(brownie.totalPrice, 85)
   assert.equal(brownie.requestNote, 'Happy birthday')
 })
 
@@ -1102,12 +1159,12 @@ test('multi-line cake API rejects client line metadata, forged prices and top-le
 test('multi-line cake API merges normalized hidden-option duplicates in first-seen position', () => {
   const reservation = buildCakeReservation(multiCakeInput([
     {
-      productId: 'brownie-cheesecake', cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'extra-chocolate',
+      productId: 'brownie-cheesecake', brownieCreamOption: 'none', cakeSize: '22cm', chocolateType: 'milk', poundAddon: 'extra-chocolate',
       chocolateIcingCount: 4, vanillaCreamCount: 4, partyDecorationCount: 4,
       vanillaCakeSheet: 'chocolate', vanillaCakeFlavor: 'nutella-chocolate-chip', quantity: 2,
     },
     { productId: 'pave-cake', cakeSize: '15cm', quantity: 1 },
-    { productId: 'brownie-cheesecake', quantity: 3 },
+    { productId: 'brownie-cheesecake', brownieCreamOption: 'none', quantity: 3 },
   ]), { now, reservationNumber: 'VG-C-AU-MERGED' })
   const { lines } = parseStoredOrderLines(reservation)
 
@@ -1264,7 +1321,7 @@ test('stored order line parser fails closed on malformed, unsupported, empty, ex
   assertApiError('INVALID_STORED_ORDER', () => publicCakeReservation({ ...reservation, orderLinesJson: '{' }), 500)
 })
 
-test('stored order parser keeps approved pre-price-update Pave, Vanilla and Buttercream lines readable', () => {
+test('stored order parser keeps approved marker-free pre-price-update cake lines readable', () => {
   const legacyCases = [
     ['pave-cake', '15cm', 7500],
     ['pave-cake', '19cm', 9500],
@@ -1275,6 +1332,8 @@ test('stored order parser keeps approved pre-price-update Pave, Vanilla and Butt
     ['buttercream-cake', '15cm', 7500],
     ['buttercream-cake', '19cm', 9800],
     ['buttercream-cake', '22cm', 13900],
+    ['brownie-cheesecake', '15cm', 5800],
+    ['pave-brownie-cheesecake', '15cm', 6800],
   ]
 
   for (const [productId, cakeSize, legacyUnitPriceCents] of legacyCases) {
@@ -1282,11 +1341,15 @@ test('stored order parser keeps approved pre-price-update Pave, Vanilla and Butt
       ...cakeInput,
       productId,
       cakeSize,
+      ...(['brownie-cheesecake', 'pave-brownie-cheesecake'].includes(productId)
+        ? { brownieCreamOption: 'none' }
+        : {}),
       totalPrice: 1,
       totalPriceCents: 1,
     }, { now, reservationNumber: `VG-C-AU-LEGACY-PRICE-${productId}-${cakeSize}` })
     const historical = structuredClone(current)
     const payload = JSON.parse(historical.orderLinesJson)
+    if (productId === 'brownie-cheesecake') delete payload.lines[0].brownieCreamOption
     payload.lines[0].unitPriceCents = legacyUnitPriceCents
     payload.lines[0].subtotalCents = legacyUnitPriceCents
     payload.lines[0].totalPriceCents = legacyUnitPriceCents
@@ -1298,8 +1361,29 @@ test('stored order parser keeps approved pre-price-update Pave, Vanilla and Butt
     assert.equal(parseStoredOrderLines(historical).lines[0].unitPriceCents, legacyUnitPriceCents)
   }
 
-  const forged = buildCakeReservation({ ...cakeInput, totalPrice: 1, totalPriceCents: 1 }, {
-    now,
+
+
+  for (const brownieCreamOption of ['none', 'fresh-cream']) {
+    const underpricedBrownie = buildCakeReservation({
+      ...cakeInput,
+      productId: 'brownie-cheesecake',
+      brownieCreamOption,
+      totalPrice: 1,
+      totalPriceCents: 1,
+    }, { now, reservationNumber: `VG-C-AU-BROWNIE-LEGACY-FORGERY-${brownieCreamOption}` })
+    const underpricedPayload = JSON.parse(underpricedBrownie.orderLinesJson)
+    underpricedPayload.lines[0].unitPriceCents = 5800
+    underpricedPayload.lines[0].subtotalCents = 5800
+    underpricedPayload.lines[0].totalPriceCents = 5800
+    underpricedBrownie.orderLinesJson = JSON.stringify(underpricedPayload)
+    underpricedBrownie.subtotalCents = 5800
+    underpricedBrownie.totalPriceCents = 5800
+    underpricedBrownie.totalPrice = 58
+    assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(underpricedBrownie), 500)
+    assertApiError('INVALID_STORED_ORDER', () => publicCakeReservation(underpricedBrownie), 500)
+  }
+
+  const forged = buildCakeReservation({ ...cakeInput, totalPrice: 1, totalPriceCents: 1 }, {    now,
     reservationNumber: 'VG-C-AU-LEGACY-PRICE-FORGED',
   })
   const forgedPayload = JSON.parse(forged.orderLinesJson)
@@ -1418,6 +1502,25 @@ test('public cake projection exposes sanitized multi-lines and synthesizes sanit
     response.discountCents, response.totalPriceCents,
   ], [25300, 0, 0, 0, 25300])
   assert.equal(JSON.stringify(response.orderLines).includes('Private'), false)
+
+  const currentBrownie = buildCakeReservation({
+    ...cakeInput,
+    productId: 'brownie-cheesecake',
+    brownieCreamOption: 'none',
+  }, { now, reservationNumber: 'VG-C-AU-PUBLIC-LEGACY-BROWNIE' })
+  const historicalBrowniePayload = JSON.parse(currentBrownie.orderLinesJson)
+  delete historicalBrowniePayload.lines[0].brownieCreamOption
+  historicalBrowniePayload.lines[0].unitPriceCents = 5800
+  historicalBrowniePayload.lines[0].subtotalCents = 5800
+  historicalBrowniePayload.lines[0].totalPriceCents = 5800
+  const historicalBrownie = publicCakeReservation({
+    ...currentBrownie,
+    orderLinesJson: JSON.stringify(historicalBrowniePayload),
+    subtotalCents: 5800,
+    totalPriceCents: 5800,
+    totalPrice: 58,
+  })
+  assert.equal(Object.hasOwn(historicalBrownie.orderLines[0], 'brownieCreamOption'), false)
 
   const legacy = publicCakeReservation({
     reservationNumber: 'VG-C-AU-PUBLIC-LEGACY', productId: 'pave-cake', cakeSize: '22cm', chocolateType: 'milk',

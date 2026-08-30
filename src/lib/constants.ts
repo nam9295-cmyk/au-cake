@@ -1,5 +1,6 @@
 import { AU_CAKE_SIZE_LABELS, marketConfig, PAYMENT_STATUSES, RESERVATION_STATUSES } from './market.js'
-import type { CacaoPercent, CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
+import { DEFAULT_BROWNIE_CREAM_OPTION, getBrownieCreamPrice } from './brownie-cream.js'
+import type { BrownieCreamOption, CacaoPercent, CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
 
 export const PRODUCT_NAME = marketConfig.copy.productName
 
@@ -374,6 +375,7 @@ export type ReservationPriceOptions = {
   chocolateType?: ChocolateType
   poundAddon?: PoundAddon
   cupcakeFinish?: CupcakeFinish
+  brownieCreamOption?: BrownieCreamOption
   chocolateIcingCount?: number
   vanillaCreamCount?: number
   partyDecorationCount?: number
@@ -473,6 +475,7 @@ function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoP
       chocolateType: DEFAULT_CHOCOLATE_TYPE,
       poundAddon: DEFAULT_POUND_ADDON,
       cupcakeFinish: DEFAULT_CUPCAKE_FINISH,
+      brownieCreamOption: DEFAULT_BROWNIE_CREAM_OPTION,
       chocolateIcingCount: 0,
       vanillaCreamCount: 0,
       partyDecorationCount: 0,
@@ -484,6 +487,7 @@ function normalizePriceOptions(optionsOrCacao?: ReservationPriceOptions | CacaoP
     chocolateType: optionsOrCacao?.chocolateType || DEFAULT_CHOCOLATE_TYPE,
     poundAddon: optionsOrCacao?.poundAddon || DEFAULT_POUND_ADDON,
     cupcakeFinish: optionsOrCacao?.cupcakeFinish || DEFAULT_CUPCAKE_FINISH,
+    brownieCreamOption: optionsOrCacao?.brownieCreamOption || DEFAULT_BROWNIE_CREAM_OPTION,
     chocolateIcingCount: optionsOrCacao?.chocolateIcingCount || 0,
     vanillaCreamCount: optionsOrCacao?.vanillaCreamCount || 0,
     partyDecorationCount: optionsOrCacao?.partyDecorationCount || 0,
@@ -513,7 +517,8 @@ export function getReservationUnitPrice(
     (product.usesCacaoOptions ? cacaoOption?.extraPrice || 0 : 0) +
     (product.usesChocolateTypeOptions ? chocolateOption.extraPrice : 0) +
     (product.usesPoundAddonOptions ? addonOption.extraPrice : 0) +
-    getChocolateIcingSurcharge(product.id, options.chocolateIcingCount)
+    getChocolateIcingSurcharge(product.id, options.chocolateIcingCount) +
+    getBrownieCreamPrice(product.id, options.brownieCreamOption)
   )
 }
 

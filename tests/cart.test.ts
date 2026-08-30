@@ -30,10 +30,11 @@ const baseSelection = (overrides: Partial<CakeDetailSelection> = {}): CakeDetail
   partyDecorationCount: 0,
   vanillaCakeSheet: 'vanilla',
   vanillaCakeFlavor: 'triple-berry',
+  brownieCreamOption: 'none',
   individualPackaging: false,
   quantity: 1,
   ...overrides,
-})
+} as CakeDetailSelection)
 
 test('cart normalizes hidden options before deriving the fixed-order quantity-free key', () => {
   const normalized = normalizeCartSelection(baseSelection({
@@ -63,6 +64,7 @@ test('cart normalizes hidden options before deriving the fixed-order quantity-fr
       0,
       'vanilla',
       'triple-berry',
+      'none',
     ]),
   )
   assert.equal(getCartLineKey({ ...normalized, quantity: 2 }), getCartLineKey(normalized))
@@ -106,11 +108,35 @@ test('Buttercream and Brownie Cheesecake cart lines add, update, and remove inde
   const added = addCartLine(addCartLine([], buttercream), brownie)
 
   assert.equal(added.length, 2)
-  assert.equal(getCartEstimatedSubtotal(added), 213)
+  assert.equal(getCartEstimatedSubtotal(added), 240)
   const updated = updateCartLineQuantity(added, added[0].lineKey, 2)
   assert.equal(updated[0].selection.quantity, 2)
-  assert.equal(getCartEstimatedSubtotal(updated), 358)
+  assert.equal(getCartEstimatedSubtotal(updated), 385)
   assert.deepEqual(removeCartLine(updated, updated[1].lineKey), [updated[0]])
+})
+
+test('Brownie Fresh cream is a persisted cart identity option priced per cake while legacy carts default to none', () => {
+  const basic = baseSelection({ productId: 'brownie-cheesecake' })
+  const withCream = { ...basic, brownieCreamOption: 'fresh-cream' } as CakeDetailSelection
+  const lines = addCartLine(addCartLine([], basic), withCream)
+
+  assert.equal(lines.length, 2)
+  assert.notEqual(lines[0]?.lineKey, lines[1]?.lineKey)
+  assert.equal(getCartEstimatedSubtotal(lines), 190)
+  assert.match(serializeCartLines(lines), /"brownieCreamOption":"fresh-cream"/)
+  assert.equal(parseCartLines(serializeCartLines(lines))[1]?.selection.brownieCreamOption, 'fresh-cream')
+
+  const attemptedPaveCombination = normalizeCartSelection(baseSelection({
+    productId: 'pave-brownie-cheesecake',
+    brownieCreamOption: 'fresh-cream',
+  }))
+  assert.equal(attemptedPaveCombination?.brownieCreamOption, 'none')
+  assert.equal(attemptedPaveCombination ? getCartEstimatedSubtotal(addCartLine([], attemptedPaveCombination)) : 0, 95)
+
+  const legacySelection: Partial<CakeDetailSelection> = { ...basic }
+  delete legacySelection.brownieCreamOption
+  const legacy = parseCartLines(JSON.stringify({ version: 1, lines: [legacySelection] }))
+  assert.equal(legacy[0]?.selection.brownieCreamOption, 'none')
 })
 
 test('Cupcake cart lines keep pack size and whole-box finish as separate priced selections', () => {

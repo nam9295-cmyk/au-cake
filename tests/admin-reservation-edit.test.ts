@@ -80,6 +80,22 @@ test('admin versioned single-line orders preserve authoritative pricing and reje
   assert.equal(scheduleOnly.pickupDate, '2026-07-24')
 })
 
+test('local single-line Brownie Fresh cream edits preserve the per-cake surcharge', () => {
+  const freshCreamReservation: Reservation = {
+    ...baseReservation,
+    productId: 'brownie-cheesecake',
+    brownieCreamOption: 'fresh-cream',
+    totalPrice: 105,
+    totalPriceCents: 10500,
+  }
+
+  const update = buildAdminReservationUpdate(freshCreamReservation, { quantity: 2 })
+
+  assert.equal(update.quantity, 2)
+  assert.equal(update.totalPrice, 210)
+  assert.equal(update.totalPriceCents, 21000)
+})
+
 test('admin reservation edits use whole-box Cupcake finish prices and clear retired count options', () => {
   const update = buildAdminReservationUpdate(baseReservation, {
     productId: 'cupcake-dozen',

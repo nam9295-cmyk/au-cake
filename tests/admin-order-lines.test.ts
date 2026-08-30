@@ -80,6 +80,24 @@ test('admin Appwrite hydration retains a selected Chocolate Extra without repric
   )
 })
 
+test('admin Appwrite hydration retains Brownie Fresh cream as a distinct priced order-line option', () => {
+  const line = {
+    productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
+    chocolateIcingCount: 0, chocolateExtra: 'none', chocolateExtraCents: 0, brownieCreamOption: 'fresh-cream',
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink',
+    quantity: 1, unitPriceCents: 10500, subtotalCents: 10500, discountPercent: 0, discountCents: 0, totalPriceCents: 10500,
+  }
+  const reservation = toReservation({
+    ...document,
+    $id: 'reservation-brownie-cream', productId: line.productId, cakeSize: line.cakeSize, cupcakeFinish: line.cupcakeFinish,
+    totalPrice: 105, totalPriceCents: 10500, subtotalCents: 10500, discountBasisCents: 0, discountPercent: 0, discountCents: 0,
+    orderLinesJson: JSON.stringify({ version: 1, lines: [line] }), orderLineCount: 1, orderItemCount: 1,
+  } as never)
+
+  assert.equal(reservation.orderLines?.[0]?.brownieCreamOption, 'fresh-cream')
+  assert.equal(reservation.orderLines?.[0]?.unitPriceCents, 10500)
+})
+
 test('admin Appwrite hydration retains current Pave and Buttercream inch pricing', () => {
   for (const [productId, cakeSize, unitPriceCents] of [
     ['pave-cake', '8in', 10900],
@@ -131,11 +149,12 @@ test('admin local search includes normalized customer email', async () => {
   })
 })
 
-test('admin Appwrite hydration keeps only the approved pre-price-update Pave, Vanilla and Buttercream lines readable', () => {
+test('admin Appwrite hydration keeps only approved pre-price-update product prices readable in admin and public lookup', async () => {
   const historicalPrices = [
     ['pave-cake', '15cm', 7500], ['pave-cake', '19cm', 9500], ['pave-cake', '22cm', 11500],
     ['vanilla-fresh-cream-cake', '15cm', 7500], ['vanilla-fresh-cream-cake', '19cm', 9800], ['vanilla-fresh-cream-cake', '22cm', 13900],
     ['buttercream-cake', '15cm', 7500], ['buttercream-cake', '19cm', 9800], ['buttercream-cake', '22cm', 13900],
+    ['brownie-cheesecake', '15cm', 5800], ['pave-brownie-cheesecake', '15cm', 6800],
   ] as const
 
   for (const [productId, cakeSize, unitPriceCents] of historicalPrices) {
@@ -162,6 +181,44 @@ test('admin Appwrite hydration keeps only the approved pre-price-update Pave, Va
     }
     const reservation = toReservation(historicalDocument as never)
     assert.equal(reservation.orderLines?.[0]?.unitPriceCents, unitPriceCents)
+    await withLocalReservations([reservation], async () => {
+      const publicReservation = await getReservationByNumber(reservation.reservationNumber, reservation.customerPhone)
+      assert.equal(publicReservation?.orderLines?.[0]?.unitPriceCents, unitPriceCents)
+    })
+  }
+
+
+
+  for (const brownieCreamOption of ['none', 'fresh-cream'] as const) {
+    const underpricedLine = {
+      ...lines[0],
+      productId: 'brownie-cheesecake',
+      brownieCreamOption,
+      unitPriceCents: 5800,
+      subtotalCents: 5800,
+      totalPriceCents: 5800,
+    }
+    const underpricedDocument = {
+      ...document,
+      productId: 'brownie-cheesecake',
+      totalPrice: 58,
+      totalPriceCents: 5800,
+      subtotalCents: 5800,
+      orderLinesJson: JSON.stringify({ version: 1, lines: [underpricedLine] }),
+      orderLineCount: 1,
+      orderItemCount: 1,
+    }
+    assert.throws(() => toReservation(underpricedDocument as never), /INVALID_STORED_ORDER/)
+    await withLocalReservations([{
+      ...underpricedDocument,
+      id: underpricedDocument.$id,
+      orderLines: [underpricedLine],
+    } as never], async () => {
+      await assert.rejects(
+        () => getReservationByNumber(underpricedDocument.reservationNumber, underpricedDocument.customerPhone),
+        /INVALID_RESERVATION_RESPONSE/,
+      )
+    })
   }
 
   const forgedLine = { ...lines[0], unitPriceCents: 7800, subtotalCents: 7800, totalPriceCents: 7800 }
@@ -385,6 +442,28 @@ test('local demo reservation storage normalizes and retains the required custome
     const stored = JSON.parse(localStorage.getItem(localReservationsKey) || '[]')
     assert.equal(reservation.customerEmail, 'customer@example.com')
     assert.equal(stored[0]?.customerEmail, 'customer@example.com')
+  })
+})
+
+
+
+test('API-off local demo preserves authoritative Brownie Basic, Pave, and Fresh cream prices and fields', async () => {
+  await withLocalReservations([], async () => {
+    const common = {
+      customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
+      cakeSize: '15cm' as const, chocolateType: 'dark' as const, poundAddon: 'none' as const,
+      chocolateIcingCount: 0, quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본' as const,
+      requestNote: '', privacyConsent: true,
+    }
+    const basic = await createReservation({ ...common, productId: 'brownie-cheesecake', brownieCreamOption: 'none' })
+    const fresh = await createReservation({ ...common, productId: 'brownie-cheesecake', brownieCreamOption: 'fresh-cream' })
+    const pave = await createReservation({ ...common, productId: 'pave-brownie-cheesecake', brownieCreamOption: 'fresh-cream' })
+    assert.deepEqual(
+      [basic.totalPriceCents, basic.brownieCreamOption, fresh.totalPriceCents, fresh.brownieCreamOption, pave.totalPriceCents, pave.brownieCreamOption],
+      [8500, 'none', 10500, 'fresh-cream', 9500, undefined],
+    )
+    const stored = JSON.parse(localStorage.getItem(localReservationsKey) || '[]')
+    assert.deepEqual(stored.map((row: { totalPriceCents: number }) => row.totalPriceCents), [9500, 10500, 8500])
   })
 })
 

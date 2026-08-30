@@ -21,13 +21,14 @@ import { formatCurrency } from '../lib/utils'
 import { formatStoredCakeSizeLabel } from '../lib/cake-serving'
 import type { CakeOrderLineRequest, CakeOrderLineResult, PublicReservation, Reservation } from '../lib/types'
 import { getIndividualPackagingPieceCount } from '../lib/individual-packaging'
+import { formatBrownieCreamOption, getBrownieCreamOption, isBrownieCheesecakeProduct } from '../lib/brownie-cream'
 
 type OrderAwareReservation = (Reservation | PublicReservation) & {
   orderLines?: Array<CakeOrderLineRequest | CakeOrderLineResult>
 }
 
 export function ProductDetailRows({ reservation, language = 'ko' }: {
-  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'cupcakeFinish' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'individualPackaging' | 'individualPackagingPieces' | 'individualPackagingFeeCents'>
+  reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'cupcakeFinish' | 'brownieCreamOption' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'individualPackaging' | 'individualPackagingPieces' | 'individualPackagingFeeCents'>
   language?: Language
 }) {
   const product = getProductById(reservation.productId)
@@ -93,6 +94,12 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
             : `Basic ${basicCupcakeCount} / Vanilla cream ${cupcakeFinishCounts.vanillaCreamCount} / Party decoration ${cupcakeFinishCounts.partyDecorationCount}`}</dd>
         </div>
       ))}
+      {isBrownieCheesecakeProduct(product.id) && reservation.brownieCreamOption === 'fresh-cream' && (
+        <div>
+          <dt>{language === 'ko' ? '생크림' : 'Fresh cream'}</dt>
+          <dd>{formatBrownieCreamOption(product.id, reservation.brownieCreamOption, language)} · +{formatCurrency(getBrownieCreamOption(product.id, reservation.brownieCreamOption).extraPrice)}</dd>
+        </div>
+      )}
       {reservation.individualPackaging && (
         <div>
           <dt>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</dt>

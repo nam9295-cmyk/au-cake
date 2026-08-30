@@ -8,6 +8,7 @@ import {
 import { isCakePointColorProduct } from './constants.js'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './individual-packaging.js'
 import { DEFAULT_CHOCOLATE_EXTRA, normalizeChocolateExtra } from './chocolate-extras.js'
+import { DEFAULT_BROWNIE_CREAM_OPTION, normalizeBrownieCreamOption } from './brownie-cream.js'
 import type {
   CakeSize,
   ChocolateType,
@@ -56,6 +57,7 @@ export function getCartLineKey(selection: CakeDetailSelection) {
     normalized.partyDecorationCount,
     normalized.vanillaCakeSheet,
     normalized.vanillaCakeFlavor,
+    normalized.brownieCreamOption,
   ]
   if (isCakePointColorProduct(normalized.productId)) {
     identity.push(normalized.vanillaCakePointColor || DEFAULT_VANILLA_CAKE_POINT_COLOR)
@@ -159,6 +161,7 @@ function toPersistedSelection(selection: CakeDetailSelection): CakeDetailSelecti
     chocolateType: normalized.chocolateType,
     poundAddon: normalized.poundAddon,
     chocolateExtra: normalized.chocolateExtra,
+    brownieCreamOption: normalized.brownieCreamOption,
     cupcakeFinish: normalized.cupcakeFinish,
     chocolateIcingCount: normalized.chocolateIcingCount,
     vanillaCreamCount: normalized.vanillaCreamCount,
@@ -196,6 +199,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     chocolateType,
     poundAddon,
     chocolateExtra,
+    brownieCreamOption,
     cupcakeFinish,
     chocolateIcingCount,
     vanillaCreamCount,
@@ -213,6 +217,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     typeof chocolateType !== 'string' ||
     typeof poundAddon !== 'string' ||
     (chocolateExtra !== undefined && typeof chocolateExtra !== 'string') ||
+    (brownieCreamOption !== undefined && typeof brownieCreamOption !== 'string') ||
     (cupcakeFinish !== undefined && typeof cupcakeFinish !== 'string') ||
     typeof chocolateIcingCount !== 'number' || !Number.isFinite(chocolateIcingCount) ||
     typeof vanillaCreamCount !== 'number' || !Number.isFinite(vanillaCreamCount) ||
@@ -233,6 +238,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
     chocolateType: chocolateType as ChocolateType,
     poundAddon: poundAddon as PoundAddon,
     chocolateExtra: normalizeChocolateExtra(productId as ProductId, typeof chocolateExtra === 'string' ? chocolateExtra : DEFAULT_CHOCOLATE_EXTRA),
+    brownieCreamOption: normalizeBrownieCreamOption(productId as ProductId, typeof brownieCreamOption === 'string' ? brownieCreamOption : DEFAULT_BROWNIE_CREAM_OPTION),
     cupcakeFinish: (typeof cupcakeFinish === 'string' ? cupcakeFinish : DEFAULT_CUPCAKE_FINISH) as CakeDetailSelection['cupcakeFinish'],
     chocolateIcingCount,
     vanillaCreamCount,

@@ -35,6 +35,7 @@ import {
 import { normalizeStoredCakeSize } from './cake-serving'
 import type { ReservationPriceOptions } from './constants'
 import { getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras'
+import { isBrownieCheesecakeProduct, normalizeBrownieCreamOption } from './brownie-cream'
 import {
   INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
@@ -269,6 +270,10 @@ function normalizeReservation(reservation: Reservation): Reservation {
     customerEmail: typeof reservation.customerEmail === 'string' ? reservation.customerEmail.trim().toLowerCase() : '',
     productId: getProductById(reservation.productId).id,
     chocolateExtra: normalizeChocolateExtra(getProductById(reservation.productId).id, reservation.chocolateExtra),
+    ...(getProductById(reservation.productId).id === 'brownie-cheesecake'
+      && Object.hasOwn(reservation, 'brownieCreamOption')
+      ? { brownieCreamOption: normalizeBrownieCreamOption(getProductById(reservation.productId).id, reservation.brownieCreamOption) }
+      : {}),
     cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
     ...(reservation.cupcakeFinish === undefined ? {} : {
@@ -339,6 +344,8 @@ const LEGACY_STORED_UNIT_PRICE_CENTS: Partial<Record<ProductId, Partial<Record<C
   'pave-cake': { '15cm': [7500], '19cm': [9500], '22cm': [11500] },
   'vanilla-fresh-cream-cake': { '15cm': [7500], '19cm': [9800], '22cm': [13900] },
   'buttercream-cake': { '15cm': [7500], '19cm': [9800], '22cm': [13900] },
+  'brownie-cheesecake': { '15cm': [5800] },
+  'pave-brownie-cheesecake': { '15cm': [6800] },
 }
 
 function isApprovedStoredUnitPriceCents(
@@ -347,9 +354,12 @@ function isApprovedStoredUnitPriceCents(
   currentUnitPriceCents: number,
   storedUnitPriceCents: number,
   allowHistoricalUnitPrice: boolean,
+  hasBrownieCreamOption: boolean,
 ) {
   return storedUnitPriceCents === currentUnitPriceCents
-    || (allowHistoricalUnitPrice && (LEGACY_STORED_UNIT_PRICE_CENTS[productId]?.[cakeSize]?.includes(storedUnitPriceCents) ?? false))
+    || (allowHistoricalUnitPrice
+      && !(productId === 'brownie-cheesecake' && hasBrownieCreamOption)
+      && (LEGACY_STORED_UNIT_PRICE_CENTS[productId]?.[cakeSize]?.includes(storedUnitPriceCents) ?? false))
 }
 
 function normalizePublicOrderLine(
@@ -366,6 +376,9 @@ function normalizePublicOrderLine(
   const normalized = {
     productId: product.id,
     chocolateExtra: normalizeChocolateExtra(product.id, line.chocolateExtra),
+    ...(product.id === 'brownie-cheesecake' && Object.hasOwn(line, 'brownieCreamOption')
+      ? { brownieCreamOption: normalizeBrownieCreamOption(product.id, line.brownieCreamOption) }
+      : {}),
     cakeSize: normalizeStoredCakeSize(line.cakeSize),
     chocolateType: normalizeReservationChocolateType(product.id, line.chocolateType || DEFAULT_CHOCOLATE_TYPE, poundAddon),
     poundAddon,
@@ -387,6 +400,7 @@ function normalizePublicOrderLine(
     if (line[key] !== normalized[key]) throw new Error('INVALID_RESERVATION_RESPONSE')
   }
   if (line.chocolateExtra !== undefined && line.chocolateExtra !== normalized.chocolateExtra) throw new Error('INVALID_RESERVATION_RESPONSE')
+  if (line.brownieCreamOption !== undefined && line.brownieCreamOption !== normalized.brownieCreamOption) throw new Error('INVALID_RESERVATION_RESPONSE')
   if (Object.hasOwn(line, 'cupcakeFinish') && line.cupcakeFinish !== normalized.cupcakeFinish) throw new Error('INVALID_RESERVATION_RESPONSE')
   if (line.vanillaCakePointColor !== undefined && line.vanillaCakePointColor !== normalized.vanillaCakePointColor) {
     throw new Error('INVALID_RESERVATION_RESPONSE')
@@ -425,7 +439,14 @@ function normalizePublicOrderLine(
     : 0
   if (!Number.isSafeInteger(chocolateExtraCents) || chocolateExtraCents < 0
     || chocolateExtraCents !== Math.round(getChocolateExtraPrice(normalized.chocolateExtra) * 100)
-    || !isApprovedStoredUnitPriceCents(product.id, normalized.cakeSize, unitPriceCents, approvedUnitPriceCents, allowHistoricalUnitPrice)
+    || !isApprovedStoredUnitPriceCents(
+      product.id,
+      normalized.cakeSize,
+      unitPriceCents,
+      approvedUnitPriceCents,
+      allowHistoricalUnitPrice,
+      Object.hasOwn(line, 'brownieCreamOption'),
+    )
     || priced.subtotalCents !== approvedUnitPriceCents * line.quantity + chocolateExtraCents
     || individualPackagingPieces !== expectedPackagingPieces
     || totalPriceCents !== subtotalCents - discountCents + individualPackagingFeeCents
@@ -444,6 +465,7 @@ function orderLineIdentityKey(line: CakeOrderLineRequest) {
     line.vanillaCreamCount, line.partyDecorationCount, line.vanillaCakeSheet, line.vanillaCakeFlavor,
     normalizeVanillaCakePointColor(line.productId, line.vanillaCakePointColor),
     normalizeChocolateExtra(line.productId, line.chocolateExtra),
+    normalizeBrownieCreamOption(line.productId, line.brownieCreamOption),
     line.individualPackaging === true,
   ])
 }
@@ -530,6 +552,9 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
   const topProjection = {
     productId: product.id,
     chocolateExtra: normalizeChocolateExtra(product.id, reservation.chocolateExtra),
+    ...(product.id === 'brownie-cheesecake' && Object.hasOwn(reservation, 'brownieCreamOption')
+      ? { brownieCreamOption: normalizeBrownieCreamOption(product.id, reservation.brownieCreamOption) }
+      : {}),
     cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
     chocolateType: normalizeReservationChocolateType(
       product.id,
@@ -562,6 +587,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
       if (topProjection[key] !== first[key]) throw new Error('INVALID_RESERVATION_RESPONSE')
     }
     if (topProjection.chocolateExtra !== first.chocolateExtra) throw new Error('INVALID_RESERVATION_RESPONSE')
+    if (topProjection.brownieCreamOption !== first.brownieCreamOption) throw new Error('INVALID_RESERVATION_RESPONSE')
   }
 
   const aggregateKeys = ['subtotalCents', 'discountBasisCents', 'discountPercent', 'discountCents', 'totalPriceCents'] as const
@@ -683,6 +709,14 @@ const CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS = new Set([
   ...STORED_ORDER_LINE_KEYS,
   'chocolateExtra', 'chocolateExtraCents',
 ])
+const BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
+  ...CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS,
+  'brownieCreamOption',
+])
+const BROWNIE_CREAM_STORED_ORDER_LINE_KEYS = new Set([
+  ...CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS,
+  'brownieCreamOption',
+])
 const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...PRE_PACKAGING_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
 const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
 const SAFE_PROMO_LAST4_PATTERN = /^[A-Z0-9]{4}$/
@@ -714,16 +748,34 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
   const chocolateExtraVersions = new Set<boolean>()
   const orderLines = rawLines.map((rawLine): CakeOrderLineResult => {
     if (!rawLine || typeof rawLine !== 'object' || Array.isArray(rawLine)) invalidStoredOrder()
-    const keys = Reflect.ownKeys(rawLine)
+    const rawKeys = Reflect.ownKeys(rawLine)
+    if (rawKeys.some((key) => typeof key !== 'string')) invalidStoredOrder()
+    const keys = rawKeys as string[]
     const hasPackagingFields = keys.length === STORED_ORDER_LINE_KEYS.size
+      && keys.every((key) => STORED_ORDER_LINE_KEYS.has(key))
     const hasChocolateExtraPrePackagingFields = keys.length === CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS.size
+      && keys.every((key) => CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS.has(key))
     const hasChocolateExtraPackagingFields = keys.length === CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS.size
-    const hasChocolateExtraFields = hasChocolateExtraPrePackagingFields || hasChocolateExtraPackagingFields
-    const hasCurrentPackagingFields = hasPackagingFields || hasChocolateExtraPackagingFields
-    const hasCupcakeFinish = hasCurrentPackagingFields || hasChocolateExtraPrePackagingFields || keys.length === PRE_PACKAGING_STORED_ORDER_LINE_KEYS.size
+      && keys.every((key) => CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS.has(key))
+    const hasBrownieCreamPrePackagingFields = keys.length === BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS.size
+      && keys.every((key) => BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS.has(key))
+    const hasBrownieCreamPackagingFields = keys.length === BROWNIE_CREAM_STORED_ORDER_LINE_KEYS.size
+      && keys.every((key) => BROWNIE_CREAM_STORED_ORDER_LINE_KEYS.has(key))
+    const hasBrownieCreamFields = hasBrownieCreamPrePackagingFields || hasBrownieCreamPackagingFields
+    const hasChocolateExtraFields = hasChocolateExtraPrePackagingFields || hasChocolateExtraPackagingFields || hasBrownieCreamFields
+    const hasCurrentPackagingFields = hasPackagingFields || hasChocolateExtraPackagingFields || hasBrownieCreamPackagingFields
+    const hasPrePackagingFields = keys.length === PRE_PACKAGING_STORED_ORDER_LINE_KEYS.size
+      && keys.every((key) => PRE_PACKAGING_STORED_ORDER_LINE_KEYS.has(key))
+    const hasCupcakeFinish = hasCurrentPackagingFields || hasChocolateExtraPrePackagingFields || hasBrownieCreamPrePackagingFields || hasPrePackagingFields
     packagingVersions.add(hasCurrentPackagingFields)
     chocolateExtraVersions.add(hasChocolateExtraFields)
-    const allowedKeys = hasChocolateExtraPackagingFields
+    const productId = (rawLine as { productId?: unknown }).productId
+    if (hasBrownieCreamFields && productId !== 'brownie-cheesecake') invalidStoredOrder()
+    const allowedKeys = hasBrownieCreamPackagingFields
+      ? BROWNIE_CREAM_STORED_ORDER_LINE_KEYS
+      : hasBrownieCreamPrePackagingFields
+        ? BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS
+        : hasChocolateExtraPackagingFields
       ? CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS
       : hasChocolateExtraPrePackagingFields
         ? CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS
@@ -894,6 +946,9 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
         ...reservation,
         ...storedOrder,
         chocolateExtra: storedOrder.orderLines?.[0]?.chocolateExtra || 'none',
+        ...(Object.hasOwn(storedOrder.orderLines?.[0] || {}, 'brownieCreamOption') ? {
+          brownieCreamOption: storedOrder.orderLines?.[0]?.brownieCreamOption,
+        } : {}),
         ...(storedOrder.orderLines?.[0]?.individualPackaging !== undefined ? {
           individualPackaging: storedOrder.orderLines[0].individualPackaging,
         } : {}),
@@ -1165,6 +1220,8 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   const now = new Date().toISOString()
   const reservationNumber = generateReservationNumber()
   const product = getProductById(input.productId || DEFAULT_PRODUCT_ID)
+  if (isAppwriteConfigured && isBrownieCheesecakeProduct(product.id)) throw new Error('BROWNIE_CREAM_SERVER_REQUIRED')
+  const brownieCreamOption = normalizeBrownieCreamOption(product.id, input.brownieCreamOption)
   const cacaoPercent = product.usesCacaoOptions ? input.cacaoPercent : '기본'
   const cakeSize = normalizeCakeSize(product.id, input.cakeSize)
   const poundAddon = normalizePoundAddon(product.id, input.poundAddon)
@@ -1178,7 +1235,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   const quantity = normalizeQuantity(input.quantity)
   const originalTotalPrice = getReservationPrice(
     product.id,
-    { cacaoPercent, cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, ...cupcakeFinishCounts },
+    { cacaoPercent, cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, brownieCreamOption, ...cupcakeFinishCounts },
     quantity,
   )
   const totalPrice = applyPromoDiscount(originalTotalPrice, product.id, input.promoCode)
@@ -1196,6 +1253,7 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     chocolateType,
     poundAddon,
     cupcakeFinish,
+    ...(product.id === 'brownie-cheesecake' ? { brownieCreamOption } : {}),
     chocolateIcingCount,
     ...cupcakeFinishCounts,
     vanillaCakeSheet,

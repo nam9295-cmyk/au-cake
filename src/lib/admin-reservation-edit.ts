@@ -35,6 +35,7 @@ export type AdminReservationEditInput = Partial<Pick<Reservation,
   | 'chocolateType'
   | 'poundAddon'
   | 'cupcakeFinish'
+  | 'brownieCreamOption'
   | 'chocolateIcingCount'
   | 'vanillaCreamCount'
   | 'partyDecorationCount'
@@ -73,6 +74,7 @@ const REVIEW_COUPON_PRICE_FIELDS = [
   'chocolateType',
   'poundAddon',
   'cupcakeFinish',
+  'brownieCreamOption',
   'chocolateIcingCount',
   'vanillaCreamCount',
   'partyDecorationCount',
@@ -161,6 +163,7 @@ function reservationPromoKind(reservation: Reservation): ReservationPromoKind | 
       chocolateType: reservation.chocolateType,
       poundAddon: reservation.poundAddon,
       ...(reservation.cupcakeFinish === undefined ? {} : { cupcakeFinish: reservation.cupcakeFinish }),
+      brownieCreamOption: reservation.brownieCreamOption,
       chocolateIcingCount: reservation.chocolateIcingCount || 0,
       vanillaCreamCount: reservation.vanillaCreamCount || 0,
       partyDecorationCount: reservation.partyDecorationCount || 0,
@@ -243,7 +246,7 @@ export function buildAdminReservationUpdate(
   )
   const cacaoPercent = (edits.cacaoPercent || reservation.cacaoPercent || '기본') as CacaoPercent
   const historicalUnitPrice = getHistoricalWholeCakeUnitPrice(productId, cakeSize)
-  const originalTotalPrice = (historicalUnitPrice === null ? getReservationPrice(productId, { cacaoPercent, cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, ...cupcakeFinishCounts }, quantity) : historicalUnitPrice / 100 * quantity) + (isLegacyCupcake ? getCupcakeFinishSurcharge(productId, cupcakeFinishCounts.vanillaCreamCount, cupcakeFinishCounts.partyDecorationCount) * quantity : 0)
+  const originalTotalPrice = (historicalUnitPrice === null ? getReservationPrice(productId, { cacaoPercent, cakeSize, chocolateType, poundAddon, cupcakeFinish, brownieCreamOption: reservation.brownieCreamOption, chocolateIcingCount, ...cupcakeFinishCounts }, quantity) : historicalUnitPrice / 100 * quantity) + (isLegacyCupcake ? getCupcakeFinishSurcharge(productId, cupcakeFinishCounts.vanillaCreamCount, cupcakeFinishCounts.partyDecorationCount) * quantity : 0)
   const promoKind = reservationPromoKind(reservation)
   const hasPriceAffectingEdit = REVIEW_COUPON_PRICE_FIELDS
     .filter((field) => field !== 'totalPrice' && field !== 'totalPriceCents')

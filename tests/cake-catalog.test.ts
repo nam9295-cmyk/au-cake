@@ -225,7 +225,7 @@ test('catalog cards expose separated Cupcake and Signature names in English and 
       ['cupcake', 'From AUD 31.00'],
       ['signature-gateau', 'AUD 45.00'],
       ['fresh-lemon-cupcakes', 'From AUD 36.00'],
-      ['brownie-cheesecake', 'From AUD 58.00'],
+      ['brownie-cheesecake', 'From AUD 85.00'],
     ],
   )
   assert.equal(english.find((card) => card.id === 'pave')?.features[0], 'Signature Gâteau layers')
@@ -310,6 +310,9 @@ test('secondary catalogue exactly matches the deployed Reservation API final pri
       vanillaCreamCount: options.vanillaCreamCount || 0,
       partyDecorationCount: options.partyDecorationCount || 0,
       cupcakeFinish: options.cupcakeFinish,
+      ...(productId === 'brownie-cheesecake' || productId === 'pave-brownie-cheesecake'
+        ? { brownieCreamOption: options.brownieCreamOption || 'none' }
+        : {}),
       vanillaCakeSheet: 'chocolate',
       vanillaCakeFlavor: 'plain',
       quantity: 1,

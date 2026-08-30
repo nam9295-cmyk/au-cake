@@ -361,6 +361,14 @@ function getPoundAddonText(reservation, config) {
   return config.poundAddonLabels[poundAddon] || config.poundAddonLabels[reservation.poundAddon] || reservation.poundAddon || '-'
 }
 
+function getBrownieFreshCreamText(reservation, config) {
+  if (reservation.productId !== 'brownie-cheesecake'
+    || reservation.brownieCreamOption !== 'fresh-cream') return null
+  return config.currency === 'AUD'
+    ? `Added · +${formatCurrency(20, config)}`
+    : `추가 · +${formatCurrency(20, config)}`
+}
+
 function getChocolateExtraText(reservation, config) {
   const labels = config.currency === 'AUD'
     ? {
@@ -542,6 +550,7 @@ function cakeDetailRows(reservation, config, suffix = '') {
   const quantity = getQuantity(reservation)
   const label = (value) => `${value}${suffix}`
   const chocolateExtra = getChocolateExtraText(reservation, config)
+  const brownieFreshCream = getBrownieFreshCreamText(reservation, config)
   return [
     [label(config.labels.product), getProductName(reservation, config)],
     [label(config.labels.size), getCakeSizeText(reservation, config)],
@@ -565,6 +574,7 @@ function cakeDetailRows(reservation, config, suffix = '') {
     [label(config.labels.finish), getPoundAddonText(reservation, config)],
     [label(config.labels.icingMix), getIcingMixText(reservation, config)],
     ...(chocolateExtra ? [[label(config.currency === 'AUD' ? 'Chocolate extra' : '초콜릿 추가'), chocolateExtra]] : []),
+    ...(brownieFreshCream ? [[label(config.currency === 'AUD' ? 'Fresh cream' : '생크림'), brownieFreshCream]] : []),
     [label(config.labels.quantity), `${quantity}${config.quantityUnit}`],
     ...(reservation.individualPackaging === true ? [[
       label(config.currency === 'AUD' ? 'Individual packaging' : '개별 포장'),
@@ -751,6 +761,7 @@ const CUSTOMER_EMAIL_KOREAN_LABELS = Object.freeze({
   'Icing mix': '마감 구성',
   Quantity: '수량',
   'Individual packaging': '개별 포장',
+  'Fresh cream': '생크림',
   Total: '총 금액',
   'Pick-up date': '픽업 날짜',
   'Pick-up time': '픽업 시간',

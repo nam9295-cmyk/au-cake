@@ -244,6 +244,47 @@ test('Chocolate Extra request projection is frontend-ready while Reservation API
   assert.deepEqual(order.orderLines.map((line) => line.chocolateExtra), ['combo', 'none'])
 })
 
+
+
+test('Brownie request projections carry an explicit catalog marker for Basic, Fresh cream, and Pave', () => {
+  const common = {
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: ' Customer@Example.com ',
+    cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
+    chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false,
+    quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
+    requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
+  }
+  const fresh = buildCakeReservationRequest({
+    ...common, productId: 'brownie-cheesecake', brownieCreamOption: 'fresh-cream',
+  } as ReservationInput)
+  assert.equal(fresh.brownieCreamOption, 'fresh-cream')
+
+  const pave = buildCakeReservationRequest({
+    ...common, productId: 'pave-brownie-cheesecake', brownieCreamOption: 'fresh-cream',
+  } as ReservationInput)
+  assert.equal(pave.brownieCreamOption, 'none')
+
+  const order = buildCakeOrderRequest({
+    customerName: common.customerName, customerPhone: common.customerPhone, customerEmail: common.customerEmail,
+    pickupDate: common.pickupDate, pickupTime: common.pickupTime, requestNote: '', privacyConsent: true,
+    requestId: common.requestId, website: '',
+    orderLines: [
+      { ...common, productId: 'brownie-cheesecake', brownieCreamOption: 'fresh-cream' },
+      { ...common, productId: 'pave-brownie-cheesecake', brownieCreamOption: 'none' },
+    ],
+  } as never)
+  assert.deepEqual(order.orderLines.map((line) => line.brownieCreamOption), ['fresh-cream', 'none'])
+
+  const missingMarker = { ...order.orderLines[0] } as Record<string, unknown>
+  delete missingMarker.brownieCreamOption
+  assert.throws(() => buildCakeOrderRequest({
+    customerName: common.customerName, customerPhone: common.customerPhone, customerEmail: common.customerEmail,
+    pickupDate: common.pickupDate, pickupTime: common.pickupTime, requestNote: '', privacyConsent: true,
+    requestId: common.requestId, website: '', orderLines: [missingMarker, order.orderLines[1]],
+  } as never), /INVALID_ORDER_LINES/)
+})
+
 test('multi-line Strawberry orders project only the new contract fields', () => {
   const strawberryLine = {
     productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in',
@@ -330,7 +371,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
       },
       {
         productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
-        cupcakeFinish: 'basic',
+        brownieCreamOption: 'fresh-cream', cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 1,
         totalPriceCents: 1, pickupDate: 'private', requestNote: 'private',
@@ -352,7 +393,7 @@ test('multi-line request projection requires a UUID and strips all cart metadata
       },
       {
         productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
-        chocolateExtra: 'none',
+        brownieCreamOption: 'fresh-cream', chocolateExtra: 'none',
         cupcakeFinish: 'basic',
         chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
         vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: false, quantity: 1,
@@ -483,6 +524,46 @@ function multiOrderResponse(overrides: Record<string, unknown> = {}) {
     ...overrides,
   }
 }
+
+
+
+function brownieFreshOrderResponse() {
+  const line = {
+    productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
+    chocolateIcingCount: 0, chocolateExtra: 'none', brownieCreamOption: 'fresh-cream', chocolateExtraCents: 0,
+    vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+    vanillaCakePointColor: 'pink', individualPackaging: false, individualPackagingPieces: 0, individualPackagingFeeCents: 0,
+    quantity: 1, unitPriceCents: 10500, subtotalCents: 10500, discountPercent: 0, discountCents: 0, totalPriceCents: 10500,
+  }
+  return {
+    ...reservation({
+      productId: 'brownie-cheesecake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic',
+      chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
+      vanillaCakePointColor: 'pink', quantity: 1, totalPrice: 105, totalPriceCents: 10500, subtotalCents: 10500,
+      discountPercent: 0, discountCents: 0, appliedPromoCodeLast4: undefined, promotionKind: 'none',
+    }),
+    orderLines: [line], orderLineCount: 1, orderItemCount: 1, discountBasisCents: 0,
+    individualPackagingPieces: 0, individualPackagingFeeCents: 0,
+  }
+}
+
+test('current Brownie Fresh cream create response round-trips through the strict client parser at AUD 105', () => {
+  const response = brownieFreshOrderResponse()
+  const parsed = parseCakeOrderResult(response)
+  assert.equal(parsed.brownieCreamOption, 'fresh-cream')
+  assert.equal(parsed.orderLines[0]?.brownieCreamOption, 'fresh-cream')
+  assert.equal(parsed.orderLines[0]?.unitPriceCents, 10500)
+  assert.equal(parsed.totalPriceCents, 10500)
+
+  const missingMarker = { ...response, orderLines: [{ ...response.orderLines[0] }] }
+  delete (missingMarker.orderLines[0] as Record<string, unknown>).brownieCreamOption
+  assert.throws(() => parseCakeOrderResult(missingMarker), /RESERVATION_API_INVALID_RESPONSE/)
+  assert.throws(() => parseCakeOrderResult({
+    ...response,
+    orderLines: [{ ...response.orderLines[0], productId: 'pave-brownie-cheesecake', brownieCreamOption: 'none', unitPriceCents: 9500, subtotalCents: 9500, totalPriceCents: 9500 }],
+    productId: 'pave-brownie-cheesecake', totalPrice: 95, totalPriceCents: 9500, subtotalCents: 9500,
+  }), /RESERVATION_API_INVALID_RESPONSE/)
+})
 
 test('multi-line response parser allowlists authoritative lines and validates every aggregate', () => {
   const parsed = parseCakeOrderResult(multiOrderResponse())

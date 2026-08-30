@@ -22,6 +22,7 @@ import { marketConfig } from './market.js'
 import { formatChocolateExtra } from './chocolate-extras.js'
 import type { CakeOrderLineRequest, CakeOrderLineResult, Reservation } from './types.js'
 import { getIndividualPackagingPieceCount } from './individual-packaging.js'
+import { formatBrownieCreamOption, getBrownieCreamOption, isBrownieCheesecakeProduct } from './brownie-cream.js'
 
 function cupcakeFinishLabel(value: CakeOrderLineRequest['cupcakeFinish']) {
   if (value === 'vanilla-fresh-cream') return 'Vanilla Fresh Cream'
@@ -48,6 +49,7 @@ export function getReservationOrderLines(reservation: Reservation): ReservationO
     vanillaCakeSheet: reservation.vanillaCakeSheet || 'vanilla',
     vanillaCakeFlavor: reservation.vanillaCakeFlavor || 'triple-berry',
     chocolateExtra: reservation.chocolateExtra || 'none',
+    brownieCreamOption: reservation.brownieCreamOption || 'none',
     ...(isCakePointColorProduct(reservation.productId)
       ? { vanillaCakePointColor: normalizeVanillaCakePointColor(reservation.productId, reservation.vanillaCakePointColor) }
       : {}),
@@ -128,6 +130,9 @@ export function formatOrderLineSummary(line: ReservationOrderLine) {
   if (line.chocolateExtra && line.chocolateExtra !== 'none') {
     const extraPrice = line.chocolateExtraCents
     details.push(`${formatChocolateExtra(line.chocolateExtra, 'en')}${Number.isSafeInteger(extraPrice) ? ` · ${formatLinePrice(extraPrice as number)}` : ''}`)
+  }
+  if (isBrownieCheesecakeProduct(line.productId) && line.brownieCreamOption === 'fresh-cream') {
+    details.push(`${formatBrownieCreamOption(line.productId, line.brownieCreamOption, 'en')} · +${formatLinePrice(getBrownieCreamOption(line.productId, line.brownieCreamOption).extraPrice * 100)}`)
   }
   if (line.individualPackaging) {
     const pieces = line.individualPackagingPieces ?? getIndividualPackagingPieceCount(line.productId, line.quantity)
