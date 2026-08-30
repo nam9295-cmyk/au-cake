@@ -27,6 +27,15 @@ const optionPreviewAssetPaths = [
 const optionPreviewAssets = await Promise.all(optionPreviewAssetPaths.map((path) => (
   readFile(new URL(path, import.meta.url)).catch(() => null)
 )))
+const sizePreviewAssetPaths = [
+  '../src/assets/options/cake-size-buttercream.webp',
+  '../src/assets/options/cake-size-pave.webp',
+  '../src/assets/options/cake-size-strawberry-chocolate.webp',
+  '../src/assets/options/cake-size-strawberry-vanilla.webp',
+]
+const sizePreviewAssets = await Promise.all(sizePreviewAssetPaths.map((path) => (
+  readFile(new URL(path, import.meta.url)).catch(() => null)
+)))
 
 test('home catalogue opens shared cake detail routes instead of skipping to the request form', () => {
   assert.match(homeSource, /navigateToCake\(card\.slug\)/)
@@ -71,14 +80,14 @@ test('cake detail makes a free individual-packaging discount visible as a negati
   assert.match(detailSource, /-\{formatCurrency\(individualPackagingDiscount/)
 })
 
-test('new cream-cake order forms hide retired flavour controls and share point colours with Buttercream', () => {
+test('new cream-cake order forms hide retired flavour controls and call Buttercream colours point colours', () => {
   assert.doesNotMatch(detailSource, /VANILLA_CAKE_FLAVOR_OPTIONS\.map/)
   assert.doesNotMatch(reserveSource, /name="vanillaCakeFlavor"/)
   assert.match(detailSource, /isCakePointColorProduct\(product\.id\)/)
   assert.match(reserveSource, /isCakePointColorProduct\(selectedProduct\.id\)/)
-  assert.match(detailSource, /isButtercreamCakeProduct\(product\.id\)[\s\S]*?'케이크 컬러 선택'[\s\S]*?'Choose a cake colour'/)
-  assert.match(reserveSource, /isButtercreamCakeProduct\(selectedProduct\.id\)[\s\S]*?'케이크 컬러 선택'[\s\S]*?'Choose a cake colour'/)
-  assert.match(detailSource, /aria-label=\{language === 'ko'[\s\S]*?isButtercreamCakeProduct\(product\.id\)[\s\S]*?'케이크 컬러'[\s\S]*?isButtercreamCakeProduct\(product\.id\)[\s\S]*?'cake colour'/)
+  assert.match(detailSource, /isButtercreamCakeProduct\(product\.id\)[\s\S]*?'케이크 포인트 컬러 선택'[\s\S]*?'Choose a point colour'/)
+  assert.match(reserveSource, /isButtercreamCakeProduct\(selectedProduct\.id\)[\s\S]*?'케이크 포인트 컬러 선택'[\s\S]*?'Choose a point colour'/)
+  assert.match(detailSource, /aria-label=\{language === 'ko'[\s\S]*?'포인트 컬러'[\s\S]*?'point colour'/)
 })
 
 test('AU detail option prices use the shared two-decimal currency formatter', () => {
@@ -193,6 +202,29 @@ test('customer-supplied photography maps every Gâteau finish and paid Chocolate
   assert.match(detailSource, /'eiffel-6':\s*\{[^}]*src:\s*eiffelExtraImg/s)
   assert.match(detailSource, /'pave-100g':\s*\{[^}]*src:\s*paveExtraImg/s)
   assert.match(detailSource, /combo:\s*\{[^}]*src:\s*chocolateExtraSetImg/s)
+})
+
+test('current whole-cake sizes map every supplied cut-out to the matching product', () => {
+  assert.deepEqual(sizePreviewAssets.map((asset) => Boolean(asset?.length)), [true, true, true, true])
+
+  assert.match(detailSource, /import buttercreamSizePreviewImg from '\.\/assets\/options\/cake-size-buttercream\.webp'/)
+  assert.match(detailSource, /import paveSizePreviewImg from '\.\/assets\/options\/cake-size-pave\.webp'/)
+  assert.match(detailSource, /import strawberryChocolateSizePreviewImg from '\.\/assets\/options\/cake-size-strawberry-chocolate\.webp'/)
+  assert.match(detailSource, /import strawberryVanillaSizePreviewImg from '\.\/assets\/options\/cake-size-strawberry-vanilla\.webp'/)
+  assert.match(detailSource, /const cakeSizePreviewImages/)
+  assert.match(detailSource, /getCakeSizePreviewKey\(product\.id\)/)
+})
+
+test('current whole-cake previews keep one frame while size and Buttercream point colour change', () => {
+  assert.match(detailSource, /getCakeSizePreviewScale\(selection\.cakeSize\)/)
+  assert.match(detailSource, /getCakePointColorPreviewBackground\(selection\.vanillaCakePointColor\)/)
+  assert.match(detailSource, /eyebrow=\{language === 'ko' \? '선택한 사이즈' : 'Selected size'\}/)
+  assert.match(detailSource, /fit="contain"/)
+
+  assert.match(cssSource, /\.cake-detail-option-preview-media\s*\{[^}]*width:\s*112px[^}]*height:\s*88px[^}]*overflow:\s*hidden/s)
+  assert.match(cssSource, /\.cake-detail-option-preview-media\.is-contained img\s*\{[^}]*object-fit:\s*contain[^}]*transform:\s*scale\(var\(--cake-option-preview-scale, 1\)\)[^}]*transform-origin:\s*center bottom/s)
+  const mobileCss = cssSource.slice(cssSource.lastIndexOf('@media (max-width: 760px)'))
+  assert.match(mobileCss, /\.cake-detail-option-preview-media\s*\{[^}]*width:\s*88px[^}]*height:\s*69px/s)
 })
 
 test('Lemon uses the shared compact editorial while retaining its current pack, finishing, and individual packaging controls', () => {

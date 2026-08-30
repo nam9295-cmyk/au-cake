@@ -613,7 +613,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     productCardFeatures: {
       'pave-cake': ['Signature Gâteau layers', 'Smooth pave chocolate ganache', 'Dense, chocolate-forward finish'],
       'vanilla-fresh-cream-cake': ['Signature Gâteau au Chocolat layers', 'Vanilla fresh cream with real vanilla bean', 'Real vanilla bean with visible vanilla bean specks', '6" · 7.5" · 9"'],
-      'buttercream-cake': ['Signature Gâteau layers', 'Italian meringue, real butter and cocoa powder', 'Choose a cake colour'],
+      'buttercream-cake': ['Signature Gâteau layers', 'Italian meringue, real butter and cocoa powder', 'Choose a point colour'],
       'fresh-strawberry-vanilla-cream-cake': ['Fresh strawberries through the cake and on top', 'Vanilla fresh cream with real vanilla bean', 'Soft genoise layers'],
       'fresh-strawberry-chocolate-cream-cake': ['Fresh strawberries through the cake and on top', 'Chocolate fresh cream', 'Soft genoise layers'],
       'pound-cake': ['Rectangular gâteau au chocolat', 'Fixed gâteau size', 'Basic, extra chocolate, or vanilla cream finish'],

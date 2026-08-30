@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
 import poundHeroImg from './assets/hero-cake-3.webp'
 import cupcakeHeroImg from './assets/cupcake-hero.webp'
@@ -15,6 +15,10 @@ import gateauVanillaFinishImg from './assets/options/gateau-vanilla.webp'
 import eiffelExtraImg from './assets/options/extra-eff.webp'
 import paveExtraImg from './assets/options/extra-pave.webp'
 import chocolateExtraSetImg from './assets/options/extra-2set.webp'
+import buttercreamSizePreviewImg from './assets/options/cake-size-buttercream.webp'
+import paveSizePreviewImg from './assets/options/cake-size-pave.webp'
+import strawberryChocolateSizePreviewImg from './assets/options/cake-size-strawberry-chocolate.webp'
+import strawberryVanillaSizePreviewImg from './assets/options/cake-size-strawberry-vanilla.webp'
 import CakeEditorialDetail from './CakeEditorialDetail'
 import KoreanCakeReviewsSection from './KoreanCakeReviewsSection'
 import {
@@ -41,9 +45,13 @@ import {
   getCakeDetailBySlug,
   getCakeDetailSelectionTotal,
   getCakeDetailSelectionEstimatedTotal,
+  getCakePointColorPreviewBackground,
+  getCakeSizePreviewKey,
+  getCakeSizePreviewScale,
   selectCakeDetailProduct,
   type CakeDetailImageKey,
   type CakeDetailSelection,
+  type CakeSizePreviewKey,
 } from './lib/cake-detail'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
 import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraOption, isChocolateExtraEligibleProduct } from './lib/chocolate-extras'
@@ -136,6 +144,29 @@ const chocolateExtraPreviewImages: Partial<Record<ChocolateExtra, OptionPreviewI
     src: chocolateExtraSetImg,
     alt: 'Eiffel Tower chocolates and Pavé chocolate extra set',
     altKo: '에펠탑 초콜릿과 파베 초콜릿 추가 세트',
+  },
+}
+
+const cakeSizePreviewImages: Record<CakeSizePreviewKey, OptionPreviewImage> = {
+  pave: {
+    src: paveSizePreviewImg,
+    alt: 'Pavé Cake size preview',
+    altKo: '파베 케이크 사이즈 미리보기',
+  },
+  buttercream: {
+    src: buttercreamSizePreviewImg,
+    alt: 'Buttercream Cake size and point colour preview',
+    altKo: '버터크림 케이크 사이즈와 포인트 컬러 미리보기',
+  },
+  'strawberry-vanilla': {
+    src: strawberryVanillaSizePreviewImg,
+    alt: 'Fresh Strawberry Vanilla Cream Cake size preview',
+    altKo: '생딸기 바닐라 생크림 케이크 사이즈 미리보기',
+  },
+  'strawberry-chocolate': {
+    src: strawberryChocolateSizePreviewImg,
+    alt: 'Fresh Strawberry Chocolate Cream Cake size preview',
+    altKo: '생딸기 초코 생크림 케이크 사이즈 미리보기',
   },
 }
 
@@ -258,28 +289,40 @@ function OptionPhotoPreview({
   label,
   description,
   language,
+  background,
+  fit = 'cover',
+  scale = 1,
 }: {
   image: OptionPreviewImage
   eyebrow: string
   label: string
-  description: string
+  description?: string
   language: Language
+  background?: string
+  fit?: 'cover' | 'contain'
+  scale?: number
 }) {
   return (
     <div className="cake-detail-option-preview" aria-live="polite">
-      <img
-        key={image.src}
-        src={image.src}
-        alt={language === 'ko' ? image.altKo : image.alt}
-        width={112}
-        height={88}
-        loading="eager"
-        decoding="async"
-      />
+      <div
+        className={`cake-detail-option-preview-media${fit === 'contain' ? ' is-contained' : ''}`}
+        style={background ? { background } : undefined}
+      >
+        <img
+          key={image.src}
+          src={image.src}
+          alt={language === 'ko' ? image.altKo : image.alt}
+          width={112}
+          height={88}
+          loading="eager"
+          decoding="async"
+          style={{ '--cake-option-preview-scale': scale } as CSSProperties}
+        />
+      </div>
       <div className="cake-detail-option-preview-copy">
         <span>{eyebrow}</span>
         <strong>{label}</strong>
-        <p className="cake-detail-extra-help">{description}</p>
+        {description && <p className="cake-detail-extra-help">{description}</p>}
       </div>
     </div>
   )
@@ -349,6 +392,15 @@ export default function CakeDetailPage({
   const selectedFinishOption = POUND_ADDON_OPTIONS.find((option) => option.value === selection.poundAddon) || POUND_ADDON_OPTIONS[0]
   const selectedFinishPreview = poundFinishPreviewImages[selection.poundAddon]
   const selectedChocolateExtraPreview = chocolateExtraPreviewImages[selection.chocolateExtra]
+  const cakeSizePreviewKey = getCakeSizePreviewKey(product.id)
+  const selectedCakeSizePreview = cakeSizePreviewKey ? cakeSizePreviewImages[cakeSizePreviewKey] : null
+  const selectedCakeSizePreviewScale = getCakeSizePreviewScale(selection.cakeSize)
+  const selectedPointColor = VANILLA_CAKE_POINT_COLOR_OPTIONS.find(
+    (option) => option.value === selection.vanillaCakePointColor,
+  ) || VANILLA_CAKE_POINT_COLOR_OPTIONS[0]
+  const cakeSizePreviewBackground = isButtercreamCakeProduct(product.id)
+    ? getCakePointColorPreviewBackground(selection.vanillaCakePointColor)
+    : undefined
   const showsSignatureOrderOptions = detail.id === 'signature-gateau'
   const productTotal = getCakeDetailSelectionTotal(selection)
   const individualPackagingPricing = getIndividualPackagingPricing([{
@@ -573,6 +625,20 @@ export default function CakeDetailPage({
           {product.usesSizeOptions && (
             <fieldset className="cake-detail-fieldset">
               <legend>{language === 'ko' ? '사이즈 선택' : 'Choose your size'}</legend>
+              {selectedCakeSizePreview && (
+                <OptionPhotoPreview
+                  image={selectedCakeSizePreview}
+                  eyebrow={language === 'ko' ? '선택한 사이즈' : 'Selected size'}
+                  label={formatCurrentCakeSizeLabel(product.id, selection.cakeSize) || formatCakeSizeLabel(selection.cakeSize)}
+                  description={isButtercreamCakeProduct(product.id)
+                    ? language === 'ko' ? `${selectedPointColor.labelKo} 포인트 컬러` : `${selectedPointColor.label} point colour`
+                    : undefined}
+                  language={language}
+                  background={cakeSizePreviewBackground}
+                  fit="contain"
+                  scale={selectedCakeSizePreviewScale}
+                />
+              )}
               <div className="cake-detail-options">
                 {sizeOptions.map((option) => (
                   <OptionButton
@@ -639,7 +705,7 @@ export default function CakeDetailPage({
           {isCakePointColorProduct(product.id) && (
             <fieldset className="cake-detail-fieldset">
               <legend>{isButtercreamCakeProduct(product.id)
-                ? language === 'ko' ? '케이크 컬러 선택' : 'Choose a cake colour'
+                ? language === 'ko' ? '케이크 포인트 컬러 선택' : 'Choose a point colour'
                 : language === 'ko' ? '포인트 컬러 선택' : 'Choose a point colour'}</legend>
               <div className="vanilla-point-color-grid">
                 {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => {
@@ -649,8 +715,8 @@ export default function CakeDetailPage({
                       type="button"
                       className={`vanilla-point-color-card${isSelected ? ' is-selected' : ''}`}
                       aria-label={language === 'ko'
-                        ? `${option.labelKo} ${isButtercreamCakeProduct(product.id) ? '케이크 컬러' : '포인트 컬러'}`
-                        : `${option.label} ${isButtercreamCakeProduct(product.id) ? 'cake colour' : 'point colour'}`}
+                        ? [option.labelKo, '포인트 컬러'].join(' ')
+                        : [option.label, 'point colour'].join(' ')}
                       aria-pressed={isSelected}
                       onClick={() => updateSelection({ vanillaCakePointColor: option.value })}
                       key={option.value}

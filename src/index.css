@@ -7859,13 +7859,27 @@ td select {
   background: rgba(255, 255, 255, 0.38);
 }
 
+.cake-detail-option-preview-media {
+  width: 112px;
+  height: 88px;
+  overflow: hidden;
+  background: var(--cream-teal);
+  transition: background 160ms ease;
+}
+
 .cake-detail-option-preview img {
   display: block;
   width: 112px;
   height: 88px;
   object-fit: cover;
-  background: var(--cream-teal);
   animation: cake-detail-option-preview-enter 160ms ease both;
+}
+
+.cake-detail-option-preview-media.is-contained img {
+  object-fit: contain;
+  transform: scale(var(--cake-option-preview-scale, 1));
+  transform-origin: center bottom;
+  transition: transform 160ms ease;
 }
 
 .cake-detail-option-preview-copy {
@@ -10676,10 +10690,18 @@ label.vanilla-point-color-card {
     width: 88px;
     height: 69px;
   }
+
+  .cake-detail-option-preview-media {
+    width: 88px;
+    height: 69px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cake-detail-option-preview img {
+  .cake-detail-option-preview img,
+  .cake-detail-option-preview-media,
+  .cake-detail-option-preview-media.is-contained img {
     animation: none;
+    transition: none;
   }
 }

@@ -59,6 +59,15 @@ import {
 import { getProductFeatures, getProductText } from '../src/lib/i18n.js'
 import { normalizeAuDailyLimitText } from '../src/lib/legacy-settings.js'
 import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraPrice, isChocolateExtraEligibleProduct, normalizeChocolateExtra } from '../src/lib/chocolate-extras.js'
+import * as cakeDetailPreview from '../src/lib/cake-detail.js'
+
+type CakeDetailPreviewApi = {
+  getCakeSizePreviewKey?: (productId: ProductId) => 'pave' | 'buttercream' | 'strawberry-vanilla' | 'strawberry-chocolate' | null
+  getCakeSizePreviewScale?: (cakeSize: string) => number
+  getCakePointColorPreviewBackground?: (pointColor: string) => string
+}
+
+const cakeDetailPreviewApi = cakeDetailPreview as unknown as CakeDetailPreviewApi
 
 test('legacy AU small-batch settings copy is replaced without overwriting custom admin copy', () => {
   assert.equal(
@@ -166,7 +175,43 @@ test('Vanilla Fresh Cream Cake uses Signature Gâteau layers and real vanilla fr
   }
 })
 
-test('Buttercream Cake uses Signature Gâteau layers, real chocolate ingredients, and a selectable cake colour', () => {
+test('current whole-cake previews map only the four supplied product photographs', () => {
+  const { getCakeSizePreviewKey } = cakeDetailPreviewApi
+  assert.equal(typeof getCakeSizePreviewKey, 'function')
+  if (!getCakeSizePreviewKey) throw new Error('Cake size preview mapping is unavailable')
+
+  assert.equal(getCakeSizePreviewKey('pave-cake'), 'pave')
+  assert.equal(getCakeSizePreviewKey('buttercream-cake'), 'buttercream')
+  assert.equal(getCakeSizePreviewKey('fresh-strawberry-vanilla-cream-cake'), 'strawberry-vanilla')
+  assert.equal(getCakeSizePreviewKey('fresh-strawberry-chocolate-cream-cake'), 'strawberry-chocolate')
+  assert.equal(getCakeSizePreviewKey('pound-cake'), null)
+})
+
+test('current whole-cake preview scale increases for each selectable size', () => {
+  const { getCakeSizePreviewScale } = cakeDetailPreviewApi
+  assert.equal(typeof getCakeSizePreviewScale, 'function')
+  if (!getCakeSizePreviewScale) throw new Error('Cake size preview scale is unavailable')
+  assert.equal(getCakeSizePreviewScale('6in'), 1)
+  assert.equal(getCakeSizePreviewScale('8in'), 1.15)
+  assert.equal(getCakeSizePreviewScale('10in'), 1.3)
+  assert.equal(getCakeSizePreviewScale('15cm'), 1)
+})
+
+test('point-colour preview backgrounds soften the exact selected swatch against cream', () => {
+  const { getCakePointColorPreviewBackground } = cakeDetailPreviewApi
+  assert.equal(typeof getCakePointColorPreviewBackground, 'function')
+  if (!getCakePointColorPreviewBackground) throw new Error('Cake point-colour preview background is unavailable')
+  assert.equal(
+    getCakePointColorPreviewBackground('blue'),
+    'color-mix(in srgb, #3b82f6 30%, var(--cream) 70%)',
+  )
+  assert.equal(
+    getCakePointColorPreviewBackground('white'),
+    'color-mix(in srgb, #ffffff 30%, var(--cream) 70%)',
+  )
+})
+
+test('Buttercream Cake uses Signature Gâteau layers, real chocolate ingredients, and a selectable point colour', () => {
   const buttercream = getProductById('buttercream-cake')
 
   assert.equal(buttercream.name, 'Buttercream Cake')
@@ -194,8 +239,8 @@ test('Buttercream Cake uses Signature Gâteau layers, real chocolate ingredients
     assert.match(text.description, /real butter|실제 버터/i)
     assert.match(text.description, /cocoa powder|코코아 파우더/i)
     assert.deepEqual(features, language === 'en'
-      ? ['Signature Gâteau layers', 'Italian meringue, real butter and cocoa powder', 'Choose a cake colour']
-      : ['시그니처 갸또 쇼콜라 시트', '이탈리안 머랭·실제 버터·코코아 파우더', '케이크 컬러 선택'])
+      ? ['Signature Gâteau layers', 'Italian meringue, real butter and cocoa powder', 'Choose a point colour']
+      : ['시그니처 갸또 쇼콜라 시트', '이탈리안 머랭·실제 버터·코코아 파우더', '케이크 포인트 컬러 선택'])
   }
 })
 

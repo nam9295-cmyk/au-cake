@@ -6,6 +6,7 @@ import {
   DEFAULT_VANILLA_CAKE_FLAVOR,
   DEFAULT_VANILLA_CAKE_POINT_COLOR,
   DEFAULT_VANILLA_CAKE_SHEET,
+  VANILLA_CAKE_POINT_COLOR_OPTIONS,
   getProductById,
   getReservationPrice,
   normalizeCakeSize,
@@ -46,6 +47,41 @@ import type {
   VanillaCakePointColor,
   VanillaCakeSheet,
 } from './types.js'
+
+export type CakeSizePreviewKey =
+  | 'pave'
+  | 'buttercream'
+  | 'strawberry-vanilla'
+  | 'strawberry-chocolate'
+
+export function getCakeSizePreviewKey(productId: ProductId): CakeSizePreviewKey | null {
+  switch (productId) {
+    case 'pave-cake':
+      return 'pave'
+    case 'buttercream-cake':
+      return 'buttercream'
+    case 'fresh-strawberry-vanilla-cream-cake':
+      return 'strawberry-vanilla'
+    case 'fresh-strawberry-chocolate-cream-cake':
+      return 'strawberry-chocolate'
+    default:
+      return null
+  }
+}
+
+export function getCakeSizePreviewScale(cakeSize: CakeSize | string): number {
+  if (cakeSize === '8in') return 1.15
+  if (cakeSize === '10in') return 1.3
+  return 1
+}
+
+export function getCakePointColorPreviewBackground(
+  pointColor: VanillaCakePointColor | string | undefined,
+): string {
+  const option = VANILLA_CAKE_POINT_COLOR_OPTIONS.find((candidate) => candidate.value === pointColor)
+    || VANILLA_CAKE_POINT_COLOR_OPTIONS[0]
+  return `color-mix(in srgb, ${option.hex} 30%, var(--cream) 70%)`
+}
 
 export type CakeDetailImageKey =
   | 'pound-side'

@@ -1021,7 +1021,7 @@ export function ReservePage({
             {isCakePointColorProduct(selectedProduct.id) && (
               <fieldset>
                 <legend>{isButtercreamCakeProduct(selectedProduct.id)
-                  ? language === 'ko' ? '케이크 컬러 선택' : 'Choose a cake colour'
+                  ? language === 'ko' ? '케이크 포인트 컬러 선택' : 'Choose a point colour'
                   : language === 'ko' ? '포인트 컬러 선택' : 'Choose point colour'}</legend>
                 <div className="vanilla-point-color-grid">
                   {VANILLA_CAKE_POINT_COLOR_OPTIONS.map((option) => (
