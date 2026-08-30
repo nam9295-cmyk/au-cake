@@ -36,6 +36,17 @@ const sizePreviewAssetPaths = [
 const sizePreviewAssets = await Promise.all(sizePreviewAssetPaths.map((path) => (
   readFile(new URL(path, import.meta.url)).catch(() => null)
 )))
+const cupcakePreviewAssetPaths = [
+  '../src/assets/options/cupcake-6-basic.webp',
+  '../src/assets/options/cupcake-6-chocolate.webp',
+  '../src/assets/options/cupcake-6-vanilla.webp',
+  '../src/assets/options/cupcake-12-basic.webp',
+  '../src/assets/options/cupcake-12-chocolate.webp',
+  '../src/assets/options/cupcake-12-vanilla.webp',
+]
+const cupcakePreviewAssets = await Promise.all(cupcakePreviewAssetPaths.map((path) => (
+  readFile(new URL(path, import.meta.url)).catch(() => null)
+)))
 
 test('home catalogue opens shared cake detail routes instead of skipping to the request form', () => {
   assert.match(homeSource, /navigateToCake\(card\.slug\)/)
@@ -213,6 +224,30 @@ test('current whole-cake sizes map every supplied cut-out to the matching produc
   assert.match(detailSource, /import strawberryVanillaSizePreviewImg from '\.\/assets\/options\/cake-size-strawberry-vanilla\.webp'/)
   assert.match(detailSource, /const cakeSizePreviewImages/)
   assert.match(detailSource, /getCakeSizePreviewKey\(product\.id\)/)
+})
+
+test('Cupcake pack and finish selections show the matching supplied photograph', () => {
+  assert.deepEqual(cupcakePreviewAssets.map((asset) => Boolean(asset?.length)), [true, true, true, true, true, true])
+
+  assert.match(detailSource, /import cupcake6BasicPreviewImg from '\.\/assets\/options\/cupcake-6-basic\.webp'/)
+  assert.match(detailSource, /import cupcake6ChocolatePreviewImg from '\.\/assets\/options\/cupcake-6-chocolate\.webp'/)
+  assert.match(detailSource, /import cupcake6VanillaPreviewImg from '\.\/assets\/options\/cupcake-6-vanilla\.webp'/)
+  assert.match(detailSource, /import cupcake12BasicPreviewImg from '\.\/assets\/options\/cupcake-12-basic\.webp'/)
+  assert.match(detailSource, /import cupcake12ChocolatePreviewImg from '\.\/assets\/options\/cupcake-12-chocolate\.webp'/)
+  assert.match(detailSource, /import cupcake12VanillaPreviewImg from '\.\/assets\/options\/cupcake-12-vanilla\.webp'/)
+  assert.match(detailSource, /const cupcakePreviewImages/)
+  assert.match(detailSource, /getCupcakePreviewKey\(product\.id, selection\.cupcakeFinish\)/)
+  assert.match(detailSource, /eyebrow=\{language === 'ko' \? '선택한 컵케이크' : 'Selected cupcakes'\}/)
+})
+
+test('Cupcake preview appears before Pack Size and Finish controls', () => {
+  const previewIndex = detailSource.indexOf('{selectedCupcakePreview && selectedCupcakePackSize && (')
+  const packSizeIndex = detailSource.indexOf('{detail.productIds.length > 1 && (')
+  const finishIndex = detailSource.indexOf('{isCupcakeProduct(product.id) && (')
+
+  assert.ok(previewIndex >= 0)
+  assert.ok(previewIndex < packSizeIndex)
+  assert.ok(packSizeIndex < finishIndex)
 })
 
 test('current whole-cake previews keep one frame while size and Buttercream point colour change', () => {

@@ -35,7 +35,7 @@ import {
   getProductGroupByProductId,
   type ReservationPriceOptions,
 } from '../src/lib/constants.js'
-import type { ProductId } from '../src/lib/types.js'
+import type { CupcakeFinish, ProductId } from '../src/lib/types.js'
 import {
   addDaysToInputValue,
   buildSmsMessage,
@@ -62,6 +62,7 @@ import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraPrice, isChocolateExtraEligib
 import * as cakeDetailPreview from '../src/lib/cake-detail.js'
 
 type CakeDetailPreviewApi = {
+  getCupcakePreviewKey?: (productId: ProductId, finish: CupcakeFinish) => '6-basic' | '6-vanilla' | '6-chocolate' | '12-basic' | '12-vanilla' | '12-chocolate' | null
   getCakeSizePreviewKey?: (productId: ProductId) => 'pave' | 'buttercream' | 'strawberry-vanilla' | 'strawberry-chocolate' | null
   getCakeSizePreviewScale?: (cakeSize: string) => number
   getCakeSizePreviewTransformOrigin?: (previewKey: 'pave' | 'buttercream' | 'strawberry-vanilla' | 'strawberry-chocolate' | null) => 'center center' | 'center bottom'
@@ -186,6 +187,20 @@ test('current whole-cake previews map only the four supplied product photographs
   assert.equal(getCakeSizePreviewKey('fresh-strawberry-vanilla-cream-cake'), 'strawberry-vanilla')
   assert.equal(getCakeSizePreviewKey('fresh-strawberry-chocolate-cream-cake'), 'strawberry-chocolate')
   assert.equal(getCakeSizePreviewKey('pound-cake'), null)
+})
+
+test('Cupcake pack and finish selections resolve to all six supplied photographs', () => {
+  const { getCupcakePreviewKey } = cakeDetailPreviewApi
+  assert.equal(typeof getCupcakePreviewKey, 'function')
+  if (!getCupcakePreviewKey) throw new Error('Cupcake preview mapping is unavailable')
+
+  assert.equal(getCupcakePreviewKey('cupcake-half-dozen', 'basic'), '6-basic')
+  assert.equal(getCupcakePreviewKey('cupcake-half-dozen', 'vanilla-fresh-cream'), '6-vanilla')
+  assert.equal(getCupcakePreviewKey('cupcake-half-dozen', 'chocolate-buttercream'), '6-chocolate')
+  assert.equal(getCupcakePreviewKey('cupcake-dozen', 'basic'), '12-basic')
+  assert.equal(getCupcakePreviewKey('cupcake-dozen', 'vanilla-fresh-cream'), '12-vanilla')
+  assert.equal(getCupcakePreviewKey('cupcake-dozen', 'chocolate-buttercream'), '12-chocolate')
+  assert.equal(getCupcakePreviewKey('pound-cake', 'basic'), null)
 })
 
 test('current whole-cake preview scale increases for each selectable size', () => {

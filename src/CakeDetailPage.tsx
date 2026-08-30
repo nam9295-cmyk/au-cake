@@ -19,6 +19,12 @@ import buttercreamSizePreviewImg from './assets/options/cake-size-buttercream.we
 import paveSizePreviewImg from './assets/options/cake-size-pave.webp'
 import strawberryChocolateSizePreviewImg from './assets/options/cake-size-strawberry-chocolate.webp'
 import strawberryVanillaSizePreviewImg from './assets/options/cake-size-strawberry-vanilla.webp'
+import cupcake6BasicPreviewImg from './assets/options/cupcake-6-basic.webp'
+import cupcake6ChocolatePreviewImg from './assets/options/cupcake-6-chocolate.webp'
+import cupcake6VanillaPreviewImg from './assets/options/cupcake-6-vanilla.webp'
+import cupcake12BasicPreviewImg from './assets/options/cupcake-12-basic.webp'
+import cupcake12ChocolatePreviewImg from './assets/options/cupcake-12-chocolate.webp'
+import cupcake12VanillaPreviewImg from './assets/options/cupcake-12-vanilla.webp'
 import CakeEditorialDetail from './CakeEditorialDetail'
 import KoreanCakeReviewsSection from './KoreanCakeReviewsSection'
 import {
@@ -49,10 +55,12 @@ import {
   getCakeSizePreviewKey,
   getCakeSizePreviewScale,
   getCakeSizePreviewTransformOrigin,
+  getCupcakePreviewKey,
   selectCakeDetailProduct,
   type CakeDetailImageKey,
   type CakeDetailSelection,
   type CakeSizePreviewKey,
+  type CupcakePreviewKey,
 } from './lib/cake-detail'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
 import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraOption, isChocolateExtraEligibleProduct } from './lib/chocolate-extras'
@@ -168,6 +176,39 @@ const cakeSizePreviewImages: Record<CakeSizePreviewKey, OptionPreviewImage> = {
     src: strawberryChocolateSizePreviewImg,
     alt: 'Fresh Strawberry Chocolate Cream Cake size preview',
     altKo: '생딸기 초코 생크림 케이크 사이즈 미리보기',
+  },
+}
+
+const cupcakePreviewImages: Record<CupcakePreviewKey, OptionPreviewImage> = {
+  '6-basic': {
+    src: cupcake6BasicPreviewImg,
+    alt: 'Half dozen cupcakes with the Basic finish',
+    altKo: '기본 마감 하프 더즌 컵케이크 6개',
+  },
+  '6-vanilla': {
+    src: cupcake6VanillaPreviewImg,
+    alt: 'Half dozen cupcakes with Vanilla Fresh Cream',
+    altKo: '바닐라 생크림 마감 하프 더즌 컵케이크 6개',
+  },
+  '6-chocolate': {
+    src: cupcake6ChocolatePreviewImg,
+    alt: 'Half dozen cupcakes with Chocolate Buttercream',
+    altKo: '초콜릿 버터크림 마감 하프 더즌 컵케이크 6개',
+  },
+  '12-basic': {
+    src: cupcake12BasicPreviewImg,
+    alt: 'Dozen cupcakes with the Basic finish',
+    altKo: '기본 마감 더즌 컵케이크 12개',
+  },
+  '12-vanilla': {
+    src: cupcake12VanillaPreviewImg,
+    alt: 'Dozen cupcakes with Vanilla Fresh Cream',
+    altKo: '바닐라 생크림 마감 더즌 컵케이크 12개',
+  },
+  '12-chocolate': {
+    src: cupcake12ChocolatePreviewImg,
+    alt: 'Dozen cupcakes with Chocolate Buttercream',
+    altKo: '초콜릿 버터크림 마감 더즌 컵케이크 12개',
   },
 }
 
@@ -398,6 +439,12 @@ export default function CakeDetailPage({
   const selectedFinishOption = POUND_ADDON_OPTIONS.find((option) => option.value === selection.poundAddon) || POUND_ADDON_OPTIONS[0]
   const selectedFinishPreview = poundFinishPreviewImages[selection.poundAddon]
   const selectedChocolateExtraPreview = chocolateExtraPreviewImages[selection.chocolateExtra]
+  const cupcakePreviewKey = getCupcakePreviewKey(product.id, selection.cupcakeFinish)
+  const selectedCupcakePreview = cupcakePreviewKey ? cupcakePreviewImages[cupcakePreviewKey] : null
+  const selectedCupcakeFinish = CUPCAKE_FINISH_OPTIONS.find(
+    (option) => option.value === selection.cupcakeFinish,
+  ) || CUPCAKE_FINISH_OPTIONS[0]
+  const selectedCupcakePackSize = getCupcakePackSize(product.id)
   const cakeSizePreviewKey = getCakeSizePreviewKey(product.id)
   const selectedCakeSizePreview = cakeSizePreviewKey ? cakeSizePreviewImages[cakeSizePreviewKey] : null
   const selectedCakeSizePreviewScale = getCakeSizePreviewScale(selection.cakeSize)
@@ -575,6 +622,17 @@ export default function CakeDetailPage({
         <aside className="cake-detail-purchase">
           <div className="cake-detail-configurator">
           {renderProductIntro('cake-detail-intro is-standard-intro')}
+
+          {selectedCupcakePreview && selectedCupcakePackSize && (
+            <OptionPhotoPreview
+              image={selectedCupcakePreview}
+              eyebrow={language === 'ko' ? '선택한 컵케이크' : 'Selected cupcakes'}
+              label={language === 'ko'
+                ? `${selectedCupcakePackSize === 6 ? '하프 더즌 · 6개' : '더즌 · 12개'} · ${selectedCupcakeFinish.labelKo}`
+                : `${selectedCupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${selectedCupcakeFinish.label}`}
+              language={language}
+            />
+          )}
 
           {detail.productIds.length > 1 && (
             <fieldset className="cake-detail-fieldset">

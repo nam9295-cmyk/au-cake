@@ -54,6 +54,33 @@ export type CakeSizePreviewKey =
   | 'strawberry-vanilla'
   | 'strawberry-chocolate'
 
+export type CupcakePreviewKey =
+  | '6-basic'
+  | '6-vanilla'
+  | '6-chocolate'
+  | '12-basic'
+  | '12-vanilla'
+  | '12-chocolate'
+
+export function getCupcakePreviewKey(
+  productId: ProductId,
+  finish: CupcakeFinish,
+): CupcakePreviewKey | null {
+  const packSize = productId === 'cupcake-half-dozen'
+    ? '6'
+    : productId === 'cupcake-dozen'
+      ? '12'
+      : null
+  if (!packSize) return null
+
+  const finishKey = finish === 'vanilla-fresh-cream'
+    ? 'vanilla'
+    : finish === 'chocolate-buttercream'
+      ? 'chocolate'
+      : 'basic'
+  return `${packSize}-${finishKey}`
+}
+
 export function getCakeSizePreviewKey(productId: ProductId): CakeSizePreviewKey | null {
   switch (productId) {
     case 'pave-cake':
