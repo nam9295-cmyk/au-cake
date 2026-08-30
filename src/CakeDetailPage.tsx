@@ -9,6 +9,12 @@ import paveSlicesImg from './assets/chocolate-cake-eight-slices.jpg'
 import cheesecakeHeroImg from './assets/basquecheesecake.webp'
 import lemonHeroImg from './assets/lemoncake.webp'
 import eiffelChocolateImg from './assets/eiffel-chocolate-card.jpg'
+import gateauBasicFinishImg from './assets/options/gateau-basic.webp'
+import gateauOnChocolateFinishImg from './assets/options/gateau-onchocolate.webp'
+import gateauVanillaFinishImg from './assets/options/gateau-vanilla.webp'
+import eiffelExtraImg from './assets/options/extra-eff.webp'
+import paveExtraImg from './assets/options/extra-pave.webp'
+import chocolateExtraSetImg from './assets/options/extra-2set.webp'
 import CakeEditorialDetail from './CakeEditorialDetail'
 import KoreanCakeReviewsSection from './KoreanCakeReviewsSection'
 import {
@@ -98,27 +104,37 @@ type OptionPreviewImage = {
 
 const poundFinishPreviewImages: Record<PoundAddon, OptionPreviewImage> = {
   none: {
-    src: detailImages['signature-gateau-side'],
+    src: gateauBasicFinishImg,
     alt: 'Signature Gâteau au Chocolat with the basic finish',
     altKo: '기본 마감 시그니처 갸또 쇼콜라',
   },
   'extra-chocolate': {
-    src: detailImages['signature-gateau-quick-view'],
-    alt: 'Close view of the extra chocolate finish',
-    altKo: '초콜릿 추가 마감 확대 모습',
+    src: gateauOnChocolateFinishImg,
+    alt: 'Signature Gâteau au Chocolat with extra chocolate on top',
+    altKo: '윗면에 초콜릿을 추가한 시그니처 갸또 쇼콜라',
   },
   'vanilla-cream': {
-    src: detailImages['vanilla-side'],
-    alt: 'Cake finished with vanilla cream',
-    altKo: '바닐라 크림으로 마감한 케이크',
+    src: gateauVanillaFinishImg,
+    alt: 'Signature Gâteau au Chocolat finished with vanilla cream',
+    altKo: '바닐라 크림으로 마감한 시그니처 갸또 쇼콜라',
   },
 }
 
 const chocolateExtraPreviewImages: Partial<Record<ChocolateExtra, OptionPreviewImage>> = {
   'eiffel-6': {
-    src: eiffelChocolateImg,
-    alt: 'Packaged Eiffel Tower chocolate',
-    altKo: '포장된 에펠탑 초콜릿',
+    src: eiffelExtraImg,
+    alt: 'Six Eiffel Tower chocolates',
+    altKo: '에펠탑 초콜릿 6개',
+  },
+  'pave-100g': {
+    src: paveExtraImg,
+    alt: '100g tub of Pavé chocolate',
+    altKo: '파베 초콜릿 100g 통',
+  },
+  combo: {
+    src: chocolateExtraSetImg,
+    alt: 'Eiffel Tower chocolates and Pavé chocolate extra set',
+    altKo: '에펠탑 초콜릿과 파베 초콜릿 추가 세트',
   },
 }
 

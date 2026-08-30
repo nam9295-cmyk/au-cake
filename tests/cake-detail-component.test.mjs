@@ -16,6 +16,17 @@ const i18nSource = await readFile(new URL('../src/lib/i18n.ts', import.meta.url)
 const marketSource = await readFile(new URL('../src/lib/market.ts', import.meta.url), 'utf8')
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 const chocolateExtrasSource = await readFile(new URL('../src/lib/chocolate-extras.ts', import.meta.url), 'utf8').catch(() => '')
+const optionPreviewAssetPaths = [
+  '../src/assets/options/gateau-basic.webp',
+  '../src/assets/options/gateau-onchocolate.webp',
+  '../src/assets/options/gateau-vanilla.webp',
+  '../src/assets/options/extra-eff.webp',
+  '../src/assets/options/extra-pave.webp',
+  '../src/assets/options/extra-2set.webp',
+]
+const optionPreviewAssets = await Promise.all(optionPreviewAssetPaths.map((path) => (
+  readFile(new URL(path, import.meta.url)).catch(() => null)
+)))
 
 test('home catalogue opens shared cake detail routes instead of skipping to the request form', () => {
   assert.match(homeSource, /navigateToCake\(card\.slug\)/)
@@ -152,6 +163,24 @@ test('finish and Chocolate Extra selections expose compact responsive photo prev
   const mobileCss = cssSource.slice(cssSource.lastIndexOf('@media (max-width: 760px)'))
   assert.match(mobileCss, /\.cake-detail-option-preview\s*\{[^}]*grid-template-columns:\s*88px minmax\(0, 1fr\)/s)
   assert.match(mobileCss, /\.cake-detail-option-preview img\s*\{[^}]*width:\s*88px[^}]*height:\s*69px/s)
+})
+
+test('customer-supplied photography maps every Gâteau finish and paid Chocolate Extra to its matching preview', () => {
+  assert.deepEqual(optionPreviewAssets.map((asset) => Boolean(asset?.length)), [true, true, true, true, true, true])
+
+  assert.match(detailSource, /import gateauBasicFinishImg from '\.\/assets\/options\/gateau-basic\.webp'/)
+  assert.match(detailSource, /import gateauOnChocolateFinishImg from '\.\/assets\/options\/gateau-onchocolate\.webp'/)
+  assert.match(detailSource, /import gateauVanillaFinishImg from '\.\/assets\/options\/gateau-vanilla\.webp'/)
+  assert.match(detailSource, /none:\s*\{[^}]*src:\s*gateauBasicFinishImg/s)
+  assert.match(detailSource, /'extra-chocolate':\s*\{[^}]*src:\s*gateauOnChocolateFinishImg/s)
+  assert.match(detailSource, /'vanilla-cream':\s*\{[^}]*src:\s*gateauVanillaFinishImg/s)
+
+  assert.match(detailSource, /import eiffelExtraImg from '\.\/assets\/options\/extra-eff\.webp'/)
+  assert.match(detailSource, /import paveExtraImg from '\.\/assets\/options\/extra-pave\.webp'/)
+  assert.match(detailSource, /import chocolateExtraSetImg from '\.\/assets\/options\/extra-2set\.webp'/)
+  assert.match(detailSource, /'eiffel-6':\s*\{[^}]*src:\s*eiffelExtraImg/s)
+  assert.match(detailSource, /'pave-100g':\s*\{[^}]*src:\s*paveExtraImg/s)
+  assert.match(detailSource, /combo:\s*\{[^}]*src:\s*chocolateExtraSetImg/s)
 })
 
 test('Lemon uses the shared compact editorial while retaining its current pack, finishing, and individual packaging controls', () => {

@@ -835,6 +835,8 @@ test('Chocolate Extras use a separate current-sales contract for exactly four el
   assert.equal(isChocolateExtraEligibleProduct('pave-brownie-cheesecake'), true)
   assert.equal(isChocolateExtraEligibleProduct('eiffel-tower-brownie-cheesecake'), false)
   assert.equal(isChocolateExtraEligibleProduct('fresh-strawberry-vanilla-cream-cake'), false)
+  assert.equal(isChocolateExtraEligibleProduct('fresh-strawberry-chocolate-cream-cake'), false)
   assert.equal(normalizeChocolateExtra('pave-cake', 'eiffel-6'), 'eiffel-6')
   assert.equal(normalizeChocolateExtra('fresh-strawberry-vanilla-cream-cake', 'combo'), 'none')
+  assert.equal(normalizeChocolateExtra('fresh-strawberry-chocolate-cream-cake', 'combo'), 'none')
 })
