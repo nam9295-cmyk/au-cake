@@ -92,6 +92,7 @@ function cakeOrderInput() {
       },
       {
         productId: 'brownie-cheesecake',
+        brownieCreamOption: 'none',
         cakeSize: '15cm',
         chocolateType: 'dark',
         poundAddon: 'none',

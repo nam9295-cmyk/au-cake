@@ -12,6 +12,7 @@ import {
 } from '../lib/individual-packaging'
 import { marketConfig } from '../lib/market'
 import { CHOCOLATE_EXTRA_OPTIONS, DEFAULT_CHOCOLATE_EXTRA, formatChocolateExtra, getChocolateExtraOption, getChocolateExtraPrice, isChocolateExtraEligibleProduct, normalizeChocolateExtra } from '../lib/chocolate-extras'
+import { BROWNIE_CREAM_OPTIONS, DEFAULT_BROWNIE_CREAM_OPTION, formatBrownieCreamOption, getBrownieCreamOption, isBrownieCheesecakeProduct, isBrownieFreshCreamEligibleProduct, normalizeBrownieCreamOption } from '../lib/brownie-cream'
 import { type Page } from '../lib/app-routes'
 import {
   CAKE_SIZE_OPTIONS,
@@ -80,7 +81,7 @@ import {
   createReservation,
 } from '../lib/repository'
 import { trackEvent } from '../lib/analytics'
-import type { CacaoPercent, CakeSize, ChocolateExtra, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, StoreSettings, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from '../lib/types'
+import type { BrownieCreamOption, CacaoPercent, CakeSize, ChocolateExtra, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, StoreSettings, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from '../lib/types'
 import {
   customerTimeOptionsForDate,
   firstCustomerPickupDate,
@@ -164,6 +165,7 @@ export function ReservePage({
     chocolateType: initialSelection?.chocolateType || DEFAULT_CHOCOLATE_TYPE as ChocolateType,
     poundAddon: initialSelection?.poundAddon || DEFAULT_POUND_ADDON as PoundAddon,
     chocolateExtra: normalizeChocolateExtra(initialFormProductId, initialSelection?.chocolateExtra || DEFAULT_CHOCOLATE_EXTRA) as ChocolateExtra,
+    brownieCreamOption: normalizeBrownieCreamOption(initialFormProductId, initialSelection?.brownieCreamOption || DEFAULT_BROWNIE_CREAM_OPTION) as BrownieCreamOption,
     cupcakeFinish: initialSelection?.cupcakeFinish || DEFAULT_CUPCAKE_FINISH as CupcakeFinish,
     chocolateIcingCount: initialSelection?.chocolateIcingCount || 0,
     vanillaCreamCount: initialSelection?.vanillaCreamCount || 0,
@@ -265,6 +267,7 @@ export function ReservePage({
         chocolateType: form.chocolateType,
         poundAddon: form.poundAddon,
         chocolateExtra: form.chocolateExtra,
+        brownieCreamOption: form.brownieCreamOption,
         cupcakeFinish: form.cupcakeFinish,
         chocolateIcingCount: form.chocolateIcingCount,
         vanillaCreamCount: form.vanillaCreamCount,
@@ -310,6 +313,7 @@ export function ReservePage({
             chocolateType: form.chocolateType,
             poundAddon: form.poundAddon,
             chocolateExtra: form.chocolateExtra,
+            brownieCreamOption: form.brownieCreamOption,
             cupcakeFinish: form.cupcakeFinish,
             chocolateIcingCount: form.chocolateIcingCount,
             vanillaCreamCount: form.vanillaCreamCount,
@@ -350,6 +354,7 @@ export function ReservePage({
                 chocolateType: selection.chocolateType,
                 poundAddon: selection.poundAddon,
                 chocolateExtra: selection.chocolateExtra,
+                brownieCreamOption: selection.brownieCreamOption,
                 cupcakeFinish: selection.cupcakeFinish,
                 chocolateIcingCount: selection.chocolateIcingCount,
                 vanillaCreamCount: selection.vanillaCreamCount,
@@ -428,6 +433,7 @@ export function ReservePage({
     chocolateType: form.chocolateType,
     poundAddon: form.poundAddon,
     cupcakeFinish: form.cupcakeFinish,
+    brownieCreamOption: form.brownieCreamOption,
     chocolateIcingCount: form.chocolateIcingCount,
     vanillaCreamCount: form.vanillaCreamCount,
     partyDecorationCount: form.partyDecorationCount,
@@ -545,6 +551,7 @@ export function ReservePage({
       chocolateType: usesReservationChocolateType(product.id, form.poundAddon) ? form.chocolateType : DEFAULT_CHOCOLATE_TYPE,
       poundAddon: product.usesPoundAddonOptions ? form.poundAddon : DEFAULT_POUND_ADDON,
       chocolateExtra: normalizeChocolateExtra(productId, form.chocolateExtra),
+      brownieCreamOption: normalizeBrownieCreamOption(productId, form.brownieCreamOption),
       chocolateIcingCount: normalizeChocolateIcingCount(productId, form.chocolateIcingCount),
       cupcakeFinish: normalizeCupcakeFinish(productId, form.cupcakeFinish),
       vanillaCreamCount: 0,
@@ -717,6 +724,12 @@ export function ReservePage({
                   <dd>{formatChocolateExtra(form.chocolateExtra, language)} · +{formatCurrency(getChocolateExtraOption(form.chocolateExtra).price)}</dd>
                 </div>
               )}
+              {isBrownieCheesecakeProduct(selectedProduct.id) && form.brownieCreamOption === 'fresh-cream' && (
+                <div>
+                  <dt>{language === 'ko' ? '생크림' : 'Fresh cream'}</dt>
+                  <dd>{formatBrownieCreamOption(selectedProduct.id, form.brownieCreamOption, language)} · +{formatCurrency(getBrownieCreamOption(selectedProduct.id, form.brownieCreamOption).extraPrice)}</dd>
+                </div>
+              )}
               <div>
                 <dt>{labels.options}</dt>
                 <dd>{selectedProductText.priceNote}</dd>
@@ -752,6 +765,9 @@ export function ReservePage({
                       )}
                       {selection.chocolateExtra !== 'none' && (
                         <small>{language === 'ko' ? '초콜릿 추가 구성' : 'Chocolate extras'} · {formatChocolateExtra(selection.chocolateExtra, language)} · +{formatCurrency(getChocolateExtraOption(selection.chocolateExtra).price)}</small>
+                      )}
+                      {isBrownieCheesecakeProduct(selection.productId) && selection.brownieCreamOption === 'fresh-cream' && (
+                        <small>{language === 'ko' ? '생크림' : 'Fresh cream'} · +{formatCurrency(getBrownieCreamOption(selection.productId, selection.brownieCreamOption).extraPrice)}</small>
                       )}
                     </li>
                   ))}
@@ -864,6 +880,27 @@ export function ReservePage({
                       </label>
                     )
                   })}
+                </div>
+              </fieldset>
+            )}
+
+            {isBrownieFreshCreamEligibleProduct(selectedProduct.id) && (
+              <fieldset>
+                <legend>{language === 'ko' ? '생크림' : 'Fresh cream'}</legend>
+                <div className="choice-list">
+                  {BROWNIE_CREAM_OPTIONS.map((option) => (
+                    <label className="choice-item" key={option.value}>
+                      <input
+                        type="radio"
+                        name="brownieCreamOption"
+                        checked={form.brownieCreamOption === option.value}
+                        onChange={() => setForm({ ...form, brownieCreamOption: option.value })}
+                      />
+                      <span className="choice-copy">
+                        <strong>{language === 'ko' ? option.labelKo : option.label}{option.extraPrice > 0 ? ` (+${formatCurrency(option.extraPrice)})` : ''}</strong>
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </fieldset>
             )}

@@ -102,6 +102,17 @@ test('Brownie Cheesecake uses the shared compact editorial with two current fini
   assert.match(detailSource, /detail\.id === 'brownie-cheesecake'[\s\S]*?extraFromBase/)
 })
 
+test('Brownie Cheesecake exposes the Fresh cream AUD 20 option in both detail and reserve flows', () => {
+  assert.match(detailSource, /isBrownieFreshCreamEligibleProduct\(product\.id\)/)
+  assert.match(detailSource, /BROWNIE_CREAM_OPTIONS\.map/)
+  assert.match(detailSource, /brownieCreamOption: option\.value/)
+  assert.match(reserveSource, /name="brownieCreamOption"/)
+  assert.match(reserveSource, /brownieCreamOption: form\.brownieCreamOption/)
+  assert.match(reserveSource, /brownieCreamOption: selection\.brownieCreamOption/)
+  assert.match(detailSource, /Fresh cream/)
+  assert.match(detailSource, /생크림/)
+})
+
 test('Signature Gâteau au Chocolat uses the shared compact editorial while retaining its current finish and chocolate controls', () => {
   assert.match(editorialDataSource, /'signature-gateau-au-chocolat'/)
   assert.match(detailSource, /product\.usesPoundAddonOptions/)

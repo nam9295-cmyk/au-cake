@@ -92,7 +92,7 @@ test('AU cake pages own starting prices and final schema modes', () => {
     'chocolate-cupcakes': 31,
     'signature-gateau-au-chocolat': 45,
     'lemon-cake': 36,
-    'brownie-cheesecake': 58,
+    'brownie-cheesecake': 85,
   })
   assert.equal(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'].schema, 'webpage-only')
   assert.equal(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'].startingPrice, null)

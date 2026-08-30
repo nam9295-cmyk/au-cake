@@ -41,6 +41,7 @@ import {
 } from './lib/cake-detail'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
 import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraOption, isChocolateExtraEligibleProduct } from './lib/chocolate-extras'
+import { BROWNIE_CREAM_OPTIONS, isBrownieFreshCreamEligibleProduct } from './lib/brownie-cream'
 import { getAuCakeCatalogCards, type CakeCatalogCard } from './lib/cake-catalog'
 import { formatCurrentCakeSizeLabel, getCakeServingGuideCopy, getCurrentWholeCakeSizeOptions, isCurrentWholeCakeProduct } from './lib/cake-serving'
 import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-editorial'
@@ -443,6 +444,24 @@ export default function CakeDetailPage({
                     </OptionButton>
                   )
                 })}
+              </div>
+            </fieldset>
+          )}
+
+          {isBrownieFreshCreamEligibleProduct(product.id) && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '생크림' : 'Fresh cream'}</legend>
+              <div className="cake-detail-options">
+                {BROWNIE_CREAM_OPTIONS.map((option) => (
+                  <OptionButton
+                    active={selection.brownieCreamOption === option.value}
+                    onClick={() => updateSelection({ brownieCreamOption: option.value })}
+                    key={option.value}
+                  >
+                    <strong>{language === 'ko' ? option.labelKo : option.label}</strong>
+                    <span>{option.extraPrice > 0 ? `+${formatCurrency(option.extraPrice)}` : language === 'ko' ? '선택 안 함' : 'No extra'}</span>
+                  </OptionButton>
+                ))}
               </div>
             </fieldset>
           )}

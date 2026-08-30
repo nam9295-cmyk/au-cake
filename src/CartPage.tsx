@@ -33,6 +33,7 @@ import {
 } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
 import { formatChocolateExtra, getChocolateExtraOption } from './lib/chocolate-extras'
+import { formatBrownieCreamOption, getBrownieCreamOption, isBrownieCheesecakeProduct } from './lib/brownie-cream'
 
 type CartPageProps = {
   language: Language
@@ -80,6 +81,12 @@ function CartLineOptions({ line, language }: { line: CartLine; language: Languag
         <div>
           <dt>{language === 'ko' ? '초콜릿 추가 구성' : 'Chocolate extras'}</dt>
           <dd>{formatChocolateExtra(chocolateExtra.value, language)} · +{formatCurrency(chocolateExtra.price)}</dd>
+        </div>
+      )}
+      {isBrownieCheesecakeProduct(product.id) && selection.brownieCreamOption === 'fresh-cream' && (
+        <div>
+          <dt>{language === 'ko' ? '생크림' : 'Fresh cream'}</dt>
+          <dd>{formatBrownieCreamOption(product.id, selection.brownieCreamOption, language)} · +{formatCurrency(getBrownieCreamOption(product.id, selection.brownieCreamOption).extraPrice)}</dd>
         </div>
       )}
       {isCreamLayerCakeProduct(product.id) && (

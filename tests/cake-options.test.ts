@@ -199,14 +199,14 @@ test('Buttercream Cake uses Signature Gâteau layers, real chocolate ingredients
   }
 })
 
-test('Brownie Cheesecake keeps two approved current finishes and an Eiffel historical reader', () => {
+test('Brownie Cheesecake keeps two product variants, the Fresh cream option, and an Eiffel historical reader', () => {
   const brownie = getProductById('brownie-cheesecake')
   const paveBrownie = getProductById('pave-brownie-cheesecake')
   const eiffelBrownie = getProductById('eiffel-tower-brownie-cheesecake')
 
   assert.equal(brownie.name, 'Brownie Cheesecake')
-  assert.equal(brownie.price, 58)
-  assert.equal(paveBrownie.price, 68)
+  assert.equal(brownie.price, 85)
+  assert.equal(paveBrownie.price, 95)
   assert.equal(eiffelBrownie.price, 70)
   assert.deepEqual(PRODUCT_GROUPS.find((group) => group.id === 'brownie-cheesecake')?.productIds, ['brownie-cheesecake', 'pave-brownie-cheesecake'])
   assert.deepEqual(getProductGroupByProductId('eiffel-tower-brownie-cheesecake').productIds, ['eiffel-tower-brownie-cheesecake'])
@@ -729,6 +729,20 @@ test('AU cheesecake confirmations include the selected finish and fixed shared s
   assert.match(eiffelMessage, /Product: Cake finishing with Eiffel Tower/)
   assert.match(eiffelMessage, /Size: 6" \| serves 8/)
   assert.equal(eiffelMessage.includes('Finish:'), false)
+})
+
+
+
+test('single Brownie Fresh cream SMS includes the selected finish and AUD 20 surcharge', () => {
+  const message = buildSmsMessage({
+    id: 'test-brownie-cream-id', reservationNumber: 'VG-C-AU-BROWNIE-CREAM', customerName: 'Jenny', customerPhone: '0412345678',
+    productId: 'brownie-cheesecake', brownieCreamOption: 'fresh-cream', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+    quantity: 1, pickupDate: '2026-09-01', pickupTime: '12:00', cacaoPercent: '기본', requestNote: '', status: '예약신청',
+    paymentStatus: '입금대기', totalPrice: 105, totalPriceCents: 10500, adminMemo: '',
+    createdAt: '2026-08-30T00:00:00.000Z', updatedAt: '2026-08-30T00:00:00.000Z',
+  })
+  assert.match(message, /Fresh cream: Fresh cream · \+AUD 20\.00/)
+  assert.match(message, /Total: AUD 105\.00/)
 })
 
 test('AU pound cake extra chocolate SMS includes selected chocolate type', () => {

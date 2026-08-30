@@ -30,6 +30,7 @@ export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 export const INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE = 50
 export const INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS = 10_000
+export const BROWNIE_FRESH_CREAM_SURCHARGE_CENTS = 2_000
 const CUPCAKE_PRODUCT_IDS = new Set(['cupcake-half-dozen', 'cupcake-dozen'])
 const CUPCAKE_FINISH_PRICES_CENTS = {
   'cupcake-half-dozen': {
@@ -59,6 +60,9 @@ const CHOCOLATE_EXTRA_PRICES_CENTS = Object.freeze({
   'pave-100g': 1200,
   combo: 2000,
 })
+const BROWNIE_CREAM_OPTIONS = new Set(['none', 'fresh-cream'])
+const BROWNIE_CHEESECAKE_PRODUCT_IDS = new Set(['brownie-cheesecake', 'pave-brownie-cheesecake'])
+const BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS = new Set(['brownie-cheesecake'])
 const CHOCOLATE_EXTRA_ELIGIBLE_PRODUCT_IDS = new Set([
   'pave-cake',
   'buttercream-cake',
@@ -220,13 +224,13 @@ const PRODUCTS = {
     usesFinish: false,
   },
   'brownie-cheesecake': {
-    basePrice: 58,
+    basePrice: 85,
     sizePrices: {},
     usesSize: false,
     usesFinish: false,
   },
   'pave-brownie-cheesecake': {
-    basePrice: 68,
+    basePrice: 95,
     sizePrices: {},
     usesSize: false,
     usesFinish: false,
@@ -576,6 +580,14 @@ function chocolateExtraPriceCents(chocolateExtra) {
   return CHOCOLATE_EXTRA_PRICES_CENTS[chocolateExtra] ?? fail('INVALID_CHOCOLATE_EXTRA')
 }
 
+function normalizeBrownieCreamOption(productId, value) {
+  const brownieCreamOption = value === undefined || value === null || value === '' ? 'none' : value
+  if (typeof brownieCreamOption !== 'string' || !BROWNIE_CREAM_OPTIONS.has(brownieCreamOption)) {
+    fail('INVALID_BROWNIE_CREAM_OPTION')
+  }
+  return BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS.has(productId) ? brownieCreamOption : 'none'
+}
+
 function normalizeCakeOptions(input, {
   allowStoredProduct = false,
   allowLegacyCupcakeCounts = false,
@@ -587,6 +599,9 @@ function normalizeCakeOptions(input, {
     : (isActiveCakeOrderProductId(input.productId)
       || (resolveCakeCatalogMode(cakeCatalogMode) === 'compat' && isCompatCakeOrderProductId(input.productId)))
   if (!isAllowedProduct || !Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
+  if (!allowStoredProduct && BROWNIE_CHEESECAKE_PRODUCT_IDS.has(input.productId) && !Object.hasOwn(input, 'brownieCreamOption')) {
+    fail('INVALID_BROWNIE_CREAM_OPTION')
+  }
   const product = PRODUCTS[input.productId]
 
   const canUseLegacySize = allowStoredProduct || resolveCakeCatalogMode(cakeCatalogMode) === 'compat'
@@ -626,9 +641,10 @@ function normalizeCakeOptions(input, {
     { allowLegacyCreamCakeOptions },
   )
   const chocolateExtra = normalizeChocolateExtra(input.productId, input.chocolateExtra)
+  const brownieCreamOption = normalizeBrownieCreamOption(input.productId, input.brownieCreamOption)
 
   return {
-    product, cakeSize, poundAddon, chocolateType, cupcakeFinish, chocolateIcingCount, chocolateExtra,
+    product, cakeSize, poundAddon, chocolateType, cupcakeFinish, chocolateIcingCount, chocolateExtra, brownieCreamOption,
     ...cupcakeFinishCounts, ...vanillaCakeOptions,
   }
 }
@@ -646,7 +662,7 @@ const LEGACY_ORDER_LINE_IDENTITY_KEYS = [
   'vanillaCakeFlavor',
   'vanillaCakePointColor',
 ]
-const ORDER_LINE_IDENTITY_KEYS = [...LEGACY_ORDER_LINE_IDENTITY_KEYS, 'chocolateExtra', 'individualPackaging']
+const ORDER_LINE_IDENTITY_KEYS = [...LEGACY_ORDER_LINE_IDENTITY_KEYS, 'chocolateExtra', 'brownieCreamOption', 'individualPackaging']
 const ORDER_LINE_INPUT_KEYS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity'])
 const CAKE_ORDER_REQUEST_KEYS = new Set([
   'customerName', 'customerPhone', 'customerEmail', 'pickupDate', 'pickupTime', 'requestNote',
@@ -688,6 +704,14 @@ const CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS = new Set([
   ...STORED_ORDER_LINE_KEYS,
   'chocolateExtra',
   'chocolateExtraCents',
+])
+const BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
+  ...CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS,
+  'brownieCreamOption',
+])
+const BROWNIE_CREAM_STORED_ORDER_LINE_KEYS = new Set([
+  ...CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS,
+  'brownieCreamOption',
 ])
 const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...PRE_PACKAGING_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
 const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
@@ -738,6 +762,7 @@ function normalizedCakeLine(input, quantity, options) {
     cupcakeFinish,
     chocolateIcingCount,
     chocolateExtra,
+    brownieCreamOption,
     vanillaCreamCount,
     partyDecorationCount,
     vanillaCakeSheet,
@@ -759,6 +784,7 @@ function normalizedCakeLine(input, quantity, options) {
     cupcakeFinish,
     chocolateIcingCount,
     chocolateExtra,
+    brownieCreamOption,
     vanillaCreamCount,
     partyDecorationCount,
     vanillaCakeSheet,
@@ -859,16 +885,20 @@ function unitPriceForCakeLine(line) {
     + line.chocolateIcingCount * LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS
     + line.vanillaCreamCount * CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS
     + line.partyDecorationCount * CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS
+    + (line.brownieCreamOption === 'fresh-cream' ? BROWNIE_FRESH_CREAM_SURCHARGE_CENTS : 0)
 }
 
 const LEGACY_STORED_UNIT_PRICE_CENTS = Object.freeze({
   'pave-cake': Object.freeze({ '15cm': [7500], '19cm': [9500], '22cm': [11500] }),
   'vanilla-fresh-cream-cake': Object.freeze({ '15cm': [7500], '19cm': [9800], '22cm': [13900] }),
   'buttercream-cake': Object.freeze({ '15cm': [7500], '19cm': [9800], '22cm': [13900] }),
+  'brownie-cheesecake': Object.freeze({ '15cm': [5800] }),
+  'pave-brownie-cheesecake': Object.freeze({ '15cm': [6800] }),
 })
 
 function isApprovedStoredUnitPrice(line) {
   if (line.unitPriceCents === unitPriceForCakeLine(line)) return true
+  if (line.productId === 'brownie-cheesecake' && Object.hasOwn(line, 'brownieCreamOption')) return false
   return LEGACY_STORED_UNIT_PRICE_CENTS[line.productId]?.[line.cakeSize]?.includes(line.unitPriceCents) || false
 }
 
@@ -935,7 +965,7 @@ function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
     selectedPackagingProductSubtotalCents,
   )
   const pricedLines = baseLines.map((line, index) => {
-    const { individualPackaging, ...legacyCompatibleLine } = line
+    const { individualPackaging, brownieCreamOption, ...legacyCompatibleLine } = line
     const lineDiscountPercent = eligibleIndexes.includes(index) ? discountPercent : 0
     const lineDiscountCents = allocations[index]
     const linePackagingPieces = line.individualPackaging
@@ -946,6 +976,7 @@ function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
       : linePackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
     return {
       ...legacyCompatibleLine,
+      ...(BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS.has(line.productId) ? { brownieCreamOption } : {}),
       ...(individualPackagingPieces > 0 ? { individualPackaging } : {}),
       discountPercent: lineDiscountPercent,
       discountCents: lineDiscountCents,
@@ -1240,6 +1271,10 @@ function sanitizedOrderLine(line) {
     ...(Object.hasOwn(line, 'cupcakeFinish') ? { cupcakeFinish: line.cupcakeFinish } : {}),
     chocolateIcingCount: line.chocolateIcingCount,
     chocolateExtra: line.chocolateExtra || 'none',
+    ...(BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS.has(line.productId)
+      && Object.hasOwn(line, 'brownieCreamOption')
+      ? { brownieCreamOption: line.brownieCreamOption }
+      : {}),
     chocolateExtraCents: Number.isSafeInteger(line.chocolateExtraCents) ? line.chocolateExtraCents : 0,
     vanillaCreamCount: line.vanillaCreamCount,
     partyDecorationCount: line.partyDecorationCount,
@@ -1274,14 +1309,18 @@ export function parseStoredOrderLines(document) {
       const hasPackagingFields = hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)
       const hasChocolateExtraPrePackagingFields = hasExactOwnKeys(line, CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS)
       const hasChocolateExtraPackagingFields = hasExactOwnKeys(line, CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS)
-      const hasChocolateExtraFields = hasChocolateExtraPrePackagingFields || hasChocolateExtraPackagingFields
-      const hasCurrentPackagingFields = hasPackagingFields || hasChocolateExtraPackagingFields
-      const hasCupcakeFinish = prePackagingStoredLine || hasCurrentPackagingFields || hasChocolateExtraPrePackagingFields
-      if (!preCupcakeFinishStoredLine && !legacyStoredLine && !prePackagingStoredLine && !hasChocolateExtraFields && !hasCurrentPackagingFields) throw new Error('invalid line keys')
+      const hasBrownieCreamPrePackagingFields = hasExactOwnKeys(line, BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS)
+      const hasBrownieCreamPackagingFields = hasExactOwnKeys(line, BROWNIE_CREAM_STORED_ORDER_LINE_KEYS)
+      const hasBrownieCreamFields = hasBrownieCreamPrePackagingFields || hasBrownieCreamPackagingFields
+      const hasChocolateExtraFields = hasChocolateExtraPrePackagingFields || hasChocolateExtraPackagingFields || hasBrownieCreamFields
+      const hasCurrentPackagingFields = hasPackagingFields || hasChocolateExtraPackagingFields || hasBrownieCreamPackagingFields
+      const hasCupcakeFinish = prePackagingStoredLine || hasCurrentPackagingFields || hasChocolateExtraPrePackagingFields || hasBrownieCreamPrePackagingFields
+      if (!preCupcakeFinishStoredLine && !legacyStoredLine && !prePackagingStoredLine && !hasChocolateExtraFields && !hasCurrentPackagingFields && !hasBrownieCreamFields) throw new Error('invalid line keys')
       if (currentPackagingDocument === null) currentPackagingDocument = hasCurrentPackagingFields
       if (currentPackagingDocument !== hasCurrentPackagingFields) throw new Error('mixed line versions')
       if (currentChocolateExtraDocument === null) currentChocolateExtraDocument = hasChocolateExtraFields
       if (currentChocolateExtraDocument !== hasChocolateExtraFields) throw new Error('mixed chocolate extra versions')
+      if (hasBrownieCreamFields && !BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS.has(line.productId)) throw new Error('ineligible brownie cream fields')
       if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('invalid quantity')
       for (const key of ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount']) {
         if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid option count')
@@ -1298,6 +1337,7 @@ export function parseStoredOrderLines(document) {
         key !== 'vanillaCakePointColor' &&
         (key !== 'cupcakeFinish' || hasCupcakeFinish) &&
         (key !== 'chocolateExtra' || hasChocolateExtraFields) &&
+        (key !== 'brownieCreamOption' || hasBrownieCreamFields) &&
         (key !== 'individualPackaging' || hasCurrentPackagingFields) &&
         normalized[key] !== line[key])) {
         throw new Error('noncanonical line')
@@ -1424,6 +1464,7 @@ export function parseStoredOrderLines(document) {
     for (const key of [...ORDER_LINE_IDENTITY_KEYS.filter((key) =>
       key !== 'vanillaCakePointColor' &&
       key !== 'chocolateExtra' &&
+      key !== 'brownieCreamOption' &&
       key !== 'individualPackaging' &&
       (key !== 'cupcakeFinish' || firstLineHasCupcakeFinish)), 'quantity']) {
       if (document[key] !== firstLine[key]) throw new Error(`inconsistent ${key}`)

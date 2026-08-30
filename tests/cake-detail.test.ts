@@ -63,7 +63,7 @@ test('sale detail badges mirror the first three Quick View features', () => {
   ])
 })
 
-test('Brownie Cheesecake keeps its 15cm two-finish current sales contract while customer copy explains the baked two-layer dessert', () => {
+test('Brownie Cheesecake keeps its 15cm three-outcome current sales contract while customer copy explains the baked two-layer dessert', () => {
   const english = getCakeDetailBySlug('brownie-cheesecake', 'en')
   const korean = getCakeDetailBySlug('brownie-cheesecake', 'ko')
 
@@ -76,9 +76,31 @@ test('Brownie Cheesecake keeps its 15cm two-finish current sales contract while 
     '진한 다크초콜릿 브라우니 베이스 위에 부드럽게 구운 바스크 치즈케이크를 올린 2층 디저트입니다. 브라우니와 치즈케이크의 서로 다른 매력을 한 조각에서 함께 즐길 수 있습니다.',
   )
   assert.deepEqual(english?.productIds, ['brownie-cheesecake', 'pave-brownie-cheesecake'])
-  assert.equal(english?.optionLabel, 'Basic or pave chocolate on top · +AUD 10')
+  assert.equal(english?.optionLabel, 'Basic, Pave +AUD 10, or Fresh cream +AUD 20')
   assert.equal(korean?.optionLabel, '6" | serves 8')
   assert.equal(english?.gallery.join(','), 'brownie-side,brownie-detail,brownie-quick-view')
+})
+
+test('Brownie Cheesecake offers Basic at AUD 85, Pave at AUD 95, or Fresh cream at AUD 105 with no combined finish', () => {
+  const initial = createCakeDetailSelection('brownie-cheesecake') as CakeDetailSelection
+  assert.ok(initial)
+  assert.equal(initial.productId, 'brownie-cheesecake')
+  assert.equal(initial.brownieCreamOption, 'none')
+  assert.equal(getCakeDetailSelectionTotal(initial), 85)
+
+  const basicWithCream: CakeDetailSelection = { ...initial, brownieCreamOption: 'fresh-cream' }
+  assert.equal(getCakeDetailSelectionTotal(basicWithCream), 105)
+
+  const pave = selectCakeDetailProduct(initial, 'pave-brownie-cheesecake')
+  assert.equal(pave.brownieCreamOption, 'none')
+  assert.equal(getCakeDetailSelectionTotal(pave), 95)
+
+  const attemptedCombination = selectCakeDetailProduct(
+    { ...pave, brownieCreamOption: 'fresh-cream' },
+    'pave-brownie-cheesecake',
+  )
+  assert.equal(attemptedCombination.brownieCreamOption, 'none')
+  assert.equal(getCakeDetailSelectionTotal(attemptedCombination), 95)
 })
 
 test('Cupcake and Signature detail selections remain independent and normalize hidden options', () => {
