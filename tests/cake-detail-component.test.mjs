@@ -47,6 +47,10 @@ const cupcakePreviewAssetPaths = [
 const cupcakePreviewAssets = await Promise.all(cupcakePreviewAssetPaths.map((path) => (
   readFile(new URL(path, import.meta.url)).catch(() => null)
 )))
+const individualPackagingPreviewAssets = await Promise.all([
+  '../src/assets/options/individual-packaging.webp',
+  '../src/assets/options/individual-packaging-cupcake.webp',
+].map((path) => readFile(new URL(path, import.meta.url)).catch(() => null)))
 
 test('home catalogue opens shared cake detail routes instead of skipping to the request form', () => {
   assert.match(homeSource, /navigateToCake\(card\.slug\)/)
@@ -273,6 +277,29 @@ test('Lemon uses the shared compact editorial while retaining its current pack, 
   assert.doesNotMatch(marketSource, /fresh lemon cream|레몬 크림/i)
   assert.doesNotMatch(i18nSource, /fresh lemon cream|레몬 크림/i)
   assert.doesNotMatch(reserveSource, /Lemon cream and floral decoration included|레몬 크림과 꽃무늬 장식 포함/)
+})
+
+test('Lemon finish quantity visually outranks its finish label', () => {
+  assert.match(cssSource, /family=Work\+Sans:wght@400;700;800/)
+  assert.match(cssSource, /\.cake-detail-lemon-finish-item strong\s*\{[^}]*font-size:\s*12px/s)
+  assert.match(cssSource, /\.cake-detail-lemon-finish-item span\s*\{[^}]*color:\s*var\(--forest-deep\)[^}]*font-size:\s*16px[^}]*font-weight:\s*800/s)
+})
+
+test('Lemon Cake and Chocolate Cupcakes use their matching individual packaging photos', () => {
+  assert.deepEqual(individualPackagingPreviewAssets.map((asset) => Boolean(asset?.length)), [true, true])
+  assert.match(detailSource, /import lemonIndividualPackagingPreviewImg from '\.\/assets\/options\/individual-packaging\.webp'/)
+  assert.match(detailSource, /import cupcakeIndividualPackagingPreviewImg from '\.\/assets\/options\/individual-packaging-cupcake\.webp'/)
+  assert.match(detailSource, /isCupcakeProduct\(product\.id\)[\s\S]*?cupcakeIndividualPackagingPreview[\s\S]*?isFreshLemonCupcakeProduct\(product\.id\)[\s\S]*?lemonIndividualPackagingPreview/)
+  assert.match(detailSource, /image=\{selectedIndividualPackagingPreview\.image\}[\s\S]*?muted=\{!selection\.individualPackaging\}/)
+
+  const previewIndex = detailSource.indexOf('image={selectedIndividualPackagingPreview.image}')
+  const checkboxIndex = detailSource.indexOf('name="individualPackaging"')
+  assert.ok(previewIndex >= 0)
+  assert.ok(previewIndex < checkboxIndex)
+  const mutedPreviewStyle = cssSource.match(/\.cake-detail-option-preview\.is-muted img\s*\{([^}]*)\}/s)?.[1]
+  assert.ok(mutedPreviewStyle)
+  assert.match(mutedPreviewStyle, /filter:\s*grayscale\(1\)/)
+  assert.doesNotMatch(mutedPreviewStyle, /opacity:/)
 })
 
 test('Pave editorial reuses live catalogue cards and the existing add-to-order callbacks', () => {

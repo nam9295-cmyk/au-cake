@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700;800&display=swap');
 
 :root {
   --font-sans: 'Work Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
@@ -7873,6 +7873,11 @@ td select {
   height: 88px;
   object-fit: cover;
   animation: cake-detail-option-preview-enter 160ms ease both;
+  transition: opacity 180ms ease, filter 180ms ease;
+}
+
+.cake-detail-option-preview.is-muted img {
+  filter: grayscale(1);
 }
 
 .cake-detail-option-preview-media.is-contained img {
@@ -7901,6 +7906,47 @@ td select {
   color: var(--forest-deep);
   font-size: 13px;
   line-height: 1.25;
+}
+
+.cake-detail-lemon-finish-preview {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.cake-detail-lemon-finish-item {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(31, 90, 70, 0.2);
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.cake-detail-lemon-finish-item img {
+  display: block;
+  width: 88px;
+  height: 69px;
+  object-fit: cover;
+}
+
+.cake-detail-lemon-finish-item strong,
+.cake-detail-lemon-finish-item span {
+  display: block;
+}
+
+.cake-detail-lemon-finish-item strong {
+  color: var(--forest-deep);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.cake-detail-lemon-finish-item span {
+  margin-top: 4px;
+  color: var(--forest-deep);
+  font-size: 16px;
+  font-weight: 800;
 }
 
 @keyframes cake-detail-option-preview-enter {
@@ -8065,12 +8111,6 @@ label.vanilla-point-color-card {
 .vanilla-point-color-card.is-selected .vanilla-point-color-swatch {
   outline: 2px solid var(--forest-deep);
   outline-offset: 2px;
-}
-
-.cake-detail-mix-fieldset>p {
-  margin-bottom: 12px;
-  color: var(--muted);
-  font-size: 12px;
 }
 
 .cake-detail-mix-fieldset input[type='range'] {

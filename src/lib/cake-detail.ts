@@ -7,6 +7,7 @@ import {
   DEFAULT_VANILLA_CAKE_POINT_COLOR,
   DEFAULT_VANILLA_CAKE_SHEET,
   VANILLA_CAKE_POINT_COLOR_OPTIONS,
+  getFreshLemonCupcakePackSize,
   getProductById,
   getReservationPrice,
   normalizeCakeSize,
@@ -61,6 +62,19 @@ export type CupcakePreviewKey =
   | '12-basic'
   | '12-vanilla'
   | '12-chocolate'
+
+export function getLemonFinishPreviewCounts(
+  productId: ProductId,
+  chocolateIcingCount: number,
+) {
+  const packSize = getFreshLemonCupcakePackSize(productId) || 0
+  const chocolate = normalizeChocolateIcingCount(productId, chocolateIcingCount)
+
+  return {
+    lemon: packSize - chocolate,
+    chocolate,
+  }
+}
 
 export function getCupcakePreviewKey(
   productId: ProductId,

@@ -67,9 +67,22 @@ type CakeDetailPreviewApi = {
   getCakeSizePreviewScale?: (cakeSize: string) => number
   getCakeSizePreviewTransformOrigin?: (previewKey: 'pave' | 'buttercream' | 'strawberry-vanilla' | 'strawberry-chocolate' | null) => 'center center' | 'center bottom'
   getCakePointColorPreviewBackground?: (pointColor: string) => string
+  getLemonFinishPreviewCounts?: (productId: ProductId, chocolateIcingCount: number) => {
+    lemon: number
+    chocolate: number
+  }
 }
 
 const cakeDetailPreviewApi = cakeDetailPreview as unknown as CakeDetailPreviewApi
+
+test('Lemon finish preview counts follow the selected pack and clamp chocolate pieces', () => {
+  const getCounts = cakeDetailPreviewApi.getLemonFinishPreviewCounts
+  assert.ok(getCounts)
+  assert.deepEqual(getCounts('fresh-lemon-cupcakes-6', 0), { lemon: 6, chocolate: 0 })
+  assert.deepEqual(getCounts('fresh-lemon-cupcakes-8', 3), { lemon: 5, chocolate: 3 })
+  assert.deepEqual(getCounts('fresh-lemon-cupcakes-12', 8), { lemon: 4, chocolate: 8 })
+  assert.deepEqual(getCounts('fresh-lemon-cupcakes-16', 99), { lemon: 0, chocolate: 16 })
+})
 
 test('legacy AU small-batch settings copy is replaced without overwriting custom admin copy', () => {
   assert.equal(

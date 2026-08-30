@@ -25,6 +25,10 @@ import cupcake6VanillaPreviewImg from './assets/options/cupcake-6-vanilla.webp'
 import cupcake12BasicPreviewImg from './assets/options/cupcake-12-basic.webp'
 import cupcake12ChocolatePreviewImg from './assets/options/cupcake-12-chocolate.webp'
 import cupcake12VanillaPreviewImg from './assets/options/cupcake-12-vanilla.webp'
+import lemonIndividualPackagingPreviewImg from './assets/options/individual-packaging.webp'
+import cupcakeIndividualPackagingPreviewImg from './assets/options/individual-packaging-cupcake.webp'
+import lemonBasicFinishPreviewImg from './assets/options/lemon-finish-basic.webp'
+import lemonChocolateFinishPreviewImg from './assets/options/lemon-finish-chocolate.webp'
 import CakeEditorialDetail from './CakeEditorialDetail'
 import KoreanCakeReviewsSection from './KoreanCakeReviewsSection'
 import {
@@ -56,6 +60,7 @@ import {
   getCakeSizePreviewScale,
   getCakeSizePreviewTransformOrigin,
   getCupcakePreviewKey,
+  getLemonFinishPreviewCounts,
   selectCakeDetailProduct,
   type CakeDetailImageKey,
   type CakeDetailSelection,
@@ -212,6 +217,18 @@ const cupcakePreviewImages: Record<CupcakePreviewKey, OptionPreviewImage> = {
   },
 }
 
+const lemonIndividualPackagingPreview: OptionPreviewImage = {
+  src: lemonIndividualPackagingPreviewImg,
+  alt: 'Lemon Cake packed in an individual container',
+  altKo: '개별 용기에 포장된 레몬 케이크',
+}
+
+const cupcakeIndividualPackagingPreview: OptionPreviewImage = {
+  src: cupcakeIndividualPackagingPreviewImg,
+  alt: 'Chocolate Cupcake packed in an individual container',
+  altKo: '개별 용기에 포장된 초콜릿 컵케이크',
+}
+
 const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height: number }> = {
   'pound-side': { width: 1080, height: 1012 },
   'pound-quick-view': { width: 1080, height: 1012 },
@@ -335,6 +352,7 @@ function OptionPhotoPreview({
   fit = 'cover',
   scale = 1,
   transformOrigin = 'center bottom',
+  muted = false,
 }: {
   image: OptionPreviewImage
   eyebrow: string
@@ -345,9 +363,10 @@ function OptionPhotoPreview({
   fit?: 'cover' | 'contain'
   scale?: number
   transformOrigin?: 'center center' | 'center bottom'
+  muted?: boolean
 }) {
   return (
-    <div className="cake-detail-option-preview" aria-live="polite">
+    <div className={`cake-detail-option-preview${muted ? ' is-muted' : ''}`} aria-live="polite">
       <div
         className={`cake-detail-option-preview-media${fit === 'contain' ? ' is-contained' : ''}`}
         style={background ? { background } : undefined}
@@ -371,6 +390,56 @@ function OptionPhotoPreview({
         <strong>{label}</strong>
         {description && <p className="cake-detail-extra-help">{description}</p>}
       </div>
+    </div>
+  )
+}
+
+function LemonFinishMixPreview({
+  lemonCount,
+  chocolateCount,
+  language,
+}: {
+  lemonCount: number
+  chocolateCount: number
+  language: Language
+}) {
+  const finishes = [
+    {
+      image: lemonBasicFinishPreviewImg,
+      alt: language === 'ko' ? '레몬 제스트 아이싱 레몬 케이크' : 'Lemon cake with lemon zest icing',
+      label: language === 'ko' ? '레몬 제스트 아이싱' : 'Lemon zest icing',
+      count: lemonCount,
+    },
+    {
+      image: lemonChocolateFinishPreviewImg,
+      alt: language === 'ko' ? '다크 초콜릿 마감 레몬 케이크' : 'Lemon cake with dark chocolate finish',
+      label: language === 'ko' ? '다크 초콜릿' : 'Dark chocolate',
+      count: chocolateCount,
+    },
+  ]
+
+  return (
+    <div
+      className="cake-detail-lemon-finish-preview"
+      aria-label={language === 'ko' ? '선택한 레몬 케이크 마감 구성' : 'Selected Lemon Cake finish mix'}
+      aria-live="polite"
+    >
+      {finishes.map((finish) => (
+        <div className="cake-detail-lemon-finish-item" key={finish.label}>
+          <img
+            src={finish.image}
+            alt={finish.alt}
+            width={88}
+            height={69}
+            loading="eager"
+            decoding="async"
+          />
+          <div>
+            <strong>{finish.label}</strong>
+            <span>× {finish.count}</span>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -445,6 +514,17 @@ export default function CakeDetailPage({
     (option) => option.value === selection.cupcakeFinish,
   ) || CUPCAKE_FINISH_OPTIONS[0]
   const selectedCupcakePackSize = getCupcakePackSize(product.id)
+  const selectedIndividualPackagingPreview = isCupcakeProduct(product.id)
+    ? {
+        image: cupcakeIndividualPackagingPreview,
+        label: language === 'ko' ? '초콜릿 컵케이크 1개씩 개별 용기 포장' : 'One Chocolate Cupcake per container',
+      }
+    : isFreshLemonCupcakeProduct(product.id)
+      ? {
+          image: lemonIndividualPackagingPreview,
+          label: language === 'ko' ? '레몬 케이크 1개씩 개별 용기 포장' : 'One Lemon Cake per container',
+        }
+      : null
   const cakeSizePreviewKey = getCakeSizePreviewKey(product.id)
   const selectedCakeSizePreview = cakeSizePreviewKey ? cakeSizePreviewImages[cakeSizePreviewKey] : null
   const selectedCakeSizePreviewScale = getCakeSizePreviewScale(selection.cakeSize)
@@ -515,6 +595,7 @@ export default function CakeDetailPage({
       }))
     : CAKE_SIZE_OPTIONS.filter((option) => Object.hasOwn(product.sizePrices, option.value))
   const packSize = getFreshLemonCupcakePackSize(product.id) || 0
+  const lemonFinishCounts = getLemonFinishPreviewCounts(product.id, selection.chocolateIcingCount)
   const productChoiceLabel = detail.id === 'cupcake'
     ? language === 'ko' ? '구성' : 'Pack Size'
     : detail.id === 'brownie-cheesecake'
@@ -622,6 +703,14 @@ export default function CakeDetailPage({
         <aside className="cake-detail-purchase">
           <div className="cake-detail-configurator">
           {renderProductIntro('cake-detail-intro is-standard-intro')}
+
+          {isFreshLemonCupcakeProduct(product.id) && (
+            <LemonFinishMixPreview
+              lemonCount={lemonFinishCounts.lemon}
+              chocolateCount={lemonFinishCounts.chocolate}
+              language={language}
+            />
+          )}
 
           {selectedCupcakePreview && selectedCupcakePackSize && (
             <OptionPhotoPreview
@@ -799,15 +888,15 @@ export default function CakeDetailPage({
           {isFreshLemonCupcakeProduct(product.id) && (
             <fieldset className="cake-detail-fieldset cake-detail-mix-fieldset">
               <legend>{language === 'ko' ? '다크 초콜릿 마감 개수' : 'Dark chocolate finish pieces'}</legend>
-              <p>{language === 'ko'
-                ? `레몬 제스트 아이싱 ${packSize - selection.chocolateIcingCount}개 · 다크 초콜릿 ${selection.chocolateIcingCount}개`
-                : `Fresh lemon zest ${packSize - selection.chocolateIcingCount} · Dark chocolate ${selection.chocolateIcingCount}`}</p>
               <input
                 type="range"
                 min="0"
                 max={packSize}
                 value={selection.chocolateIcingCount}
                 aria-label={language === 'ko' ? '다크 초콜릿 마감 개수' : 'Dark chocolate finish pieces'}
+                aria-valuetext={language === 'ko'
+                  ? `레몬 제스트 아이싱 ${lemonFinishCounts.lemon}개, 다크 초콜릿 ${lemonFinishCounts.chocolate}개`
+                  : `Lemon zest icing ${lemonFinishCounts.lemon}, Dark chocolate ${lemonFinishCounts.chocolate}`}
                 onChange={(event) => updateSelection({ chocolateIcingCount: Number(event.target.value) })}
               />
             </fieldset>
@@ -863,6 +952,15 @@ export default function CakeDetailPage({
           {isIndividualPackagingEligibleProduct(product.id) && (
             <fieldset className="cake-detail-fieldset">
               <legend>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</legend>
+              {selectedIndividualPackagingPreview && (
+                <OptionPhotoPreview
+                  image={selectedIndividualPackagingPreview.image}
+                  eyebrow={language === 'ko' ? '포장 예시' : 'Packaging example'}
+                  label={selectedIndividualPackagingPreview.label}
+                  language={language}
+                  muted={!selection.individualPackaging}
+                />
+              )}
               <label className="choice-item">
                 <input
                   type="checkbox"
