@@ -186,13 +186,13 @@ test('AU catalogue groups own the exact bilingual four-by-two presentation contr
   assert.equal(getAuCakeCatalog().flatMap((entry) => entry.productIds).includes('eiffel-tower-brownie-cheesecake'), false)
 })
 
-test('catalog cards expose separated Cupcake and Signature names in English and Korean', () => {
+test('catalog cards expose the approved AU category display names while Korean names stay unchanged', () => {
   const english = getAuCakeCatalogCards('en')
   const korean = getAuCakeCatalogCards('ko')
   assert.deepEqual(english.map((card) => card.name), [
-    'Pave Chocolate Cake', 'Buttercream Cake', 'Fresh Strawberry Vanilla Cream Cake',
-    'Fresh Strawberry Chocolate Cream Cake', 'Chocolate Cupcakes', 'Signature Gâteau au Chocolat',
-    'Lemon Cake', 'Brownie Cheesecake',
+    'PAVÉ CHOCOLATE GÂTEAU', 'BUTTERCREAM CHOCOLATE GÂTEAU', 'STRAWBERRY VANILLA FRESH CREAM',
+    'STRAWBERRY CHOCO FRESH CREAM', 'GÂTEAU CUPCAKES (FOR SHARING)', 'SIGNATURE GÂTEAU LOAF (POUND)',
+    'Patissier’s LEMON GLAZE CAKE', 'Chocolatier’s BROWNIE CHEESECAKE',
   ])
   assert.deepEqual(korean.map((card) => card.name), [
     '파베 초콜릿 케이크', '버터크림 케이크', '생딸기 바닐라 생크림 케이크',

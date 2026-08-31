@@ -193,7 +193,7 @@ test('finish and Chocolate Extra selections expose compact responsive photo prev
 
   assert.match(cssSource, /\.cake-detail-option-preview\s*\{[^}]*grid-template-columns:\s*112px minmax\(0, 1fr\)/s)
   assert.match(cssSource, /\.cake-detail-option-preview img\s*\{[^}]*width:\s*112px[^}]*height:\s*88px/s)
-  assert.match(cssSource, /\.cake-detail-options \+ \.cake-detail-option-preview\s*\{[^}]*margin-top:\s*10px/s)
+  assert.match(cssSource, /\.cake-detail-options\s*\+\s*\.cake-detail-option-preview\s*\{[^}]*margin-top:\s*10px/s)
   assert.match(cssSource, /@keyframes cake-detail-option-preview-enter/)
 
   const mobileCss = cssSource.slice(cssSource.lastIndexOf('@media (max-width: 760px)'))

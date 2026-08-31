@@ -17,6 +17,13 @@ import { getAuPublicContent, getPublicCakePage } from '../lib/public-content'
 
 const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().home : null
 
+const AU_CATALOG_GROUP_MARKERS = {
+  'signature-gateau': '/category-marker-01.svg',
+  'gateau-daily': '/category-marker-02.svg',
+  'fresh-cream-cakes': '/category-marker-03.svg',
+  'tea-time-refresh': '/category-marker-04.svg',
+} as const
+
 const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'pound-cake': '/products/details/chocolate-pound-cake-quick-view.webp',
   'pave-cake': '/products/details/pave-chocolate-cake-quick-view.webp',
@@ -169,7 +176,7 @@ export function HomePage({
   const closeQuickView = useCallback(() => setQuickViewCardId(null), [])
 
   const renderCatalogCard = (card: CakeCatalogCard) => (
-    <article className="product-card" key={card.id}>
+    <article className={'product-card cake-catalog-card cake-catalog-card-' + card.id} key={card.id}>
       <button
         className="product-card-quick-view"
         type="button"
@@ -201,19 +208,32 @@ export function HomePage({
             />
           )}
         </span>
-        <strong className="product-card-title">{card.name}</strong>
-        <span className="product-card-price">{card.priceLabel}</span>
       </button>
       <a
-        className="secondary-button full-width"
+        className="product-card-detail-link"
         href={`/cakes/${card.slug}`}
         onClick={(event) => {
           event.preventDefault()
           navigateToCake(card.slug)
         }}
       >
-        {language === 'ko' ? '옵션 선택' : 'Choose options'}
+        <span className="product-card-kicker">CAKES</span>
+        <strong className="product-card-title">{card.name}</strong>
       </a>
+      <span className="product-card-price">
+        {(() => {
+          const priceParts = card.priceLabel.match(/^((?:From\s+)?AUD)\s+(.+)$/)
+
+          if (!priceParts) return card.priceLabel
+
+          return (
+            <>
+              <span className="product-card-price-prefix">{priceParts[1]}</span>{' '}
+              <span className="product-card-price-number">{priceParts[2]}</span>
+            </>
+          )
+        })()}
+      </span>
     </article>
   )
 
@@ -387,7 +407,9 @@ export function HomePage({
         </section>
 
         <section className="content-section product-section">
-          <h2>{copy.productSectionTitle}</h2>
+          {marketConfig.market !== 'AU' && (
+            <h2>{copy.productSectionTitle}</h2>
+          )}
           {marketConfig.market === 'AU' ? (
             <div className="cake-catalog-groups">
               {catalogGroups.map((group) => {
@@ -395,7 +417,14 @@ export function HomePage({
                 return (
                   <section className="cake-catalog-group" aria-labelledby={headingId} key={group.id}>
                     <header className="cake-catalog-group-header">
-                      <span className="cake-catalog-group-number" aria-hidden="true">{group.number}</span>
+                      <img
+                        className="cake-catalog-group-marker"
+                        src={AU_CATALOG_GROUP_MARKERS[group.id]}
+                        alt=""
+                        aria-hidden="true"
+                        width={160}
+                        height={110}
+                      />
                       <div>
                         <h3 id={headingId}>{group.title}</h3>
                         <p>{group.description}</p>
