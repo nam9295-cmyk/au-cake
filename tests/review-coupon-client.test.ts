@@ -244,6 +244,36 @@ test('Chocolate Extra request projection is frontend-ready while Reservation API
   assert.deepEqual(order.orderLines.map((line) => line.chocolateExtra), ['combo', 'none'])
 })
 
+test('multi-line request strips the cart default Chocolate Extra from an ineligible Cupcake line', () => {
+  const common = {
+    cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateExtra: 'none',
+    chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink',
+    brownieCreamOption: 'none', individualPackaging: false, quantity: 1,
+  }
+  const orderInput = {
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
+    pickupDate: '2099-07-11', pickupTime: '10:00', requestNote: '', privacyConsent: true,
+    requestId: '11111111-1111-4111-8111-111111111111', website: '',
+    orderLines: [
+      { ...common, productId: 'cupcake-dozen', individualPackaging: true },
+      { ...common, productId: 'pave-cake', cakeSize: '6in' },
+    ],
+  }
+  const request = buildCakeOrderRequest(orderInput as never)
+
+  assert.equal(Object.hasOwn(request.orderLines[0], 'chocolateExtra'), false)
+  assert.equal(request.orderLines[0].individualPackaging, true)
+  assert.equal(request.orderLines[1].chocolateExtra, 'none')
+  assert.throws(() => buildCakeOrderRequest({
+    ...orderInput,
+    orderLines: [
+      { ...orderInput.orderLines[0], chocolateExtra: 'combo' },
+      orderInput.orderLines[1],
+    ],
+  } as never), /INVALID_ORDER_LINES/)
+})
+
 
 
 test('Brownie request projections carry an explicit catalog marker for Basic, Fresh cream, and Pave', () => {

@@ -387,7 +387,6 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
     (line.chocolateExtra !== undefined && (
       typeof line.chocolateExtra !== 'string' ||
       !VALID_CHOCOLATE_EXTRAS.has(line.chocolateExtra as ChocolateExtra) ||
-      !isChocolateExtraEligibleProduct(line.productId as ProductId) ||
       line.chocolateExtra !== normalizeChocolateExtra(line.productId as ProductId, line.chocolateExtra as ChocolateExtra)
     )) ||
     typeof line.cupcakeFinish !== 'string' || !VALID_CUPCAKE_FINISHES.has(line.cupcakeFinish as CupcakeFinish) ||
