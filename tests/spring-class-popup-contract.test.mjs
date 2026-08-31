@@ -4,38 +4,15 @@ import { readFile } from 'node:fs/promises'
 
 const popup = await readFile(new URL('../src/components/SpringClassCampaignDialog.tsx', import.meta.url), 'utf8').catch(() => '')
 const home = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
-const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+const campaign = await readFile(new URL('../src/lib/class-campaign.ts', import.meta.url), 'utf8')
 
-test('Spring class popup is mounted only by the public Home page and books the class route', () => {
-  assert.match(home, /SpringClassCampaignDialog/)
-  assert.match(home, /onBook=\{\(\) => navigate\('class-reserve'\)\}/)
-  assert.doesNotMatch(app, /SpringClassCampaignDialog/)
+test('the public Home page has no automatic Spring class campaign popup', () => {
+  assert.doesNotMatch(home, /SpringClassCampaignDialog/)
+  assert.equal(popup, '')
 })
 
-test('Spring popup owns accessible modal, keyboard, focus, scroll and session dismissal behavior', () => {
-  assert.match(popup, /role="dialog"/)
-  assert.match(popup, /aria-modal="true"/)
-  assert.match(popup, /aria-labelledby="spring-class-dialog-title"/)
-  assert.match(popup, /closeButtonRef/)
-  assert.match(popup, /event\.key === 'Escape'/)
-  assert.match(popup, /document\.body\.style\.overflow = 'hidden'/)
-  assert.match(popup, /previouslyFocusedRef\.current\?\.focus/)
-  assert.match(popup, /window\.sessionStorage/)
-  assert.match(popup, /dismissSpringClassPopup/)
-  assert.match(popup, /isSpringClassCampaignActive/)
-  assert.match(popup, /copy\.courseOptions\.map/)
-  assert.match(popup, /copy\.discountNotes\.map/)
-  assert.match(popup, /Available class options/)
-  assert.match(popup, /Class booking discounts/)
-})
-
-test('Spring popup has isolated mobile-safe styles and respects reduced motion', () => {
-  assert.match(css, /\.spring-class-popup-backdrop/)
-  assert.match(css, /\.spring-class-popup-dialog/)
-  assert.match(css, /\.spring-class-popup-course-list/)
-  assert.match(css, /\.spring-class-popup-discount-list/)
-  assert.match(css, /max-height:/)
-  assert.match(css, /@media \(max-width:[\s\S]*\.spring-class-popup-dialog/)
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.spring-class-popup-dialog/)
+test('popup-only styles and session dismissal code are retired', () => {
+  assert.doesNotMatch(css, /spring-class-popup/)
+  assert.doesNotMatch(campaign, /SPRING_CLASS_POPUP_SESSION_KEY|isSpringClassPopupDismissed|dismissSpringClassPopup/)
 })

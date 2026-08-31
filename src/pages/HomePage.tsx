@@ -4,7 +4,6 @@ import heroCake2Img from '../assets/hero-cake-2.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
-import { SpringClassCampaignDialog } from '../components/SpringClassCampaignDialog'
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
@@ -562,9 +561,6 @@ export function HomePage({
       >
         {language === 'ko' ? '케이크 자세히 보기' : 'View cake details'}
       </a>
-      {marketConfig.market === 'AU' && (
-        <SpringClassCampaignDialog language={language} onBook={() => navigate('class-reserve')} />
-      )}
     </>
   )
 }
