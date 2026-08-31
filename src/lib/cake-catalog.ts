@@ -90,6 +90,17 @@ export type CakeCatalogGroup = LocalizedCatalogGroupCopy & {
   cards: readonly CakeCatalogCard[]
 }
 
+const AU_CATALOG_DISPLAY_NAMES: Partial<Record<CakeCatalogId, string>> = {
+  pave: 'PAVÉ CHOCOLATE GÂTEAU',
+  buttercream: 'BUTTERCREAM CHOCOLATE GÂTEAU',
+  'fresh-strawberry-vanilla-cream': 'STRAWBERRY VANILLA FRESH CREAM',
+  'fresh-strawberry-chocolate-cream': 'STRAWBERRY CHOCO FRESH CREAM',
+  cupcake: 'GÂTEAU CUPCAKES (FOR SHARING)',
+  'signature-gateau': 'SIGNATURE GÂTEAU LOAF (POUND)',
+  'fresh-lemon-cupcakes': 'Patissier’s LEMON GLAZE CAKE',
+  'brownie-cheesecake': 'Chocolatier’s BROWNIE CHEESECAKE',
+}
+
 const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
   {
     id: 'pave',
@@ -304,6 +315,7 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
     isPhotoComingSoon: entry.isPhotoComingSoon,
     priceLabel,
     ...copy,
+    name: language === 'en' ? AU_CATALOG_DISPLAY_NAMES[entry.id] || copy.name : copy.name,
   }
 }
 

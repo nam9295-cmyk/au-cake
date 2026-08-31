@@ -13,6 +13,13 @@ test('Home and cakes page render the same four groups from the shared AU cake ca
   assert.doesNotMatch(cakesSource, /\['pave',\s*'buttercream'/)
 })
 
+test('AU Home starts with the numbered cake groups while the Korean market keeps its section heading', () => {
+  assert.match(
+    homeSource,
+    /\{marketConfig\.market !== 'AU' && \(\s*<h2>\{copy\.productSectionTitle\}<\/h2>\s*\)\}/,
+  )
+})
+
 test('catalogue cards render their canonical image paths', () => {
   assert.match(homeSource, /src=\{card\.imagePath\}/)
   assert.match(cakesSource, /src=\{card\.imagePath\}/)
@@ -134,9 +141,47 @@ test('home catalogue cards show only image, title, price, and one action', async
   assert.match(homeSource, /aria-haspopup="dialog"/)
   assert.match(homeSource, /className="product-card-title"/)
   assert.match(homeSource, /className="product-card-price"/)
-  assert.match(homeSource, /className="secondary-button full-width"/)
+  assert.match(homeSource, /className="product-card-detail-link"/)
+  assert.match(homeSource, /href={\`\/cakes\/\${card\.slug}\`}/)
+  assert.doesNotMatch(homeSource, /className="secondary-button full-width"/)
   assert.doesNotMatch(homeSource, /card\.features\.map/)
   assert.doesNotMatch(homeSource, /<dt>\{copy\.options\}<\/dt>/)
+})
+
+test('AU homepage catalogue keeps its matched desktop and mobile card-to-cake proportions', async () => {
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+
+  assert.match(homeSource, /const AU_CATALOG_GROUP_MARKERS/)
+  assert.match(homeSource, /className="cake-catalog-group-marker"/)
+  assert.match(homeSource, /src={AU_CATALOG_GROUP_MARKERS\[group\.id\]}/)
+  assert.match(homeSource, /className=\{'product-card cake-catalog-card cake-catalog-card-' \+ card\.id\}/)
+  assert.match(css, /\.cake-catalog-card-pave\s*\{[^}]*--catalogue-card-color:\s*#F19FA8/s)
+  assert.match(css, /\.cake-catalog-card-buttercream\s*\{[^}]*--catalogue-card-color:\s*#B9D2A8/s)
+  assert.match(css, /\.product-section \.cake-catalog-groups\s*\{[^}]*gap:\s*clamp\(210px, 28vw, 300px\)/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-header\s*\{[^}]*margin-bottom:\s*clamp\(48px, 5vw, 64px\)/s)
+  assert.match(css, /\.product-section \.cake-catalog-group-products \.product-image-wrap\s*\{[^}]*height:\s*clamp\(380px, 46vw, 641px\)/s)
+  assert.match(css, /\.product-section \.cake-catalog-group-products \.product-image-wrap\s*\{[^}]*background:\s*transparent/s)
+  assert.match(css, /\.product-section \.cake-catalog-group-products \.cake-catalog-card \.product-image-wrap::before\s*\{[^}]*width:\s*min\(92%, 40vw, 560px\)[^}]*aspect-ratio:\s*427 \/ 489[^}]*background:\s*var\(--catalogue-card-color\)/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap\s*\{[^}]*height:\s*clamp\(330px, 34\.4vw, 481px\)/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.cake-catalog-card \.product-image-wrap::before\s*\{[^}]*width:\s*min\(92%, clamp\(288px, 30vw, 420px\)\)/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap img:not\(\.gluten-free-stamp\)\s*\{[^}]*top:\s*60px[^}]*width:\s*min\(72%, 375px\)[^}]*max-height:\s*315px[^}]*transform:\s*scale\(1\.15\)/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.cake-catalog-card-cupcake \.product-image-wrap img:not\(\.gluten-free-stamp\)\s*\{[^}]*top:\s*84px/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap\s*\{[^}]*aspect-ratio:\s*427 \/ 489[^}]*background:\s*var\(--catalogue-card-color\)/s)
+  assert.match(css, /\.product-section \.cake-catalog-group-header\s*>\s*div\s*\{[^}]*position:\s*relative[^}]*z-index:\s*1/s)
+  assert.match(css, /\.cake-catalog-group-marker\s*\{[^}]*z-index:\s*0[^}]*animation:\s*cake-catalog-marker-wiggle\s+7s/s)
+  assert.match(css, /\.cake-catalog-group-marker\s*\{[^}]*margin-top:\s*-25px/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cake-catalog-group-marker\s*\{[^}]*margin-top:\s*-18px/s)
+  assert.match(css, /@keyframes cake-catalog-marker-wiggle\s*\{[\s\S]*?transform:\s*rotate\(-3\.5deg\)[\s\S]*?transform:\s*rotate\(3\.5deg\)/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-detail-link,\s*\.product-section \.cake-catalog-group-products \.product-card-price\s*\{[^}]*width:\s*min\(92%, 40vw, 560px\)[^}]*margin-inline:\s*auto/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card\s*\{[^}]*gap:\s*6px/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-quick-view\s*\{[^}]*margin-bottom:\s*8px/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-detail-link\s*\{[^}]*gap:\s*2px/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-kicker\s*\{[^}]*font-size:\s*13px/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-title\s*\{[^}]*min-height:\s*2\.2em[^}]*font-size:\s*clamp\(18px, 2vw, 22px\)[^}]*line-height:\s*1\.1/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-price\s*\{[^}]*margin-top:\s*0[^}]*font-size:\s*clamp\(20px, 2vw, 24px\)/s)
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-header p\s*\{[^}]*max-width:\s*none[^}]*white-space:\s*nowrap/s)
+  assert.match(css, /@media \(hover: hover\)[\s\S]*?\.product-card-detail-link:hover\s*\{[^}]*color:\s*var\(--berry-emphasis\)/s)
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.cake-catalog-group-marker\s*\{[^}]*animation-duration:\s*0\.01ms/s)
 })
 
 test('cake quick view is an accessible portal dialog with concise content and detail handoff', async () => {
@@ -186,7 +231,7 @@ test('cake quick view floats as a compact animated product card on desktop and m
 test('quick view photography fills its frame and mobile copy stays compact', async () => {
   const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
-  assert.match(css, /\.product-quick-view-image-wrap > img\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*max-height:\s*none[^}]*object-fit:\s*cover/s)
+  assert.match(css, /\.product-quick-view-image-wrap\s*>\s*img\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*max-height:\s*none[^}]*object-fit:\s*cover/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-image-wrap\s*\{[^}]*height:\s*min\(42dvh,\s*320px\)[^}]*min-height:\s*240px[^}]*max-height:\s*320px/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-content\s*\{[^}]*padding:\s*16px 14px calc\(16px \+ env\(safe-area-inset-bottom\)\)/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-description\s*\{[^}]*font-size:\s*12px[^}]*line-height:\s*1\.35/s)
@@ -200,9 +245,22 @@ test('mobile cake catalogue cards reduce copy without changing the public source
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-copy h3\s*\{[^}]*overflow-wrap:\s*anywhere/s)
 })
 
-test('mobile Home and cakes catalogue photography fills more of each two-column card', async () => {
+test('mobile Home and cakes catalogue photography keeps a balanced cutout size in each two-column card', async () => {
   const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
 
-  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap img\s*\{[^}]*width:\s*116%[^}]*max-width:\s*none[^}]*max-height:\s*190px/s)
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap img\s*\{[^}]*width:\s*115%[^}]*max-width:\s*none[^}]*max-height:\s*166px/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-image img\s*\{[^}]*padding:\s*0/s)
+})
+
+test('Home catalogue gives its price prefix and amount separate visual emphasis', () => {
+  assert.match(homeSource, /className="product-card-price-prefix"/)
+  assert.match(homeSource, /className="product-card-price-number"/)
+})
+
+test('desktop catalogue photography sits lower with the larger Daily Gâteau product scale', async () => {
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+
+  assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap img:not\(\.gluten-free-stamp\)\s*\{[^}]*top:\s*\d+px[^}]*transform:\s*scale\([\d.]+\)/s)
+  assert.match(css, /\.product-section \.cake-catalog-group-products \.cake-catalog-card-signature-gateau \.product-image-wrap img:not\(\.gluten-free-stamp\),\s*\.product-section \.cake-catalog-group-products \.cake-catalog-card-cupcake \.product-image-wrap img:not\(\.gluten-free-stamp\)\s*\{[^}]*transform:\s*scale\(1\.22\)/s)
+  assert.match(css, /\.product-section \.cake-catalog-group-products \.cake-catalog-card-cupcake \.product-image-wrap img:not\(\.gluten-free-stamp\)\s*\{[^}]*top:\s*\d+px/s)
 })
