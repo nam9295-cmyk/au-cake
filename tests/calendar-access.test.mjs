@@ -6,6 +6,7 @@ import {
   sanitizeCakeCalendarEvent,
   sanitizeClassCalendarEvent,
 } from '../appwrite-functions/reservation-api/src/calendar-access.js'
+import { parseStoredOrderLines } from '../appwrite-functions/reservation-api/src/business.js'
 
 const secret = 'a-test-secret-that-is-long-enough-for-hmac'
 
@@ -226,8 +227,8 @@ test('calendar reads pre-cupcake-finish stored orders when Appwrite returns a nu
   assert.equal(event.label, 'Pave cake · 6" | serves 8 · Dark chocolate ×1')
 })
 
-test('calendar cake event fails closed when stored order lines are present but malformed', () => {
-  assert.throws(() => sanitizeCakeCalendarEvent({
+test('stored order parser fails closed when stored order lines are malformed', () => {
+  assert.throws(() => parseStoredOrderLines({
     $id: 'broken-id', pickupDate: '2026-08-03', pickupTime: '14:00', status: '예약신청',
     productId: 'pound-cake', quantity: 1, orderLinesJson: '{broken',
   }), /INVALID_STORED_ORDER/)
@@ -294,4 +295,29 @@ test('calendar class events expose only safe class schedule and pricing audit fi
   })
   assert.equal(JSON.stringify(event).includes('Private'), false)
   assert.equal(JSON.stringify(event).includes('example.com'), false)
+})
+
+test('calendar falls back to the safe single-line projection when stored order lines are malformed', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'legacy-malformed-order-id',
+    pickupDate: '2026-08-30',
+    pickupTime: '12:00',
+    productId: 'pave-brownie-cheesecake',
+    cakeSize: '15cm',
+    chocolateType: 'dark',
+    poundAddon: 'none',
+    quantity: 1,
+    status: '예약신청',
+    orderLinesJson: '{malformed',
+  })
+
+  assert.deepEqual(event, {
+    id: 'cake:legacy-malformed-order-id',
+    kind: 'cake',
+    date: '2026-08-30',
+    time: '12:00',
+    label: 'Brownie Cheesecake · Pave chocolate on top · 6\" | serves 8 ×1',
+    status: 'Requested',
+    isCancelled: false,
+  })
 })

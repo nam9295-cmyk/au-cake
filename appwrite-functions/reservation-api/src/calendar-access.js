@@ -108,9 +108,14 @@ function cakeLineLabel(document) {
 }
 
 function cakeLabel(document) {
-  const stored = parseStoredOrderLines(document)
-  const lines = stored?.lines || [document]
-  return lines.map(cakeLineLabel).join(' / ')
+  try {
+    const stored = parseStoredOrderLines(document)
+    const lines = stored?.lines || [document]
+    return lines.map(cakeLineLabel).join(' / ')
+  } catch (caught) {
+    if (caught?.code === 'INVALID_STORED_ORDER') return cakeLineLabel(document)
+    throw caught
+  }
 }
 
 function cakeStatus(status) {
