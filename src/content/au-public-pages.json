@@ -21,16 +21,6 @@
     "description": "Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney: Pave, buttercream, fresh strawberry cream cakes, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake.",
     "hero": "Chocolate cakes made with chocolatier-grade couverture chocolate for birthdays, parties and gifting.",
     "pickup": "Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00",
-    "ctas": [
-      { "label": "Browse Chocolate Cakes", "href": "/cakes" },
-      { "label": "How Ordering Works", "href": "#how-ordering-works" }
-    ],
-    "orderingSteps": [
-      "Choose a cake and options.",
-      "Send a request so availability can be checked.",
-      "Receive payment details after availability is confirmed.",
-      "Collect in Melrose Park after final confirmation · Fri 18:00–20:00 · Sat–Sun 08:00–20:00."
-    ],
     "faq": [
       {
         "question": "Where do I pick up my cake?",

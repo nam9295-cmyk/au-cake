@@ -177,6 +177,7 @@ test('AU homepage catalogue keeps its matched desktop and mobile card-to-cake pr
   assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-quick-view\s*\{[^}]*margin-bottom:\s*8px/s)
   assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-detail-link\s*\{[^}]*gap:\s*2px/s)
   assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-kicker\s*\{[^}]*font-size:\s*13px/s)
+  assert.match(css, /\.product-card \.product-card-title\s*\{[^}]*font-family:\s*var\(--font-sans\)/s)
   assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-title\s*\{[^}]*min-height:\s*2\.2em[^}]*font-size:\s*clamp\(18px, 2vw, 22px\)[^}]*line-height:\s*1\.1/s)
   assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-card-price\s*\{[^}]*margin-top:\s*0[^}]*font-size:\s*clamp\(20px, 2vw, 24px\)/s)
   assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-header p\s*\{[^}]*max-width:\s*none[^}]*white-space:\s*nowrap/s)
