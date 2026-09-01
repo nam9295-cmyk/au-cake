@@ -30,9 +30,10 @@ import {
   normalizeStoredVanillaCakeFlavor,
   normalizeStoredVanillaCakeSheet,
   normalizeReservationChocolateType,
+  usesReservationChocolateType,
   normalizePoundAddon,
 } from './constants'
-import { normalizeStoredCakeSize } from './cake-serving'
+import { isHistoricalWholeCakeSize, isHistoricalWholeCakeUnitPrice, normalizeStoredCakeSize } from './cake-serving'
 import type { ReservationPriceOptions } from './constants'
 import { getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras'
 import { isBrownieCheesecakeProduct, normalizeBrownieCreamOption } from './brownie-cream'
@@ -276,10 +277,10 @@ function normalizeReservation(reservation: Reservation): Reservation {
       : {}),
     cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
-    ...(reservation.cupcakeFinish === undefined ? {} : {
+    ...(reservation.cupcakeFinish == null ? {} : {
       cupcakeFinish: normalizeCupcakeFinish(getProductById(reservation.productId).id, reservation.cupcakeFinish),
     }),
-    chocolateType: normalizeReservationChocolateType(
+    chocolateType: normalizeStoredReservationChocolateType(
       getProductById(reservation.productId).id,
       reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
       normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
@@ -329,6 +330,24 @@ type PublicReservationPayload = PublicReservation & {
   totalPriceCents?: number
 }
 
+function isCurrentStoredCakeSize(productId: ProductId, cakeSize: CakeSize) {
+  const product = getProductById(productId)
+  return product.usesSizeOptions
+    ? Object.hasOwn(product.sizePrices, cakeSize)
+    : cakeSize === '15cm'
+}
+
+function normalizeStoredReservationChocolateType(
+  productId: ProductId,
+  chocolateType: unknown,
+  poundAddon: Reservation['poundAddon'],
+) {
+  return usesReservationChocolateType(productId, poundAddon)
+    && (chocolateType === 'dark' || chocolateType === 'milk')
+    ? chocolateType
+    : DEFAULT_CHOCOLATE_TYPE
+}
+
 function normalizedLineUnitPriceCents(
   productId: ProductId,
   line: ReservationPriceOptions & { cupcakeFinish?: unknown },
@@ -356,10 +375,11 @@ function isApprovedStoredUnitPriceCents(
   allowHistoricalUnitPrice: boolean,
   hasBrownieCreamOption: boolean,
 ) {
-  return storedUnitPriceCents === currentUnitPriceCents
+  return (isCurrentStoredCakeSize(productId, cakeSize) && storedUnitPriceCents === currentUnitPriceCents)
     || (allowHistoricalUnitPrice
       && !(productId === 'brownie-cheesecake' && hasBrownieCreamOption)
-      && (LEGACY_STORED_UNIT_PRICE_CENTS[productId]?.[cakeSize]?.includes(storedUnitPriceCents) ?? false))
+      && (isHistoricalWholeCakeUnitPrice(productId, cakeSize, storedUnitPriceCents)
+        || (LEGACY_STORED_UNIT_PRICE_CENTS[productId]?.[cakeSize]?.includes(storedUnitPriceCents) ?? false)))
 }
 
 function normalizePublicOrderLine(
@@ -380,7 +400,7 @@ function normalizePublicOrderLine(
       ? { brownieCreamOption: normalizeBrownieCreamOption(product.id, line.brownieCreamOption) }
       : {}),
     cakeSize: normalizeStoredCakeSize(line.cakeSize),
-    chocolateType: normalizeReservationChocolateType(product.id, line.chocolateType || DEFAULT_CHOCOLATE_TYPE, poundAddon),
+    chocolateType: normalizeStoredReservationChocolateType(product.id, line.chocolateType || DEFAULT_CHOCOLATE_TYPE, poundAddon),
     poundAddon,
     ...(Object.hasOwn(line, 'cupcakeFinish') ? {
       cupcakeFinish: normalizeCupcakeFinish(product.id, line.cupcakeFinish),
@@ -395,6 +415,8 @@ function normalizePublicOrderLine(
     } : {}),
     quantity: line.quantity,
   }
+  if (!isCurrentStoredCakeSize(product.id, normalized.cakeSize)
+    && !isHistoricalWholeCakeSize(product.id, normalized.cakeSize)) throw new Error('INVALID_RESERVATION_RESPONSE')
   if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('INVALID_RESERVATION_RESPONSE')
   for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity'] as const) {
     if (line[key] !== normalized[key]) throw new Error('INVALID_RESERVATION_RESPONSE')
@@ -556,13 +578,13 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
       ? { brownieCreamOption: normalizeBrownieCreamOption(product.id, reservation.brownieCreamOption) }
       : {}),
     cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
-    chocolateType: normalizeReservationChocolateType(
+    chocolateType: normalizeStoredReservationChocolateType(
       product.id,
       reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
       poundAddon,
     ),
     poundAddon,
-    ...(reservation.cupcakeFinish === undefined ? {} : {
+    ...(reservation.cupcakeFinish == null ? {} : {
       cupcakeFinish: normalizeCupcakeFinish(product.id, reservation.cupcakeFinish),
     }),
     chocolateIcingCount: normalizeChocolateIcingCount(product.id, reservation.chocolateIcingCount),
@@ -899,12 +921,12 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
     chocolateExtra: 'none',
     cakeSize: normalizeStoredCakeSize(document.cakeSize),
     poundAddon: normalizePoundAddon(getProductById(document.productId).id, document.poundAddon || DEFAULT_POUND_ADDON),
-    chocolateType: normalizeReservationChocolateType(
+    chocolateType: normalizeStoredReservationChocolateType(
       getProductById(document.productId).id,
       document.chocolateType || DEFAULT_CHOCOLATE_TYPE,
       normalizePoundAddon(getProductById(document.productId).id, document.poundAddon || DEFAULT_POUND_ADDON),
     ),
-    ...(document.cupcakeFinish === undefined ? {} : {
+    ...(document.cupcakeFinish == null ? {} : {
       cupcakeFinish: normalizeCupcakeFinish(getProductById(document.productId).id, document.cupcakeFinish),
     }),
     chocolateIcingCount: normalizeChocolateIcingCount(

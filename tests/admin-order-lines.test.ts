@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { sanitizeCakeCalendarEvent } from '../appwrite-functions/reservation-api/src/calendar-access.js'
+import { parseStoredOrderLines } from '../appwrite-functions/reservation-api/src/business.js'
 import { createReservation, getReservationByNumber, listReservations, toReservation, toReservationList, updateReservation } from '../src/lib/repository.js'
 
 const lines = [
@@ -36,6 +38,104 @@ test('admin Appwrite hydration preserves every validated stored order line and a
   assert.equal(reservation.orderItemCount, 2)
   assert.equal(reservation.totalPriceCents, 13000)
   assert.equal(reservation.totalPrice, 130)
+})
+
+test('admin retains the historical whole-cake order accepted by the read-only calendar', () => {
+  const historicalLines = [
+    {
+      ...lines[0],
+      unitPriceCents: 7900,
+      subtotalCents: 7900,
+      totalPriceCents: 7900,
+    },
+    {
+      ...lines[0],
+      cakeSize: '19cm',
+      unitPriceCents: 9900,
+      subtotalCents: 9900,
+      totalPriceCents: 9900,
+    },
+  ]
+  const storedReservation = {
+    ...document,
+    $id: 'historical-whole-cake-id',
+    unitPrice: 7900,
+    totalPrice: 178,
+    subtotalCents: 17800,
+    totalPriceCents: 17800,
+    orderLinesJson: JSON.stringify({ version: 1, lines: historicalLines }),
+  }
+
+  const calendarEvent = sanitizeCakeCalendarEvent(storedReservation)
+  const reservations = toReservationList([storedReservation] as never)
+
+  assert.equal(calendarEvent.label, 'Pave cake · 6" | serves 8 · Dark chocolate ×1 / Pave cake · 7.5" | serves 14 · Dark chocolate ×1')
+  assert.equal(reservations.length, 1)
+  assert.deepEqual(reservations[0].orderLines?.map((line) => [line.cakeSize, line.unitPriceCents]), [
+    ['15cm', 7900],
+    ['19cm', 9900],
+  ])
+})
+
+test('admin preserves the stored Pave milk option accepted by the server parser', () => {
+  const line = {
+    ...lines[0],
+    chocolateType: 'milk',
+  }
+  const storedReservation = {
+    ...document,
+    $id: 'historical-pave-milk-id',
+    chocolateType: 'milk',
+    cupcakeFinish: null,
+    totalPrice: 75,
+    subtotalCents: 7500,
+    totalPriceCents: 7500,
+    orderLinesJson: JSON.stringify({ version: 1, lines: [line] }),
+    orderLineCount: 1,
+    orderItemCount: 1,
+  }
+
+  assert.equal(parseStoredOrderLines(storedReservation).lines[0].chocolateType, 'milk')
+  assert.equal(toReservation(storedReservation as never).orderLines?.[0]?.chocolateType, 'milk')
+})
+
+test('admin rejects the same unsupported size and fallback-price pairs as the server parser', () => {
+  for (const [productId, cakeSize, unitPriceCents] of [
+    ['pave-cake', '19cm', 7900],
+    ['pave-cake', '22cm', 7900],
+    ['buttercream-cake', '19cm', 7500],
+    ['buttercream-cake', '22cm', 7500],
+    ['fresh-strawberry-vanilla-cream-cake', '15cm', 6500],
+    ['fresh-strawberry-chocolate-cream-cake', '15cm', 6900],
+  ] as const) {
+    const usesButtercreamOptions = productId === 'buttercream-cake'
+    const line = {
+      ...lines[0],
+      productId,
+      cakeSize,
+      vanillaCakeSheet: usesButtercreamOptions ? 'chocolate' : 'vanilla',
+      vanillaCakeFlavor: usesButtercreamOptions ? 'plain' : 'triple-berry',
+      unitPriceCents,
+      subtotalCents: unitPriceCents,
+      totalPriceCents: unitPriceCents,
+    }
+    const forgedReservation = {
+      ...document,
+      productId,
+      cakeSize,
+      vanillaCakeSheet: line.vanillaCakeSheet,
+      vanillaCakeFlavor: line.vanillaCakeFlavor,
+      totalPrice: unitPriceCents / 100,
+      subtotalCents: unitPriceCents,
+      totalPriceCents: unitPriceCents,
+      orderLinesJson: JSON.stringify({ version: 1, lines: [line] }),
+      orderLineCount: 1,
+      orderItemCount: 1,
+    }
+
+    assert.throws(() => parseStoredOrderLines(forgedReservation), /INVALID_(?:CAKE_SIZE|STORED_ORDER)/)
+    assert.throws(() => toReservation(forgedReservation as never), /INVALID_STORED_ORDER/)
+  }
 })
 
 test('admin Appwrite hydration retains a current Strawberry Whole Cake line with its inch key', () => {
@@ -152,8 +252,10 @@ test('admin local search includes normalized customer email', async () => {
 test('admin Appwrite hydration keeps only approved pre-price-update product prices readable in admin and public lookup', async () => {
   const historicalPrices = [
     ['pave-cake', '15cm', 7500], ['pave-cake', '19cm', 9500], ['pave-cake', '22cm', 11500],
+    ['pave-cake', '15cm', 7900], ['pave-cake', '19cm', 9900], ['pave-cake', '22cm', 13700],
     ['vanilla-fresh-cream-cake', '15cm', 7500], ['vanilla-fresh-cream-cake', '19cm', 9800], ['vanilla-fresh-cream-cake', '22cm', 13900],
     ['buttercream-cake', '15cm', 7500], ['buttercream-cake', '19cm', 9800], ['buttercream-cake', '22cm', 13900],
+    ['buttercream-cake', '15cm', 7400], ['buttercream-cake', '19cm', 9400], ['buttercream-cake', '22cm', 12800],
     ['brownie-cheesecake', '15cm', 5800], ['pave-brownie-cheesecake', '15cm', 6800],
   ] as const
 
@@ -317,6 +419,13 @@ test('admin Appwrite hydration treats nullable unused discount fields as absent'
   assert.equal(reservation.orderLines?.length, 2)
   assert.equal(reservation.discountPercent, 0)
   assert.equal(reservation.totalPriceCents, 13000)
+})
+
+test('admin treats a nullable top-level Cupcake finish as absent for older stored orders', () => {
+  const reservation = toReservation({ ...document, cupcakeFinish: null } as never)
+
+  assert.equal(Object.hasOwn(reservation, 'cupcakeFinish'), false)
+  assert.equal(reservation.orderLines?.length, 2)
 })
 
 test('admin reservation list isolates a malformed historical order instead of hiding valid bookings', () => {
