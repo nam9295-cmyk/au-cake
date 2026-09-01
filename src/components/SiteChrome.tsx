@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { ShoppingBag } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Menu, ShoppingBag, X } from 'lucide-react'
 import tigerImg from '../assets/tiger.png'
 import heartLogoImg from '../assets/heart_logo.png'
+import headerLogo from '../assets/header-logo.svg'
 import { type Page } from '../lib/app-routes'
 import { getAnalyticsConsent, initializeAnalytics, setAnalyticsConsent, trackEvent, trackPageView } from '../lib/analytics'
 import { cakeCopy, type Language } from '../lib/i18n'
@@ -111,7 +112,21 @@ export function SiteHeader({
   setLanguage?: (language: Language) => void
   cartItemCount?: number
 }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const copy = cakeCopy(language || 'en')
+  const mobileMenuCopy = language === 'ko'
+    ? {
+        close: '메뉴 닫기',
+        open: '메뉴 열기',
+        navigation: '메뉴',
+        backdrop: '메뉴 닫기',
+      }
+    : {
+        close: 'Close menu',
+        open: 'Open menu',
+        navigation: 'Menu',
+        backdrop: 'Close menu',
+      }
   const cartAriaLabel = cartItemCount === undefined
     ? ''
     : language === 'ko'
@@ -119,11 +134,49 @@ export function SiteHeader({
       : cartItemCount === 0
         ? 'Open order, empty'
         : cartItemCount === 1 ? 'Open order, 1 item' : `Open order, ${cartItemCount} items`
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false)
+    }
+    const previousOverflow = document.body.style.overflow
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [mobileMenuOpen])
+
+  function navigateFromMobileMenu(page: Page) {
+    setMobileMenuOpen(false)
+    navigate(page)
+  }
+
+  function selectMobileLanguage(nextLanguage: Language) {
+    setLanguage?.(nextLanguage)
+    setMobileMenuOpen(false)
+  }
+
   return (
     <>
-      <header className="site-header">
+      <header className={mobileMenuOpen ? 'site-header is-mobile-menu-open' : 'site-header'}>
+        <button
+          type="button"
+          className="mobile-menu-toggle"
+          aria-label={mobileMenuOpen ? mobileMenuCopy.close : mobileMenuCopy.open}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          {mobileMenuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+        </button>
         <a className="brand-button" href="/" onClick={(event) => { event.preventDefault(); navigate('home') }}>
-          <img className="brand-mark" src="/favicon.png" alt="verygood chocolate" />
+          <img className="brand-mark" src={headerLogo} alt="verygood chocolate" />
         </a>
         <nav>
           <a className="cakes-nav-button" href="/cakes" onClick={(event) => { event.preventDefault(); navigate('cakes') }}>
@@ -141,7 +194,7 @@ export function SiteHeader({
               href="/cart"
               rel="nofollow"
               aria-label={cartAriaLabel}
-              onClick={(event) => { event.preventDefault(); navigate('cart') }}
+              onClick={(event) => { event.preventDefault(); setMobileMenuOpen(false); navigate('cart') }}
             >
               <ShoppingBag size={16} aria-hidden="true" />
               <span className="cart-nav-label">{language === 'ko' ? '주문' : 'Order'}</span>
@@ -152,11 +205,59 @@ export function SiteHeader({
               )}
             </a>
           )}
-          <a className="admin-nav-button" href="/admin/login" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('admin-login') }}>
-            {copy.adminNav}
-          </a>
         </nav>
       </header>
+      <div
+        className={`mobile-navigation-drawer${mobileMenuOpen ? ' is-open' : ''}`}
+        aria-hidden={!mobileMenuOpen}
+      >
+        <button
+          type="button"
+          className="mobile-navigation-backdrop"
+          aria-label={mobileMenuCopy.backdrop}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        <aside
+          id="mobile-navigation"
+          className="mobile-navigation-panel"
+          role="dialog"
+          aria-modal={mobileMenuOpen}
+          aria-label={mobileMenuCopy.navigation}
+        >
+          <nav className="mobile-navigation-links" aria-label={mobileMenuCopy.navigation}>
+            <a className="cakes-nav-button" href="/cakes" onClick={(event) => { event.preventDefault(); navigateFromMobileMenu('cakes') }}>
+              {language === 'ko' ? '케이크' : 'Cakes'}
+            </a>
+            <a className="kids-nav-button" href="/classes" onClick={(event) => { event.preventDefault(); navigateFromMobileMenu('classes') }}>
+              {copy.kidsNav}
+            </a>
+            <a href="/lookup" rel="nofollow" onClick={(event) => { event.preventDefault(); navigateFromMobileMenu('lookup') }}>
+              {copy.lookupNav}
+            </a>
+          </nav>
+          {language && setLanguage && (
+            <div className="mobile-navigation-language" role="group" aria-label={copy.languageLabel}>
+              <span>{copy.languageLabel}</span>
+              <div>
+                <button
+                  type="button"
+                  className={language === 'en' ? 'is-active' : ''}
+                  onClick={() => selectMobileLanguage('en')}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  className={language === 'ko' ? 'is-active' : ''}
+                  onClick={() => selectMobileLanguage('ko')}
+                >
+                  한국어
+                </button>
+              </div>
+            </div>
+          )}
+        </aside>
+      </div>
       {language && setLanguage && (
         <div className="language-strip" aria-label={copy.languageLabel}>
           <span>{copy.languageHelp}</span>
