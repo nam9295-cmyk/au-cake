@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type CSSProperties, type PointerEvent } from 'react'
-import { CalendarDays, ChevronLeft, ChevronRight, Clipboard, MessageCircleCheck, Wallet } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import heroCake2Img from '../assets/hero-cake-2.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
@@ -11,7 +11,7 @@ import { getAuCakeCatalogGroups, getAuHomeHeroCards, type CakeCatalogCard, type 
 import { DEFAULT_CAKE_SIZE, PRODUCTS, formatCakeSizeLabel } from '../lib/constants'
 import { cakeCopy, getProductFeatures, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
-import type { ProductId, StoreSettings } from '../lib/types'
+import type { ProductId } from '../lib/types'
 import { formatCurrency } from '../lib/utils'
 import { getAuPublicContent, getPublicCakePage } from '../lib/public-content'
 
@@ -49,21 +49,18 @@ const heroVisuals: Partial<Record<CakeCatalogImageKey, { image?: string; tagKey:
 
 export function HomePage({
   navigate,
-  settings,
   navigateToCake,
   language,
   setLanguage,
   cartItemCount,
 }: {
   navigate: (page: Page) => void
-  settings: StoreSettings
   navigateToCake: (slug: string) => void
   language: Language
   setLanguage: (language: Language) => void
   cartItemCount: number
 }) {
   const copy = cakeCopy(language)
-  const orderingSteps = publicHomeContent?.orderingSteps ?? null
   const [activeHeroCake, setActiveHeroCake] = useState(() => marketConfig.market === 'AU' ? 0 : 1)
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null)
   const [heroDragX, setHeroDragX] = useState(0)
@@ -297,35 +294,11 @@ export function HomePage({
               {language === 'ko' ? (
                 <><strong>verygood chocolate</strong>이 쇼콜라티에용 커버춰 초콜릿으로 만드는 케이크를 Melrose Park 픽업 예약으로 만나보세요.</>
               ) : publicHomeContent ? (
-                <>{publicHomeContent.hero}<br /><span>{publicHomeContent.pickup}</span></>
+                <>{publicHomeContent.hero}<span className="hero-pickup-copy">{publicHomeContent.pickup}</span></>
               ) : (
                 <>Cakes made with chocolatier-grade couverture chocolate by <strong>verygood chocolate</strong>,<br className="hero-description-break" /> available by pre-order for confirmed Melrose Park pick-up.</>
               )}
             </p>
-            <div className="hero-actions">
-              {publicHomeContent ? publicHomeContent.ctas.map((cta, index) => (
-                <a
-                  className={index === 0 ? 'primary-button' : 'secondary-button'}
-                  href={cta.href}
-                  key={cta.href}
-                  onClick={(event) => {
-                    if (cta.href === '/cakes') {
-                      event.preventDefault()
-                      navigate('cakes')
-                    }
-                  }}
-                >
-                  {cta.label}
-                </a>
-              )) : (
-                <a className="primary-button" href="/cakes/pave-chocolate-cake" onClick={(event) => {
-                  event.preventDefault()
-                  navigateToCake('pave-chocolate-cake')
-                }}>
-                  {language === 'ko' ? '파베 케이크 보기' : 'View Pave cake'}
-                </a>
-              )}
-            </div>
           </div>
           <div
             className={`hero-image-wrap${swipeStartX !== null ? ' is-dragging' : ''}`}
@@ -444,65 +417,6 @@ export function HomePage({
           )}
         </section>
 
-        <section className="content-section policy-section" id={publicHomeContent ? 'how-ordering-works' : 'reservation-guide'}>
-          <h2>{copy.reservationGuideTitle}</h2>
-          <div className="policy-manual">
-            <article className="policy-step">
-              <div className="policy-step-figure">
-                <span>01</span>
-                <Clipboard size={28} strokeWidth={1.7} />
-              </div>
-              <div>
-                <strong>{orderingSteps ? 'Choose a cake and options' : copy.guideSteps[0].title}</strong>
-                <p>{orderingSteps ? orderingSteps[0] : copy.guideSteps[0].text}</p>
-              </div>
-            </article>
-            <article className="policy-step">
-              <div className="policy-step-figure">
-                <span>02</span>
-                <MessageCircleCheck size={28} strokeWidth={1.7} />
-              </div>
-              <div>
-                <strong>{orderingSteps ? 'Send a request' : copy.guideSteps[1].title}</strong>
-                <p>{orderingSteps ? orderingSteps[1] : copy.guideSteps[1].text}</p>
-              </div>
-            </article>
-            <article className="policy-step">
-              <div className="policy-step-figure">
-                <span>03</span>
-                <Wallet size={28} strokeWidth={1.7} />
-              </div>
-              <div>
-                <strong>{orderingSteps ? 'Receive payment details' : copy.guideSteps[2].title}</strong>
-                <p>{orderingSteps ? orderingSteps[2] : copy.guideSteps[2].text}</p>
-              </div>
-            </article>
-            <article className="policy-step">
-              <div className="policy-step-figure">
-                <span>04</span>
-                <CalendarDays size={28} strokeWidth={1.7} />
-              </div>
-              <div>
-                <strong>{orderingSteps ? 'Pre-arranged pickup' : copy.guideSteps[3].title}</strong>
-                {orderingSteps ? (
-                  <p>{orderingSteps[3]}</p>
-                ) : marketConfig.market === 'AU' ? (
-                  <p>
-                    {copy.pickupHours[0]}
-                    <br />
-                    {copy.pickupHours[1]}
-                  </p>
-                ) : (
-                  <p>
-                    평일 {settings.weekdayOpen}-{settings.weekdayClose}, 주말 {settings.weekendOpen}-{settings.weekendClose}
-                  </p>
-                )}
-              </div>
-            </article>
-          </div>
-          {settings.pickupNotice.trim() && <p className="policy-note">{settings.pickupNotice}</p>}
-        </section>
-
         <section className="content-section cake-information-section" aria-labelledby="sydney-cake-info-title">
           <p className="summary-kicker">{language === 'ko' ? '시드니에서 직접 제작' : 'Made in Sydney'}</p>
           <h2 id="sydney-cake-info-title">
@@ -580,16 +494,6 @@ export function HomePage({
           }}
         />
       )}
-      <a
-        className="sticky-cta"
-        href="/cakes/pave-chocolate-cake"
-        onClick={(event) => {
-          event.preventDefault()
-          navigateToCake('pave-chocolate-cake')
-        }}
-      >
-        {language === 'ko' ? '케이크 자세히 보기' : 'View cake details'}
-      </a>
     </>
   )
 }

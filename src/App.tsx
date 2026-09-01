@@ -202,7 +202,7 @@ function App() {
       )}
       {!isPrivatePage && <AnnouncementTicker language={language} />}
 
-      {page === 'home' && <HomePage navigate={navigate} settings={settings} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
+      {page === 'home' && <HomePage navigate={navigate} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'not-found' && (
         <>
           <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />

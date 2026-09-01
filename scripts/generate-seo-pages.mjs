@@ -200,11 +200,6 @@ const homeFallback = `
         <h1>${escapeHtml(auPublicPages.home.h1)}</h1>
         <p>${escapeHtml(auPublicPages.home.hero)}</p>
         <p><strong>${escapeHtml(auPublicPages.home.pickup)}</strong></p>
-        <p><a href="/cakes">Browse Chocolate Cakes</a></p>
-        <section id="how-ordering-works">
-          <h2>How ordering works</h2>
-          <ol>${auPublicPages.home.orderingSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>
-        </section>
         <section>
           <h2>Chocolate cakes available to request</h2>
           <ul>${cakeEntries.map((cake) => `<li><a href="/cakes/${cake.slug}">${escapeHtml(cake.name)}</a> — ${escapeHtml(cake.priceSummary)}</li>`).join('')}</ul>

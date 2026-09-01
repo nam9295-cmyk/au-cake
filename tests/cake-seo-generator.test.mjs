@@ -78,7 +78,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   assert.match(home, /Signature Gâteau au Chocolat/)
   assert.match(home, /Brownie Cheesecake/)
   assert.match(home, /Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
-  assert.match(home, /id="how-ordering-works"/)
+  assert.doesNotMatch(home, /id="how-ordering-works"/)
   assert.doesNotMatch(home, /\.seo-fallback\s*\{\s*display:\s*none/)
 
   const catalogue = await readFile(join(dist, 'cakes.html'), 'utf8')
@@ -288,7 +288,7 @@ test('normal operational routes are generated noindex pages while unknown guides
   await assert.rejects(stat(join(dist, 'guides', 'chocolate-cake-size-guide-sydney.html')))
 })
 
-test('llms text exposes only grounded public catalogue and ordering facts', async () => {
+test('llms text exposes only grounded public catalogue facts', async () => {
   const { dist } = await generate()
   const llms = await readFile(join(dist, 'llms.txt'), 'utf8')
   const checkedInLlms = await readFile(llmsPath, 'utf8')
@@ -296,6 +296,7 @@ test('llms text exposes only grounded public catalogue and ordering facts', asyn
   assert.equal(llms, renderAuLlms(auPublicPages))
   assert.equal(llms, checkedInLlms)
   assert.match(llms, /^# verygood chocolate Sydney/m)
+  assert.doesNotMatch(llms, /^## Ordering$/m)
   assert.match(llms, /Choose a size · dark chocolate only/)
   assert.doesNotMatch(llms, /dark or milk|milk chocolate/i)
   assert.match(llms, /vanilla fresh cream and fresh strawberries/i)

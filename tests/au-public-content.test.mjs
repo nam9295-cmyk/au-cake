@@ -28,12 +28,9 @@ test('AU public content owns the approved homepage contract', () => {
   assert.equal(content.home.h1, 'Made-to-Order Chocolate Cakes in Sydney')
   assert.equal(content.home.description, 'Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney: Pave, buttercream, fresh strawberry cream cakes, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake.')
   assert.equal(content.home.pickup, 'Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00')
-  assert.match(content.home.orderingSteps[3], /Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
+  assert.equal('orderingSteps' in content.home, false)
   assert.match(content.home.faq[0].answer, /Friday 18:00–20:00 and Saturday–Sunday 08:00–20:00/)
-  assert.deepEqual(content.home.ctas, [
-    { label: 'Browse Chocolate Cakes', href: '/cakes' },
-    { label: 'How Ordering Works', href: '#how-ordering-works' },
-  ])
+  assert.equal('ctas' in content.home, false)
 })
 
 test('AU customer copy replaces small-batch claims with chocolatier-grade couverture chocolate', () => {
