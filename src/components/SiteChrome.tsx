@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Menu, ShoppingBag, X } from 'lucide-react'
 import tigerImg from '../assets/tiger.png'
 import heartLogoImg from '../assets/heart_logo.png'
@@ -291,6 +291,29 @@ export function SiteFooter({
   navigate: (page: Page) => void
   language: Language
 }) {
+  const contentRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const node = contentRef.current
+    if (!node || typeof IntersectionObserver === 'undefined') return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const footer = node.closest('.site-footer')
+        if (!footer) return
+        if (entry.isIntersecting && entry.intersectionRatio > 0.08) {
+          footer.classList.add('is-revealed')
+        } else if (!entry.isIntersecting) {
+          footer.classList.remove('is-revealed')
+        }
+      },
+      { threshold: [0, 0.08, 0.2, 0.4] }
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+
   const copy = language === 'ko'
     ? {
         service: '케이크 주문 & 키즈 클래스',
@@ -315,7 +338,7 @@ export function SiteFooter({
     <footer className="site-footer">
       <img className="site-footer-tiger" src={tigerImg} alt="" aria-hidden="true" />
       <img className="site-footer-heart" src={heartLogoImg} alt="verygood chocolate" />
-      <div className="site-footer-content">
+      <div ref={contentRef} className="site-footer-content">
         <p className="site-footer-service">{copy.service}</p>
         <p className="site-footer-location">{copy.location}</p>
         <p className="site-footer-address">{copy.description}</p>

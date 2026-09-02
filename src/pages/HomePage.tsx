@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties, type PointerEvent } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import heroCake2Img from '../assets/hero-cake-2.webp'
+import footerLogoImg from '../assets/footer-logo.svg'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
@@ -372,6 +373,7 @@ export function HomePage({
                   key={cake.label}
                   aria-label={`Show ${cake.label}`}
                   aria-pressed={index === activeHeroCake}
+                  onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => setActiveHeroCake(index)}
                 />
               ))}
@@ -480,6 +482,21 @@ export function HomePage({
         />
 
         {marketConfig.market === 'AU' && <PickupLocationCard language={language} />}
+
+        <section className="home-brand-curtain" aria-label="verygood chocolate">
+          <div className="home-brand-curtain-inner">
+            <span className="home-brand-curtain-kicker">MELROSE PARK · SYDNEY</span>
+            <div className="home-brand-curtain-wordmark" aria-hidden="true">
+              <img
+                className="home-brand-curtain-logo"
+                src={footerLogoImg}
+                alt="verygood chocolate"
+                width={1920}
+                height={400}
+              />
+            </div>
+          </div>
+        </section>
       </main>
       {quickViewCard && (
         <ProductQuickViewDialog
