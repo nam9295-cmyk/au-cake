@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
 const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
@@ -14,7 +15,7 @@ const cakeDetailDataSource = await readFile(new URL('../src/lib/cake-detail.ts',
 const cartSource = await readFile(new URL('../src/CartPage.tsx', import.meta.url), 'utf8')
 const i18nSource = await readFile(new URL('../src/lib/i18n.ts', import.meta.url), 'utf8')
 const marketSource = await readFile(new URL('../src/lib/market.ts', import.meta.url), 'utf8')
-const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+const cssSource = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 const chocolateExtrasSource = await readFile(new URL('../src/lib/chocolate-extras.ts', import.meta.url), 'utf8').catch(() => '')
 const optionPreviewAssetPaths = [
   '../src/assets/options/gateau-basic.webp',

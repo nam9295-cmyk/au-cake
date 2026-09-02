@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { readExpandedCssSync } from './helpers/read-expanded-css.mjs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
@@ -12,7 +13,7 @@ const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const campaign = readFileSync(new URL('../src/lib/class-campaign.ts', import.meta.url), 'utf8')
 const setup = readFileSync(new URL('../scripts/setup-appwrite.mjs', import.meta.url), 'utf8')
 const repository = readFileSync(new URL('../src/lib/repository.ts', import.meta.url), 'utf8')
-const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+const css = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
 const calendar = readFileSync(new URL('../src/components/WeekendDatePicker.tsx', import.meta.url), 'utf8')
 const publicContent = JSON.parse(
   readFileSync(new URL('../src/content/au-public-pages.json', import.meta.url), 'utf8'),

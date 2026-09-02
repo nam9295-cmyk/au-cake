@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { readExpandedCssSync } from './helpers/read-expanded-css.mjs'
 
 const root = new URL('../', import.meta.url)
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
@@ -80,7 +81,7 @@ test('home and classes hand off to one indexable reviews route with generated SE
 })
 
 test('review CSS clamps home excerpts and makes the mobile detail a real full-screen view', () => {
-  const css = read('src/index.css')
+  const css = readExpandedCssSync('src/index.css')
   assert.match(css, /-webkit-line-clamp:\s*3/)
   assert.match(css, /\.public-review-dialog/)
   assert.match(css, /height:\s*100dvh/)

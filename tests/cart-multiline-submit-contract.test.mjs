@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { readExpandedCssSync } from './helpers/read-expanded-css.mjs'
 import test from 'node:test'
 
 const repository = readFileSync(new URL('../src/lib/repository.ts', import.meta.url), 'utf8')
 const cartPage = readFileSync(new URL('../src/CartPage.tsx', import.meta.url), 'utf8')
 const reservePage = readFileSync(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
-const styles = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+const styles = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const cartProvider = readFileSync(new URL('../src/CartProvider.tsx', import.meta.url), 'utf8')
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))

@@ -1,13 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
 const readSource = async (path) => readFile(new URL(path, import.meta.url), 'utf8').catch(() => '')
 
 const cartPageSource = await readSource('../src/CartPage.tsx')
 const appSource = await readSource('../src/App.tsx')
 const reserveSource = await readSource('../src/pages/ReservePage.tsx')
-const cssSource = await readSource('../src/index.css')
+const cssSource = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
 test('CartPage has the exact bilingual Phase B2a request copy', () => {
   for (const copy of [

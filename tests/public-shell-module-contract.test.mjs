@@ -1,13 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
 const readSource = async (path) => readFile(new URL(path, import.meta.url), 'utf8').catch(() => '')
 
 const appSource = await readSource('../src/App.tsx')
 const chromeSource = await readSource('../src/components/SiteChrome.tsx')
 const homeSource = await readSource('../src/pages/HomePage.tsx')
-const cssSource = await readSource('../src/index.css')
+const cssSource = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 const indexSource = await readSource('../index.html')
 
 test('App delegates the public shell and home page to explicit modules', () => {

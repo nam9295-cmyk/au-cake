@@ -1,10 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
 const popup = await readFile(new URL('../src/components/SpringClassCampaignDialog.tsx', import.meta.url), 'utf8').catch(() => '')
 const home = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
-const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 const campaign = await readFile(new URL('../src/lib/class-campaign.ts', import.meta.url), 'utf8')
 
 test('the public Home page has no automatic Spring class campaign popup', () => {

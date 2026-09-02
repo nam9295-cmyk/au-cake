@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs'
+import { readExpandedCssSync } from './helpers/read-expanded-css.mjs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
 const home = readFileSync(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const reserve = readFileSync(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
-const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+const css = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
 const catalog = readFileSync(new URL('../src/lib/cake-catalog.ts', import.meta.url), 'utf8')
 const detail = readFileSync(new URL('../src/lib/cake-detail.ts', import.meta.url), 'utf8')
 const detailPage = readFileSync(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')

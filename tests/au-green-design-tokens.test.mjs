@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs'
+import { readExpandedCssSync } from './helpers/read-expanded-css.mjs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
-const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+const css = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
 
 function rule(selector) {
   const match = css.match(new RegExp(`${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'))

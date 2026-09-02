@@ -1,0 +1,84 @@
+
+
+.complete-panel {
+  text-align: center;
+}
+
+.complete-panel .detail-list,
+.complete-bank-section {
+  text-align: left;
+  margin-top: 24px;
+}
+
+.complete-bank-section p {
+  margin-top: 16px;
+}
+
+.check-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border: 2px solid var(--forest);
+  border-radius: 50%;
+  color: var(--forest);
+  display: grid;
+  place-items: center;
+}
+
+.bank-account-card {
+  padding: 18px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.bank-account-card .bank-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.bank-account-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.bank-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bank-number {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.bank-holder {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.lookup-form svg {
+  color: var(--muted);
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: var(--border);
+}

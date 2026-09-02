@@ -1,0 +1,389 @@
+
+
+/* AU catalogue refresh: category markers, product colour fields and direct-title navigation. */
+.product-section .cake-catalog-groups {
+  gap: clamp(210px, 28vw, 300px);
+}
+
+.product-section .cake-catalog-group-header {
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 0;
+  margin-bottom: clamp(84px, 10vw, 109px);
+  padding-bottom: clamp(26px, 3.8vw, 42px);
+  isolation: isolate;
+}
+
+.product-section .cake-catalog-group-header>div {
+  position: relative;
+  z-index: 1;
+}
+
+.cake-catalog-group-marker {
+  position: relative;
+  z-index: 0;
+  width: 120px;
+  height: auto;
+  margin-top: -25px;
+  transform-origin: 52% 72%;
+  animation: cake-catalog-marker-wiggle 7s ease-in-out infinite;
+}
+
+.product-section .cake-catalog-group-header h2,
+.product-section .cake-catalog-group-header h3 {
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.2;
+}
+
+.product-section .cake-catalog-group-header p {
+  margin-top: 8px;
+  color: var(--charcoal);
+  font-size: clamp(16px, 2vw, 24px);
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+.product-section .cake-catalog-group-products .product-card {
+  grid-template-rows: auto auto auto;
+  gap: 10px;
+}
+
+.product-section .cake-catalog-group-products .product-card-quick-view {
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  height: auto;
+}
+
+.product-section .cake-catalog-group-products .product-image-wrap {
+  min-height: 0;
+  height: clamp(380px, 46vw, 641px);
+  overflow: visible;
+  background: transparent;
+}
+
+.cake-catalog-card-pave {
+  --catalogue-card-color: #F19FA8;
+}
+
+.cake-catalog-card-buttercream {
+  --catalogue-card-color: #B9D2A8;
+}
+
+.cake-catalog-card-signature-gateau {
+  --catalogue-card-color: #EDC5C4;
+}
+
+.cake-catalog-card-cupcake {
+  --catalogue-card-color: #DED5E8;
+}
+
+.cake-catalog-card-fresh-strawberry-vanilla-cream {
+  --catalogue-card-color: #CEE0EB;
+}
+
+.cake-catalog-card-fresh-strawberry-chocolate-cream {
+  --catalogue-card-color: #F6C9B8;
+}
+
+.cake-catalog-card-fresh-lemon-cupcakes {
+  --catalogue-card-color: #F6E4A8;
+}
+
+.cake-catalog-card-brownie-cheesecake {
+  --catalogue-card-color: #D9E7D6;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card .product-image-wrap::before {
+  position: absolute;
+  z-index: 0;
+  bottom: 0;
+  left: 50%;
+  display: block;
+  width: min(92%, 40vw, 560px);
+  height: auto;
+  max-height: none;
+  aspect-ratio: 427 / 489;
+  background: var(--catalogue-card-color);
+  content: '';
+  opacity: 1;
+  transform: translateX(-50%);
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card:hover .product-image-wrap::before,
+.product-section .cake-catalog-group-products .cake-catalog-card:focus-within .product-image-wrap::before {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+
+.product-section .cake-catalog-group-products .product-card-detail-link {
+  display: grid;
+  gap: 6px;
+  color: var(--forest-deep);
+  text-decoration: none;
+}
+
+.product-section .cake-catalog-group-products .product-card-kicker {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.product-section .cake-catalog-group-products .product-card-title {
+  min-height: 2.4em;
+  color: inherit;
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 700;
+  line-height: 1.2;
+  transition: color 160ms ease, letter-spacing 160ms ease;
+}
+
+.product-section .cake-catalog-group-products .product-card-price {
+  color: var(--berry-emphasis);
+  font-size: clamp(22px, 2.8vw, 30px);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.product-section .cake-catalog-group-products .product-card-price-prefix {
+  font-weight: 700;
+}
+
+.product-section .cake-catalog-group-products .product-card-price-number {
+  font-size: calc(1em + 2px);
+}
+
+@media (min-width: 768px) {
+
+  /*
+   * DESKTOP CATALOGUE CAKE TUNING
+   * - Field, cutout and vertical offset scale together so a compact card
+   *   keeps the same cake-to-colour-field relationship.
+   * - `top`: all cake images move down with a positive value, up with a negative value.
+   * - `scale`: all cake images grow above 1, shrink below 1.
+   * - This block is desktop-only. Mobile card sizing is defined separately below.
+   */
+  .product-section .cake-catalog-group-products .product-image-wrap {
+    height: clamp(330px, 34.4vw, 481px);
+  }
+
+  .product-section .cake-catalog-group-products .cake-catalog-card .product-image-wrap::before {
+    width: min(92%, clamp(288px, 30vw, 420px));
+  }
+
+  .product-section .cake-catalog-group-products .product-image-wrap img:not(.gluten-free-stamp) {
+    top: 60px;
+    width: min(72%, 375px);
+    max-height: 315px;
+    transform: scale(1.15);
+  }
+
+  /* GÂTEAU DAILY only: Signature loaf and Cupcakes use the larger Penpot proportion. */
+  .product-section .cake-catalog-group-products .cake-catalog-card-signature-gateau .product-image-wrap img:not(.gluten-free-stamp),
+  .product-section .cake-catalog-group-products .cake-catalog-card-cupcake .product-image-wrap img:not(.gluten-free-stamp) {
+    transform: scale(1.22);
+  }
+
+  /*
+   * GÂTEAU CUPCAKES vertical position only.
+   * Change this pixel value to move only the cupcakes: larger = lower, smaller = higher.
+   * It starts at the shared catalogue position above, so the page does not jump on first load.
+   */
+  .product-section .cake-catalog-group-products .cake-catalog-card-cupcake .product-image-wrap img:not(.gluten-free-stamp) {
+    top: 84px;
+  }
+
+  .product-section .cake-catalog-group-header p {
+    max-width: none;
+    white-space: nowrap;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-detail-link,
+  .product-section .cake-catalog-group-products .product-card-price {
+    width: min(92%, 40vw, 560px);
+    margin-inline: auto;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-quick-view {
+    margin-bottom: 15px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-detail-link {
+    gap: 4px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-price {
+    margin-top: 2px;
+  }
+
+  /*
+   * DESKTOP CATALOGUE DENSITY
+   * Keep the Penpot-sized colour fields and cake photography, but bring the
+   * category heading, title and price into a single, tighter reading group.
+   */
+  .product-section .cake-catalog-group-header {
+    margin-bottom: clamp(48px, 5vw, 64px);
+  }
+
+  .product-section .cake-catalog-group-products .product-card {
+    gap: 6px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-quick-view {
+    margin-bottom: 8px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-detail-link {
+    gap: 2px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-kicker {
+    font-size: 13px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-title {
+    min-height: 2.2em;
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.1;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-price {
+    margin-top: 0;
+    font-size: clamp(20px, 2vw, 24px);
+  }
+}
+
+@media (hover: hover) {
+  .product-section .cake-catalog-group-products .product-card-detail-link:hover {
+    color: var(--berry-emphasis);
+  }
+
+  .product-section .cake-catalog-group-products .product-card-detail-link:hover .product-card-title {
+    letter-spacing: -0.035em;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-quick-view:hover .product-image-wrap img,
+  .product-section .cake-catalog-group-products .product-card-quick-view:focus-visible .product-image-wrap img {
+    filter: drop-shadow(0 28px 30px rgba(3, 85, 66, 0.2));
+    transform: scale(1.08) translate3d(0, -1%, 0);
+  }
+}
+
+@media (min-width: 768px) and (hover: hover) {
+
+  /* Keep hover scale a little larger than the normal scale above. */
+  .product-section .cake-catalog-group-products .product-card-quick-view:hover .product-image-wrap img:not(.gluten-free-stamp),
+  .product-section .cake-catalog-group-products .product-card-quick-view:focus-visible .product-image-wrap img:not(.gluten-free-stamp) {
+    transform: scale(1.18) translate3d(0, -1%, 0);
+  }
+
+  /* GÂTEAU DAILY hover scale: tune with its larger normal scale (1.22) above. */
+  .product-section .cake-catalog-group-products .cake-catalog-card-signature-gateau .product-card-quick-view:hover .product-image-wrap img:not(.gluten-free-stamp),
+  .product-section .cake-catalog-group-products .cake-catalog-card-signature-gateau .product-card-quick-view:focus-visible .product-image-wrap img:not(.gluten-free-stamp),
+  .product-section .cake-catalog-group-products .cake-catalog-card-cupcake .product-card-quick-view:hover .product-image-wrap img:not(.gluten-free-stamp),
+  .product-section .cake-catalog-group-products .cake-catalog-card-cupcake .product-card-quick-view:focus-visible .product-image-wrap img:not(.gluten-free-stamp) {
+    transform: scale(1.32) translate3d(0, -1%, 0);
+  }
+}
+
+.product-section .cake-catalog-group-products .product-card-detail-link:focus-visible {
+  outline: 2px solid var(--berry-emphasis);
+  outline-offset: 4px;
+}
+
+@keyframes cake-catalog-marker-wiggle {
+
+  0%,
+  100% {
+    transform: rotate(-3.5deg);
+  }
+
+  45% {
+    transform: rotate(3.5deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .product-section .cake-catalog-groups {
+    gap: 54px;
+  }
+
+  .product-section .cake-catalog-group-header {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 0;
+    margin-bottom: 16px;
+    padding-bottom: 13px;
+  }
+
+  .cake-catalog-group-marker {
+    width: 62px;
+    margin-top: -18px;
+  }
+
+  .product-section .cake-catalog-group-header h2,
+  .product-section .cake-catalog-group-header h3 {
+    font-size: clamp(19px, 5.8vw, 24px);
+    line-height: 1.05;
+  }
+
+  .product-section .cake-catalog-group-header p {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .product-section .cake-catalog-group-products .product-image-wrap {
+    height: auto;
+    aspect-ratio: 427 / 489;
+    background: var(--catalogue-card-color);
+  }
+
+  .product-section .cake-catalog-group-products .product-image-wrap img {
+    width: 115%;
+    max-width: none;
+    max-height: 166px;
+  }
+
+  .product-section .cake-catalog-group-products .product-image-wrap .gluten-free-stamp {
+    width: clamp(78px, 7vw, 96px);
+    max-height: none;
+  }
+
+  .product-section .cake-catalog-group-products .cake-catalog-card .product-image-wrap::before {
+    display: none;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-detail-link {
+    gap: 3px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card {
+    gap: 5px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-kicker {
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-title {
+    min-height: 2.3em;
+    font-size: clamp(14px, 3.8vw, 16px);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-price {
+    margin-top: 2px;
+    font-size: clamp(13px, 3.4vw, 14.5px);
+    line-height: 1.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cake-catalog-group-marker {
+    animation-duration: 0.01ms;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-title {
+    transition-duration: 0.01ms;
+  }
+}

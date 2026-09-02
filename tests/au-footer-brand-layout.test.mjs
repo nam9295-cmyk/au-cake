@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs'
+import { readExpandedCssSync } from './helpers/read-expanded-css.mjs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
-const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+const css = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
 const footerStart = chrome.indexOf('export function SiteFooter')
 const footerEnd = chrome.indexOf('export function VanillaFreshCreamCakeSilhouette')
 const footer = footerStart >= 0 && footerEnd > footerStart ? chrome.slice(footerStart, footerEnd) : ''

@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
@@ -54,7 +55,7 @@ test('review photo and success transitions manage focus without focusing on init
 })
 
 test('photo card has mobile-safe preview and minimum 44px controls', async () => {
-  const css = await readFile(cssPath, 'utf8')
+  const css = await readExpandedCss(cssPath)
   assert.match(css, /\.review-photo-card/)
   assert.match(css, /\.review-photo-preview/)
   assert.match(css, /\.review-photo-actions[\s\S]*min-height:\s*44px/)
