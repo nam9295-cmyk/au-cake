@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 import test from 'node:test'
 
 const readSource = async (path) => readFile(new URL(path, import.meta.url), 'utf8')
 
 const siteChromeSource = await readSource('../src/components/SiteChrome.tsx')
 const appSource = await readSource('../src/App.tsx')
-const cssSource = await readSource('../src/index.css')
+const cssSource = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 const adminLoginSource = await readSource('../src/AdminLoginPage.tsx')
 const customerPageSources = await Promise.all([
   '../src/pages/HomePage.tsx',

@@ -1,0 +1,38 @@
+
+
+/* Validated multi-line order summaries in private admin surfaces. */
+.admin-order-lines {
+  display: grid;
+  gap: 6px;
+  min-width: 260px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: normal;
+}
+
+.admin-order-lines li {
+  color: #3c2f2f;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.admin-order-summary {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #d2c9c0;
+  border-radius: 12px;
+  background: #faf8f5;
+}
+
+.admin-order-summary h3 {
+  margin: 0 0 12px;
+  color: #3c2f2f;
+  font-size: 14px;
+}
+
+.admin-order-summary .order-detail-line+.order-detail-line {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5ddd4;
+}

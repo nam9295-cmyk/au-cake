@@ -1,0 +1,814 @@
+
+
+.admin-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  background: var(--surface-soft);
+}
+
+.admin-sidebar {
+  border-right: 1px solid #d8ddda;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--canvas);
+}
+
+.admin-sidebar .brand-button {
+  padding: 0 8px 20px;
+  text-align: left;
+}
+
+.admin-sidebar button {
+  min-height: 38px;
+  padding: 0 8px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.admin-sidebar button:hover {
+  background: rgba(3, 85, 66, 0.08);
+}
+
+.admin-main {
+  max-width: none;
+  width: 100%;
+  padding: 28px;
+  overflow: auto;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.admin-header h1 {
+  margin: 0;
+  text-transform: none;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  padding: 18px;
+}
+
+.stat-card span {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.stat-card strong {
+  font-size: 30px;
+}
+
+.admin-month-calendar-section {
+  margin-top: 28px;
+  border: 1px solid #d8ddda;
+  border-radius: 18px;
+  background: var(--canvas);
+  box-shadow: 0 18px 45px rgba(43, 31, 24, 0.06);
+  overflow: hidden;
+}
+
+.admin-month-calendar-header {
+  padding: 22px 24px;
+  border-bottom: 1px solid #d8ddda;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-month-calendar-header h2 {
+  margin: 4px 0 8px;
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1;
+  text-transform: none;
+}
+
+.admin-month-calendar-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.admin-month-calendar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 360px;
+}
+
+.admin-month-calendar-controls strong {
+  min-width: 112px;
+  text-align: center;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.admin-month-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(142px, 1fr));
+  background: #d8ddda;
+  gap: 1px;
+  overflow-x: auto;
+}
+
+.admin-month-calendar-weekday {
+  min-width: 142px;
+  padding: 10px 12px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-month-calendar-day {
+  min-width: 142px;
+  min-height: 158px;
+  padding: 10px;
+  background: #fffefa;
+}
+
+.admin-month-calendar-day.is-outside-month {
+  background: #f2f2ee;
+  color: #9a9a91;
+}
+
+.admin-month-calendar-day.is-today {
+  box-shadow: inset 0 0 0 2px #035542;
+}
+
+.admin-month-calendar-day-head {
+  min-height: 38px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.admin-month-calendar-day-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.admin-month-calendar-day.is-today .admin-month-calendar-day-number {
+  background: #035542;
+  color: white;
+}
+
+.admin-month-calendar-summary {
+  color: #6c5a4b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.admin-month-calendar-events {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-calendar-event {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 6px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-calendar-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(43, 31, 24, 0.11);
+}
+
+.admin-calendar-event.cake {
+  background: #f7eee6;
+  border-color: #d8b99d;
+  color: #3b2417;
+}
+
+.admin-calendar-event.class {
+  background: #fff3bf;
+  border-color: #f2c94c;
+  color: #5f4300;
+}
+
+.admin-calendar-event.is-cancelled {
+  opacity: 0.48;
+  text-decoration: line-through;
+}
+
+.admin-calendar-event-time {
+  grid-row: span 2;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.admin-calendar-event-title,
+.admin-calendar-event-subtitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-calendar-event-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.admin-calendar-event-subtitle {
+  color: rgba(59, 36, 23, 0.68);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.admin-calendar-event.class .admin-calendar-event-subtitle {
+  color: rgba(95, 67, 0, 0.72);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 170px 150px 150px 150px minmax(260px, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.filters label {
+  position: relative;
+  display: block;
+}
+
+.filters label svg {
+  position: absolute;
+  left: 11px;
+  top: 13px;
+  color: var(--muted);
+}
+
+.filters label input {
+  padding-left: 34px;
+}
+
+.table-wrap {
+  border: 1px solid #d8ddda;
+  border-radius: var(--radius);
+  overflow: auto;
+  background: var(--canvas);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1280px;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid #d8ddda;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 700;
+  background: var(--surface-soft);
+}
+
+td select {
+  min-width: 108px;
+}
+
+.note-cell {
+  max-width: 260px;
+  white-space: normal;
+}
+
+.table-actions button {
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid #d8ddda;
+  border-radius: var(--radius);
+  background: var(--canvas);
+}
+
+.empty-cell {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px;
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  top: 24px;
+  z-index: 20;
+  background: var(--forest);
+  color: white;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(51, 51, 51, 0.28);
+  z-index: 15;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer {
+  width: min(520px, 100%);
+  min-height: 100vh;
+  padding: 24px;
+  overflow: auto;
+  border-left: 1px solid #d8ddda;
+  background: var(--canvas);
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+  text-transform: none;
+}
+
+.sms-preview {
+  margin-top: 18px;
+  border: 1px solid #d8ddda;
+  border-radius: var(--radius);
+  padding: 14px;
+  background: var(--surface-soft);
+}
+
+.sms-preview pre {
+  white-space: pre-wrap;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.review-invite-action {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0 12px;
+}
+
+.review-invite-action .secondary-button {
+  width: 100%;
+}
+
+.review-invite-action .secondary-button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.review-invite-error {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.class-admin-page {
+  width: min(100%, 1200px);
+  margin: 0 auto;
+  padding: 2px 0 36px;
+  color: #3c2f2f;
+  font-family: var(--font-sans);
+}
+
+.class-admin-topline {
+  min-height: 38px;
+  border-bottom: 1px solid #d2c9c0;
+  display: flex;
+  align-items: flex-start;
+  gap: 34px;
+  color: #3c2f2f;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.class-admin-topline span {
+  color: #b88400;
+}
+
+.class-admin-summary-row {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 600px) auto;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.class-admin-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 180px));
+  gap: 20px;
+}
+
+.class-admin-stat {
+  min-height: 70px;
+  padding: 10px 14px;
+  border: 1px solid #d2c9c0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.class-admin-stat span {
+  display: block;
+  margin-bottom: 4px;
+  color: #888888;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.class-admin-stat strong {
+  color: #3c2f2f;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.class-admin-stat.warning strong {
+  color: #d97706;
+}
+
+.class-admin-stat.success strong {
+  color: #b88400;
+}
+
+.class-admin-download {
+  min-height: 40px;
+  padding: 0 24px;
+  border: 1.5px solid #b88400;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #b88400;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.class-admin-filters {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 160px 150px 170px minmax(260px, 1fr);
+  gap: 10px;
+}
+
+.class-admin-filters label {
+  display: grid;
+  gap: 5px;
+  color: #3c2f2f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.class-admin-filters input,
+.class-admin-filters select {
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #d2c9c0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #3c2f2f;
+  font-size: 12px;
+}
+
+.class-admin-table-card {
+  margin-top: 20px;
+  border: 1.5px solid #3c2f2f;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.class-admin-table-scroll {
+  overflow: auto;
+}
+
+.class-admin-table {
+  min-width: 1080px;
+  border-collapse: collapse;
+  color: #3c2f2f;
+  font-size: 12px;
+}
+
+.class-admin-table th,
+.class-admin-table td {
+  border-bottom: 1px solid #ebe6df;
+  padding: 11px 12px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.class-admin-table th {
+  height: 40px;
+  border-bottom-color: #d2c9c0;
+  background: #faf8f5;
+  color: #3c2f2f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.class-admin-table td strong,
+.class-admin-table td span {
+  display: block;
+}
+
+.class-admin-table td strong {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.class-admin-table td span {
+  margin-top: 2px;
+  color: #3c2f2f;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.class-allergy-cell {
+  max-width: 130px;
+  white-space: normal !important;
+  color: #3c2f2f;
+  font-weight: 400;
+}
+
+.class-allergy-cell.warning {
+  color: #d9534f;
+  font-weight: 700;
+}
+
+.class-status-select,
+.class-payment-select {
+  width: auto;
+  min-width: 118px;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 999px;
+  color: #3c2f2f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.class-status-select.requested,
+.class-payment-select:has(option[value='Pending deposit']:checked) {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.class-status-select.confirmed,
+.class-payment-select:has(option[value='Deposit paid']:checked),
+.class-payment-select:has(option[value='Fully paid']:checked) {
+  background: #fff4c7;
+  color: #b88400;
+}
+
+.class-status-select.cancelled,
+.class-payment-select:has(option[value='Refund required']:checked) {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.class-admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.class-admin-actions button {
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid #d2c9c0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #b88400;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.admin-edit-card {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #d2c9c0;
+  border-radius: 12px;
+  background: #faf8f5;
+}
+
+.admin-edit-card h3 {
+  margin: 0 0 12px;
+  color: #3c2f2f;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.admin-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-repricing-fields {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.admin-repricing-fields:disabled {
+  opacity: 0.62;
+}
+
+.admin-edit-card .notice-line {
+  margin: 0 0 12px;
+}
+
+@media (max-width: 640px) {
+
+  .admin-edit-grid,
+  .admin-repricing-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-edit-grid label {
+  display: grid;
+  gap: 5px;
+  color: #3c2f2f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-edit-grid input,
+.admin-edit-grid select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #d2c9c0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #3c2f2f;
+  font-size: 12px;
+}
+
+.admin-edit-price-row {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5ddd4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #3c2f2f;
+  font-size: 12px;
+}
+
+.admin-edit-price-row strong {
+  color: #b88400;
+  font-size: 18px;
+}
+
+.class-copy-library {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #d2c9c0;
+  border-radius: 8px;
+  background: #faf8f5;
+}
+
+.class-copy-library h2 {
+  margin: 0 0 14px;
+  color: #3c2f2f;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.class-copy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px;
+}
+
+.class-copy-card {
+  min-height: 170px;
+  padding: 10px 14px 14px;
+  border: 1px solid #d2c9c0;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.class-copy-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.class-copy-card-header strong {
+  color: #b88400;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.class-copy-card-header button {
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid #b88400;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #b88400;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.class-copy-card pre {
+  max-height: 125px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #3c2f2f;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+@media (hover: hover) {
+
+  .class-admin-download:hover,
+  .class-admin-actions button:hover,
+  .class-copy-card-header button:hover {
+    transform: translateY(-1px);
+    border-color: #b88400;
+  }
+}

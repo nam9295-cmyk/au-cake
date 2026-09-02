@@ -1,10 +1,11 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
 const page = await readFile(new URL('../src/AdminReviewsPage.tsx', import.meta.url), 'utf8')
 const client = await readFile(new URL('../src/lib/admin-reviews.ts', import.meta.url), 'utf8')
-const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
 test('admin card renders only a masked safe reward summary with Korean states and Sydney expiry', () => {
   for (const field of ['rewardCodeLast4', 'rewardStatus', 'rewardExpiresAt', 'rewardMessageAvailable']) {

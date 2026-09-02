@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile, stat } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
 const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
 const cakesSource = await readFile(new URL('../src/CakesPage.tsx', import.meta.url), 'utf8')
@@ -129,7 +130,7 @@ test('new catalogue and preserved detail WebPs are present in this worktree', as
 })
 
 test('every catalogue category keeps its two products in a flexible two-column grid', async () => {
-  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+  const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
   assert.match(css, /\.cake-catalog-group-products\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cake-catalog-group-products\s*\{[^}]*gap:\s*1[02]px/s)
@@ -149,7 +150,7 @@ test('home catalogue cards show only image, title, price, and one action', async
 })
 
 test('AU homepage catalogue keeps its matched desktop and mobile card-to-cake proportions', async () => {
-  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+  const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
   assert.match(homeSource, /const AU_CATALOG_GROUP_MARKERS/)
   assert.match(homeSource, /className="cake-catalog-group-marker"/)
@@ -204,7 +205,7 @@ test('cake quick view is an accessible portal dialog with concise content and de
 })
 
 test('cake quick view floats as a compact animated product card on desktop and mobile', async () => {
-  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+  const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
   assert.match(css, /\.product-quick-view-backdrop/)
   assert.match(css, /\.product-quick-view-dialog/)
@@ -230,7 +231,7 @@ test('cake quick view floats as a compact animated product card on desktop and m
 })
 
 test('quick view photography fills its frame and mobile copy stays compact', async () => {
-  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+  const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
   assert.match(css, /\.product-quick-view-image-wrap\s*>\s*img\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*max-height:\s*none[^}]*object-fit:\s*cover/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.product-quick-view-image-wrap\s*\{[^}]*height:\s*min\(42dvh,\s*320px\)[^}]*min-height:\s*240px[^}]*max-height:\s*320px/s)
@@ -240,14 +241,14 @@ test('quick view photography fills its frame and mobile copy stays compact', asy
 })
 
 test('mobile cake catalogue cards reduce copy without changing the public source', async () => {
-  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+  const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-card-description,\s*\.cakes-index-card-option\s*\{[^}]*display:\s*none/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-copy h3\s*\{[^}]*overflow-wrap:\s*anywhere/s)
 })
 
 test('mobile Home and cakes catalogue photography keeps a balanced cutout size in each two-column card', async () => {
-  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+  const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap img\s*\{[^}]*width:\s*115%[^}]*max-width:\s*none[^}]*max-height:\s*166px/s)
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*?\.cakes-index-image img\s*\{[^}]*padding:\s*0/s)
@@ -259,7 +260,7 @@ test('Home catalogue gives its price prefix and amount separate visual emphasis'
 })
 
 test('desktop catalogue photography sits lower with the larger Daily Gâteau product scale', async () => {
-  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+  const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
   assert.match(css, /@media \(min-width: 768px\)[\s\S]*?\.product-section \.cake-catalog-group-products \.product-image-wrap img:not\(\.gluten-free-stamp\)\s*\{[^}]*top:\s*\d+px[^}]*transform:\s*scale\([\d.]+\)/s)
   assert.match(css, /\.product-section \.cake-catalog-group-products \.cake-catalog-card-signature-gateau \.product-image-wrap img:not\(\.gluten-free-stamp\),\s*\.product-section \.cake-catalog-group-products \.cake-catalog-card-cupcake \.product-image-wrap img:not\(\.gluten-free-stamp\)\s*\{[^}]*transform:\s*scale\(1\.22\)/s)

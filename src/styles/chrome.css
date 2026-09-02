@@ -1,0 +1,242 @@
+
+
+.app-shell {
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.app-shell.home-shell {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+@media (max-width: 767px) {
+  .home-tiger-background {
+    background-image: url('../assets/tiger-pattern-mobile.webp');
+    opacity: 0.09;
+  }
+}
+
+.app-shell.admin-shell {
+  --page-max: none;
+  --surface-soft: #f7f8f7;
+  width: 100%;
+  background: var(--surface-soft);
+}
+
+.env-notice {
+  background: var(--forest);
+  color: white;
+  padding: 8px 18px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.announcement-ticker {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+  overflow-x: clip;
+  contain: inline-size;
+  border-bottom: 0;
+  background: var(--forest);
+  color: var(--canvas);
+}
+
+.announcement-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 26s linear infinite;
+}
+
+.announcement-ticker span {
+  flex: 0 0 auto;
+  padding: 9px 28px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-ticker-track {
+    justify-content: center;
+    width: 100%;
+    animation: none;
+  }
+
+  .announcement-ticker span:not(:first-child) {
+    display: none;
+  }
+}
+
+.site-header {
+  position: relative;
+  z-index: 8;
+  width: min(100%, var(--page-max));
+  margin: 0 auto;
+  padding: 18px 20px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.site-header nav,
+.button-row,
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-header nav button,
+.site-header nav a,
+.brand-button,
+.text-button,
+.admin-sidebar button,
+.table-actions button,
+.drawer-header button {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+.brand-button {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.brand-mark {
+  display: block;
+  width: 156px;
+  height: 40px;
+  object-fit: contain;
+}
+
+@media (max-width: 600px) {
+  .site-header {
+    gap: 8px;
+  }
+
+  .site-header nav {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .site-header nav :is(button, a) {
+    min-height: 36px;
+    padding: 6px 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+}
+
+.site-header nav :is(button, a) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--forest);
+  border-radius: 999px;
+  color: var(--forest);
+  font-size: 14px;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.site-header nav :is(button, a):hover {
+  border-color: var(--forest-deep);
+  background: var(--cream-teal);
+  color: var(--forest-deep);
+}
+
+.site-header nav .kids-nav-button {
+  border-color: #3c2f2f;
+  background: #f6c945;
+  color: #3c2f2f;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(184, 132, 0, 0.22);
+}
+
+.site-header nav .kids-nav-button:hover {
+  border-color: #3c2f2f;
+  background: #ffd95a;
+  color: #3c2f2f;
+}
+
+.language-strip {
+  position: relative;
+  z-index: 7;
+  width: min(100%, var(--page-max));
+  margin: 0 auto 8px;
+  padding: 0 20px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.language-strip>span {
+  line-height: 1;
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 3px;
+  border: 1px solid var(--forest);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 8px 22px rgba(31, 90, 70, 0.08);
+}
+
+.language-toggle button {
+  min-height: 28px;
+  padding: 5px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--forest);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.language-toggle button.is-active {
+  background: var(--forest);
+  color: #ffffff;
+}
+
+.language-toggle button:not(.is-active):hover {
+  color: var(--billboard-blue);
+}
+
+.language-label-short {
+  display: none;
+}

@@ -1,0 +1,154 @@
+
+
+/* Keep the enlarged public brand mark and all three customer links on one mobile row. */
+@media (max-width: 767px) {
+  .app-shell:not(:has(.kids-class-page)):not(:has(.class-reserve-page)):not(:has(.class-complete-page)) .site-header nav {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .app-shell:not(:has(.kids-class-page)):not(:has(.class-reserve-page)):not(:has(.class-complete-page)) .site-header nav :is(button, a) {
+    min-height: 32px;
+    padding: 5px 6px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+.site-footer {
+  position: relative;
+  isolation: isolate;
+  min-height: 408px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 76px 24px;
+  background: var(--forest);
+  color: var(--canvas);
+}
+
+.site-footer-content {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 520px);
+  text-align: center;
+}
+
+.site-footer-content p {
+  margin-bottom: 0;
+}
+
+.site-footer-service {
+  margin-bottom: 8px !important;
+  font-family: var(--font-sans);
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+}
+
+.site-footer-location {
+  margin-bottom: 10px !important;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.site-footer-address {
+  max-width: 480px;
+  margin: 0 auto 26px !important;
+  color: rgba(240, 238, 233, 0.78);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.site-footer-nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-bottom: 28px;
+}
+
+.site-footer-nav a {
+  color: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.site-footer-nav a:hover {
+  text-decoration: underline;
+}
+
+.site-footer-content small {
+  color: rgba(240, 238, 233, 0.64);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.site-footer-tiger,
+.site-footer-heart {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.site-footer-tiger {
+  left: clamp(-26px, 2vw, 28px);
+  bottom: -138px;
+  width: clamp(236px, 22vw, 330px);
+}
+
+.site-footer-heart {
+  right: clamp(-56px, 1vw, 28px);
+  bottom: -108px;
+  width: clamp(300px, 27vw, 430px);
+}
+
+@media (max-width: 560px) {
+  .site-footer {
+    min-height: 604px;
+    align-items: start;
+    padding: 82px 28px 184px;
+  }
+
+  .site-footer-content {
+    width: min(100%, 292px);
+  }
+
+  .site-footer-service {
+    font-size: 31px;
+  }
+
+  .site-footer-address {
+    margin-bottom: 24px !important;
+    font-size: 11px;
+  }
+
+  .site-footer-nav {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .site-footer-nav a {
+    font-size: 13px;
+  }
+
+  .site-footer-tiger {
+    left: -18px;
+    top: 246px;
+    width: clamp(88px, 28vw, 104px);
+  }
+
+  .site-footer-heart {
+    right: -22px;
+    top: 282px;
+    width: clamp(124px, 39vw, 144px);
+    clip-path: none;
+  }
+}

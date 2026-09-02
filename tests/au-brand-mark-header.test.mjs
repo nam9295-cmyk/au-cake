@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs'
+import { readExpandedCssSync } from './helpers/read-expanded-css.mjs'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
-const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+const css = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
 const indexHtml = readFileSync(new URL('../index.html', import.meta.url), 'utf8')
 const notFoundHtml = readFileSync(new URL('../public/404.html', import.meta.url), 'utf8')
 const header = chrome.slice(chrome.indexOf('export function SiteHeader'), chrome.indexOf('export function SiteFooter'))

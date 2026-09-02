@@ -1,0 +1,546 @@
+
+
+/* Public cake UI: forest communicates selection; pink communicates invitation and hover. */
+.app-shell:not(.admin-shell) .site-header nav :is(button, a):not(.kids-nav-button),
+.app-shell:not(.admin-shell) .primary-button:not(.kids-primary-button),
+.product-card>button.secondary-button,
+.cake-detail-option,
+.public-review-card {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+.public-review-stars,
+.public-review-dialog-stars {
+  color: var(--berry-emphasis);
+}
+
+@media (hover: hover) {
+  .app-shell:not(.admin-shell) .site-header nav :is(button, a):not(.kids-nav-button):hover {
+    border-color: var(--berry-emphasis);
+    background: var(--soft-pink);
+    color: var(--forest-deep);
+    box-shadow: 0 7px 16px rgba(184, 63, 76, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .app-shell:not(.admin-shell) .primary-button:not(.kids-primary-button):hover,
+  .product-card>button.secondary-button:hover {
+    border-color: var(--berry-emphasis);
+    background: var(--berry-emphasis);
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(184, 63, 76, 0.22);
+    transform: translateY(-2px);
+  }
+
+
+  .public-review-card:hover {
+    border-color: var(--berry-emphasis);
+    box-shadow: 4px 4px 0 var(--soft-pink);
+  }
+
+  .cake-detail-option:not(.is-selected):hover {
+    border-color: var(--berry-emphasis);
+    background: rgba(237, 197, 196, 0.58);
+    color: var(--forest-deep);
+  }
+
+  .cake-detail-breadcrumb button:hover {
+    color: var(--berry-emphasis);
+    text-decoration: underline;
+    text-decoration-color: var(--pink-accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .app-shell:not(.admin-shell) .site-header nav :is(button, a):not(.kids-nav-button),
+  .app-shell:not(.admin-shell) .primary-button:not(.kids-primary-button),
+  .product-card>button.secondary-button,
+  .product-image-wrap::before,
+  .cake-detail-option,
+  .public-review-card {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* Compact cake catalogue and quick view. */
+.product-card {
+  align-content: start;
+  grid-template-rows: auto auto;
+}
+
+.product-card-quick-view {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+@media (min-width: 1100px) {
+
+  /* Keep the catalogue row clean: all product actions share one baseline. */
+  .product-card {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .product-card-quick-view {
+    height: 100%;
+    align-content: start;
+  }
+
+  /* The coming-soon silhouette needs the same visual floor as the product photos. */
+  .product-card .product-image-wrap:has(.vanilla-fresh-cream-silhouette) {
+    min-height: 420px;
+    align-items: end;
+  }
+}
+
+.product-card-quick-view .product-image-wrap {
+  width: 100%;
+  cursor: pointer;
+}
+
+.product-card .product-card-title {
+  font-family: var(--font-sans);
+  min-height: 2.15em;
+  margin: 0;
+  color: var(--forest);
+  line-height: 1.08;
+}
+
+.product-card-price {
+  color: var(--berry-emphasis);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+@media (max-width: 767px) {
+
+  .cake-catalog-groups,
+  .cakes-index-groups {
+    gap: 54px;
+  }
+
+  .cake-catalog-group-header {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 13px;
+  }
+
+  .cake-catalog-group-number {
+    padding-top: 3px;
+    font-size: 10px;
+  }
+
+  .cake-catalog-group-header h2,
+  .cake-catalog-group-header h3 {
+    font-size: clamp(19px, 5.8vw, 24px);
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .cake-catalog-group-header p {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .cake-catalog-group-products {
+    gap: 12px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card {
+    gap: 10px;
+  }
+
+  .product-section .cake-catalog-group-products .product-image-wrap {
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+  }
+
+  .product-section .cake-catalog-group-products .product-image-wrap img {
+    width: 116%;
+    max-width: none;
+    max-height: 190px;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-title {
+    min-height: 3.3em;
+    font-size: clamp(14px, 3.8vw, 16px);
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .product-section .cake-catalog-group-products .product-card-price {
+    font-size: 12px;
+  }
+
+  .product-section .cake-catalog-group-products .secondary-button {
+    min-height: 42px;
+    height: auto;
+    padding: 8px 6px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  .cakes-index-group-products {
+    gap: 1px;
+  }
+
+  .cakes-index-image img {
+    padding: 0;
+  }
+
+  .cakes-index-number {
+    top: 10px;
+    left: 10px;
+    font-size: 10px;
+  }
+
+  .cakes-index-copy {
+    padding: 14px 10px 16px;
+  }
+
+  .cakes-index-copy h3 {
+    min-height: 3.25em;
+    font-size: clamp(14px, 4vw, 17px);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+  }
+
+  .cakes-index-card-description,
+  .cakes-index-card-option {
+    display: none;
+  }
+
+  .cakes-index-card-price {
+    margin: 14px 0 12px;
+    padding: 11px 0;
+  }
+
+  .cakes-index-card-price strong {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .cakes-index-copy .secondary-button {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 5px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+}
+
+.product-card:hover .product-image-wrap img,
+.product-card:focus-within .product-image-wrap img,
+.product-card:nth-child(2):hover .product-image-wrap img,
+.product-card:nth-child(2):focus-within .product-image-wrap img {
+  filter: drop-shadow(0 22px 26px rgba(3, 85, 66, 0.14));
+  transform: scale(1) translate3d(0, 0, 0);
+}
+
+@media (hover: hover) {
+
+  .product-card-quick-view:hover .product-image-wrap img,
+  .product-card-quick-view:focus-visible .product-image-wrap img {
+    filter: drop-shadow(0 28px 30px rgba(3, 85, 66, 0.2));
+    transform: scale(1.08) translate3d(0, -1%, 0);
+  }
+
+  .product-card-quick-view:hover .product-card-title {
+    color: var(--berry-emphasis);
+  }
+}
+
+.product-quick-view-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483595;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(54, 54, 54, 0.16);
+  backdrop-filter: blur(4px);
+  animation: product-quick-view-backdrop-in 420ms ease-out both;
+}
+
+.product-quick-view-dialog {
+  position: relative;
+  width: min(720px, calc(100% - 40px));
+  max-height: calc(100dvh - 40px);
+  overflow: hidden;
+  border: 2px solid var(--forest-deep);
+  background: var(--canvas);
+  box-shadow:
+    0 28px 72px rgba(22, 67, 52, 0.34),
+    10px 10px 0 rgba(237, 197, 196, 0.92);
+  color: var(--charcoal);
+  transform-origin: center 60%;
+  will-change: transform, opacity;
+  animation: product-quick-view-card-in 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes product-quick-view-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes product-quick-view-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.product-quick-view-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid var(--forest);
+  border-radius: 50%;
+  background: var(--canvas);
+  color: var(--forest);
+}
+
+.product-quick-view-close:hover {
+  border-color: var(--berry-emphasis);
+  background: var(--soft-pink);
+  color: var(--forest-deep);
+}
+
+.product-quick-view-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(340px, 1.12fr);
+  max-height: inherit;
+  overflow: auto;
+}
+
+.product-quick-view-image-wrap {
+  position: relative;
+  min-height: 430px;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background: #e9e5de;
+}
+
+.product-quick-view-image-wrap>img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+.product-quick-view-image-wrap .vanilla-fresh-cream-silhouette {
+  width: min(78%, 270px);
+}
+
+.product-quick-view-coming-soon {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--charcoal);
+  background: var(--canvas);
+  color: var(--charcoal);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-quick-view-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 34px 30px 24px;
+}
+
+.product-quick-view-kicker {
+  margin: 0 0 7px;
+  color: var(--berry-emphasis);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.product-quick-view-content h2 {
+  margin: 0 0 8px;
+  padding-right: 28px;
+  color: var(--forest-deep);
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 0.98;
+  text-transform: none;
+}
+
+.product-quick-view-price {
+  margin: 0 0 11px;
+  color: var(--berry-emphasis);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.product-quick-view-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.product-quick-view-features {
+  display: grid;
+  gap: 0;
+  margin: 12px 0 14px;
+  padding: 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+
+.product-quick-view-features li {
+  position: relative;
+  padding: 7px 0 7px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--forest-deep);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.product-quick-view-features li::before {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  background: var(--soft-pink);
+  outline: 1px solid var(--berry-emphasis);
+}
+
+.product-quick-view-action {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 999px;
+}
+
+@media (max-width: 767px) {
+  .product-card .product-card-title {
+    min-height: 0;
+  }
+
+  .product-quick-view-backdrop {
+    place-items: center;
+    padding: 12px 0;
+    background: rgba(54, 54, 54, 0.14);
+  }
+
+  .product-quick-view-dialog {
+    width: calc(100% - 28px);
+    max-height: calc(100dvh - 24px);
+    border-width: 2px;
+    box-shadow:
+      0 22px 52px rgba(22, 67, 52, 0.3),
+      6px 6px 0 rgba(237, 197, 196, 0.92);
+  }
+
+  .product-quick-view-layout {
+    grid-template-columns: 1fr;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .product-quick-view-image-wrap {
+    height: min(42dvh, 320px);
+    min-height: 240px;
+    max-height: 320px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .product-quick-view-image-wrap .vanilla-fresh-cream-silhouette {
+    width: min(62%, 230px);
+    min-height: 140px;
+  }
+
+  .product-quick-view-content {
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .product-quick-view-content h2 {
+    padding-right: 0;
+    font-size: clamp(24px, 7.5vw, 30px);
+  }
+
+  .product-quick-view-description {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .product-quick-view-close {
+    top: 10px;
+    right: 10px;
+    width: 38px;
+    height: 38px;
+    background: rgba(240, 238, 233, 0.96);
+  }
+
+  .product-quick-view-features {
+    margin: 11px 0 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card-quick-view .product-image-wrap img {
+    transition-duration: 0.01ms;
+  }
+
+  .product-quick-view-backdrop,
+  .product-quick-view-dialog {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+}

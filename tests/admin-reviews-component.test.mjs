@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
 const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const page = await readFile(new URL('../src/AdminReviewsPage.tsx', import.meta.url), 'utf8').catch(() => '')
@@ -9,7 +10,7 @@ const frame = await readFile(new URL('../src/AdminFrame.tsx', import.meta.url), 
 const routes = await readFile(new URL('../src/lib/app-routes.ts', import.meta.url), 'utf8')
 const seo = await readFile(new URL('../src/lib/seo.ts', import.meta.url), 'utf8')
 const generator = await readFile(new URL('../scripts/generate-seo-pages.mjs', import.meta.url), 'utf8')
-const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+const css = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 
 test('admin reviews route uses the existing admin auth guard and shell navigation', () => {
   assert.match(routes, /'admin-reviews'/)

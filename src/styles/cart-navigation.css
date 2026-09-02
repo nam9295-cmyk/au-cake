@@ -1,0 +1,82 @@
+
+
+/* Customer order link and quantity badge */
+.site-header nav .cart-nav-button {
+  position: relative;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.cart-nav-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--forest-deep);
+  border-radius: 999px;
+  background: var(--forest);
+  color: var(--canvas);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .site-header nav .cart-nav-button {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+    padding: 6px;
+  }
+
+  .cart-nav-label {
+    display: none;
+  }
+
+  .cart-nav-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+  }
+}
+
+/* Keep the public Order control visible on compact headers. */
+@media (max-width: 767px) {
+
+  .app-shell:has(.kids-class-page) .site-header nav a.cart-nav-button,
+  .app-shell:has(.class-reserve-page) .site-header nav a.cart-nav-button,
+  .app-shell:has(.class-complete-page) .site-header nav a.cart-nav-button {
+    display: inline-flex;
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+    padding: 6px;
+    border: 1px solid var(--forest);
+    border-radius: 999px;
+    color: var(--forest);
+    font-size: 0;
+  }
+
+  .app-shell:has(.class-reserve-page) .site-header nav,
+  .app-shell:has(.class-complete-page) .site-header nav {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .app-shell:has(.class-reserve-page) .site-header nav> :not(.cart-nav-button),
+  .app-shell:has(.class-complete-page) .site-header nav> :not(.cart-nav-button) {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell:not(:has(.kids-class-page)):not(:has(.class-reserve-page)):not(:has(.class-complete-page)) .site-header nav {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

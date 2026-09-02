@@ -1,0 +1,325 @@
+
+
+
+/* ==========================================================================
+   Home Brand Curtain & Fade-in Footer (1px Down Logo Alignment)
+   ========================================================================== */
+
+:root {
+  --home-curtain-peek: clamp(96px, 18svh, 160px);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --home-curtain-peek: clamp(84px, 17svh, 120px);
+  }
+}
+
+/* Home Shell: Content is 100% transparent with tiger wallpaper seamless everywhere */
+.home-shell main {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  box-shadow: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.home-brand-curtain {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: clamp(60px, 12svh, 110px) 0 0;
+  margin: 0;
+  background: transparent;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.home-brand-curtain-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: min(100%, var(--page-max));
+  margin: 0 auto;
+  padding: 0;
+}
+
+.home-brand-curtain-kicker {
+  display: block;
+  margin-bottom: clamp(14px, 3svh, 24px);
+  padding: 0 24px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: clamp(11px, 1.3vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.home-brand-curtain-wordmark {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  font-size: 0;
+}
+
+.home-brand-curtain-logo {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto -1px;
+  transform: translateY(1px);
+  vertical-align: bottom;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Home Footer: Desktop with large cropped corner mascot & heart logo bleed, Mobile with top mascot presentation */
+.home-shell .site-footer {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100svh - var(--home-curtain-peek));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(56px, 8svh, 96px) 28px clamp(40px, 6svh, 64px);
+  background: var(--forest);
+  color: var(--canvas);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   [데스크탑 푸터 텍스트 콘텐츠 조절 영역]
+   ========================================================================== */
+
+/* 📝 데스크탑 중앙 텍스트 콘텐츠 스택 (타이틀, 설명, 메뉴, 카피라이트) */
+.home-shell .site-footer-content {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 580px);
+  text-align: center;
+
+  /* 📍 텍스트 전체 상하 위치 조절 (100px 아래로 이동) */
+  margin-top: 250px;
+  /* 👈 더 내리거나 올리실 때 이 수치를 조절하세요 (예: 60px, 120px) */
+
+  opacity: 0;
+  transform: none;
+  transition: opacity 950ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.home-shell .site-footer-service {
+  font-size: clamp(28px, 2.5vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 10px !important;
+}
+
+.home-shell .site-footer-location {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px !important;
+}
+
+.home-shell .site-footer-address {
+  max-width: 520px;
+  margin: 0 auto 24px !important;
+  color: #d5ded9;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.home-shell .site-footer-nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin-bottom: 24px;
+}
+
+.home-shell .site-footer-nav a {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.home-shell .site-footer-content small {
+  color: #a3b8b0;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   [데스크탑 푸터 캐릭터 조절 영역] - 여기서 직접 사이즈와 위치를 수정하시면 됩니다!
+   ========================================================================== */
+
+/* 🐯 1. 데스크탑 좌측 호랑이 캐릭터 */
+.home-shell .site-footer-tiger {
+  position: absolute;
+  z-index: 1;
+
+  /* 📍 위치 조절 (좌측 / 하단) */
+  left: clamp(-30px, 0vw, 24px);
+  /* 좌측 위치 (음수일수록 더 왼쪽 바깥으로 나감) */
+  bottom: clamp(-58px, -4vh, -46px);
+  /* 바닥 위치 (음수일수록 더 바닥 아래로 잘려 내려감) */
+  top: auto;
+
+  /* 📐 크기 조절 (너비: 최소px, 가변vw, 최대px) */
+  width: clamp(280px, 26vw, 400px);
+  /* 👈 크기 줄이실 때 이 숫자들을 낮춰주세요 */
+  max-height: none;
+
+  opacity: 0;
+  transform: none;
+  transition: opacity 1050ms cubic-bezier(0.16, 1, 0.3, 1) 140ms;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ❤️ 2. 데스크탑 우측 하트 로고 */
+.home-shell .site-footer-heart {
+  position: absolute;
+  z-index: 1;
+
+  /* 📍 위치 조절 (우측 / 하단) */
+  right: clamp(-80px, -3vw, -10px);
+  /* 우측 위치 (음수일수록 더 오른쪽 바깥으로 나감) */
+  bottom: clamp(-200px, -8vh, -130px);
+  /* 바닥 위치 (음수일수록 더 바닥 아래로 잘려 내려감) */
+  top: auto;
+
+  /* 📐 크기 조절 (너비: 최소px, 가변vw, 최대px) */
+  width: clamp(320px, 32vw, 480px);
+  /* 👈 크기 줄이실 때 이 숫자들을 낮춰주세요 */
+
+  opacity: 0;
+  transform: none;
+  transition: opacity 1050ms cubic-bezier(0.16, 1, 0.3, 1) 140ms;
+  pointer-events: none;
+  user-select: none;
+}
+
+.home-shell .site-footer.is-revealed .site-footer-content,
+.home-shell .site-footer.is-revealed .site-footer-tiger,
+.home-shell .site-footer.is-revealed .site-footer-heart {
+  opacity: 1;
+  transform: none;
+}
+
+/* Mobile Screen Layout matching footer-design.pen */
+@media (max-width: 767px) {
+  .home-brand-curtain {
+    padding: clamp(44px, 8svh, 64px) 0 0;
+  }
+
+  .home-shell .site-footer {
+    min-height: 680px;
+    justify-content: flex-end;
+    padding: 36px 20px calc(36px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ==========================================================================
+     [모바일 푸터 호랑이 & 하트 조절 영역]
+     ========================================================================== */
+
+  /* 🐯 1. 모바일 중앙 호랑이 캐릭터 */
+  .home-shell .site-footer-tiger {
+    /* 📍 위치 조절 (가운데 정렬) */
+    left: 50%;
+    /* 화면 가로 50% 기준점 */
+    top: 100px;
+    /* 👈 상단 여백 (더 내리거나 올릴 때 조절) */
+    bottom: auto;
+    transform: translateX(-50%);
+    /* 👈 가로 정확한 정중앙 정렬 */
+
+    /* 📐 크기 조절 (200px 부근 설정) */
+    width: clamp(180px, 50vw, 210px);
+    /* 👈 모바일 호랑이 크기 (예: 200px 고정도 가능) */
+  }
+
+  /* ❤️ 2. 모바일 좌상단 하트 로고 */
+  .home-shell .site-footer-heart {
+    left: clamp(25px, 3vw, 25px);
+    /* 좌측 여백 */
+    right: auto;
+    top: 100px;
+    /* 상단 여백 */
+    bottom: auto;
+    width: clamp(80px, 24vw, 100px);
+    /* 하트 크기 */
+    transform: none;
+  }
+
+  .home-shell .site-footer.is-revealed .site-footer-tiger {
+    transform: translateX(-50%);
+    /* 페이드인 후에도 중앙 정렬 유지 */
+  }
+
+  .home-shell .site-footer.is-revealed .site-footer-heart {
+    transform: none;
+  }
+
+  /* 📝 모바일 하단 텍스트 콘텐츠 스택 */
+  .home-shell .site-footer-content {
+    width: min(100%, 320px);
+    margin-top: clamp(210px, 58vw, 240px);
+    /* 👈 호랑이 크기가 줄어든 만큼 여백 최적화 */
+  }
+
+  .home-shell .site-footer-service {
+    font-size: 24px;
+    line-height: 1.15;
+    letter-spacing: -0.4px;
+    margin-bottom: 6px !important;
+  }
+
+  .home-shell .site-footer-location {
+    font-size: 13px;
+    margin-bottom: 6px !important;
+  }
+
+  .home-shell .site-footer-address {
+    font-size: 11.5px;
+    line-height: 1.45;
+    margin-bottom: 16px !important;
+  }
+
+  .home-shell .site-footer-nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-bottom: 16px;
+  }
+
+  .home-shell .site-footer-nav a {
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    padding: 2px 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .home-shell .site-footer-content,
+  .home-shell .site-footer-tiger,
+  .home-shell .site-footer-heart {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
