@@ -233,11 +233,33 @@ function readDensePlainDataArray(value: unknown, minimumLength: number): unknown
   return result
 }
 
+function hasVersionedOrderEnvelope(row: Record<string, unknown>): boolean {
+  return ['orderLines', 'orderLineCount', 'orderItemCount', 'discountBasisCents']
+    .some((key) => Object.hasOwn(row, key))
+}
+
 export function getReservationPricingAudit(value: unknown): ReservationPricingAudit {
   if (!isPlainDataRecord(value) || !hasOwnDataFields(value, [
     'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
   ])) invalidResponse()
   const reservation = value as Record<string, unknown>
+  if (hasVersionedOrderEnvelope(reservation)) {
+    const parsed = parseCakeOrderResult(value)
+    const discountPercent: 0 | 5 | 10 = parsed.discountPercent === 0
+      ? 0
+      : parsed.discountPercent === 5
+        ? 5
+        : parsed.discountPercent === 10
+          ? 10
+          : invalidResponse()
+    return {
+      subtotalCents: nonnegativeInteger(parsed.subtotalCents),
+      discountPercent,
+      discountCents: nonnegativeInteger(parsed.discountCents),
+      totalPriceCents: nonnegativeInteger(parsed.totalPriceCents),
+      appliedPromoCodeLast4: parsed.appliedPromoCodeLast4 || '',
+    }
+  }
   const subtotalCents = nonnegativeInteger(reservation.subtotalCents)
   const discountCents = nonnegativeInteger(reservation.discountCents)
   const totalPriceCents = nonnegativeInteger(reservation.totalPriceCents)
@@ -849,7 +871,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
 export function parseCakeReservationResult(value: unknown): Reservation {
   const row = readPlainDataRecordSnapshot(value)
   if (!row) invalidResponse()
-  if (Array.isArray(row.orderLines)) return parseCakeOrderResult(row)
+  if (hasVersionedOrderEnvelope(row)) return parseCakeOrderResult(row)
   const pricing = getReservationPricingAudit(row)
   const totalPrice = requiredFiniteNumber(row, 'totalPrice')
   if (Math.round(totalPrice * 100) !== pricing.totalPriceCents) invalidResponse()

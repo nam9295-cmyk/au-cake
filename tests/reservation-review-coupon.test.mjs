@@ -323,6 +323,48 @@ test('persistence boundary rejects quantity beyond signed-32-bit storage without
   assert.equal(db.calls.some(([name]) => name === 'createDocument' || name === 'updateDocument' || name === 'createTransaction'), false)
 })
 
+test('mixed-order storage ceiling is enforced for every line before reservation or coupon side effects', async () => {
+  const order = (orderLines, requestId) => ({
+    requestId,
+    customerName: cakeInput.customerName,
+    customerPhone: cakeInput.customerPhone,
+    customerEmail: cakeInput.customerEmail,
+    pickupDate: cakeInput.pickupDate,
+    pickupTime: cakeInput.pickupTime,
+    requestNote: cakeInput.requestNote,
+    promoCode: rawCode,
+    privacyConsent: true,
+    orderLines,
+  })
+  const oversizedOrders = [
+    order([
+      { productId: 'smore-stick', quantity: 2147483648 },
+      { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+    ], '10000000-0000-4000-8000-000000000001'),
+    order([
+      { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+      { productId: 'smore-stick', quantity: 2147483648 },
+    ], '10000000-0000-4000-8000-000000000002'),
+  ]
+  for (const request of oversizedOrders) {
+    const db = createDatabaseDouble()
+    await assert.rejects(() => createCake(db, request, { now, runtimeConfig }), assertApiCode('QUANTITY_STORAGE_OVERFLOW'))
+    assert.equal(db.calls.some(([name]) => name === 'listDocuments' || name === 'createDocument' || name === 'updateDocument' || name === 'createTransaction' || name === 'updateTransaction'), false)
+  }
+
+  const boundaryDb = createDatabaseDouble()
+  const boundary = await createCake(boundaryDb, order([
+    { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+    { productId: 'smore-stick', quantity: 2147483647 },
+  ], '10000000-0000-4000-8000-000000000003'), { now, runtimeConfig })
+  assert.equal(boundary.orderItemCount, 2147483648)
+  assert.equal(boundaryDb.calls.filter(([name]) => name === 'createDocument').length, 1)
+
+  assert.throws(() => buildCakeReservation(order([
+    { productId: 'pave-cake', cakeSize: '6in', quantity: 6 },
+  ], '10000000-0000-4000-8000-000000000004'), { now }), assertApiCode('INVALID_QUANTITY'))
+})
+
 for (const quantity of [6, 12, 50, 100, 2147483647]) {
   test(`createCake sends actual ${quantity} sticks to persistence and retains it on retry`, async () => {
     const db = createDatabaseDouble()

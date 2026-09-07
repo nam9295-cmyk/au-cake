@@ -2,9 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildCakeReservation, publicCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 import { cakeReservationResponse } from '../appwrite-functions/reservation-api/src/main.js'
-import { buildCakeOrderRequest, parseCakeReservationResult } from '../src/lib/review-coupon-client.js'
+import { buildCakeOrderRequest, getReservationPricingAudit, parseCakeReservationResult } from '../src/lib/review-coupon-client.js'
 import { getReservationByNumber, toReservation } from '../src/lib/repository.js'
 import { buildAdminReservationUpdate } from '../src/lib/admin-reservation-edit.js'
+import { readFileSync } from 'node:fs'
 
 const now = new Date('2026-09-07T00:00:00.000Z')
 const customer = { customerName: 'Test Customer', customerPhone: '0412345678', customerEmail: 'test@example.com', pickupDate: '2026-09-12', pickupTime: '10:00', privacyConsent: true, requestNote: '', website: '' }
@@ -129,4 +130,74 @@ test('normal product quantities remain capped and unsafe smore amounts rejected'
   const forged = structuredClone(result)
   forged.orderLines[0].quantity = Number.MAX_SAFE_INTEGER
   assert.throws(() => parseCakeReservationResult(forged), /INVALID_RESPONSE/)
+})
+
+test('pricing audit accepts validated Smore bulk savings separately from promotion savings', () => {
+  const cases = [
+    generated(6),
+    generated(12),
+    generated(50),
+    buildCakeReservation({ ...customer, orderLines: [
+      { productId: 'smore-stick', quantity: 12 },
+      { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+    ] }, { now }),
+    buildCakeReservation({ ...customer, promoCode: 'lemoni', orderLines: [
+      { productId: 'smore-stick', quantity: 12 },
+      { productId: 'fresh-lemon-cupcakes-6', quantity: 1 },
+    ] }, { now }),
+    generated(12, 10),
+  ]
+  for (const document of cases) {
+    const reservation = parseCakeReservationResult(response(document))
+    assert.deepEqual(getReservationPricingAudit(reservation), {
+      subtotalCents: reservation.subtotalCents,
+      discountPercent: reservation.discountPercent,
+      discountCents: reservation.discountCents,
+      totalPriceCents: reservation.totalPriceCents,
+      appliedPromoCodeLast4: reservation.appliedPromoCodeLast4 || '',
+    })
+  }
+})
+
+test('pricing audit rejects forged bulk, promotion provenance, basis, and total fields', () => {
+  const valid = response(generated(12, 10))
+  const mutations = [
+    (row: typeof valid) => { row.orderLines[0].discountPercent = 10 },
+    (row: typeof valid) => { row.orderLines[0].discountCents += 1; row.orderLines[0].totalPriceCents -= 1; row.discountCents += 1; row.totalPriceCents -= 1; row.totalPrice = row.totalPriceCents / 100 },
+    (row: typeof valid) => { row.discountPercent = 5 },
+    (row: typeof valid) => { row.discountBasisCents += 1 },
+    (row: typeof valid) => { row.appliedPromoCodeLast4 = '' },
+    (row: typeof valid) => { row.totalPriceCents += 1; row.totalPrice = row.totalPriceCents / 100 },
+  ]
+  for (const mutate of mutations) {
+    const forged = structuredClone(valid)
+    mutate(forged)
+    assert.throws(() => getReservationPricingAudit(forged), /INVALID_RESPONSE/)
+  }
+})
+
+test('present malformed or removed orderLines cannot fall back to aggregate-only pricing audit', () => {
+  const document = buildCakeReservation({ ...customer, orderLines: [
+    { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+    { productId: 'smore-stick', quantity: 6 },
+  ] }, { now, reviewCoupon: { id: 'review-test', rewardPercent: 10, codeLast4: 'ABCD' } })
+  const valid = response(document)
+  assert.equal(valid.discountCents, Math.round(valid.subtotalCents * valid.discountPercent / 100))
+  for (const replacement of [null, {}, 'invalid']) {
+    const forged = { ...valid, orderLines: replacement }
+    assert.throws(() => getReservationPricingAudit(forged), /INVALID_RESPONSE/)
+    assert.throws(() => parseCakeReservationResult(forged), /INVALID_RESPONSE/)
+  }
+  const removed = { ...valid }
+  delete (removed as Partial<typeof valid>).orderLines
+  assert.throws(() => getReservationPricingAudit(removed), /INVALID_RESPONSE/)
+  assert.throws(() => parseCakeReservationResult(removed), /INVALID_RESPONSE/)
+})
+
+test('CompletePage sends a server-authoritative Smore bulk reservation through the validated pricing audit', () => {
+  const reservation = parseCakeReservationResult(response(generated(12)))
+  assert.doesNotThrow(() => getReservationPricingAudit(reservation))
+  const completePage = readFileSync('src/pages/CompletePage.tsx', 'utf8')
+  assert.match(completePage, /getReservationPricingAudit\(reservation\)/)
+  assert.match(completePage, /pricingAudit\.discountCents/)
 })

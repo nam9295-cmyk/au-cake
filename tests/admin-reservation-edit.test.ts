@@ -46,8 +46,8 @@ test('admin multi-line edits preserve pricing and reject first-line repricing', 
   const scheduleOnly = buildAdminReservationUpdate(multiLine, {
     pickupDate: '2026-07-24', status: '예약확정', paymentStatus: '입금확인', adminMemo: 'confirmed',
   })
-  assert.equal(scheduleOnly.totalPrice, 195)
-  assert.equal(scheduleOnly.totalPriceCents, 19500)
+  assert.equal(Object.hasOwn(scheduleOnly, 'totalPrice'), false)
+  assert.equal(Object.hasOwn(scheduleOnly, 'totalPriceCents'), false)
   assert.equal(scheduleOnly.productId, multiLine.productId)
   assert.equal(scheduleOnly.quantity, multiLine.quantity)
   assert.equal(scheduleOnly.pickupDate, '2026-07-24')
@@ -76,7 +76,8 @@ test('admin versioned single-line orders preserve authoritative pricing and reje
     pickupDate: '2026-07-24', status: '예약확정', paymentStatus: '입금확인', adminMemo: 'confirmed',
   })
   assert.equal(scheduleOnly.quantity, 1)
-  assert.equal(scheduleOnly.totalPriceCents, 7500)
+  assert.equal(Object.hasOwn(scheduleOnly, 'totalPrice'), false)
+  assert.equal(Object.hasOwn(scheduleOnly, 'totalPriceCents'), false)
   assert.equal(scheduleOnly.pickupDate, '2026-07-24')
 })
 

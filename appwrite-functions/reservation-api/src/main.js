@@ -408,13 +408,16 @@ export async function createCake(databases, input, {
   }
   // The compatibility deployment keeps the complete S'more reader/replay path,
   // but its immutable artifact policy blocks every new request containing S'more.
-  if (!smoreWritesEnabled && parseStoredOrderLines(data)?.lines.some(line => line.productId === 'smore-stick')) {
+  const storedOrder = parseStoredOrderLines(data)
+  if (!smoreWritesEnabled && storedOrder?.lines.some(line => line.productId === 'smore-stick')) {
     throw new ReservationApiError('SMORE_WRITES_DISABLED', 503)
   }
   // Storage capacity, not a product maximum: the original Appwrite quantity
   // attribute was created in the signed-32-bit range. Integer range PATCH does
   // not widen that physical column. Keep pricing/line policy independent.
-  if (data.quantity > 2147483647) throw new ReservationApiError('QUANTITY_STORAGE_OVERFLOW')
+  if (storedOrder?.lines.some(line => line.quantity > 2147483647)) {
+    throw new ReservationApiError('QUANTITY_STORAGE_OVERFLOW')
+  }
   data.reservationNumber = await uniqueReservationNumber(
     databases,
     runtimeConfig.cakeDatabaseId,

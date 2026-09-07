@@ -63,10 +63,8 @@ export type AdminReservationUpdate = Pick<Reservation,
   | 'cacaoPercent'
   | 'status'
   | 'paymentStatus'
-  | 'totalPrice'
-  | 'totalPriceCents'
   | 'adminMemo'
->
+> & Partial<Pick<Reservation, 'totalPrice' | 'totalPriceCents'>>
 
 const REVIEW_COUPON_PRICE_FIELDS = [
   'productId',
@@ -208,8 +206,6 @@ export function buildAdminReservationUpdate(
       cacaoPercent: reservation.cacaoPercent,
       status: (edits.status || reservation.status) as ReservationStatus,
       paymentStatus: (edits.paymentStatus || reservation.paymentStatus) as PaymentStatus,
-      totalPrice: reservation.totalPrice,
-      totalPriceCents: reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice),
       adminMemo: edits.adminMemo ?? reservation.adminMemo,
     }
   }

@@ -21,6 +21,7 @@ test('Smore status-only edit retains authoritative quantity and totals; repricin
   } as unknown as Reservation
   const updated = buildAdminReservationUpdate(reservation, { status: '픽업완료' })
   assert.equal(updated.quantity, 50)
-  assert.equal(updated.totalPrice, 180)
+  assert.equal(Object.hasOwn(updated, 'totalPrice'), false)
+  assert.equal(Object.hasOwn(updated, 'totalPriceCents'), false)
   assert.throws(() => buildAdminReservationUpdate(reservation, { quantity: 5 }), /MULTI_LINE_EDIT_UNAVAILABLE/)
 })
