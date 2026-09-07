@@ -238,6 +238,38 @@ test('server-authoritative pricing provenance survives every normal versioned Ad
   assert.ok((bulkOnly.discountCents || 0) > 0)
 })
 
+test('Appwrite nullable promo projections normalize only at the trusted Admin hydration boundary', () => {
+  const cases = [
+    generated(12),
+    buildCakeReservation({ ...customer, orderLines: [
+      { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+    ] }, { now }),
+    buildCakeReservation({ ...customer, promoCode: 'lemoni', orderLines: [
+      { productId: 'fresh-lemon-cupcakes-6', quantity: 1 },
+    ] }, { now }),
+    generated(1, 10),
+    generated(1, 5),
+  ]
+
+  for (const [index, document] of cases.entries()) {
+    const appwriteDocument = {
+      ...document,
+      $id: `admin-nullable-provenance-${index}`,
+      appliedPromoCodeLast4: document.appliedPromoCodeLast4 ?? null,
+      reviewCouponId: document.reviewCouponId ?? null,
+    }
+    assert.equal(Object.hasOwn(appwriteDocument, 'appliedPromoCodeLast4'), true)
+    assert.equal(Object.hasOwn(appwriteDocument, 'reviewCouponId'), true)
+
+    const admin = toReservation(appwriteDocument as never)
+    assert.equal(Object.hasOwn(admin, 'appliedPromoCodeLast4'), true)
+    assert.equal(Object.hasOwn(admin, 'reviewCouponId'), true)
+    assert.equal(admin.appliedPromoCodeLast4, document.appliedPromoCodeLast4)
+    assert.equal(admin.reviewCouponId, document.reviewCouponId)
+    assert.deepEqual(getReservationPricingAudit(admin), getReservationPricingAudit(response(document)))
+  }
+})
+
 test('Admin audit rejects forged versioned provenance and pricing instead of downgrading', () => {
   const document = buildCakeReservation({ ...customer, orderLines: [
     { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
