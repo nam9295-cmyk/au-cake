@@ -193,6 +193,7 @@ function productFromPublicPage(pathname: string, page: PublicCakePage, noindex =
       url: `${SITE_URL}${pathname}`,
       priceCurrency: 'AUD',
       price: page.startingPrice,
+      ...('availability' in page && page.availability ? { availability: page.availability } : {}),
       seller: { '@type': 'Organization', name: publicContent.site.brand, url: SITE_URL },
     },
   }

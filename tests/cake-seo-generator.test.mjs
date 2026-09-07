@@ -65,7 +65,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
     new RegExp('<title>' + escapeRegExp(auPublicPages.home.title) + '</title>'),
   )
   assert.match(home, /<h1>Made-to-Order Chocolate Cakes in Sydney<\/h1>/)
-  assert.match(home, /Order made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney/)
+  assert.match(home, /Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney/)
   assert.match(home, /Signature Gâteau au Chocolat/)
   assert.match(home, /Brownie Cheesecake/)
   assert.match(home, /Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
@@ -180,6 +180,13 @@ test('cake generator uses the final per-page schema contract and real product We
     assert.equal(data.some((entry) => entry['@type'] === 'AggregateOffer' || entry['@type'] === 'ProductGroup'), false, slug)
     assert.match(html, new RegExp(`<meta property="og:type" content="${expected.og}"`), slug)
     if (expected.image) assert.match(html, new RegExp(expected.image), slug)
+    if (slug === 'smore-stick') {
+      assert.equal(product.offers.availability, 'https://schema.org/OutOfStock', slug)
+      assert.match(html, /Orders opening soon/, slug)
+      assert.doesNotMatch(html, /Request this cake/, slug)
+      assert.doesNotMatch(html, /href="\/reserve"/, slug)
+      assert.match(html, /@verygood_syd/, slug)
+    }
   }
 
   const combined = await readFile(join(dist, 'cakes', 'chocolate-pound-cake-and-cupcakes.html'), 'utf8')
