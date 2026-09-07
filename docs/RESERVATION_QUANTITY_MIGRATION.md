@@ -109,5 +109,7 @@ node --test tests/review-schema.test.mjs tests/individual-packaging-schema.test.
 - 상품 수량 검증 및 cents 계산은 계속 positive safe integer를 사용한다. S'more에 business max를 만들지 않는다.
 - `createCake()`의 DB 쓰기 경계에서 **최상위 quantity가 2147483647보다 크면 `QUANTITY_STORAGE_OVERFLOW`**로 거절한다. 예약 쓰기·쿠폰 transaction 시작 전에 거절하며, 저장 가능한 것처럼 응답하거나 1로 바꾸지 않는다. 첫 line 수량을 투영하는 DB 컬럼의 기술적 한계이지 line 가격 정책이 아니다.
 - 이 한계를 넘는 수량까지 실제 저장하려면 물리 저장 폭 확장에 대한 별도 승인/설계가 필요하다. max 메타데이터만 safe-integer 최댓값으로 올리는 방식은 승인 대상으로 제안하지 않는다.
-- 새 S'more 주문이 존재하면 이전 S'more 미지원 parser로 무조건 rollback하면 안 된다. 신규 접수를 중지하고 S'more 읽기 호환 코드를 보존한 rollback을 사용한다.
+- 새 S'more writer는 legacy deployment에 직접 의존해 rollback하지 않는다. `scripts/deploy-reservation-api.mjs`가 먼저 reader-compatible / S'more-write-disabled compatibility artifact를 build·activate·health-check하고 그 deployment ID를 checkpoint로 확정한 뒤 full writer를 활성화한다.
+- compatibility artifact는 runtime variable이 아니라 archive-local `SMORE_WRITES_ENABLED=false`를 포함한다. 따라서 full writer health 실패 후 checkpoint deployment ID로 전환하면 기존 S'more lookup/replay는 유지되고 신규 S'more/mixed write는 서버에서 차단된다.
+- Phase A 실패는 S'more write가 아직 활성화되지 않았으므로 시작 전 deployment로 복귀할 수 있다. Phase B 이후에는 이전 S'more 미지원 parser를 rollback target으로 선택하지 않는다.
 - DB max는 확대 상태로 남기는 것이 안전하다. 6개 이상 저장된 레코드가 있는데 max5로 축소하거나 quantity를 1로 덮어쓰지 않는다. 축소/데이터 수정은 별도 승인과 전체 영향 검증이 필요하다.

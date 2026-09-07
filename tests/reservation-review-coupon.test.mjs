@@ -1017,7 +1017,11 @@ test('reservation readiness returns only generic ready after complete private co
   const databases = readinessDatabase()
   assert.deepEqual(await checkReservationReadiness(databases, runtimeConfig), {
     status: 'ready',
-    capabilities: { cakeOrderLines: 1 },
+    capabilities: {
+      cakeOrderLines: 1,
+      smoreStoredOrders: 1,
+      smoreWrites: 1,
+    },
   })
   assert.deepEqual(databases.calls.map(([name]) => name), [
     'listDocuments',

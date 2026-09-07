@@ -33,7 +33,7 @@
     "test:reservation-notification-email": "node --test tests/reservation-notification-email.test.mjs",
     "test:reservation-notification-confirmation": "node --test tests/reservation-notification-confirmation.test.mjs",
     "test:booking-confirmation-client": "TMP_DIR=/tmp/au-cake-booking-confirmation-client-test-$(date +%s); npx tsc tests/booking-confirmation-email-client.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && node --test $TMP_DIR/tests/booking-confirmation-email-client.test.js tests/booking-email-retry-client.test.mjs tests/booking-email-retry-component.test.mjs",
-    "test:reservation-api-deploy": "node --test tests/reservation-api-deploy.test.mjs",
+    "test:reservation-api-deploy": "node --test tests/reservation-api-deploy.test.mjs tests/reservation-api-rollback-compatibility.test.mjs",
     "test:calendar-access": "node --test tests/calendar-access.test.mjs",
     "test:reservation-notification-deploy": "node --test tests/reservation-notification-deploy.test.mjs",
     "test:booking-reminder": "node --test tests/booking-reminder.test.mjs tests/booking-reminder-deploy.test.mjs",

@@ -1,19 +1,19 @@
-import { execFile } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
-import { promisify } from 'node:util'
+import { resolve } from 'node:path'
 import {
   FUNCTION_SCOPES,
   buildDryRunPlan,
   buildHealthFailureDiagnostic,
   buildRuntimeCandidates,
-  isReadyCakeOrderLinesHealth,
+  isReadyReservationRolloutHealth,
   isSecretFunctionVariable,
   redactReservationDeploymentDiagnostic,
   resolveDeployConfig,
 } from './reservation-api-deploy-config.mjs'
+import {
+  createReservationApiArchive,
+  runReservationApiRollout,
+} from './reservation-api-deploy-rollout.mjs'
 
 if (process.argv.includes('--dry-run')) {
   process.stdout.write(`${JSON.stringify(buildDryRunPlan(process.env), null, 2)}\n`)
@@ -31,7 +31,6 @@ const { Client: BrowserClient, ExecutionMethod, Functions: BrowserFunctions } = 
 const { AppwriteException, Client, Functions, Role, Runtime } = serverSdk
 const { InputFile } = fileSdk
 
-const execFileAsync = promisify(execFile)
 const sleep = (ms) => new Promise((resolveSleep) => setTimeout(resolveSleep, ms))
 const deployConfig = resolveDeployConfig(process.env)
 const {
@@ -51,22 +50,16 @@ try {
   const { previousDeploymentId, runtime } = await ensureFunction()
   console.log(`selected runtime ${runtime}`)
   await ensureVariables()
-  try {
-    const deployment = await deployFunction()
-    await waitForDeployment(deployment.$id)
-    await verifyHealth()
-  } catch (deploymentError) {
-    if (previousDeploymentId) {
-      try {
-        await functions.updateFunctionDeployment({ functionId, deploymentId: previousDeploymentId })
-        console.error(`Health/build failed; restored previous deployment ${previousDeploymentId}.`)
-      } catch (rollbackError) {
-        console.error(`Automatic deployment rollback failed: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`)
-      }
-    }
-    throw deploymentError
-  }
-  console.log('Reservation API deployment and read-only health check complete.')
+  const rollout = await runReservationApiRollout({
+    previousDeploymentId,
+    createDeployment: deployFunction,
+    waitForDeployment,
+    activateDeployment,
+    verifyHealth,
+  })
+  console.log(`compatibility rollback checkpoint ${rollout.compatibilityDeploymentId}`)
+  console.log(`active full writer deployment ${rollout.fullDeploymentId}`)
+  console.log('Reservation API two-phase deployment and read-only health checks complete.')
   console.log('Database collection permissions were not changed.')
 } catch (error) {
   if (error instanceof AppwriteException && error.type === 'general_unauthorized_scope') {
@@ -163,32 +156,26 @@ async function ensureVariables() {
   }
 }
 
-async function deployFunction() {
-  const functionDir = resolve(process.cwd(), 'appwrite-functions/reservation-api')
-  const tempDir = await mkdtemp(join(tmpdir(), 'reservation-api-'))
-  const archivePath = join(tempDir, 'code.tar.gz')
-
+async function deployFunction(phase) {
+  const artifact = await createReservationApiArchive({ phase })
   try {
-    await execFileAsync('tar', [
-      '-czf', archivePath,
-      '-C', functionDir,
-      'package.json',
-      'package-lock.json',
-      'src',
-    ])
-    const archive = await readFile(archivePath)
     const deployment = await functions.createDeployment({
       functionId,
-      code: InputFile.fromBuffer(archive, 'code.tar.gz'),
-      activate: true,
+      code: InputFile.fromBuffer(artifact.archive, 'code.tar.gz'),
+      activate: false,
       entrypoint: 'src/main.js',
       commands: 'npm ci --omit=dev',
     })
-    console.log(`created deployment ${deployment.$id}; waiting for build`)
+    console.log(`created ${phase} deployment ${deployment.$id}; waiting for build`)
     return deployment
   } finally {
-    await rm(tempDir, { recursive: true, force: true })
+    await artifact.cleanup()
   }
+}
+
+async function activateDeployment(deploymentId) {
+  await functions.updateFunctionDeployment({ functionId, deploymentId })
+  console.log(`activated deployment ${deploymentId}`)
 }
 
 async function waitForDeployment(deploymentId) {
@@ -209,7 +196,7 @@ async function waitForDeployment(deploymentId) {
   throw new Error('Reservation API deployment did not become ready within 120 seconds.')
 }
 
-async function verifyHealth() {
+async function verifyHealth(phase) {
   const browserClient = new BrowserClient().setEndpoint(endpoint).setProject(projectId)
   const browserFunctions = new BrowserFunctions(browserClient)
   const execution = await browserFunctions.createExecution({
@@ -225,7 +212,7 @@ async function verifyHealth() {
   } catch {
     throw new Error(`Reservation API health check returned invalid JSON (HTTP ${execution.responseStatusCode}).`)
   }
-  if (!isReadyCakeOrderLinesHealth(execution.responseStatusCode, response)) {
+  if (!isReadyReservationRolloutHealth(execution.responseStatusCode, response, phase)) {
     const secrets = [
       apiKey,
       ...Object.entries(runtimeVariables)
@@ -234,5 +221,5 @@ async function verifyHealth() {
     ]
     throw new Error(`Reservation API health check failed:\n${buildHealthFailureDiagnostic(execution, secrets)}`)
   }
-  console.log('read-only health check passed')
+  console.log(`${phase} read-only health check passed`)
 }

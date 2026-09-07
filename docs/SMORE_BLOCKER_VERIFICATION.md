@@ -104,18 +104,27 @@ AU build는 기존 대형 chunk 경고가 있으나 exit0. 운영 배포 아님.
 
 아래 git status는 이전 초안의 변경까지 포함한다. Orders opening soon/CTA/CakeDetailPage/catalogue/CSS/images/SEO 파일 diff 없음. package-lock 변경 없음. main와 Antigravity HEAD는 시작과 동일. 운영에는 GET만 수행했다.
 
-## 11. 승인 후 rollout 순서
+## 11. 승인 후 rollback-safe rollout 순서
 
-1. 사용자 결과 검토 → 별도 commit/push/PR 승인 → 독립 review와 merge 승인.
-2. 배포 직전 운영 version/quantity/config·rollback 대상 재확인.
-3. 별도 승인 후 quantity migration 적용 및 GET postcheck. 전체 setup 재실행 금지.
-4. S'more reader를 포함한 admin/lookup shared contract 산출물과 notification/reminder 공통 parser를 먼저 승인 배포. CTA는 잠금 유지.
-5. Reservation API 승인 배포. 승인된 수신자/테스트 레코드 범위에서 create→저장→lookup/admin/email→재시도 검증 및 TEST 정리.
-6. backend/storage 검증 완료 후에만 별도 frontend branch에서 CTA/OutOfStock 전환.
+1. 운영 Appwrite version/config, 현재 active deployment, rollback 후보와 quantity schema를 read-only preflight한다.
+2. quantity migration을 GET-only dry-run한다.
+3. 별도 승인 후 quantity migration을 적용하고 `available`, min 1, max 2147483647 전체 postcheck를 완료한다. 전체 setup 재실행은 금지한다.
+4. S'more reader를 포함한 admin/lookup shared contract 산출물과 notification/reminder parser를 먼저 배포·검증한다. CTA와 SEO availability는 계속 잠근다.
+5. Reservation API deploy script가 **compatibility artifact**를 `activate:false`로 build한다. 이 artifact는 HEAD reader 전체를 포함하되 archive 안의 immutable `SMORE_WRITES_ENABLED=false` 정책으로 신규 S'more 및 S'more가 포함된 mixed write를 서버에서 거절한다.
+6. build가 ready인 compatibility deployment를 activate하고 health의 `smoreStoredOrders=1`, `smoreWrites=0`을 확인한다. 계약 테스트에서 S'more 50개 stored document lookup/replay, 신규 S'more 차단, 일반 cake create를 증명한다.
+7. health를 통과한 compatibility deployment ID를 유일한 rollback checkpoint로 확정한다.
+8. 동일 source의 **full artifact**를 `activate:false`로 build한 뒤 activate한다. 이 artifact의 archive-local 정책은 `SMORE_WRITES_ENABLED=true`이며 health는 `smoreStoredOrders=1`, `smoreWrites=1`을 요구한다.
+9. 승인된 수신자/테스트 레코드 범위에서 S'more create→저장→lookup/admin/email→동일 request replay smoke를 수행하고 TEST 자료를 정리한다.
+10. full writer build/health가 실패하면 compatibility checkpoint ID로만 자동 rollback한다. 신규 S'more document가 생길 수 있는 Phase B 이후 legacy incompatible deployment는 rollback target으로 선택하지 않는다.
+11. backend/storage/reader 검증 완료 후에만 별도 frontend branch에서 CTA와 `OutOfStock`을 전환한다.
+
+Appwrite 1.8.1에서 Function variable은 function resource에 속하고 변경은 Function을 non-live로 표시해 재배포를 요구한다. rollback deployment가 어떤 variable snapshot을 읽는지에 안전성을 의존하지 않는다. 두 artifact 각각에 write policy를 고정하므로 deployment ID 전환이 reader/write mode도 함께 복구한다.
 
 ## 12. Rollback
 
-지금은 운영 변경이 없어 rollback할 운영 작업 없음. 나중에 장애가 나면 신규 접수를 우선 차단한다. S'more 주문이 이미 있으면 기존 미지원 parser로 단순 회귀하지 않고 읽기 호환 코드를 보존한다. 넓힌 DB max는 그대로 두며 quantity1 덮어쓰기/레코드 삭제/max5 자동 축소 금지. 승인된 물리/데이터 영향 검증 없이는 스키마 축소하지 않는다.
+지금은 운영 변경이 없어 rollback할 운영 작업이 없다. 나중에 Phase A가 build/health 실패하면 S'more write가 한 번도 활성화되지 않았으므로 배포 시작 전 deployment로 복귀할 수 있다. Phase B가 실패하면 자동 복귀 대상은 health를 통과한 compatibility checkpoint뿐이다. 복귀 후 기존 S'more lookup과 동일 request replay는 유지하고 신규 S'more/mixed write는 차단하며 일반 cake write는 유지한다.
+
+S'more 주문이 존재할 수 있는 Phase B 이후에는 legacy 미지원 parser로 복귀하지 않는다. 넓힌 DB max는 그대로 두고 quantity=1 덮어쓰기, 예약 삭제, max5 자동 축소, coupon 재소비, notification 재전송을 rollback 동작으로 사용하지 않는다. 승인된 물리/데이터 영향 검증 없이는 스키마를 축소하지 않는다.
 
 ## 13. Git 상태
 
