@@ -6,6 +6,7 @@ export const CURRENT_WHOLE_CAKE_ORDER_PRODUCT_IDS = Object.freeze([
 ])
 
 export const CURRENT_SECONDARY_CAKE_ORDER_PRODUCT_IDS = Object.freeze([
+  'smore-stick',
   'pound-cake',
   'cupcake-half-dozen',
   'cupcake-dozen',

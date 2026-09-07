@@ -141,5 +141,6 @@ export function formatOrderLineSummary(line: ReservationOrderLine) {
   }
   details.push(`x${line.quantity}`)
   if (Number.isSafeInteger(line.totalPriceCents)) details.push(formatLinePrice(line.totalPriceCents as number))
+  if (line.productId === 'smore-stick' && (line.discountPercent || 0) > 0) details.push(`${line.discountPercent}% bulk discount`)
   return details.join(' · ')
 }

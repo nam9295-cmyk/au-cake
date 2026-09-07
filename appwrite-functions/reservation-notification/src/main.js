@@ -419,6 +419,7 @@ function getIcingMixText(reservation, config) {
 
 function getQuantity(reservation) {
   const quantity = Number(reservation.quantity || 1)
+  if (reservation.productId === 'smore-stick') return Number.isSafeInteger(quantity) && quantity >= 1 ? quantity : 1
   if (!Number.isFinite(quantity)) return 1
   return Math.min(5, Math.max(1, Math.floor(quantity)))
 }
@@ -549,6 +550,14 @@ function readStoredCakeLines(reservation) {
 function cakeDetailRows(reservation, config, suffix = '') {
   const quantity = getQuantity(reservation)
   const label = (value) => `${value}${suffix}`
+  if (reservation.productId === 'smore-stick') {
+    return [
+      [label(config.labels.product), "S'more Stick"],
+      [label(config.labels.quantity), `${quantity} sticks`],
+      ...(Number.isSafeInteger(reservation.totalPriceCents) ? [[label('Line total'), formatCurrency(reservation.totalPriceCents / 100, config)]] : []),
+      ...(reservation.discountPercent > 0 ? [[label('Bulk discount'), `${reservation.discountPercent}% bulk discount`]] : []),
+    ]
+  }
   const chocolateExtra = getChocolateExtraText(reservation, config)
   const brownieFreshCream = getBrownieFreshCreamText(reservation, config)
   return [

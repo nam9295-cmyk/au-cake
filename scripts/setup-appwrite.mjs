@@ -202,7 +202,8 @@ const reservationAttributes = [
   { key: 'partyDecorationCount', type: 'integer', required: false, min: 0, max: 12 },
   { key: 'vanillaCakeSheet', type: 'string', size: 20, required: false },
   { key: 'vanillaCakeFlavor', type: 'string', size: 40, required: false },
-  { key: 'quantity', type: 'integer', required: false, min: 1, max: 5 },
+  // Storage technical ceiling only; normal cake business max=5 stays in product validation.
+  { key: 'quantity', type: 'integer', required: false, min: 1, max: 2147483647 },
   { key: 'pickupDate', type: 'string', size: 20, required: true },
   { key: 'pickupTime', type: 'string', size: 10, required: true },
   { key: 'cacaoPercent', type: 'string', size: 10, required: true },

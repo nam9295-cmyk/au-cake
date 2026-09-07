@@ -154,6 +154,7 @@ const BASIC_CLASS_SCHOOL_YEARS = new Set(['Kindy', 'Year 1', 'Year 2', 'Year 3',
 const ADVANCED_CLASS_SCHOOL_YEARS = new Set(['Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
 
 const PRODUCTS = {
+  'smore-stick': { basePrice: 4.5, sizePrices: {}, usesSize: false, usesFinish: false },
   'pave-cake': {
     basePrice: 79,
     sizePrices: { '6in': 79, '8in': 109, '10in': 159 },
@@ -664,6 +665,31 @@ const LEGACY_ORDER_LINE_IDENTITY_KEYS = [
 ]
 const ORDER_LINE_IDENTITY_KEYS = [...LEGACY_ORDER_LINE_IDENTITY_KEYS, 'chocolateExtra', 'brownieCreamOption', 'individualPackaging']
 const ORDER_LINE_INPUT_KEYS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity'])
+// Only this product accepts (and discards) known client price projections.
+const SMORE_CLIENT_PRICE_KEYS = new Set([
+  'price', 'unitPrice', 'totalPrice', 'unitPriceCents', 'subtotalCents',
+  'discountPercent', 'discountCents', 'totalPriceCents', 'discountBasisCents',
+  'chocolateExtraCents', 'individualPackagingPieces', 'individualPackagingFeeCents',
+])
+
+function validCakeQuantity(productId, quantity) {
+  return Number.isSafeInteger(quantity) && quantity > 0
+    && (productId === 'smore-stick' || quantity <= MAX_RESERVATION_QUANTITY)
+}
+
+function safeOrderAmount(value) {
+  if (!Number.isSafeInteger(value) || value < 0) fail('ORDER_AMOUNT_OVERFLOW')
+  return value
+}
+
+function smoreBulkPercent(line) {
+  return line.productId === 'smore-stick' ? (line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0) : 0
+}
+
+function smoreBulkDiscount(line) {
+  // Exact integer cents per piece avoid overflowing subtotal * percent.
+  return line.productId === 'smore-stick' ? line.quantity * (450 * smoreBulkPercent(line) / 100) : 0
+}
 const CAKE_ORDER_REQUEST_KEYS = new Set([
   'customerName', 'customerPhone', 'customerEmail', 'pickupDate', 'pickupTime', 'requestNote',
   'promoCode', 'privacyConsent', 'requestId', 'website', 'orderLines',
@@ -755,6 +781,7 @@ function assertKnownStrawberryPayloadFields(input) {
 }
 
 function normalizedCakeLine(input, quantity, options) {
+  if (input.productId === 'smore-stick') input = { productId: input.productId }
   const {
     cakeSize,
     poundAddon,
@@ -804,10 +831,11 @@ export function normalizeCakeOrderLines(orderLines, { cakeCatalogMode = 'compat'
   const normalized = []
   const positions = new Map()
   for (const input of orderLines) {
-    if (!isPlainObject(input) || Reflect.ownKeys(input).some((key) => typeof key !== 'string' || !ORDER_LINE_INPUT_KEYS.has(key))) {
+    if (!isPlainObject(input) || Reflect.ownKeys(input).some((key) => typeof key !== 'string'
+      || (!ORDER_LINE_INPUT_KEYS.has(key) && !(input.productId === 'smore-stick' && SMORE_CLIENT_PRICE_KEYS.has(key))))) {
       fail('INVALID_ORDER_LINE')
     }
-    if (!Number.isInteger(input.quantity) || input.quantity < 1 || input.quantity > MAX_RESERVATION_QUANTITY) {
+    if (!validCakeQuantity(input.productId, input.quantity)) {
       fail('INVALID_QUANTITY')
     }
     const line = normalizedCakeLine(input, input.quantity, { cakeCatalogMode })
@@ -819,7 +847,7 @@ export function normalizeCakeOrderLines(orderLines, { cakeCatalogMode = 'compat'
       continue
     }
     const mergedQuantity = normalized[existingPosition].quantity + line.quantity
-    if (mergedQuantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
+    if (!validCakeQuantity(line.productId, mergedQuantity)) fail('INVALID_QUANTITY')
     normalized[existingPosition] = { ...normalized[existingPosition], quantity: mergedQuantity }
   }
   return normalized
@@ -839,8 +867,8 @@ export function canonicalCakeRequestPayload(input, { customerEmailMode = 'requir
     if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
     lines = normalizeCakeOrderLines(input.orderLines, { cakeCatalogMode })
   } else {
-    const quantity = Number(input.quantity)
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
+    const quantity = input.productId === 'smore-stick' ? input.quantity : Number(input.quantity)
+    if (!validCakeQuantity(input.productId, quantity)) fail('INVALID_QUANTITY')
     lines = [normalizedCakeLine(input, quantity, { cakeCatalogMode })]
   }
   const promoText = input.promoCode === undefined
@@ -938,20 +966,22 @@ function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
       ...line,
       unitPriceCents,
       chocolateExtraCents,
-      subtotalCents: unitPriceCents * line.quantity + chocolateExtraCents,
+      subtotalCents: safeOrderAmount(unitPriceCents * line.quantity + chocolateExtraCents),
     }
   })
   let appliedPromoCode = null
   const eligibleIndexes = []
   for (let index = 0; index < baseLines.length; index += 1) {
     const linePromoCode = reviewCoupon ? null : getValidPromoCode(baseLines[index].productId, promoCode, now)
-    if (reviewCoupon || linePromoCode) eligibleIndexes.push(index)
+    if ((reviewCoupon && baseLines[index].productId !== 'smore-stick') || linePromoCode) eligibleIndexes.push(index)
     if (linePromoCode) appliedPromoCode = linePromoCode
   }
+  if (reviewCoupon && eligibleIndexes.length === 0) fail('PROMO_CODE_INVALID')
   const discountPercent = reviewCoupon?.rewardPercent || (eligibleIndexes.length > 0 ? PROMO_DISCOUNT_RATE * 100 : 0)
   const discountBasisCents = eligibleIndexes.reduce((sum, index) => sum + baseLines[index].subtotalCents, 0)
-  const discountCents = Math.round(discountBasisCents * discountPercent / 100)
-  const allocations = allocateDiscounts(baseLines, eligibleIndexes, discountPercent, discountCents)
+  const promotionDiscountCents = Math.round(discountBasisCents * discountPercent / 100)
+  const allocations = allocateDiscounts(baseLines, eligibleIndexes, discountPercent, promotionDiscountCents)
+  const discountCents = safeOrderAmount(promotionDiscountCents + baseLines.reduce((sum, line) => sum + smoreBulkDiscount(line), 0))
   const individualPackagingPieces = baseLines.reduce((sum, line) => sum + (
     line.individualPackaging
       ? INDIVIDUAL_PACKAGING_PRODUCT_PIECES[line.productId] * line.quantity
@@ -966,8 +996,8 @@ function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
   )
   const pricedLines = baseLines.map((line, index) => {
     const { individualPackaging, brownieCreamOption, ...legacyCompatibleLine } = line
-    const lineDiscountPercent = eligibleIndexes.includes(index) ? discountPercent : 0
-    const lineDiscountCents = allocations[index]
+    const lineDiscountPercent = eligibleIndexes.includes(index) ? discountPercent : smoreBulkPercent(line)
+    const lineDiscountCents = allocations[index] + smoreBulkDiscount(line)
     const linePackagingPieces = line.individualPackaging
       ? INDIVIDUAL_PACKAGING_PRODUCT_PIECES[line.productId] * line.quantity
       : 0
@@ -987,8 +1017,8 @@ function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
       totalPriceCents: line.subtotalCents - lineDiscountCents + linePackagingFeeCents,
     }
   })
-  const subtotalCents = pricedLines.reduce((sum, line) => sum + line.subtotalCents, 0)
-  const totalPriceCents = subtotalCents - discountCents + individualPackagingFeeCents
+  const subtotalCents = safeOrderAmount(pricedLines.reduce((sum, line) => sum + line.subtotalCents, 0))
+  const totalPriceCents = safeOrderAmount(subtotalCents - discountCents + individualPackagingFeeCents)
   return {
     lines: pricedLines,
     subtotalCents,
@@ -1015,7 +1045,7 @@ export function serializeStoredOrderLines(lines) {
 
 function buildPromoNote(note, pricing) {
   if (!pricing.appliedPromoCode) return note
-  const discountedBasisCents = pricing.discountBasisCents - pricing.discountCents
+  const discountedBasisCents = pricing.discountBasisCents - Math.round(pricing.discountBasisCents * pricing.discountPercent / 100)
   const promoLine = `[Promo ${pricing.appliedPromoCode}] 10% discount applied: ${(pricing.discountBasisCents / 100).toFixed(2)} -> ${(discountedBasisCents / 100).toFixed(2)}`
   const result = [promoLine, note].filter(Boolean).join('\n')
   if (result.length > 1000) fail('REQUEST_NOTE_TOO_LONG')
@@ -1054,8 +1084,8 @@ export function buildCakeReservation(input, {
     if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
     normalizedLines = normalizeCakeOrderLines(input.orderLines, { cakeCatalogMode })
   } else {
-    const quantity = Number(input.quantity)
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_QUANTITY')
+    const quantity = input.productId === 'smore-stick' ? input.quantity : Number(input.quantity)
+    if (!validCakeQuantity(input.productId, quantity)) fail('INVALID_QUANTITY')
     normalizedLines = [normalizedCakeLine(input, quantity, { cakeCatalogMode })]
   }
   const pricing = priceCakeOrderLines(normalizedLines, input.promoCode, now, reviewCoupon)
@@ -1321,7 +1351,7 @@ export function parseStoredOrderLines(document) {
       if (currentChocolateExtraDocument === null) currentChocolateExtraDocument = hasChocolateExtraFields
       if (currentChocolateExtraDocument !== hasChocolateExtraFields) throw new Error('mixed chocolate extra versions')
       if (hasBrownieCreamFields && !BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS.has(line.productId)) throw new Error('ineligible brownie cream fields')
-      if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('invalid quantity')
+      if (!validCakeQuantity(line.productId, line.quantity)) throw new Error('invalid quantity')
       for (const key of ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount']) {
         if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid option count')
       }
@@ -1349,7 +1379,7 @@ export function parseStoredOrderLines(document) {
       if (canonicalKeys.has(canonicalKey)) throw new Error('duplicate line')
       canonicalKeys.add(canonicalKey)
       for (const key of ['unitPriceCents', 'subtotalCents', 'discountCents', 'totalPriceCents']) {
-        if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid price')
+        if (!Number.isSafeInteger(line[key]) || line[key] < 0) throw new Error('invalid price')
       }
       if (!isApprovedStoredUnitPrice(line)) throw new Error('invalid unit price')
       const chocolateExtraCents = hasChocolateExtraFields ? chocolateExtraPriceCents(normalized.chocolateExtra) : 0
@@ -1357,7 +1387,9 @@ export function parseStoredOrderLines(document) {
         line.chocolateExtra !== normalized.chocolateExtra || line.chocolateExtraCents !== chocolateExtraCents
       )) throw new Error('invalid chocolate extra')
       if (line.subtotalCents !== line.unitPriceCents * line.quantity + chocolateExtraCents) throw new Error('invalid subtotal')
-      if (line.discountPercent !== 0 && line.discountPercent !== 5 && line.discountPercent !== 10) throw new Error('invalid discount percent')
+      if (line.productId === 'smore-stick'
+        ? line.discountPercent !== smoreBulkPercent(line)
+        : line.discountPercent !== 0 && line.discountPercent !== 5 && line.discountPercent !== 10) throw new Error('invalid discount percent')
       if (hasCurrentPackagingFields) {
         const expectedPieces = line.individualPackaging
           ? INDIVIDUAL_PACKAGING_PRODUCT_PIECES[line.productId] * line.quantity
@@ -1385,7 +1417,8 @@ export function parseStoredOrderLines(document) {
           !MANUAL_REVIEW_COUPON_ID_PATTERN.test(document.reviewCouponId) || discountPercent !== 5
         ))
       ) throw new Error('invalid review discount provenance')
-      eligibleIndexes = payload.lines.map((_, index) => index)
+      eligibleIndexes = payload.lines.map((line, index) => line.productId !== 'smore-stick' ? index : -1).filter((index) => index >= 0)
+      if (eligibleIndexes.length === 0) throw new Error('ineligible review coupon')
     } else if (discountPercent === 10) {
       if (!hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string' || !SAFE_LAST4_PATTERN.test(document.appliedPromoCodeLast4)) {
         throw new Error('invalid static discount provenance')
@@ -1406,13 +1439,14 @@ export function parseStoredOrderLines(document) {
       throw new Error('missing review discount provenance')
     }
     const eligibleIndexSet = new Set(eligibleIndexes)
-    if (payload.lines.some((line, index) => line.discountPercent !== (eligibleIndexSet.has(index) ? discountPercent : 0))) {
+    if (payload.lines.some((line, index) => line.discountPercent !== (eligibleIndexSet.has(index) ? discountPercent : smoreBulkPercent(line)))) {
       throw new Error('invalid line discount eligibility')
     }
     const discountBasisCents = eligibleIndexes.reduce((sum, index) => sum + payload.lines[index].subtotalCents, 0)
-    const discountCents = Math.round(discountBasisCents * discountPercent / 100)
-    const expectedAllocations = allocateDiscounts(payload.lines, eligibleIndexes, discountPercent, discountCents)
-    if (payload.lines.some((line, index) => line.discountCents !== expectedAllocations[index])) throw new Error('invalid discount allocation')
+    const promotionDiscountCents = Math.round(discountBasisCents * discountPercent / 100)
+    const discountCents = safeOrderAmount(promotionDiscountCents + payload.lines.reduce((sum, line) => sum + smoreBulkDiscount(line), 0))
+    const expectedAllocations = allocateDiscounts(payload.lines, eligibleIndexes, discountPercent, promotionDiscountCents)
+    if (payload.lines.some((line, index) => line.discountCents !== expectedAllocations[index] + smoreBulkDiscount(line))) throw new Error('invalid discount allocation')
 
     const individualPackagingPieces = currentPackagingDocument
       ? payload.lines.reduce((sum, line) => sum + line.individualPackagingPieces, 0)
@@ -1433,8 +1467,8 @@ export function parseStoredOrderLines(document) {
       && storedPackagingFeeCents !== legacyPackagingFeeCents) {
       throw new Error('invalid aggregate packaging fee')
     }
-    const subtotalCents = payload.lines.reduce((sum, line) => sum + line.subtotalCents, 0)
-    const totalPriceCents = payload.lines.reduce((sum, line) => sum + line.totalPriceCents, 0)
+    const subtotalCents = safeOrderAmount(payload.lines.reduce((sum, line) => sum + line.subtotalCents, 0))
+    const totalPriceCents = safeOrderAmount(payload.lines.reduce((sum, line) => sum + line.totalPriceCents, 0))
     const orderLineCount = payload.lines.length
     const orderItemCount = payload.lines.reduce((sum, line) => sum + line.quantity, 0)
     const expectedDocumentValues = {

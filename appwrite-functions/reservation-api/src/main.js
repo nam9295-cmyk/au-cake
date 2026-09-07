@@ -161,7 +161,7 @@ export function cakeReservationResponse(document) {
     ? 'manual-coupon'
     : document.reviewCouponId
       ? 'review-reward'
-      : discountCents > 0
+      : discountCents > 0 && Number(document.discountPercent || 0) > 0
         ? 'static'
         : 'none'
   return {
@@ -183,7 +183,7 @@ export function cakeReservationResponse(document) {
     ...(Object.hasOwn(storedOrder?.lines?.[0] || {}, 'individualPackaging') ? {
       individualPackaging: storedOrder.lines[0].individualPackaging === true,
     } : {}),
-    quantity: document.quantity,
+    quantity: storedOrder?.lines[0]?.quantity ?? document.quantity,
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
     cacaoPercent: document.cacaoPercent,
@@ -401,6 +401,10 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
     }),
     requestFingerprint,
   }
+  // Storage capacity, not a product maximum: the original Appwrite quantity
+  // attribute was created in the signed-32-bit range. Integer range PATCH does
+  // not widen that physical column. Keep pricing/line policy independent.
+  if (data.quantity > 2147483647) throw new ReservationApiError('QUANTITY_STORAGE_OVERFLOW')
   data.reservationNumber = await uniqueReservationNumber(
     databases,
     runtimeConfig.cakeDatabaseId,
