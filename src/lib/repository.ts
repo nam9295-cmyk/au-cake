@@ -761,9 +761,17 @@ function invalidStoredOrder(): never {
 
 function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProjection: Reservation): Pick<
   Reservation,
-  'orderLines' | 'orderLineCount' | 'orderItemCount' | 'subtotalCents' | 'discountBasisCents' | 'discountPercent' | 'discountCents' | 'totalPriceCents' | 'individualPackagingPieces' | 'individualPackagingFeeCents'
+  'orderLines' | 'orderLineCount' | 'orderItemCount' | 'subtotalCents' | 'discountBasisCents' | 'discountPercent' | 'discountCents' | 'totalPriceCents' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'promotionKind'
 > | null {
-  if (!Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) return null
+  const hasVersionedCompanionMetadata = [
+    document.orderLineCount,
+    document.orderItemCount,
+    document.discountBasisCents,
+  ].some((value) => value !== null && value !== undefined)
+  if (!Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) {
+    if (hasVersionedCompanionMetadata) invalidStoredOrder()
+    return null
+  }
   if (typeof document.orderLinesJson !== 'string'
     || new TextEncoder().encode(document.orderLinesJson).byteLength > STORED_ORDER_MAX_BYTES) invalidStoredOrder()
   let payload: unknown
@@ -890,6 +898,11 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
   } else {
     invalidStoredOrder()
   }
+  const promotionKind: NonNullable<Reservation['promotionKind']> = hasReviewCoupon
+    ? document.reviewCouponId?.startsWith('manual:') ? 'manual-coupon' : 'review-reward'
+    : hasPromoLast4
+      ? 'static'
+      : 'none'
 
   validateOrderPricing(orderLines, {
     subtotalCents,
@@ -918,6 +931,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
     discountPercent: document.discountPercent,
     discountCents,
     totalPriceCents,
+    promotionKind,
     ...(hasPackagingFields ? { individualPackagingPieces, individualPackagingFeeCents } : {}),
   }
 }

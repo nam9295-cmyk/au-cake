@@ -36,6 +36,7 @@ const REVIEW_COUPON_PATTERN = new RegExp(
   `^(?:${REVIEW_COUPON_ANIMALS.join('|')})(?:${REVIEW_COUPON_FRUITS.join('|')})[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$`,
 )
 const MANUAL_REVIEW_COUPON_PATTERN = /^JENNIE[A-Z0-9]{5}$/
+const MANUAL_REVIEW_COUPON_ID_PATTERN = /^manual:[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const SAFE_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 const VALID_CAKE_SIZES = new Set<CakeSize>(['mini', 'size-1', '6in', '8in', '10in', '15cm', '17cm', '19cm', '22cm'])
 const VALID_CHOCOLATE_TYPES = new Set<ChocolateType>(['dark', 'milk'])
@@ -245,6 +246,20 @@ export function getReservationPricingAudit(value: unknown): ReservationPricingAu
   const reservation = value as Record<string, unknown>
   if (hasVersionedOrderEnvelope(reservation)) {
     const parsed = parseCakeOrderResult(value)
+    const isAdminReservation = typeof reservation.id === 'string' && reservation.id.length > 0
+    const hasReviewCouponId = Object.hasOwn(reservation, 'reviewCouponId')
+    if (isAdminReservation && !hasReviewCouponId) invalidResponse()
+    if (isAdminReservation && (parsed.promotionKind === 'review-reward' || parsed.promotionKind === 'manual-coupon')
+      && (typeof reservation.reviewCouponId !== 'string' || !reservation.reviewCouponId)) invalidResponse()
+    if (isAdminReservation && (parsed.promotionKind === 'none' || parsed.promotionKind === 'static')
+      && reservation.reviewCouponId !== undefined) invalidResponse()
+    if (reservation.reviewCouponId !== null && reservation.reviewCouponId !== undefined) {
+      if (typeof reservation.reviewCouponId !== 'string' || !reservation.reviewCouponId) invalidResponse()
+      const expectedPromotionKind = reservation.reviewCouponId.startsWith('manual:')
+        ? MANUAL_REVIEW_COUPON_ID_PATTERN.test(reservation.reviewCouponId) ? 'manual-coupon' : invalidResponse()
+        : 'review-reward'
+      if (parsed.promotionKind !== expectedPromotionKind) invalidResponse()
+    }
     const discountPercent: 0 | 5 | 10 = parsed.discountPercent === 0
       ? 0
       : parsed.discountPercent === 5

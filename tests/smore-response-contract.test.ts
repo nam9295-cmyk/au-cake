@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { buildCakeReservation, publicCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 import { cakeReservationResponse } from '../appwrite-functions/reservation-api/src/main.js'
-import { buildCakeOrderRequest, getReservationPricingAudit, parseCakeReservationResult } from '../src/lib/review-coupon-client.js'
+import { ReservationDrawer } from '../src/ReservationDrawer.js'
+import { DEFAULT_SETTINGS } from '../src/lib/constants.js'
+import { buildCakeOrderRequest, getOptionalReservationPricingAudit, getReservationPricingAudit, parseCakeReservationResult } from '../src/lib/review-coupon-client.js'
 import { getReservationByNumber, toReservation } from '../src/lib/repository.js'
 import { buildAdminReservationUpdate } from '../src/lib/admin-reservation-edit.js'
 import { readFileSync } from 'node:fs'
@@ -200,4 +204,108 @@ test('CompletePage sends a server-authoritative Smore bulk reservation through t
   const completePage = readFileSync('src/pages/CompletePage.tsx', 'utf8')
   assert.match(completePage, /getReservationPricingAudit\(reservation\)/)
   assert.match(completePage, /pricingAudit\.discountCents/)
+})
+
+test('server-authoritative pricing provenance survives every normal versioned Admin audit path', () => {
+  const cases = [
+    buildCakeReservation({ ...customer, orderLines: [
+      { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+    ] }, { now, reviewCoupon: { id: 'review-cupcake', rewardPercent: 10, codeLast4: 'ABCD' } } as never),
+    generated(1, 10),
+    buildCakeReservation({ ...customer, promoCode: 'lemoni', orderLines: [
+      { productId: 'fresh-lemon-cupcakes-6', quantity: 1 },
+    ] }, { now }),
+    generated(12),
+    buildCakeReservation({ ...customer, promoCode: 'lemoni', orderLines: [
+      { productId: 'smore-stick', quantity: 6 },
+      { productId: 'fresh-lemon-cupcakes-6', quantity: 1 },
+    ] }, { now }),
+    buildCakeReservation({ ...customer, orderLines: [
+      { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+      { productId: 'smore-stick', quantity: 6 },
+    ] }, { now, reviewCoupon: { id: 'review-test', rewardPercent: 10, codeLast4: 'ABCD' } } as never),
+  ]
+  for (const [index, document] of cases.entries()) {
+    const expected = getReservationPricingAudit(response(document))
+    const admin = toReservation({ ...document, $id: `admin-audit-${index}` } as never)
+    assert.deepEqual(getReservationPricingAudit(admin), expected)
+    assert.deepEqual(getOptionalReservationPricingAudit(admin), expected)
+    assert.equal(admin.promotionKind, response(document).promotionKind)
+  }
+  const bulkOnly = toReservation({ ...cases[3], $id: 'admin-bulk-only' } as never)
+  assert.equal(bulkOnly.promotionKind, 'none')
+  assert.equal(bulkOnly.discountPercent, 0)
+  assert.ok((bulkOnly.discountCents || 0) > 0)
+})
+
+test('Admin audit rejects forged versioned provenance and pricing instead of downgrading', () => {
+  const document = buildCakeReservation({ ...customer, orderLines: [
+    { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+    { productId: 'smore-stick', quantity: 6 },
+  ] }, { now, reviewCoupon: { id: 'review-test', rewardPercent: 10, codeLast4: 'ABCD' } } as never)
+  const admin = toReservation({ ...document, $id: 'admin-forged-audit' } as never)
+  for (const mode of ['deleted', 'null', 'undefined'] as const) {
+    const forged = structuredClone(admin) as typeof admin
+    if (mode === 'deleted') delete forged.reviewCouponId
+    else forged.reviewCouponId = mode === 'null' ? null as never : undefined
+    assert.throws(() => getReservationPricingAudit(forged), /INVALID_RESPONSE/, mode)
+    assert.equal(getOptionalReservationPricingAudit(forged), null, mode)
+  }
+  const reviewLemon = buildCakeReservation({ ...customer, orderLines: [
+    { productId: 'fresh-lemon-cupcakes-6', quantity: 1 },
+  ] }, { now, reviewCoupon: { id: 'review-lemon', rewardPercent: 10, codeLast4: 'ABCD' } } as never)
+  const forgedStatic = toReservation({ ...reviewLemon, $id: 'admin-forged-static' } as never)
+  delete forgedStatic.reviewCouponId
+  forgedStatic.promotionKind = 'static'
+  forgedStatic.appliedPromoCodeLast4 = 'MONI'
+  assert.throws(() => getReservationPricingAudit(forgedStatic), /INVALID_RESPONSE/)
+  assert.equal(getOptionalReservationPricingAudit(forgedStatic), null)
+  const publicResponse = response(document)
+  assert.equal(Object.hasOwn(publicResponse, 'id'), false)
+  assert.equal(Object.hasOwn(publicResponse, 'reviewCouponId'), false)
+  assert.doesNotThrow(() => getReservationPricingAudit(publicResponse))
+
+  const mutations: Array<(row: typeof admin) => void> = [
+    row => { row.promotionKind = 'static' },
+    row => { row.reviewCouponId = 'manual:***' },
+    row => { row.appliedPromoCodeLast4 = '***' },
+    row => { row.promotionKind = 'none'; row.reviewCouponId = undefined; row.appliedPromoCodeLast4 = undefined },
+    row => { row.discountBasisCents = (row.discountBasisCents || 0) + 1 },
+    row => { row.discountCents = (row.discountCents || 0) + 1 },
+    row => { row.totalPriceCents = (row.totalPriceCents || 0) + 1 },
+  ]
+  for (const mutate of mutations) {
+    const forged = structuredClone(admin)
+    mutate(forged)
+    assert.throws(() => getReservationPricingAudit(forged), /INVALID_RESPONSE/)
+    assert.equal(getOptionalReservationPricingAudit(forged), null)
+  }
+  const forgedBulk = toReservation({ ...generated(12), $id: 'admin-forged-bulk' } as never)
+  forgedBulk.promotionKind = 'static'
+  forgedBulk.appliedPromoCodeLast4 = 'ABCD'
+  assert.throws(() => getReservationPricingAudit(forgedBulk), /INVALID_RESPONSE/)
+  assert.equal(getOptionalReservationPricingAudit(forgedBulk), null)
+})
+
+test('ReservationDrawer renders the validated Admin subtotal, discount and coupon provenance', () => {
+  const document = buildCakeReservation({ ...customer, orderLines: [
+    { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+    { productId: 'smore-stick', quantity: 6 },
+  ] }, { now, reviewCoupon: { id: 'review-test', rewardPercent: 10, codeLast4: 'ABCD' } } as never)
+  const admin = toReservation({ ...document, $id: 'admin-drawer-audit' } as never)
+  assert.equal(admin.subtotalCents, 5800)
+  assert.equal(admin.discountCents, 580)
+  assert.equal(admin.totalPriceCents, 5220)
+  const html = renderToStaticMarkup(React.createElement(ReservationDrawer, {
+    reservation: admin,
+    onClose: () => {},
+    onSave: async () => {},
+    onCopy: async () => {},
+    settings: DEFAULT_SETTINGS,
+  }))
+  assert.match(html, /할인 감사 정보/)
+  assert.match(html, /AUD 58\.00/)
+  assert.match(html, /AUD 5\.80/)
+  assert.match(html, /코드 끝 4자리 ABCD/)
+  assert.match(html, /일회용 쿠폰 ID review-test/)
 })
