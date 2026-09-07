@@ -110,6 +110,11 @@ const koProducts: Partial<Record<ProductId, ProductText>> = {
   'fresh-lemon-cupcakes-16': {
     name: '레몬 케이크 · 16개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '16개 구성 · 레몬 글레이즈와 꽃 장식 포함',
   },
+  'smore-stick': {
+    name: '스모어 스틱',
+    description: '스틱에 꽂은 푹신한 마시멜로에 진한 커버춰 초콜릿을 더한 디저트. 모임과 파티용 대량 주문에 적합합니다.',
+    priceNote: '개당 AUD 4.50 · 6개 이상 10%, 12개 이상 20% 할인',
+  },
 }
 
 const koProductFeatures: Record<ProductId, string[]> = {
@@ -132,6 +137,7 @@ const koProductFeatures: Record<ProductId, string[]> = {
   'fresh-lemon-cupcakes-8': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
   'fresh-lemon-cupcakes-12': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
   'fresh-lemon-cupcakes-16': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
+  'smore-stick': ['스틱 마시멜로 디저트', '리얼 커버춰 초콜릿 코팅', '개당 AUD 4.50', '6~11개 10% 할인', '12개 이상 20% 대량 할인'],
 }
 
 export function getProductText(productId: ProductId, language: Language): ProductText {

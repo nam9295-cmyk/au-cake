@@ -14,35 +14,37 @@ import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/
 test('eight public sale slugs resolve to independent reusable detail contracts', () => {
   const details = [
     getCakeDetailBySlug('pave-chocolate-cake', 'en'),
-    getCakeDetailBySlug('buttercream-cake', 'en'),
-    getCakeDetailBySlug('fresh-strawberry-vanilla-cream-cake', 'en'),
-    getCakeDetailBySlug('fresh-strawberry-chocolate-cream-cake', 'en'),
-    getCakeDetailBySlug('chocolate-cupcakes', 'en'),
     getCakeDetailBySlug('signature-gateau-au-chocolat', 'en'),
-    getCakeDetailBySlug('lemon-cake', 'en'),
+    getCakeDetailBySlug('chocolate-cupcakes', 'en'),
+    getCakeDetailBySlug('bento-cake', 'en'),
+    getCakeDetailBySlug('fresh-strawberry-vanilla-cream-cake', 'en'),
     getCakeDetailBySlug('brownie-cheesecake', 'en'),
+    getCakeDetailBySlug('lemon-cake', 'en'),
+    getCakeDetailBySlug('smore-stick', 'en'),
   ]
 
   assert.deepEqual(details.map((detail) => detail?.slug), [
     'pave-chocolate-cake',
-    'buttercream-cake',
-    'fresh-strawberry-vanilla-cream-cake',
-    'fresh-strawberry-chocolate-cream-cake',
-    'chocolate-cupcakes',
     'signature-gateau-au-chocolat',
-    'lemon-cake',
+    'chocolate-cupcakes',
+    'bento-cake',
+    'fresh-strawberry-vanilla-cream-cake',
     'brownie-cheesecake',
+    'lemon-cake',
+    'smore-stick',
   ])
-  assert.deepEqual(details.map((detail) => detail?.gallery.length), [7, 3, 2, 2, 3, 5, 4, 3])
+  assert.deepEqual(details.map((detail) => detail?.gallery.length), [7, 5, 3, 1, 2, 3, 4, 1])
   assert.deepEqual(details[0]?.gallery.slice(0, 4), ['pave-side', 'pave-quick-view', 'pave-previous', 'pave-hero'])
-  assert.deepEqual(details[1]?.gallery, ['buttercream-side', 'buttercream-detail', 'buttercream-quick-view'])
-  assert.deepEqual(details[2]?.gallery, ['fresh-strawberry-vanilla-cream-side', 'fresh-strawberry-vanilla-cream-detail'])
-  assert.deepEqual(details[3]?.gallery, ['fresh-strawberry-chocolate-cream-side', 'fresh-strawberry-chocolate-cream-detail'])
-  assert.deepEqual(details[4]?.gallery, ['cupcake-side', 'cupcake-detail', 'cupcake-hero'])
-  assert.deepEqual(details[5]?.gallery, ['signature-gateau-side', 'signature-gateau-detail', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'])
-  assert.deepEqual(details[7]?.gallery, ['brownie-side', 'brownie-detail', 'brownie-quick-view'])
-  assert.equal(details[2]?.isPhotoComingSoon, false)
+  assert.deepEqual(details[1]?.gallery, ['signature-gateau-side', 'signature-gateau-detail', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'])
+  assert.deepEqual(details[2]?.gallery, ['cupcake-side', 'cupcake-detail', 'cupcake-hero'])
+  assert.deepEqual(details[3]?.gallery, ['bento-cake-side'])
+  assert.deepEqual(details[4]?.gallery, ['fresh-strawberry-vanilla-cream-side', 'fresh-strawberry-vanilla-cream-detail'])
+  assert.deepEqual(details[5]?.gallery, ['brownie-side', 'brownie-detail', 'brownie-quick-view'])
+  assert.deepEqual(details[7]?.gallery, ['smore-stick-side'])
+  assert.equal(details[3]?.isComingSoon, true)
   assert.equal(details[3]?.isPhotoComingSoon, false)
+  assert.equal(details[4]?.isPhotoComingSoon, false)
+  assert.equal(details[5]?.isPhotoComingSoon, false)
   assert.equal(details[7]?.isPhotoComingSoon, false)
   assert.equal(getCakeDetailBySlug('not-a-cake', 'en'), null)
 })
@@ -138,21 +140,49 @@ test('Cupcake and Signature detail selections remain independent and normalize h
   assert.equal(getCakeDetailBySlug('chocolatiers-basque-cheesecake', 'en')?.isLegacy, true)
 })
 
-test('current Strawberry cakes create inch selections and keep Buttercream cake colours separate', () => {
+test('current Strawberry cakes create inch selections, S\'more supports bulk pricing, and retired cakes remain legacy', () => {
   const strawberryVanilla = createCakeDetailSelection('fresh-strawberry-vanilla-cream-cake')
   const strawberryChocolate = createCakeDetailSelection('fresh-strawberry-chocolate-cream-cake')
   const buttercream = createCakeDetailSelection('buttercream-cake')
-  assert.equal(strawberryVanilla?.productId, 'fresh-strawberry-vanilla-cream-cake')
-  assert.equal(strawberryChocolate?.productId, 'fresh-strawberry-chocolate-cream-cake')
-  assert.equal(strawberryVanilla?.cakeSize, '6in')
-  assert.equal(strawberryChocolate?.cakeSize, '6in')
-  assert.equal(buttercream?.cakeSize, '6in')
+  const bento = createCakeDetailSelection('bento-cake')
+  const smore = createCakeDetailSelection('smore-stick')
 
-  const blueButtercream = selectCakeDetailProduct({
-    ...buttercream!,
-    vanillaCakePointColor: 'blue',
-  }, 'buttercream-cake')
-  assert.equal(blueButtercream.vanillaCakePointColor, 'blue')
+  assert.equal(strawberryVanilla?.productId, 'fresh-strawberry-vanilla-cream-cake')
+  assert.equal(strawberryVanilla?.cakeSize, '6in')
+
+  // Retired products return null selection and are marked as legacy
+  assert.equal(strawberryChocolate, null)
+  assert.equal(buttercream, null)
+  assert.equal(getCakeDetailBySlug('fresh-strawberry-chocolate-cream-cake', 'en')?.isLegacy, true)
+  assert.equal(getCakeDetailBySlug('buttercream-cake', 'en')?.isLegacy, true)
+
+  // Bento is coming soon with no active selection
+  assert.equal(bento, null)
+  assert.equal(getCakeDetailBySlug('bento-cake', 'en')?.isComingSoon, true)
+
+  // S'more Stick has selection and calculates bulk discounts
+  assert.ok(smore)
+  assert.equal(smore.productId, 'smore-stick')
+  assert.equal(smore.quantity, 1)
+  assert.equal(getCakeDetailSelectionTotal(smore), 4.5)
+
+  const smoreBulk = selectCakeDetailProduct({ ...smore, quantity: 12 }, 'smore-stick')
+  assert.equal(smoreBulk.quantity, 12)
+  // 12 * 4.50 = 54.00, 20% discount = 43.20
+  assert.equal(getCakeDetailSelectionTotal(smoreBulk), 43.2)
+
+  // S'more Stick has NO artificial upper limit (supports 50, 100, 300+)
+  const smore50 = selectCakeDetailProduct({ ...smore, quantity: 50 }, 'smore-stick')
+  assert.equal(smore50.quantity, 50)
+  assert.equal(getCakeDetailSelectionTotal(smore50), 180)
+
+  const smore100 = selectCakeDetailProduct({ ...smore, quantity: 100 }, 'smore-stick')
+  assert.equal(smore100.quantity, 100)
+  assert.equal(getCakeDetailSelectionTotal(smore100), 360)
+
+  const smore300 = selectCakeDetailProduct({ ...smore, quantity: 300 }, 'smore-stick')
+  assert.equal(smore300.quantity, 300)
+  assert.equal(getCakeDetailSelectionTotal(smore300), 1080)
 })
 
 test('Lemon Cake supports two or more identical packs with simple quantity multiplication', () => {

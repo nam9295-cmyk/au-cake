@@ -36,6 +36,7 @@ import {
 } from './individual-packaging.js'
 import { DEFAULT_CHOCOLATE_EXTRA, getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras.js'
 import { DEFAULT_BROWNIE_CREAM_OPTION, normalizeBrownieCreamOption } from './brownie-cream.js'
+import { calculateSmorePricing } from './smore.js'
 import type {
   BrownieCreamOption,
   CakeSize,
@@ -170,6 +171,8 @@ export type CakeDetailImageKey =
   | 'fresh-strawberry-vanilla-cream-detail'
   | 'fresh-strawberry-chocolate-cream-side'
   | 'fresh-strawberry-chocolate-cream-detail'
+  | 'bento-cake-side'
+  | 'smore-stick-side'
 
 export type CakeDetailSelection = {
   productId: ProductId
@@ -201,6 +204,7 @@ export type CakeDetailData = {
   defaultProductId: ProductId
   gallery: readonly CakeDetailImageKey[]
   isPhotoComingSoon: boolean
+  isComingSoon?: boolean
   isLegacy?: boolean
   legacyLinks?: readonly { slug: string; name: string }[]
   trustPoints: readonly string[]
@@ -219,6 +223,8 @@ const DETAIL_GALLERIES: Record<CakeCatalogId, readonly CakeDetailImageKey[]> = {
   cupcake: ['cupcake-side', 'cupcake-detail', 'cupcake-hero'],
   'signature-gateau': ['signature-gateau-side', 'signature-gateau-detail', 'signature-gateau-quick-view', 'signature-gateau-previous', 'signature-gateau-hero'],
   'brownie-cheesecake': ['brownie-side', 'brownie-detail', 'brownie-quick-view'],
+  'bento-cake': ['bento-cake-side'],
+  'smore-stick': ['smore-stick-side'],
 }
 
 const LEGACY_CAKE_DETAILS = {
@@ -247,6 +253,20 @@ const LEGACY_CAKE_DETAILS = {
     links: {
       en: [],
       ko: [],
+    },
+  },
+  'buttercream-cake': {
+    id: 'buttercream' as const,
+    links: {
+      en: [{ slug: 'pave-chocolate-cake', name: 'Pavé Chocolate Gâteau' }],
+      ko: [{ slug: 'pave-chocolate-cake', name: '파베 초콜릿 갸또' }],
+    },
+  },
+  'fresh-strawberry-chocolate-cream-cake': {
+    id: 'fresh-strawberry-chocolate-cream' as const,
+    links: {
+      en: [{ slug: 'fresh-strawberry-vanilla-cream-cake', name: 'Vanilla Fresh Cream Cake' }],
+      ko: [{ slug: 'fresh-strawberry-vanilla-cream-cake', name: '바닐라 생크림 케이크' }],
     },
   },
 } as const
@@ -291,8 +311,11 @@ const DETAIL_OPERATION_COPY: Record<Language, {
   },
 }
 
-function normalizeQuantity(value: number) {
+function normalizeQuantity(value: number, productId?: ProductId) {
   if (!Number.isFinite(value)) return 1
+  if (productId === 'smore-stick') {
+    return Math.max(1, Math.floor(value))
+  }
   return Math.min(5, Math.max(1, Math.floor(value)))
 }
 
@@ -333,6 +356,25 @@ export function getCakeDetailBySlug(slug: string, language: Language): CakeDetai
   if (!card) return null
   const operations = DETAIL_OPERATION_COPY[language]
 
+  if (entry.isComingSoonOnly) {
+    return {
+      id: entry.id,
+      slug: entry.slug,
+      name: card.name,
+      description: card.description,
+      features: card.features,
+      optionLabel: card.optionLabel,
+      priceLabel: card.priceLabel,
+      productIds: [],
+      defaultProductId: '' as unknown as ProductId,
+      gallery: DETAIL_GALLERIES[entry.id] || [],
+      isPhotoComingSoon: entry.isPhotoComingSoon,
+      isComingSoon: true,
+      trustPoints: card.features,
+      accordions: operations.accordions,
+    }
+  }
+
   return {
     id: entry.id,
     slug: entry.slug,
@@ -342,7 +384,7 @@ export function getCakeDetailBySlug(slug: string, language: Language): CakeDetai
     optionLabel: card.optionLabel,
     priceLabel: card.priceLabel,
     productIds: entry.productIds,
-    defaultProductId: entry.defaultProductId,
+    defaultProductId: entry.defaultProductId || (entry.productIds[0] as ProductId),
     gallery: DETAIL_GALLERIES[entry.id],
     isPhotoComingSoon: entry.isPhotoComingSoon,
     trustPoints: card.features.slice(0, 3),
@@ -352,7 +394,7 @@ export function getCakeDetailBySlug(slug: string, language: Language): CakeDetai
 
 export function createCakeDetailSelection(slug: string): CakeDetailSelection | null {
   const entry = getCakeCatalogEntryBySlug(slug)
-  if (!entry) return null
+  if (!entry || !entry.defaultProductId || entry.isComingSoonOnly) return null
   return selectCakeDetailProduct({
     productId: entry.defaultProductId,
     cakeSize: DEFAULT_CAKE_SIZE,
@@ -402,11 +444,15 @@ export function selectCakeDetailProduct(
       ? { vanillaCakePointColor: normalizeVanillaCakePointColor(product.id, selection.vanillaCakePointColor) }
       : {}),
     individualPackaging: isIndividualPackagingEligibleProduct(product.id) && selection.individualPackaging === true,
-    quantity: normalizeQuantity(selection.quantity),
+    quantity: normalizeQuantity(selection.quantity, product.id),
   }
 }
 
 export function getCakeDetailSelectionTotal(selection: CakeDetailSelection) {
+  if (selection.productId === 'smore-stick') {
+    const pricing = calculateSmorePricing(selection.quantity)
+    return pricing.finalTotalCents / 100
+  }
   const cakeTotal = getReservationPrice(selection.productId, {
     cakeSize: selection.cakeSize,
     chocolateType: selection.chocolateType,

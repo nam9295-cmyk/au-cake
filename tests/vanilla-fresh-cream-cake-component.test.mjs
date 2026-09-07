@@ -58,7 +58,7 @@ test('Strawberry Whole Cake catalogue cards exist only for the AU market', () =>
 
 test('AU catalogue grouping declares the final eight-product presentation order', () => {
   const groups = catalog.slice(catalog.indexOf('const AU_CAKE_CATALOG_GROUPS'))
-  assert.match(groups, /catalogIds: \['pave', 'buttercream'\][\s\S]*catalogIds: \['signature-gateau', 'cupcake'\][\s\S]*catalogIds: \['fresh-strawberry-vanilla-cream', 'fresh-strawberry-chocolate-cream'\][\s\S]*catalogIds: \['fresh-lemon-cupcakes', 'brownie-cheesecake'\]/)
+  assert.match(groups, /catalogIds: \['pave', 'signature-gateau'\][\s\S]*catalogIds: \['cupcake', 'bento-cake'\][\s\S]*catalogIds: \['fresh-strawberry-vanilla-cream', 'brownie-cheesecake'\][\s\S]*catalogIds: \['fresh-lemon-cupcakes', 'smore-stick'\]/)
 })
 
 test('grouped catalogue stays two-column on mobile, tablet and desktop', () => {

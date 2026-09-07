@@ -251,7 +251,7 @@ test('Cupcakes compact editorial exposes only the approved finish, ingredient, p
     'Please contact us before ordering for someone with a food allergy.',
   )
   assert.match(compactEnglish.details?.items.join(' '), /Basic|Vanilla Fresh Cream|Chocolate Buttercream/)
-  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'lemon-cake,buttercream-cake')
+  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'lemon-cake,signature-gateau-au-chocolat')
 
   const approvedCopy = JSON.stringify({ compactEnglish, compactKorean })
   assert.doesNotMatch(approvedCopy, /(?:750(?:-|–)?760g|75(?:-|–)?76g|\b75g\b|\b76g\b|\b10 cupcakes?\b|\b10개\b)/i)
@@ -396,7 +396,7 @@ test('Vanilla compact editorial preserves the approved cake, cream, allergen, an
     compactEnglish.ingredientsAndAllergens?.contact,
     'Please contact us before ordering for someone with a food allergy.',
   )
-  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'pave-chocolate-cake,buttercream-cake')
+  assert.equal(compactEnglish.relatedProductSlugs.join(','), 'pave-chocolate-cake,signature-gateau-au-chocolat')
 
   const approvedCopy = JSON.stringify({ compactEnglish, compactKorean })
   assert.doesNotMatch(approvedCopy, /Plain fresh cream|No added fruit or flavour|No flavour|Chocolate cake sheets/i)

@@ -40,6 +40,7 @@ export type ProductId =
   | 'fresh-lemon-cupcakes-8'
   | 'fresh-lemon-cupcakes-12'
   | 'fresh-lemon-cupcakes-16'
+  | 'smore-stick'
 
 export type ReservationStatus = '예약신청' | '예약확정' | '픽업완료' | '취소'
 

@@ -14,16 +14,7 @@ const robotsPath = fileURLToPath(new URL('../public/robots.txt', import.meta.url
 const manifestPath = fileURLToPath(new URL('../public/site.webmanifest', import.meta.url))
 const indexPath = fileURLToPath(new URL('../index.html', import.meta.url))
 const site = 'https://au.verygood-chocolate.com'
-const cakeSlugs = [
-  'pave-chocolate-cake',
-  'buttercream-cake',
-  'fresh-strawberry-vanilla-cream-cake',
-  'fresh-strawberry-chocolate-cream-cake',
-  'chocolate-cupcakes',
-  'signature-gateau-au-chocolat',
-  'lemon-cake',
-  'brownie-cheesecake',
-]
+const cakeSlugs = Object.keys(auPublicPages.cakePages)
 
 const template = `<!doctype html>
 <html lang="en-AU">
@@ -74,7 +65,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
     new RegExp('<title>' + escapeRegExp(auPublicPages.home.title) + '</title>'),
   )
   assert.match(home, /<h1>Made-to-Order Chocolate Cakes in Sydney<\/h1>/)
-  assert.match(home, /Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney/)
+  assert.match(home, /Order made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney/)
   assert.match(home, /Signature Gâteau au Chocolat/)
   assert.match(home, /Brownie Cheesecake/)
   assert.match(home, /Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
@@ -86,14 +77,14 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   assert.match(catalogue, /<h1>Choose Your Cake<\/h1>/)
 
   const generatedSitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
-  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, 12)
+  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, 11)
   for (const path of ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']) {
     assert.match(generatedSitemap, new RegExp(`<loc>${(path === '/' ? site : `${site}${path}`).replaceAll('.', '\\.')}</loc>`), path)
   }
   for (const excluded of ['/cart', '/reserve', '/lookup', '/admin', '/guides']) {
     assert.doesNotMatch(generatedSitemap, new RegExp(`<loc>[^<]*${excluded}`), excluded)
   }
-  for (const legacyPath of ['/cakes/chocolate-pound-cake-and-cupcakes', '/cakes/chocolatiers-basque-cheesecake']) {
+  for (const legacyPath of ['/cakes/chocolate-pound-cake-and-cupcakes', '/cakes/chocolatiers-basque-cheesecake', '/cakes/buttercream-cake', '/cakes/fresh-strawberry-chocolate-cream-cake']) {
     assert.doesNotMatch(generatedSitemap, new RegExp(`<loc>[^<]*${legacyPath}`), legacyPath)
   }
 })
@@ -159,13 +150,12 @@ test('cake generator uses the final per-page schema contract and real product We
   const { dist } = await generate()
   const expectations = new Map([
     ['pave-chocolate-cake', { type: 'Product', price: 79, og: 'product', image: 'pave-chocolate-cake-sydney.webp' }],
-    ['buttercream-cake', { type: 'Product', price: 75, og: 'product', image: 'buttercream-cake-sydney.webp' }],
     ['fresh-strawberry-vanilla-cream-cake', { type: 'Product', price: 65, og: 'product', image: 'fresh-strawberry-vanilla-cream-cake-sydney.webp' }],
-    ['fresh-strawberry-chocolate-cream-cake', { type: 'Product', price: 69, og: 'product', image: 'fresh-strawberry-chocolate-cream-cake-sydney.webp' }],
     ['chocolate-cupcakes', { type: 'Product', price: 31, og: 'product', image: 'chocolate-cupcakes-sydney.webp' }],
     ['signature-gateau-au-chocolat', { type: 'Product', price: 45, og: 'product', image: 'signature-gateau-au-chocolat-sydney.webp' }],
     ['lemon-cake', { type: 'Product', price: 36, og: 'product', image: 'lemon-cake-sydney.webp' }],
     ['brownie-cheesecake', { type: 'Product', price: 85, og: 'product', image: 'brownie-cheesecake-sydney.webp' }],
+    ['smore-stick', { type: 'Product', price: 4.5, og: 'product', image: 'smore-stick-sydney.webp' }],
   ])
 
   for (const [slug, expected] of expectations) {
@@ -205,6 +195,14 @@ test('cake generator uses the final per-page schema contract and real product We
   assert.deepEqual(jsonLd(basque).map((entry) => entry['@type']), ['WebPage', 'BreadcrumbList'])
   assert.match(basque, /<meta name="robots" content="noindex, nofollow"/)
   assert.match(basque, /href="\/cakes">View current cakes<\/a>/)
+
+  const buttercreamHtml = await readFile(join(dist, 'cakes', 'buttercream-cake.html'), 'utf8')
+  assert.deepEqual(jsonLd(buttercreamHtml).map((entry) => entry['@type']), ['WebPage', 'BreadcrumbList'])
+  assert.match(buttercreamHtml, /<meta name="robots" content="noindex, nofollow"/)
+
+  const strawberryChocHtml = await readFile(join(dist, 'cakes', 'fresh-strawberry-chocolate-cream-cake.html'), 'utf8')
+  assert.deepEqual(jsonLd(strawberryChocHtml).map((entry) => entry['@type']), ['WebPage', 'BreadcrumbList'])
+  assert.match(strawberryChocHtml, /<meta name="robots" content="noindex, nofollow"/)
 
   const paveHtml = await readFile(join(dist, 'cakes', 'pave-chocolate-cake.html'), 'utf8')
   const vanillaHtml = await readFile(join(dist, 'cakes', 'vanilla-fresh-cream-cake.html'), 'utf8')

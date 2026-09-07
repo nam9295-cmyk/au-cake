@@ -20,6 +20,10 @@ const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().ho
 
 const AU_CATALOG_GROUP_MARKERS = {
   'signature-gateau': '/category-marker-01.svg',
+  'gateau-sharing': '/category-marker-02.svg',
+  'chocolatiers-cake': '/category-marker-03.svg',
+  'gather-celebrate': '/category-marker-04.svg',
+  // Retained legacy group keys for fallback compatibility
   'gateau-daily': '/category-marker-02.svg',
   'fresh-cream-cakes': '/category-marker-03.svg',
   'tea-time-refresh': '/category-marker-04.svg',
@@ -37,6 +41,8 @@ const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'chocolate-cupcakes': '/products/details/chocolate-cupcakes2-sydney.webp',
   'signature-gateau-au-chocolat': '/products/details/chocolate-pound-cake-quick-view.webp',
   'brownie-cheesecake': '/products/details/brownie-cheese-quick-view.webp',
+  'bento-cake': '/products/bento-cake-sydney.webp',
+  'smore-stick': '/products/smore-stick-sydney.webp',
 }
 
 const heroVisuals: Partial<Record<CakeCatalogImageKey, { image?: string; tagKey: string; className: string }>> = {
@@ -79,6 +85,7 @@ export function HomePage({
   const heroCakes = marketConfig.market === 'AU'
     ? getAuHomeHeroCards(language)
       .filter((card) => !card.isPhotoComingSoon)
+      .filter((card) => card.id !== 'bento-cake' && card.id !== 'smore-stick')
       .map((card) => ({
         image: heroVisuals[card.imageKey]?.image || card.imagePath,
         label: card.name,
@@ -173,8 +180,39 @@ export function HomePage({
   const quickViewCard = catalogCards.find((card) => card.id === quickViewCardId) || null
   const closeQuickView = useCallback(() => setQuickViewCardId(null), [])
 
-  const renderCatalogCard = (card: CakeCatalogCard) => (
-    <article className={'product-card cake-catalog-card cake-catalog-card-' + card.id} key={card.id}>
+  const renderCatalogCard = (card: CakeCatalogCard) => {
+    if (card.isComingSoonOnly) {
+      return (
+        <article className={'product-card cake-catalog-card cake-catalog-card-' + card.id + ' is-coming-soon'} key={card.id}>
+          <div className="product-card-quick-view is-disabled" aria-label={`${card.name} coming soon`}>
+            <span className="product-image-wrap">
+              {card.imagePath ? (
+                <img
+                  src={card.imagePath}
+                  alt={card.name}
+                  loading="lazy"
+                  decoding="async"
+                  width={1080}
+                  height={1012}
+                />
+              ) : (
+                <VanillaFreshCreamCakeSilhouette productName={card.name} />
+              )}
+            </span>
+          </div>
+          <div className="product-card-detail-link is-disabled">
+            <span className="product-card-kicker">COMING SOON</span>
+            <strong className="product-card-title">{card.name}</strong>
+          </div>
+          <span className="product-card-price">
+            <span className="product-card-price-number">COMING SOON</span>
+          </span>
+        </article>
+      )
+    }
+
+    return (
+      <article className={'product-card cake-catalog-card cake-catalog-card-' + card.id} key={card.id}>
       <button
         className="product-card-quick-view"
         type="button"
@@ -234,6 +272,7 @@ export function HomePage({
       </span>
     </article>
   )
+}
 
   const rotateHeroCake = useCallback((direction: 1 | -1) => {
     setActiveHeroCake((current) => (current + direction + heroCakes.length) % heroCakes.length)

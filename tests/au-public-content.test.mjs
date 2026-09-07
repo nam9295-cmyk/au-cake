@@ -26,7 +26,7 @@ const productStartingPrices = Object.fromEntries(
 test('AU public content owns the approved homepage contract', () => {
   assert.equal(content.home.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(content.home.h1, 'Made-to-Order Chocolate Cakes in Sydney')
-  assert.equal(content.home.description, 'Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney: Pave, buttercream, fresh strawberry cream cakes, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake.')
+  assert.equal(content.home.description, "Order made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks.")
   assert.equal(content.home.pickup, 'Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00')
   assert.equal('orderingSteps' in content.home, false)
   assert.match(content.home.faq[0].answer, /Friday 18:00–20:00 and Saturday–Sunday 08:00–20:00/)
@@ -47,18 +47,20 @@ test('AU customer copy replaces small-batch claims with chocolatier-grade couver
 
 test('AU public product copy and price summaries use current Whole Cake copy and two-decimal money', () => {
   const strawberryVanilla = cakePages['fresh-strawberry-vanilla-cream-cake']
-  const buttercream = cakePages['buttercream-cake']
   const lemon = cakePages['lemon-cake']
   const brownie = cakePages['brownie-cheesecake']
+  const smore = cakePages['smore-stick']
+  const buttercreamLegacy = content.legacyCakePages['buttercream-cake']
 
   assert.match(strawberryVanilla.description, /Real vanilla bean/)
   assert.match(strawberryVanilla.description, /fresh strawberries/)
   assert.equal(strawberryVanilla.optionSummary, 'Choose a size')
 
-  assert.match(buttercream.description, /Italian meringue/)
-  assert.match(buttercream.description, /real butter/)
-  assert.match(buttercream.description, /cocoa powder/)
-  assert.equal(buttercream.optionSummary, 'Choose a size and cake colour · Chocolate Buttercream included')
+  assert.equal(buttercreamLegacy.description, 'This product is no longer part of the current cake catalogue.')
+  assert.equal(buttercreamLegacy.schema, 'webpage-only')
+
+  assert.match(smore.description, /marshmallows toasted on a stick/)
+  assert.equal(smore.optionSummary, 'Bulk discounts from 6+ sticks')
 
   assert.equal(
     lemon.description,
@@ -83,14 +85,17 @@ test('HTML shell fallback uses the current eight-cake homepage description', () 
 test('AU cake pages own starting prices and final schema modes', () => {
   assert.deepEqual(productStartingPrices, {
     'pave-chocolate-cake': 79,
-    'buttercream-cake': 75,
     'fresh-strawberry-vanilla-cream-cake': 65,
-    'fresh-strawberry-chocolate-cream-cake': 69,
     'chocolate-cupcakes': 31,
     'signature-gateau-au-chocolat': 45,
     'lemon-cake': 36,
     'brownie-cheesecake': 85,
+    'smore-stick': 4.5,
   })
+  assert.equal(content.legacyCakePages['buttercream-cake'].schema, 'webpage-only')
+  assert.equal(content.legacyCakePages['buttercream-cake'].startingPrice, null)
+  assert.equal(content.legacyCakePages['fresh-strawberry-chocolate-cream-cake'].schema, 'webpage-only')
+  assert.equal(content.legacyCakePages['fresh-strawberry-chocolate-cream-cake'].startingPrice, null)
   assert.equal(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'].schema, 'webpage-only')
   assert.equal(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'].startingPrice, null)
   assert.equal(Object.hasOwn(content.legacyCakePages['chocolate-pound-cake-and-cupcakes'], 'aggregateOffer'), false)

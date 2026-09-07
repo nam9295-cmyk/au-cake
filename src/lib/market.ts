@@ -560,6 +560,18 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
         price: 85, priceNote: '16-piece box · lemon glaze and floral finish included',
         usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
       },
+      'smore-stick': {
+        id: 'smore-stick',
+        name: "S'more Stick",
+        description: 'Toasted marshmallows on a stick coated in rich couverture chocolate for gatherings and party sharing.',
+        price: 4.5,
+        priceNote: 'AUD 4.50 / stick · Bulk discounts from 6+ sticks',
+        usesCacaoOptions: false,
+        usesSizeOptions: false,
+        usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false,
+        sizePrices: {},
+      },
     },
     cakeSizeOptions: [
       { value: '15cm', label: AU_CAKE_SIZE_LABELS['15cm'], description: 'A compact cake for a small gathering or gift', price: 75 },
@@ -630,6 +642,7 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
       'fresh-lemon-cupcakes-8': ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'],
       'fresh-lemon-cupcakes-12': ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'],
       'fresh-lemon-cupcakes-16': ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'],
+      'smore-stick': ['Toasted marshmallow on stick', 'Rich couverture chocolate coating', 'AUD 4.50 / stick', '6+ sticks: 10% off', '12+ sticks: 20% off'],
     },
     guideSteps: [
       { title: 'Request', text: 'Choose your cake and preferred pick-up time.' },
