@@ -25,6 +25,7 @@ import {
   verifyCalendarToken,
 } from './calendar-access.js'
 import { digestCakeRequestPayload, resolveReviewCouponHmacSecret } from './coupon-digest.js'
+import { SMORE_WRITES_ENABLED } from './smore-write-policy.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -161,7 +162,7 @@ export function cakeReservationResponse(document) {
     ? 'manual-coupon'
     : document.reviewCouponId
       ? 'review-reward'
-      : discountCents > 0
+      : discountCents > 0 && Number(document.discountPercent || 0) > 0
         ? 'static'
         : 'none'
   return {
@@ -183,7 +184,7 @@ export function cakeReservationResponse(document) {
     ...(Object.hasOwn(storedOrder?.lines?.[0] || {}, 'individualPackaging') ? {
       individualPackaging: storedOrder.lines[0].individualPackaging === true,
     } : {}),
-    quantity: document.quantity,
+    quantity: storedOrder?.lines[0]?.quantity ?? document.quantity,
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
     cacaoPercent: document.cacaoPercent,
@@ -368,7 +369,11 @@ async function reconcileReviewCouponCommit(
   throw new ReservationApiError('PROMO_CODE_INVALID')
 }
 
-export async function createCake(databases, input, { now = new Date(), runtimeConfig = config } = {}) {
+export async function createCake(databases, input, {
+  now = new Date(),
+  runtimeConfig = config,
+  smoreWritesEnabled = SMORE_WRITES_ENABLED,
+} = {}) {
   const documentId = documentIdForInput(input)
   const customerPhone = normalizeAustralianMobile(input?.customerPhone)
   if (!/^04\d{8}$/.test(customerPhone)) throw new ReservationApiError('INVALID_PHONE')
@@ -400,6 +405,18 @@ export async function createCake(databases, input, { now = new Date(), runtimeCo
       cakeCatalogMode: runtimeConfig.cakeCatalogMode,
     }),
     requestFingerprint,
+  }
+  // The compatibility deployment keeps the complete S'more reader/replay path,
+  // but its immutable artifact policy blocks every new request containing S'more.
+  const storedOrder = parseStoredOrderLines(data)
+  if (!smoreWritesEnabled && storedOrder?.lines.some(line => line.productId === 'smore-stick')) {
+    throw new ReservationApiError('SMORE_WRITES_DISABLED', 503)
+  }
+  // Storage capacity, not a product maximum: the original Appwrite quantity
+  // attribute was created in the signed-32-bit range. Integer range PATCH does
+  // not widen that physical column. Keep pricing/line policy independent.
+  if (storedOrder?.lines.some(line => line.quantity > 2147483647)) {
+    throw new ReservationApiError('QUANTITY_STORAGE_OVERFLOW')
   }
   data.reservationNumber = await uniqueReservationNumber(
     databases,
@@ -895,7 +912,14 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
   if (!expectedAuditAttributes.every(compatibleAuditAttribute)) {
     throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
   }
-  return { status: 'ready', capabilities: { cakeOrderLines: 1 } }
+  return {
+    status: 'ready',
+    capabilities: {
+      cakeOrderLines: 1,
+      smoreStoredOrders: 1,
+      smoreWrites: SMORE_WRITES_ENABLED ? 1 : 0,
+    },
+  }
 }
 
 export default async ({ req, res, log, error }) => {

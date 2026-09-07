@@ -36,6 +36,7 @@ const REVIEW_COUPON_PATTERN = new RegExp(
   `^(?:${REVIEW_COUPON_ANIMALS.join('|')})(?:${REVIEW_COUPON_FRUITS.join('|')})[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$`,
 )
 const MANUAL_REVIEW_COUPON_PATTERN = /^JENNIE[A-Z0-9]{5}$/
+const MANUAL_REVIEW_COUPON_ID_PATTERN = /^manual:[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const SAFE_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 const VALID_CAKE_SIZES = new Set<CakeSize>(['mini', 'size-1', '6in', '8in', '10in', '15cm', '17cm', '19cm', '22cm'])
 const VALID_CHOCOLATE_TYPES = new Set<ChocolateType>(['dark', 'milk'])
@@ -233,11 +234,47 @@ function readDensePlainDataArray(value: unknown, minimumLength: number): unknown
   return result
 }
 
+function hasVersionedOrderEnvelope(row: Record<string, unknown>): boolean {
+  return ['orderLines', 'orderLineCount', 'orderItemCount', 'discountBasisCents']
+    .some((key) => Object.hasOwn(row, key))
+}
+
 export function getReservationPricingAudit(value: unknown): ReservationPricingAudit {
   if (!isPlainDataRecord(value) || !hasOwnDataFields(value, [
     'subtotalCents', 'discountPercent', 'discountCents', 'totalPriceCents',
   ])) invalidResponse()
   const reservation = value as Record<string, unknown>
+  if (hasVersionedOrderEnvelope(reservation)) {
+    const parsed = parseCakeOrderResult(value)
+    const isAdminReservation = typeof reservation.id === 'string' && reservation.id.length > 0
+    const hasReviewCouponId = Object.hasOwn(reservation, 'reviewCouponId')
+    if (isAdminReservation && !hasReviewCouponId) invalidResponse()
+    if (isAdminReservation && (parsed.promotionKind === 'review-reward' || parsed.promotionKind === 'manual-coupon')
+      && (typeof reservation.reviewCouponId !== 'string' || !reservation.reviewCouponId)) invalidResponse()
+    if (isAdminReservation && (parsed.promotionKind === 'none' || parsed.promotionKind === 'static')
+      && reservation.reviewCouponId !== undefined) invalidResponse()
+    if (reservation.reviewCouponId !== null && reservation.reviewCouponId !== undefined) {
+      if (typeof reservation.reviewCouponId !== 'string' || !reservation.reviewCouponId) invalidResponse()
+      const expectedPromotionKind = reservation.reviewCouponId.startsWith('manual:')
+        ? MANUAL_REVIEW_COUPON_ID_PATTERN.test(reservation.reviewCouponId) ? 'manual-coupon' : invalidResponse()
+        : 'review-reward'
+      if (parsed.promotionKind !== expectedPromotionKind) invalidResponse()
+    }
+    const discountPercent: 0 | 5 | 10 = parsed.discountPercent === 0
+      ? 0
+      : parsed.discountPercent === 5
+        ? 5
+        : parsed.discountPercent === 10
+          ? 10
+          : invalidResponse()
+    return {
+      subtotalCents: nonnegativeInteger(parsed.subtotalCents),
+      discountPercent,
+      discountCents: nonnegativeInteger(parsed.discountCents),
+      totalPriceCents: nonnegativeInteger(parsed.totalPriceCents),
+      appliedPromoCodeLast4: parsed.appliedPromoCodeLast4 || '',
+    }
+  }
   const subtotalCents = nonnegativeInteger(reservation.subtotalCents)
   const discountCents = nonnegativeInteger(reservation.discountCents)
   const totalPriceCents = nonnegativeInteger(reservation.totalPriceCents)
@@ -401,7 +438,7 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
     !Number.isSafeInteger(line.chocolateIcingCount) || Number(line.chocolateIcingCount) < 0 ||
     !Number.isSafeInteger(line.vanillaCreamCount) || Number(line.vanillaCreamCount) < 0 ||
     !Number.isSafeInteger(line.partyDecorationCount) || Number(line.partyDecorationCount) < 0 ||
-    !Number.isSafeInteger(line.quantity) || Number(line.quantity) < 1 || Number(line.quantity) > MAX_RESERVATION_QUANTITY
+    !Number.isSafeInteger(line.quantity) || Number(line.quantity) < 1 || (line.productId !== 'smore-stick' && Number(line.quantity) > MAX_RESERVATION_QUANTITY)
   ) return false
   const productId = line.productId as ProductId
   const finishes = normalizeCupcakeFinishCounts(productId, Number(line.vanillaCreamCount), Number(line.partyDecorationCount))
@@ -540,6 +577,20 @@ function safeSum(values: number[]): number {
   return sum
 }
 
+export function getOrderLineBulkDiscountPercent(line: Pick<CakeOrderLineRequest, 'productId' | 'quantity'>): 0 | 10 | 20 {
+  return line.productId === 'smore-stick' ? line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0 : 0
+}
+
+export function getOrderLineBulkDiscountCents(line: Pick<CakeOrderLineResult, 'productId' | 'quantity' | 'subtotalCents'>): number {
+  // Smore has an exact 45c/90c discount per piece. Do not overflow an
+  // otherwise valid safe-integer subtotal by multiplying it by 10 or 20.
+  const discountCents = line.productId === 'smore-stick'
+    ? line.quantity * (450 * getOrderLineBulkDiscountPercent(line) / 100)
+    : 0
+  if (!Number.isSafeInteger(discountCents)) invalidResponse()
+  return discountCents
+}
+
 function expectedLineDiscounts(lines: CakeOrderLineResult[], eligibleIndexes: number[], discountPercent: 0 | 5 | 10, discountCents: number): number[] {
   const allocations = new Array<number>(lines.length).fill(0)
   const ranked = eligibleIndexes.map((index) => {
@@ -662,14 +713,14 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
       vanillaCakeSheet !== normalizeStoredVanillaCakeSheet(productId, vanillaCakeSheet) ||
       vanillaCakeFlavor !== normalizeStoredVanillaCakeFlavor(productId, vanillaCakeFlavor) ||
       vanillaCakePointColor !== normalizeVanillaCakePointColor(productId, vanillaCakePointColor) ||
-      quantity < 1 || quantity > MAX_RESERVATION_QUANTITY
+      quantity < 1 || (productId !== 'smore-stick' && quantity > MAX_RESERVATION_QUANTITY)
     ) invalidResponse()
     const unitPriceCents = nonnegativeInteger(line.unitPriceCents)
     const subtotalCents = nonnegativeInteger(line.subtotalCents)
     const discountCents = nonnegativeInteger(line.discountCents)
     const totalPriceCents = nonnegativeInteger(line.totalPriceCents)
     const discountPercent = line.discountPercent
-    if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10) invalidResponse()
+    if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10 && !(productId === 'smore-stick' && discountPercent === 20)) invalidResponse()
     const authoritativeUnitPriceCents = Math.round(getReservationPrice(productId, {
       cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, vanillaCreamCount, partyDecorationCount,
       brownieCreamOption,
@@ -708,15 +759,18 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
   const individualPackagingPieces = hasPackagingAggregates ? nonnegativeInteger(row.individualPackagingPieces) : 0
   const individualPackagingFeeCents = hasPackagingAggregates ? nonnegativeInteger(row.individualPackagingFeeCents) : 0
   if (subtotalCents - discountCents + individualPackagingFeeCents !== totalPriceCents) invalidResponse()
+  const bulkDiscounts = orderLines.map(getOrderLineBulkDiscountCents)
+  const bulkDiscountCents = safeSum(bulkDiscounts)
+  const promoDiscountCents = discountCents - bulkDiscountCents
   const aggregateDiscountNumerator = discountBasisCents * Number(discountPercent)
-  if (!Number.isSafeInteger(aggregateDiscountNumerator) || discountCents !== Math.round(aggregateDiscountNumerator / 100)) invalidResponse()
+  if (!Number.isSafeInteger(aggregateDiscountNumerator) || promoDiscountCents !== Math.round(aggregateDiscountNumerator / 100)) invalidResponse()
   const appliedPromoCodeLast4 = row.appliedPromoCodeLast4 === undefined
     ? ''
     : typeof row.appliedPromoCodeLast4 === 'string'
       ? row.appliedPromoCodeLast4.toUpperCase()
       : invalidResponse()
-  if (discountPercent === 0 && (discountBasisCents !== 0 || discountCents !== 0 || appliedPromoCodeLast4 !== '')) invalidResponse()
-  if (discountPercent !== 0 && (discountBasisCents <= 0 || discountCents <= 0 || !SAFE_LAST4_PATTERN.test(appliedPromoCodeLast4))) invalidResponse()
+  if (discountPercent === 0 && (discountBasisCents !== 0 || promoDiscountCents !== 0 || appliedPromoCodeLast4 !== '')) invalidResponse()
+  if (discountPercent !== 0 && (discountBasisCents <= 0 || promoDiscountCents <= 0 || !SAFE_LAST4_PATTERN.test(appliedPromoCodeLast4))) invalidResponse()
 
   const promotionKind = requiredSetValue(row, 'promotionKind', new Set(['none', 'static', 'review-reward', 'manual-coupon'] as const))
   const createdAt = requiredIsoTimestamp(row, 'createdAt')
@@ -737,14 +791,14 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
       .filter((index) => index >= 0)
     if (eligibleIndexes.length === 0) invalidResponse()
   } else if (promotionKind === 'review-reward' || promotionKind === 'manual-coupon') {
-    eligibleIndexes = orderLines.map((_, index) => index)
+    eligibleIndexes = orderLines.map((line, index) => line.productId !== 'smore-stick' ? index : -1).filter((index) => index >= 0)
   }
   const eligibleIndexSet = new Set(eligibleIndexes)
-  if (orderLines.some((line, index) => line.discountPercent !== (eligibleIndexSet.has(index) ? discountPercent : 0))) invalidResponse()
+  if (orderLines.some((line, index) => line.discountPercent !== (line.productId === 'smore-stick' ? getOrderLineBulkDiscountPercent(line) : eligibleIndexSet.has(index) ? discountPercent : 0))) invalidResponse()
 
   const expectedBasis = safeSum(eligibleIndexes.map((index) => orderLines[index].subtotalCents))
-  const expectedAllocations = expectedLineDiscounts(orderLines, eligibleIndexes, discountPercent, discountCents)
-  if (orderLines.some((line, index) => line.discountCents !== expectedAllocations[index])) invalidResponse()
+  const expectedAllocations = expectedLineDiscounts(orderLines, eligibleIndexes, discountPercent, promoDiscountCents)
+  if (orderLines.some((line, index) => line.discountCents !== expectedAllocations[index] + bulkDiscounts[index])) invalidResponse()
   const lineSubtotal = safeSum(orderLines.map((line) => line.subtotalCents))
   const lineDiscount = safeSum(orderLines.map((line) => line.discountCents))
   const lineTotal = safeSum(orderLines.map((line) => line.totalPriceCents))
@@ -832,7 +886,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
 export function parseCakeReservationResult(value: unknown): Reservation {
   const row = readPlainDataRecordSnapshot(value)
   if (!row) invalidResponse()
-  if (Array.isArray(row.orderLines)) return parseCakeOrderResult(row)
+  if (hasVersionedOrderEnvelope(row)) return parseCakeOrderResult(row)
   const pricing = getReservationPricingAudit(row)
   const totalPrice = requiredFiniteNumber(row, 'totalPrice')
   if (Math.round(totalPrice * 100) !== pricing.totalPriceCents) invalidResponse()

@@ -266,7 +266,7 @@ export function ReservationDrawer({
           </div>
           <div className="admin-edit-price-row">
             <span>수정 후 금액</span>
-            <strong>{formatCurrency(draftUpdate.totalPrice)}</strong>
+            <strong>{formatCurrency(draftReservation.totalPrice)}</strong>
           </div>
         </section>
 

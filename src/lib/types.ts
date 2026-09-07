@@ -158,7 +158,8 @@ export type CakeOrderLineResult = CakeOrderLineRequest & {
   unitPriceCents: number
   chocolateExtraCents?: number
   subtotalCents: number
-  discountPercent: 0 | 5 | 10
+  // 20% is a smore quantity discount, never a coupon reward.
+  discountPercent: 0 | 5 | 10 | 20
   discountCents: number
   individualPackagingPieces?: number
   individualPackagingFeeCents?: number

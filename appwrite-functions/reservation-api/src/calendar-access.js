@@ -43,6 +43,10 @@ export function verifyCalendarToken(token, secret, now = new Date()) {
 }
 
 function cakeLineLabel(document) {
+  if (document.productId === 'smore-stick') {
+    const quantity = Number.isSafeInteger(document.quantity) && document.quantity >= 1 ? document.quantity : 1
+    return `S'more Stick ×${quantity}`
+  }
   const labels = {
     'pave-cake': 'Pave cake',
     'vanilla-fresh-cream-cake': 'vanilla fresh cream cake',

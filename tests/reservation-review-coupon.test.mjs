@@ -314,6 +314,111 @@ function createDatabaseDouble({ couponDocument = coupon(), failAt, commitApplies
   return db
 }
 
+test('persistence boundary rejects quantity beyond signed-32-bit storage without writes, not as product validation', async () => {
+  const db = createDatabaseDouble()
+  const request = { ...cakeInput, productId: 'smore-stick', quantity: 2147483648, promoCode: '' }
+  // The product policy and integer-cents calculator accept this safe quantity.
+  assert.equal(buildCakeReservation(request, { now }).quantity, 2147483648)
+  await assert.rejects(() => createCake(db, request, { now, runtimeConfig }), assertApiCode('QUANTITY_STORAGE_OVERFLOW'))
+  assert.equal(db.calls.some(([name]) => name === 'createDocument' || name === 'updateDocument' || name === 'createTransaction'), false)
+})
+
+test('mixed-order storage ceiling is enforced for every line before reservation or coupon side effects', async () => {
+  const order = (orderLines, requestId) => ({
+    requestId,
+    customerName: cakeInput.customerName,
+    customerPhone: cakeInput.customerPhone,
+    customerEmail: cakeInput.customerEmail,
+    pickupDate: cakeInput.pickupDate,
+    pickupTime: cakeInput.pickupTime,
+    requestNote: cakeInput.requestNote,
+    promoCode: rawCode,
+    privacyConsent: true,
+    orderLines,
+  })
+  const oversizedOrders = [
+    order([
+      { productId: 'smore-stick', quantity: 2147483648 },
+      { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+    ], '10000000-0000-4000-8000-000000000001'),
+    order([
+      { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+      { productId: 'smore-stick', quantity: 2147483648 },
+    ], '10000000-0000-4000-8000-000000000002'),
+  ]
+  for (const request of oversizedOrders) {
+    const db = createDatabaseDouble()
+    await assert.rejects(() => createCake(db, request, { now, runtimeConfig }), assertApiCode('QUANTITY_STORAGE_OVERFLOW'))
+    assert.equal(db.calls.some(([name]) => name === 'listDocuments' || name === 'createDocument' || name === 'updateDocument' || name === 'createTransaction' || name === 'updateTransaction'), false)
+  }
+
+  const boundaryDb = createDatabaseDouble()
+  const boundary = await createCake(boundaryDb, order([
+    { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+    { productId: 'smore-stick', quantity: 2147483647 },
+  ], '10000000-0000-4000-8000-000000000003'), { now, runtimeConfig })
+  assert.equal(boundary.orderItemCount, 2147483648)
+  assert.equal(boundaryDb.calls.filter(([name]) => name === 'createDocument').length, 1)
+
+  assert.throws(() => buildCakeReservation(order([
+    { productId: 'pave-cake', cakeSize: '6in', quantity: 6 },
+  ], '10000000-0000-4000-8000-000000000004'), { now }), assertApiCode('INVALID_QUANTITY'))
+})
+
+for (const quantity of [6, 12, 50, 100, 2147483647]) {
+  test(`createCake sends actual ${quantity} sticks to persistence and retains it on retry`, async () => {
+    const db = createDatabaseDouble()
+    const request = { ...cakeInput, productId: 'smore-stick', quantity, promoCode: '' }
+    const response = await createCake(db, request, { now, runtimeConfig })
+    const writes = db.calls.filter(([name]) => name === 'createDocument')
+    assert.equal(writes.length, 1)
+    const stored = writes[0][1].data
+    assert.equal(stored.quantity, quantity)
+    assert.equal(stored.orderItemCount, quantity)
+    assert.equal(JSON.parse(stored.orderLinesJson).lines[0].quantity, quantity)
+    assert.equal(response.quantity, quantity)
+    assert.equal(publicCakeReservation(db.documents.get(requestId)).quantity, quantity)
+    assert.deepEqual(await createCake(db, request, { now, runtimeConfig }), response)
+    assert.equal(db.calls.filter(([name]) => name === 'createDocument').length, 1)
+  })
+}
+
+for (const manual of [false, true]) for (const quantity of [1, 5, 6, 11, 12, 24]) {
+  test(`smore-only ${quantity} rejects valid ${manual ? 'manual' : 'review'} coupon without consumption`, async () => {
+    const db = createDatabaseDouble({ couponDocument: manual ? manualCoupon() : coupon() })
+    await assert.rejects(() => createCake(db, {
+      ...cakeInput, productId: 'smore-stick', quantity,
+      promoCode: manual ? manualCode : rawCode,
+    }, { now, runtimeConfig }), assertApiCode('PROMO_CODE_INVALID'))
+    assert.equal(db.coupon.status, 'active')
+    assert.equal(db.documents.size, 0)
+    assert.equal(db.calls.some(([name]) => name === 'createDocument' || name === 'updateDocument'), false)
+  })
+}
+
+for (const manual of [false, true]) {
+  test(`mixed smore order redeems ${manual ? 'manual' : 'review'} coupon once for cake only`, async () => {
+    const db = createDatabaseDouble({ couponDocument: manual ? manualCoupon() : coupon() })
+    const { productId, cakeSize, chocolateType, poundAddon, quantity, ...customer } = cakeInput
+    const request = {
+      ...customer, promoCode: manual ? manualCode : rawCode,
+      orderLines: [{ productId: 'smore-stick', quantity: 12 }, { productId, cakeSize, chocolateType, poundAddon, quantity }],
+    }
+    const response = await createCake(db, request, { now, runtimeConfig })
+    assert.equal(db.documents.get(requestId).quantity, 12)
+    assert.equal(db.documents.get(requestId).orderItemCount, 13)
+    assert.equal(response.discountBasisCents, 7900)
+    assert.equal(response.discountCents, 1475)
+    assert.equal(response.totalPriceCents, 11825)
+    assert.equal(response.promotionKind, manual ? 'manual-coupon' : 'review-reward')
+    assert.equal(db.coupon.status, 'redeemed')
+    const retry = await createCake(db, request, { now, runtimeConfig })
+    assert.deepEqual(retry, response)
+    assert.equal(db.calls.filter(([name]) => name === 'updateDocument').length, 1)
+    assert.equal(publicCakeReservation(db.documents.get(requestId)).totalPriceCents, response.totalPriceCents)
+  })
+}
+
 test('review coupon format normalizes trim/case and requires curated tokens plus five unambiguous suffix characters', () => {
   assert.equal(normalizeReviewCouponCode('  foxkiwi7q2mk  '), rawCode)
   assert.equal(normalizeReviewCouponCode('CATMANGO2A3BC'), 'CATMANGO2A3BC')
@@ -954,7 +1059,11 @@ test('reservation readiness returns only generic ready after complete private co
   const databases = readinessDatabase()
   assert.deepEqual(await checkReservationReadiness(databases, runtimeConfig), {
     status: 'ready',
-    capabilities: { cakeOrderLines: 1 },
+    capabilities: {
+      cakeOrderLines: 1,
+      smoreStoredOrders: 1,
+      smoreWrites: 1,
+    },
   })
   assert.deepEqual(databases.calls.map(([name]) => name), [
     'listDocuments',

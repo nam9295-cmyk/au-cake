@@ -8,6 +8,7 @@ import {
   buildHealthFailureDiagnostic,
   buildRuntimeCandidates,
   isReadyCakeOrderLinesHealth,
+  isReadyReservationRolloutHealth,
   isSecretFunctionVariable,
   redactReservationDeploymentDiagnostic,
   resolveDeployConfig,
@@ -124,6 +125,10 @@ test('deployment and permission transition health gates require the multi-line c
     ok: true,
     result: { status: 'ready', capabilities: { cakeOrderLines: 1 } },
   }), true)
+  assert.equal(isReadyReservationRolloutHealth(200, {
+    ok: true,
+    result: { status: 'ready', capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 0 } },
+  }, 'compatibility'), true)
   for (const [statusCode, response] of [
     [503, { ok: true, result: { status: 'ready', capabilities: { cakeOrderLines: 1 } } }],
     [200, { ok: false, result: { status: 'ready', capabilities: { cakeOrderLines: 1 } } }],
@@ -133,11 +138,13 @@ test('deployment and permission transition health gates require the multi-line c
     assert.equal(isReadyCakeOrderLinesHealth(statusCode, response), false)
   }
 
-  for (const path of ['scripts/deploy-reservation-api.mjs', 'scripts/set-reservation-write-mode.mjs']) {
-    const source = readFileSync(path, 'utf8')
-    assert.match(source, /isReadyCakeOrderLinesHealth\(execution\.responseStatusCode, response\)/)
-  }
+  const deploySource = readFileSync('scripts/deploy-reservation-api.mjs', 'utf8')
+  assert.match(deploySource, /isReadyReservationRolloutHealth\(execution\.responseStatusCode, response, phase\)/)
+  assert.match(deploySource, /runReservationApiRollout\(/)
+  assert.match(deploySource, /activate: false/)
+  assert.doesNotMatch(deploySource, /activate: true/)
   const permissionSource = readFileSync('scripts/set-reservation-write-mode.mjs', 'utf8')
+  assert.match(permissionSource, /isReadyCakeOrderLinesHealth\(execution\.responseStatusCode, response\)/)
   assert.match(permissionSource, /if \(mode === 'function'\) await verifyReservationApiHealth\(\)/)
   assert.ok(permissionSource.indexOf("if (mode === 'function') await verifyReservationApiHealth()") < permissionSource.indexOf('await updateCollectionPermissions'))
 })

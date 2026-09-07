@@ -95,6 +95,8 @@ import {
   parseCakeOrderResult,
   parseCakeReservationResult,
   parseReservationApiCapabilities,
+  getOrderLineBulkDiscountPercent,
+  getOrderLineBulkDiscountCents,
 } from './review-coupon-client'
 import { assertReservationRepricingAllowed } from './admin-reservation-edit'
 
@@ -297,7 +299,7 @@ function normalizeReservation(reservation: Reservation): Reservation {
     vanillaCakeSheet: normalizeStoredVanillaCakeSheet(getProductById(reservation.productId).id, reservation.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeStoredVanillaCakeFlavor(getProductById(reservation.productId).id, reservation.vanillaCakeFlavor),
     vanillaCakePointColor: normalizeVanillaCakePointColor(getProductById(reservation.productId).id, reservation.vanillaCakePointColor),
-    quantity: normalizeQuantity(reservation.quantity),
+    quantity: normalizeQuantity(reservation.quantity, reservation.productId),
     totalPrice: reservation.totalPriceCents === undefined || reservation.totalPriceCents === null
       ? reservation.totalPrice
       : fromCurrencyCents(reservation.totalPriceCents),
@@ -417,7 +419,7 @@ function normalizePublicOrderLine(
   }
   if (!isCurrentStoredCakeSize(product.id, normalized.cakeSize)
     && !isHistoricalWholeCakeSize(product.id, normalized.cakeSize)) throw new Error('INVALID_RESERVATION_RESPONSE')
-  if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_RESERVATION_QUANTITY) throw new Error('INVALID_RESERVATION_RESPONSE')
+  if (!Number.isSafeInteger(line.quantity) || line.quantity < 1 || (product.id !== 'smore-stick' && line.quantity > MAX_RESERVATION_QUANTITY)) throw new Error('INVALID_RESERVATION_RESPONSE')
   for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity'] as const) {
     if (line[key] !== normalized[key]) throw new Error('INVALID_RESERVATION_RESPONSE')
   }
@@ -472,7 +474,7 @@ function normalizePublicOrderLine(
     || priced.subtotalCents !== approvedUnitPriceCents * line.quantity + chocolateExtraCents
     || individualPackagingPieces !== expectedPackagingPieces
     || totalPriceCents !== subtotalCents - discountCents + individualPackagingFeeCents
-    || ![0, 5, 10].includes(priced.discountPercent!)) throw new Error('INVALID_RESERVATION_RESPONSE')
+    || !(product.id === 'smore-stick' ? [0, 10, 20] : [0, 5, 10]).includes(priced.discountPercent!)) throw new Error('INVALID_RESERVATION_RESPONSE')
   return {
     ...normalized,
     ...Object.fromEntries(priceKeys.map((key) => [key, priced[key]])),
@@ -520,7 +522,12 @@ function validateOrderPricing(
   if (new Set(canonicalKeys).size !== canonicalKeys.length) invalid()
   if (aggregates.discountPercent !== 0 && eligibleIndexes.length === 0) invalid()
   const eligibleSet = new Set(eligibleIndexes)
-  if (lines.some((line, index) => line.discountPercent !== (eligibleSet.has(index) ? aggregates.discountPercent : 0))) invalid()
+  if (eligibleIndexes.some((index) => lines[index].productId === 'smore-stick')) invalid()
+  if (lines.some((line, index) => line.discountPercent !== (line.productId === 'smore-stick' ? getOrderLineBulkDiscountPercent(line) : eligibleSet.has(index) ? aggregates.discountPercent : 0))) invalid()
+  const bulkDiscounts = lines.map((line) => {
+    try { return getOrderLineBulkDiscountCents(line) } catch { return invalid() }
+  })
+  const bulkDiscountCents = safeOrderSum(bulkDiscounts, invalid)
   const expectedBasis = safeOrderSum(eligibleIndexes.map((index) => lines[index].subtotalCents), invalid)
   const numerator = expectedBasis * aggregates.discountPercent
   if (!Number.isSafeInteger(numerator)) invalid()
@@ -538,7 +545,7 @@ function validateOrderPricing(
     allocations[candidate.index] += 1
     remaining -= 1
   }
-  if (remaining !== 0 || lines.some((line, index) => line.discountCents !== allocations[index])) invalid()
+  if (remaining !== 0 || lines.some((line, index) => line.discountCents !== allocations[index] + bulkDiscounts[index])) invalid()
 
   const subtotalCents = safeOrderSum(lines.map((line) => line.subtotalCents), invalid)
   const discountCents = safeOrderSum(lines.map((line) => line.discountCents), invalid)
@@ -557,7 +564,7 @@ function validateOrderPricing(
     : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
   if (
     aggregates.subtotalCents !== subtotalCents || aggregates.discountBasisCents !== expectedBasis
-    || aggregates.discountCents !== discountCents || aggregates.discountCents !== expectedDiscount
+    || aggregates.discountCents !== discountCents || aggregates.discountCents !== safeOrderSum([expectedDiscount, bulkDiscountCents], invalid)
     || aggregates.totalPriceCents !== totalPriceCents
     || aggregates.totalPriceCents !== aggregates.subtotalCents - aggregates.discountCents + individualPackagingFeeCents
     || (aggregates.individualPackagingPieces || 0) !== individualPackagingPieces
@@ -595,7 +602,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     ...(reservation.individualPackaging === undefined ? {} : {
       individualPackaging: reservation.individualPackaging === true,
     }),
-    quantity: normalizeQuantity(reservation.quantity),
+    quantity: normalizeQuantity(reservation.quantity, reservation.productId),
   }
   const orderLines = payload.orderLines?.map((line) => normalizePublicOrderLine(line, { allowHistoricalUnitPrice: true }))
   if (payload.orderLines && (!orderLines?.length
@@ -632,7 +639,7 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     }
     const eligibleIndexes = payload.discountPercent === 0
       ? []
-      : pricedLines.map((line, index) => line.discountPercent === payload.discountPercent ? index : -1).filter((index) => index >= 0)
+      : pricedLines.map((line, index) => line.productId !== 'smore-stick' && line.discountPercent === payload.discountPercent ? index : -1).filter((index) => index >= 0)
     validateOrderPricing(pricedLines, {
       subtotalCents: payload.subtotalCents!,
       discountBasisCents: payload.discountBasisCents!,
@@ -667,8 +674,12 @@ function matchesReservationPhone(storedPhone: string, suppliedPhone: string) {
   return isValidPhone(suppliedDigits) && storedDigits === suppliedDigits
 }
 
-function normalizeQuantity(quantity?: number) {
+function normalizeQuantity(quantity?: number, productId?: ProductId) {
   const value = Number(quantity || 1)
+  if (productId === 'smore-stick') {
+    if (!Number.isSafeInteger(value) || value < 1) throw new Error('INVALID_RESERVATION_RESPONSE')
+    return value
+  }
   if (!Number.isFinite(value)) return 1
   return Math.min(MAX_RESERVATION_QUANTITY, Math.max(1, Math.floor(value)))
 }
@@ -750,9 +761,17 @@ function invalidStoredOrder(): never {
 
 function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProjection: Reservation): Pick<
   Reservation,
-  'orderLines' | 'orderLineCount' | 'orderItemCount' | 'subtotalCents' | 'discountBasisCents' | 'discountPercent' | 'discountCents' | 'totalPriceCents' | 'individualPackagingPieces' | 'individualPackagingFeeCents'
+  'orderLines' | 'orderLineCount' | 'orderItemCount' | 'subtotalCents' | 'discountBasisCents' | 'discountPercent' | 'discountCents' | 'totalPriceCents' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'promotionKind'
 > | null {
-  if (!Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) return null
+  const hasVersionedCompanionMetadata = [
+    document.orderLineCount,
+    document.orderItemCount,
+    document.discountBasisCents,
+  ].some((value) => value !== null && value !== undefined)
+  if (!Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) {
+    if (hasVersionedCompanionMetadata) invalidStoredOrder()
+    return null
+  }
   if (typeof document.orderLinesJson !== 'string'
     || new TextEncoder().encode(document.orderLinesJson).byteLength > STORED_ORDER_MAX_BYTES) invalidStoredOrder()
   let payload: unknown
@@ -862,7 +881,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
       || (document.reviewCouponId.startsWith('manual:')
         && (!MANUAL_REVIEW_COUPON_ID_PATTERN.test(document.reviewCouponId) || aggregateDiscountPercent !== 5))
     ) invalidStoredOrder()
-    eligibleIndexes = orderLines.map((_, index) => index)
+    eligibleIndexes = orderLines.map((line, index) => line.productId !== 'smore-stick' ? index : -1).filter((index) => index >= 0)
   } else if (aggregateDiscountPercent === 10) {
     if (!hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string'
       || !SAFE_PROMO_LAST4_PATTERN.test(document.appliedPromoCodeLast4)) invalidStoredOrder()
@@ -879,6 +898,11 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
   } else {
     invalidStoredOrder()
   }
+  const promotionKind: NonNullable<Reservation['promotionKind']> = hasReviewCoupon
+    ? document.reviewCouponId?.startsWith('manual:') ? 'manual-coupon' : 'review-reward'
+    : hasPromoLast4
+      ? 'static'
+      : 'none'
 
   validateOrderPricing(orderLines, {
     subtotalCents,
@@ -893,7 +917,8 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
 
   const first = orderLines[0]
   for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'quantity'] as const) {
-    if (firstProjection[key] !== first[key]) invalidStoredOrder()
+    if (firstProjection[key] !== first[key]
+      || (key === 'quantity' && first.productId === 'smore-stick' && document.quantity !== first.quantity)) invalidStoredOrder()
   }
   if (Object.hasOwn(first, 'cupcakeFinish') !== Object.hasOwn(firstProjection, 'cupcakeFinish')
     || (Object.hasOwn(first, 'cupcakeFinish') && firstProjection.cupcakeFinish !== first.cupcakeFinish)) invalidStoredOrder()
@@ -906,6 +931,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
     discountPercent: document.discountPercent,
     discountCents,
     totalPriceCents,
+    promotionKind,
     ...(hasPackagingFields ? { individualPackagingPieces, individualPackagingFeeCents } : {}),
   }
 }
@@ -941,7 +967,7 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
     vanillaCakeSheet: normalizeStoredVanillaCakeSheet(getProductById(document.productId).id, document.vanillaCakeSheet),
     vanillaCakeFlavor: normalizeStoredVanillaCakeFlavor(getProductById(document.productId).id, document.vanillaCakeFlavor),
     vanillaCakePointColor: normalizeVanillaCakePointColor(getProductById(document.productId).id, document.vanillaCakePointColor),
-    quantity: normalizeQuantity(document.quantity),
+    quantity: normalizeQuantity(document.quantity, getProductById(document.productId).id),
     pickupDate: document.pickupDate,
     pickupTime: document.pickupTime,
     cacaoPercent: document.cacaoPercent,
@@ -967,6 +993,7 @@ export function toReservation(document: AppwriteReservationDocument): Reservatio
     ? {
         ...reservation,
         ...storedOrder,
+        quantity: storedOrder.orderLines![0].quantity,
         chocolateExtra: storedOrder.orderLines?.[0]?.chocolateExtra || 'none',
         ...(Object.hasOwn(storedOrder.orderLines?.[0] || {}, 'brownieCreamOption') ? {
           brownieCreamOption: storedOrder.orderLines?.[0]?.brownieCreamOption,

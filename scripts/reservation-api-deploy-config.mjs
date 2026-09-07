@@ -152,6 +152,14 @@ export function isReadyCakeOrderLinesHealth(responseStatusCode, response) {
     response.result?.capabilities?.cakeOrderLines === 1
 }
 
+export function isReadyReservationRolloutHealth(responseStatusCode, response, phase) {
+  const expectedWrites = phase === 'compatibility' ? 0 : phase === 'full' ? 1 : null
+  return expectedWrites !== null &&
+    isReadyCakeOrderLinesHealth(responseStatusCode, response) &&
+    response.result.capabilities.smoreStoredOrders === 1 &&
+    response.result.capabilities.smoreWrites === expectedWrites
+}
+
 export function buildHealthFailureDiagnostic(execution = {}, secrets = []) {
   return redactReservationDeploymentDiagnostic([
     `status=${String(execution.status || 'unknown')}`,

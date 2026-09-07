@@ -84,6 +84,14 @@ function optionalReplyTo(value) {
 }
 
 function compactCakeLineSummary(line) {
+  if (line?.productId === 'smore-stick') {
+    const quantity = Number.isSafeInteger(line.quantity) && line.quantity >= 1 ? line.quantity : 1
+    return [
+      `S'more Stick × ${quantity}`,
+      ...(Number.isSafeInteger(line.totalPriceCents) ? [`AUD ${(line.totalPriceCents / 100).toFixed(2)}`] : []),
+      ...(line.discountPercent > 0 ? [`${line.discountPercent}% bulk discount`] : []),
+    ].join(' · ')
+  }
   const product = CAKE_PRODUCT_LABELS[line?.productId] || plainTextCell(line?.productId) || 'Cake order'
   const size = CAKE_SIZE_LABELS[line?.cakeSize] || plainTextCell(line?.cakeSize)
   const quantity = Number.isInteger(Number(line?.quantity)) && Number(line.quantity) > 0
