@@ -74,6 +74,8 @@ test('direct cart entry points reject retired and unknown products without reviv
   const invalidSelections = [
     baseSelection({ productId: 'fresh-lemon-cupcakes-4' }),
     baseSelection({ productId: 'choco-basque-cheesecake' }),
+    baseSelection({ productId: 'buttercream-cake' }),
+    baseSelection({ productId: 'fresh-strawberry-chocolate-cream-cake' }),
     baseSelection({ productId: 'unknown-cake' as CakeDetailSelection['productId'] }),
   ]
 
@@ -102,16 +104,16 @@ test('adding an identical normalized configuration merges quantity into one capp
   assert.equal(merged[0].selection.quantity, 5)
 })
 
-test('Buttercream and Brownie Cheesecake cart lines add, update, and remove independently', () => {
-  const buttercream = baseSelection({ productId: 'buttercream-cake', cakeSize: '10in', quantity: 1 })
+test('Pave and Brownie Cheesecake cart lines add, update, and remove independently', () => {
+  const pave = baseSelection({ productId: 'pave-cake', cakeSize: '10in', quantity: 1 })
   const brownie = baseSelection({ productId: 'pave-brownie-cheesecake', quantity: 1 })
-  const added = addCartLine(addCartLine([], buttercream), brownie)
+  const added = addCartLine(addCartLine([], pave), brownie)
 
   assert.equal(added.length, 2)
-  assert.equal(getCartEstimatedSubtotal(added), 240)
+  assert.equal(getCartEstimatedSubtotal(added), 254)
   const updated = updateCartLineQuantity(added, added[0].lineKey, 2)
   assert.equal(updated[0].selection.quantity, 2)
-  assert.equal(getCartEstimatedSubtotal(updated), 385)
+  assert.equal(getCartEstimatedSubtotal(updated), 413)
   assert.deepEqual(removeCartLine(updated, updated[1].lineKey), [updated[0]])
 })
 
@@ -217,7 +219,7 @@ test('current Strawberry orders ignore legacy Vanilla fields while Lemon options
   const selections: CakeDetailSelection[] = [
     baseSelection({ productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '6in' }),
     baseSelection({ productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in' }),
-    baseSelection({ productId: 'fresh-strawberry-chocolate-cream-cake', cakeSize: '10in' }),
+    baseSelection({ productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '10in' }),
     baseSelection({ productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '6in', vanillaCakeFlavor: 'nutella-chocolate-chip' }),
     baseSelection({ productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 0 }),
     baseSelection({ productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1 }),
@@ -231,7 +233,7 @@ test('current Strawberry orders ignore legacy Vanilla fields while Lemon options
   assert.equal(getCartTotalQuantity(lines), 6)
 })
 
-test('Strawberry carts omit legacy point colours while Buttercream colours remain separate', () => {
+test('Strawberry carts omit legacy point colours while retired Buttercream additions are rejected', () => {
   const pink = baseSelection({ productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '6in', vanillaCakePointColor: 'pink' })
   const blue = baseSelection({ productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '6in', vanillaCakePointColor: 'blue' })
   const lines = addCartLine(addCartLine([], pink), blue)
@@ -239,12 +241,9 @@ test('Strawberry carts omit legacy point colours while Buttercream colours remai
   assert.equal(lines.length, 1)
   assert.equal(lines[0].selection.quantity, 2)
 
-
   const buttercreamPink = baseSelection({ productId: 'buttercream-cake', vanillaCakePointColor: 'pink' })
-  const buttercreamBlue = baseSelection({ productId: 'buttercream-cake', vanillaCakePointColor: 'blue' })
-  const buttercreamLines = addCartLine(addCartLine([], buttercreamPink), buttercreamBlue)
-  assert.equal(buttercreamLines.length, 2)
-  assert.notEqual(buttercreamLines[0].lineKey, buttercreamLines[1].lineKey)
+  assert.equal(normalizeCartSelection(buttercreamPink), null)
+  assert.deepEqual(addCartLine([], buttercreamPink), [])
 })
 
 test('updating one line clamps its quantity without changing other lines', () => {

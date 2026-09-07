@@ -42,6 +42,40 @@ export default function CakesPage({
               <div className="cake-catalog-group-products cakes-index-group-products">
                 {group.cards.map((card, cardIndex) => {
                   const productNumber = groupIndex * 2 + cardIndex + 1
+
+                  if (card.isComingSoonOnly) {
+                    return (
+                      <article className="cakes-index-card cakes-index-card-coming-soon" key={card.slug}>
+                        <div className="cakes-index-image">
+                          {card.imagePath ? (
+                            <img
+                              src={card.imagePath}
+                              alt={card.name}
+                              loading="lazy"
+                              decoding="async"
+                              width={1080}
+                              height={1012}
+                              className="cakes-index-img"
+                            />
+                          ) : (
+                            <span className="cakes-index-coming-soon">
+                              <b>COMING SOON</b>
+                              <small>{language === 'ko' ? '출시 준비 중' : 'Coming soon'}</small>
+                            </span>
+                          )}
+                          <span className="cakes-index-number">{String(productNumber).padStart(2, '0')}</span>
+                        </div>
+                        <div className="cakes-index-copy">
+                          <h3>{card.name}</h3>
+                          <p className="cakes-index-card-description">{card.description}</p>
+                          <div className="cakes-index-card-price">
+                            <strong>COMING SOON</strong>
+                          </div>
+                        </div>
+                      </article>
+                    )
+                  }
+
                   return (
                     <article className="cakes-index-card" key={card.slug}>
                       <a
@@ -52,7 +86,7 @@ export default function CakesPage({
                         {card.isPhotoComingSoon ? (
                           <span className="cakes-index-coming-soon">
                             <b>COMING SOON</b>
-                            <small>{language === 'ko' ? '사진 준비 중 · 주문 가능' : 'Photo pending · Available to request'}</small>
+                            <small>{language === 'ko' ? '사진 준비 중' : 'Photo pending'}</small>
                           </span>
                         ) : (
                           <img

@@ -92,6 +92,14 @@
   --catalogue-card-color: #D9E7D6;
 }
 
+.cake-catalog-card-bento-cake {
+  --catalogue-card-color: #B9D2A8;
+}
+
+.cake-catalog-card-smore-stick {
+  --catalogue-card-color: #F6C9B8;
+}
+
 .product-section .cake-catalog-group-products .cake-catalog-card .product-image-wrap::before {
   position: absolute;
   z-index: 0;
@@ -198,8 +206,10 @@
 
   .product-section .cake-catalog-group-products .product-card-detail-link,
   .product-section .cake-catalog-group-products .product-card-price {
-    width: min(92%, 40vw, 560px);
+    width: min(92%, clamp(288px, 30vw, 420px));
     margin-inline: auto;
+    text-align: left;
+    justify-items: start;
   }
 
   .product-section .cake-catalog-group-products .product-card-quick-view {

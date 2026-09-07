@@ -18,18 +18,17 @@ function productOffer(path: string) {
   return offer
 }
 
-test('home and eight sale cake detail routes use AU self canonicals', () => {
+test('home and seven sale cake detail routes use AU self canonicals', () => {
   const paths = [
     '/',
     '/cakes',
     '/cakes/pave-chocolate-cake',
-    '/cakes/fresh-strawberry-vanilla-cream-cake',
-    '/cakes/fresh-strawberry-chocolate-cream-cake',
-    '/cakes/buttercream-cake',
-    '/cakes/chocolate-cupcakes',
     '/cakes/signature-gateau-au-chocolat',
-    '/cakes/lemon-cake',
+    '/cakes/chocolate-cupcakes',
+    '/cakes/fresh-strawberry-vanilla-cream-cake',
     '/cakes/brownie-cheesecake',
+    '/cakes/lemon-cake',
+    '/cakes/smore-stick',
   ]
 
   for (const path of paths) {
@@ -42,7 +41,7 @@ test('home and eight sale cake detail routes use AU self canonicals', () => {
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
   assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
-  assert.equal(config.description, 'Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney: Pave, buttercream, fresh strawberry cream cakes, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake.')
+  assert.equal(config.description, "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks (orders opening soon).")
   assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList', 'FAQPage'])
   const organization = config.structuredData?.find((entry) => entry['@type'] === 'Organization')
   const faq = config.structuredData?.find((entry) => entry['@type'] === 'FAQPage')
@@ -125,16 +124,15 @@ test('product runtime metadata carries descriptive copy and complete image attri
   }
 })
 
-test('eight sale cakes use one Offer at the visible starting price', () => {
+test('seven sale cakes use one Offer at the visible starting price', () => {
   const expectations = new Map([
     ['/cakes/pave-chocolate-cake', { name: 'Pave Chocolate Cake', price: 79 }],
-    ['/cakes/buttercream-cake', { name: 'Buttercream Cake', price: 75 }],
     ['/cakes/fresh-strawberry-vanilla-cream-cake', { name: 'Fresh Strawberry Vanilla Cream Cake', price: 65 }],
-    ['/cakes/fresh-strawberry-chocolate-cream-cake', { name: 'Fresh Strawberry Chocolate Cream Cake', price: 69 }],
     ['/cakes/chocolate-cupcakes', { name: 'Chocolate Cupcakes', price: 31 }],
     ['/cakes/signature-gateau-au-chocolat', { name: 'Signature Gâteau au Chocolat', price: 45 }],
     ['/cakes/lemon-cake', { name: 'Lemon Cake', price: 36 }],
     ['/cakes/brownie-cheesecake', { name: 'Brownie Cheesecake', price: 85 }],
+    ['/cakes/smore-stick', { name: "S'more Stick", price: 4.5 }],
   ])
 
   for (const [path, expected] of expectations) {
@@ -147,24 +145,32 @@ test('eight sale cakes use one Offer at the visible starting price', () => {
     assert.equal(offer.price, expected.price, path)
     assert.equal(offer.priceCurrency, 'AUD', path)
     assert.equal(offer.url, `${SITE_URL}${path}`, path)
+    if (path === '/cakes/smore-stick') {
+      assert.equal(offer.availability, 'https://schema.org/OutOfStock', path)
+    } else {
+      assert.equal(Object.hasOwn(offer, 'availability'), false, path)
+    }
     assert.equal(types.includes('AggregateOffer'), false, path)
     assert.equal(types.includes('ProductGroup'), false, path)
     assert.equal(Object.hasOwn(offer, 'lowPrice'), false, path)
     assert.equal(Object.hasOwn(offer, 'highPrice'), false, path)
-    assert.equal(Object.hasOwn(offer, 'availability'), false, path)
     assert.equal(Object.hasOwn(offer, 'shippingDetails'), false, path)
   }
 })
 
 test('legacy grouped and Basque pages are noindex WebPage compatibility views', () => {
-  const path = '/cakes/chocolate-pound-cake-and-cupcakes'
-  const config = getSeoConfig(path)
-  assert.equal(config.noindex, true)
-  assert.deepEqual(structuredTypes(path), ['WebPage', 'BreadcrumbList'])
-  assert.equal(config.ogType, 'website')
-  assert.equal(config.image, 'https://au.verygood-chocolate.com/products/chocolate-pound-cake-sydney.webp')
-  assert.equal(getSeoConfig('/cakes/chocolatiers-basque-cheesecake').noindex, true)
-  assert.deepEqual(structuredTypes('/cakes/chocolatiers-basque-cheesecake'), ['WebPage', 'BreadcrumbList'])
+  const paths = [
+    '/cakes/chocolate-pound-cake-and-cupcakes',
+    '/cakes/chocolatiers-basque-cheesecake',
+    '/cakes/buttercream-cake',
+    '/cakes/fresh-strawberry-chocolate-cream-cake',
+  ]
+  for (const path of paths) {
+    const config = getSeoConfig(path)
+    assert.equal(config.noindex, true, path)
+    assert.deepEqual(structuredTypes(path), ['WebPage', 'BreadcrumbList'], path)
+    assert.equal(config.ogType, 'website', path)
+  }
 })
 
 test('cake catalogue exposes eight canonical detail pages in product order', () => {
@@ -175,13 +181,13 @@ test('cake catalogue exposes eight canonical detail pages in product order', () 
   assert.equal(items.length, 8)
   assert.deepEqual(items.map((item) => item.url), [
     `${SITE_URL}/cakes/pave-chocolate-cake`,
-    `${SITE_URL}/cakes/buttercream-cake`,
-    `${SITE_URL}/cakes/fresh-strawberry-vanilla-cream-cake`,
-    `${SITE_URL}/cakes/fresh-strawberry-chocolate-cream-cake`,
-    `${SITE_URL}/cakes/chocolate-cupcakes`,
     `${SITE_URL}/cakes/signature-gateau-au-chocolat`,
-    `${SITE_URL}/cakes/lemon-cake`,
+    `${SITE_URL}/cakes/chocolate-cupcakes`,
+    `${SITE_URL}/cakes/bento-cake`,
+    `${SITE_URL}/cakes/fresh-strawberry-vanilla-cream-cake`,
     `${SITE_URL}/cakes/brownie-cheesecake`,
+    `${SITE_URL}/cakes/lemon-cake`,
+    `${SITE_URL}/cakes/smore-stick`,
   ])
 })
 

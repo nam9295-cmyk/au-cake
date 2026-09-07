@@ -50,6 +50,7 @@ import {
   isFreshLemonCupcakeProduct,
   usesReservationChocolateType,
 } from './lib/constants'
+import { calculateSmorePricing } from './lib/smore'
 import {
   createCakeDetailSelection,
   getCakeDetailBySlug,
@@ -117,6 +118,8 @@ const detailImages: Record<CakeDetailImageKey, string> = {
   'brownie-side': '/products/brownie-cheesecake-sydney.webp',
   'brownie-detail': '/products/details/brownie-cheesecake-detail-01.webp',
   'brownie-quick-view': '/products/details/brownie-cheese-quick-view.webp',
+  'bento-cake-side': '/products/bento-cake-sydney.webp',
+  'smore-stick-side': '/products/smore-stick-sydney.webp',
 }
 
 type OptionPreviewImage = {
@@ -269,6 +272,8 @@ const detailImageDimensions: Record<CakeDetailImageKey, { width: number; height:
   'brownie-side': { width: 1080, height: 1012 },
   'brownie-detail': { width: 1080, height: 1012 },
   'brownie-quick-view': { width: 1080, height: 1012 },
+  'bento-cake-side': { width: 1080, height: 1012 },
+  'smore-stick-side': { width: 1080, height: 1012 },
 }
 
 const editorialImages: Record<CakeEditorialImageKey, { src: string; width: number; height: number }> = {
@@ -470,6 +475,28 @@ export default function CakeDetailPage({
     )
   }
 
+  if (detail.isComingSoon) {
+    return (
+      <main className="cake-detail-not-found">
+        <div style={{ maxWidth: 360, margin: '0 auto 1.5rem', borderRadius: 8, overflow: 'hidden' }}>
+          <img
+            src="/products/bento-cake-sydney.webp"
+            alt={detail.name}
+            width={1080}
+            height={1012}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+        <p className="summary-kicker">COMING SOON</p>
+        <h1>{detail.name}</h1>
+        <p>{detail.description}</p>
+        <button type="button" className="primary-button" onClick={onBrowseCakes}>
+          {language === 'ko' ? '케이크 전체 보기' : 'View all cakes'}
+        </button>
+      </main>
+    )
+  }
+
   if (detail.isLegacy) {
     return (
       <main className="cake-detail-not-found">
@@ -536,6 +563,8 @@ export default function CakeDetailPage({
     ? getCakePointColorPreviewBackground(selection.vanillaCakePointColor)
     : undefined
   const showsSignatureOrderOptions = detail.id === 'signature-gateau'
+  const isSmoreStick = selection.productId === 'smore-stick'
+  const smorePricing = isSmoreStick ? calculateSmorePricing(selection.quantity, language) : null
   const productTotal = getCakeDetailSelectionTotal(selection)
   const individualPackagingPricing = getIndividualPackagingPricing([{
     productId: selection.productId,
@@ -647,7 +676,9 @@ export default function CakeDetailPage({
               <div className="cake-detail-photo-coming" role="img" aria-label={`${detail.name} photo coming soon`}>
                 <span>COMING SOON</span>
                 <strong>{detail.name}</strong>
-                <small>{language === 'ko' ? '사진 준비 중 · 주문 가능' : 'Photo pending · Available to request'}</small>
+                <small>{isSmoreStick
+                  ? (language === 'ko' ? '사진 준비 중 · 판매 준비 중' : 'Photo pending · Coming soon')
+                  : (language === 'ko' ? '사진 준비 중 · 주문 가능' : 'Photo pending · Available to request')}</small>
               </div>
             )}
             {galleryCount > 1 && (
@@ -981,10 +1012,30 @@ export default function CakeDetailPage({
           </div>
           <div className="cake-detail-checkout">
             <div className="cake-detail-checkout-card">
-          <p className="cake-detail-checkout-price" aria-live="polite">{formatCurrency(total)}</p>
+          {smorePricing ? (
+            <div className="cake-detail-checkout-price-wrap" aria-live="polite">
+              {smorePricing.discountPercent > 0 ? (
+                <div>
+                  <span style={{ textDecoration: 'line-through', color: '#888', marginRight: '0.5rem', fontSize: '1.2rem' }}>
+                    {smorePricing.formattedBaseTotal}
+                  </span>
+                  <strong style={{ fontSize: '1.75rem', color: '#1f5a46' }}>
+                    {smorePricing.formattedFinalTotal}
+                  </strong>
+                  <div style={{ marginTop: '0.25rem', color: '#1f5a46', fontWeight: 600, fontSize: '0.88rem' }}>
+                    {smorePricing.discountLabel}
+                  </div>
+                </div>
+              ) : (
+                <p className="cake-detail-checkout-price">{smorePricing.formattedFinalTotal}</p>
+              )}
+            </div>
+          ) : (
+            <p className="cake-detail-checkout-price" aria-live="polite">{formatCurrency(total)}</p>
+          )}
 
           <fieldset className="cake-detail-fieldset">
-            <legend>{language === 'ko' ? '수량' : 'Quantity'}</legend>
+            <legend>{isSmoreStick ? (language === 'ko' ? '수량 (스틱)' : 'Quantity (sticks)') : (language === 'ko' ? '수량' : 'Quantity')}</legend>
             <div className="cake-detail-quantity">
               <button
                 type="button"
@@ -994,22 +1045,69 @@ export default function CakeDetailPage({
               >
                 <Minus aria-hidden="true" />
               </button>
-              <output aria-live="polite">{selection.quantity}</output>
+              {isSmoreStick ? (
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={selection.quantity}
+                  onChange={(event) => {
+                    const raw = event.target.value.replace(/[^0-9]/g, '')
+                    const parsed = parseInt(raw, 10)
+                    if (Number.isFinite(parsed) && parsed >= 1) {
+                      updateSelection({ quantity: parsed })
+                    } else if (raw === '') {
+                      updateSelection({ quantity: 1 })
+                    }
+                  }}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    width: '100%',
+                    height: '100%',
+                    color: 'inherit',
+                  }}
+                  aria-label={language === 'ko' ? '수량 입력' : 'Quantity input'}
+                />
+              ) : (
+                <output aria-live="polite">{selection.quantity}</output>
+              )}
               <button
                 type="button"
                 aria-label={language === 'ko' ? '수량 늘리기' : 'Increase quantity'}
-                disabled={selection.quantity >= MAX_RESERVATION_QUANTITY}
+                disabled={!isSmoreStick && selection.quantity >= MAX_RESERVATION_QUANTITY}
                 onClick={() => updateSelection({ quantity: selection.quantity + 1 })}
               >
                 <Plus aria-hidden="true" />
               </button>
             </div>
+            {isSmoreStick && (
+              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#666', lineHeight: 1.4 }}>
+                <p style={{ margin: '0 0 0.2rem 0' }}>
+                  {language === 'ko' ? '기준가: 개당 AUD 4.50' : 'Base: AUD 4.50 / stick'}
+                </p>
+                <p style={{ margin: 0 }}>
+                  {language === 'ko' ? '6~11개 10% 할인 · 12개 이상 20% 대량 할인' : '6–11 sticks: 10% off · 12+ sticks: 20% bulk discount'}
+                </p>
+              </div>
+            )}
           </fieldset>
 
           <div className="cake-detail-order-summary">
             <div>
               <span>{language === 'ko' ? '선택 상품' : 'Your selection'}</span>
               <strong className="cake-detail-order-product">{productText.name}</strong>
+              {isSmoreStick && smorePricing && (
+                <div className="cake-detail-order-options">
+                  <span>{selection.quantity} {language === 'ko' ? '개' : 'sticks'}</span>
+                  {smorePricing.discountPercent > 0 && (
+                    <span style={{ color: '#1f5a46', fontWeight: 600 }}>{smorePricing.discountLabel}</span>
+                  )}
+                </div>
+              )}
               {showsSignatureOrderOptions && (
                 <div className="cake-detail-order-options">
                   <span>{selectedFinishOption.label}</span>
@@ -1026,18 +1124,39 @@ export default function CakeDetailPage({
             <strong>{formatCurrency(total)}</strong>
           </div>
 
-          <button type="button" className="primary-button cake-detail-request" onClick={addToOrder}>
-            {addLabel}
-          </button>
-          {addedToOrder && (
-            <div className="cake-detail-added">
-              <p role="status">
-                {language === 'ko' ? '주문에 담았어요.' : 'Added to your order.'}
-              </p>
-              <button type="button" className="secondary-button" onClick={onViewOrder}>
-                {language === 'ko' ? '주문 보기' : 'View order'}
+          {isSmoreStick ? (
+            <div className="cake-detail-smore-notice-box">
+              <button
+                type="button"
+                className="primary-button cake-detail-request is-disabled"
+                disabled
+                aria-disabled="true"
+                style={{ opacity: 0.6, cursor: 'not-allowed' }}
+              >
+                {language === 'ko' ? '예약 오픈 준비 중' : 'Orders opening soon'}
               </button>
+              <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#666', lineHeight: 1.4 }}>
+                {language === 'ko'
+                  ? '스모어 스틱은 대량 주문 예약 시스템 오픈 준비 중입니다. 단체 주문이나 사전 문의는 Instagram @verygood_syd로 문의해 주세요.'
+                  : 'S’more Stick bulk ordering is opening soon. For party bookings or early enquiries, please message us on Instagram @verygood_syd.'}
+              </p>
             </div>
+          ) : (
+            <>
+              <button type="button" className="primary-button cake-detail-request" onClick={addToOrder}>
+                {addLabel}
+              </button>
+              {addedToOrder && (
+                <div className="cake-detail-added">
+                  <p role="status">
+                    {language === 'ko' ? '주문에 담았어요.' : 'Added to your order.'}
+                  </p>
+                  <button type="button" className="secondary-button" onClick={onViewOrder}>
+                    {language === 'ko' ? '주문 보기' : 'View order'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
             </div>
           {compactOrderingNotice ? (

@@ -18,7 +18,7 @@
   "home": {
     "title": "Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate",
     "h1": "Made-to-Order Chocolate Cakes in Sydney",
-    "description": "Order eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney: Pave, buttercream, fresh strawberry cream cakes, cupcakes, gâteau au chocolat, lemon cake and brownie cheesecake.",
+    "description": "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks (orders opening soon).",
     "hero": "Chocolate cakes made with chocolatier-grade couverture chocolate for birthdays, parties and gifting.",
     "pickup": "Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00",
     "faq": [
@@ -39,8 +39,8 @@
   "catalogue": {
     "title": "Made-to-Order Cakes Sydney | verygood chocolate",
     "h1": "Choose Your Cake",
-    "description": "Browse eight made-to-order cakes and request confirmed pickup in Melrose Park, Sydney.",
-    "intro": "Browse eight made-to-order cakes for pre-arranged pickup in Melrose Park, Sydney.",
+    "description": "Browse made-to-order cakes and treats and request confirmed pickup in Melrose Park, Sydney.",
+    "intro": "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney.",
     "collectionName": "Made-to-Order Cakes Sydney"
   },
   "classes": {
@@ -80,22 +80,6 @@
       "imageWidth": 1080,
       "imageHeight": 1012
     },
-    "buttercream-cake": {
-      "title": "Buttercream Cake Sydney | verygood chocolate",
-      "name": "Buttercream Cake",
-      "description": "Our Signature Gâteau au Chocolat layers are filled and finished with chocolate buttercream made with Italian meringue, real butter and cocoa powder.",
-      "searchGoal": "Buttercream Cake Sydney",
-      "schema": "product-offer",
-      "startingPrice": 75,
-      "priceSummary": "From AUD 75.00. 6 inch serves approximately 8–10, 8 inch serves approximately 14–18, and 10 inch serves approximately 24–28.",
-      "optionSummary": "Choose a size and cake colour · Chocolate Buttercream included",
-      "cardOptionLabel": "Choose a size and cake colour · Chocolate Buttercream included",
-      "imagePath": "/products/buttercream-cake-sydney.webp",
-      "imageAlt": "Buttercream Cake prepared for pre-arranged pickup in Sydney",
-      "imageType": "image/webp",
-      "imageWidth": 1080,
-      "imageHeight": 1012
-    },
     "fresh-strawberry-vanilla-cream-cake": {
       "title": "Fresh Strawberry Vanilla Cream Cake Sydney | verygood chocolate",
       "name": "Fresh Strawberry Vanilla Cream Cake",
@@ -108,22 +92,6 @@
       "cardOptionLabel": "Choose a size",
       "imagePath": "/products/fresh-strawberry-vanilla-cream-cake-sydney.webp",
       "imageAlt": "Fresh Strawberry Vanilla Cream Cake made to order for Sydney pickup",
-      "imageType": "image/webp",
-      "imageWidth": 1080,
-      "imageHeight": 1012
-    },
-    "fresh-strawberry-chocolate-cream-cake": {
-      "title": "Fresh Strawberry Chocolate Cream Cake Sydney | verygood chocolate",
-      "name": "Fresh Strawberry Chocolate Cream Cake",
-      "description": "Soft genoise layers filled with chocolate fresh cream and fresh strawberries, finished with more strawberries on top. A classic chocolate-and-strawberry combination in a fresh-cream cake.",
-      "searchGoal": "Fresh Strawberry Chocolate Cream Cake Sydney",
-      "schema": "product-offer",
-      "startingPrice": 69,
-      "priceSummary": "From AUD 69.00. 6 inch serves approximately 6–8, 8 inch serves approximately 10–14, and 10 inch serves approximately 16–20.",
-      "optionSummary": "Choose a size",
-      "cardOptionLabel": "Choose a size",
-      "imagePath": "/products/fresh-strawberry-chocolate-cream-cake-sydney.webp",
-      "imageAlt": "Fresh Strawberry Chocolate Cream Cake made to order for Sydney pickup",
       "imageType": "image/webp",
       "imageWidth": 1080,
       "imageHeight": 1012
@@ -191,9 +159,58 @@
       "imageType": "image/webp",
       "imageWidth": 1080,
       "imageHeight": 1012
+    },
+    "smore-stick": {
+      "title": "S'more Stick Sydney | verygood chocolate",
+      "name": "S'more Stick",
+      "description": "Fluffy marshmallows toasted on a stick and coated in rich couverture chocolate. Designed for gatherings and bulk sharing with automatic discounts from 6 sticks.",
+      "searchGoal": "S'more Stick Sydney",
+      "schema": "product-offer",
+      "availability": "https://schema.org/OutOfStock",
+      "startingPrice": 4.5,
+      "priceSummary": "From AUD 4.50 / stick. Bulk discount: 10% off for 6–11 sticks, 20% off for 12+ sticks.",
+      "optionSummary": "Bulk discounts from 6+ sticks",
+      "cardOptionLabel": "From AUD 4.50 / stick · Bulk discounts from 6+",
+      "imagePath": "/products/smore-stick-sydney.webp",
+      "imageAlt": "S'more Stick prepared for pre-arranged pickup in Sydney",
+      "imageType": "image/webp",
+      "imageWidth": 1080,
+      "imageHeight": 1012
     }
   },
   "legacyCakePages": {
+    "buttercream-cake": {
+      "title": "Buttercream Cake Sydney | verygood chocolate",
+      "name": "Buttercream Cake",
+      "description": "This product is no longer part of the current cake catalogue.",
+      "searchGoal": "Buttercream Cake Sydney",
+      "schema": "webpage-only",
+      "startingPrice": null,
+      "priceSummary": "See the current cake catalogue for available products.",
+      "optionSummary": "This legacy product is no longer a sale catalogue item.",
+      "cardOptionLabel": "View current cakes",
+      "imagePath": "/products/buttercream-cake-sydney.webp",
+      "imageAlt": "Buttercream chocolate cake previously prepared for Sydney pickup",
+      "imageType": "image/webp",
+      "imageWidth": 1080,
+      "imageHeight": 1012
+    },
+    "fresh-strawberry-chocolate-cream-cake": {
+      "title": "Fresh Strawberry Chocolate Cream Cake Sydney | verygood chocolate",
+      "name": "Fresh Strawberry Chocolate Cream Cake",
+      "description": "This product is no longer part of the current cake catalogue.",
+      "searchGoal": "Fresh Strawberry Chocolate Cream Cake Sydney",
+      "schema": "webpage-only",
+      "startingPrice": null,
+      "priceSummary": "See the current cake catalogue for available products.",
+      "optionSummary": "This legacy product is no longer a sale catalogue item.",
+      "cardOptionLabel": "View current cakes",
+      "imagePath": "/products/fresh-strawberry-chocolate-cream-cake-sydney.webp",
+      "imageAlt": "Fresh Strawberry Chocolate Cream Cake previously prepared for Sydney pickup",
+      "imageType": "image/webp",
+      "imageWidth": 1080,
+      "imageHeight": 1012
+    },
     "chocolate-pound-cake-and-cupcakes": {
       "title": "Chocolate Pound Cake & Cupcakes Sydney | verygood chocolate",
       "name": "Chocolate Pound Cake & Cupcakes",
@@ -257,6 +274,7 @@
     "/cakes/lemon-cake",
     "/cakes/vanilla-fresh-cream-cake",
     "/cakes/brownie-cheesecake",
+    "/cakes/smore-stick",
     "/classes",
     "/reviews",
     "/cart",

@@ -7,29 +7,33 @@ import type { ProductId } from './types.js'
 
 export type CakeCatalogId =
   | 'pave'
-  | 'vanilla-fresh-cream'
-  | 'buttercream'
-  | 'fresh-strawberry-vanilla-cream'
-  | 'fresh-strawberry-chocolate-cream'
-  | 'cupcake'
   | 'signature-gateau'
-  | 'fresh-lemon-cupcakes'
+  | 'cupcake'
+  | 'bento-cake'
+  | 'fresh-strawberry-vanilla-cream'
   | 'brownie-cheesecake'
+  | 'fresh-lemon-cupcakes'
+  | 'smore-stick'
   // Retained only by the Korean catalogue and AU legacy route views.
+  | 'buttercream'
+  | 'fresh-strawberry-chocolate-cream'
+  | 'vanilla-fresh-cream'
   | 'pound-cupcake'
   | 'cheesecake'
 
 export type CakeCatalogImageKey =
   | 'pave-cake'
-  | 'vanilla-fresh-cream-cake'
-  | 'buttercream-cake'
-  | 'fresh-strawberry-vanilla-cream-cake'
-  | 'fresh-strawberry-chocolate-cream-cake'
-  | 'chocolate-cupcakes'
   | 'signature-gateau-au-chocolat'
-  | 'lemon-cake'
+  | 'chocolate-cupcakes'
+  | 'bento-cake'
+  | 'fresh-strawberry-vanilla-cream-cake'
   | 'brownie-cheesecake'
+  | 'lemon-cake'
+  | 'smore-stick'
   // Legacy image keys are deliberately kept so historic route views remain typed.
+  | 'buttercream-cake'
+  | 'fresh-strawberry-chocolate-cream-cake'
+  | 'vanilla-fresh-cream-cake'
   | 'pound-cake'
   | 'basque-cheesecake'
 
@@ -46,11 +50,12 @@ export type CakeCatalogEntry = {
   id: CakeCatalogId
   group: 'whole-cakes' | 'more-cakes'
   slug: string
-  defaultProductId: ProductId
+  defaultProductId?: ProductId
   productIds: readonly ProductId[]
   imageKey: CakeCatalogImageKey
   isPhotoComingSoon: boolean
-  priceMode: 'fixed' | 'from'
+  isComingSoonOnly?: boolean
+  priceMode: 'fixed' | 'from' | 'none'
   copy?: LocalizedCopyMap
 }
 
@@ -58,18 +63,19 @@ export type CakeCatalogCard = LocalizedCatalogCopy & {
   id: CakeCatalogId
   group: CakeCatalogEntry['group']
   slug: string
-  productId: ProductId
+  productId?: ProductId
   imageKey: CakeCatalogImageKey
   imagePath: string
   isPhotoComingSoon: boolean
+  isComingSoonOnly?: boolean
   priceLabel: string
 }
 
 export type CakeCatalogGroupId =
   | 'signature-gateau'
-  | 'gateau-daily'
-  | 'fresh-cream-cakes'
-  | 'tea-time-refresh'
+  | 'gateau-sharing'
+  | 'chocolatiers-cake'
+  | 'gather-celebrate'
 
 type LocalizedCatalogGroupCopy = {
   title: string
@@ -92,13 +98,15 @@ export type CakeCatalogGroup = LocalizedCatalogGroupCopy & {
 
 const AU_CATALOG_DISPLAY_NAMES: Partial<Record<CakeCatalogId, string>> = {
   pave: 'PAVÉ CHOCOLATE GÂTEAU',
-  buttercream: 'BUTTERCREAM CHOCOLATE GÂTEAU',
-  'fresh-strawberry-vanilla-cream': 'STRAWBERRY VANILLA FRESH CREAM',
-  'fresh-strawberry-chocolate-cream': 'STRAWBERRY CHOCO FRESH CREAM',
-  cupcake: 'GÂTEAU CUPCAKES (FOR SHARING)',
   'signature-gateau': 'SIGNATURE GÂTEAU LOAF (POUND)',
-  'fresh-lemon-cupcakes': 'Patissier’s LEMON GLAZE CAKE',
+  cupcake: 'GÂTEAU CUPCAKES (FOR SHARING)',
+  'bento-cake': 'BENTO CAKE',
+  'fresh-strawberry-vanilla-cream': 'VANILLA FRESH CREAM CAKE',
   'brownie-cheesecake': 'Chocolatier’s BROWNIE CHEESECAKE',
+  'fresh-lemon-cupcakes': 'Patissier’s LEMON GLAZE CAKE',
+  'smore-stick': 'S’MORE STICK',
+  buttercream: 'BUTTERCREAM CHOCOLATE GÂTEAU',
+  'fresh-strawberry-chocolate-cream': 'STRAWBERRY CHOCO FRESH CREAM',
 }
 
 const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
@@ -113,34 +121,14 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     priceMode: 'fixed',
   },
   {
-    id: 'buttercream',
-    slug: 'buttercream-cake',
-    group: 'whole-cakes',
-    defaultProductId: 'buttercream-cake',
-    productIds: ['buttercream-cake'],
-    imageKey: 'buttercream-cake',
+    id: 'signature-gateau',
+    slug: 'signature-gateau-au-chocolat',
+    group: 'more-cakes',
+    defaultProductId: 'pound-cake',
+    productIds: ['pound-cake'],
+    imageKey: 'signature-gateau-au-chocolat',
     isPhotoComingSoon: false,
-    priceMode: 'from',
-  },
-  {
-    id: 'fresh-strawberry-vanilla-cream',
-    slug: 'fresh-strawberry-vanilla-cream-cake',
-    group: 'whole-cakes',
-    defaultProductId: 'fresh-strawberry-vanilla-cream-cake',
-    productIds: ['fresh-strawberry-vanilla-cream-cake'],
-    imageKey: 'fresh-strawberry-vanilla-cream-cake',
-    isPhotoComingSoon: false,
-    priceMode: 'from',
-  },
-  {
-    id: 'fresh-strawberry-chocolate-cream',
-    slug: 'fresh-strawberry-chocolate-cream-cake',
-    group: 'whole-cakes',
-    defaultProductId: 'fresh-strawberry-chocolate-cream-cake',
-    productIds: ['fresh-strawberry-chocolate-cream-cake'],
-    imageKey: 'fresh-strawberry-chocolate-cream-cake',
-    isPhotoComingSoon: false,
-    priceMode: 'from',
+    priceMode: 'fixed',
   },
   {
     id: 'cupcake',
@@ -153,14 +141,49 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     priceMode: 'from',
   },
   {
-    id: 'signature-gateau',
-    slug: 'signature-gateau-au-chocolat',
+    id: 'bento-cake',
+    slug: 'bento-cake',
     group: 'more-cakes',
-    defaultProductId: 'pound-cake',
-    productIds: ['pound-cake'],
-    imageKey: 'signature-gateau-au-chocolat',
+    defaultProductId: undefined,
+    productIds: [],
+    imageKey: 'bento-cake',
     isPhotoComingSoon: false,
-    priceMode: 'fixed',
+    isComingSoonOnly: true,
+    priceMode: 'none',
+    copy: {
+      en: {
+        name: 'BENTO CAKE',
+        description: 'A petite lunchbox-sized celebration cake for intimate moments. Coming soon.',
+        features: ['Petite celebration size', 'Coming soon'],
+        optionLabel: 'Coming soon',
+      },
+      ko: {
+        name: '도시락 케이크',
+        description: '작고 소중한 순간을 위한 런치박스 사이즈 케이크. 준비 중입니다.',
+        features: ['미니 사이즈 케이크', '출시 준비 중'],
+        optionLabel: '출시 준비 중',
+      },
+    },
+  },
+  {
+    id: 'fresh-strawberry-vanilla-cream',
+    slug: 'fresh-strawberry-vanilla-cream-cake',
+    group: 'whole-cakes',
+    defaultProductId: 'fresh-strawberry-vanilla-cream-cake',
+    productIds: ['fresh-strawberry-vanilla-cream-cake'],
+    imageKey: 'fresh-strawberry-vanilla-cream-cake',
+    isPhotoComingSoon: false,
+    priceMode: 'from',
+  },
+  {
+    id: 'brownie-cheesecake',
+    slug: 'brownie-cheesecake',
+    group: 'more-cakes',
+    defaultProductId: 'brownie-cheesecake',
+    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
+    imageKey: 'brownie-cheesecake',
+    isPhotoComingSoon: false,
+    priceMode: 'from',
   },
   {
     id: 'fresh-lemon-cupcakes',
@@ -187,14 +210,40 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     },
   },
   {
-    id: 'brownie-cheesecake',
-    slug: 'brownie-cheesecake',
+    id: 'smore-stick',
+    slug: 'smore-stick',
     group: 'more-cakes',
-    defaultProductId: 'brownie-cheesecake',
-    productIds: ['brownie-cheesecake', 'pave-brownie-cheesecake'],
-    imageKey: 'brownie-cheesecake',
+    defaultProductId: 'smore-stick',
+    productIds: ['smore-stick'],
+    imageKey: 'smore-stick',
     isPhotoComingSoon: false,
     priceMode: 'from',
+    copy: {
+      en: {
+        name: 'S’more Stick',
+        description: 'Fluffy marshmallows toasted on a stick and coated in rich couverture chocolate. Designed for gatherings and bulk sharing with automatic discounts from 6 sticks.',
+        features: [
+          'Toasted marshmallow on stick',
+          'Rich couverture chocolate coating',
+          'AUD 4.50 / stick',
+          '6–11 sticks: 10% off',
+          '12+ sticks: 20% bulk discount',
+        ],
+        optionLabel: 'Bulk discounts from 6+ sticks',
+      },
+      ko: {
+        name: '스모어 스틱',
+        description: '스틱에 꽂은 푹신한 마시멜로에 진한 커버춰 초콜릿을 더한 디저트. 모임과 파티용 대량 주문에 적합합니다.',
+        features: [
+          '스틱 마시멜로 디저트',
+          '리얼 커버춰 초콜릿 코팅',
+          '개당 AUD 4.50',
+          '6~11개 10% 할인',
+          '12개 이상 20% 대량 할인',
+        ],
+        optionLabel: '6개 이상 수량 할인',
+      },
+    },
   },
 ]
 
@@ -212,52 +261,52 @@ const AU_CAKE_CATALOG_GROUPS: readonly CakeCatalogGroupDefinition[] = [
         description: '진하고 밀도감 있는 시그니처 갸또 쇼콜라 시트로 완성한 케이크.',
       },
     },
-    catalogIds: ['pave', 'buttercream'],
+    catalogIds: ['pave', 'signature-gateau'],
   },
   {
-    id: 'gateau-daily',
+    id: 'gateau-sharing',
     number: '02',
     copy: {
       en: {
-        title: 'GÂTEAU DAILY',
-        description: 'Everyday chocolate cakes made for easy sharing and simple moments.',
+        title: 'GÂTEAU SHARING',
+        description: 'Chocolate gâteau creations crafted for gatherings and shared celebration.',
       },
       ko: {
-        title: '갸또 데일리',
-        description: '매일 부담 없이 즐기고 나누기 좋은 초콜릿 케이크.',
+        title: '갸또 셰어링',
+        description: '여럿이 함께 나누기 좋은 갸또 디저트와 케이크.',
       },
     },
-    catalogIds: ['signature-gateau', 'cupcake'],
+    catalogIds: ['cupcake', 'bento-cake'],
   },
   {
-    id: 'fresh-cream-cakes',
+    id: 'chocolatiers-cake',
     number: '03',
     copy: {
       en: {
-        title: 'FRESH CREAM CAKES',
-        description: 'Soft genoise layers with fresh cream and fresh strawberries.',
+        title: 'CHOCOLATIER’S CAKE',
+        description: 'Classic artisanal cakes crafted with fresh cream and rich chocolate balance.',
       },
       ko: {
-        title: '프레시 생크림 케이크',
-        description: '부드러운 제누아즈 시트에 생크림과 생딸기를 더한 케이크.',
+        title: '쇼콜라티에 케이크',
+        description: '신선한 생크림과 진한 초콜릿의 조화로 완성한 케이크.',
       },
     },
-    catalogIds: ['fresh-strawberry-vanilla-cream', 'fresh-strawberry-chocolate-cream'],
+    catalogIds: ['fresh-strawberry-vanilla-cream', 'brownie-cheesecake'],
   },
   {
-    id: 'tea-time-refresh',
+    id: 'gather-celebrate',
     number: '04',
     copy: {
       en: {
-        title: 'TEA TIME & REFRESH',
-        description: 'Easy treats for sharing, gifting and afternoon tea.',
+        title: 'GATHER & CELEBRATE',
+        description: 'Refreshing citrus cakes and crowd-pleasing sweets for parties and group orders.',
       },
       ko: {
-        title: '티타임 & 리프레시',
-        description: '티타임과 가벼운 디저트 시간에 함께하기 좋은 케이크.',
+        title: '개더 & 셀레브레이트',
+        description: '파티와 단체 모임, 특별한 날에 함께하기 좋은 디저트.',
       },
     },
-    catalogIds: ['fresh-lemon-cupcakes', 'brownie-cheesecake'],
+    catalogIds: ['fresh-lemon-cupcakes', 'smore-stick'],
   },
 ]
 
@@ -274,17 +323,18 @@ export function getCakeCatalogEntryByProductId(productId: ProductId) {
 }
 
 export function getCakeCatalogStartingPrice(entry: CakeCatalogEntry) {
+  if (!entry.productIds || entry.productIds.length === 0) return 0
   return Math.min(...entry.productIds.map((productId) => getProductById(productId).price))
 }
 
 function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCatalogCard {
-  const productText = getProductText(entry.defaultProductId, language)
   const publicPage = getPublicCakePage(entry.slug)
+  const productText = entry.defaultProductId ? getProductText(entry.defaultProductId, language) : null
   const localizedCopy = entry.copy?.[language] || {
-    name: productText.name,
-    description: productText.description,
-    features: getProductFeatures(entry.defaultProductId, language),
-    optionLabel: productText.priceNote,
+    name: productText?.name || '',
+    description: productText?.description || '',
+    features: entry.defaultProductId ? getProductFeatures(entry.defaultProductId, language) : [],
+    optionLabel: productText?.priceNote || '',
   }
   const copy = language === 'en' && publicPage
     ? {
@@ -294,16 +344,22 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
         optionLabel: publicPage.cardOptionLabel,
       }
     : localizedCopy
-  const imagePath = publicPage?.imagePath || ''
+  const imagePath = publicPage?.imagePath || (entry.slug === 'bento-cake' ? '/products/bento-cake-sydney.webp' : '')
 
   if (!entry.isPhotoComingSoon && !imagePath) {
     throw new Error('Missing public cake image: ' + entry.slug)
   }
-  const startingPrice = getCakeCatalogStartingPrice(entry)
-  const price = formatCurrency(startingPrice)
-  const priceLabel = entry.priceMode === 'fixed'
-    ? price
-    : language === 'ko' ? `${price}부터` : `From ${price}`
+
+  let priceLabel = 'COMING SOON'
+  if (entry.priceMode === 'fixed') {
+    priceLabel = formatCurrency(getCakeCatalogStartingPrice(entry))
+  } else if (entry.priceMode === 'from') {
+    const startingPrice = getCakeCatalogStartingPrice(entry)
+    const price = formatCurrency(startingPrice)
+    priceLabel = language === 'ko' ? `${price}부터` : `From ${price}`
+  } else if (entry.isComingSoonOnly) {
+    priceLabel = 'COMING SOON'
+  }
 
   return {
     group: entry.group,
@@ -313,6 +369,7 @@ function getCakeCatalogCard(entry: CakeCatalogEntry, language: Language): CakeCa
     imageKey: entry.imageKey,
     imagePath,
     isPhotoComingSoon: entry.isPhotoComingSoon,
+    isComingSoonOnly: entry.isComingSoonOnly,
     priceLabel,
     ...copy,
     name: language === 'en' ? AU_CATALOG_DISPLAY_NAMES[entry.id] || copy.name : copy.name,
@@ -343,9 +400,9 @@ export function getAuCakeCatalogGroups(language: Language): readonly CakeCatalog
 
 const AU_HOME_HERO_PRIORITY: readonly CakeCatalogId[] = [
   'fresh-strawberry-vanilla-cream',
-  'fresh-strawberry-chocolate-cream',
   'pave',
   'brownie-cheesecake',
+  'signature-gateau',
 ]
 
 export function getAuHomeHeroCards(language: Language): readonly CakeCatalogCard[] {

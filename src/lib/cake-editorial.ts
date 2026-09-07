@@ -203,7 +203,7 @@ const STRAWBERRY_VANILLA_EDITORIAL: Record<Language, CompactCakeEditorialContent
     details: { title: 'Cake details', items: ['Soft genoise cake layers', 'Vanilla fresh cream', 'Fresh strawberries between the layers', 'Fresh strawberries on top'] },
     ingredientsAndAllergens: { title: 'Ingredients & allergens', ingredientsLabel: 'Key ingredients', ingredients: 'Fresh strawberries, vanilla fresh cream, real vanilla bean and genoise cake.', allergenLabel: 'Allergen note', allergens: 'Please contact us before ordering for current allergen information.', contact: 'Please contact us before ordering for someone with a food allergy.' },
     pickupAndConfirmation: { title: 'Pick-up & order confirmation' },
-    relatedProductSlugs: ['pave-chocolate-cake', 'buttercream-cake'],
+    relatedProductSlugs: ['pave-chocolate-cake', 'brownie-cheesecake'],
   },
   ko: {
     layout: 'compact',
@@ -216,7 +216,7 @@ const STRAWBERRY_VANILLA_EDITORIAL: Record<Language, CompactCakeEditorialContent
     details: { title: '케이크 상세', items: ['부드러운 제누아즈 시트', '바닐라 생크림', '시트 사이의 생딸기', '윗면의 생딸기'] },
     ingredientsAndAllergens: { title: '재료 및 알레르기 안내', ingredientsLabel: '주요 재료', ingredients: '신선한 생딸기, 바닐라 생크림, 실제 바닐라빈, 제누아즈 케이크.', allergenLabel: '알레르기 안내', allergens: '현재 알레르기 정보는 주문 전 문의해 주세요.', contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.' },
     pickupAndConfirmation: { title: '픽업 및 주문 확정' },
-    relatedProductSlugs: ['pave-chocolate-cake', 'buttercream-cake'],
+    relatedProductSlugs: ['pave-chocolate-cake', 'brownie-cheesecake'],
   },
 }
 
@@ -232,7 +232,7 @@ const STRAWBERRY_CHOCOLATE_EDITORIAL: Record<Language, CompactCakeEditorialConte
     details: { title: 'Cake details', items: ['Soft genoise cake layers', 'Chocolate fresh cream', 'Fresh strawberries between the layers', 'Fresh strawberries on top'] },
     ingredientsAndAllergens: { title: 'Ingredients & allergens', ingredientsLabel: 'Key ingredients', ingredients: 'Fresh strawberries, chocolate fresh cream and genoise cake.', allergenLabel: 'Allergen note', allergens: 'Please contact us before ordering for current allergen information.', contact: 'Please contact us before ordering for someone with a food allergy.' },
     pickupAndConfirmation: { title: 'Pick-up & order confirmation' },
-    relatedProductSlugs: ['pave-chocolate-cake', 'buttercream-cake'],
+    relatedProductSlugs: ['pave-chocolate-cake', 'brownie-cheesecake'],
   },
   ko: {
     layout: 'compact',
@@ -245,7 +245,7 @@ const STRAWBERRY_CHOCOLATE_EDITORIAL: Record<Language, CompactCakeEditorialConte
     details: { title: '케이크 상세', items: ['부드러운 제누아즈 시트', '초코 생크림', '시트 사이의 생딸기', '윗면의 생딸기'] },
     ingredientsAndAllergens: { title: '재료 및 알레르기 안내', ingredientsLabel: '주요 재료', ingredients: '신선한 생딸기, 초코 생크림, 제누아즈 케이크.', allergenLabel: '알레르기 안내', allergens: '현재 알레르기 정보는 주문 전 문의해 주세요.', contact: '식품 알레르기가 있는 분을 위한 주문은 먼저 문의해 주세요.' },
     pickupAndConfirmation: { title: '픽업 및 주문 확정' },
-    relatedProductSlugs: ['pave-chocolate-cake', 'buttercream-cake'],
+    relatedProductSlugs: ['pave-chocolate-cake', 'brownie-cheesecake'],
   },
 }
 
@@ -624,7 +624,7 @@ const VANILLA_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
     },
     relatedProductSlugs: [
       'pave-chocolate-cake',
-      'buttercream-cake',
+      'signature-gateau-au-chocolat',
     ],
     finalCta: {
       eyebrow: 'Made to order in Sydney',
@@ -727,7 +727,7 @@ const VANILLA_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
     },
     relatedProductSlugs: [
       'pave-chocolate-cake',
-      'buttercream-cake',
+      'signature-gateau-au-chocolat',
     ],
     finalCta: {
       eyebrow: '시드니 주문 제작',
@@ -1050,7 +1050,7 @@ const CUPCAKES_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
     },
     relatedProductSlugs: [
       'lemon-cake',
-      'buttercream-cake',
+      'signature-gateau-au-chocolat',
     ],
     finalCta: {
       eyebrow: 'Made to order in Sydney',
@@ -1153,7 +1153,7 @@ const CUPCAKES_EDITORIAL: Record<Language, LongFormCakeEditorialContent> = {
     },
     relatedProductSlugs: [
       'lemon-cake',
-      'buttercream-cake',
+      'signature-gateau-au-chocolat',
     ],
     finalCta: {
       eyebrow: '시드니 주문 제작',
