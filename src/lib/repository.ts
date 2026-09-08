@@ -634,7 +634,11 @@ function toPublicReservation(reservation: PublicReservation): PublicReservation 
     const pricedLines = orderLines as CakeOrderLineResult[]
     const presentPackagingAggregateKeys = packagingAggregateKeys.filter((key) => payload[key] !== undefined)
     const hasPackagedLines = pricedLines.some((line) => Object.hasOwn(line, 'individualPackaging'))
-    if (presentPackagingAggregateKeys.length !== (hasPackagedLines ? packagingAggregateKeys.length : 0)) {
+    const hasZeroValuePackagingProjection = !hasPackagedLines
+      && payload.individualPackagingPieces === 0
+      && payload.individualPackagingFeeCents === 0
+    if (presentPackagingAggregateKeys.length !== (hasPackagedLines ? packagingAggregateKeys.length : 0)
+      && !hasZeroValuePackagingProjection) {
       throw new Error('INVALID_RESERVATION_RESPONSE')
     }
     const eligibleIndexes = payload.discountPercent === 0

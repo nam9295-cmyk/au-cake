@@ -447,3 +447,53 @@ for (const quantity of [6, 12]) {
     })
   }
 }
+
+function appwritePublicProjection(document: ReturnType<typeof buildCakeReservation>) {
+  return publicCakeReservation({
+    ...document,
+    // Appwrite projects optional zero-valued packaging aggregates as own properties.
+    individualPackagingPieces: 0,
+    individualPackagingFeeCents: 0,
+  })
+}
+
+test('actual public lookup accepts authoritative S’more bulk tiers without PII and rejects regular 20% pricing', async () => {
+  for (const [quantity, discountPercent] of [[6, 10], [12, 20], [20, 20]] as const) {
+    const document = generated(quantity)
+    const projection = appwritePublicProjection(document)
+    assert.equal(projection.productId, 'smore-stick')
+    assert.equal(projection.quantity, quantity)
+    assert.equal(projection.orderLines[0].discountPercent, discountPercent)
+    for (const key of ['customerName', 'customerPhone', 'customerEmail', 'requestNote', 'adminMemo']) {
+      assert.equal(Object.hasOwn(projection, key), false)
+    }
+    const found = await lookup({ ...projection, id: `public-smore-${quantity}`, customerPhone: customer.customerPhone }, document.reservationNumber)
+    assert.equal(found?.productId, 'smore-stick')
+    assert.equal(found?.quantity, quantity)
+    assert.equal(found?.totalPriceCents, document.totalPriceCents)
+  }
+
+  for (const reward of [undefined, 5, 10] as const) {
+    const document = buildCakeReservation({ ...customer, orderLines: [
+      { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+    ] }, { now, ...(reward ? { reviewCoupon: { id: reward === 5 ? 'manual:public' : 'review-public', rewardPercent: reward, codeLast4: 'ABCD' } } : {}) } as never)
+    const projection = appwritePublicProjection(document)
+    const found = await lookup({ ...projection, id: `public-normal-${reward || 0}`, customerPhone: customer.customerPhone }, document.reservationNumber)
+    assert.equal(found?.quantity, 1)
+    assert.equal(found?.discountPercent, reward || 0)
+  }
+
+  const regular = appwritePublicProjection(buildCakeReservation({ ...customer, orderLines: [
+    { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+  ] }, { now }))
+  const forged = structuredClone(regular)
+  const line = forged.orderLines[0]
+  line.discountPercent = 20
+  line.discountCents = Math.round(line.subtotalCents * 0.2)
+  line.totalPriceCents = line.subtotalCents - line.discountCents
+  forged.discountPercent = 20
+  forged.discountBasisCents = line.subtotalCents
+  forged.discountCents = line.discountCents
+  forged.totalPriceCents = line.totalPriceCents
+  await assert.rejects(lookup({ ...forged, id: 'public-regular-20', customerPhone: customer.customerPhone }, forged.reservationNumber), /INVALID_RESERVATION_RESPONSE/)
+})
