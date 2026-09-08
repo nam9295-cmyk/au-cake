@@ -341,3 +341,109 @@ test('ReservationDrawer renders the validated Admin subtotal, discount and coupo
   assert.match(html, /코드 끝 4자리 ABCD/)
   assert.match(html, /일회용 쿠폰 ID review-test/)
 })
+
+function renderAppwriteDrawer(document: object) {
+  const raw = {
+    ...document,
+    $id: 'drawer-display-fixture',
+    appliedPromoCodeLast4: (document as { appliedPromoCodeLast4?: string }).appliedPromoCodeLast4 ?? null,
+    reviewCouponId: (document as { reviewCouponId?: string }).reviewCouponId ?? null,
+  }
+  const admin = toReservation(raw as never)
+  // Exercise the real strict boundary without a JSON round-trip losing own undefined.
+  const audit = getReservationPricingAudit(admin)
+  const before = structuredClone(admin)
+  const html = renderToStaticMarkup(React.createElement(ReservationDrawer, {
+    reservation: admin, settings: DEFAULT_SETTINGS,
+    onClose: () => {}, onSave: async () => {}, onCopy: async () => {},
+  }))
+  assert.deepEqual(admin, before, 'rendering must not mutate authoritative pricing')
+  const auditHtml = html.match(/<dt>할인 감사 정보<\/dt><dd>([\s\S]*?)<\/dd>/)?.[1] || ''
+  const auditText = auditHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  return { raw, admin, audit, html, auditText }
+}
+
+test('Drawer production-log qty12 nullable fixture labels AUD 10.80 as 20% quantity discount', () => {
+  // Captured production pricing/nullable shape; identity/pickup fields are redacted placeholders.
+  const document = JSON.parse(readFileSync('tests/fixtures/smore-appwrite-nullable.json', 'utf8'))
+  const { raw, admin, audit, html, auditText } = renderAppwriteDrawer(document)
+  for (const key of ['appliedPromoCodeLast4', 'reviewCouponId'] as const) {
+    assert.equal(raw[key], null)
+    assert.equal(Object.hasOwn(admin, key), true)
+    assert.equal(admin[key], undefined)
+  }
+  assert.equal(admin.quantity, 12)
+  assert.equal(admin.promotionKind, 'none')
+  assert.equal(audit.subtotalCents, 5400)
+  assert.equal(audit.discountCents, 1080)
+  assert.equal(audit.totalPriceCents, 4320)
+  assert.match(html, /주문 구성 · 12개/)
+  assert.match(html, /AUD 43\.20/)
+  assert.doesNotMatch(auditText, /(?:^|\s)0% 할인/)
+  assert.match(auditText, /20% 수량 할인\s*·\s*- AUD 10\.80/)
+  assert.match(auditText, /소계 AUD 54\.00/)
+  assert.doesNotMatch(auditText, /프로모션|리뷰|쿠폰/)
+})
+
+test('Drawer qty6 bulk-only labels 10% quantity discount and exact AUD 2.70', () => {
+  const { auditText, html } = renderAppwriteDrawer(generated(6))
+  assert.match(auditText, /10% 수량 할인\s*·\s*- AUD 2\.70/)
+  assert.doesNotMatch(auditText, /(?:^|\s)0% 할인/)
+  assert.match(html, /AUD 24\.30/)
+})
+
+test('Drawer qty5 no-discount order has no fake discount row', () => {
+  const { auditText, html, audit } = renderAppwriteDrawer(generated(5))
+  assert.equal(audit.discountCents, 0)
+  assert.equal(auditText, '')
+  assert.doesNotMatch(html, /할인 감사 정보|수량 할인/)
+  assert.match(html, /AUD 22\.50/)
+})
+
+test('Drawer normal static promo preserves the existing percentage and provenance display', () => {
+  const document = buildCakeReservation({ ...customer, promoCode: 'lemoni', orderLines: [
+    { productId: 'fresh-lemon-cupcakes-6', quantity: 1 },
+  ] }, { now: new Date('2026-07-10T00:00:00.000Z') })
+  const { auditText, admin } = renderAppwriteDrawer(document)
+  assert.equal(admin.promotionKind, 'static')
+  assert.match(auditText, /10% 할인/)
+  assert.ok(auditText.includes(`- AUD ${(document.discountCents / 100).toFixed(2)}`))
+  assert.match(auditText, /코드 끝 4자리 MONI/)
+  assert.doesNotMatch(auditText, /수량 할인/)
+})
+
+for (const reward of [5, 10] as const) {
+  test(`Drawer normal ${reward}% coupon keeps the existing rate, amount and ID`, () => {
+    const couponId = reward === 5 ? 'manual:drawer' : 'review-drawer'
+    const document = buildCakeReservation({ ...customer, orderLines: [
+      { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
+    ] }, { now, reviewCoupon: { id: couponId, rewardPercent: reward, codeLast4: 'ABCD' } } as never)
+    const { auditText } = renderAppwriteDrawer(document)
+    assert.ok(auditText.includes(`${reward}% 할인`))
+    assert.ok(auditText.includes(`- AUD ${(document.discountCents / 100).toFixed(2)}`))
+    assert.ok(auditText.includes(`일회용 쿠폰 ID ${couponId}`))
+    assert.doesNotMatch(auditText, /수량 할인/)
+  })
+}
+
+for (const quantity of [6, 12]) {
+  for (const provenance of ['static', 'review'] as const) {
+    test(`Drawer mixed qty${quantity} + ${provenance} separates bulk, promotion and total savings`, () => {
+      const document = provenance === 'static'
+        ? buildCakeReservation({ ...customer, promoCode: 'lemoni', orderLines: [
+          { productId: 'smore-stick', quantity },
+          { productId: 'fresh-lemon-cupcakes-6', quantity: 1 },
+        ] }, { now: new Date('2026-07-10T00:00:00.000Z') })
+        : generated(quantity, 10)
+      const { admin, auditText } = renderAppwriteDrawer(document)
+      const bulk = admin.orderLines![0]
+      const promoCents = document.discountCents - bulk.discountCents
+      assert.ok(auditText.includes(`${bulk.discountPercent}% 수량 할인 · - AUD ${(bulk.discountCents / 100).toFixed(2)}`))
+      assert.ok(auditText.includes(`${provenance === 'static' ? '프로모션' : '리뷰'} 10% 할인 · - AUD ${(promoCents / 100).toFixed(2)}`))
+      assert.ok(auditText.includes(`총 할인 · - AUD ${(document.discountCents / 100).toFixed(2)}`))
+      assert.ok(!auditText.includes(`10% 할인 · - AUD ${(document.discountCents / 100).toFixed(2)}`), 'total savings cannot be described as one promotion percentage')
+      assert.match(auditText, /코드 끝 4자리/)
+      if (provenance === 'review') assert.match(auditText, /일회용 쿠폰 ID/)
+    })
+  }
+}
