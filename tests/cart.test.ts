@@ -94,6 +94,32 @@ test('S’more cart preserves bulk quantities and automatic totals while normal 
   assert.equal(getCartEstimatedSubtotal(twenty), 72)
 })
 
+test('S’more cart accepts only positive safe integers through the Appwrite storage ceiling', () => {
+  const max = 2_147_483_647
+  const valid = baseSelection({ productId: 'smore-stick', quantity: max })
+  assert.equal(normalizeCartSelection(valid)?.quantity, max)
+  assert.equal(addCartLine([], valid)[0]?.selection.quantity, max)
+  assert.equal(parseCartLines(JSON.stringify({ version: 1, lines: [valid] }))[0]?.selection.quantity, max)
+
+  for (const quantity of [max + 1, Number.MAX_SAFE_INTEGER + 1, 1e308, Infinity, NaN, 1.5]) {
+    const invalid = baseSelection({ productId: 'smore-stick', quantity })
+    assert.equal(normalizeCartSelection(invalid), null, String(quantity))
+    assert.deepEqual(addCartLine([], invalid), [], String(quantity))
+  }
+
+  for (const quantity of [max + 1, Number.MAX_SAFE_INTEGER + 1, 1e308, 1.5]) {
+    assert.deepEqual(parseCartLines(JSON.stringify({
+      version: 1,
+      lines: [baseSelection({ productId: 'smore-stick', quantity })],
+    })), [], String(quantity))
+  }
+
+  const atLimit = addCartLine([], valid)
+  assert.deepEqual(addCartLine(atLimit, baseSelection({ productId: 'smore-stick', quantity: 1 })), atLimit)
+  assert.deepEqual(updateCartLineQuantity(atLimit, atLimit[0]!.lineKey, max + 1), atLimit)
+  assert.equal(normalizeCartSelection(baseSelection({ productId: 'pound-cake', quantity: 6 }))?.quantity, 5)
+})
+
 test('direct cart entry points reject retired and unknown products without reviving defaults', () => {
   const invalidSelections = [
     baseSelection({ productId: 'fresh-lemon-cupcakes-4' }),
