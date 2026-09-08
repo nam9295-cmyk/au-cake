@@ -4,6 +4,7 @@ import { PickupDatePicker } from '../components/WeekendDatePicker'
 import { BankAccountBox } from '../components/BankAccountBox'
 import { SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { getCakeDetailSelectionTotal, type CakeDetailSelection } from '../lib/cake-detail'
+import { isValidSmoreQuantity, SMORE_STORAGE_MAX_QUANTITY } from '../lib/smore-quantity'
 import { getAuCakeCatalogCards } from '../lib/cake-catalog'
 import {
   getIndividualPackagingPieceCount,
@@ -11,7 +12,7 @@ import {
   isIndividualPackagingEligibleProduct,
 } from '../lib/individual-packaging'
 import { marketConfig } from '../lib/market'
-import { CHOCOLATE_EXTRA_OPTIONS, DEFAULT_CHOCOLATE_EXTRA, formatChocolateExtra, getChocolateExtraOption, getChocolateExtraPrice, isChocolateExtraEligibleProduct, normalizeChocolateExtra } from '../lib/chocolate-extras'
+import { CHOCOLATE_EXTRA_OPTIONS, DEFAULT_CHOCOLATE_EXTRA, formatChocolateExtra, getChocolateExtraOption, isChocolateExtraEligibleProduct, normalizeChocolateExtra } from '../lib/chocolate-extras'
 import { BROWNIE_CREAM_OPTIONS, DEFAULT_BROWNIE_CREAM_OPTION, formatBrownieCreamOption, getBrownieCreamOption, isBrownieCheesecakeProduct, isBrownieFreshCreamEligibleProduct, normalizeBrownieCreamOption } from '../lib/brownie-cream'
 import { type Page } from '../lib/app-routes'
 import {
@@ -242,7 +243,11 @@ export function ReservePage({
       return
     }
 
-    if (!isMultiOrder && (form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY)) {
+    if (!isMultiOrder && (
+      form.productId === 'smore-stick'
+        ? !isValidSmoreQuantity(form.quantity)
+        : form.quantity < 1 || form.quantity > MAX_RESERVATION_QUANTITY
+    )) {
       setError(copy.errors.quantity(MAX_RESERVATION_QUANTITY))
       return
     }
@@ -441,7 +446,26 @@ export function ReservePage({
     vanillaCakeFlavor: form.vanillaCakeFlavor,
     }
   const unitPrice = getReservationUnitPrice(selectedProduct.id, priceOptions)
-  const singleSelectionPrice = getReservationPrice(selectedProduct.id, priceOptions, form.quantity) + getChocolateExtraPrice(form.chocolateExtra)
+  const singleSelection: CakeDetailSelection = {
+    productId: form.productId,
+    cakeSize: form.cakeSize,
+    chocolateType: form.chocolateType,
+    poundAddon: form.poundAddon,
+    chocolateExtra: form.chocolateExtra,
+    brownieCreamOption: form.brownieCreamOption,
+    cupcakeFinish: form.cupcakeFinish,
+    chocolateIcingCount: form.chocolateIcingCount,
+    vanillaCreamCount: form.vanillaCreamCount,
+    partyDecorationCount: form.partyDecorationCount,
+    vanillaCakeSheet: form.vanillaCakeSheet,
+    vanillaCakeFlavor: form.vanillaCakeFlavor,
+    vanillaCakePointColor: form.vanillaCakePointColor,
+    individualPackaging: form.individualPackaging,
+    quantity: selectedProduct.id === 'smore-stick' && !isValidSmoreQuantity(form.quantity)
+      ? 1
+      : form.quantity,
+  }
+  const singleSelectionPrice = getCakeDetailSelectionTotal(singleSelection)
   const currentPrice = orderSelections
     ? orderSelections.reduce((sum, selection) => sum + getCakeDetailSelectionTotal(selection), 0)
     : singleSelectionPrice
@@ -453,9 +477,9 @@ export function ReservePage({
         productSubtotalCents: Math.round(getReservationPrice(selection.productId, selection, selection.quantity) * 100),
       })))
     : getIndividualPackagingPricing([{
-        productId: selectedProduct.id,
-        quantity: form.quantity,
-        individualPackaging: form.individualPackaging,
+        productId: singleSelection.productId,
+        quantity: singleSelection.quantity,
+        individualPackaging: singleSelection.individualPackaging,
         productSubtotalCents: Math.round(singleSelectionPrice * 100),
       }])
   const packagingFee = packagingPricing.individualPackagingFeeCents / 100
@@ -1151,19 +1175,36 @@ export function ReservePage({
               <legend>{labels.quantity}</legend>
               <label>
                 {labels.orderQuantity}
-                <select
-                  value={form.quantity}
-                  onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
-                >
-                  {Array.from({ length: MAX_RESERVATION_QUANTITY }, (_, index) => index + 1).map((quantity) => (
-                    <option value={quantity} key={quantity}>
-                      {quantity}
-                      {copy.quantityUnit}
-                    </option>
-                  ))}
-                </select>
+                {selectedProduct.id === 'smore-stick' ? (
+                  <input
+                    name="quantity"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={SMORE_STORAGE_MAX_QUANTITY}
+                    step={1}
+                    value={form.quantity}
+                    onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
+                  />
+                ) : (
+                  <select
+                    value={form.quantity}
+                    onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
+                  >
+                    {Array.from({ length: MAX_RESERVATION_QUANTITY }, (_, index) => index + 1).map((quantity) => (
+                      <option value={quantity} key={quantity}>
+                        {quantity}
+                        {copy.quantityUnit}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </label>
-              <p className="field-help">{labels.quantityHelp}</p>
+              <p className="field-help">
+                {selectedProduct.id === 'smore-stick'
+                  ? language === 'ko' ? '6개부터 수량 할인이 자동 적용됩니다.' : 'Bulk discounts apply automatically from 6 sticks.'
+                  : labels.quantityHelp}
+              </p>
             </fieldset>
             </>)}
 

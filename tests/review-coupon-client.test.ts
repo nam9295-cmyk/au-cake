@@ -116,6 +116,8 @@ test('static Chocolate and Lemoni campaign eligibility remains unchanged', () =>
   assert.equal(getPromoEntryState('pave-cake', 'Chocolate', validStaticNow).kind, 'invalid')
   assert.equal(getPromoEntryState('fresh-lemon-cupcakes-8', 'LEMONI', validStaticNow).kind, 'static-valid')
   assert.equal(getPromoEntryState('pound-cake', 'Lemoni', validStaticNow).kind, 'invalid')
+  assert.equal(getPromoEntryState('smore-stick', 'Chocolate', validStaticNow).kind, 'invalid')
+  assert.equal(getPromoEntryState('smore-stick', 'Lemoni', validStaticNow).kind, 'invalid')
 })
 
 test('review coupon handoff is one-shot component memory with no browser persistence API', () => {
@@ -335,10 +337,13 @@ test('multi-line Strawberry orders project only the new contract fields', () => 
     productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in', quantity: 2,
   })
 })
-test('reservation API capability parser enables multi-line orders only for exact numeric capability one', () => {
-  assert.deepEqual(parseReservationApiCapabilities({ status: 'ready', capabilities: { cakeOrderLines: 1 } }), {
-    cakeOrderLines: 1,
-  })
+test('reservation API capability parser accepts exact legacy, Phase A, and Phase B health contracts only', () => {
+  const legacy = { status: 'ready', capabilities: { cakeOrderLines: 1 } }
+  const phaseA = { status: 'ready', capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 0 } }
+  const phaseB = { status: 'ready', capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 1 } }
+  for (const ready of [legacy, phaseA, phaseB]) {
+    assert.deepEqual(parseReservationApiCapabilities(ready), { cakeOrderLines: 1 })
+  }
   for (const invalid of [
     null,
     {},
@@ -346,9 +351,10 @@ test('reservation API capability parser enables multi-line orders only for exact
     { status: 'ready', capabilities: { cakeOrderLines: 1 }, unexpected: true },
     { status: 'ready', capabilities: { cakeOrderLines: 1, unexpected: true } },
     { status: 'warming', capabilities: { cakeOrderLines: 1 } },
-    { status: 'ready', capabilities: { cakeOrderLines: '1' } },
-    { status: 'ready', capabilities: { cakeOrderLines: true } },
-    { status: 'ready', capabilities: { cakeOrderLines: 0 } },
+    { status: 'ready', capabilities: { cakeOrderLines: '1', smoreStoredOrders: 1, smoreWrites: 1 } },
+    { status: 'ready', capabilities: { cakeOrderLines: 1, smoreStoredOrders: 0, smoreWrites: 1 } },
+    { status: 'ready', capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 2 } },
+    { status: 'ready', capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: true } },
   ]) assert.throws(() => parseReservationApiCapabilities(invalid), /RESERVATION_API_INVALID_RESPONSE/)
 
   let getterRead = false

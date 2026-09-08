@@ -26,12 +26,12 @@ const productStartingPrices = Object.fromEntries(
 test('AU public content owns the approved homepage contract', () => {
   assert.equal(content.home.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(content.home.h1, 'Made-to-Order Chocolate Cakes in Sydney')
-  assert.equal(content.home.description, "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks (orders opening soon).")
+  assert.equal(content.home.description, "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks.")
   assert.equal(content.home.pickup, 'Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00')
   assert.equal('orderingSteps' in content.home, false)
   assert.match(content.home.faq[0].answer, /Friday 18:00–20:00 and Saturday–Sunday 08:00–20:00/)
   assert.equal('ctas' in content.home, false)
-  assert.equal(content.cakePages['smore-stick'].availability, 'https://schema.org/OutOfStock')
+  assert.equal(content.cakePages['smore-stick'].availability, 'https://schema.org/InStock')
 })
 
 test('AU customer copy replaces small-batch claims with chocolatier-grade couverture chocolate', () => {

@@ -366,8 +366,19 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
 export function parseReservationApiCapabilities(value: unknown): ReservationApiCapabilities {
   const row = readExactPlainDataRecordSnapshot(value, ['status', 'capabilities'])
   if (!row || row.status !== 'ready') invalidResponse()
-  const capabilities = readExactPlainDataRecordSnapshot(row.capabilities, ['cakeOrderLines'])
-  if (!capabilities || capabilities.cakeOrderLines !== 1) invalidResponse()
+
+  const legacyCapabilities = readExactPlainDataRecordSnapshot(row.capabilities, ['cakeOrderLines'])
+  if (legacyCapabilities?.cakeOrderLines === 1) return { cakeOrderLines: 1 }
+
+  const smoreCapabilities = readExactPlainDataRecordSnapshot(row.capabilities, [
+    'cakeOrderLines', 'smoreStoredOrders', 'smoreWrites',
+  ])
+  if (
+    !smoreCapabilities
+    || smoreCapabilities.cakeOrderLines !== 1
+    || smoreCapabilities.smoreStoredOrders !== 1
+    || (smoreCapabilities.smoreWrites !== 0 && smoreCapabilities.smoreWrites !== 1)
+  ) invalidResponse()
   return { cakeOrderLines: 1 }
 }
 

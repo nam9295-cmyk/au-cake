@@ -9,6 +9,7 @@ import { isCakePointColorProduct } from './constants.js'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './individual-packaging.js'
 import { DEFAULT_CHOCOLATE_EXTRA, normalizeChocolateExtra } from './chocolate-extras.js'
 import { DEFAULT_BROWNIE_CREAM_OPTION, normalizeBrownieCreamOption } from './brownie-cream.js'
+import { isValidSmoreQuantity } from './smore-quantity.js'
 import type {
   CakeSize,
   ChocolateType,
@@ -29,20 +30,21 @@ export type CartLine = {
   selection: CakeDetailSelection
 }
 
-export function normalizeCartQuantity(value: number, productId?: ProductId) {
+export function normalizeCartQuantity(value: number, productId?: ProductId): number {
+  if (productId === 'smore-stick') return isValidSmoreQuantity(value) ? value : 0
   if (!Number.isFinite(value)) return 1
   const normalized = Math.max(1, Math.floor(value))
-  return productId === 'smore-stick'
-    ? normalized
-    : Math.min(MAX_RESERVATION_QUANTITY, normalized)
+  return Math.min(MAX_RESERVATION_QUANTITY, normalized)
 }
 
 export function normalizeCartSelection(selection: CakeDetailSelection): CakeDetailSelection | null {
   if (!getCakeCatalogEntryByProductId(selection.productId)) return null
+  const quantity = normalizeCartQuantity(selection.quantity, selection.productId)
+  if (quantity < 1) return null
   const normalized = selectCakeDetailProduct(selection, selection.productId)
   return {
     ...normalized,
-    quantity: normalizeCartQuantity(selection.quantity, selection.productId),
+    quantity,
   }
 }
 
@@ -79,12 +81,17 @@ export function addCartLine(lines: readonly CartLine[], selection: CakeDetailSel
 
   if (!existing) return [...lines, { lineKey, selection: normalized }]
 
+  const mergedQuantity = normalizeCartQuantity(
+    existing.selection.quantity + normalized.quantity,
+    normalized.productId,
+  )
+  if (mergedQuantity < 1) return [...lines]
   return lines.map((line) => line.lineKey === lineKey
     ? {
         lineKey,
         selection: {
           ...normalized,
-          quantity: normalizeCartQuantity(line.selection.quantity + normalized.quantity, normalized.productId),
+          quantity: mergedQuantity,
         },
       }
     : line)
@@ -116,12 +123,15 @@ export function updateCartLineQuantity(
   lineKey: string,
   quantity: number,
 ): CartLine[] {
+  const productId = lines.find((line) => line.lineKey === lineKey)?.selection.productId
+  const normalizedQuantity = normalizeCartQuantity(quantity, productId)
+  if (normalizedQuantity < 1) return [...lines]
   return lines.map((line) => line.lineKey === lineKey
     ? {
         ...line,
         selection: {
           ...line.selection,
-          quantity: normalizeCartQuantity(quantity, line.selection.productId),
+          quantity: normalizedQuantity,
         },
       }
     : line)

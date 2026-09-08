@@ -53,9 +53,22 @@ function completed(result) {
   }
 }
 
-function readyHealth() {
-  return completed({ status: 'ready', capabilities: { cakeOrderLines: 1 } })
+function readyHealth(smoreWrites) {
+  return completed({
+    status: 'ready',
+    capabilities: smoreWrites === undefined
+      ? { cakeOrderLines: 1 }
+      : { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites },
+  })
 }
+
+test('actual Phase A and Phase B health bodies enable multi-line ordering', async (t) => {
+  for (const smoreWrites of [0, 1]) {
+    replaceMethod(t, Functions.prototype, 'createExecution', async () => readyHealth(smoreWrites))
+    const repository = await loadRepository()
+    assert.equal(await repository.supportsCakeOrderLines(), true, `smoreWrites=${smoreWrites}`)
+  }
+})
 
 function replaceMethod(t, prototype, name, replacement) {
   const original = prototype[name]

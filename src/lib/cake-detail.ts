@@ -37,6 +37,7 @@ import {
 import { DEFAULT_CHOCOLATE_EXTRA, getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras.js'
 import { DEFAULT_BROWNIE_CREAM_OPTION, normalizeBrownieCreamOption } from './brownie-cream.js'
 import { calculateSmorePricing } from './smore.js'
+import { isValidSmoreQuantity } from './smore-quantity.js'
 import type {
   BrownieCreamOption,
   CakeSize,
@@ -312,10 +313,8 @@ const DETAIL_OPERATION_COPY: Record<Language, {
 }
 
 function normalizeQuantity(value: number, productId?: ProductId) {
+  if (productId === 'smore-stick') return isValidSmoreQuantity(value) ? value : 1
   if (!Number.isFinite(value)) return 1
-  if (productId === 'smore-stick') {
-    return Math.max(1, Math.floor(value))
-  }
   return Math.min(5, Math.max(1, Math.floor(value)))
 }
 
