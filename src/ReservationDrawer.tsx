@@ -69,6 +69,14 @@ export function ReservationDrawer({
   const isVersionedOrder = Array.isArray(reservation.orderLines)
   const isLegacyCupcake = reservation.productId === 'cupcake-dozen' && reservation.cupcakeFinish === undefined
   const reservationPricingAudit = getOptionalReservationPricingAudit(reservation)
+  const bulkDiscountLines = reservationPricingAudit
+    ? (reservation.orderLines || []).filter(line => line.productId === 'smore-stick' && line.discountCents > 0)
+    : []
+  const bulkDiscountCents = bulkDiscountLines.reduce((total, line) => total + line.discountCents, 0)
+  const promoDiscountCents = (reservationPricingAudit?.discountCents || 0) - bulkDiscountCents
+  const promoDiscountLabel = reservation.promotionKind === 'review-reward'
+    ? '리뷰'
+    : reservation.promotionKind === 'manual-coupon' ? '쿠폰' : '프로모션'
 
   const draftUpdate = buildAdminReservationUpdate(reservation, {
     productId,
@@ -126,9 +134,30 @@ export function ReservationDrawer({
             <div>
               <dt>할인 감사 정보</dt>
               <dd>
-                소계 {formatCurrency(reservationPricingAudit.subtotalCents / 100)} ·
-                {' '}{reservationPricingAudit.discountPercent}% 할인 ·
-                {' '}- {formatCurrency(reservationPricingAudit.discountCents / 100)}
+                {bulkDiscountLines.length > 0 ? (
+                  <>
+                    소계 {formatCurrency(reservationPricingAudit.subtotalCents / 100)}
+                    {bulkDiscountLines.map((line, index) => (
+                      <span key={index}>
+                        <br />S’more {line.quantity}개 · {line.discountPercent}% 수량 할인 ·
+                        {' '}- {formatCurrency(line.discountCents / 100)}
+                      </span>
+                    ))}
+                    {promoDiscountCents > 0 && (
+                      <span>
+                        <br />{promoDiscountLabel} {reservationPricingAudit.discountPercent}% 할인 ·
+                        {' '}- {formatCurrency(promoDiscountCents / 100)}
+                      </span>
+                    )}
+                    <br />총 할인 · - {formatCurrency(reservationPricingAudit.discountCents / 100)}
+                  </>
+                ) : (
+                  <>
+                    소계 {formatCurrency(reservationPricingAudit.subtotalCents / 100)} ·
+                    {' '}{reservationPricingAudit.discountPercent}% 할인 ·
+                    {' '}- {formatCurrency(reservationPricingAudit.discountCents / 100)}
+                  </>
+                )}
                 {reservationPricingAudit.appliedPromoCodeLast4
                   ? ` · 코드 끝 4자리 ${reservationPricingAudit.appliedPromoCodeLast4}`
                   : ''}
