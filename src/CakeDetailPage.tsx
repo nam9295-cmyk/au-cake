@@ -1124,39 +1124,18 @@ export default function CakeDetailPage({
             <strong>{formatCurrency(total)}</strong>
           </div>
 
-          {isSmoreStick ? (
-            <div className="cake-detail-smore-notice-box">
-              <button
-                type="button"
-                className="primary-button cake-detail-request is-disabled"
-                disabled
-                aria-disabled="true"
-                style={{ opacity: 0.6, cursor: 'not-allowed' }}
-              >
-                {language === 'ko' ? '예약 오픈 준비 중' : 'Orders opening soon'}
-              </button>
-              <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#666', lineHeight: 1.4 }}>
-                {language === 'ko'
-                  ? '스모어 스틱은 대량 주문 예약 시스템 오픈 준비 중입니다. 단체 주문이나 사전 문의는 Instagram @verygood_syd로 문의해 주세요.'
-                  : 'S’more Stick bulk ordering is opening soon. For party bookings or early enquiries, please message us on Instagram @verygood_syd.'}
+          <button type="button" className="primary-button cake-detail-request" onClick={addToOrder}>
+            {addLabel}
+          </button>
+          {addedToOrder && (
+            <div className="cake-detail-added">
+              <p role="status">
+                {language === 'ko' ? '주문에 담았어요.' : 'Added to your order.'}
               </p>
-            </div>
-          ) : (
-            <>
-              <button type="button" className="primary-button cake-detail-request" onClick={addToOrder}>
-                {addLabel}
+              <button type="button" className="secondary-button" onClick={onViewOrder}>
+                {language === 'ko' ? '주문 보기' : 'View order'}
               </button>
-              {addedToOrder && (
-                <div className="cake-detail-added">
-                  <p role="status">
-                    {language === 'ko' ? '주문에 담았어요.' : 'Added to your order.'}
-                  </p>
-                  <button type="button" className="secondary-button" onClick={onViewOrder}>
-                    {language === 'ko' ? '주문 보기' : 'View order'}
-                  </button>
-                </div>
-              )}
-            </>
+            </div>
           )}
             </div>
           {compactOrderingNotice ? (

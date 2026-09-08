@@ -18,7 +18,7 @@
   "home": {
     "title": "Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate",
     "h1": "Made-to-Order Chocolate Cakes in Sydney",
-    "description": "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks (orders opening soon).",
+    "description": "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks.",
     "hero": "Chocolate cakes made with chocolatier-grade couverture chocolate for birthdays, parties and gifting.",
     "pickup": "Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00",
     "faq": [
@@ -166,7 +166,7 @@
       "description": "Fluffy marshmallows toasted on a stick and coated in rich couverture chocolate. Designed for gatherings and bulk sharing with automatic discounts from 6 sticks.",
       "searchGoal": "S'more Stick Sydney",
       "schema": "product-offer",
-      "availability": "https://schema.org/OutOfStock",
+      "availability": "https://schema.org/InStock",
       "startingPrice": 4.5,
       "priceSummary": "From AUD 4.50 / stick. Bulk discount: 10% off for 6–11 sticks, 20% off for 12+ sticks.",
       "optionSummary": "Bulk discounts from 6+ sticks",

@@ -91,7 +91,6 @@ function productSchema(cake, path) {
 
 function cakeFallback(cake, path) {
   const isLegacy = cake.schema === 'webpage-only'
-  const isSmore = cake.slug === 'smore-stick'
   const image = imageFor(cake)
   const legacyActions = cake.slug === 'chocolate-pound-cake-and-cupcakes'
     ? '<p><a href="/cakes/signature-gateau-au-chocolat">Signature Gâteau au Chocolat</a> · <a href="/cakes/chocolate-cupcakes">Chocolate Cupcakes</a></p>'
@@ -99,9 +98,7 @@ function cakeFallback(cake, path) {
       ? '<p><a href="/cakes">View current cakes</a></p>'
       : cake.slug === 'vanilla-fresh-cream-cake'
         ? '<p><a href="/cakes">View current cakes</a></p>'
-        : isSmore
-          ? '<p>Orders opening soon · Inquiries via Instagram <a href="https://www.instagram.com/verygood_syd/" target="_blank" rel="noopener noreferrer">@verygood_syd</a></p>'
-          : '<p><a href="/reserve">Request this cake</a></p>'
+        : '<p><a href="/reserve">Request this cake</a></p>'
   const productDetails = isLegacy ? '' : `
         <p><strong>Price guide:</strong> ${escapeHtml(cake.priceSummary)}</p>
         <p><strong>Options:</strong> ${escapeHtml(cake.optionSummary)}</p>

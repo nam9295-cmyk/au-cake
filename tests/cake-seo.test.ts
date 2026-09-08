@@ -41,7 +41,7 @@ test('home and seven sale cake detail routes use AU self canonicals', () => {
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
   assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
-  assert.equal(config.description, "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks (orders opening soon).")
+  assert.equal(config.description, "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks.")
   assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList', 'FAQPage'])
   const organization = config.structuredData?.find((entry) => entry['@type'] === 'Organization')
   const faq = config.structuredData?.find((entry) => entry['@type'] === 'FAQPage')
@@ -146,7 +146,7 @@ test('seven sale cakes use one Offer at the visible starting price', () => {
     assert.equal(offer.priceCurrency, 'AUD', path)
     assert.equal(offer.url, `${SITE_URL}${path}`, path)
     if (path === '/cakes/smore-stick') {
-      assert.equal(offer.availability, 'https://schema.org/OutOfStock', path)
+      assert.equal(offer.availability, 'https://schema.org/InStock', path)
     } else {
       assert.equal(Object.hasOwn(offer, 'availability'), false, path)
     }
