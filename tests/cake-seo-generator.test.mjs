@@ -181,11 +181,11 @@ test('cake generator uses the final per-page schema contract and real product We
     assert.match(html, new RegExp(`<meta property="og:type" content="${expected.og}"`), slug)
     if (expected.image) assert.match(html, new RegExp(expected.image), slug)
     if (slug === 'smore-stick') {
-      assert.equal(product.offers.availability, 'https://schema.org/OutOfStock', slug)
-      assert.match(html, /Orders opening soon/, slug)
-      assert.doesNotMatch(html, /Request this cake/, slug)
-      assert.doesNotMatch(html, /href="\/reserve"/, slug)
-      assert.match(html, /@verygood_syd/, slug)
+      assert.equal(product.offers.availability, 'https://schema.org/InStock', slug)
+      assert.doesNotMatch(html, /Orders opening soon/, slug)
+      assert.match(html, /Request this cake/, slug)
+      assert.match(html, /href="\/reserve"/, slug)
+      assert.doesNotMatch(html, /@verygood_syd/, slug)
     }
   }
 

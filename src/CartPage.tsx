@@ -252,7 +252,7 @@ export default function CartPage({
                           <button
                             type="button"
                             aria-label={language === 'ko' ? '수량 늘리기' : 'Increase quantity'}
-                            disabled={line.selection.quantity >= MAX_RESERVATION_QUANTITY}
+                            disabled={line.selection.productId !== 'smore-stick' && line.selection.quantity >= MAX_RESERVATION_QUANTITY}
                             onClick={() => onUpdate(line.lineKey, line.selection.quantity + 1)}
                           >
                             <Plus aria-hidden="true" />

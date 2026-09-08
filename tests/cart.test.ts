@@ -70,6 +70,30 @@ test('cart normalizes hidden options before deriving the fixed-order quantity-fr
   assert.equal(getCartLineKey({ ...normalized, quantity: 2 }), getCartLineKey(normalized))
 })
 
+test('S’more cart preserves bulk quantities and automatic totals while normal cakes remain capped elsewhere', () => {
+  const subtotalAt = (quantity: number) => getCartEstimatedSubtotal(
+    addCartLine([], baseSelection({ productId: 'smore-stick', quantity })),
+  )
+
+  assert.deepEqual([
+    subtotalAt(1),
+    subtotalAt(5),
+    subtotalAt(6),
+    subtotalAt(11),
+    subtotalAt(12),
+    subtotalAt(20),
+  ], [4.5, 22.5, 24.3, 44.55, 43.2, 72])
+
+  const six = addCartLine([], baseSelection({ productId: 'smore-stick', quantity: 6 }))
+  assert.equal(six[0]?.selection.quantity, 6)
+  const twelve = addCartLine(six, baseSelection({ productId: 'smore-stick', quantity: 6 }))
+  assert.equal(twelve[0]?.selection.quantity, 12)
+  assert.equal(getCartEstimatedSubtotal(twelve), 43.2)
+  const twenty = updateCartLineQuantity(twelve, twelve[0]!.lineKey, 20)
+  assert.equal(twenty[0]?.selection.quantity, 20)
+  assert.equal(getCartEstimatedSubtotal(twenty), 72)
+})
+
 test('direct cart entry points reject retired and unknown products without reviving defaults', () => {
   const invalidSelections = [
     baseSelection({ productId: 'fresh-lemon-cupcakes-4' }),

@@ -29,9 +29,12 @@ export type CartLine = {
   selection: CakeDetailSelection
 }
 
-export function normalizeCartQuantity(value: number) {
+export function normalizeCartQuantity(value: number, productId?: ProductId) {
   if (!Number.isFinite(value)) return 1
-  return Math.min(MAX_RESERVATION_QUANTITY, Math.max(1, Math.floor(value)))
+  const normalized = Math.max(1, Math.floor(value))
+  return productId === 'smore-stick'
+    ? normalized
+    : Math.min(MAX_RESERVATION_QUANTITY, normalized)
 }
 
 export function normalizeCartSelection(selection: CakeDetailSelection): CakeDetailSelection | null {
@@ -39,7 +42,7 @@ export function normalizeCartSelection(selection: CakeDetailSelection): CakeDeta
   const normalized = selectCakeDetailProduct(selection, selection.productId)
   return {
     ...normalized,
-    quantity: normalizeCartQuantity(selection.quantity),
+    quantity: normalizeCartQuantity(selection.quantity, selection.productId),
   }
 }
 
@@ -81,7 +84,7 @@ export function addCartLine(lines: readonly CartLine[], selection: CakeDetailSel
         lineKey,
         selection: {
           ...normalized,
-          quantity: normalizeCartQuantity(line.selection.quantity + normalized.quantity),
+          quantity: normalizeCartQuantity(line.selection.quantity + normalized.quantity, normalized.productId),
         },
       }
     : line)
@@ -118,7 +121,7 @@ export function updateCartLineQuantity(
         ...line,
         selection: {
           ...line.selection,
-          quantity: normalizeCartQuantity(quantity),
+          quantity: normalizeCartQuantity(quantity, line.selection.productId),
         },
       }
     : line)
