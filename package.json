@@ -6,6 +6,7 @@
   "scripts": {
     "pretest": "npm run test:custom-cake-contract && node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
     "test:custom-cake-contract": "node --test tests/custom-cake-contract.test.mjs",
+    "test:custom-cake-frontend": "VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/custom-cake-frontend.test.ts",
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",
     "lint": "eslint .",

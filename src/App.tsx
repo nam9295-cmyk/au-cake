@@ -16,6 +16,8 @@ import { ClassCompletePage } from './pages/ClassCompletePage'
 import { ClassReservePage } from './pages/ClassReservePage'
 import { ClassesPage } from './pages/ClassesPage'
 import { CompletePage } from './pages/CompletePage'
+import { CustomCakePage } from './pages/CustomCakePage'
+import { CustomCakeCompletePage } from './pages/CustomCakeCompletePage'
 import { HomePage } from './pages/HomePage'
 import { LookupPage } from './pages/LookupPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -23,6 +25,7 @@ import { ReservePage } from './pages/ReservePage'
 import { getCakeSlugFromPath, getPageFromPath, pathForCake, pathForPage, type Page } from './lib/app-routes'
 import { type CakeDetailSelection } from './lib/cake-detail'
 import type { CartLine } from './lib/cart'
+import type { CustomCakeCreateResponse } from './lib/custom-cake-contract'
 import {
   DEFAULT_PRODUCT_ID,
   DEFAULT_SETTINGS,
@@ -73,6 +76,8 @@ function App() {
   const page = getPageFromPath(pathname)
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
   const [completedReservation, setCompletedReservation] = useState<Reservation | null>(null)
+  const [completedCustomCake, setCompletedCustomCake] = useState<CustomCakeCreateResponse | null>(null)
+  const [lookupRequestNumber, setLookupRequestNumber] = useState('')
 
   const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
   const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
@@ -151,11 +156,25 @@ function App() {
   const navigateToCake = useCallback((slug: string) => {
     cartOriginLinesRef.current = []
     setReservationOrderLines(null)
+    if (slug === 'custom-cake') {
+      pushPage('custom-cake')
+      return
+    }
     const path = pathForCake(slug)
     window.history.pushState(null, '', path)
     setPathname(path)
     window.scrollTo({ top: 0 })
-  }, [])
+  }, [pushPage])
+
+  const completeCustomCake = useCallback((result: CustomCakeCreateResponse) => {
+    setCompletedCustomCake(result)
+    pushPage('custom-cake-complete')
+  }, [pushPage])
+
+  const goToCustomCakeLookup = useCallback((requestNumber: string) => {
+    setLookupRequestNumber(requestNumber)
+    pushPage('lookup')
+  }, [pushPage])
 
   const continueCartOrder = useCallback(() => {
     const snapshot: CartLine[] = cartLines.map((line) => ({ lineKey: line.lineKey, selection: { ...line.selection } }))
@@ -187,7 +206,13 @@ function App() {
     setCompletedReservation(reservation)
   }, [removeSubmittedCartLines])
 
-  const isAdminPage = page === 'admin-login' || page === 'admin' || page === 'admin-reservations' || page === 'admin-classes' || page === 'admin-reviews'
+  const isAdminPage =
+    page === 'admin-login' ||
+    page === 'admin' ||
+    page === 'admin-reservations' ||
+    page === 'admin-custom-cakes' ||
+    page === 'admin-classes' ||
+    page === 'admin-reviews'
   const isPrivatePage = isAdminPage || page === 'calendar'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
 
@@ -214,6 +239,25 @@ function App() {
           <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
           <CakesPage language={language} onOpenCake={navigateToCake} />
         </>
+      )}
+      {page === 'custom-cake' && (
+        <CustomCakePage
+          navigate={navigate}
+          language={language}
+          setLanguage={setLanguage}
+          cartItemCount={cartItemCount}
+          onComplete={completeCustomCake}
+        />
+      )}
+      {page === 'custom-cake-complete' && (
+        <CustomCakeCompletePage
+          navigate={navigate}
+          language={language}
+          setLanguage={setLanguage}
+          cartItemCount={cartItemCount}
+          createdResult={completedCustomCake}
+          onGoToLookup={goToCustomCakeLookup}
+        />
       )}
       {page === 'cart' && (
         <>
@@ -279,12 +323,22 @@ function App() {
       {page === 'complete' && (
         <CompletePage navigate={navigate} reservation={completedReservation} settings={settings} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
       )}
-      {page === 'lookup' && <LookupPage navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
+      {page === 'lookup' && (
+        <LookupPage
+          key={lookupRequestNumber}
+          navigate={navigate}
+          language={language}
+          setLanguage={setLanguage}
+          cartItemCount={cartItemCount}
+          initialRequestNumber={lookupRequestNumber}
+        />
+      )}
       {isPrivatePage && (
         <Suspense fallback={<PrivateRouteFallback />}>
           {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
           {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
-          {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
+          {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} initialTab="regular" />}
+          {page === 'admin-custom-cakes' && <AdminReservationsPage navigate={navigate} initialTab="custom" />}
           {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}
           {page === 'admin-reviews' && (
             <AdminReviewsPage

@@ -1,0 +1,580 @@
+import { useEffect, useState } from 'react'
+import {
+  Check,
+  CheckCircle2,
+  Clock,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  X,
+} from 'lucide-react'
+import type { CustomCakeLookupResponse } from '../lib/custom-cake-contract.js'
+import {
+  customCakeService,
+  formatCents,
+  formatExtraCents,
+  getStatusInfo,
+} from '../lib/custom-cake-client.js'
+
+export function AdminCustomCakesSection() {
+  const [requests, setRequests] = useState<CustomCakeLookupResponse[]>([])
+  const [selected, setSelected] = useState<CustomCakeLookupResponse | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [toast, setToast] = useState('')
+
+  // Edit quote form fields
+  const [designExtraInput, setDesignExtraInput] = useState('')
+  const [figurineExtraInput, setFigurineExtraInput] = useState('')
+  const [explanation, setExplanation] = useState('')
+  const [updatingQuote, setUpdatingQuote] = useState(false)
+  const [actionError, setActionError] = useState('')
+
+  const refreshList = async () => {
+    setLoading(true)
+    try {
+      const list = await customCakeService.listAdminRequests()
+      setRequests(list)
+      if (selected) {
+        const updatedSelected = list.find((r) => r.requestNumber === selected.requestNumber)
+        if (updatedSelected) setSelected(updatedSelected)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    customCakeService.listAdminRequests().then((list) => {
+      setRequests(list)
+    })
+  }, [])
+
+  const openDrawer = (item: CustomCakeLookupResponse) => {
+    setSelected(item)
+    setActionError('')
+    setDesignExtraInput(
+      item.quote.designExtraCents !== null ? (item.quote.designExtraCents / 100).toString() : '',
+    )
+    setFigurineExtraInput(
+      item.quote.figurineExtraCents !== null ? (item.quote.figurineExtraCents / 100).toString() : '',
+    )
+    setExplanation('')
+  }
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
+  const handleUpdateQuote = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selected) return
+    setActionError('')
+    setUpdatingQuote(true)
+
+    try {
+      const designExtraCents = designExtraInput.trim() !== ''
+        ? Math.round(parseFloat(designExtraInput) * 100)
+        : null
+      const figurineExtraCents = figurineExtraInput.trim() !== ''
+        ? Math.round(parseFloat(figurineExtraInput) * 100)
+        : null
+
+      const updated = await customCakeService.updateQuote({
+        contractVersion: 'custom-cake.v1',
+        requestNumber: selected.requestNumber,
+        expectedQuoteVersion: selected.quote.quoteVersion,
+        designExtraCents,
+        figurineExtraCents,
+        explanation: explanation.trim(),
+      })
+
+      setSelected(updated)
+      showToast(`Quote updated to v${updated.quote.quoteVersion}`)
+      await refreshList()
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setUpdatingQuote(false)
+    }
+  }
+
+  const handleRecordAcceptance = async () => {
+    if (!selected) return
+    setActionError('')
+    setUpdatingQuote(true)
+
+    try {
+      const updated = await customCakeService.recordAcceptance({
+        contractVersion: 'custom-cake.v1',
+        requestNumber: selected.requestNumber,
+        quoteVersion: selected.quote.quoteVersion,
+        customerConsent: true,
+      })
+
+      setSelected(updated)
+      showToast(`Customer consent recorded for Quote v${updated.quote.quoteVersion}`)
+      await refreshList()
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setUpdatingQuote(false)
+    }
+  }
+
+  const handleConfirmReservation = async () => {
+    if (!selected) return
+    setActionError('')
+    setUpdatingQuote(true)
+
+    try {
+      const updated = await customCakeService.confirmRequest({
+        contractVersion: 'custom-cake.v1',
+        requestNumber: selected.requestNumber,
+        expectedQuoteVersion: selected.quote.quoteVersion,
+      })
+
+      setSelected(updated)
+      showToast(`Custom Cake request confirmed!`)
+      await refreshList()
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setUpdatingQuote(false)
+    }
+  }
+
+  const filteredRequests = requests.filter((r) => {
+    const q = searchTerm.toLowerCase()
+    return (
+      r.requestNumber.toLowerCase().includes(q) ||
+      r.customer.customerName.toLowerCase().includes(q) ||
+      r.customer.customerPhone.includes(q) ||
+      r.customer.customerEmail.toLowerCase().includes(q)
+    )
+  })
+
+  return (
+    <div className="admin-custom-cakes-section">
+      <div className="admin-page-header">
+        <div>
+          <h2>커스텀 케이크 접수 및 견적 관리</h2>
+          <p className="admin-subtitle">
+            custom-cake.v1 계약 기반 견적 산출, 추가비 협의, 고객 동의 및 예약 확정
+          </p>
+        </div>
+        <button
+          type="button"
+          className="refresh-btn"
+          onClick={refreshList}
+          disabled={loading}
+          aria-label="Refresh list"
+        >
+          <RefreshCw size={16} className={loading ? 'spin' : ''} />
+          <span>새로고침</span>
+        </button>
+      </div>
+
+      {toast && (
+        <div className="toast" role="status" aria-live="polite">
+          {toast}
+        </div>
+      )}
+
+      <div className="admin-filters-bar">
+        <div className="search-input-wrap">
+          <Search size={16} />
+          <input
+            type="search"
+            placeholder="접수번호, 고객명, 전화번호 검색..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <span className="count-label">총 {filteredRequests.length}건</span>
+      </div>
+
+      <div className="admin-table-container">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>접수번호</th>
+              <th>상태</th>
+              <th>신청자</th>
+              <th>픽업일</th>
+              <th>구성</th>
+              <th>견적 버전</th>
+              <th>확정 여부</th>
+              <th>고객 동의</th>
+              <th>금액 (잠정/확정)</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRequests.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="empty-cell">
+                  접수된 커스텀 케이크 내역이 없습니다.
+                </td>
+              </tr>
+            ) : (
+              filteredRequests.map((item) => {
+                const statusInfo = getStatusInfo(item.status, 'ko')
+                const cakeLine = item.lines.find((l) => l.kind === 'custom-cake')
+                const isFinal = item.quote.isFinalQuote
+                const hasAcceptance =
+                  item.acceptance && item.acceptance.acceptedQuoteVersion === item.quote.quoteVersion
+
+                return (
+                  <tr key={item.requestNumber} onClick={() => openDrawer(item)} className="clickable-row">
+                    <td>
+                      <strong className="request-code">{item.requestNumber}</strong>
+                    </td>
+                    <td>
+                      <span className={statusInfo.className}>{statusInfo.label}</span>
+                    </td>
+                    <td>
+                      <strong>{item.customer.customerName}</strong>
+                      <div className="sub-contact">{item.customer.customerPhone}</div>
+                    </td>
+                    <td>
+                      {item.pickup.pickupDate} {item.pickup.pickupTime}
+                    </td>
+                    <td>
+                      {cakeLine && cakeLine.kind === 'custom-cake'
+                        ? `${cakeLine.tier === 'single' ? '1단' : '2단'} · ${cakeLine.size} (${cakeLine.quantity}개)`
+                        : '-'}
+                    </td>
+                    <td>
+                      <span className="version-pill">v{item.quote.quoteVersion}</span>
+                    </td>
+                    <td>
+                      {isFinal ? (
+                        <span className="badge-settled">Final</span>
+                      ) : (
+                        <span className="badge-provisional">Provisional</span>
+                      )}
+                    </td>
+                    <td>
+                      {hasAcceptance ? (
+                        <span className="badge-agreed">
+                          <Check size={12} /> v{item.acceptance?.acceptedQuoteVersion}
+                        </span>
+                      ) : (
+                        <span className="badge-pending">대기</span>
+                      )}
+                    </td>
+                    <td>
+                      {isFinal && item.quote.finalTotalCents !== null ? (
+                        <strong className="final-price">{formatCents(item.quote.finalTotalCents)}</strong>
+                      ) : (
+                        <span className="known-price">{formatCents(item.quote.knownTotalCents)} (잠정)</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="small-button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openDrawer(item)
+                        }}
+                      >
+                        상세/견적
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Detail & Quote Mutation Drawer */}
+      {selected && (
+        <div className="drawer-overlay" onClick={() => setSelected(null)}>
+          <div className="admin-drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <header className="drawer-header">
+              <div>
+                <span className="kicker">Custom Cake v1</span>
+                <h2>{selected.requestNumber}</h2>
+              </div>
+              <button
+                type="button"
+                className="close-button"
+                onClick={() => setSelected(null)}
+                aria-label="Close drawer"
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div className="drawer-content">
+              {actionError && (
+                <div className="error-banner" role="alert">
+                  {actionError}
+                </div>
+              )}
+
+              {/* Status banner */}
+              <div className="drawer-status-bar">
+                <span className={getStatusInfo(selected.status, 'ko').className}>
+                  {getStatusInfo(selected.status, 'ko').label}
+                </span>
+                <span className="version-tag">Quote v{selected.quote.quoteVersion}</span>
+                {selected.quote.isFinalQuote ? (
+                  <span className="badge-settled">최종 금액 확정 (Final)</span>
+                ) : (
+                  <span className="badge-provisional">잠정 견적 (Provisional)</span>
+                )}
+              </div>
+
+              {/* Customer & Pickup info */}
+              <section className="drawer-section">
+                <h3>주문자 및 픽업 정보</h3>
+                <dl className="drawer-dl">
+                  <div>
+                    <dt>주문자</dt>
+                    <dd>{selected.customer.customerName}</dd>
+                  </div>
+                  <div>
+                    <dt>연락처</dt>
+                    <dd>{selected.customer.customerPhone}</dd>
+                  </div>
+                  <div>
+                    <dt>이메일</dt>
+                    <dd>{selected.customer.customerEmail}</dd>
+                  </div>
+                  <div>
+                    <dt>픽업 일정</dt>
+                    <dd>
+                      <strong>{selected.pickup.pickupDate}</strong> {selected.pickup.pickupTime}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+
+              {/* Cake lines & Reference photos */}
+              <section className="drawer-section">
+                <h3>케이크 사양 및 디자인</h3>
+                {selected.lines
+                  .filter((l) => l.kind === 'custom-cake')
+                  .map((cake, idx) => (
+                    <div className="cake-spec-box" key={idx}>
+                      <p>
+                        <strong>구성:</strong> {cake.tier === 'single' ? 'Single Tier (1단)' : 'Double Tier (2단)'} ·{' '}
+                        {cake.size} ({cake.quantity}개)
+                      </p>
+                      <p>
+                        <strong>피규어:</strong>{' '}
+                        {cake.figurineSource === 'none' && '피규어 없음'}
+                        {cake.figurineSource === 'customer' && '고객 직접 전달 (구매비 없음)'}
+                        {cake.figurineSource === 'shop' && '매장 준비 요청'}
+                      </p>
+                      {cake.designNote && (
+                        <div className="design-note-display">
+                          <strong>디자인 설명:</strong>
+                          <p>{cake.designNote}</p>
+                        </div>
+                      )}
+                      {cake.photoRefs && cake.photoRefs.length > 0 && (
+                        <div className="photo-refs-display">
+                          <strong>참고 사진 ({cake.photoRefs.length}개):</strong>
+                          <div className="photo-refs-grid">
+                            {cake.photoRefs.map((ref) => (
+                              <span className="photo-ref-badge" key={ref}>
+                                {ref}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </section>
+
+              {/* Current Quote Breakdown */}
+              <section className="drawer-section">
+                <h3>현재 견적 스냅샷 (Quote v{selected.quote.quoteVersion})</h3>
+                <div className="quote-breakdown-grid">
+                  <div className="qb-item">
+                    <span>기본 가격</span>
+                    <strong>{formatCents(selected.quote.baseCents)}</strong>
+                  </div>
+                  <div className="qb-item discount">
+                    <span>9월 5% 할인</span>
+                    <strong>-{formatCents(selected.quote.cakeDiscountCents)}</strong>
+                  </div>
+                  <div className="qb-item">
+                    <span>디자인 추가비</span>
+                    <strong>{formatExtraCents(selected.quote.designExtraCents, 'ko')}</strong>
+                  </div>
+                  <div className="qb-item">
+                    <span>피규어 추가비</span>
+                    <strong>{formatExtraCents(selected.quote.figurineExtraCents, 'ko')}</strong>
+                  </div>
+                  <div className="qb-item gift">
+                    <span>무료 스모어 증정</span>
+                    <strong>{selected.quote.giftSmoreQuantity}개</strong>
+                  </div>
+                  <div className="qb-item">
+                    <span>유료 스모어</span>
+                    <strong>
+                      {selected.quote.paidSmoreQuantity}개 ({formatCents(selected.quote.paidSmoreTotalCents)})
+                    </strong>
+                  </div>
+                  <div className="qb-item total">
+                    <span>잠정 확인 총액</span>
+                    <strong>{formatCents(selected.quote.knownTotalCents)}</strong>
+                  </div>
+                  <div className="qb-item final">
+                    <span>최종 확정 총액</span>
+                    <strong>
+                      {selected.quote.isFinalQuote && selected.quote.finalTotalCents !== null
+                        ? formatCents(selected.quote.finalTotalCents)
+                        : '미확정 (To be confirmed)'}
+                    </strong>
+                  </div>
+                </div>
+              </section>
+
+              {/* Quote Mutation Form */}
+              <section className="drawer-section edit-section">
+                <h3>견적 및 추가비 수정 (Update Quote)</h3>
+                <p className="admin-hint">
+                  `expectedQuoteVersion` ({selected.quote.quoteVersion})을 검증하여 안전하게 수정합니다.
+                  디자인과 피규어 추가비가 모두 입력되면 최종 견적(Final Quote)으로 전환됩니다.
+                </p>
+
+                <form onSubmit={handleUpdateQuote} className="admin-quote-form">
+                  <div className="admin-form-row">
+                    <label>
+                      디자인 추가비 (AUD)
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="미정 시 비워둠, 없으면 0"
+                        value={designExtraInput}
+                        onChange={(e) => setDesignExtraInput(e.target.value)}
+                        disabled={selected.status === 'confirmed' || selected.status === 'completed'}
+                      />
+                      <small>비워두면 null(협의 중), 0이면 추가금 없음 확정</small>
+                    </label>
+
+                    <label>
+                      피규어 추가비 (AUD)
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="미정 시 비워둠, 없으면 0"
+                        value={figurineExtraInput}
+                        onChange={(e) => setFigurineExtraInput(e.target.value)}
+                        disabled={selected.status === 'confirmed' || selected.status === 'completed'}
+                      />
+                      <small>비워두면 null(협의 중), 0이면 추가금 없음 확정</small>
+                    </label>
+                  </div>
+
+                  <label className="full-width-label">
+                    추가비 산출 사유 및 설명
+                    <input
+                      type="text"
+                      placeholder="예: 입체 꽃 파이핑 추가 $20, 피규어 2종 구매 실비 $15"
+                      value={explanation}
+                      onChange={(e) => setExplanation(e.target.value)}
+                      disabled={selected.status === 'confirmed' || selected.status === 'completed'}
+                    />
+                  </label>
+
+                  <button
+                    type="submit"
+                    className="primary-button"
+                    disabled={
+                      updatingQuote ||
+                      selected.status === 'confirmed' ||
+                      selected.status === 'completed' ||
+                      selected.status === 'cancelled'
+                    }
+                  >
+                    {updatingQuote ? '견적 수정 중...' : `Quote v${selected.quote.quoteVersion + 1}로 갱신하기`}
+                  </button>
+                </form>
+              </section>
+
+              {/* Customer Agreement & Confirm Section */}
+              <section className="drawer-section actions-section">
+                <h3>고객 동의 및 예약 확정</h3>
+
+                {/* Consent Status */}
+                <div className="agreement-status-card">
+                  <h4>고객 견적 동의 상태</h4>
+                  {selected.acceptance ? (
+                    <div className="agreed-info">
+                      <CheckCircle2 size={18} />
+                      <div>
+                        <strong>v{selected.acceptance.acceptedQuoteVersion} 동의 완료</strong>
+                        <p>동의 일시: {new Date(selected.acceptance.acceptedAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="pending-info">
+                      <Clock size={18} />
+                      <span>고객 동의 내역 없음</span>
+                    </div>
+                  )}
+
+                  {selected.status === 'quoted' && selected.quote.isFinalQuote && (
+                    <button
+                      type="button"
+                      className="secondary-button record-btn"
+                      onClick={handleRecordAcceptance}
+                      disabled={
+                        updatingQuote ||
+                        (selected.acceptance?.acceptedQuoteVersion === selected.quote.quoteVersion)
+                      }
+                    >
+                      <Check size={16} />
+                      <span>
+                        {selected.acceptance?.acceptedQuoteVersion === selected.quote.quoteVersion
+                          ? '현재 버전에 이미 동의됨'
+                          : `고객 동의 기록하기 (Quote v${selected.quote.quoteVersion})`}
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Final Confirmation Gate */}
+                <div className="confirmation-card">
+                  <h4>최종 예약 확정 (Confirm Reservation)</h4>
+                  <p>
+                    조건: 상태 <code>quoted</code> + 최종 견적 <code>isFinalQuote=true</code> + 고객 동의 일치{' '}
+                    <code>v{selected.quote.quoteVersion}</code>
+                  </p>
+
+                  <button
+                    type="button"
+                    className="primary-button confirm-btn"
+                    onClick={handleConfirmReservation}
+                    disabled={
+                      updatingQuote ||
+                      selected.status !== 'quoted' ||
+                      !selected.quote.isFinalQuote ||
+                      selected.acceptance?.acceptedQuoteVersion !== selected.quote.quoteVersion
+                    }
+                  >
+                    <ShieldCheck size={18} />
+                    <span>예약 최종 확정하기</span>
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
