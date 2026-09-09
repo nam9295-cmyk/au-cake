@@ -1,4 +1,4 @@
-import { AppwriteException, Client, Databases, ID, Query } from 'node-appwrite'
+import { AppwriteException, Client, Databases, ID, Query, Storage } from 'node-appwrite'
 import {
   ReservationApiError,
   REVIEW_COUPON_ANIMALS,
@@ -28,7 +28,6 @@ import { digestCakeRequestPayload, resolveReviewCouponHmacSecret } from './coupo
 import { SMORE_WRITES_ENABLED } from './smore-write-policy.js'
 import { cakeReservationResponse } from './cake-create-response.js'
 import { checkReservationReadiness } from './reservation-health.js'
-import { cakeServicesForRequest } from './custom-cake-runtime.js'
 import { isCakeWireAction, handleCakeWireRequest, handleCakePhotoRecovery } from './custom-cake-routes.js'
 import { createLegacyCakeGate } from './custom-cake-legacy-gate.js'
 
@@ -655,7 +654,7 @@ return async ({ req, res, log, error }) => {
     const options = { env, now, smoreWritesEnabled }
     try {
       options.runtimeConfig = resolveReservationConfig(env)
-      options.services = servicesForRequest ? servicesForRequest(req) : cakeServicesForRequest(req, env)
+      options.services = servicesForRequest ? servicesForRequest(req) : (await import('./custom-cake-runtime.js')).cakeServicesForRequest(req, env)
     } catch {
       // Route-owned mapping retains the selected strict wire envelope.
       options.services = {}
@@ -674,7 +673,7 @@ return async ({ req, res, log, error }) => {
     let result
     if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig)
     else if (action === 'create-cake') {
-      const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: cakeServicesForRequest(req, env).storage }
+      const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: new Storage(clientForRequest(req)) }
       const legacyGate = createLegacyCakeGate({ env, services })
       result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, legacyGate })
     }

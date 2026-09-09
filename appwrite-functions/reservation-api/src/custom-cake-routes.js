@@ -1,4 +1,3 @@
-import { createCakeWireRuntime } from './custom-cake-runtime.js'
 import { exactCakeObject, cakeWireFail } from './custom-cake-workflow.js'
 import { normalizeAustralianMobile } from './business.js'
 import { randomUUID } from 'node:crypto'
@@ -24,6 +23,7 @@ export async function handleCakeWireRequest({ req, res }, options) {
     exactCakeObject(body, operation === 'capabilities' ? ['action'] : ['action', 'data'])
     const size = Buffer.byteLength(typeof req.bodyText === 'string' ? req.bodyText : JSON.stringify(body))
     if (size > (operation === 'upload' ? 13981016 + 4096 : 1048576)) cakeWireFail(operation === 'upload' ? 'PHOTO_TOO_LARGE' : 'INVALID_REQUEST')
+    const { createCakeWireRuntime } = await import('./custom-cake-runtime.js')
     const runtime = await createCakeWireRuntime(options), context = { headers: req.headers || {} }
     let result
     if (operation === 'capabilities') result = runtime.capabilities
@@ -54,6 +54,7 @@ export async function handleCakeWireRequest({ req, res }, options) {
 export async function handleCakePhotoRecovery({ req, res }, options) {
   try {
     if (req.headers?.['x-appwrite-trigger'] !== 'schedule') cakeWireFail('FORBIDDEN')
+    const { createCakeWireRuntime } = await import('./custom-cake-runtime.js')
     const runtime = await createCakeWireRuntime(options)
     if (!runtime.recoveryReady || !runtime.photos) cakeWireFail('CAPABILITY_UNAVAILABLE')
     const cursorId = 'photo-recovery-cursor'

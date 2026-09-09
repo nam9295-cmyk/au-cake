@@ -1,10 +1,16 @@
 import { randomUUID } from 'node:crypto'
 import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from './custom-cake-persistence.js'
 import { checkCustomCakeReadiness } from './custom-cake-readiness.js'
-import { legacyCakeWireMode } from './custom-cake-runtime.js'
 import { ReservationApiError } from './business.js'
 const fail = (code, status = 409) => { throw new ReservationApiError(code, status) }
 const sharedId = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value) ? value.toLowerCase() : null
+
+export function legacyCakeWireMode(env) {
+  const mode = env.CAKE_WIRE_LEGACY_NEW_SUBMISSIONS
+  if (mode === undefined || mode === '') return 'compat'
+  if (!['compat', 'required'].includes(mode)) fail('FUNCTION_CONFIGURATION_ERROR', 503)
+  return mode
+}
 
 /** Lazy: historical authorized replay never depends on activation or new resources. */
 export function createLegacyCakeGate({ env, services }) {

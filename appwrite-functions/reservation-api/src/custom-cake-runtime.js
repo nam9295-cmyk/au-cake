@@ -7,6 +7,7 @@ import { createCustomCakeWorkflow, cakeWireFail } from './custom-cake-workflow.j
 import { createCustomCakeRateLimiter, resolveCustomCakeAdmin } from './custom-cake-security.js'
 import { createCakeV2CouponLedger } from './custom-cake-coupons.js'
 import { normalizeAustralianMobile } from './business.js'
+import { legacyCakeWireMode } from './custom-cake-legacy-gate.js'
 
 // Appwrite Databases transactions are authorized by documents.write. The
 // request uses only the platform dynamic key, so Function.scopes is authoritative.
@@ -27,13 +28,6 @@ function digestKey(value) {
   return bytes.length >= 32 && bytes.toString('base64url') === value ? bytes : null
 }
 function instant(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value }
-export function legacyCakeWireMode(env) {
-  const mode = env.CAKE_WIRE_LEGACY_NEW_SUBMISSIONS
-  if (mode === undefined || mode === '') return 'compat'
-  if (!['compat', 'required'].includes(mode)) cakeWireFail('CAPABILITY_UNAVAILABLE')
-  return mode
-}
-
 export async function createCakeWireRuntime({ services, env, runtimeConfig, now = () => new Date(), smoreWritesEnabled }) {
   const { databases, storage } = services, config = resolveCustomCakePersistenceConfig(env)
   await checkCustomCakeReadiness({ databases, storage, config })
