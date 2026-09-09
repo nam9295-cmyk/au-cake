@@ -2,9 +2,9 @@ import { MARKET_TIMEZONE, MANUAL_REVIEW_COUPON_PATTERN, SAFE_LAST4_PATTERN, fail
 export { REVIEW_COUPON_ANIMALS, REVIEW_COUPON_FRUITS, normalizeReviewCouponCode, normalizeAustralianMobile, isValidDateValue, sydneyDateValue } from './reservation-input-policy.js'
 import { BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, CAKE_SIZE_LABELS, PRODUCTS } from './cake-order-catalog.js'
 export { PROMO_CODE, LEMON_PROMO_CODE, PROMO_DISCOUNT_RATE, LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS, CUPCAKE_PACK_SIZE, CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS, CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS, INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE, INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS, BROWNIE_FRESH_CREAM_SURCHARGE_CENTS, VANILLA_CAKE_SHEETS, VANILLA_CAKE_FLAVORS, VANILLA_CAKE_POINT_COLORS, CAKE_SIZE_LABELS, CHOCOLATE_PROMO_EXPIRES_ON, LEMONI_PROMO_EXPIRES_ON, MAX_RESERVATION_QUANTITY } from './cake-order-catalog.js'
-import { normalizeCakeReservationInput } from './cake-order-input.js'
+import { buildCakeOrderData } from './cake-order-data.js'
+export { serializeStoredOrderLines } from './cake-order-data.js'
 export { PICKUP_CUTOFF_HOUR, LATE_ORDER_NEXT_DAY_START_MINUTES, AU_CAKE_PICKUP_SCHEDULE, resolveCakeCustomerEmailMode, resolveCakeCatalogMode, isSchoolPickupWindowClosed, isCakePickupServiceTime, normalizeCakeOrderLines, canonicalCakeRequestPayload } from './cake-order-input.js'
-import { priceCakeOrderLines } from './cake-order-pricing.js'
 export { getValidPromoCode } from './cake-order-pricing.js'
 import { ReservationApiError } from './reservation-error.js'
 import { parseStoredOrderLines } from './stored-order-reader.js'
@@ -114,7 +114,6 @@ export function validateReviewCoupon(coupon, normalizedCodeValue, now = new Date
 
 
 
-const STORED_ORDER_MAX_BYTES = 65535
 
 
 
@@ -130,20 +129,7 @@ const STORED_ORDER_MAX_BYTES = 65535
 
 
 
-export function serializeStoredOrderLines(lines) {
-  const serialized = JSON.stringify({ version: 1, lines })
-  if (new TextEncoder().encode(serialized).byteLength > STORED_ORDER_MAX_BYTES) fail('ORDER_TOO_LARGE', 413)
-  return serialized
-}
 
-function buildPromoNote(note, pricing) {
-  if (!pricing.appliedPromoCode) return note
-  const discountedBasisCents = pricing.discountBasisCents - Math.round(pricing.discountBasisCents * pricing.discountPercent / 100)
-  const promoLine = `[Promo ${pricing.appliedPromoCode}] 10% discount applied: ${(pricing.discountBasisCents / 100).toFixed(2)} -> ${(discountedBasisCents / 100).toFixed(2)}`
-  const result = [promoLine, note].filter(Boolean).join('\n')
-  if (result.length > 1000) fail('REQUEST_NOTE_TOO_LONG')
-  return result
-}
 
 export function generateCakeReservationNumber(date = new Date()) {
   const ymd = sydneyDateValue(date).replaceAll('-', '')
@@ -162,57 +148,7 @@ export function buildCakeReservation(input, {
   customerEmailMode = 'required',
   cakeCatalogMode = 'compat',
 } = {}) {
-  const { customerName, customerPhone, customerEmail, requestNote, normalizedLines } = normalizeCakeReservationInput(
-    input, { now, customerEmailMode, cakeCatalogMode },
-  )
-  const pricing = priceCakeOrderLines(normalizedLines, input.promoCode, now, reviewCoupon)
-  const firstLine = pricing.lines[0]
-  const orderLineCount = pricing.lines.length
-  const orderItemCount = pricing.lines.reduce((sum, line) => sum + line.quantity, 0)
-  const orderLinesJson = serializeStoredOrderLines(pricing.lines)
-  const createdAt = now.toISOString()
-
-  return {
-    reservationNumber,
-    customerName,
-    customerPhone,
-    ...(customerEmail === undefined ? {} : { customerEmail }),
-    productId: firstLine.productId,
-    cakeSize: firstLine.cakeSize,
-    chocolateType: firstLine.chocolateType,
-    poundAddon: firstLine.poundAddon,
-    cupcakeFinish: firstLine.cupcakeFinish,
-    chocolateIcingCount: firstLine.chocolateIcingCount,
-    vanillaCreamCount: firstLine.vanillaCreamCount,
-    partyDecorationCount: firstLine.partyDecorationCount,
-    vanillaCakeSheet: firstLine.vanillaCakeSheet,
-    vanillaCakeFlavor: firstLine.vanillaCakeFlavor,
-    quantity: firstLine.quantity,
-    pickupDate: input.pickupDate,
-    pickupTime: input.pickupTime,
-    cacaoPercent: '기본',
-    requestNote: buildPromoNote(requestNote, pricing),
-    status: '예약신청',
-    paymentStatus: '입금대기',
-    totalPrice: pricing.totalPrice,
-    totalPriceCents: pricing.totalPriceCents,
-    subtotalCents: pricing.subtotalCents,
-    discountBasisCents: pricing.discountBasisCents,
-    discountPercent: pricing.discountPercent,
-    discountCents: pricing.discountCents,
-    ...(pricing.individualPackagingPieces > 0 ? {
-      individualPackagingPieces: pricing.individualPackagingPieces,
-      individualPackagingFeeCents: pricing.individualPackagingFeeCents,
-    } : {}),
-    orderLineCount,
-    orderItemCount,
-    orderLinesJson,
-    ...(pricing.appliedPromoCodeLast4 ? { appliedPromoCodeLast4: pricing.appliedPromoCodeLast4 } : {}),
-    ...(pricing.reviewCouponId ? { reviewCouponId: pricing.reviewCouponId } : {}),
-    adminMemo: '',
-    createdAt,
-    updatedAt: createdAt,
-  }
+  return buildCakeOrderData(input, { now, reservationNumber, reviewCoupon, customerEmailMode, cakeCatalogMode })
 }
 
 function validateAge(value, code) {
