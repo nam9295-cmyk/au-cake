@@ -1,5 +1,5 @@
 // Current new-order catalog and option/promotion constants. Independent of stored-order compatibility snapshots.
-
+import { ACTIVE_CAKE_ORDER_PRODUCT_IDS } from './active-cake-products.js'
 
 export const PROMO_CODE = 'chocolate'
 
@@ -217,3 +217,6 @@ export const FINISH_PRICES = {
   'vanilla-cream': 10,
 }
 
+if (ACTIVE_CAKE_ORDER_PRODUCT_IDS.some((productId) => !Object.hasOwn(PRODUCTS, productId))) {
+  throw new Error('ACTIVE_CAKE_ORDER_PRODUCT_CATALOG_MISMATCH')
+}

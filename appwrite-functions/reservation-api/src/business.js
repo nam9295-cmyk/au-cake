@@ -1,10 +1,59 @@
-import { MARKET_TIMEZONE, MANUAL_REVIEW_COUPON_PATTERN, SAFE_LAST4_PATTERN, fail, normalizeReviewCouponCode, requiredText, optionalText, normalizeAustralianMobile, validateAustralianMobile, validateEmail, isValidDateValue, sydneyDateValue, sydneyTimeCode } from './reservation-input-policy.js'
-export { REVIEW_COUPON_ANIMALS, REVIEW_COUPON_FRUITS, normalizeReviewCouponCode, normalizeAustralianMobile, isValidDateValue, sydneyDateValue } from './reservation-input-policy.js'
-import { BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, CAKE_SIZE_LABELS, PRODUCTS } from './cake-order-catalog.js'
-export { PROMO_CODE, LEMON_PROMO_CODE, PROMO_DISCOUNT_RATE, LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS, CUPCAKE_PACK_SIZE, CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS, CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS, INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE, INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS, BROWNIE_FRESH_CREAM_SURCHARGE_CENTS, VANILLA_CAKE_SHEETS, VANILLA_CAKE_FLAVORS, VANILLA_CAKE_POINT_COLORS, CAKE_SIZE_LABELS, CHOCOLATE_PROMO_EXPIRES_ON, LEMONI_PROMO_EXPIRES_ON, MAX_RESERVATION_QUANTITY } from './cake-order-catalog.js'
+import {
+  MARKET_TIMEZONE,
+  MANUAL_REVIEW_COUPON_PATTERN,
+  SAFE_LAST4_PATTERN,
+  fail,
+  normalizeReviewCouponCode,
+  requiredText,
+  optionalText,
+  normalizeAustralianMobile,
+  validateAustralianMobile,
+  validateEmail,
+  isValidDateValue,
+  sydneyDateValue,
+  sydneyTimeCode,
+} from './reservation-input-policy.js'
+export {
+  REVIEW_COUPON_ANIMALS,
+  REVIEW_COUPON_FRUITS,
+  normalizeReviewCouponCode,
+  normalizeAustralianMobile,
+  isValidDateValue,
+  sydneyDateValue,
+} from './reservation-input-policy.js'
+import { BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, CAKE_SIZE_LABELS } from './cake-order-catalog.js'
+export {
+  PROMO_CODE,
+  LEMON_PROMO_CODE,
+  PROMO_DISCOUNT_RATE,
+  LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS,
+  CUPCAKE_PACK_SIZE,
+  CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS,
+  CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS,
+  INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
+  INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
+  BROWNIE_FRESH_CREAM_SURCHARGE_CENTS,
+  VANILLA_CAKE_SHEETS,
+  VANILLA_CAKE_FLAVORS,
+  VANILLA_CAKE_POINT_COLORS,
+  CAKE_SIZE_LABELS,
+  CHOCOLATE_PROMO_EXPIRES_ON,
+  LEMONI_PROMO_EXPIRES_ON,
+  MAX_RESERVATION_QUANTITY,
+} from './cake-order-catalog.js'
 import { buildCakeOrderData } from './cake-order-data.js'
 export { serializeStoredOrderLines } from './cake-order-data.js'
-export { PICKUP_CUTOFF_HOUR, LATE_ORDER_NEXT_DAY_START_MINUTES, AU_CAKE_PICKUP_SCHEDULE, resolveCakeCustomerEmailMode, resolveCakeCatalogMode, isSchoolPickupWindowClosed, isCakePickupServiceTime, normalizeCakeOrderLines, canonicalCakeRequestPayload } from './cake-order-input.js'
+export {
+  PICKUP_CUTOFF_HOUR,
+  LATE_ORDER_NEXT_DAY_START_MINUTES,
+  AU_CAKE_PICKUP_SCHEDULE,
+  resolveCakeCustomerEmailMode,
+  resolveCakeCatalogMode,
+  isSchoolPickupWindowClosed,
+  isCakePickupServiceTime,
+  normalizeCakeOrderLines,
+  canonicalCakeRequestPayload,
+} from './cake-order-input.js'
 export { getValidPromoCode } from './cake-order-pricing.js'
 import { ReservationApiError } from './reservation-error.js'
 import { parseStoredOrderLines } from './stored-order-reader.js'
@@ -12,10 +61,6 @@ export { ReservationApiError } from './reservation-error.js'
 export { parseStoredOrderLines } from './stored-order-reader.js'
 import { projectPublicCakeReservation } from './cake-lookup-response.js'
 import { digestReviewCouponCode } from './coupon-digest.js'
-import { ACTIVE_CAKE_ORDER_PRODUCT_IDS } from './active-cake-products.js'
-
-
-
 
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const SPRING_CLASS_CAMPAIGN_2026 = Object.freeze({
@@ -33,24 +78,15 @@ const CLASS_COURSE_PLANS = new Set(['basic', 'advanced', 'basic-advanced-package
 const BASIC_CLASS_SCHOOL_YEARS = new Set(['Kindy', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
 const ADVANCED_CLASS_SCHOOL_YEARS = new Set(['Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
 
-
-if (ACTIVE_CAKE_ORDER_PRODUCT_IDS.some((productId) => !Object.hasOwn(PRODUCTS, productId))) {
-  throw new Error('ACTIVE_CAKE_ORDER_PRODUCT_CATALOG_MISMATCH')
-}
-
 export function formatCakeSizeLabel(cakeSize) {
   return CAKE_SIZE_LABELS[cakeSize] || CAKE_SIZE_LABELS['15cm']
 }
-
 
 const CLASS_PRICES = {
   'year-1-2': 99,
   '1-child': 109,
   '2-friends': 198,
 }
-
-
-
 
 export function hashReviewCouponCode(value, hmacSecret) {
   return digestReviewCouponCode(normalizeReviewCouponCode(value), hmacSecret, ReservationApiError)
@@ -84,52 +120,7 @@ export function validateReviewCoupon(coupon, normalizedCodeValue, now = new Date
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Only this product accepts (and discards) known client price projections.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export function generateCakeReservationNumber(date = new Date()) {
   const ymd = sydneyDateValue(date).replaceAll('-', '')
@@ -280,7 +271,6 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
   }
 }
 
-
 export function isCakePickupBlocked(_pickupDate, _pickupTime, _bookedSlots, _pickupOpenings = []) {
   // Kids Class reservations retain their own booking rules, but do not close
   // the independently requested Cake pickup schedule.
@@ -292,9 +282,6 @@ export function matchesLookupPhone(storedPhone, suppliedPhone) {
   const storedDigits = normalizeAustralianMobile(String(storedPhone || ''))
   return /^04\d{8}$/.test(suppliedDigits) && storedDigits === suppliedDigits
 }
-
-
-
 
 export function publicCakeReservation(document) {
   return projectPublicCakeReservation(document, parseStoredOrderLines, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS)

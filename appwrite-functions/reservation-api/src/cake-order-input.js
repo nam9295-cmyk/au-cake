@@ -1,6 +1,41 @@
 // Current Cake request validation, normalization and canonical identity; no stored-order reader or pricing execution.
-import { MARKET_TIMEZONE, validateEmail, isValidDateValue, minutes, fail, zonedTimestamp, sydneyDateValue, addDaysToDateValue, zonedDateParts, requiredText, validateAustralianMobile, optionalText, REVIEW_COUPON_ANIMALS, normalizeReviewCouponCode } from './reservation-input-policy.js'
-import { FRESH_LEMON_CUPCAKE_PRODUCT_IDS, CUPCAKE_PRODUCT_IDS, CUPCAKE_FINISHES, CREAM_LAYER_CAKE_PRODUCT_IDS, LEGACY_VANILLA_CAKE_FLAVORS, VANILLA_CAKE_POINT_COLORS, VANILLA_CAKE_SHEETS, VANILLA_CAKE_FLAVORS, CHOCOLATE_EXTRA_PRICES_CENTS, CHOCOLATE_EXTRA_ELIGIBLE_PRODUCT_IDS, BROWNIE_CREAM_OPTIONS, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, PRODUCTS, BROWNIE_CHEESECAKE_PRODUCT_IDS, FINISH_PRICES, MAX_RESERVATION_QUANTITY, STRAWBERRY_CREAM_CAKE_PRODUCT_IDS, INDIVIDUAL_PACKAGING_PRODUCT_PIECES, PROMOTIONS } from './cake-order-catalog.js'
+import {
+  MARKET_TIMEZONE,
+  validateEmail,
+  isValidDateValue,
+  minutes,
+  fail,
+  zonedTimestamp,
+  sydneyDateValue,
+  addDaysToDateValue,
+  zonedDateParts,
+  requiredText,
+  validateAustralianMobile,
+  optionalText,
+  REVIEW_COUPON_ANIMALS,
+  normalizeReviewCouponCode,
+} from './reservation-input-policy.js'
+import {
+  FRESH_LEMON_CUPCAKE_PRODUCT_IDS,
+  CUPCAKE_PRODUCT_IDS,
+  CUPCAKE_FINISHES,
+  CREAM_LAYER_CAKE_PRODUCT_IDS,
+  LEGACY_VANILLA_CAKE_FLAVORS,
+  VANILLA_CAKE_POINT_COLORS,
+  VANILLA_CAKE_SHEETS,
+  VANILLA_CAKE_FLAVORS,
+  CHOCOLATE_EXTRA_PRICES_CENTS,
+  CHOCOLATE_EXTRA_ELIGIBLE_PRODUCT_IDS,
+  BROWNIE_CREAM_OPTIONS,
+  BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS,
+  PRODUCTS,
+  BROWNIE_CHEESECAKE_PRODUCT_IDS,
+  FINISH_PRICES,
+  MAX_RESERVATION_QUANTITY,
+  STRAWBERRY_CREAM_CAKE_PRODUCT_IDS,
+  INDIVIDUAL_PACKAGING_PRODUCT_PIECES,
+  PROMOTIONS,
+} from './cake-order-catalog.js'
 import { isActiveCakeOrderProductId, isCompatCakeOrderProductId } from './active-cake-products.js'
 
 export const PICKUP_CUTOFF_HOUR = 20
