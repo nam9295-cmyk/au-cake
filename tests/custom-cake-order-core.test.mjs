@@ -225,3 +225,35 @@ test('pricing rejects unsafe cents, quantities, timestamps and caller supplied m
   const forged = copy(custom.request); forged.lines[0].baseCents = 1
   reject(() => customPrice(forged))
 })
+
+test('pure initial data builders emit the exact separate creation and lookup fixture shapes', () => {
+  assert.equal(typeof data.buildCustomCakeV1Data, 'function')
+  assert.equal(typeof data.buildCakeOrderV2Data, 'function')
+  const customResult = data.buildCustomCakeV1Data(custom.request, { now: new Date(promotionEligibilityAt), requestNumber: custom.created.requestNumber, promotionStartsAt })
+  assert.deepEqual(customResult.request, custom.request)
+  assert.deepEqual(customResult.creationResponse, custom.created)
+  assert.deepEqual(customResult.lookupResponse, custom.lookup)
+  const ordinaryResult = data.buildCakeOrderV2Data(ordinary.request, { now: new Date(pricedAt), reservationNumber: ordinary.created.reservationNumber })
+  assert.deepEqual(ordinaryResult.request, ordinary.request)
+  assert.deepEqual(ordinaryResult.creationResponse, ordinary.created)
+  assert.deepEqual(ordinaryResult.lookupResponse, ordinary.lookup)
+  customResult.lookupResponse.quote.quoteVersion = 2
+  assert.equal(customResult.creationResponse.quote.quoteVersion, 1)
+  ordinaryResult.lookupResponse.pricing.totalCents = 1
+  assert.equal(ordinaryResult.creationResponse.pricing.totalCents, 8530)
+  for (const now of [new Date('invalid'), new Date('2026-10-06T00:00:00.000Z')]) {
+    reject(() => data.buildCustomCakeV1Data(custom.request, { now, requestNumber: 'CUSTOM-1', promotionStartsAt }))
+    reject(() => data.buildCakeOrderV2Data(ordinary.request, { now, reservationNumber: 'VG-C-1' }))
+  }
+  reject(() => data.buildCustomCakeV1Data(custom.request, { now: new Date(promotionEligibilityAt), requestNumber: '', promotionStartsAt }))
+  reject(() => data.buildCakeOrderV2Data(ordinary.request, { now: new Date(pricedAt), reservationNumber: '' }))
+})
+
+test('custom tier and size cannot coerce arrays into a valid selection; pickup validator requires a supported wire', () => {
+  for (const field of ['tier', 'size']) {
+    const request = copy(custom.request)
+    request.lines[0][field] = [request.lines[0][field]]
+    reject(() => normalize(request))
+  }
+  reject(() => input.validateNewCakeWirePickup({ ...ordinary.request, contractVersion: 'unknown' }, new Date(pricedAt)))
+})

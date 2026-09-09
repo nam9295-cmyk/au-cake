@@ -517,7 +517,8 @@ function normalizeWireLines(lines, custom) {
       let result = { kind: line.kind, lineId: line.lineId, parentCakeLineId: null, productId: line.productId, quantity: line.quantity }
       let identity
       if (custom) {
-        if (line.productId !== 'custom-cake' || !Object.hasOwn(CUSTOM_CAKE_V1_BASE_CENTS, line.tier)
+        if (line.productId !== 'custom-cake' || typeof line.tier !== 'string' || typeof line.size !== 'string'
+          || !Object.hasOwn(CUSTOM_CAKE_V1_BASE_CENTS, line.tier)
           || !Object.hasOwn(CUSTOM_CAKE_V1_BASE_CENTS[line.tier], line.size)
           || !['none', 'customer', 'shop'].includes(line.figurineSource)) fail('INVALID_REQUEST')
         if (!Array.isArray(line.photoRefs)) fail('INVALID_PHOTO_REFERENCE')
@@ -555,6 +556,7 @@ function normalizeWireLines(lines, custom) {
 
 function normalizeWireRequest(value, contractVersion) {
   return wireInputBoundary(() => {
+    if (!['custom-cake.v1', 'cake-order.v2'].includes(contractVersion)) fail('INVALID_REQUEST')
     const custom = contractVersion === 'custom-cake.v1'
     exactWireFields(value, ['contractVersion', 'requestId', 'customer', 'pickup', 'requestNote', 'privacyConsent', ...(custom ? [] : ['promoCode']), 'lines'])
     if (value.contractVersion !== contractVersion || typeof value.requestId !== 'string'

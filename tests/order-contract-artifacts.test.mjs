@@ -11,6 +11,8 @@ import { createBookingReminderArchive } from '../scripts/booking-reminder-deploy
 
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/order-core-golden.json', import.meta.url)))
 const newCanonical = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/canonical.json', import.meta.url)))
+const customWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/custom-v1.json', import.meta.url)))
+const ordinaryWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/cake-order-v2.json', import.meta.url)))
 const artifacts = [
   ['reservation-compatibility', () => createReservationApiArchive({ phase: 'compatibility' }), 'src/business.js', true],
   ['reservation-full', () => createReservationApiArchive({ phase: 'full' }), 'src/business.js', true],
@@ -72,9 +74,18 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
           assert.equal(canonicalize(fixture.request), fixture.canonicalJson);
           assert.equal(digest(fixture.permuted, Buffer.alloc(32, 7)), fixture.fingerprint);
         }
+        const wireData = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'cake-order-data.js')));
+        const custom = fixtures.customWire;
+        const customData = wireData.buildCustomCakeV1Data(custom.request, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber, promotionStartsAt: '2026-09-01T00:00:00.000Z' });
+        assert.deepEqual(customData.creationResponse, custom.created);
+        assert.deepEqual(customData.lookupResponse, custom.lookup);
+        const ordinary = fixtures.ordinaryWire;
+        const ordinaryData = wireData.buildCakeOrderV2Data(ordinary.request, { now: new Date(ordinary.created.pricing.pricedAt), reservationNumber: ordinary.created.reservationNumber });
+        assert.deepEqual(ordinaryData.creationResponse, ordinary.created);
+        assert.deepEqual(ordinaryData.lookupResponse, ordinary.lookup);
       `
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-        cwd: extracted, input: JSON.stringify({ ...baseline, newCanonical }), encoding: 'utf8',
+        cwd: extracted, input: JSON.stringify({ ...baseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',
         env: { PATH: process.env.PATH },
       })
       assert.equal(result.status, 0, result.stderr || result.stdout)

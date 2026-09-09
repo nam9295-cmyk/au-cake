@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "pretest": "npm run test:custom-cake-contract && node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
+    "pretest": "npm run test:custom-cake-contract && npm run test:custom-cake-order-core && node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
+    "test:custom-cake-order-core": "node --test tests/custom-cake-order-core.test.mjs",
     "test:custom-cake-contract": "node --test tests/custom-cake-contract.test.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",

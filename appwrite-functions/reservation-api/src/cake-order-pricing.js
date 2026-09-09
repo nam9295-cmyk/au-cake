@@ -18,7 +18,7 @@ import {
   CUSTOM_CAKE_V1_BASE_CENTS,
   CUSTOM_CAKE_V1_PROMOTION_END,
 } from './cake-order-catalog.js'
-import { fail, sydneyDateValue, SAFE_LAST4_PATTERN } from './reservation-input-policy.js'
+import { fail, sydneyDateValue, isValidDateValue, SAFE_LAST4_PATTERN } from './reservation-input-policy.js'
 import { canonicalOrderLineKey, normalizeCustomCakeV1Request, normalizeCakeOrderV2Request } from './cake-order-input.js'
 
 export function calculateIndividualPackagingFeeCents(individualPackagingPieces, selectedPackagingProductSubtotalCents) {
@@ -185,8 +185,8 @@ function wireSum(values) {
 }
 
 function wireTimestamp(value) {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)
-    || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString() !== value) fail('INVALID_REQUEST')
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d\.\d{3}Z$/.test(value)
+    || !isValidDateValue(value.slice(0, 10)) || !Number.isFinite(Date.parse(value))) fail('INVALID_REQUEST')
   return value
 }
 
@@ -254,7 +254,7 @@ export function priceCakeOrderV2Request(value, { pricedAt, reviewCoupon } = {}) 
   const staticPromo = PROMOTIONS.some(promo => promo.code === request.promoCode)
   if (request.promoCode && !staticPromo && !reviewCoupon) fail('PROMO_CODE_INVALID')
   if (staticPromo && reviewCoupon) fail('PROMO_CODE_INVALID')
-  const cakePricing = priceCakeOrderLines(flatLines, reviewCoupon ? '' : request.promoCode, new Date(pricedAt), reviewCoupon)
+  const cakePricing = priceCakeOrderLines(flatLines, reviewCoupon ? '' : request.promoCode, Date.parse(pricedAt), reviewCoupon)
   const byId = new Map(cakeLines.map((line, index) => {
     const price = cakePricing.lines[index]
     return [line.lineId, {
