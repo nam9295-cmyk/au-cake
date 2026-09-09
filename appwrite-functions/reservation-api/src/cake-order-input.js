@@ -1,7 +1,7 @@
 // Current Cake request validation, normalization and canonical identity; no stored-order reader or pricing execution.
 import { MARKET_TIMEZONE, validateEmail, isValidDateValue, minutes, fail, zonedTimestamp, sydneyDateValue, addDaysToDateValue, zonedDateParts, requiredText, validateAustralianMobile, optionalText, REVIEW_COUPON_ANIMALS, normalizeReviewCouponCode } from './reservation-input-policy.js'
-import { FRESH_LEMON_CUPCAKE_PRODUCT_IDS, CUPCAKE_PACK_SIZE, CUPCAKE_PRODUCT_IDS, CUPCAKE_FINISHES, CREAM_LAYER_CAKE_PRODUCT_IDS, LEGACY_VANILLA_CAKE_FLAVORS, VANILLA_CAKE_POINT_COLORS, VANILLA_CAKE_SHEETS, VANILLA_CAKE_FLAVORS, CHOCOLATE_EXTRA_PRICES_CENTS, CHOCOLATE_EXTRA_ELIGIBLE_PRODUCT_IDS, BROWNIE_CREAM_OPTIONS, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, PRODUCTS, BROWNIE_CHEESECAKE_PRODUCT_IDS, FINISH_PRICES, MAX_RESERVATION_QUANTITY, STRAWBERRY_CREAM_CAKE_PRODUCT_IDS, INDIVIDUAL_PACKAGING_PRODUCT_PIECES, PROMOTIONS } from './cake-order-catalog.js'
-import { isActiveCakeOrderProductId, isCompatCakeOrderProductId, isStoredCakeOrderProductId } from './active-cake-products.js'
+import { FRESH_LEMON_CUPCAKE_PRODUCT_IDS, CUPCAKE_PRODUCT_IDS, CUPCAKE_FINISHES, CREAM_LAYER_CAKE_PRODUCT_IDS, LEGACY_VANILLA_CAKE_FLAVORS, VANILLA_CAKE_POINT_COLORS, VANILLA_CAKE_SHEETS, VANILLA_CAKE_FLAVORS, CHOCOLATE_EXTRA_PRICES_CENTS, CHOCOLATE_EXTRA_ELIGIBLE_PRODUCT_IDS, BROWNIE_CREAM_OPTIONS, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, PRODUCTS, BROWNIE_CHEESECAKE_PRODUCT_IDS, FINISH_PRICES, MAX_RESERVATION_QUANTITY, STRAWBERRY_CREAM_CAKE_PRODUCT_IDS, INDIVIDUAL_PACKAGING_PRODUCT_PIECES, PROMOTIONS } from './cake-order-catalog.js'
+import { isActiveCakeOrderProductId, isCompatCakeOrderProductId } from './active-cake-products.js'
 
 export const PICKUP_CUTOFF_HOUR = 20
 
@@ -105,45 +105,26 @@ export function normalizeChocolateIcingCount(productId, value) {
   return count
 }
 
-export function normalizeCupcakeFinishCounts(productId, vanillaValue, partyValue, { allowLegacyCupcakeCounts = false } = {}) {
-  if (productId !== 'cupcake-dozen' || !allowLegacyCupcakeCounts) return { vanillaCreamCount: 0, partyDecorationCount: 0 }
-  const normalize = (value) => value === undefined || value === null || value === '' ? 0 : value
-  const vanillaCreamCount = normalize(vanillaValue)
-  const partyDecorationCount = normalize(partyValue)
-  if (
-    !Number.isInteger(vanillaCreamCount) ||
-    !Number.isInteger(partyDecorationCount) ||
-    vanillaCreamCount < 0 ||
-    partyDecorationCount < 0 ||
-    vanillaCreamCount + partyDecorationCount > CUPCAKE_PACK_SIZE
-  ) fail('INVALID_CUPCAKE_FINISH_COUNT')
-  return { vanillaCreamCount, partyDecorationCount }
+function normalizeCupcakeFinishCounts() {
+  // New requests have always discarded the pre-finish count fields.
+  return { vanillaCreamCount: 0, partyDecorationCount: 0 }
 }
 
-export function normalizeCupcakeFinish(productId, value, { allowLegacyCupcakeCounts = false } = {}) {
+export function normalizeCupcakeFinish(productId, value) {
   if (!CUPCAKE_PRODUCT_IDS.has(productId)) return 'basic'
-  if (allowLegacyCupcakeCounts && value === undefined) return undefined
   if (!CUPCAKE_FINISHES.has(value)) fail('INVALID_CUPCAKE_FINISH')
   return value
 }
 
-export function normalizeVanillaCakeOptions(productId, cakeSheet, flavor, pointColor, { allowLegacyCreamCakeOptions = false } = {}) {
+export function normalizeVanillaCakeOptions(productId, cakeSheet, flavor, pointColor) {
   if (!CREAM_LAYER_CAKE_PRODUCT_IDS.has(productId)) {
     return { vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink' }
   }
-  const vanillaCakeSheet = allowLegacyCreamCakeOptions
-    ? (cakeSheet === 'vanilla' || cakeSheet === 'chocolate' ? cakeSheet : 'chocolate')
-    : (cakeSheet === undefined || cakeSheet === 'vanilla' ? 'chocolate' : cakeSheet)
-  const vanillaCakeFlavor = allowLegacyCreamCakeOptions
-    ? (flavor === 'plain' || LEGACY_VANILLA_CAKE_FLAVORS.has(flavor) ? flavor : 'plain')
-    : (flavor === undefined || flavor === 'plain' || LEGACY_VANILLA_CAKE_FLAVORS.has(flavor) ? 'plain' : flavor)
+  const vanillaCakeSheet = cakeSheet === undefined || cakeSheet === 'vanilla' ? 'chocolate' : cakeSheet
+  const vanillaCakeFlavor = flavor === undefined || flavor === 'plain' || LEGACY_VANILLA_CAKE_FLAVORS.has(flavor) ? 'plain' : flavor
   const vanillaCakePointColor = VANILLA_CAKE_POINT_COLORS.has(pointColor) ? pointColor : 'pink'
-  const hasValidSheet = allowLegacyCreamCakeOptions
-    ? vanillaCakeSheet === 'vanilla' || VANILLA_CAKE_SHEETS.has(vanillaCakeSheet)
-    : VANILLA_CAKE_SHEETS.has(vanillaCakeSheet)
-  const hasValidFlavor = allowLegacyCreamCakeOptions
-    ? VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor) || LEGACY_VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)
-    : VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)
+  const hasValidSheet = VANILLA_CAKE_SHEETS.has(vanillaCakeSheet)
+  const hasValidFlavor = VANILLA_CAKE_FLAVORS.has(vanillaCakeFlavor)
   if (!hasValidSheet || !hasValidFlavor) {
     fail('INVALID_VANILLA_CAKE_OPTION')
   }
@@ -167,22 +148,17 @@ export function normalizeBrownieCreamOption(productId, value) {
 }
 
 export function normalizeCakeOptions(input, {
-  allowStoredProduct = false,
-  allowLegacyCupcakeCounts = false,
-  allowLegacyCreamCakeOptions = false,
   cakeCatalogMode = 'compat',
 } = {}) {
-  const isAllowedProduct = allowStoredProduct
-    ? isStoredCakeOrderProductId(input.productId)
-    : (isActiveCakeOrderProductId(input.productId)
-      || (resolveCakeCatalogMode(cakeCatalogMode) === 'compat' && isCompatCakeOrderProductId(input.productId)))
+  const isAllowedProduct = isActiveCakeOrderProductId(input.productId)
+    || (resolveCakeCatalogMode(cakeCatalogMode) === 'compat' && isCompatCakeOrderProductId(input.productId))
   if (!isAllowedProduct || !Object.hasOwn(PRODUCTS, input.productId)) fail('INVALID_PRODUCT')
-  if (!allowStoredProduct && BROWNIE_CHEESECAKE_PRODUCT_IDS.has(input.productId) && !Object.hasOwn(input, 'brownieCreamOption')) {
+  if (BROWNIE_CHEESECAKE_PRODUCT_IDS.has(input.productId) && !Object.hasOwn(input, 'brownieCreamOption')) {
     fail('INVALID_BROWNIE_CREAM_OPTION')
   }
   const product = PRODUCTS[input.productId]
 
-  const canUseLegacySize = allowStoredProduct || resolveCakeCatalogMode(cakeCatalogMode) === 'compat'
+  const canUseLegacySize = resolveCakeCatalogMode(cakeCatalogMode) === 'compat'
   const hasCurrentSize = product.usesSize && Object.hasOwn(product.sizePrices, input.cakeSize)
   const hasLegacySize = product.usesSize && canUseLegacySize && Object.hasOwn(product.legacySizePrices || {}, input.cakeSize)
   const cakeSize = !product.usesSize
@@ -203,20 +179,17 @@ export function normalizeCakeOptions(input, {
   const cupcakeFinish = normalizeCupcakeFinish(
     input.productId,
     input.cupcakeFinish,
-    { allowLegacyCupcakeCounts },
   )
   const cupcakeFinishCounts = normalizeCupcakeFinishCounts(
     input.productId,
     input.vanillaCreamCount,
     input.partyDecorationCount,
-    { allowLegacyCupcakeCounts },
   )
   const vanillaCakeOptions = normalizeVanillaCakeOptions(
     input.productId,
     input.vanillaCakeSheet,
     input.vanillaCakeFlavor,
     input.vanillaCakePointColor,
-    { allowLegacyCreamCakeOptions },
   )
   const chocolateExtra = normalizeChocolateExtra(input.productId, input.chocolateExtra)
   const brownieCreamOption = normalizeBrownieCreamOption(input.productId, input.brownieCreamOption)
