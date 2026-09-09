@@ -41,6 +41,17 @@ function assertTargets(targets) {
   if (JSON.stringify(expected) !== JSON.stringify(targets)) fail('CUSTOM_CAKE_SCHEMA_TARGET_DRIFT')
 }
 
+function frozenCopy(value) {
+  function freeze(item) {
+    if (item && typeof item === 'object') {
+      for (const child of Object.values(item)) freeze(child)
+      Object.freeze(item)
+    }
+    return item
+  }
+  return freeze(structuredClone(value))
+}
+
 export function customCakeMigrationConfirmation(targets) {
   assertTargets(targets)
   return `APPLY CUSTOM CAKE ${targets.endpoint} ${targets.projectId}/${targets.databaseId} ${createHash('sha256').update(JSON.stringify(targets)).digest('hex')}`
@@ -141,19 +152,28 @@ export async function runCustomCakeSchemaMigration({ adapter, targets, mode = 'd
     return { mode, network: false, safeToApply: false, reason: 'EXPLICIT_TARGET_AND_ADAPTER_REQUIRED' }
   }
   const required = customCakeMigrationConfirmation(targets)
+  const approvedTargets = frozenCopy(targets)
   if (typeof adapter.assertTarget !== 'function') fail('CUSTOM_CAKE_SCHEMA_TARGET_DRIFT')
-  adapter.assertTarget(targets)
+  const assertBinding = () => {
+    let current
+    try { current = customCakeMigrationConfirmation(targets) } catch { fail('CUSTOM_CAKE_SCHEMA_TARGET_DRIFT') }
+    if (current !== required) fail('CUSTOM_CAKE_SCHEMA_TARGET_DRIFT')
+    adapter.assertTarget(approvedTargets)
+  }
+  assertBinding()
   if (mode === 'apply' && (confirmation !== required || typeof reconfirm !== 'function')) fail('CUSTOM_CAKE_SCHEMA_CONFIRMATION_REQUIRED')
-  const first = await inspect(adapter, targets)
+  const first = frozenCopy(await inspect(adapter, approvedTargets))
+  assertBinding()
   const result = { mode, network: true, confirmation: required, ...first }
   if (mode === 'dry-run' || !first.safeToApply) return result
   if (await reconfirm(required, structuredClone(result)) !== required) fail('CUSTOM_CAKE_SCHEMA_CONFIRMATION_REQUIRED')
-  adapter.assertTarget(targets)
-  const second = await inspect(adapter, targets)
+  assertBinding()
+  const second = frozenCopy(await inspect(adapter, approvedTargets))
+  assertBinding()
   if (!second.safeToApply) return { ...result, ...second }
   if (JSON.stringify(second) !== JSON.stringify(first)) return { ...result, safeToApply: false, drift: ['schema changed after confirmation'] }
-  await apply(adapter, targets, second.create, waitOptions)
-  const verified = await inspect(adapter, targets)
+  await apply(adapter, approvedTargets, second.create, waitOptions)
+  const verified = await inspect(adapter, approvedTargets)
   if (!verified.safeToApply || verified.create.length) fail('CUSTOM_CAKE_SCHEMA_VERIFICATION_FAILED')
   return { ...result, applied: true }
 }

@@ -106,3 +106,36 @@ test('apply requires target-bound explicit reconfirmation and repeats preflight 
     assert.equal(r.safeToApply, false); assert.ok(calls.every(c => c.method === 'GET'))
   }, { existing: true })
 })
+
+for (const [name, mutate] of [
+  ['collection ID', targets => { targets.collections[0].collectionId = 'legacy_table' }],
+  ['bucket ID', targets => { targets.bucket.bucketId = 'legacy-photos' }],
+  ['bucket permissions', targets => { targets.bucket.permissions.push('read("any")') }],
+]) test(`reconfirmation mutation of ${name} fails closed with zero writes`, async () => {
+  await harness(async ({ m, adapter, targets, calls }) => {
+    let error
+    try {
+      await m.runCustomCakeSchemaMigration({ adapter, targets, mode: 'apply', confirmation: m.customCakeMigrationConfirmation(targets), reconfirm: async confirmation => {
+        mutate(targets)
+        return confirmation
+      }, waitOptions: { sleep: async () => {}, attempts: 1 } })
+    } catch (caught) { error = caught }
+    assert.equal(calls.filter(c => c.method !== 'GET').length, 0, 'mutated targets must never reach a write')
+    assert.equal(error?.code, 'CUSTOM_CAKE_SCHEMA_TARGET_DRIFT')
+  })
+})
+
+test('target mutation while second preflight awaits also fails closed with zero writes', async () => {
+  let reconfirmed = false
+  await harness(async ({ m, adapter, targets, calls }) => {
+    let error
+    try {
+      await m.runCustomCakeSchemaMigration({ adapter, targets, mode: 'apply', confirmation: m.customCakeMigrationConfirmation(targets), reconfirm: async confirmation => {
+        reconfirmed = true
+        return confirmation
+      }, waitOptions: { sleep: async () => {}, attempts: 1 } })
+    } catch (caught) { error = caught }
+    assert.equal(calls.filter(c => c.method !== 'GET').length, 0, 'mutated targets must never reach a write')
+    assert.equal(error?.code, 'CUSTOM_CAKE_SCHEMA_TARGET_DRIFT')
+  }, { onRead: (_resources, targets) => { if (reconfirmed) { reconfirmed = false; targets.bucket.permissions.push('read("any")') } } })
+})
