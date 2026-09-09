@@ -1,5 +1,7 @@
 import type {
   AcceptCustomCakeQuoteRequest,
+  CancelCustomCakeRequest,
+  CompleteCustomCakeRequest,
   ConfirmCustomCakeRequest,
   CustomCakeCreateRequest,
   CustomCakeCreateResponse,
@@ -12,7 +14,18 @@ import type {
   QuoteAcceptance,
   UpdateCustomCakeQuoteRequest,
 } from './custom-cake-contract.js'
-import type { Cents, SmorePricedLine } from './cake-wire-types.js'
+import type {
+  PhotoDeleteRequest,
+  PhotoDeleteResponse,
+  PhotoReadRequest,
+  PhotoReadResponse,
+  PhotoRef,
+  PhotoSessionResponse,
+  PhotoUploadHeaders,
+  PhotoUploadRequest,
+  PhotoUploadResponse,
+} from './custom-cake-photo-contract.js'
+import type { Cents, RequestId, SmorePricedLine } from './cake-wire-types.js'
 import type { Language } from './i18n.js'
 
 export const CUSTOM_CAKE_BASE_PRICES = {
@@ -168,6 +181,20 @@ const INITIAL_FIXTURE_RECORDS: CustomCakeLookupResponse[] = [
 ]
 
 const STORAGE_KEY = 'verygood_custom_cake_requests_mock_v1'
+const PHOTO_STORAGE_KEY = 'verygood_custom_cake_photos_mock_v1'
+const PHOTO_SESSION_STORAGE_KEY = 'verygood_custom_cake_photo_sessions_mock_v1'
+
+export type MockPhotoRecord = {
+  photoRef: PhotoRef
+  requestId: RequestId
+  uploadId: string
+  mimeType: 'image/webp'
+  base64: string
+  width: number
+  height: number
+  byteLength: number
+  state: 'staged' | 'deletion-pending' | 'deleted'
+}
 
 function loadMockDatabase(): CustomCakeLookupResponse[] {
   if (typeof window === 'undefined') return INITIAL_FIXTURE_RECORDS
@@ -190,6 +217,82 @@ function saveMockDatabase(records: CustomCakeLookupResponse[]) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records))
   } catch {
     // Ignore storage quota errors in mock mode
+  }
+}
+
+const inMemorySessions: Record<string, PhotoSessionResponse> = {}
+const inMemoryPhotos: Record<string, MockPhotoRecord> = {}
+
+function loadMockPhotos(): Record<string, MockPhotoRecord> {
+  const seed: Record<string, MockPhotoRecord> = {
+    photo_sample_1: {
+      photoRef: 'photo_sample_1',
+      requestId: '11111111-1111-4111-8111-111111111111',
+      uploadId: 'upload_seed_1',
+      mimeType: 'image/webp',
+      base64: 'UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==',
+      width: 1200,
+      height: 1200,
+      byteLength: 26,
+      state: 'staged',
+    },
+    photo_sample_2: {
+      photoRef: 'photo_sample_2',
+      requestId: '11111111-1111-4111-8111-111111111111',
+      uploadId: 'upload_seed_2',
+      mimeType: 'image/webp',
+      base64: 'UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==',
+      width: 1200,
+      height: 1200,
+      byteLength: 26,
+      state: 'staged',
+    },
+  }
+  if (typeof window === 'undefined') {
+    return { ...seed, ...inMemoryPhotos }
+  }
+  try {
+    const raw = localStorage.getItem(PHOTO_STORAGE_KEY)
+    if (!raw) return seed
+    const parsed = JSON.parse(raw)
+    return { ...seed, ...parsed }
+  } catch {
+    return seed
+  }
+}
+
+function saveMockPhotos(photos: Record<string, MockPhotoRecord>) {
+  if (typeof window === 'undefined') {
+    Object.assign(inMemoryPhotos, photos)
+    return
+  }
+  try {
+    localStorage.setItem(PHOTO_STORAGE_KEY, JSON.stringify(photos))
+  } catch (e) {
+    void e
+  }
+}
+
+function loadMockSessions(): Record<string, PhotoSessionResponse> {
+  if (typeof window === 'undefined') return inMemorySessions
+  try {
+    const raw = localStorage.getItem(PHOTO_SESSION_STORAGE_KEY)
+    if (!raw) return {}
+    return JSON.parse(raw)
+  } catch {
+    return {}
+  }
+}
+
+function saveMockSessions(sessions: Record<string, PhotoSessionResponse>) {
+  if (typeof window === 'undefined') {
+    Object.assign(inMemorySessions, sessions)
+    return
+  }
+  try {
+    localStorage.setItem(PHOTO_SESSION_STORAGE_KEY, JSON.stringify(sessions))
+  } catch (e) {
+    void e
   }
 }
 
@@ -469,5 +572,171 @@ export const customCakeService = {
     records[index] = updated
     saveMockDatabase(records)
     return updated
+  },
+
+  async completeRequest(payload: CompleteCustomCakeRequest): Promise<CustomCakeMutationResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 250))
+    const records = loadMockDatabase()
+    const index = records.findIndex((r) => r.requestNumber === payload.requestNumber)
+    if (index === -1) throw new Error('NOT_FOUND')
+
+    const current = records[index]
+    if (current.status !== payload.expectedStatus) {
+      throw new Error(`QUOTE_STATE_CONFLICT: Current status is '${current.status}', expected '${payload.expectedStatus}'`)
+    }
+
+    if (current.quote.quoteVersion !== payload.expectedQuoteVersion) {
+      throw new Error(`QUOTE_VERSION_CONFLICT: Current quoteVersion is ${current.quote.quoteVersion}, expected ${payload.expectedQuoteVersion}`)
+    }
+
+    const updated: CustomCakeLookupResponse = {
+      ...current,
+      status: 'completed',
+    }
+
+    records[index] = updated
+    saveMockDatabase(records)
+    return updated
+  },
+
+  async cancelRequest(payload: CancelCustomCakeRequest): Promise<CustomCakeMutationResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 250))
+    const records = loadMockDatabase()
+    const index = records.findIndex((r) => r.requestNumber === payload.requestNumber)
+    if (index === -1) throw new Error('NOT_FOUND')
+
+    const current = records[index]
+    if (current.status !== payload.expectedStatus) {
+      throw new Error(`QUOTE_STATE_CONFLICT: Current status is '${current.status}', expected '${payload.expectedStatus}'`)
+    }
+
+    if (current.quote.quoteVersion !== payload.expectedQuoteVersion) {
+      throw new Error(`QUOTE_VERSION_CONFLICT: Current quoteVersion is ${current.quote.quoteVersion}, expected ${payload.expectedQuoteVersion}`)
+    }
+
+    const updated: CustomCakeLookupResponse = {
+      ...current,
+      status: 'cancelled',
+    }
+
+    records[index] = updated
+    saveMockDatabase(records)
+    return updated
+  },
+
+  async createPhotoSession(requestId: RequestId): Promise<PhotoSessionResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    const sessionId = `session_${Math.random().toString(36).slice(2, 10)}`
+    const token = `token_${Math.random().toString(36).slice(2, 18)}`
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString()
+    const session: PhotoSessionResponse = {
+      contractVersion: 'custom-cake-photo.v1',
+      requestId,
+      uploadSessionId: sessionId,
+      uploadToken: token,
+      expiresAt,
+      limits: {
+        maxPhotosPerRequest: 5,
+        maxInputBytes: 10485760,
+        maxDecodedPixels: 20000000,
+        maxStoredDimension: 2560,
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        storedMimeType: 'image/webp',
+        maxFrames: 1,
+      },
+    }
+    const sessions = loadMockSessions()
+    sessions[sessionId] = session
+    saveMockSessions(sessions)
+    return session
+  },
+
+  async uploadPhoto(
+    headers: PhotoUploadHeaders,
+    request: PhotoUploadRequest,
+  ): Promise<PhotoUploadResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 150))
+    const sessions = loadMockSessions()
+    const session = sessions[headers['x-custom-cake-upload-session']]
+    if (!session || session.uploadToken !== headers['x-custom-cake-upload-token']) {
+      throw new Error('PHOTO_SESSION_INVALID')
+    }
+    if (new Date(session.expiresAt).getTime() < Date.now()) {
+      throw new Error('PHOTO_SESSION_EXPIRED')
+    }
+    if (session.requestId !== request.requestId) {
+      throw new Error('FORBIDDEN')
+    }
+
+    const photos = loadMockPhotos()
+    const forRequest = Object.values(photos).filter(
+      (p) => p.requestId === request.requestId && p.state === 'staged',
+    )
+    if (forRequest.length >= session.limits.maxPhotosPerRequest) {
+      throw new Error('PHOTO_LIMIT_EXCEEDED')
+    }
+
+    const photoRef = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+    const photoRecord: MockPhotoRecord = {
+      photoRef,
+      requestId: request.requestId,
+      uploadId: request.uploadId,
+      mimeType: 'image/webp',
+      base64: request.base64,
+      width: 1200,
+      height: 1200,
+      byteLength: Math.round(request.base64.length * 0.75),
+      state: 'staged',
+    }
+    photos[photoRef] = photoRecord
+    saveMockPhotos(photos)
+
+    return {
+      contractVersion: 'custom-cake-photo.v1',
+      requestId: request.requestId,
+      photoRef,
+      state: 'staged',
+      mimeType: 'image/webp',
+      width: photoRecord.width,
+      height: photoRecord.height,
+      byteLength: photoRecord.byteLength,
+    }
+  },
+
+  async readPhoto(request: PhotoReadRequest): Promise<PhotoReadResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    const photos = loadMockPhotos()
+    const photo = photos[request.photoRef]
+    if (!photo || photo.state === 'deleted') {
+      throw new Error('NOT_FOUND')
+    }
+    return {
+      contractVersion: 'custom-cake-photo.v1',
+      photoRef: photo.photoRef,
+      mimeType: 'image/webp',
+      base64: photo.base64,
+      width: photo.width,
+      height: photo.height,
+      byteLength: photo.byteLength,
+    }
+  },
+
+  async deletePhoto(request: PhotoDeleteRequest): Promise<PhotoDeleteResponse> {
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    const photos = loadMockPhotos()
+    const photo = photos[request.photoRef]
+    if (!photo) {
+      throw new Error('NOT_FOUND')
+    }
+    photos[request.photoRef] = {
+      ...photo,
+      state: 'deleted',
+    }
+    saveMockPhotos(photos)
+    return {
+      contractVersion: 'custom-cake-photo.v1',
+      photoRef: request.photoRef,
+      state: 'deleted',
+    }
   },
 }

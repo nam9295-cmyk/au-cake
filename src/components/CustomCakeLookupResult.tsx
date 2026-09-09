@@ -23,7 +23,19 @@ export function CustomCakeLookupResult({
           <span className="request-kicker">{language === 'ko' ? '커스텀 케이크 접수 내역' : 'Custom Cake Request'}</span>
           <h2 className="request-number">{requestNumber}</h2>
         </div>
-        <span className={statusInfo.className}>{statusInfo.label}</span>
+        <div className="status-badges-group" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span className={statusInfo.className}>{statusInfo.label}</span>
+          {acceptance && (
+            <span
+              className="status-badge status-agreed"
+              style={{ background: '#f6ffed', color: '#237804', border: '1px solid #b7eb8f' }}
+            >
+              {language === 'ko'
+                ? `견적 v${acceptance.acceptedQuoteVersion} 고객 동의 완료`
+                : `Quote v${acceptance.acceptedQuoteVersion} Agreed`}
+            </span>
+          )}
+        </div>
       </header>
 
       <div className="status-callout-box">

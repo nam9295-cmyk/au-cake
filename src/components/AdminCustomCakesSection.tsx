@@ -123,6 +123,73 @@ export function AdminCustomCakesSection() {
     }
   }
 
+function AdminPhotoThumbnail({
+  requestNumber,
+  photoRef,
+}: {
+  requestNumber: string
+  photoRef: string
+}) {
+  const [photoData, setPhotoData] = useState<{
+    base64: string
+    mimeType: string
+    width: number
+    height: number
+    byteLength: number
+  } | null>(null)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    customCakeService
+      .readPhoto({
+        contractVersion: 'custom-cake-photo.v1',
+        requestNumber,
+        photoRef,
+        authorization: { kind: 'admin' },
+      })
+      .then((res) => {
+        if (!cancelled) setPhotoData(res)
+      })
+      .catch(() => {
+        if (!cancelled) setError(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [requestNumber, photoRef])
+
+  if (error || !photoData) {
+    return <span className="photo-ref-badge">{photoRef}</span>
+  }
+
+  return (
+    <div
+      className="admin-photo-card"
+      style={{
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '4px',
+        border: '1px solid #e0e0e0',
+        padding: '6px',
+        borderRadius: '6px',
+        background: '#fff',
+      }}
+    >
+      <img
+        src={`data:${photoData.mimeType};base64,${photoData.base64}`}
+        alt={photoRef}
+        style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }}
+      />
+      <span style={{ fontSize: '0.75rem', color: '#444', fontWeight: 500 }}>{photoRef}</span>
+      <span style={{ fontSize: '0.7rem', color: '#888' }}>
+        {photoData.width}×{photoData.height} ({Math.round(photoData.byteLength / 1024)}KB)
+      </span>
+    </div>
+  )
+}
+
   const handleConfirmReservation = async () => {
     if (!selected) return
     setActionError('')
@@ -136,10 +203,77 @@ export function AdminCustomCakesSection() {
       })
 
       setSelected(updated)
-      showToast(`Custom Cake request confirmed!`)
+      showToast('예약이 최종 확정되었습니다.')
       await refreshList()
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setUpdatingQuote(false)
+    }
+  }
+
+  const handleCompleteRequest = async () => {
+    if (!selected || selected.status !== 'confirmed') return
+    setActionError('')
+    setUpdatingQuote(true)
+
+    try {
+      const updated = await customCakeService.completeRequest({
+        contractVersion: 'custom-cake.v1',
+        requestNumber: selected.requestNumber,
+        expectedStatus: 'confirmed',
+        expectedQuoteVersion: selected.quote.quoteVersion,
+      })
+
+      setSelected(updated)
+      showToast('제작 및 픽업 완료 처리되었습니다.')
+      await refreshList()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('QUOTE_STATE_CONFLICT') || msg.includes('QUOTE_VERSION_CONFLICT')) {
+        setActionError('다른 변경으로 인해 화면 정보가 최신 상태가 아닙니다. 최신 데이터를 다시 불러옵니다.')
+        await refreshList()
+      } else {
+        setActionError(msg)
+      }
+    } finally {
+      setUpdatingQuote(false)
+    }
+  }
+
+  const handleCancelRequest = async () => {
+    if (!selected) return
+    if (selected.status !== 'requested' && selected.status !== 'quoted' && selected.status !== 'confirmed') {
+      return
+    }
+
+    const confirmCancel = window.confirm(
+      '이 커스텀 케이크 주문을 취소하시겠습니까?\n\n(참고: 취소 처리는 주문 접수 취소를 의미하며, 환불 또는 결제 취소와는 무관합니다.)',
+    )
+    if (!confirmCancel) return
+
+    setActionError('')
+    setUpdatingQuote(true)
+
+    try {
+      const updated = await customCakeService.cancelRequest({
+        contractVersion: 'custom-cake.v1',
+        requestNumber: selected.requestNumber,
+        expectedStatus: selected.status,
+        expectedQuoteVersion: selected.quote.quoteVersion,
+      })
+
+      setSelected(updated)
+      showToast('주문이 취소 처리되었습니다.')
+      await refreshList()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('QUOTE_STATE_CONFLICT') || msg.includes('QUOTE_VERSION_CONFLICT')) {
+        setActionError('다른 변경으로 인해 화면 정보가 최신 상태가 아닙니다. 최신 데이터를 다시 불러옵니다.')
+        await refreshList()
+      } else {
+        setActionError(msg)
+      }
     } finally {
       setUpdatingQuote(false)
     }
@@ -382,11 +516,13 @@ export function AdminCustomCakesSection() {
                       {cake.photoRefs && cake.photoRefs.length > 0 && (
                         <div className="photo-refs-display">
                           <strong>참고 사진 ({cake.photoRefs.length}개):</strong>
-                          <div className="photo-refs-grid">
+                          <div className="photo-refs-grid" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
                             {cake.photoRefs.map((ref) => (
-                              <span className="photo-ref-badge" key={ref}>
-                                {ref}
-                              </span>
+                              <AdminPhotoThumbnail
+                                key={ref}
+                                requestNumber={selected.requestNumber}
+                                photoRef={ref}
+                              />
                             ))}
                           </div>
                         </div>
@@ -570,6 +706,63 @@ export function AdminCustomCakesSection() {
                     <span>예약 최종 확정하기</span>
                   </button>
                 </div>
+
+                {/* Complete Order Action (confirmed -> completed) */}
+                {selected.status === 'confirmed' && (
+                  <div
+                    className="confirmation-card complete-card"
+                    style={{
+                      marginTop: '16px',
+                      background: '#f4fbf7',
+                      border: '1px solid #b7eb8f',
+                      padding: '16px',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <h4>제작 및 픽업 완료 처리 (Complete)</h4>
+                    <p style={{ fontSize: '0.85rem', color: '#555', margin: '4px 0 12px' }}>
+                      고객이 케이크를 수령한 후 완료 상태로 전환합니다. (픽업 완료 처리이며 결제/환불과는 무관합니다.)
+                    </p>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      style={{ background: '#237804', borderColor: '#237804', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={handleCompleteRequest}
+                      disabled={updatingQuote}
+                    >
+                      <CheckCircle2 size={16} />
+                      <span>제작 및 픽업 완료 처리</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Cancel Request Action (requested | quoted | confirmed -> cancelled) */}
+                {(selected.status === 'requested' || selected.status === 'quoted' || selected.status === 'confirmed') && (
+                  <div
+                    className="cancellation-card"
+                    style={{
+                      marginTop: '16px',
+                      background: '#fff1f0',
+                      border: '1px solid #ffa39e',
+                      padding: '16px',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <h4 style={{ color: '#cf1322' }}>주문 접수 취소 (Cancel Request)</h4>
+                    <p style={{ fontSize: '0.85rem', color: '#555', margin: '4px 0 12px' }}>
+                      주문 취소 시 상태만 취소로 변경되며, 환불 또는 결제 취소와는 무관합니다.
+                    </p>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      style={{ color: '#cf1322', borderColor: '#ffa39e' }}
+                      onClick={handleCancelRequest}
+                      disabled={updatingQuote}
+                    >
+                      <span>주문 접수 취소하기</span>
+                    </button>
+                  </div>
+                )}
               </section>
             </div>
           </div>

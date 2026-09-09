@@ -32,6 +32,11 @@ export function CustomCakePage({
   onComplete: (result: CustomCakeCreateResponse) => void
 }) {
   const formId = useId()
+  const [requestId] = useState<string>(() =>
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+  )
   const [tier, setTier] = useState<'single' | 'double'>('single')
   const [singleSize, setSingleSize] = useState<SingleTierSize>('6in')
   const [doubleSize, setDoubleSize] = useState<DoubleTierSize>('4in+6in')
@@ -40,7 +45,24 @@ export function CustomCakePage({
   const [pickupTime, setPickupTime] = useState('12:00')
   const [designNote, setDesignNote] = useState('')
   const [figurineSource, setFigurineSource] = useState<'none' | 'customer' | 'shop'>('none')
-  const [photoFiles, setPhotoFiles] = useState<{ id: string; name: string; previewUrl: string }[]>([])
+
+  type StagedPhoto = {
+    photoRef: string
+    uploadId: string
+    name: string
+    previewUrl: string
+    width: number
+    height: number
+    byteLength: number
+  }
+  const [stagedPhotos, setStagedPhotos] = useState<StagedPhoto[]>([])
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoSession, setPhotoSession] = useState<{
+    uploadSessionId: string
+    uploadToken: string
+    expiresAt: string
+  } | null>(null)
+
   const [paidSmoreQuantity, setPaidSmoreQuantity] = useState(0)
 
   // Customer Contact
@@ -61,28 +83,157 @@ export function CustomCakePage({
   const baseTotalCents = baseUnitCents * quantity
   // 5% discount on Custom Cake base subtotal only (September promotion)
   const cakeDiscountCents = Math.round((baseTotalCents * 5) / 100)
-  const giftSmoreCount = quantity * 2
   const paidSmoreCents = paidSmoreQuantity * 315
   const estimatedKnownCents = baseTotalCents - cakeDiscountCents + paidSmoreCents
 
-  const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return
+  const handlePhotoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    setErrorMessage('')
     const files = Array.from(e.target.files)
-    const newItems = files.map((file, idx) => ({
-      id: `photo_${Date.now()}_${idx}`,
-      name: file.name,
-      previewUrl: URL.createObjectURL(file),
-    }))
-    setPhotoFiles((prev) => [...prev, ...newItems])
     e.target.value = ''
+
+    if (stagedPhotos.length + files.length > 5) {
+      setErrorMessage(
+        language === 'ko'
+          ? '사진은 최대 5장까지 첨부할 수 있습니다.'
+          : 'You can upload a maximum of 5 photos per request.',
+      )
+      return
+    }
+
+    const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp']
+
+    for (const file of files) {
+      const lowerName = file.name.toLowerCase()
+      if (lowerName.endsWith('.heic') || lowerName.endsWith('.heif') || !ALLOWED_MIMES.includes(file.type)) {
+        setErrorMessage(
+          language === 'ko'
+            ? `"${file.name}": 지원되지 않는 형식입니다. JPEG, PNG, WebP 이미지만 업로드 가능합니다 (HEIC 제외).`
+            : `"${file.name}": Invalid format. Only JPEG, PNG, or WebP allowed (No HEIC).`,
+        )
+        return
+      }
+
+      // Max 10 MiB (10,485,760 bytes)
+      if (file.size > 10485760 || file.size === 0) {
+        setErrorMessage(
+          language === 'ko'
+            ? `"${file.name}": 파일 크기는 10MB 이하여야 합니다.`
+            : `"${file.name}": File size exceeds the 10MB limit.`,
+        )
+        return
+      }
+    }
+
+    setPhotoUploading(true)
+    try {
+      // Ensure photo session exists
+      let session = photoSession
+      if (!session || new Date(session.expiresAt).getTime() <= Date.now()) {
+        const newSession = await customCakeService.createPhotoSession(requestId)
+        session = {
+          uploadSessionId: newSession.uploadSessionId,
+          uploadToken: newSession.uploadToken,
+          expiresAt: newSession.expiresAt,
+        }
+        setPhotoSession(session)
+      }
+
+      const newStaged: StagedPhoto[] = []
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        // Check decoded dimensions (max 20,000,000 pixels)
+        const dim = await new Promise<{ valid: boolean; width: number; height: number }>((resolve) => {
+          const img = new Image()
+          const objectUrl = URL.createObjectURL(file)
+          img.onload = () => {
+            URL.revokeObjectURL(objectUrl)
+            const pixels = img.width * img.height
+            resolve({ valid: pixels <= 20000000, width: img.width, height: img.height })
+          }
+          img.onerror = () => {
+            URL.revokeObjectURL(objectUrl)
+            resolve({ valid: true, width: 1200, height: 1200 })
+          }
+          img.src = objectUrl
+        })
+
+        if (!dim.valid) {
+          setErrorMessage(
+            language === 'ko'
+              ? `"${file.name}": 이미지 해상도가 너무 큽니다 (최대 2000만 픽셀 허용).`
+              : `"${file.name}": Image resolution exceeds limit (max 20MP).`,
+          )
+          continue
+        }
+
+        // Convert to canonical base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => {
+            const raw = reader.result as string
+            const idx = raw.indexOf(',')
+            resolve(idx >= 0 ? raw.slice(idx + 1) : raw)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+
+        const uploadId = `upload_${Date.now()}_${i}`
+        const uploaded = await customCakeService.uploadPhoto(
+          {
+            'x-custom-cake-upload-session': session.uploadSessionId,
+            'x-custom-cake-upload-token': session.uploadToken,
+          },
+          {
+            contractVersion: 'custom-cake-photo.v1',
+            requestId,
+            uploadId,
+            mimeType: file.type as 'image/jpeg' | 'image/png' | 'image/webp',
+            base64,
+          },
+        )
+
+        newStaged.push({
+          photoRef: uploaded.photoRef,
+          uploadId,
+          name: file.name,
+          previewUrl: URL.createObjectURL(file),
+          width: uploaded.width,
+          height: uploaded.height,
+          byteLength: uploaded.byteLength,
+        })
+      }
+
+      setStagedPhotos((prev) => [...prev, ...newStaged])
+    } catch (err) {
+      setErrorMessage(
+        language === 'ko'
+          ? `사진 업로드 중 오류가 발생했습니다: ${err instanceof Error ? err.message : String(err)}`
+          : `Failed to upload photo: ${err instanceof Error ? err.message : String(err)}`,
+      )
+    } finally {
+      setPhotoUploading(false)
+    }
   }
 
-  const removePhoto = (id: string) => {
-    setPhotoFiles((prev) => {
-      const target = prev.find((p) => p.id === id)
+  const removePhoto = async (photoRef: string) => {
+    setStagedPhotos((prev) => {
+      const target = prev.find((p) => p.photoRef === photoRef)
       if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
-      return prev.filter((p) => p.id !== id)
+      return prev.filter((p) => p.photoRef !== photoRef)
     })
+    try {
+      await customCakeService.deletePhoto({
+        contractVersion: 'custom-cake-photo.v1',
+        requestNumber: 'PENDING',
+        photoRef,
+        authorization: { kind: 'admin' },
+      })
+    } catch {
+      // Ignore cleanup error for pre-submission photo
+    }
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -92,7 +243,7 @@ export function CustomCakePage({
     if (!privacyConsent) {
       setErrorMessage(
         language === 'ko'
-          ? '개인정보 수집 및 처리에 동의해 주세요.'
+          ? '개인정보 수집 및 이용에 동의해 주세요.'
           : 'Please accept the privacy consent to proceed.',
       )
       return
@@ -127,10 +278,6 @@ export function CustomCakePage({
       return
     }
 
-    const requestId = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
-
     const cakeLineId = `line_${Date.now()}_cake`
     const smoreLineId = `line_${Date.now()}_smore`
 
@@ -160,7 +307,7 @@ export function CustomCakePage({
             : { tier: 'double' as const, size: doubleSize }),
           designNote: designNote.trim(),
           figurineSource,
-          photoRefs: photoFiles.map((p) => p.id),
+          photoRefs: stagedPhotos.map((p) => p.photoRef),
         },
         ...(paidSmoreQuantity > 0
           ? [
@@ -479,31 +626,44 @@ export function CustomCakePage({
             {/* Reference Photos */}
             <div className="field-group">
               <label htmlFor={`${formId}-photos`}>
-                {language === 'ko' ? '참고 사진 첨부 (선택)' : 'Reference Photos (Optional)'}
+                {language === 'ko' ? '참고 사진 첨부 (선택, 최대 5장)' : 'Reference Photos (Optional, up to 5)'}
               </label>
+              <p className="photo-limits-hint" style={{ fontSize: '0.85rem', color: '#666', marginBottom: '8px' }}>
+                {language === 'ko'
+                  ? 'JPEG, PNG, WebP 지원 · 파일당 최대 10MB · 최대 2000만 화소 (HEIC 제외)'
+                  : 'JPEG, PNG, WebP supported · Max 10MB per file · Max 20MP (No HEIC)'}
+              </p>
               <div className="photo-uploader">
-                <label className="photo-upload-button" htmlFor={`${formId}-photos`}>
+                <label
+                  className={`photo-upload-button ${stagedPhotos.length >= 5 || photoUploading ? 'disabled' : ''}`}
+                  htmlFor={`${formId}-photos`}
+                >
                   <Camera size={20} />
-                  <span>{language === 'ko' ? '사진 추가' : 'Add Photo'}</span>
+                  <span>
+                    {photoUploading
+                      ? (language === 'ko' ? '업로드 중...' : 'Uploading...')
+                      : (language === 'ko' ? `사진 추가 (${stagedPhotos.length}/5)` : `Add Photo (${stagedPhotos.length}/5)`)}
+                  </span>
                   <input
                     id={`${formId}-photos`}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     multiple
+                    disabled={stagedPhotos.length >= 5 || photoUploading}
                     className="visually-hidden"
                     onChange={handlePhotoUpload}
                   />
                 </label>
-                {photoFiles.length > 0 && (
+                {stagedPhotos.length > 0 && (
                   <div className="photo-preview-list">
-                    {photoFiles.map((photo) => (
-                      <div className="photo-preview-item" key={photo.id}>
+                    {stagedPhotos.map((photo) => (
+                      <div className="photo-preview-item" key={photo.photoRef}>
                         <img src={photo.previewUrl} alt={photo.name} />
                         <button
                           type="button"
                           className="photo-remove-btn"
                           aria-label="Remove photo"
-                          onClick={() => removePhoto(photo.id)}
+                          onClick={() => removePhoto(photo.photoRef)}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -539,8 +699,8 @@ export function CustomCakePage({
               </span>
               <span>
                 {language === 'ko'
-                  ? `무료 증정: ${giftSmoreCount}개 (케이크 1개당 2개)`
-                  : `Free Gift: ${giftSmoreCount} sticks (2 per cake)`}
+                  ? '케이크 1개당 스모어 스틱 2개 무료 증정 (접수 후 견적에 최종 수량 반영)'
+                  : '2 free S’more sticks per cake (confirmed in quote snapshot)'}
               </span>
             </div>
 
@@ -609,7 +769,7 @@ export function CustomCakePage({
               <div className="breakdown-row gift-row">
                 <dt>{language === 'ko' ? '무료 증정 스모어 스틱' : 'Gift S’more Sticks'}</dt>
                 <dd>
-                  {giftSmoreCount} {language === 'ko' ? '개 (무료 증정)' : 'sticks (Complimentary)'}
+                  {language === 'ko' ? '케이크 1개당 2개 (접수 시 확정)' : '2 per cake (Confirmed on quote)'}
                 </dd>
               </div>
 

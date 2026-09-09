@@ -213,6 +213,183 @@ test('customCakeService quote revision, acceptance, and confirmation lifecycle',
   assert.equal(confirmed.status, 'confirmed')
   assert.equal(confirmed.quote.isFinalQuote, true)
   assert.equal(confirmed.acceptance.acceptedQuoteVersion, 2)
+
+  // 6. Complete request (confirmed -> completed)
+  // 6a. Version conflict on complete
+  await assert.rejects(
+    () =>
+      customCakeService.completeRequest({
+        contractVersion: 'custom-cake.v1',
+        requestNumber: created.requestNumber,
+        expectedStatus: 'confirmed',
+        expectedQuoteVersion: 99,
+      }),
+    /QUOTE_VERSION_CONFLICT/,
+  )
+
+  // 6b. Successful completion
+  const completed = await customCakeService.completeRequest({
+    contractVersion: 'custom-cake.v1',
+    requestNumber: created.requestNumber,
+    expectedStatus: 'confirmed',
+    expectedQuoteVersion: 2,
+  })
+  assert.equal(completed.status, 'completed')
+
+  // 6c. Cancellation fails when already completed (state conflict)
+  await assert.rejects(
+    () =>
+      customCakeService.cancelRequest({
+        contractVersion: 'custom-cake.v1',
+        requestNumber: created.requestNumber,
+        expectedStatus: 'confirmed',
+        expectedQuoteVersion: 2,
+      }),
+    /QUOTE_STATE_CONFLICT/,
+  )
+})
+
+test('customCakeService cancellation flow from requested status', async () => {
+  const req = {
+    contractVersion: 'custom-cake.v1',
+    requestId: 'test-req-cancel-1',
+    customer: {
+      customerName: 'Charlie Cancel',
+      customerPhone: '0411223344',
+      customerEmail: 'charlie@example.com',
+    },
+    pickup: {
+      pickupDate: '2026-10-25',
+      pickupTime: '13:00',
+    },
+    requestNote: '',
+    privacyConsent: true,
+    lines: [
+      {
+        kind: 'custom-cake',
+        lineId: 'cake_charlie',
+        parentCakeLineId: null,
+        productId: 'custom-cake',
+        quantity: 1,
+        tier: 'single',
+        size: '8in',
+        designNote: 'Chocolate ribbons',
+        figurineSource: 'none',
+        photoRefs: [],
+      },
+    ],
+  }
+
+  const created = await customCakeService.createRequest(req)
+  assert.equal(created.status, 'requested')
+
+  const cancelled = await customCakeService.cancelRequest({
+    contractVersion: 'custom-cake.v1',
+    requestNumber: created.requestNumber,
+    expectedStatus: 'requested',
+    expectedQuoteVersion: 1,
+  })
+  assert.equal(cancelled.status, 'cancelled')
+})
+
+test('giftSmoreQuantity is proportional to cake quantity (quantity 2 yields 4 gifts)', async () => {
+  const req = {
+    contractVersion: 'custom-cake.v1',
+    requestId: 'test-req-gift-proportional',
+    customer: {
+      customerName: 'Dana Multi',
+      customerPhone: '0422334455',
+      customerEmail: 'dana@example.com',
+    },
+    pickup: {
+      pickupDate: '2026-10-30',
+      pickupTime: '15:00',
+    },
+    requestNote: '',
+    privacyConsent: true,
+    lines: [
+      {
+        kind: 'custom-cake',
+        lineId: 'cake_dana',
+        parentCakeLineId: null,
+        productId: 'custom-cake',
+        quantity: 2,
+        tier: 'single',
+        size: '6in',
+        designNote: 'Twin celebration',
+        figurineSource: 'none',
+        photoRefs: [],
+      },
+    ],
+  }
+
+  const created = await customCakeService.createRequest(req)
+  // Cake qty 2 -> base: 15500 * 2 = 31000
+  assert.equal(created.quote.baseCents, 31000)
+  // Cake qty 2 -> 2 * 2 = 4 gift smore sticks (not hardcoded 2)
+  assert.equal(created.quote.giftSmoreQuantity, 4)
+})
+
+test('custom-cake-photo.v1 session, upload, read, and delete adapter flow', async () => {
+  const requestId = '12345678-1234-4234-8234-123456789abc'
+
+  // 1. Create photo session
+  const session = await customCakeService.createPhotoSession(requestId)
+  assert.equal(session.contractVersion, 'custom-cake-photo.v1')
+  assert.equal(session.requestId, requestId)
+  assert.equal(session.limits.maxPhotosPerRequest, 5)
+  assert.equal(session.limits.maxInputBytes, 10485760)
+  assert.equal(session.limits.maxDecodedPixels, 20000000)
+  assert.ok(new Date(session.expiresAt).getTime() > Date.now())
+
+  // 2. Upload photo
+  const uploadRes = await customCakeService.uploadPhoto(
+    {
+      'x-custom-cake-upload-session': session.uploadSessionId,
+      'x-custom-cake-upload-token': session.uploadToken,
+    },
+    {
+      contractVersion: 'custom-cake-photo.v1',
+      requestId,
+      uploadId: 'upload_test_1',
+      mimeType: 'image/jpeg',
+      base64: '/9j/2Q==',
+    },
+  )
+  assert.equal(uploadRes.contractVersion, 'custom-cake-photo.v1')
+  assert.equal(uploadRes.state, 'staged')
+  assert.ok(uploadRes.photoRef.startsWith('photo_'))
+
+  // 3. Read uploaded photo
+  const readRes = await customCakeService.readPhoto({
+    contractVersion: 'custom-cake-photo.v1',
+    requestNumber: 'REQ_TEST',
+    photoRef: uploadRes.photoRef,
+    authorization: { kind: 'admin' },
+  })
+  assert.equal(readRes.photoRef, uploadRes.photoRef)
+  assert.equal(readRes.mimeType, 'image/webp')
+
+  // 4. Delete photo
+  const delRes = await customCakeService.deletePhoto({
+    contractVersion: 'custom-cake-photo.v1',
+    requestNumber: 'REQ_TEST',
+    photoRef: uploadRes.photoRef,
+    authorization: { kind: 'admin' },
+  })
+  assert.equal(delRes.state, 'deleted')
+
+  // 5. Read after delete fails
+  await assert.rejects(
+    () =>
+      customCakeService.readPhoto({
+        contractVersion: 'custom-cake-photo.v1',
+        requestNumber: 'REQ_TEST',
+        photoRef: uploadRes.photoRef,
+        authorization: { kind: 'admin' },
+      }),
+    /NOT_FOUND/,
+  )
 })
 
 function getProjectRoot() {
