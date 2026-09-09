@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { AppwriteException } from 'node-appwrite'
+import { AppwriteException, loadReservationSdk } from './reservation-sdk.mjs'
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { mkdtemp, rm, symlink } from 'node:fs/promises'
@@ -30,7 +30,7 @@ const cakeRequest = (requestId) => ({
   ...customer, requestId, orderLines: [{ productId: 'pave-cake', cakeSize: '6in', quantity: 1 }],
 })
 
-function databaseDouble() {
+function databaseDouble(Exception = AppwriteException) {
   const documents = new Map()
   const calls = []
   const db = {
@@ -38,7 +38,7 @@ function databaseDouble() {
     calls,
     async getDocument({ documentId }) {
       calls.push(['getDocument', documentId])
-      if (!documents.has(documentId)) throw new AppwriteException('missing', 404)
+      if (!documents.has(documentId)) throw new Exception('missing', 404)
       return documents.get(documentId)
     },
     async listDocuments({ queries = [] } = {}) {
@@ -51,7 +51,7 @@ function databaseDouble() {
     },
     async createDocument({ documentId, data }) {
       calls.push(['createDocument', documentId])
-      if (documents.has(documentId)) throw new AppwriteException('conflict', 409)
+      if (documents.has(documentId)) throw new Exception('conflict', 409)
       const document = { $id: documentId, ...data }
       documents.set(documentId, document)
       return document
@@ -123,7 +123,8 @@ test('compatibility and full archives execute their immutable deployment-local w
       execFileSync('tar', ['-xzf', archive.path, '-C', extracted])
       await symlink(resolve('node_modules'), join(extracted, 'node_modules'), 'dir')
       const deployed = await import(`${pathToFileURL(join(extracted, 'src/main.js')).href}?phase=${phase}`)
-      const attempt = deployed.createCake(databaseDouble(), smoreRequest('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'), {
+      const sdk = await loadReservationSdk(pathToFileURL(join(extracted, 'package.json')))
+      const attempt = deployed.createCake(databaseDouble(sdk.AppwriteException), smoreRequest('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'), {
         now,
         runtimeConfig,
       })
