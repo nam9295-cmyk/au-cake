@@ -1,9 +1,10 @@
 // Private additive storage only. No pricing, catalogue, transport authorization,
 // Storage calls or runtime/environment activation is performed by this module.
 import { createHash } from 'node:crypto'
+import { Query } from 'node-appwrite'
 
 export const CUSTOM_CAKE_RECORD_LIMIT = 65535
-export const CUSTOM_CAKE_RESOURCE_KEYS = Object.freeze(['claims', 'snapshots', 'sessions', 'photos', 'quotas', 'outbox', 'commits'])
+export const CUSTOM_CAKE_RESOURCE_KEYS = Object.freeze(['claims', 'snapshots', 'sessions', 'photos', 'quotas', 'outbox', 'commits', 'chunks', 'histories'])
 const resourceId = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/
 const fail = code => { throw Object.assign(new Error(code), { code }) }
@@ -22,6 +23,7 @@ function validJson(value, seen = new Set()) {
   if (typeof value === 'number') { if (!Number.isSafeInteger(value) || Object.is(value, -0)) fail('PERSISTENCE_INVALID_RECORD'); return }
   if (typeof value !== 'object' || seen.has(value) || (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype)) fail('PERSISTENCE_INVALID_RECORD')
   seen.add(value)
+  if (Array.isArray(value) && Object.keys(value).length !== value.length) fail('PERSISTENCE_INVALID_RECORD')
   for (const entry of Object.values(value)) validJson(entry, seen)
   seen.delete(value)
 }
@@ -36,20 +38,37 @@ function validate(kind, value) {
   if (kind === 'claims') {
     if (!uuid.test(value.requestId) || !['custom-cake.v1', 'cake-order.v2', 'cake-request-v1'].includes(value.wire) || typeof value.creatorScope !== 'string' || !value.creatorScope || value.creatorScope.length > 256 || !/^[a-f0-9]{64}$/.test(value.fingerprint) || !Object.hasOwn(value, 'creationResponse')) fail('PERSISTENCE_INVALID_RECORD')
   }
+  if (kind === 'sessions') {
+    if (!uuid.test(value.requestId) || !/^[a-f0-9]{64}$/.test(value.tokenDigest) || !instant(value.issuedAt) || !instant(value.expiresAt) || Date.parse(value.expiresAt) - Date.parse(value.issuedAt) !== 1800000 || ['token', 'uploadToken', 'uploadSessionId'].some(key => Object.hasOwn(value, key))) fail('PERSISTENCE_INVALID_RECORD')
+  }
+  if (kind === 'photos') {
+    if (!['staging', 'staged', 'attached', 'cleanup-claimed', 'deletion-pending', 'deleted'].includes(value.state) || !uuid.test(value.requestId) || !resourceId.test(value.sessionId) || !/^[A-Za-z0-9_-]{1,64}$/.test(value.uploadId) || !/^[a-f0-9]{64}$/.test(value.inputDigest) || !resourceId.test(value.fileId) || !instant(value.intentAt) || typeof value.uploadResolved !== 'boolean') fail('PERSISTENCE_INVALID_RECORD')
+  }
+  if (kind === 'quotas' && (!uuid.test(value.requestId) || !Number.isSafeInteger(value.used) || value.used < 0 || value.used > 5)) fail('PERSISTENCE_INVALID_RECORD')
+}
+
+function instant(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value }
+
+function metadata(kind, value) {
+  const lookupKey = kind === 'snapshots' ? value.lookupResponse.requestNumber || value.lookupResponse.reservationNumber : value.requestId || ''
+  const state = kind === 'snapshots' ? value.lookupResponse.status : value.state || ''
+  const dueAt = value.dueAt || ''
+  if (typeof lookupKey !== 'string' || lookupKey.length > 64 || typeof state !== 'string' || state.length > 32 || (dueAt && !instant(dueAt))) fail('PERSISTENCE_INVALID_RECORD')
+  return { lookupKey, state, dueAt }
 }
 
 export function encodeCustomCakeRecord(kind, value) {
   validate(kind, value)
   const payloadJson = JSON.stringify(value)
-  if (Buffer.byteLength(payloadJson, 'utf8') > CUSTOM_CAKE_RECORD_LIMIT) fail('PERSISTENCE_RECORD_TOO_LARGE')
-  return { schemaVersion: 1, payloadJson }
+  return { schemaVersion: 1, payloadJson, ...metadata(kind, value) }
 }
 
 export function decodeCustomCakeRecord(kind, document) {
-  if (document?.schemaVersion !== 1 || typeof document.payloadJson !== 'string' || Buffer.byteLength(document.payloadJson, 'utf8') > CUSTOM_CAKE_RECORD_LIMIT) fail('PERSISTENCE_INVALID_RECORD')
+  if (document?.schemaVersion !== 1 || typeof document.payloadJson !== 'string') fail('PERSISTENCE_INVALID_RECORD')
   let value
   try { value = JSON.parse(document.payloadJson) } catch { fail('PERSISTENCE_INVALID_RECORD') }
   validate(kind, value)
+  for (const [key, expected] of Object.entries(metadata(kind, value))) if (document[key] !== expected) fail('PERSISTENCE_INVALID_RECORD')
   return value
 }
 
@@ -59,6 +78,7 @@ export function customCakeDocumentId(namespace, value) {
 }
 
 function preserve(kind, before, after) {
+  if (['claims', 'commits', 'histories', 'chunks'].includes(kind) && !equal(before, after)) fail('PERSISTENCE_IMMUTABLE_RECORD')
   const immutable = kind === 'snapshots' ? ['request', 'creationResponse'] : kind === 'claims' || kind === 'commits' ? Object.keys(before) : []
   for (const key of immutable) if (!equal(before[key], after[key])) fail('PERSISTENCE_IMMUTABLE_RECORD')
   if (kind === 'snapshots') {
@@ -68,6 +88,9 @@ function preserve(kind, before, after) {
     if (old.acceptanceHistory && !equal(old.acceptanceHistory, next.acceptanceHistory?.slice(0, old.acceptanceHistory.length))) fail('PERSISTENCE_IMMUTABLE_RECORD')
     if (old.quote) for (const key of ['pricingPolicyVersion', 'promotionEligibilityAt', 'currency', 'baseCents', 'cakeDiscountCents', 'paidSmoreQuantity', 'paidSmoreTotalCents', 'giftSmoreQuantity']) if (!equal(old.quote[key], next.quote?.[key])) fail('PERSISTENCE_IMMUTABLE_RECORD')
   }
+  if (kind === 'sessions') for (const key of ['requestId', 'tokenDigest', 'issuedAt', 'expiresAt']) if (!equal(before[key], after[key])) fail('PERSISTENCE_IMMUTABLE_RECORD')
+  if (kind === 'photos') for (const key of ['requestId', 'sessionId', 'uploadId', 'inputDigest', 'fileId', 'intentAt']) if (!equal(before[key], after[key])) fail('PERSISTENCE_IMMUTABLE_RECORD')
+  if (kind === 'quotas' && before.requestId !== after.requestId) fail('PERSISTENCE_IMMUTABLE_RECORD')
 }
 
 /** Inject a node-appwrite Databases service. Callbacks perform database work only:
@@ -79,8 +102,82 @@ export function createCustomCakeRepository(databases, config = {}) {
     if (!CUSTOM_CAKE_RESOURCE_KEYS.includes(kind) || !resourceId.test(id)) fail('PERSISTENCE_INVALID_RECORD')
     return { databaseId: config.databaseId, collectionId: config[kind], documentId: id, ...(transactionId ? { transactionId } : {}) }
   }
+  async function raw(kind, id, transactionId) {
+    try { return await databases.getDocument(params(kind, id, transactionId)) } catch (error) { if (error?.code === 404) return null; throw error }
+  }
+  const historyFields = ['quoteHistory', 'transitionAudit', 'acceptanceHistory']
+  const historyId = (id, field, index) => customCakeDocumentId('custom-cake-history-v1', `${id}/${field}/${index}`)
+  async function hydrate(kind, id, document, transactionId) {
+    if (!document || document.schemaVersion !== 1 || typeof document.payloadJson !== 'string' || Buffer.byteLength(document.payloadJson) > CUSTOM_CAKE_RECORD_LIMIT) fail('PERSISTENCE_INVALID_RECORD')
+    let envelope
+    try { envelope = JSON.parse(document.payloadJson) } catch { fail('PERSISTENCE_INVALID_RECORD') }
+    if (envelope.format !== 'custom-cake-storage.v1') fail('PERSISTENCE_INVALID_RECORD')
+    let body = envelope.body
+    if (envelope.chunks) {
+      if (!Array.isArray(envelope.chunks) || !envelope.chunks.length) fail('PERSISTENCE_INVALID_RECORD')
+      const chunks = []
+      for (const chunkId of envelope.chunks) {
+        const chunk = await raw('chunks', chunkId, transactionId)
+        if (!chunk || chunk.lookupKey !== `${kind}/${id}` || typeof chunk.payloadJson !== 'string') fail('PERSISTENCE_INVALID_RECORD')
+        chunks.push(Buffer.from(chunk.payloadJson, 'base64'))
+      }
+      body = Buffer.concat(chunks).toString('utf8')
+      if (createHash('sha256').update(body).digest('hex') !== envelope.digest) fail('PERSISTENCE_INVALID_RECORD')
+    }
+    let value
+    try { value = JSON.parse(body) } catch { fail('PERSISTENCE_INVALID_RECORD') }
+    if (kind === 'snapshots') {
+      for (const field of historyFields) {
+        const count = envelope.historyCounts?.[field]
+        if (!Number.isSafeInteger(count) || count < 0) fail('PERSISTENCE_INVALID_RECORD')
+        const history = []
+        for (let index = 0; index < count; index++) {
+          const event = await get('histories', historyId(id, field, index), transactionId)
+          if (!event || event.snapshotId !== id || event.field !== field || event.index !== index) fail('PERSISTENCE_INVALID_RECORD')
+          history.push(event.value)
+        }
+        if (field === 'acceptanceHistory') { if (value.request.contractVersion === 'custom-cake.v1') value.lookupResponse[field] = history }
+        else value[field] = history
+      }
+    }
+    return decodeCustomCakeRecord(kind, { ...document, payloadJson: JSON.stringify(value) })
+  }
   async function get(kind, id, transactionId) {
-    try { return decodeCustomCakeRecord(kind, await databases.getDocument(params(kind, id, transactionId))) } catch (error) { if (error?.code === 404) return null; throw error }
+    const document = await raw(kind, id, transactionId)
+    return document ? hydrate(kind, id, document, transactionId) : null
+  }
+  async function store(kind, id, value, transactionId, replace = false, before) {
+    const encoded = encodeCustomCakeRecord(kind, value), stored = clone(value)
+    const envelope = { format: 'custom-cake-storage.v1' }
+    if (kind === 'snapshots') {
+      envelope.historyCounts = {}
+      for (const field of historyFields) {
+        const history = field === 'acceptanceHistory' ? stored.lookupResponse[field] || [] : stored[field]
+        const prior = field === 'acceptanceHistory' ? before?.lookupResponse[field] || [] : before?.[field] || []
+        envelope.historyCounts[field] = history.length
+        for (let index = prior.length; index < history.length; index++) await store('histories', historyId(id, field, index), { snapshotId: id, field, index, value: history[index] }, transactionId)
+        if (field === 'acceptanceHistory') delete stored.lookupResponse[field]
+        else delete stored[field]
+      }
+    }
+    const body = JSON.stringify(stored)
+    envelope.body = body
+    if (Buffer.byteLength(JSON.stringify(envelope)) > CUSTOM_CAKE_RECORD_LIMIT) {
+      delete envelope.body
+      envelope.chunks = []
+      envelope.digest = createHash('sha256').update(body).digest('hex')
+      const bytes = Buffer.from(body)
+      for (let offset = 0; offset < bytes.length; offset += 48000) {
+        const payloadJson = bytes.subarray(offset, offset + 48000).toString('base64')
+        const chunkId = customCakeDocumentId('custom-cake-chunk-v1', `${kind}/${id}/${offset}/${payloadJson}`)
+        envelope.chunks.push(chunkId)
+        if (!await raw('chunks', chunkId, transactionId)) await databases.createDocument({ ...params('chunks', chunkId, transactionId), data: { schemaVersion: 1, payloadJson, lookupKey: `${kind}/${id}`, state: '', dueAt: '' }, permissions: [] })
+      }
+    }
+    const payloadJson = JSON.stringify(envelope)
+    if (Buffer.byteLength(payloadJson) > CUSTOM_CAKE_RECORD_LIMIT) fail('PERSISTENCE_RECORD_TOO_LARGE')
+    await databases[replace ? 'updateDocument' : 'createDocument']({ ...params(kind, id, transactionId), data: { ...encoded, payloadJson }, permissions: [] })
+    return clone(value)
   }
   function replay(claim, identity) {
     if (!claim) return null
@@ -91,13 +188,12 @@ export function createCustomCakeRepository(databases, config = {}) {
     return {
       transactionId,
       get: (kind, id) => get(kind, id, transactionId),
-      async create(kind, id, value) { await databases.createDocument({ ...params(kind, id, transactionId), data: encodeCustomCakeRecord(kind, value), permissions: [] }); return clone(value) },
+      create: (kind, id, value) => store(kind, id, value, transactionId),
       async replace(kind, id, value) {
         const before = await get(kind, id, transactionId)
         if (!before) fail('PERSISTENCE_NOT_FOUND')
         preserve(kind, before, value)
-        await databases.updateDocument({ ...params(kind, id, transactionId), data: encodeCustomCakeRecord(kind, value), permissions: [] })
-        return clone(value)
+        return store(kind, id, value, transactionId, true, before)
       },
       async claimRequest(identity, creationResponse) {
         const existing = await get('claims', identity.requestId, transactionId)
@@ -109,6 +205,16 @@ export function createCustomCakeRepository(databases, config = {}) {
   }
   return {
     get: (kind, id) => get(kind, id),
+    async list(kind, { lookupKey, state, dueBefore, cursor, limit = 100 } = {}) {
+      if (!CUSTOM_CAKE_RESOURCE_KEYS.includes(kind) || !Number.isInteger(limit) || limit < 1 || limit > 100 || (dueBefore && !instant(dueBefore))) fail('PERSISTENCE_INVALID_RECORD')
+      const queries = [Query.limit(limit), Query.orderAsc('$id')]
+      if (lookupKey !== undefined) queries.push(Query.equal('lookupKey', lookupKey))
+      if (state !== undefined) queries.push(Query.equal('state', state))
+      if (dueBefore !== undefined) queries.push(Query.lessThanEqual('dueAt', dueBefore))
+      if (cursor !== undefined) queries.push(Query.cursorAfter(cursor))
+      const result = await databases.listDocuments({ databaseId: config.databaseId, collectionId: config[kind], queries, total: false })
+      return Promise.all(result.documents.map(async document => ({ id: document.$id, value: await hydrate(kind, document.$id, document) })))
+    },
     findReplay: async identity => replay(await get('claims', identity.requestId), identity),
     async atomic(operationId, work) {
       const id = customCakeDocumentId('custom-cake-operation-v1', operationId)

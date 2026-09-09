@@ -17,6 +17,11 @@ function service() {
     docs, calls: [], uncertain: false,
     async createTransaction() { const id = `tx${++serial}`; txs.set(id, { view: structuredClone(docs), writes: new Map(), state: 'pending' }); return { $id: id } },
     async getDocument(p) { api.calls.push(['get', p]); const d = view(p).get(key(p)); if (!d) throw fail(404); return structuredClone(d.data) },
+    async listDocuments(p) {
+      let documents = [...docs.entries()].filter(([k]) => k.startsWith(`${p.collectionId}/`)).map(([, v]) => v.data)
+      for (const query of p.queries.map(JSON.parse)) if (query.method === 'equal') documents = documents.filter(d => query.values.includes(d[query.attribute]))
+      return { documents: structuredClone(documents), total: documents.length }
+    },
     async createDocument(p) { api.calls.push(['create', p]); if (view(p).has(key(p))) throw fail(409); return write(p) },
     async updateDocument(p) { api.calls.push(['update', p]); if (!view(p).has(key(p))) throw fail(404); return write(p) },
     async updateTransaction(p) {
@@ -40,7 +45,7 @@ function service() {
   return api
 }
 
-const config = { enabled: true, databaseId: 'test-db', claims: 'new_claims', snapshots: 'new_snapshots', sessions: 'new_sessions', photos: 'new_photos', quotas: 'new_quotas', outbox: 'new_outbox', commits: 'new_commits', bucketId: 'new-photos' }
+const config = { enabled: true, databaseId: 'test-db', claims: 'new_claims', snapshots: 'new_snapshots', sessions: 'new_sessions', photos: 'new_photos', quotas: 'new_quotas', outbox: 'new_outbox', commits: 'new_commits', chunks: 'new_chunks', histories: 'new_histories', bucketId: 'new-photos' }
 const identity = { requestId: '11111111-1111-4111-8111-111111111111', wire: 'custom-cake.v1', creatorScope: 'anonymous:synthetic', fingerprint: 'a'.repeat(64) }
 const receipt = () => { const f = fixture('custom-v1'); return { request: f.request, creationResponse: f.created, lookupResponse: f.lookup, quoteHistory: [], transitionAudit: [] } }
 
@@ -52,7 +57,7 @@ test('persistence exports default unavailable and round trips saved prices witho
   const saved = receipt(); const packed = m.encodeCustomCakeRecord('snapshots', saved)
   assert.deepEqual(m.decodeCustomCakeRecord('snapshots', packed), saved)
   for (const value of [NaN, Infinity, undefined, -0]) assert.throws(() => m.encodeCustomCakeRecord('outbox', { value }), { code: 'PERSISTENCE_INVALID_RECORD' })
-  assert.throws(() => m.encodeCustomCakeRecord('outbox', { value: 'x'.repeat(65536) }), { code: 'PERSISTENCE_RECORD_TOO_LARGE' })
+  assert.equal(m.decodeCustomCakeRecord('outbox', m.encodeCustomCakeRecord('outbox', { value: 'x'.repeat(65536) })).value.length, 65536)
 })
 
 test('one shared request namespace stores original replay and rejects changed wire or creator', async () => {
@@ -104,3 +109,77 @@ test('snapshot replacement preserves immutable receipt, history and pricing whil
 })
 
 export { service, config }
+
+test('unresolved commit fails closed; JSON cannot silently erase holes or typed metadata', async () => {
+  const m = await load(), sdk = service(), repo = m.createCustomCakeRepository(sdk, config)
+  sdk.updateTransaction = async () => { throw Object.assign(new Error('timeout'), { code: 504 }) }
+  await assert.rejects(repo.atomic('lost', async tx => { await tx.claimRequest(identity, { receipt: 1 }); return true }), { code: 'PERSISTENCE_UNCERTAIN' })
+  assert.equal(await repo.findReplay(identity), null)
+  assert.throws(() => m.encodeCustomCakeRecord('outbox', { holes: Array(1) }), { code: 'PERSISTENCE_INVALID_RECORD' })
+})
+
+test('durable metadata rejects raw tokens and invalid photo/quota states; snapshot discovery is indexed', async () => {
+  const m = await load()
+  for (const [kind, value] of [
+    ['sessions', { requestId: identity.requestId, token: 'secret' }],
+    ['photos', { state: 'public' }], ['quotas', { used: 6 }],
+  ]) assert.throws(() => m.encodeCustomCakeRecord(kind, value), { code: 'PERSISTENCE_INVALID_RECORD' })
+  const packed = m.encodeCustomCakeRecord('snapshots', receipt())
+  assert.equal(packed.lookupKey, 'CUSTOM-EXAMPLE-1')
+  assert.equal(packed.state, 'requested')
+})
+
+test('legal large Unicode requests roundtrip through chunks; audit history appends without rewriting previous events', async () => {
+  const m = await load(), sdk = service(), repo = m.createCustomCakeRepository(sdk, config)
+  const saved = receipt(), selections = [['single', '6in'], ['single', '8in'], ['single', '10in'], ['double', '4in+6in'], ['double', '6in+8in'], ['double', '8in+10in']]
+  saved.request.lines = selections.flatMap(([tier, size], i) => Array.from({ length: 5 }, (_, n) => ({ ...saved.request.lines[0], lineId: `line_${i}_${n}`, tier, size, photoRefs: [], designNote: '한'.repeat(1000) })))
+  saved.lookupResponse.lines = structuredClone(saved.request.lines)
+  assert.ok(Buffer.byteLength(JSON.stringify(saved)) > 180000)
+  await repo.atomic('large', async tx => { await tx.create('snapshots', identity.requestId, saved); return saved.creationResponse })
+  assert.deepEqual(await repo.get('snapshots', identity.requestId), saved)
+  for (const row of sdk.docs.values()) assert.ok(Buffer.byteLength(row.data.payloadJson) <= 65535)
+  for (let n = 0; n < 2; n++) await repo.atomic(`history-${n}`, async tx => { const value = await tx.get('snapshots', identity.requestId); value.quoteHistory.push({ quoteVersion: n + 1, explanation: '한'.repeat(1000) }); await tx.replace('snapshots', identity.requestId, value); return null })
+  assert.equal((await repo.get('snapshots', identity.requestId)).quoteHistory.length, 2)
+  assert.equal([...sdk.docs.keys()].filter(k => k.startsWith('new_histories/')).length, 2)
+  assert.ok(sdk.calls.filter(([verb, p]) => verb === 'update' && p.collectionId === 'new_histories').length === 0)
+  const discovered = await repo.list('snapshots', { lookupKey: 'CUSTOM-EXAMPLE-1' })
+  assert.equal(discovered[0].value.quoteHistory.length, 2)
+  await assert.rejects(repo.atomic('rewrite-history', async tx => {
+    const history = [...sdk.docs.entries()].find(([k]) => k.startsWith('new_histories/'))
+    const id = history[0].split('/')[1], event = await tx.get('histories', id)
+    await tx.replace('histories', id, { ...event, value: { changed: true } }); return null
+  }), { code: 'PERSISTENCE_IMMUTABLE_RECORD' })
+})
+
+test('concurrent quota increments share one durable fence and session expiry is immutable', async () => {
+  const m = await load(), sdk = service(), repo = m.createCustomCakeRepository(sdk, config)
+  await repo.atomic('quota', async tx => {
+    await tx.create('quotas', identity.requestId, { requestId: identity.requestId, used: 4 })
+    await tx.create('sessions', 'session1', { requestId: identity.requestId, tokenDigest: 'a'.repeat(64), issuedAt: '2026-09-01T00:00:00.000Z', expiresAt: '2026-09-01T00:30:00.000Z' }); return null
+  })
+  let release; const barrier = new Promise(r => { release = r }); let entered = 0
+  const reserve = id => repo.atomic(id, async tx => { const q = await tx.get('quotas', identity.requestId); if (++entered === 2) release(); await barrier; await tx.replace('quotas', identity.requestId, { ...q, used: q.used + 1 }); return true })
+  const result = await Promise.allSettled([reserve('upload1'), reserve('upload2')])
+  assert.equal(result.filter(r => r.status === 'fulfilled').length, 1)
+  assert.equal((await repo.get('quotas', identity.requestId)).used, 5)
+  await assert.rejects(repo.atomic('extend-session', async tx => { const s = await tx.get('sessions', 'session1'); s.expiresAt = '2026-09-01T01:00:00.000Z'; await tx.replace('sessions', 'session1', s); return null }), { code: 'PERSISTENCE_IMMUTABLE_RECORD' })
+})
+
+test('concurrent quote/status/audit writes have one winner and preserve the original creation receipt', async () => {
+  const m = await load(), sdk = service(), repo = m.createCustomCakeRepository(sdk, config)
+  await repo.atomic('snapshot', async tx => { await tx.create('snapshots', identity.requestId, receipt()); return null })
+  let release; const barrier = new Promise(r => { release = r }); let entered = 0
+  const mutate = (id, status) => repo.atomic(id, async tx => {
+    const s = await tx.get('snapshots', identity.requestId)
+    if (++entered === 2) release(); await barrier
+    s.lookupResponse.status = status
+    s.transitionAudit.push({ action: id, source: 'requested', target: status, quoteVersion: 1, adminId: 'admin1', at: '2026-09-01T00:00:00.000Z' })
+    await tx.replace('snapshots', identity.requestId, s); await tx.create('outbox', id, { state: 'pending' }); return s.lookupResponse
+  })
+  const result = await Promise.allSettled([mutate('quote', 'quoted'), mutate('cancel', 'cancelled')])
+  assert.equal(result.filter(r => r.status === 'fulfilled').length, 1)
+  const saved = await repo.get('snapshots', identity.requestId)
+  assert.equal(saved.transitionAudit.length, 1); assert.equal(saved.transitionAudit[0].target, saved.lookupResponse.status)
+  assert.deepEqual(saved.creationResponse, receipt().creationResponse)
+  assert.equal([...sdk.docs.keys()].filter(k => k.startsWith('new_outbox/')).length, 1)
+})
