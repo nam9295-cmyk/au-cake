@@ -621,6 +621,51 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
   }
 }
 
+export function normalizeLocalStoredReservation(reservation: Reservation): Reservation {
+  return {
+    ...reservation,
+    customerEmail: typeof reservation.customerEmail === 'string' ? reservation.customerEmail.trim().toLowerCase() : '',
+    productId: getProductById(reservation.productId).id,
+    chocolateExtra: normalizeChocolateExtra(getProductById(reservation.productId).id, reservation.chocolateExtra),
+    ...(getProductById(reservation.productId).id === 'brownie-cheesecake'
+      && Object.hasOwn(reservation, 'brownieCreamOption')
+      ? { brownieCreamOption: normalizeBrownieCreamOption(getProductById(reservation.productId).id, reservation.brownieCreamOption) }
+      : {}),
+    cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
+    poundAddon: normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
+    ...(reservation.cupcakeFinish == null ? {} : {
+      cupcakeFinish: normalizeCupcakeFinish(getProductById(reservation.productId).id, reservation.cupcakeFinish),
+    }),
+    chocolateType: normalizeStoredReservationChocolateType(
+      getProductById(reservation.productId).id,
+      reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
+      normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
+    ),
+    chocolateIcingCount: normalizeChocolateIcingCount(
+      getProductById(reservation.productId).id,
+      reservation.chocolateIcingCount,
+    ),
+    ...normalizeCupcakeFinishCounts(
+      getProductById(reservation.productId).id,
+      reservation.vanillaCreamCount,
+      reservation.partyDecorationCount,
+    ),
+    vanillaCakeSheet: normalizeStoredVanillaCakeSheet(getProductById(reservation.productId).id, reservation.vanillaCakeSheet),
+    vanillaCakeFlavor: normalizeStoredVanillaCakeFlavor(getProductById(reservation.productId).id, reservation.vanillaCakeFlavor),
+    vanillaCakePointColor: normalizeVanillaCakePointColor(getProductById(reservation.productId).id, reservation.vanillaCakePointColor),
+    quantity: normalizeQuantity(reservation.quantity, reservation.productId),
+    totalPrice: reservation.totalPriceCents === undefined || reservation.totalPriceCents === null
+      ? reservation.totalPrice
+      : fromCurrencyCents(reservation.totalPriceCents),
+    totalPriceCents: reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice),
+    subtotalCents: reservation.subtotalCents,
+    discountPercent: reservation.discountPercent,
+    discountCents: reservation.discountCents,
+    appliedPromoCodeLast4: reservation.appliedPromoCodeLast4,
+    reviewCouponId: reservation.reviewCouponId,
+  }
+}
+
 export function toReservation(document: AppwriteReservationDocument): Reservation {
   const reservation: Reservation = {
     id: document.$id,

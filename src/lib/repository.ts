@@ -2,9 +2,7 @@ import { AppwriteException, ExecutionMethod, ID, OAuthProvider, Query, type Mode
 import { account, appwriteConfig, databases, functions, isAppwriteConfigured } from './appwrite'
 import { MARKET } from './market'
 import { normalizeAuDailyLimitText } from './legacy-settings'
-import { DEFAULT_CHOCOLATE_TYPE, DEFAULT_CUPCAKE_FINISH, DEFAULT_POUND_ADDON, DEFAULT_PRODUCT_ID, DEFAULT_SETTINGS, MAX_RESERVATION_QUANTITY, applyPromoDiscount, fromCurrencyCents, getProductById, getValidPromoCode, toCurrencyCents, getReservationPrice, normalizeCakeSize, normalizeChocolateIcingCount, normalizeCupcakeFinish, normalizeCupcakeFinishCounts, normalizeVanillaCakeFlavor, normalizeVanillaCakePointColor, normalizeVanillaCakeSheet, normalizeStoredVanillaCakeFlavor, normalizeStoredVanillaCakeSheet, normalizeReservationChocolateType, usesReservationChocolateType, normalizePoundAddon } from './constants'
-import { normalizeStoredCakeSize } from './cake-serving'
-import { normalizeChocolateExtra } from './chocolate-extras'
+import { DEFAULT_CUPCAKE_FINISH, DEFAULT_PRODUCT_ID, DEFAULT_SETTINGS, MAX_RESERVATION_QUANTITY, applyPromoDiscount, getProductById, getValidPromoCode, toCurrencyCents, getReservationPrice, normalizeCakeSize, normalizeChocolateIcingCount, normalizeCupcakeFinish, normalizeCupcakeFinishCounts, normalizeVanillaCakeFlavor, normalizeVanillaCakePointColor, normalizeVanillaCakeSheet, normalizeReservationChocolateType, normalizePoundAddon } from './constants'
 import { isBrownieCheesecakeProduct, normalizeBrownieCreamOption } from './brownie-cream'
 import { CLASS_TYPE_ID, calculateClassPricing, filterClassReservationsForAdmin, generateClassReservationNumber, getClassDurationMinutes, type CakePickupOpening, type ClassBookedSlot } from './class-utils'
 import type { CakeOrderRequest, CakeOrderReservation, CacaoPercent, ClassPaymentStatus, ClassReservation, ClassReservationFilters, ClassReservationInput, ClassReservationStatus, PaymentStatus, ProductId, PublicReservation, Reservation, ReservationFilters, ReservationInput, ReservationStatus, StoreSettings } from './types'
@@ -12,6 +10,7 @@ import { generateReservationNumber, isCakePickupServiceTime, isPickupTimeAllowed
 import { buildCakeOrderRequest, buildCakeReservationRequest, normalizeReviewCouponCode, parseCakeOrderResult, parseCakeReservationResult, parseReservationApiCapabilities } from './review-coupon-client'
 import { assertReservationRepricingAllowed } from './admin-reservation-edit'
 import { toReservation, toPublicReservation, type AppwriteReservationDocument } from './stored-order-reader'
+import { normalizeLocalStoredReservation as normalizeReservation } from './stored-order-reader'
 export { toReservation } from './stored-order-reader'
 
 const LOCAL_RESERVATIONS_KEY = `verygood-cake-reservations-${MARKET.toLowerCase()}`
@@ -153,50 +152,6 @@ async function listAllDocuments(databaseId: string, collectionId: string, querie
   throw new Error('APPWRITE_RESULT_LIMIT_EXCEEDED')
 }
 
-function normalizeReservation(reservation: Reservation): Reservation {
-  return {
-    ...reservation,
-    customerEmail: typeof reservation.customerEmail === 'string' ? reservation.customerEmail.trim().toLowerCase() : '',
-    productId: getProductById(reservation.productId).id,
-    chocolateExtra: normalizeChocolateExtra(getProductById(reservation.productId).id, reservation.chocolateExtra),
-    ...(getProductById(reservation.productId).id === 'brownie-cheesecake'
-      && Object.hasOwn(reservation, 'brownieCreamOption')
-      ? { brownieCreamOption: normalizeBrownieCreamOption(getProductById(reservation.productId).id, reservation.brownieCreamOption) }
-      : {}),
-    cakeSize: normalizeStoredCakeSize(reservation.cakeSize),
-    poundAddon: normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
-    ...(reservation.cupcakeFinish == null ? {} : {
-      cupcakeFinish: normalizeCupcakeFinish(getProductById(reservation.productId).id, reservation.cupcakeFinish),
-    }),
-    chocolateType: normalizeStoredReservationChocolateType(
-      getProductById(reservation.productId).id,
-      reservation.chocolateType || DEFAULT_CHOCOLATE_TYPE,
-      normalizePoundAddon(getProductById(reservation.productId).id, reservation.poundAddon || DEFAULT_POUND_ADDON),
-    ),
-    chocolateIcingCount: normalizeChocolateIcingCount(
-      getProductById(reservation.productId).id,
-      reservation.chocolateIcingCount,
-    ),
-    ...normalizeCupcakeFinishCounts(
-      getProductById(reservation.productId).id,
-      reservation.vanillaCreamCount,
-      reservation.partyDecorationCount,
-    ),
-    vanillaCakeSheet: normalizeStoredVanillaCakeSheet(getProductById(reservation.productId).id, reservation.vanillaCakeSheet),
-    vanillaCakeFlavor: normalizeStoredVanillaCakeFlavor(getProductById(reservation.productId).id, reservation.vanillaCakeFlavor),
-    vanillaCakePointColor: normalizeVanillaCakePointColor(getProductById(reservation.productId).id, reservation.vanillaCakePointColor),
-    quantity: normalizeQuantity(reservation.quantity, reservation.productId),
-    totalPrice: reservation.totalPriceCents === undefined || reservation.totalPriceCents === null
-      ? reservation.totalPrice
-      : fromCurrencyCents(reservation.totalPriceCents),
-    totalPriceCents: reservation.totalPriceCents ?? toCurrencyCents(reservation.totalPrice),
-    subtotalCents: reservation.subtotalCents,
-    discountPercent: reservation.discountPercent,
-    discountCents: reservation.discountCents,
-    appliedPromoCodeLast4: reservation.appliedPromoCodeLast4,
-    reviewCouponId: reservation.reviewCouponId,
-  }
-}
 
 function normalizeCustomerEmail(value: unknown): string {
   if (typeof value !== 'string') throw new Error('INVALID_EMAIL')
@@ -209,16 +164,6 @@ function normalizeCustomerEmail(value: unknown): string {
 
 
 
-function normalizeStoredReservationChocolateType(
-  productId: ProductId,
-  chocolateType: unknown,
-  poundAddon: Reservation['poundAddon'],
-) {
-  return usesReservationChocolateType(productId, poundAddon)
-    && (chocolateType === 'dark' || chocolateType === 'milk')
-    ? chocolateType
-    : DEFAULT_CHOCOLATE_TYPE
-}
 
 
 
