@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "pretest": "node --test tests/order-core-golden.test.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",
     "lint": "eslint .",
