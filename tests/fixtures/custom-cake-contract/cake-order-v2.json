@@ -1,0 +1,501 @@
+{
+  "request": {
+    "contractVersion": "cake-order.v2",
+    "requestId": "11111111-1111-4111-8111-111111111111",
+    "customer": {
+      "customerName": "Contract Example",
+      "customerPhone": "0412345678",
+      "customerEmail": "contract@example.invalid"
+    },
+    "pickup": {
+      "pickupDate": "2026-10-05",
+      "pickupTime": "12:00"
+    },
+    "requestNote": "",
+    "privacyConsent": true,
+    "promoCode": "",
+    "lines": [
+      {
+        "kind": "cake",
+        "lineId": "cake_A",
+        "parentCakeLineId": null,
+        "productId": "pave-cake",
+        "quantity": 1,
+        "options": {
+          "cakeSize": "6in",
+          "chocolateType": "dark",
+          "poundAddon": "none",
+          "cupcakeFinish": "basic",
+          "chocolateIcingCount": 0,
+          "chocolateExtra": "none",
+          "brownieCreamOption": "none",
+          "vanillaCreamCount": 0,
+          "partyDecorationCount": 0,
+          "vanillaCakeSheet": "vanilla",
+          "vanillaCakeFlavor": "triple-berry",
+          "vanillaCakePointColor": "pink",
+          "individualPackaging": false
+        }
+      },
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A"
+      }
+    ]
+  },
+  "created": {
+    "contractVersion": "cake-order.v2",
+    "requestId": "11111111-1111-4111-8111-111111111111",
+    "reservationNumber": "VG-C-AU-CONTRACT-1",
+    "status": "예약신청",
+    "pricing": {
+      "currency": "AUD",
+      "pricingPolicyVersion": "cake-order.2026-09.v2",
+      "pricedAt": "2026-10-02T00:00:00.000Z",
+      "lines": [
+        {
+          "kind": "cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "pave-cake",
+          "quantity": 1,
+          "options": {
+            "cakeSize": "6in",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "cupcakeFinish": "basic",
+            "chocolateIcingCount": 0,
+            "chocolateExtra": "none",
+            "brownieCreamOption": "none",
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "individualPackaging": false
+          },
+          "unitPriceCents": 7900,
+          "chocolateExtraCents": 0,
+          "subtotalCents": 7900,
+          "discountPercent": 0,
+          "discountCents": 0,
+          "individualPackagingPieces": 0,
+          "individualPackagingFeeCents": 0,
+          "totalCents": 7900
+        },
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "cake_A",
+          "unitPriceCents": 450,
+          "subtotalCents": 900,
+          "discountPercent": 30,
+          "discountCents": 270,
+          "totalCents": 630
+        }
+      ],
+      "subtotalCents": 8800,
+      "discountCents": 270,
+      "individualPackagingFeeCents": 0,
+      "totalCents": 8530
+    }
+  },
+  "lookup": {
+    "contractVersion": "cake-order.v2",
+    "reservationNumber": "VG-C-AU-CONTRACT-1",
+    "status": "예약신청",
+    "customer": {
+      "customerName": "Contract Example",
+      "customerPhone": "0412345678",
+      "customerEmail": "contract@example.invalid"
+    },
+    "pickup": {
+      "pickupDate": "2026-10-05",
+      "pickupTime": "12:00"
+    },
+    "pricing": {
+      "currency": "AUD",
+      "pricingPolicyVersion": "cake-order.2026-09.v2",
+      "pricedAt": "2026-10-02T00:00:00.000Z",
+      "lines": [
+        {
+          "kind": "cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "pave-cake",
+          "quantity": 1,
+          "options": {
+            "cakeSize": "6in",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "cupcakeFinish": "basic",
+            "chocolateIcingCount": 0,
+            "chocolateExtra": "none",
+            "brownieCreamOption": "none",
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "individualPackaging": false
+          },
+          "unitPriceCents": 7900,
+          "chocolateExtraCents": 0,
+          "subtotalCents": 7900,
+          "discountPercent": 0,
+          "discountCents": 0,
+          "individualPackagingPieces": 0,
+          "individualPackagingFeeCents": 0,
+          "totalCents": 7900
+        },
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "cake_A",
+          "unitPriceCents": 450,
+          "subtotalCents": 900,
+          "discountPercent": 30,
+          "discountCents": 270,
+          "totalCents": 630
+        }
+      ],
+      "subtotalCents": 8800,
+      "discountCents": 270,
+      "individualPackagingFeeCents": 0,
+      "totalCents": 8530
+    }
+  },
+  "smoreCases": [
+    {
+      "kind": "standalone-smore",
+      "lineId": "smore_S",
+      "productId": "smore-stick",
+      "quantity": 1,
+      "parentCakeLineId": null,
+      "unitPriceCents": 450,
+      "subtotalCents": 450,
+      "discountPercent": 0,
+      "discountCents": 0,
+      "totalCents": 450
+    },
+    {
+      "kind": "standalone-smore",
+      "lineId": "smore_S",
+      "productId": "smore-stick",
+      "quantity": 6,
+      "parentCakeLineId": null,
+      "unitPriceCents": 450,
+      "subtotalCents": 2700,
+      "discountPercent": 0,
+      "discountCents": 0,
+      "totalCents": 2700
+    },
+    {
+      "kind": "standalone-smore",
+      "lineId": "smore_S",
+      "productId": "smore-stick",
+      "quantity": 12,
+      "parentCakeLineId": null,
+      "unitPriceCents": 450,
+      "subtotalCents": 5400,
+      "discountPercent": 0,
+      "discountCents": 0,
+      "totalCents": 5400
+    },
+    {
+      "kind": "cake-addon-smore",
+      "lineId": "smore_A",
+      "productId": "smore-stick",
+      "quantity": 1,
+      "parentCakeLineId": "cake_A",
+      "unitPriceCents": 450,
+      "subtotalCents": 450,
+      "discountPercent": 30,
+      "discountCents": 135,
+      "totalCents": 315
+    },
+    {
+      "kind": "cake-addon-smore",
+      "lineId": "smore_A",
+      "productId": "smore-stick",
+      "quantity": 6,
+      "parentCakeLineId": "cake_A",
+      "unitPriceCents": 450,
+      "subtotalCents": 2700,
+      "discountPercent": 30,
+      "discountCents": 810,
+      "totalCents": 1890
+    },
+    {
+      "kind": "cake-addon-smore",
+      "lineId": "smore_A",
+      "productId": "smore-stick",
+      "quantity": 12,
+      "parentCakeLineId": "cake_A",
+      "unitPriceCents": 450,
+      "subtotalCents": 5400,
+      "discountPercent": 30,
+      "discountCents": 1620,
+      "totalCents": 3780
+    }
+  ],
+  "couponExample": {
+    "currency": "AUD",
+    "pricingPolicyVersion": "cake-order.2026-09.v2",
+    "pricedAt": "2026-10-02T00:00:00.000Z",
+    "lines": [
+      {
+        "kind": "cake",
+        "lineId": "cake_A",
+        "parentCakeLineId": null,
+        "productId": "pave-cake",
+        "quantity": 1,
+        "options": {
+          "cakeSize": "6in",
+          "chocolateType": "dark",
+          "poundAddon": "none",
+          "cupcakeFinish": "basic",
+          "chocolateIcingCount": 0,
+          "chocolateExtra": "none",
+          "brownieCreamOption": "none",
+          "vanillaCreamCount": 0,
+          "partyDecorationCount": 0,
+          "vanillaCakeSheet": "vanilla",
+          "vanillaCakeFlavor": "triple-berry",
+          "vanillaCakePointColor": "pink",
+          "individualPackaging": false
+        },
+        "unitPriceCents": 7900,
+        "chocolateExtraCents": 0,
+        "subtotalCents": 7900,
+        "discountPercent": 5,
+        "discountCents": 395,
+        "individualPackagingPieces": 0,
+        "individualPackagingFeeCents": 0,
+        "totalCents": 7505
+      },
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A",
+        "unitPriceCents": 450,
+        "subtotalCents": 900,
+        "discountPercent": 30,
+        "discountCents": 270,
+        "totalCents": 630
+      }
+    ],
+    "subtotalCents": 8800,
+    "discountCents": 665,
+    "individualPackagingFeeCents": 0,
+    "totalCents": 8135
+  },
+  "referenceCases": [
+    {
+      "name": "missing-parent",
+      "lines": [
+        {
+          "kind": "cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "pave-cake",
+          "quantity": 1,
+          "options": {
+            "cakeSize": "6in",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "cupcakeFinish": "basic",
+            "chocolateIcingCount": 0,
+            "chocolateExtra": "none",
+            "brownieCreamOption": "none",
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "individualPackaging": false
+          }
+        },
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "absent"
+        }
+      ],
+      "error": "INVALID_LINE_REFERENCE"
+    },
+    {
+      "name": "self-parent",
+      "lines": [
+        {
+          "kind": "cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "pave-cake",
+          "quantity": 1,
+          "options": {
+            "cakeSize": "6in",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "cupcakeFinish": "basic",
+            "chocolateIcingCount": 0,
+            "chocolateExtra": "none",
+            "brownieCreamOption": "none",
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "individualPackaging": false
+          }
+        },
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "smore_A"
+        }
+      ],
+      "error": "INVALID_LINE_REFERENCE"
+    },
+    {
+      "name": "smore-parent",
+      "lines": [
+        {
+          "kind": "cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "pave-cake",
+          "quantity": 1,
+          "options": {
+            "cakeSize": "6in",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "cupcakeFinish": "basic",
+            "chocolateIcingCount": 0,
+            "chocolateExtra": "none",
+            "brownieCreamOption": "none",
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "individualPackaging": false
+          }
+        },
+        {
+          "kind": "standalone-smore",
+          "lineId": "smore_S",
+          "productId": "smore-stick",
+          "quantity": 1,
+          "parentCakeLineId": null
+        },
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "smore_S"
+        }
+      ],
+      "error": "INVALID_LINE_REFERENCE"
+    },
+    {
+      "name": "duplicate-id",
+      "lines": [
+        {
+          "kind": "cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "pave-cake",
+          "quantity": 1,
+          "options": {
+            "cakeSize": "6in",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "cupcakeFinish": "basic",
+            "chocolateIcingCount": 0,
+            "chocolateExtra": "none",
+            "brownieCreamOption": "none",
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "individualPackaging": false
+          }
+        },
+        {
+          "kind": "cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "pave-cake",
+          "quantity": 1,
+          "options": {
+            "cakeSize": "6in",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "cupcakeFinish": "basic",
+            "chocolateIcingCount": 0,
+            "chocolateExtra": "none",
+            "brownieCreamOption": "none",
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "individualPackaging": false
+          }
+        }
+      ],
+      "error": "INVALID_LINE_ID"
+    },
+    {
+      "name": "standalone-with-parent",
+      "lines": [
+        {
+          "kind": "cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "pave-cake",
+          "quantity": 1,
+          "options": {
+            "cakeSize": "6in",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "cupcakeFinish": "basic",
+            "chocolateIcingCount": 0,
+            "chocolateExtra": "none",
+            "brownieCreamOption": "none",
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "individualPackaging": false
+          }
+        },
+        {
+          "kind": "standalone-smore",
+          "lineId": "smore_S",
+          "productId": "smore-stick",
+          "quantity": 1,
+          "parentCakeLineId": "cake_A"
+        }
+      ],
+      "error": "INVALID_LINE_REFERENCE"
+    }
+  ]
+}

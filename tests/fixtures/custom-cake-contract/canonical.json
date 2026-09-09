@@ -1,0 +1,188 @@
+{
+  "cases": [
+    {
+      "name": "custom-cake.v1",
+      "request": {
+        "contractVersion": "custom-cake.v1",
+        "requestId": "11111111-1111-4111-8111-111111111111",
+        "customer": {
+          "customerName": "Contract Example",
+          "customerPhone": "0412345678",
+          "customerEmail": "contract@example.invalid"
+        },
+        "pickup": {
+          "pickupDate": "2026-10-05",
+          "pickupTime": "12:00"
+        },
+        "requestNote": "",
+        "privacyConsent": true,
+        "lines": [
+          {
+            "kind": "custom-cake",
+            "lineId": "cake_A",
+            "parentCakeLineId": null,
+            "productId": "custom-cake",
+            "quantity": 1,
+            "tier": "single",
+            "size": "6in",
+            "designNote": "Blue flowers",
+            "figurineSource": "shop",
+            "photoRefs": [
+              "photo_A",
+              "photo_B"
+            ]
+          },
+          {
+            "kind": "cake-addon-smore",
+            "lineId": "smore_A",
+            "productId": "smore-stick",
+            "quantity": 2,
+            "parentCakeLineId": "cake_A"
+          }
+        ]
+      },
+      "permuted": {
+        "contractVersion": "custom-cake.v1",
+        "requestId": "11111111-1111-4111-8111-111111111111",
+        "customer": {
+          "customerName": "Contract Example",
+          "customerPhone": "0412345678",
+          "customerEmail": "contract@example.invalid"
+        },
+        "pickup": {
+          "pickupDate": "2026-10-05",
+          "pickupTime": "12:00"
+        },
+        "requestNote": "",
+        "privacyConsent": true,
+        "lines": [
+          {
+            "kind": "cake-addon-smore",
+            "lineId": "smore_A",
+            "productId": "smore-stick",
+            "quantity": 2,
+            "parentCakeLineId": "cake_A"
+          },
+          {
+            "kind": "custom-cake",
+            "lineId": "cake_A",
+            "parentCakeLineId": null,
+            "productId": "custom-cake",
+            "quantity": 1,
+            "tier": "single",
+            "size": "6in",
+            "designNote": "Blue flowers",
+            "figurineSource": "shop",
+            "photoRefs": [
+              "photo_B",
+              "photo_A"
+            ]
+          }
+        ]
+      },
+      "canonicalJson": "{\"contractVersion\":\"custom-cake.v1\",\"customer\":{\"customerName\":\"Contract Example\",\"customerPhone\":\"0412345678\",\"customerEmail\":\"contract@example.invalid\"},\"pickup\":{\"pickupDate\":\"2026-10-05\",\"pickupTime\":\"12:00\"},\"requestNote\":\"\",\"privacyConsent\":true,\"lines\":[{\"kind\":\"custom-cake\",\"lineId\":\"cake_A\",\"parentCakeLineId\":null,\"productId\":\"custom-cake\",\"quantity\":1,\"tier\":\"single\",\"size\":\"6in\",\"designNote\":\"Blue flowers\",\"figurineSource\":\"shop\",\"photoRefs\":[\"photo_A\",\"photo_B\"]},{\"kind\":\"cake-addon-smore\",\"lineId\":\"smore_A\",\"productId\":\"smore-stick\",\"quantity\":2,\"parentCakeLineId\":\"cake_A\"}]}",
+      "domain": "custom-cake-request-v1\u0000",
+      "fingerprint": "e5542e361a924e528b9f915302403aa599ede16779613aeef6acef4556fd2785"
+    },
+    {
+      "name": "cake-order.v2",
+      "request": {
+        "contractVersion": "cake-order.v2",
+        "requestId": "11111111-1111-4111-8111-111111111111",
+        "customer": {
+          "customerName": "Contract Example",
+          "customerPhone": "0412345678",
+          "customerEmail": "contract@example.invalid"
+        },
+        "pickup": {
+          "pickupDate": "2026-10-05",
+          "pickupTime": "12:00"
+        },
+        "requestNote": "",
+        "privacyConsent": true,
+        "promoCode": "",
+        "lines": [
+          {
+            "kind": "cake",
+            "lineId": "cake_A",
+            "parentCakeLineId": null,
+            "productId": "pave-cake",
+            "quantity": 1,
+            "options": {
+              "cakeSize": "6in",
+              "chocolateType": "dark",
+              "poundAddon": "none",
+              "cupcakeFinish": "basic",
+              "chocolateIcingCount": 0,
+              "chocolateExtra": "none",
+              "brownieCreamOption": "none",
+              "vanillaCreamCount": 0,
+              "partyDecorationCount": 0,
+              "vanillaCakeSheet": "vanilla",
+              "vanillaCakeFlavor": "triple-berry",
+              "vanillaCakePointColor": "pink",
+              "individualPackaging": false
+            }
+          },
+          {
+            "kind": "cake-addon-smore",
+            "lineId": "smore_A",
+            "productId": "smore-stick",
+            "quantity": 2,
+            "parentCakeLineId": "cake_A"
+          }
+        ]
+      },
+      "permuted": {
+        "contractVersion": "cake-order.v2",
+        "requestId": "11111111-1111-4111-8111-111111111111",
+        "customer": {
+          "customerName": "Contract Example",
+          "customerPhone": "0412345678",
+          "customerEmail": "contract@example.invalid"
+        },
+        "pickup": {
+          "pickupDate": "2026-10-05",
+          "pickupTime": "12:00"
+        },
+        "requestNote": "",
+        "privacyConsent": true,
+        "promoCode": "",
+        "lines": [
+          {
+            "kind": "cake-addon-smore",
+            "lineId": "smore_A",
+            "productId": "smore-stick",
+            "quantity": 2,
+            "parentCakeLineId": "cake_A"
+          },
+          {
+            "kind": "cake",
+            "lineId": "cake_A",
+            "parentCakeLineId": null,
+            "productId": "pave-cake",
+            "quantity": 1,
+            "options": {
+              "cakeSize": "6in",
+              "chocolateType": "dark",
+              "poundAddon": "none",
+              "cupcakeFinish": "basic",
+              "chocolateIcingCount": 0,
+              "chocolateExtra": "none",
+              "brownieCreamOption": "none",
+              "vanillaCreamCount": 0,
+              "partyDecorationCount": 0,
+              "vanillaCakeSheet": "vanilla",
+              "vanillaCakeFlavor": "triple-berry",
+              "vanillaCakePointColor": "pink",
+              "individualPackaging": false
+            }
+          }
+        ]
+      },
+      "canonicalJson": "{\"contractVersion\":\"cake-order.v2\",\"customer\":{\"customerName\":\"Contract Example\",\"customerPhone\":\"0412345678\",\"customerEmail\":\"contract@example.invalid\"},\"pickup\":{\"pickupDate\":\"2026-10-05\",\"pickupTime\":\"12:00\"},\"requestNote\":\"\",\"privacyConsent\":true,\"promoCode\":\"\",\"lines\":[{\"kind\":\"cake\",\"lineId\":\"cake_A\",\"parentCakeLineId\":null,\"productId\":\"pave-cake\",\"quantity\":1,\"options\":{\"cakeSize\":\"6in\",\"chocolateType\":\"dark\",\"poundAddon\":\"none\",\"cupcakeFinish\":\"basic\",\"chocolateIcingCount\":0,\"chocolateExtra\":\"none\",\"brownieCreamOption\":\"none\",\"vanillaCreamCount\":0,\"partyDecorationCount\":0,\"vanillaCakeSheet\":\"vanilla\",\"vanillaCakeFlavor\":\"triple-berry\",\"vanillaCakePointColor\":\"pink\",\"individualPackaging\":false}},{\"kind\":\"cake-addon-smore\",\"lineId\":\"smore_A\",\"productId\":\"smore-stick\",\"quantity\":2,\"parentCakeLineId\":\"cake_A\"}]}",
+      "domain": "cake-request-v2\u0000",
+      "fingerprint": "604554df6aca415b74f02997558b96979148fdf38531960efc7d12696a945a90"
+    }
+  ]
+}
