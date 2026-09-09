@@ -1,0 +1,536 @@
+{
+  "wires": [
+    {
+      "type": "P.PhotoSessionRequest",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "requestId": "12345678-1234-4234-8234-123456789abc"
+      }
+    },
+    {
+      "type": "P.PhotoSessionResponse",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "requestId": "12345678-1234-4234-8234-123456789abc",
+        "uploadSessionId": "session_TEST",
+        "uploadToken": "SYNTHETIC_ONLY_NOT_A_REAL_SECRET_0123456789abcd",
+        "expiresAt": "2026-09-09T00:30:00.000Z",
+        "limits": {
+          "maxPhotosPerRequest": 5,
+          "maxInputBytes": 10485760,
+          "maxDecodedPixels": 20000000,
+          "maxStoredDimension": 2560,
+          "allowedMimeTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+          ],
+          "storedMimeType": "image/webp",
+          "maxFrames": 1
+        }
+      }
+    },
+    {
+      "type": "P.PhotoUploadHeaders",
+      "value": {
+        "x-custom-cake-upload-session": "session_TEST",
+        "x-custom-cake-upload-token": "SYNTHETIC_ONLY_NOT_A_REAL_SECRET_0123456789abcd"
+      }
+    },
+    {
+      "type": "P.PhotoUploadRequest",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "requestId": "12345678-1234-4234-8234-123456789abc",
+        "uploadId": "upload_A",
+        "mimeType": "image/jpeg",
+        "base64": "/9j/2Q=="
+      }
+    },
+    {
+      "type": "P.PhotoUploadResponse",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "photoRef": "photo_A",
+        "mimeType": "image/webp",
+        "width": 2560,
+        "height": 1920,
+        "byteLength": 12,
+        "requestId": "12345678-1234-4234-8234-123456789abc",
+        "state": "staged"
+      }
+    },
+    {
+      "type": "P.PhotoReadRequest",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "requestNumber": "CUSTOM_TEST_001",
+        "photoRef": "photo_A",
+        "authorization": {
+          "kind": "customer",
+          "customerPhone": "0412345678"
+        }
+      }
+    },
+    {
+      "type": "P.PhotoReadRequest",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "requestNumber": "CUSTOM_TEST_001",
+        "photoRef": "photo_A",
+        "authorization": {
+          "kind": "admin"
+        }
+      }
+    },
+    {
+      "type": "P.PhotoReadResponse",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "photoRef": "photo_A",
+        "mimeType": "image/webp",
+        "width": 2560,
+        "height": 1920,
+        "byteLength": 12,
+        "base64": "UklGRgQAAABXRUJQ"
+      }
+    },
+    {
+      "type": "P.PhotoDeleteRequest",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "requestNumber": "CUSTOM_TEST_001",
+        "photoRef": "photo_A",
+        "authorization": {
+          "kind": "customer",
+          "customerPhone": "0412345678"
+        }
+      }
+    },
+    {
+      "type": "P.PhotoDeleteResponse",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "photoRef": "photo_A",
+        "state": "deletion-pending"
+      }
+    },
+    {
+      "type": "P.PhotoDeleteResponse",
+      "value": {
+        "contractVersion": "custom-cake-photo.v1",
+        "photoRef": "photo_A",
+        "state": "deleted"
+      }
+    },
+    {
+      "type": "P.PhotoError",
+      "value": {
+        "ok": false,
+        "contractVersion": "custom-cake-photo.v1",
+        "code": "PHOTO_SESSION_INVALID"
+      }
+    },
+    {
+      "type": "P.PhotoError",
+      "value": {
+        "ok": false,
+        "contractVersion": "custom-cake-photo.v1",
+        "code": "PHOTO_SESSION_EXPIRED"
+      }
+    },
+    {
+      "type": "P.PhotoError",
+      "value": {
+        "ok": false,
+        "contractVersion": "custom-cake-photo.v1",
+        "code": "PHOTO_LIMIT_EXCEEDED"
+      }
+    },
+    {
+      "type": "P.PhotoError",
+      "value": {
+        "ok": false,
+        "contractVersion": "custom-cake-photo.v1",
+        "code": "PHOTO_TOO_LARGE"
+      }
+    },
+    {
+      "type": "P.PhotoError",
+      "value": {
+        "ok": false,
+        "contractVersion": "custom-cake-photo.v1",
+        "code": "PHOTO_INVALID_IMAGE"
+      }
+    },
+    {
+      "type": "P.PhotoError",
+      "value": {
+        "ok": false,
+        "contractVersion": "custom-cake-photo.v1",
+        "code": "PHOTO_STATE_CONFLICT"
+      }
+    },
+    {
+      "type": "P.PhotoError",
+      "value": {
+        "ok": false,
+        "contractVersion": "custom-cake-photo.v1",
+        "code": "PHOTO_UPLOAD_CONFLICT"
+      }
+    },
+    {
+      "type": "P.PhotoError",
+      "value": {
+        "ok": false,
+        "contractVersion": "custom-cake-photo.v1",
+        "code": "NOT_FOUND"
+      }
+    },
+    {
+      "type": "P.PhotoAction",
+      "value": {
+        "action": "create-custom-cake-photo-session",
+        "data": {
+          "contractVersion": "custom-cake-photo.v1",
+          "requestId": "12345678-1234-4234-8234-123456789abc"
+        }
+      }
+    },
+    {
+      "type": "P.PhotoAction",
+      "value": {
+        "action": "upload-custom-cake-photo",
+        "data": {
+          "contractVersion": "custom-cake-photo.v1",
+          "requestId": "12345678-1234-4234-8234-123456789abc",
+          "uploadId": "upload_A",
+          "mimeType": "image/jpeg",
+          "base64": "/9j/2Q=="
+        }
+      }
+    },
+    {
+      "type": "P.PhotoAction",
+      "value": {
+        "action": "read-custom-cake-photo",
+        "data": {
+          "contractVersion": "custom-cake-photo.v1",
+          "requestNumber": "CUSTOM_TEST_001",
+          "photoRef": "photo_A",
+          "authorization": {
+            "kind": "customer",
+            "customerPhone": "0412345678"
+          }
+        }
+      }
+    },
+    {
+      "type": "P.PhotoAction",
+      "value": {
+        "action": "delete-custom-cake-photo",
+        "data": {
+          "contractVersion": "custom-cake-photo.v1",
+          "requestNumber": "CUSTOM_TEST_001",
+          "photoRef": "photo_A",
+          "authorization": {
+            "kind": "customer",
+            "customerPhone": "0412345678"
+          }
+        }
+      }
+    }
+  ],
+  "validationCases": [
+    {
+      "name": "inclusive boundaries",
+      "mimeType": "image/jpeg",
+      "bytes": 10485760,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": true
+    },
+    {
+      "name": "PNG",
+      "mimeType": "image/png",
+      "bytes": 10485760,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": true
+    },
+    {
+      "name": "WebP",
+      "mimeType": "image/webp",
+      "bytes": 10485760,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": true
+    },
+    {
+      "name": "six photos",
+      "mimeType": "image/jpeg",
+      "bytes": 10485760,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 6,
+      "accepted": false
+    },
+    {
+      "name": "byte overflow",
+      "mimeType": "image/jpeg",
+      "bytes": 10485761,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": false
+    },
+    {
+      "name": "empty",
+      "mimeType": "image/jpeg",
+      "bytes": 0,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": false
+    },
+    {
+      "name": "pixel overflow",
+      "mimeType": "image/jpeg",
+      "bytes": 10485760,
+      "pixels": 20000001,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": false
+    },
+    {
+      "name": "animation",
+      "mimeType": "image/jpeg",
+      "bytes": 10485760,
+      "pixels": 20000000,
+      "frames": 2,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": false
+    },
+    {
+      "name": "GIF",
+      "mimeType": "image/gif",
+      "bytes": 10485760,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": false
+    },
+    {
+      "name": "signature mismatch",
+      "mimeType": "image/jpeg",
+      "bytes": 10485760,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": false,
+      "decodeValid": true,
+      "requestPhotoCount": 5,
+      "accepted": false
+    },
+    {
+      "name": "decode failure",
+      "mimeType": "image/jpeg",
+      "bytes": 10485760,
+      "pixels": 20000000,
+      "frames": 1,
+      "signatureMatches": true,
+      "decodeValid": false,
+      "requestPhotoCount": 5,
+      "accepted": false
+    }
+  ],
+  "ownershipCases": [
+    {
+      "name": "matching proof",
+      "validToken": true,
+      "sameSession": true,
+      "sameRequest": true,
+      "expired": false,
+      "staged": true,
+      "attachAllowed": true
+    },
+    {
+      "name": "request ID only",
+      "validToken": false,
+      "sameSession": true,
+      "sameRequest": true,
+      "expired": false,
+      "staged": true,
+      "attachAllowed": false
+    },
+    {
+      "name": "other session",
+      "validToken": true,
+      "sameSession": false,
+      "sameRequest": true,
+      "expired": false,
+      "staged": true,
+      "attachAllowed": false
+    },
+    {
+      "name": "other request",
+      "validToken": true,
+      "sameSession": true,
+      "sameRequest": false,
+      "expired": false,
+      "staged": true,
+      "attachAllowed": false
+    },
+    {
+      "name": "expired",
+      "validToken": true,
+      "sameSession": true,
+      "sameRequest": true,
+      "expired": true,
+      "staged": true,
+      "attachAllowed": false
+    },
+    {
+      "name": "claimed by cleanup",
+      "validToken": true,
+      "sameSession": true,
+      "sameRequest": true,
+      "expired": false,
+      "staged": false,
+      "attachAllowed": false
+    }
+  ],
+  "normalizedExample": {
+    "mimeType": "image/webp",
+    "width": 2560,
+    "height": 1920,
+    "metadataPresent": false,
+    "frames": 1
+  },
+  "cleanupCases": [
+    {
+      "name": "orphan fenced",
+      "ageHours": 24,
+      "authoritativeReadSucceeded": true,
+      "requestReferencesPhoto": false,
+      "metadataAttached": false,
+      "exclusiveDeleteClaim": true,
+      "requestDataChanged": false,
+      "lateAttachAllowed": false,
+      "storageDeleteFailed": false,
+      "durableRetryRetained": false,
+      "mayDeleteStorage": true
+    },
+    {
+      "name": "grace not reached",
+      "ageHours": 23,
+      "authoritativeReadSucceeded": true,
+      "requestReferencesPhoto": false,
+      "metadataAttached": false,
+      "exclusiveDeleteClaim": false,
+      "requestDataChanged": false,
+      "lateAttachAllowed": false,
+      "storageDeleteFailed": false,
+      "durableRetryRetained": false,
+      "mayDeleteStorage": false
+    },
+    {
+      "name": "request attach wins",
+      "ageHours": 24,
+      "authoritativeReadSucceeded": true,
+      "requestReferencesPhoto": true,
+      "metadataAttached": false,
+      "exclusiveDeleteClaim": false,
+      "requestDataChanged": false,
+      "lateAttachAllowed": false,
+      "storageDeleteFailed": false,
+      "durableRetryRetained": false,
+      "mayDeleteStorage": false
+    },
+    {
+      "name": "metadata attach wins",
+      "ageHours": 24,
+      "authoritativeReadSucceeded": true,
+      "requestReferencesPhoto": false,
+      "metadataAttached": true,
+      "exclusiveDeleteClaim": false,
+      "requestDataChanged": false,
+      "lateAttachAllowed": false,
+      "storageDeleteFailed": false,
+      "durableRetryRetained": false,
+      "mayDeleteStorage": false
+    },
+    {
+      "name": "uncertain read",
+      "ageHours": 24,
+      "authoritativeReadSucceeded": false,
+      "requestReferencesPhoto": false,
+      "metadataAttached": false,
+      "exclusiveDeleteClaim": false,
+      "requestDataChanged": false,
+      "lateAttachAllowed": false,
+      "storageDeleteFailed": false,
+      "durableRetryRetained": false,
+      "mayDeleteStorage": false
+    },
+    {
+      "name": "no fencing",
+      "ageHours": 24,
+      "authoritativeReadSucceeded": true,
+      "requestReferencesPhoto": false,
+      "metadataAttached": false,
+      "exclusiveDeleteClaim": false,
+      "requestDataChanged": false,
+      "lateAttachAllowed": false,
+      "storageDeleteFailed": false,
+      "durableRetryRetained": false,
+      "mayDeleteStorage": false
+    },
+    {
+      "name": "delete fails",
+      "ageHours": 24,
+      "authoritativeReadSucceeded": true,
+      "requestReferencesPhoto": false,
+      "metadataAttached": false,
+      "exclusiveDeleteClaim": true,
+      "requestDataChanged": false,
+      "lateAttachAllowed": false,
+      "storageDeleteFailed": true,
+      "durableRetryRetained": true,
+      "mayDeleteStorage": true
+    },
+    {
+      "name": "attachment discovered after claim",
+      "ageHours": 24,
+      "authoritativeReadSucceeded": true,
+      "requestReferencesPhoto": true,
+      "metadataAttached": true,
+      "exclusiveDeleteClaim": true,
+      "requestDataChanged": false,
+      "lateAttachAllowed": false,
+      "storageDeleteFailed": false,
+      "durableRetryRetained": false,
+      "mayDeleteStorage": false
+    }
+  ]
+}

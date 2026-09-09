@@ -87,7 +87,7 @@ function confirmationResult(q) {
 // This is not emitting code or importing a production runtime validator.
 function typeDiagnostics(assignments) {
   const path = resolve('tests/__wire_contract_probe__.ts')
-  const content = `import type * as C from '../src/lib/custom-cake-contract.js';\nimport type * as V from '../src/lib/cake-order-v2-contract.js';\nimport type * as W from '../src/lib/cake-wire-types.js';\n${assignments.map(([type, value], i) => `const value${i}: ${type} = ${JSON.stringify(value)};`).join('\n')}`
+  const content = `import type * as C from '../src/lib/custom-cake-contract.js';\nimport type * as V from '../src/lib/cake-order-v2-contract.js';\nimport type * as W from '../src/lib/cake-wire-types.js';\nimport type * as P from '../src/lib/custom-cake-photo-contract.js';\n${assignments.map(([type, value], i) => `const value${i}: ${type} = ${JSON.stringify(value)};`).join('\n')}`
   const options = { strict: true, noEmit: true, skipLibCheck: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.NodeNext, moduleResolution: ts.ModuleResolutionKind.NodeNext }
   const host = ts.createCompilerHost(options)
   const original = host.getSourceFile.bind(host)
@@ -130,7 +130,7 @@ test('wire types reject final-null, missing line identity, wrong tier and legacy
 })
 
 test('declaration artifacts erase to no runtime implementation', () => {
-  for (const name of ['cake-wire-types', 'custom-cake-contract', 'cake-order-v2-contract']) {
+  for (const name of ['cake-wire-types', 'custom-cake-contract', 'cake-order-v2-contract', 'custom-cake-photo-contract']) {
     const source = readFileSync(`src/lib/${name}.ts`, 'utf8')
     const output = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, removeComments: true } }).outputText.trim()
     assert.equal(output, 'export {};')
@@ -250,4 +250,80 @@ test('approved custom/v2 contract artifacts exist before frontend/backend split'
 test('existing immutable golden is still present with 17 cases', () => {
   const golden = JSON.parse(readFileSync('tests/fixtures/order-core-golden.json', 'utf8'))
   assert.equal(golden.cases.length, 17)
+})
+
+test('lifecycle supplement requires both status and quote CAS on exact action wires', () => {
+  assert.ok(existsSync('tests/fixtures/custom-cake-contract/lifecycle-supplement.json'))
+  const fixture = read('lifecycle-supplement')
+  assert.deepEqual(typeDiagnostics(fixture.requests.map(x => ['C.CustomCakeLifecycleAction', x])).map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n')), [])
+  assert.deepEqual(typeDiagnostics(fixture.responses.map(x => ['C.CustomCakeMutationResponse', x])).map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n')), [])
+  for (const response of fixture.responses) {
+    assert.deepEqual(response.quote, custom.finalLookup.quote)
+    assert.deepEqual(response.acceptance, custom.finalLookup.acceptance)
+    assert.deepEqual(response.acceptanceHistory, custom.finalLookup.acceptanceHistory)
+  }
+  for (const request of fixture.requests) {
+    for (const key of ['expectedStatus', 'expectedQuoteVersion']) {
+      const invalid = structuredClone(request)
+      delete invalid.data[key]
+      assert.ok(typeDiagnostics([['C.CustomCakeLifecycleAction', invalid]]).length > 0)
+    }
+  }
+  assert.ok(typeDiagnostics([['C.CustomCakeLifecycleAction', { ...fixture.requests[0], data: { ...fixture.requests[0].data, expectedStatus: 'cancelled' } }]]).length > 0)
+})
+
+test('terminal transition fixtures never overwrite terminal states or accept unproven replay', () => {
+  assert.ok(existsSync('tests/fixtures/custom-cake-contract/lifecycle-supplement.json'))
+  for (const row of read('lifecycle-supplement').cases) {
+    // Static contract consumer; backend must separately prove atomic persistence.
+    const replay = row.current === row.target && row.recordedSource === row.expectedStatus && row.recordedVersion === row.expectedQuoteVersion
+    const result = row.current !== row.expectedStatus && !replay ? 'QUOTE_STATE_CONFLICT'
+      : row.currentQuoteVersion !== row.expectedQuoteVersion ? 'QUOTE_VERSION_CONFLICT'
+        : replay ? 'noop'
+          : (row.target === 'completed' ? row.current === 'confirmed' : ['requested', 'quoted', 'confirmed'].includes(row.current)) ? 'transition' : 'QUOTE_STATE_CONFLICT'
+    assert.equal(result, row.result, row.name)
+    assert.equal(row.paymentEffects, 0)
+    assert.equal(row.implicitEmailEvents, 0)
+    assert.equal(row.preserveHistory, true)
+  }
+})
+
+test('photo session/upload/read/delete fixtures conform without public URLs or order credentials', () => {
+  assert.ok(existsSync('tests/fixtures/custom-cake-contract/photo.json'))
+  const p = read('photo')
+  assert.deepEqual(typeDiagnostics(p.wires.map(x => [x.type, x.value])).map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n')), [])
+  const upload = p.wires.find(x => x.type === 'P.PhotoUploadRequest').value
+  const readRequest = p.wires.find(x => x.type === 'P.PhotoReadRequest').value
+  const invalid = [
+    ['P.PhotoUploadRequest', { ...upload, mimeType: 'image/gif' }],
+    ['P.PhotoReadRequest', { ...readRequest, authorization: { kind: 'upload-session', token: 'not-customer-lookup-proof' } }],
+    ['P.PhotoReadResponse', { contractVersion: 'custom-cake-photo.v1', photoRef: 'photo_A', publicUrl: 'https://example.invalid/photo' }],
+    ['C.CustomCakeCreateRequest', { ...custom.request, uploadToken: 'must-not-enter-data' }],
+  ]
+  for (const item of invalid) assert.ok(typeDiagnostics([item]).length > 0, item[0])
+  for (const row of canonical.cases) assert.ok(!/uploadToken|uploadSessionId/.test(row.canonicalJson))
+})
+
+test('photo security fixture boundaries include size pixels frames ownership and metadata normalization', () => {
+  assert.ok(existsSync('tests/fixtures/custom-cake-contract/photo.json'))
+  const p = read('photo')
+  for (const row of p.validationCases) {
+    const accepted = ['image/jpeg', 'image/png', 'image/webp'].includes(row.mimeType)
+      && row.bytes > 0 && row.bytes <= 10485760 && row.pixels > 0 && row.pixels <= 20000000
+      && row.frames === 1 && row.signatureMatches && row.decodeValid && row.requestPhotoCount <= 5;
+    assert.equal(accepted, row.accepted, row.name)
+  }
+  for (const row of p.ownershipCases) assert.equal(row.validToken && row.sameSession && row.sameRequest && !row.expired && row.staged, row.attachAllowed, row.name)
+  assert.deepEqual(p.normalizedExample, { mimeType: 'image/webp', width: 2560, height: 1920, metadataPresent: false, frames: 1 })
+})
+
+test('cleanup contract scenarios retain attached or uncertain photos and fence late attaches', () => {
+  assert.ok(existsSync('tests/fixtures/custom-cake-contract/photo.json'))
+  for (const row of read('photo').cleanupCases) {
+    const mayDelete = row.ageHours >= 24 && row.authoritativeReadSucceeded && !row.requestReferencesPhoto && !row.metadataAttached && row.exclusiveDeleteClaim;
+    assert.equal(mayDelete, row.mayDeleteStorage, row.name)
+    assert.equal(row.requestDataChanged, false)
+    if (row.exclusiveDeleteClaim) assert.equal(row.lateAttachAllowed, false)
+    if (row.storageDeleteFailed) assert.equal(row.durableRetryRetained, true)
+  }
 })

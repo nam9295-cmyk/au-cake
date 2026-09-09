@@ -1,0 +1,382 @@
+{
+  "requests": [
+    {
+      "action": "admin-complete-custom-cake-request",
+      "data": {
+        "contractVersion": "custom-cake.v1",
+        "requestNumber": "CUSTOM_TEST_001",
+        "expectedStatus": "confirmed",
+        "expectedQuoteVersion": 2
+      }
+    },
+    {
+      "action": "admin-cancel-custom-cake-request",
+      "data": {
+        "contractVersion": "custom-cake.v1",
+        "requestNumber": "CUSTOM_TEST_001",
+        "expectedStatus": "requested",
+        "expectedQuoteVersion": 2
+      }
+    },
+    {
+      "action": "admin-cancel-custom-cake-request",
+      "data": {
+        "contractVersion": "custom-cake.v1",
+        "requestNumber": "CUSTOM_TEST_001",
+        "expectedStatus": "quoted",
+        "expectedQuoteVersion": 2
+      }
+    },
+    {
+      "action": "admin-cancel-custom-cake-request",
+      "data": {
+        "contractVersion": "custom-cake.v1",
+        "requestNumber": "CUSTOM_TEST_001",
+        "expectedStatus": "confirmed",
+        "expectedQuoteVersion": 2
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "complete",
+      "current": "confirmed",
+      "target": "completed",
+      "expectedStatus": "confirmed",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": null,
+      "recordedVersion": null,
+      "result": "transition",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "cancel requested",
+      "current": "requested",
+      "target": "cancelled",
+      "expectedStatus": "requested",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": null,
+      "recordedVersion": null,
+      "result": "transition",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "cancel quoted",
+      "current": "quoted",
+      "target": "cancelled",
+      "expectedStatus": "quoted",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": null,
+      "recordedVersion": null,
+      "result": "transition",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "cancel confirmed",
+      "current": "confirmed",
+      "target": "cancelled",
+      "expectedStatus": "confirmed",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": null,
+      "recordedVersion": null,
+      "result": "transition",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "stale status",
+      "current": "quoted",
+      "target": "cancelled",
+      "expectedStatus": "requested",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": null,
+      "recordedVersion": null,
+      "result": "QUOTE_STATE_CONFLICT",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "stale quote",
+      "current": "confirmed",
+      "target": "completed",
+      "expectedStatus": "confirmed",
+      "currentQuoteVersion": 3,
+      "expectedQuoteVersion": 2,
+      "recordedSource": null,
+      "recordedVersion": null,
+      "result": "QUOTE_VERSION_CONFLICT",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "complete replay",
+      "current": "completed",
+      "target": "completed",
+      "expectedStatus": "confirmed",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": "confirmed",
+      "recordedVersion": 2,
+      "result": "noop",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "cancel replay",
+      "current": "cancelled",
+      "target": "cancelled",
+      "expectedStatus": "quoted",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": "quoted",
+      "recordedVersion": 2,
+      "result": "noop",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "unproven replay",
+      "current": "cancelled",
+      "target": "cancelled",
+      "expectedStatus": "quoted",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": null,
+      "recordedVersion": null,
+      "result": "QUOTE_STATE_CONFLICT",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "wrong replay source",
+      "current": "cancelled",
+      "target": "cancelled",
+      "expectedStatus": "requested",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": "quoted",
+      "recordedVersion": 2,
+      "result": "QUOTE_STATE_CONFLICT",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "replay stale current quote",
+      "current": "completed",
+      "target": "completed",
+      "expectedStatus": "confirmed",
+      "currentQuoteVersion": 3,
+      "expectedQuoteVersion": 2,
+      "recordedSource": "confirmed",
+      "recordedVersion": 2,
+      "result": "QUOTE_VERSION_CONFLICT",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "completed cannot cancel",
+      "current": "completed",
+      "target": "cancelled",
+      "expectedStatus": "confirmed",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": "confirmed",
+      "recordedVersion": 2,
+      "result": "QUOTE_STATE_CONFLICT",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    },
+    {
+      "name": "cancelled cannot complete",
+      "current": "cancelled",
+      "target": "completed",
+      "expectedStatus": "confirmed",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "recordedSource": "quoted",
+      "recordedVersion": 2,
+      "result": "QUOTE_STATE_CONFLICT",
+      "paymentEffects": 0,
+      "implicitEmailEvents": 0,
+      "preserveHistory": true
+    }
+  ],
+  "responses": [
+    {
+      "contractVersion": "custom-cake.v1",
+      "requestNumber": "CUSTOM-EXAMPLE-1",
+      "status": "completed",
+      "customer": {
+        "customerName": "Contract Example",
+        "customerPhone": "0412345678",
+        "customerEmail": "contract@example.invalid"
+      },
+      "pickup": {
+        "pickupDate": "2026-10-05",
+        "pickupTime": "12:00"
+      },
+      "lines": [
+        {
+          "kind": "custom-cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "custom-cake",
+          "quantity": 1,
+          "tier": "single",
+          "size": "6in",
+          "designNote": "Blue flowers",
+          "figurineSource": "shop",
+          "photoRefs": [
+            "photo_A",
+            "photo_B"
+          ]
+        },
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "cake_A"
+        }
+      ],
+      "quote": {
+        "currency": "AUD",
+        "pricingPolicyVersion": "custom-cake.2026-09.v1",
+        "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
+        "baseCents": 15500,
+        "cakeDiscountCents": 775,
+        "paidSmoreQuantity": 2,
+        "paidSmoreTotalCents": 630,
+        "giftSmoreQuantity": 2,
+        "knownTotalCents": 18855,
+        "isFinalQuote": true,
+        "designExtraCents": 2000,
+        "figurineExtraCents": 1500,
+        "finalTotalCents": 18855,
+        "quoteVersion": 2
+      },
+      "paidSmoreLines": [
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "cake_A",
+          "unitPriceCents": 450,
+          "subtotalCents": 900,
+          "discountPercent": 30,
+          "discountCents": 270,
+          "totalCents": 630
+        }
+      ],
+      "acceptance": {
+        "acceptedQuoteVersion": 2,
+        "acceptedAt": "2026-10-02T03:00:00.000Z"
+      },
+      "acceptanceHistory": [
+        {
+          "acceptedQuoteVersion": 2,
+          "acceptedAt": "2026-10-02T03:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "contractVersion": "custom-cake.v1",
+      "requestNumber": "CUSTOM-EXAMPLE-1",
+      "status": "cancelled",
+      "customer": {
+        "customerName": "Contract Example",
+        "customerPhone": "0412345678",
+        "customerEmail": "contract@example.invalid"
+      },
+      "pickup": {
+        "pickupDate": "2026-10-05",
+        "pickupTime": "12:00"
+      },
+      "lines": [
+        {
+          "kind": "custom-cake",
+          "lineId": "cake_A",
+          "parentCakeLineId": null,
+          "productId": "custom-cake",
+          "quantity": 1,
+          "tier": "single",
+          "size": "6in",
+          "designNote": "Blue flowers",
+          "figurineSource": "shop",
+          "photoRefs": [
+            "photo_A",
+            "photo_B"
+          ]
+        },
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "cake_A"
+        }
+      ],
+      "quote": {
+        "currency": "AUD",
+        "pricingPolicyVersion": "custom-cake.2026-09.v1",
+        "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
+        "baseCents": 15500,
+        "cakeDiscountCents": 775,
+        "paidSmoreQuantity": 2,
+        "paidSmoreTotalCents": 630,
+        "giftSmoreQuantity": 2,
+        "knownTotalCents": 18855,
+        "isFinalQuote": true,
+        "designExtraCents": 2000,
+        "figurineExtraCents": 1500,
+        "finalTotalCents": 18855,
+        "quoteVersion": 2
+      },
+      "paidSmoreLines": [
+        {
+          "kind": "cake-addon-smore",
+          "lineId": "smore_A",
+          "productId": "smore-stick",
+          "quantity": 2,
+          "parentCakeLineId": "cake_A",
+          "unitPriceCents": 450,
+          "subtotalCents": 900,
+          "discountPercent": 30,
+          "discountCents": 270,
+          "totalCents": 630
+        }
+      ],
+      "acceptance": {
+        "acceptedQuoteVersion": 2,
+        "acceptedAt": "2026-10-02T03:00:00.000Z"
+      },
+      "acceptanceHistory": [
+        {
+          "acceptedQuoteVersion": 2,
+          "acceptedAt": "2026-10-02T03:00:00.000Z"
+        }
+      ]
+    }
+  ]
+}

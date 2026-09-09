@@ -74,7 +74,7 @@ No generic `totalCents` in Custom quote. Ordinary v2 has a definitive `pricing.t
 - `ConfirmCustomCakeRequest` contains requestNumber and expectedQuoteVersion. In one atomic compare/transition, server checks expected==current, isFinalQuote===true, acceptedQuoteVersion==current and acceptedAt present. Only then confirmed. A concurrent revision cannot slip between checks and confirmation. After confirmed, this edit contract is closed; completed/cancelled are terminal for quote/acceptance mutation. Confirmation replay of the same already-confirmed version is a no-op success.
 - Confirmation source must be quoted, except the same-version confirmed replay above. Requested, cancelled and completed always reject with QUOTE_STATE_CONFLICT even if a historical accepted final quote exists. Confirmed with a different expected version rejects QUOTE_VERSION_CONFLICT; never creates another confirmation.
 - Check order: authorization → object/version validity → allowed source state → expected/current version → final quote → acceptance. Missing acceptance -> QUOTE_ACCEPTANCE_REQUIRED; stale acceptance -> QUOTE_VERSION_CONFLICT; provisional -> QUOTE_NOT_FINAL. No existing reservation state/transaction is rewritten in this contract commit.
-- `CustomCakeMutationResponse` has the lookup snapshot shape. Status set: requested, quoted, confirmed, completed, cancelled. This contract reserves completion/cancellation states, not new completion/cancellation API handlers.
+- `CustomCakeMutationResponse` has the lookup snapshot shape. Status set: requested, quoted, confirmed, completed, cancelled. The approved supplement in §9 defines completion/cancellation actions; no handler is implemented by this contract-only commit.
 
 ## 4. cake-order.v2
 
@@ -143,3 +143,83 @@ The required-gate error on the OLD endpoint is exactly `{ok:false, code:'CAKE_OR
 
 Contract tests check fixture shapes against erased types, monetary/reference/version relations and rejecting counterexamples. They do not prove real API authorization, persistence, pricing execution or transaction atomicity; backend implementation must add those integration tests using these fixtures. Stage 0 golden 17 is untouched; no existing runtime changed. Future intentional new-policy expectations use new fixture suites, never weaken old golden to hide drift.
 After this commit SHA is reviewed, and only then, Antigravity/frontend and Codex/backend may branch from that exact SHA. No such branches or operational actions are created here.
+
+## 9. Approved supplement — terminal lifecycle
+
+Contract parent: `caa9a96ca9c16dea44ffdcb3c785f6e72c7845cf`. This supplement adds documentation, erased types, static fixtures and contract tests only. Original pricing, canonical bytes, fingerprints and the original four fixtures remain unchanged.
+
+Two existing-admin-authenticated actions are added to the contract: `admin-complete-custom-cake-request` and `admin-cancel-custom-cake-request`. Their data is `{contractVersion:'custom-cake.v1', requestNumber, expectedStatus, expectedQuoteVersion}`. Expected version is a positive safe integer. Success uses `{ok:true,result:CustomCakeMutationResponse}`. No runtime registration yet.
+
+| Action | expectedStatus / allowed source | Target |
+| --- | --- | --- |
+| admin-complete-custom-cake-request | confirmed | completed |
+| admin-cancel-custom-cake-request | requested, quoted, confirmed | cancelled |
+| Any different transition from completed/cancelled | Forbidden | No change |
+
+Authorization and strict shape validation happen first. In one atomic operation compare current status with expectedStatus, then current quoteVersion with expectedQuoteVersion: stale status -> `409 QUOTE_STATE_CONFLICT`; stale quote -> `409 QUOTE_VERSION_CONFLICT`. Preserve quoteVersion, quote, acceptance, acceptanceHistory, original creation response and request fingerprint. These state-only transitions do not increment a price version.
+
+Exact terminal retry exception: persist the successful transition's action, source, target, quoteVersion and administrator audit identity/time atomically with status. If current status already equals target, a request with the exact recorded action/source/target/version may return the existing snapshot without writes after authorization and current quoteVersion validation. Target equality alone is NOT proof of replay. Different source or unproven transition -> QUOTE_STATE_CONFLICT; never overwrite another terminal state. This supports retry of the original expectedStatus rather than requiring clients to send a terminal expectedStatus. The original transition audit is not overwritten on replay.
+
+Cancellation is not refund, payment reversal, charge cancellation or a payment API call. Completion/cancellation preserve all quote/acceptance/history. State changes and their retries must not implicitly send email. If a later approved notification is added, it must use a separately persisted event identity/outbox with existing deduplication/retry controls; no `status changed => send again` behavior.
+
+## 10. Approved supplement — private reference photos
+
+`src/lib/custom-cake-photo-contract.ts` defines the separate `custom-cake-photo.v1` wire. There is no new login/membership system. All photo actions use `{action,data}`, success `{ok:true,result}` and strict fields. Photo-specific failures use `{ok:false,contractVersion:'custom-cake-photo.v1',code}`. This is not an extension of the original order error union.
+
+### Session, upload and attachment
+
+1. Client creates/persists its stable requestId. `create-custom-cake-photo-session` data is `{contractVersion,requestId}`. Server issues a random opaque uploadSessionId and cryptographically random bearer uploadToken (at least 256 bits entropy), expiresAt and literal limits. Session lifetime is 30 minutes from issue, exclusive expiry; no sliding refresh. Store only a protected token digest, redact token/session credentials from logs, telemetry and URLs. Session issuance is rate/abuse limited and does not prove phone/email ownership or reserve event eligibility.
+2. A repeated issue for the same requestId must NOT reveal/recover/replace a prior token, transfer staged photos or invalidate someone else's session. Each issued session is isolated, bound to requestId. Limits are enforced across concurrent uploads/attachments, not just a client counter. Expired sessions cannot upload or attach new requests; a new session requires reupload and confers no access to old staged files. No recovery based on requestId/phone/email alone.
+3. `upload-custom-cake-photo` data: `{contractVersion,requestId,uploadId,mimeType,base64}`; credential comes only from `x-custom-cake-upload-session` and `x-custom-cake-upload-token` headers. uploadId is a stable per-file ASCII ID; same valid session/uploadId/input bytes+MIME replays the same photoRef, changed input -> PHOTO_UPLOAD_CONFLICT. Strict base64, no data URLs; HTTP body limits must permit the base64 expansion of 10 MiB but enforce decoded byte limits before expensive decode. Response: `{contractVersion,requestId,photoRef,state:'staged',mimeType:'image/webp',width,height,byteLength}`. All dimensions/byteLength are positive safe integers describing normalized output. Session is checked before processing and again before staging completion. Never return file keys, bucket IDs or URLs.
+4. Record durable staged intent and ownership metadata BEFORE Storage upload. Keep immutable requestId/session binding, upload identity/digest, allocated photoRef/private file key and staging time, then upload only normalized bytes. A failed/uncertain upload remains discoverable for reconciliation; do not assume a thrown Storage error proves no file was created.
+5. `create-custom-cake-request` keeps its EXACT original data shape and canonical bytes. When photoRefs are nonempty, the same two transport headers supply the session proof. In the successful request transaction attach only fully uploaded staged photos from that valid session and same requestId. Maximum 5 refs across all custom lines; reject duplicate refs across lines and mixed sessions. RequestId, phone, email or file ID alone is never ownership proof. Invalid session/ownership on this ORDER action -> existing `400 INVALID_PHOTO_REFERENCE` without leaking another owner's file existence. Empty photoRefs require no photo session. Credentials are never in order data/canonical/fingerprint/creation response.
+6. Attachment atomically binds the chosen session, all photos and the new request; an incomplete/failed attach cannot produce a partly attached successful request. Existing request creation replay follows the original stored fingerprint and authorization checks FIRST; an expired/consumed upload token must not turn an already committed matching request into a new attach or reprice. No photo reads are granted by that replay. First receipt/event timing remains the original order contract.
+
+### Fixed image limits and normalization
+
+| Limit | Binding value |
+| --- | --- |
+| Photos | Maximum 5 per request, including concurrent uploads; duplicate refs do not create extra slots |
+| Accepted input | JPEG / PNG / WebP only |
+| Input byte limit | 10 MiB = 10,485,760 per file, inclusive; empty rejected |
+| Decoded pixel limit | 20,000,000 pixels inclusive, validated before unbounded allocation |
+| Frames | Exactly one; animated or multi-frame inputs rejected, not flattened |
+| Validation | Declared MIME, magic signature and actual successful image decode must agree |
+| Stored image | Canonical single-frame WebP, both dimensions ≤2560, aspect ratio preserved, no upscaling |
+| Metadata | Apply orientation before stripping; remove EXIF and all ancillary source metadata; never store original bytes |
+| Storage | Private bucket/files only; no public read permission or public URL |
+
+The server encoder must use pinned deterministic settings for normalized output; those codec settings are internal implementation details, not customer wire fields. Reject malformed/truncated/decompression-bomb input. Never trust client dimensions, frames or MIME alone. Client previews do not substitute for server validation.
+
+### Authenticated read and delete
+
+`read-custom-cake-photo` and `delete-custom-cake-photo` data: `{contractVersion,requestNumber,photoRef,authorization}`. authorization is `{kind:'admin'}` or `{kind:'customer',customerPhone}`. These are selectors/proof inputs, not trusted identities: admin requires the existing independently verified admin transport authentication; customer requires the existing full request-number + normalized phone lookup possession check and its anti-enumeration/rate controls for THIS request. Phone alone is insufficient. Session tokens, email, file ID or requestId alone cannot read/delete attached photos. No new customer login. Recheck authoritative photo/request relationship on every operation; wrong customer, unrelated photo or unavailable/deleted photo reads return privacy-safe NOT_FOUND. Never issue a public or transferable Storage URL. Authenticated responses use `Cache-Control: no-store`; no shared cache.
+
+Read result is `{contractVersion,photoRef,mimeType:'image/webp',base64,width,height,byteLength}` with normalized bytes. Delete result is `{contractVersion,photoRef,state:'deletion-pending'|'deleted'}`. Only attached photos of the authorized request (or their existing deletion tombstones for retry) are eligible for this delete wire. Pre-attach abandoned photos use internal orphan cleanup, not a requestId-only delete endpoint. Authentication failure never triggers deletion.
+
+Authorized deletion atomically records a durable removal intent/tombstone and revokes read access, then retries physical deletion. Keep original immutable submitted photoRefs/canonical/creation replay, quote and acceptance/history intact; a removed reference resolves to NOT_FOUND and is not a broken pricing record. Active photo attachment metadata marks it removed rather than erasing audit provenance. Repeat authorized delete uses the same tombstone and returns pending/deleted without another event. Storage deletion failure keeps the retry record; never deletes or corrupts the request. This explicit customer/admin removal is separate from orphan cleanup's prohibition on deleting attached files.
+
+### Staged/attach/cleanup lifecycle and race guarantees
+
+Internal metadata states (not new DB schema in this commit): staging → staged → attached; staging/staged → cleanup-claimed → deleted. Explicit authorized attached deletion uses attached → deletion-pending → deleted. Upload/attach/delete failures retain durable recovery metadata. Expired session does not mean an attached image expires.
+
+Orphan eligibility begins after a 24-hour grace from staged-intent creation, but age alone NEVER authorizes deletion. Before claiming deletion, re-read authoritative metadata AND its request (including uncertain commits). Any current attachment in either source means retain. Failed/ambiguous reads, inconsistent ownership or unresolved commit state mean retain and retry. Future/invalid timestamps mean retain.
+
+Attach and cleanup must contend on the same atomic state/version fence: attach succeeds only from unclaimed staged; cleanup claims only from unattached staging/staged after grace and authoritative checks. A cleanup-claimed photo cannot subsequently attach. Re-read authoritative metadata/request before physical deletion; if attached, cancel deletion/retain and surface inconsistency. A plain read-check-delete sequence with an unfenced attach in between is forbidden. This follows review photo's durable intent + uncertain-attach reconciliation pattern and makes the late-attach race explicit.
+
+If attach wins, cleanup cannot claim/delete. If cleanup wins, late attach fails safely with INVALID_PHOTO_REFERENCE, never creates a damaged successful request. If a Storage upload is still in flight when cleanup claims, its completion cannot attach; keep the claim/reconciliation work discoverable until late Storage outcomes are reconciled. Storage 404 is deletion success only after fenced in-flight uploads are resolved. Delete failure retains a durable retry; no cleanup failure may mutate the request, quote, acceptance or pricing.
+
+### Photo error mapping and static coverage
+
+| HTTP | Photo codes |
+| --- | --- |
+| 400 | INVALID_REQUEST, PHOTO_INVALID_IMAGE |
+| 403 | PHOTO_SESSION_INVALID, PHOTO_SESSION_EXPIRED, FORBIDDEN |
+| 404 | NOT_FOUND |
+| 409 | PHOTO_UPLOAD_CONFLICT, PHOTO_STATE_CONFLICT, PHOTO_LIMIT_EXCEEDED |
+| 413 | PHOTO_TOO_LARGE |
+| 503 | CAPABILITY_UNAVAILABLE |
+
+Missing/malformed/unknown session bearer is PHOTO_SESSION_INVALID; an authenticated expired session is PHOTO_SESSION_EXPIRED. Never expose another session's existence. PHOTO_TOO_LARGE covers byte/pixel bounds. PHOTO_INVALID_IMAGE covers MIME/signature/decode/frame failures. Capability readiness must not advertise usable Custom photo support until all required private operations and safe recovery are available; old health remains unchanged.
+
+Supplement fixtures: `lifecycle-supplement.json` (actions, CAS/replay/terminal cases) and `photo.json` (wire examples, security limits, ownership, cleanup races). Tokens and byte payloads are synthetic contract illustrations, not valid image decoder fixtures. Static contract tests check actual TS assignability/rejection/erasure and scenario invariants; they do NOT prove image decode, authentication, Storage security or transaction atomicity. Backend must add real-image and controlled concurrent persistence tests later. This supplement activates no endpoint, Storage, migration, email or runtime policy.

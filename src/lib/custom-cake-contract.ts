@@ -98,3 +98,20 @@ export type ConfirmCustomCakeRequest = {
 }
 /** Authenticated admin mutation result; same full public snapshot, no private audit. */
 export type CustomCakeMutationResponse = CustomCakeLookupResponse
+
+/** Terminal transitions: exact source status + quote CAS; no payment side effects. */
+export type CompleteCustomCakeRequest = {
+  contractVersion: 'custom-cake.v1'
+  requestNumber: string
+  expectedStatus: 'confirmed'
+  expectedQuoteVersion: number
+}
+export type CancelCustomCakeRequest = {
+  contractVersion: 'custom-cake.v1'
+  requestNumber: string
+  expectedStatus: 'requested' | 'quoted' | 'confirmed'
+  expectedQuoteVersion: number
+}
+export type CustomCakeLifecycleAction =
+  | { action: 'admin-complete-custom-cake-request'; data: CompleteCustomCakeRequest }
+  | { action: 'admin-cancel-custom-cake-request'; data: CancelCustomCakeRequest }
