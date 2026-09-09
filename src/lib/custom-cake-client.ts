@@ -86,12 +86,33 @@ function allocatedDiscount(line: CakePricedLineV2): boolean {
   const discount = BigInt(line.discountCents)
   return discount >= numerator / 100n && discount <= (numerator + 99n) / 100n
 }
+function savedDiscountAllocations(lines: CakeOrderV2Pricing['lines']): boolean {
+  // This is the saved option identity order used by the existing allocator,
+  // independent of object insertion order and today's product catalogue.
+  const identityOptions = ['cakeSize', 'chocolateType', 'poundAddon', 'cupcakeFinish', 'chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount', 'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'chocolateExtra', 'brownieCreamOption', 'individualPackaging'] as const
+  const cakes = lines.filter((line): line is CakePricedLineV2 => line.kind === 'cake')
+  for (const rate of [5, 10]) {
+    const ranked = cakes.filter(line => line.discountPercent === rate).map(line => {
+      const numerator = BigInt(line.subtotalCents) * BigInt(rate)
+      return { line, numerator, floor: numerator / 100n, remainder: numerator % 100n, identity: JSON.stringify([line.productId, ...identityOptions.map(key => line.options[key])]) }
+    }).sort((a, b) => a.remainder !== b.remainder ? (a.remainder > b.remainder ? -1 : 1)
+      : a.identity !== b.identity ? (a.identity < b.identity ? -1 : 1) : a.line.lineId < b.line.lineId ? -1 : 1)
+    const rounded = (ranked.reduce((total, item) => total + item.numerator, 0n) + 50n) / 100n
+    let remaining = rounded - ranked.reduce((total, item) => total + item.floor, 0n)
+    for (const item of ranked) {
+      const expected = item.floor + (remaining > 0n ? 1n : 0n)
+      if (remaining > 0n) remaining--
+      if (BigInt(item.line.discountCents) !== expected) return false
+    }
+  }
+  return true
+}
 const options = object({ cakeSize: literal('6in', '8in', '10in', '15cm'), chocolateType: literal('dark', 'milk'), poundAddon: literal('none', 'extra-chocolate', 'vanilla-cream'), cupcakeFinish: literal('basic', 'vanilla-fresh-cream', 'chocolate-buttercream'), chocolateIcingCount: integer, chocolateExtra: literal('none', 'eiffel-6', 'pave-100g', 'combo'), brownieCreamOption: literal('none', 'fresh-cream'), vanillaCreamCount: literal(0), partyDecorationCount: literal(0), vanillaCakeSheet: literal('vanilla', 'chocolate'), vanillaCakeFlavor: literal('plain', 'triple-berry'), vanillaCakePointColor: literal('pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'), individualPackaging: bool })
 const cakePriced = guard(v => checked<CakePricedLineV2>(v, object({ kind: literal('cake'), lineId: id, parentCakeLineId: literal(null), productId: literal('pave-cake', 'buttercream-cake', 'fresh-strawberry-vanilla-cream-cake', 'fresh-strawberry-chocolate-cream-cake', 'pound-cake', 'cupcake-half-dozen', 'cupcake-dozen', 'fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16', 'brownie-cheesecake', 'pave-brownie-cheesecake'), quantity: cakeQuantity, options, ...moneyFields, discountPercent: literal(0, 5, 10), chocolateExtraCents: integer, individualPackagingPieces: integer, individualPackagingFeeCents: integer }), l =>
   l.subtotalCents === sum([l.unitPriceCents * l.quantity, l.chocolateExtraCents]) && l.discountCents <= l.subtotalCents && allocatedDiscount(l) && l.totalCents === sum([l.subtotalCents - l.discountCents, l.individualPackagingFeeCents])))
 function parsePricing(value: unknown): CakeOrderV2Pricing {
   return checked<CakeOrderV2Pricing>(value, object({ currency: literal('AUD'), pricingPolicyVersion: literal('cake-order.2026-09.v2'), pricedAt: timestamp, lines: array(either(cakePriced, smorePriced)), subtotalCents: integer, discountCents: integer, individualPackagingFeeCents: integer, totalCents: integer }), p =>
-    graph(p.lines, 'cake', false) && p.subtotalCents === sum(p.lines.map(l => l.subtotalCents)) && p.discountCents === sum(p.lines.map(l => l.discountCents)) && p.individualPackagingFeeCents === sum(p.lines.map(l => l.kind === 'cake' ? l.individualPackagingFeeCents : 0)) && p.totalCents === sum(p.lines.map(l => l.totalCents)) && p.totalCents === sum([p.subtotalCents - p.discountCents, p.individualPackagingFeeCents]))
+    graph(p.lines, 'cake', false) && savedDiscountAllocations(p.lines) && p.subtotalCents === sum(p.lines.map(l => l.subtotalCents)) && p.discountCents === sum(p.lines.map(l => l.discountCents)) && p.individualPackagingFeeCents === sum(p.lines.map(l => l.kind === 'cake' ? l.individualPackagingFeeCents : 0)) && p.totalCents === sum(p.lines.map(l => l.totalCents)) && p.totalCents === sum([p.subtotalCents - p.discountCents, p.individualPackagingFeeCents]))
 }
 const v2Fields = { contractVersion: literal('cake-order.v2'), reservationNumber: string(1, 128), pricing: guard(parsePricing) }
 export function parseCakeOrderV2CreateResponse(value: unknown): CakeOrderV2CreateResponse { return checked(value, object({ ...v2Fields, requestId, status: literal('예약신청') })) }

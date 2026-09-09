@@ -72,6 +72,34 @@ test('capability is separate and fails closed', () => {
     assert.throws(() => parse('parseCakeWireCapabilities', { ...value, ...change }))
   }
 })
+function savedAllocation(lines) {
+  const value = structuredClone(ordinary.lookup)
+  value.pricing.lines = lines.map(({ lineId, subtotal, discount, options = {}, productId }) => ({
+    ...structuredClone(ordinary.lookup.pricing.lines[0]), lineId, ...(productId ? { productId } : {}),
+    options: { ...ordinary.lookup.pricing.lines[0].options, ...options },
+    unitPriceCents: subtotal, subtotalCents: subtotal, discountPercent: 5, discountCents: discount, totalCents: subtotal - discount,
+  }))
+  for (const field of ['subtotalCents', 'discountCents', 'individualPackagingFeeCents', 'totalCents']) value.pricing[field] = value.pricing.lines.reduce((sum, line) => sum + line[field], 0)
+  return value
+}
+test('v2 rejects line-wise rounding that disagrees with saved aggregate coupon rounding', () => {
+  const invalid = savedAllocation([{ lineId: 'A', subtotal: 7901, discount: 396 }, { lineId: 'B', subtotal: 7901, discount: 396 }])
+  assert.throws(() => parse('parseCakeOrderV2LookupResponse', invalid), /^Error: CAKE_WIRE_INVALID_RESPONSE$/)
+  const valid = savedAllocation([{ lineId: 'A', subtotal: 7901, discount: 395 }, { lineId: 'B', subtotal: 7901, discount: 395 }])
+  assert.deepEqual(parse('parseCakeOrderV2LookupResponse', valid), valid)
+})
+for (const [name, validLines] of [
+  ['largest remainder', [{ lineId: 'A', subtotal: 7901, discount: 395 }, { lineId: 'B', subtotal: 7909, discount: 396 }]],
+  ['option identity before line ID', [{ lineId: 'A', subtotal: 7905, discount: 395, options: { chocolateType: 'milk' } }, { lineId: 'B', subtotal: 7905, discount: 396, options: { chocolateType: 'dark' } }]],
+  ['product identity before line ID', [{ lineId: 'A', subtotal: 7905, discount: 395, productId: 'pave-cake' }, { lineId: 'B', subtotal: 7905, discount: 396, productId: 'buttercream-cake' }]],
+  ['line ID for equal identity', [{ lineId: 'B', subtotal: 7905, discount: 395 }, { lineId: 'A', subtotal: 7905, discount: 396 }]],
+]) test(`v2 validates ${name} using only saved values`, () => {
+  const valid = savedAllocation(validLines)
+  assert.deepEqual(parse('parseCakeOrderV2LookupResponse', valid), valid)
+  assert.deepEqual(parse('parseCakeOrderV2LookupResponse', { ...valid, pricing: { ...valid.pricing, lines: [...valid.pricing.lines].reverse() } }).pricing.lines, [...valid.pricing.lines].reverse())
+  const swapped = validLines.map((line, index) => ({ ...line, discount: validLines[1 - index].discount }))
+  assert.throws(() => parse('parseCakeOrderV2LookupResponse', savedAllocation(swapped)), /^Error: CAKE_WIRE_INVALID_RESPONSE$/)
+})
 test('photo parsers validate every selected response and never return URL shapes', () => {
   for (const [type, name] of [['PhotoSessionResponse', 'parsePhotoSessionResponse'], ['PhotoUploadResponse', 'parsePhotoUploadResponse'], ['PhotoReadResponse', 'parsePhotoReadResponse'], ['PhotoDeleteResponse', 'parsePhotoDeleteResponse']]) {
     const value = fixture('photo').wires.find(v => v.type === `P.${type}`).value
