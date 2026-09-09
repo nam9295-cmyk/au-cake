@@ -83,3 +83,30 @@ test('v2 current coupon ledger is redeemed with receipt and sanitized event; fai
     }
   }
 })
+
+test('simultaneous legacy and v2 redemption share the current coupon fence and leave only the winning receipt', async () => {
+  const h = await setup(), old = oldInput(), ordinary = fixture('cake-order-v2').request
+  old.promoCode = 'FOXKIWI7Q2MK'; ordinary.promoCode = old.promoCode; ordinary.requestId = '22222222-2222-4222-8222-222222222222'
+  h.sdk.docs.set('review_coupons/coupon-1', { revision: 1, data: { $id: 'coupon-1', codeHash: hashReviewCouponCode(old.promoCode, Buffer.alloc(32, 7)), codeLast4: 'Q2MK', rewardPercent: 5, scope: 'cake', status: 'active', expiresAt: '2026-11-01T00:00:00.000Z' } })
+  const update = h.sdk.updateDocument; let entered = 0, release
+  const barrier = new Promise(resolve => { release = resolve })
+  h.sdk.updateDocument = async p => { const value = await update(p); if (p.collectionId === 'review_coupons') { if (++entered === 2) release(); await barrier } return value }
+  const replies = await Promise.all([h.call('create-cake', old), h.call('create-cake-order-v2', ordinary)])
+  assert.equal(replies.filter(r => r.status === 200).length, 1)
+  assert.equal(replies.find(r => r.status !== 200).body.code, 'PROMO_CODE_INVALID')
+  assert.equal((await h.repository.list('claims')).length, 1)
+  assert.equal([...h.sdk.docs.keys()].filter(k => k.startsWith('reservations/') || k.startsWith('custom_cake_snapshots/')).length, 1)
+  assert.equal(h.sdk.docs.get('review_coupons/coupon-1').data.status, 'redeemed')
+})
+
+test('legacy coupon lost commit response reconciles existing receipt and shared claim without redemption twice', async () => {
+  const h = await setup(), input = oldInput(); input.promoCode = 'JENNIETEST7'
+  h.sdk.docs.set('manual_coupons/coupon-1', { revision: 1, data: { $id: 'coupon-1', codeHash: hashReviewCouponCode(input.promoCode, Buffer.alloc(32, 7)), codeLast4: 'EST7', rewardPercent: 5, scope: 'cake', status: 'active', expiresAt: '2026-11-01T00:00:00.000Z' } })
+  h.sdk.uncertain = true
+  const created = await h.call('create-cake', input)
+  assert.equal(created.status, 200, JSON.stringify(created.body))
+  assert.deepEqual((await h.call('create-cake', input)).body, created.body)
+  assert.equal((await h.repository.list('claims')).length, 1)
+  assert.equal(h.sdk.calls.filter(([verb, p]) => verb === 'update' && p.collectionId === 'manual_coupons').length, 1)
+  assert.equal(h.sdk.docs.get('manual_coupons/coupon-1').data.redeemedReservationId, input.requestId)
+})

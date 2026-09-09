@@ -8,6 +8,10 @@ import { createCustomCakeRateLimiter, resolveCustomCakeAdmin } from './custom-ca
 import { createCakeV2CouponLedger } from './custom-cake-coupons.js'
 import { normalizeAustralianMobile } from './business.js'
 
+// Appwrite Databases transactions are authorized by documents.write. The
+// request uses only the platform dynamic key, so Function.scopes is authoritative.
+export const CUSTOM_CAKE_REQUIRED_SCOPES = Object.freeze(['functions.read', 'databases.read', 'collections.read', 'documents.read', 'documents.write', 'buckets.read', 'files.read', 'files.write'])
+
 export function cakeServicesForRequest(req, env) {
   const endpoint = env.APPWRITE_FUNCTION_API_ENDPOINT, projectId = env.APPWRITE_FUNCTION_PROJECT_ID, key = req.headers?.['x-appwrite-key']
   if (!endpoint || !projectId || !key) cakeWireFail('CAPABILITY_UNAVAILABLE')
@@ -41,7 +45,7 @@ export async function createCakeWireRuntime({ services, env, runtimeConfig, now 
   if (env.CUSTOM_CAKE_RECOVERY_ENABLED === 'true' && env.APPWRITE_FUNCTION_ID) {
     try {
       const fn = await services.functions.get({ functionId: env.APPWRITE_FUNCTION_ID })
-      recoveryReady = fn.$id === env.APPWRITE_FUNCTION_ID && fn.enabled === true && typeof fn.schedule === 'string' && fn.schedule.trim().split(/\s+/).length === 5
+      recoveryReady = fn.$id === env.APPWRITE_FUNCTION_ID && fn.enabled === true && typeof fn.schedule === 'string' && fn.schedule.trim().split(/\s+/).length === 5 && Array.isArray(fn.scopes) && CUSTOM_CAKE_REQUIRED_SCOPES.every(scope => fn.scopes.includes(scope))
     } catch { /* Missing schedule/scopes cannot enable new submissions. */ }
   }
   const securityReady = Boolean(independentKey && recoveryReady && String(env.REVIEW_ADMIN_USER_IDS || '').split(',').some(v => v.trim()))

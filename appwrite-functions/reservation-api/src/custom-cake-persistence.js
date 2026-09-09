@@ -10,6 +10,7 @@ const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{1
 const fail = code => { throw Object.assign(new Error(code), { code }) }
 const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 const clone = value => JSON.parse(JSON.stringify(value))
+const readOnlyResult = Symbol('custom-cake-read-only-result')
 
 export function resolveCustomCakePersistenceConfig(env = {}) {
   const config = { enabled: env.CUSTOM_CAKE_PERSISTENCE_ENABLED === 'true', databaseId: env.APPWRITE_CUSTOM_CAKE_DATABASE_ID, bucketId: env.APPWRITE_CUSTOM_CAKE_PHOTOS_BUCKET_ID }
@@ -18,7 +19,7 @@ export function resolveCustomCakePersistenceConfig(env = {}) {
   return config
 }
 
-function validJson(value, seen = new Set()) {
+function validJson(value, seen = new Set(), legacyReceipts = new WeakSet()) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return
   if (typeof value === 'number') { if (!Number.isSafeInteger(value) || Object.is(value, -0)) fail('PERSISTENCE_INVALID_RECORD'); return }
   if (typeof value !== 'object' || seen.has(value) || (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype)) fail('PERSISTENCE_INVALID_RECORD')
@@ -26,14 +27,22 @@ function validJson(value, seen = new Set()) {
   if (Array.isArray(value) && Object.keys(value).length !== value.length) fail('PERSISTENCE_INVALID_RECORD')
   for (const [key, entry] of Object.entries(value)) {
     if (['token', 'uploadToken', 'base64', 'x-custom-cake-upload-token', 'x-custom-cake-upload-session'].includes(key) || (key === 'promoCode' && entry !== '')) fail('PERSISTENCE_SENSITIVE_RECORD')
-    validJson(entry, seen)
+    // The old public receipt has one dollar display field. Its authoritative
+    // integer cents must agree; no other field/domain permits fractional money.
+    if (key === 'totalPrice' && legacyReceipts.has(value)) {
+      if (!nonnegative(value.totalPriceCents) || typeof entry !== 'number' || !Number.isFinite(entry) || entry < 0 || Object.is(entry, -0) || entry !== value.totalPriceCents / 100) fail('PERSISTENCE_INVALID_RECORD')
+    } else validJson(entry, seen, legacyReceipts)
   }
   seen.delete(value)
 }
 
 function validate(kind, value) {
   if (!CUSTOM_CAKE_RESOURCE_KEYS.includes(kind) || !value || Array.isArray(value) || typeof value !== 'object') fail('PERSISTENCE_INVALID_RECORD')
-  validJson(value)
+  const legacyReceipts = new WeakSet()
+  const receipt = kind === 'claims' && value.wire === 'cake-request-v1' ? value.creationResponse
+    : kind === 'commits' && typeof value.operationId === 'string' && value.operationId.startsWith('legacy-create/') ? value.result : null
+  if (receipt && typeof receipt === 'object' && !Array.isArray(receipt)) legacyReceipts.add(receipt)
+  validJson(value, new Set(), legacyReceipts)
   if (kind === 'snapshots') {
     const { request, creationResponse, lookupResponse, quoteHistory, transitionAudit } = value
     if (!request || !creationResponse || !lookupResponse || !Array.isArray(quoteHistory) || !Array.isArray(transitionAudit) || !['custom-cake.v1', 'cake-order.v2'].includes(request.contractVersion) || request.contractVersion !== creationResponse.contractVersion || request.contractVersion !== lookupResponse.contractVersion || request.requestId !== creationResponse.requestId) fail('PERSISTENCE_INVALID_RECORD')
@@ -223,14 +232,20 @@ export function createCustomCakeRepository(databases, config = {}) {
     return clone(claim.creationResponse)
   }
   function unit(transactionId) {
+    let changed = false
     return {
       transactionId,
       get: (kind, id) => get(kind, id, transactionId),
-      create: (kind, id, value) => store(kind, id, value, transactionId),
+      create: (kind, id, value) => { changed = true; return store(kind, id, value, transactionId) },
+      readOnly(result) {
+        if (changed) fail('PERSISTENCE_INVALID_RECORD')
+        return { [readOnlyResult]: result }
+      },
       async replace(kind, id, value) {
         const before = await get(kind, id, transactionId)
         if (!before) fail('PERSISTENCE_NOT_FOUND')
         preserve(kind, before, value)
+        changed = true
         return store(kind, id, value, transactionId, true, before)
       },
       async claimRequest(identity, creationResponse) {
@@ -270,6 +285,10 @@ export function createCustomCakeRepository(databases, config = {}) {
       try {
         const tx = unit(transactionId)
         const result = await work(tx)
+        if (result && Object.hasOwn(result, readOnlyResult)) {
+          await databases.updateTransaction({ transactionId, rollback: true })
+          return clone(result[readOnlyResult])
+        }
         await tx.create('commits', id, { operationId, result })
         committing = true
         await databases.updateTransaction({ transactionId, commit: true })

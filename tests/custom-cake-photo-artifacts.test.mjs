@@ -18,6 +18,11 @@ for (const phase of ['compatibility', 'full']) test(`${phase} photo archive inst
       import { normalizeCustomCakePhoto } from './src/custom-cake-photo-codec.js';
       import { createCustomCakePhotoService } from './src/custom-cake-photo-service.js';
       import { createCustomCakePhotoStorage } from './src/custom-cake-photo-storage.js';
+      import { createReservationHandler } from './src/main.js';
+      const handler = createReservationHandler({env:{},servicesForRequest:()=>({})});
+      const response = await handler({req:{bodyJson:{action:'get-cake-wire-capabilities'},bodyText:'{}',headers:{}},res:{json:(body,status)=>({body,status})},log(){},error(){}});
+      assert.equal(response.status,503);
+      assert.deepEqual(response.body,{ok:false,contractVersion:'custom-cake.v1',code:'CAPABILITY_UNAVAILABLE'});
       assert.throws(() => createCustomCakePhotoService(), {code:'CAPABILITY_UNAVAILABLE'});
       assert.throws(() => createCustomCakePhotoStorage(), {code:'CAPABILITY_UNAVAILABLE'});
       const bytes = await sharp({create:{width:4,height:3,channels:3,background:'red'}}).png().toBuffer();

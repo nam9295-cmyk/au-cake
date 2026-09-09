@@ -10,6 +10,7 @@ const fixture = n => JSON.parse(readFileSync(new URL(`./fixtures/custom-cake-con
 const custom = () => { const d = fixture('custom-v1').request; d.lines[0].photoRefs = []; return d }
 const admin = { 'x-appwrite-user-id': 'admin-1', 'x-appwrite-user-jwt': 'valid-admin-jwt' }
 const photoWire = 'custom-cake-photo.v1'
+const scopes = ['functions.read', 'databases.read', 'collections.read', 'documents.read', 'documents.write', 'buckets.read', 'files.read', 'files.write']
 export async function harness({ smoreWritesEnabled = true } = {}) {
   assert.equal(typeof main.createReservationHandler, 'function')
   const targets = customCakeSchemaTargets({ endpoint: 'https://synthetic.invalid/v1', projectId: 'synthetic-project', databaseId: 'test-db' })
@@ -34,7 +35,7 @@ export async function harness({ smoreWritesEnabled = true } = {}) {
     getFileDownload: async p => files.get(p.fileId),
     deleteFile: async p => { files.delete(p.fileId) },
   }
-  const services = { databases: sdk, storage, functions: { get: async () => ({ $id: 'reservation-api', enabled: true, schedule: '*/15 * * * *' }) }, accountForJwt: jwt => ({ get: async () => { if (jwt !== 'valid-admin-jwt') throw new Error('invalid token'); return { $id: 'admin-1' } } }) }
+  const services = { databases: sdk, storage, functions: { get: async () => ({ $id: 'reservation-api', enabled: true, schedule: '*/15 * * * *', scopes: [...scopes] }) }, accountForJwt: jwt => ({ get: async () => { if (jwt !== 'valid-admin-jwt') throw new Error('invalid token'); return { $id: 'admin-1' } } }) }
   let time = new Date('2026-09-09T00:00:00.000Z')
   const handler = main.createReservationHandler({ env, servicesForRequest: () => services, now: () => time, smoreWritesEnabled })
   const call = async (action, data, headers = {}, bodyText) => {
@@ -54,6 +55,17 @@ test('actual handler advertises only provisioned wire and maps strict errors wit
   const unavailable = await h.call('create-cake-order-v2', fixture('cake-order-v2').request)
   assert.deepEqual(unavailable.body, { ok: false, contractVersion: 'cake-order.v2', code: 'CAPABILITY_UNAVAILABLE' })
   assert.equal(unavailable.status, 503)
+})
+
+test('capability requires every dynamic key scope needed for transactional writes and private recovery', async () => {
+  const h = await harness()
+  for (const omitted of scopes) {
+    h.services.functions.get = async () => ({ $id: 'reservation-api', enabled: true, schedule: '*/15 * * * *', scopes: scopes.filter(s => s !== omitted) })
+    const reply = await h.call('get-cake-wire-capabilities')
+    assert.equal(reply.body.result.customCakeV1, false, omitted); assert.equal(reply.body.result.cakeOrderV2, false, omitted)
+    assert.equal((await h.call('create-custom-cake-request', custom())).body.code, 'CAPABILITY_UNAVAILABLE')
+    assert.equal(h.sdk.docs.size, 0)
+  }
 })
 
 test('actual handler authenticates customer possession and verified admin through full lifecycle', async () => {
@@ -144,4 +156,66 @@ test('platform schedule performs durable photo recovery and persists continuatio
   assert.equal((await h.call('get-cake-wire-capabilities')).body.result.customCakeV1, false)
   const unavailable = await h.call('anything', undefined, { 'x-appwrite-trigger': 'schedule' }); assert.equal(unavailable.status, 503)
   assert.equal((await h.call('recover-custom-cake-photos')).body.code, 'UNKNOWN_ACTION')
+})
+
+test('scheduled bounded scan resumes after a thousand retained tombstones instead of starving later orphan', async () => {
+  const h = await harness(), requestId = custom().requestId
+  const session = await h.call('create-custom-cake-photo-session', { contractVersion: photoWire, requestId })
+  const proof = { 'x-custom-cake-upload-session': session.body.result.uploadSessionId, 'x-custom-cake-upload-token': session.body.result.uploadToken }
+  const bytes = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#aa5588' } }).png().toBuffer()
+  const uploaded = await h.call('upload-custom-cake-photo', { contractVersion: photoWire, requestId, uploadId: 'orphan', mimeType: 'image/png', base64: bytes.toString('base64') }, proof)
+  const photo = await h.repository.get('photos', uploaded.body.result.photoRef)
+  for (let page = 0; page < 20; page++) await h.repository.atomic(`retained-${page}`, async tx => {
+    for (let i = page * 50; i < (page + 1) * 50; i++) {
+      const id = i.toString(16).padStart(36, '0'); assert.ok(id < uploaded.body.result.photoRef)
+      await tx.create('photos', id, { ...photo, state: 'deleted', fileId: `retained-${i}`, uploadId: `retained-${i}` })
+    }
+    return null
+  })
+  h.clock('2026-09-11T00:00:00.000Z')
+  const first = await h.call('internal', undefined, { 'x-appwrite-trigger': 'schedule' })
+  assert.equal(first.status, 200); assert.equal(first.body.result.inspected, 1000); assert.equal(h.files.size, 1)
+  assert.equal((await h.repository.get('ratelimits', 'photo-recovery-cursor')).cursor, '0000000000000000000000000000000003e7')
+  const second = await h.call('internal', undefined, { 'x-appwrite-trigger': 'schedule' })
+  assert.equal(second.status, 200); assert.equal(second.body.result.inspected, 1); assert.equal(h.files.size, 0)
+  assert.equal((await h.repository.get('ratelimits', 'photo-recovery-cursor')).cursor, null)
+})
+
+test('actual simultaneous quote edits return the precise losing CAS conflict and commit one quote event', async () => {
+  const h = await harness(), created = await h.call('create-custom-cake-request', custom())
+  const input = { contractVersion: 'custom-cake.v1', requestNumber: created.body.result.requestNumber, expectedQuoteVersion: 1, designExtraCents: 100, figurineExtraCents: 0, explanation: 'Design' }
+  let entered = 0, release; const barrier = new Promise(resolve => { release = resolve }), update = h.sdk.updateDocument
+  h.sdk.updateDocument = async p => {
+    const result = await update(p)
+    if (p.collectionId === 'custom_cake_snapshots') { if (++entered === 2) release(); await barrier }
+    return result
+  }
+  const replies = await Promise.all([h.call('admin-update-custom-cake-quote', input, admin), h.call('admin-update-custom-cake-quote', { ...input, designExtraCents: 200 }, admin)])
+  assert.equal(replies.filter(r => r.status === 200).length, 1)
+  assert.equal(replies.find(r => r.status !== 200).body.code, 'QUOTE_VERSION_CONFLICT')
+  const snapshot = await h.repository.get('snapshots', custom().requestId)
+  assert.equal(snapshot.quoteHistory.length, 1); assert.equal(snapshot.lookupResponse.quote.quoteVersion, 2)
+  assert.equal((await h.repository.list('outbox')).length, 2)
+})
+
+test('actual handler enforces allowed source state before version for every custom lifecycle action', async () => {
+  for (const state of ['requested', 'quoted', 'confirmed', 'completed', 'cancelled']) {
+    const h = await harness(), receipt = await h.call('create-custom-cake-request', custom()), n = receipt.body.result.requestNumber
+    const b = { contractVersion: 'custom-cake.v1', requestNumber: n }
+    if (state !== 'requested') {
+      await h.call('admin-update-custom-cake-quote', { ...b, expectedQuoteVersion: 1, designExtraCents: 0, figurineExtraCents: 0, explanation: '' }, admin)
+      if (state !== 'quoted') {
+        await h.call('admin-record-custom-cake-acceptance', { ...b, quoteVersion: 2, customerConsent: true }, admin)
+        await h.call('admin-confirm-custom-cake-request', { ...b, expectedQuoteVersion: 2 }, admin)
+        if (['completed', 'cancelled'].includes(state)) await h.call(`admin-${state === 'completed' ? 'complete' : 'cancel'}-custom-cake-request`, { ...b, expectedStatus: 'confirmed', expectedQuoteVersion: 2 }, admin)
+      }
+    }
+    const before = await h.repository.get('snapshots', custom().requestId)
+    const quote = await h.call('admin-update-custom-cake-quote', { ...b, expectedQuoteVersion: 99, designExtraCents: 0, figurineExtraCents: 0, explanation: '' }, admin)
+    assert.equal(quote.body.code, ['requested', 'quoted'].includes(state) ? 'QUOTE_VERSION_CONFLICT' : 'QUOTE_STATE_CONFLICT', state)
+    const accept = await h.call('admin-record-custom-cake-acceptance', { ...b, quoteVersion: 99, customerConsent: true }, admin)
+    const confirm = await h.call('admin-confirm-custom-cake-request', { ...b, expectedQuoteVersion: 99 }, admin)
+    for (const reply of [accept, confirm]) assert.equal(reply.body.code, ['quoted', 'confirmed'].includes(state) ? 'QUOTE_VERSION_CONFLICT' : 'QUOTE_STATE_CONFLICT', state)
+    assert.deepEqual(await h.repository.get('snapshots', custom().requestId), before)
+  }
 })

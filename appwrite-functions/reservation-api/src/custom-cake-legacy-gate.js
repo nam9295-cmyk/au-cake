@@ -46,7 +46,7 @@ export function createLegacyCakeGate({ env, services }) {
       try {
         return await r.atomic(`legacy-create/${identity.requestId}/${randomUUID()}`, async tx => {
           const existing = await tx.get('claims', identity.requestId)
-          if (existing) return (await tx.claimRequest(identity, null)).creationResponse
+          if (existing) return tx.readOnly((await tx.claimRequest(identity, null)).creationResponse)
           const response = await create(tx.transactionId)
           await tx.claimRequest(identity, response)
           return response

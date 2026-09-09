@@ -18,8 +18,18 @@ function service() {
     async createTransaction() { const id = `tx${++serial}`; txs.set(id, { view: structuredClone(docs), writes: new Map(), state: 'pending' }); return { $id: id } },
     async getDocument(p) { api.calls.push(['get', p]); const d = view(p).get(key(p)); if (!d) throw fail(404); return structuredClone(d.data) },
     async listDocuments(p) {
-      let documents = [...docs.entries()].filter(([k]) => k.startsWith(`${p.collectionId}/`)).map(([, v]) => v.data)
-      for (const query of p.queries.map(JSON.parse)) if (query.method === 'equal') documents = documents.filter(d => query.values.includes(d[query.attribute]))
+      api.calls.push(['list', p])
+      let documents = [...view(p).entries()].filter(([k]) => k.startsWith(`${p.collectionId}/`)).map(([, v]) => v.data)
+      const queries = p.queries.map(JSON.parse)
+      for (const query of queries) {
+        if (query.method === 'equal') documents = documents.filter(d => query.values.includes(d[query.attribute]))
+        if (query.method === 'lessThanEqual') documents = documents.filter(d => d[query.attribute] <= query.values[0])
+        if (query.method === 'orderAsc') documents.sort((a, b) => a[query.attribute] < b[query.attribute] ? -1 : a[query.attribute] > b[query.attribute] ? 1 : 0)
+      }
+      const cursor = queries.find(q => q.method === 'cursorAfter')
+      if (cursor) { const index = documents.findIndex(d => d.$id === cursor.values[0]); documents = documents.slice(index + 1) }
+      const limit = queries.find(q => q.method === 'limit')
+      if (limit) documents = documents.slice(0, limit.values[0])
       return { documents: structuredClone(documents), total: documents.length }
     },
     async createDocument(p) { api.calls.push(['create', p]); if (view(p).has(key(p))) throw fail(409); return write(p) },
@@ -109,6 +119,34 @@ test('snapshot replacement preserves immutable receipt, history and pricing whil
 })
 
 export { service, config }
+
+test('legacy claim and commit retain decimal dollar display only when backed by exact integer cents', async () => {
+  const m = await load(), claim = { ...identity, wire: 'cake-request-v1', creationResponse: { totalPrice: 75.05, totalPriceCents: 7505 } }
+  assert.deepEqual(m.decodeCustomCakeRecord('claims', m.encodeCustomCakeRecord('claims', claim)), claim)
+  const marker = { operationId: 'legacy-create/request/synthetic', result: claim.creationResponse }
+  assert.deepEqual(m.decodeCustomCakeRecord('commits', m.encodeCustomCakeRecord('commits', marker)), marker)
+  for (const response of [{ totalPrice: 75.06, totalPriceCents: 7505 }, { totalPrice: -1, totalPriceCents: -100 }, { totalPrice: 75.05, totalPriceCents: 7505.5 }, { totalPrice: Infinity, totalPriceCents: 7505 }, { totalPrice: 75.05, totalPriceCents: 7505, discountCents: 0.5 }]) {
+    assert.throws(() => m.encodeCustomCakeRecord('claims', { ...claim, creationResponse: response }), { code: 'PERSISTENCE_INVALID_RECORD' })
+  }
+  assert.throws(() => m.encodeCustomCakeRecord('claims', { ...claim, wire: 'cake-order.v2' }), { code: 'PERSISTENCE_INVALID_RECORD' })
+  assert.throws(() => m.encodeCustomCakeRecord('outbox', { totalPrice: 75.05, totalPriceCents: 7505 }), { code: 'PERSISTENCE_INVALID_RECORD' })
+})
+
+test('transaction read-only replay and rate denial create no commit marker or durable write', async () => {
+  const m = await load(), sdk = service(), repo = m.createCustomCakeRepository(sdk, config)
+  const replay = await repo.atomic('read-only-replay', async tx => {
+    assert.equal(typeof tx.readOnly, 'function')
+    assert.equal(await tx.get('claims', identity.requestId), null)
+    return tx.readOnly({ noOp: true })
+  })
+  assert.deepEqual(replay, { noOp: true }); assert.equal(sdk.docs.size, 0)
+  assert.equal(sdk.calls.filter(([verb]) => ['create', 'update'].includes(verb)).length, 0)
+  await assert.rejects(repo.atomic('invalid-read-only', async tx => {
+    await tx.create('outbox', 'event', { state: 'pending' })
+    return tx.readOnly(null)
+  }), { code: 'PERSISTENCE_INVALID_RECORD' })
+  assert.equal(sdk.docs.size, 0)
+})
 
 test('unresolved commit fails closed; JSON cannot silently erase holes or typed metadata', async () => {
   const m = await load(), sdk = service(), repo = m.createCustomCakeRepository(sdk, config)

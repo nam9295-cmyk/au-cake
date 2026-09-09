@@ -30,7 +30,7 @@ export function createCustomCakeRateLimiter({ repository, key, now = () => new D
           for (const [scope, limit] of limits) {
             const id = digest(scope), old = await tx.get('ratelimits', id)
             const used = old?.window === window ? old.used : 0
-            if (!Number.isSafeInteger(used) || used < 0 || used >= limit) return false
+            if (!Number.isSafeInteger(used) || used < 0 || used >= limit) return tx.readOnly(false)
             records.push({ id, old, next: { window, used: used + 1, state: 'rate-limit', dueAt: resetAt } })
           }
           for (const r of records) await tx[r.old ? 'replace' : 'create']('ratelimits', r.id, r.next)

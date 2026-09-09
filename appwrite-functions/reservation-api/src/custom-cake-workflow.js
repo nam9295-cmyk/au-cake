@@ -85,7 +85,7 @@ export function createCustomCakeWorkflow({ repository, fingerprintKey, promotion
     if (rows.length !== 1 || rows[0].value.request.contractVersion !== wire) cakeWireFail('NOT_FOUND')
     return rows[0]
   }
-  async function create(value, headers) {
+  async function create(value, headers, attempt = 0) {
     const custom = value?.contractVersion === 'custom-cake.v1'
     const request = custom ? normalizeCustomCakeV1Request(value) : normalizeCakeOrderV2Request(value)
     const fingerprint = (custom ? fingerprintCustomCakeV1Request : fingerprintCakeOrderV2Request)(request, fingerprintKey)
@@ -97,7 +97,7 @@ export function createCustomCakeWorkflow({ repository, fingerprintKey, promotion
     try {
       return await repository.atomic(`create/${request.requestId}/${fingerprint}/${randomUUID()}`, async tx => {
         const prior = await tx.get('claims', request.requestId)
-        if (prior) return (await tx.claimRequest(identity, null)).creationResponse
+        if (prior) return tx.readOnly((await tx.claimRequest(identity, null)).creationResponse)
         await assertLegacyAbsent(request.requestId, tx.transactionId)
         const receivedAt = now()
         validateNewCakeWirePickup(request, receivedAt)
@@ -117,24 +117,29 @@ export function createCustomCakeWorkflow({ repository, fingerprintKey, promotion
       if (error.code === 'TRANSACTION_CONFLICT') {
         const committed = await repository.findReplay(identity)
         if (committed) return committed
+        if (attempt < 2) return create(value, headers, attempt + 1)
       }
       throw error
     }
   }
-  async function mutate(action, input, actor) {
+  async function mutate(action, input, actor, attempt = 0) {
     validateMutation(action, input, actor)
     const row = await find(input.requestNumber)
     const initial = structuredClone(row.value)
     if (!transition(initial, action, input, actor, now().toISOString())) return row.value.lookupResponse
-    return repository.atomic(`mutation/${row.id}/${action}/${randomUUID()}`, async tx => {
+    try { return await repository.atomic(`mutation/${row.id}/${action}/${randomUUID()}`, async tx => {
       const snapshot = await tx.get('snapshots', row.id)
       if (!snapshot || snapshot.lookupResponse.requestNumber !== input.requestNumber) cakeWireFail('NOT_FOUND')
       const at = now().toISOString()
-      if (!transition(snapshot, action, input, actor, at)) return snapshot.lookupResponse
+      if (!transition(snapshot, action, input, actor, at)) return tx.readOnly(snapshot.lookupResponse)
       await tx.replace('snapshots', row.id, snapshot)
       if (action === 'quote' || action === 'confirm') await persistCakeEvent(tx, snapshot, `custom-cake.${action === 'quote' ? 'quoted' : 'confirmed'}`, at, action === 'quote' ? input.explanation.trim() : '')
       return snapshot.lookupResponse
-    })
+    }) } catch (error) {
+      // A definite failed CAS can be re-read; ambiguous commit cannot be rerun.
+      if (error.code === 'TRANSACTION_CONFLICT' && attempt < 2) return mutate(action, input, actor, attempt + 1)
+      throw error
+    }
   }
   return { create, mutate, find }
 }
