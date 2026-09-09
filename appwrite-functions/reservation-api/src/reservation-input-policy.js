@@ -161,4 +161,3 @@ export function minutes(value) {
   if (!match) return null
   return Number(match[1]) * 60 + Number(match[2])
 }
-

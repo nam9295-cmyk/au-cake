@@ -73,4 +73,3 @@ export function buildCakeOrderData(input, { now, reservationNumber, reviewCoupon
     updatedAt: createdAt,
   }
 }
-

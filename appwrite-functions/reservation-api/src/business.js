@@ -120,8 +120,6 @@ export function validateReviewCoupon(coupon, normalizedCodeValue, now = new Date
   }
 }
 
-// Only this product accepts (and discards) known client price projections.
-
 export function generateCakeReservationNumber(date = new Date()) {
   const ymd = sydneyDateValue(date).replaceAll('-', '')
   return `VG-C-AU-${ymd}-${sydneyTimeCode(date)}${Math.floor(Math.random() * 900 + 100)}`

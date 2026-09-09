@@ -253,6 +253,7 @@ export const ORDER_LINE_IDENTITY_KEYS = [...LEGACY_ORDER_LINE_IDENTITY_KEYS, 'ch
 
 export const ORDER_LINE_INPUT_KEYS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity'])
 
+// Only this product accepts (and discards) known client price projections.
 export const SMORE_CLIENT_PRICE_KEYS = new Set([
   'price', 'unitPrice', 'totalPrice', 'unitPriceCents', 'subtotalCents',
   'discountPercent', 'discountCents', 'totalPriceCents', 'discountBasisCents',
