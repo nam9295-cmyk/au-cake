@@ -82,6 +82,21 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         const ordinaryData = wireData.buildCakeOrderV2Data(ordinary.request, { now: new Date(ordinary.created.pricing.pricedAt), reservationNumber: ordinary.created.reservationNumber });
         assert.deepEqual(ordinaryData.creationResponse, ordinary.created);
         assert.deepEqual(ordinaryData.lookupResponse, ordinary.lookup);
+        if (${JSON.stringify(name)} === 'notification') {
+          verify('src/custom-cake-notification-runtime.js');
+          const runtime = await import(pathToFileURL(path.resolve('src/custom-cake-notification-runtime.js')));
+          assert.equal(typeof runtime.createCustomCakeNotificationRuntime, 'function');
+          const notification = await import(pathToFileURL(path.resolve('src/custom-cake-notification.js')));
+          const { customCakeDocumentId } = await import(pathToFileURL(path.resolve('shared/reservation-api/custom-cake-persistence.js')));
+          for (const [eventType, snapshot] of [['custom-cake.received', custom.lookup], ['custom-cake.quoted', { ...custom.finalLookup, status: 'quoted' }], ['custom-cake.confirmed', custom.finalLookup], ['cake-order-v2.received', ordinary.lookup]]) {
+            const quoteVersion = snapshot.quote?.quoteVersion || 0;
+            const event = { schemaVersion: 1, eventType, requestId: custom.request.requestId, requestNumber: snapshot.requestNumber || snapshot.reservationNumber, quoteVersion, occurredAt: '2026-10-03T00:00:00.000Z', state: 'pending', dueAt: '2026-10-03T00:00:00.000Z', snapshot, explanation: '' };
+            const id = customCakeDocumentId('custom-cake-event-v1', event.requestId + '/' + eventType + '/' + quoteVersion);
+            const payload = notification.buildCustomCakeEmailPayload({ id, event, from: 'Cake <cake@example.invalid>', role: 'customer' });
+            assert.equal(payload.template, eventType);
+            assert.ok(!JSON.stringify(payload).includes('photo_A'));
+          }
+        }
       `
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
         cwd: extracted, input: JSON.stringify({ ...baseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',

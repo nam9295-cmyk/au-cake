@@ -1,3 +1,4 @@
+import { customCakeDeployment } from './custom-cake-deploy-config.mjs'
 const RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 
 export const FUNCTION_SCOPES = Object.freeze([
@@ -54,6 +55,10 @@ function endpoint(env) {
 
 function transactionCompatibleRuntime(env) {
   const value = String(env.APPWRITE_RESERVATION_API_RUNTIME || 'node-16.0').trim()
+  if (env.CUSTOM_CAKE_BACKEND_DEPLOY_ENABLED === 'true') {
+    if (value !== 'node-22.0') throw new Error('APPWRITE_RESERVATION_API_RUNTIME must explicitly be node-22.0 for custom backend deployment.')
+    return value
+  }
   if (value !== 'node-16.0') {
     throw new Error('APPWRITE_RESERVATION_API_RUNTIME must be node-16.0 for this self-hosted Appwrite deployment.')
   }
@@ -89,10 +94,11 @@ function couponHmacSecret(env) {
 }
 
 export function isSecretFunctionVariable(key) {
-  return key === 'CALENDAR_VIEW_PIN' || key === 'CALENDAR_TOKEN_SECRET' || key === 'REVIEW_COUPON_HMAC_SECRET'
+  return key === 'CALENDAR_VIEW_PIN' || key === 'CALENDAR_TOKEN_SECRET' || key === 'REVIEW_COUPON_HMAC_SECRET' || key === 'CUSTOM_CAKE_PHOTO_TOKEN_HMAC_SECRET' || key === 'REVIEW_ADMIN_USER_IDS'
 }
 
 export function resolveDeployConfig(env = {}) {
+  const custom = customCakeDeployment(env, 'api', FUNCTION_SCOPES)
   const cakeDatabaseId = resourceId(env, 'APPWRITE_CAKE_DATABASE_ID')
   const kidsDatabaseId = resourceId(env, 'APPWRITE_KIDS_DATABASE_ID')
   const pin = required(env, 'CALENDAR_VIEW_PIN')
@@ -106,7 +112,9 @@ export function resolveDeployConfig(env = {}) {
     apiKey: required(env, 'APPWRITE_API_KEY'),
     functionId: resourceId(env, 'APPWRITE_RESERVATION_API_FUNCTION_ID', 'reservation-api'),
     runtime: transactionCompatibleRuntime(env),
+    ...(env.CUSTOM_CAKE_BACKEND_DEPLOY_ENABLED === 'true' ? { customCakeFunctionOptions: custom.functionOptions } : {}),
     runtimeVariables: {
+      ...custom.runtimeVariables,
       MARKET: String(env.MARKET || 'AU').trim(),
       APPWRITE_CAKE_DATABASE_ID: cakeDatabaseId,
       APPWRITE_KIDS_DATABASE_ID: kidsDatabaseId,
@@ -171,6 +179,7 @@ export function buildHealthFailureDiagnostic(execution = {}, secrets = []) {
 }
 
 export function buildDryRunPlan(env = {}) {
+  const custom = customCakeDeployment(env, 'api', FUNCTION_SCOPES)
   const variableValues = {
     MARKET: env.MARKET || 'AU',
     APPWRITE_CAKE_DATABASE_ID: env.APPWRITE_CAKE_DATABASE_ID,
@@ -193,7 +202,8 @@ export function buildDryRunPlan(env = {}) {
       id: maskValue(env.APPWRITE_RESERVATION_API_FUNCTION_ID || 'reservation-api'),
       runtime: env.APPWRITE_RESERVATION_API_RUNTIME || 'node-16.0',
       source: 'appwrite-functions/reservation-api/{package.json,package-lock.json,src/**}',
-      scopes: [...FUNCTION_SCOPES],
+      scopes: custom.functionOptions.scopes || [...FUNCTION_SCOPES],
+      ...(custom.functionOptions.schedule ? { schedule: custom.functionOptions.schedule, customRuntimePrerequisite: 'Operator must verify self-hosted node-22.0 availability before deployment.' } : {}),
       variableNames: Object.keys(variableValues),
       maskedVariables: Object.fromEntries(Object.entries(variableValues).map(([key, value]) => [key, maskValue(value)])),
     },

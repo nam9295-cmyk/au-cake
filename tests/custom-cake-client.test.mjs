@@ -26,6 +26,9 @@ test('creation and lookup cannot substitute for each other', () => {
   assert.throws(() => parse('parseCustomCakeLookupResponse', custom.created))
   assert.throws(() => parse('parseCakeOrderV2CreateResponse', ordinary.lookup))
   assert.throws(() => parse('parseCakeOrderV2LookupResponse', ordinary.created))
+  const parent = structuredClone(custom.created)
+  parent.paidSmoreLines[0].parentCakeLineId = parent.paidSmoreLines[0].lineId
+  assert.throws(() => parse('parseCustomCakeCreateResponse', parent))
 })
 test('custom parser rejects inconsistent money, parent graph, finality, status and history', () => {
   for (const change of [
@@ -59,6 +62,7 @@ test('v2 validates saved arithmetic and graph without repricing against catalogu
     v => { v.pricing.lines[1].parentCakeLineId = v.pricing.lines[1].lineId },
     v => { v.pricing.lines[1].discountPercent = 10 }, v => { v.pricing.lines[0].options.extra = true },
     v => { v.pricing.lines[0].totalCents = Infinity }, v => { v.pricing.pricedAt = '2026-02-30T00:00:00.000Z' },
+    v => { v.pricing.lines[0].discountPercent = 5 },
   ]) { const bad = structuredClone(ordinary.lookup); change(bad); assert.throws(() => parse('parseCakeOrderV2LookupResponse', bad)) }
 })
 test('capability is separate and fails closed', () => {
@@ -94,6 +98,8 @@ test('real Appwrite execution adapter selects actions, isolated headers and stri
   assert.deepEqual(calls[1].headers, { 'x-appwrite-user-jwt': 'test-admin-jwt' })
   reply = { responseStatusCode: 409, responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'QUOTE_VERSION_CONFLICT' }) }
   await assert.rejects(repo.confirmCustomCakeRequest({}), /^Error: QUOTE_VERSION_CONFLICT$/)
+  reply = { responseStatusCode: NaN, responseBody: JSON.stringify({ ok: true, result: custom.created }) }
+  await assert.rejects(repo.createCustomCakeRequest(custom.request), /^Error: CAKE_WIRE_INVALID_RESPONSE$/)
   for (const body of [{ ok: false, code: 'CAKE_ORDER_UPGRADE_REQUIRED' }, { ok: false, contractVersion: 'cake-order.v2', code: 'QUOTE_VERSION_CONFLICT' }, { ok: false, contractVersion: 'custom-cake.v1', code: 'SECRET_PROVIDER_ERROR' }, { ok: true, result: custom.created, secret: true }]) {
     reply = { responseStatusCode: 409, responseBody: JSON.stringify(body) }
     await assert.rejects(repo.createCustomCakeRequest(custom.request), /^Error: CAKE_WIRE_INVALID_RESPONSE$/)

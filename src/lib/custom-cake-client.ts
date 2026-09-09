@@ -50,7 +50,8 @@ function graph(lines: GraphLine[], parentKind: string, requireCake: boolean): bo
   return lines.length > 0 && ids.size === lines.length && (!requireCake || lines.some(line => line.kind === parentKind)) && lines.every(line => line.kind !== 'cake-addon-smore' || (line.parentCakeLineId !== null && line.parentCakeLineId !== line.lineId && ids.get(line.parentCakeLineId)?.kind === parentKind))
 }
 function paid(q: CustomCakeQuote, lines: SmorePricedLine[]) {
-  return new Set(lines.map(l => l.lineId)).size === lines.length && q.paidSmoreQuantity === sum(lines.map(l => l.quantity)) && q.paidSmoreTotalCents === sum(lines.map(l => l.totalCents))
+  const ids = new Set(lines.map(l => l.lineId))
+  return ids.size === lines.length && lines.every(l => l.kind !== 'cake-addon-smore' || !ids.has(l.parentCakeLineId)) && q.paidSmoreQuantity === sum(lines.map(l => l.quantity)) && q.paidSmoreTotalCents === sum(lines.map(l => l.totalCents))
 }
 const customFields = { contractVersion: literal('custom-cake.v1'), requestNumber: string(1, 128), quote: guard(parseQuote), paidSmoreLines: array(smorePriced), acceptance: nullable(acceptance) }
 export function parseCustomCakeCreateResponse(value: unknown): CustomCakeCreateResponse {
@@ -80,9 +81,14 @@ export function parseCustomCakeLookupResponse(value: unknown): CustomCakeLookupR
   })
 }
 export function parseCustomCakeMutationResponse(value: unknown): CustomCakeMutationResponse { return parseCustomCakeLookupResponse(value) }
+function allocatedDiscount(line: CakePricedLineV2): boolean {
+  const numerator = BigInt(line.subtotalCents) * BigInt(line.discountPercent)
+  const discount = BigInt(line.discountCents)
+  return discount >= numerator / 100n && discount <= (numerator + 99n) / 100n
+}
 const options = object({ cakeSize: literal('6in', '8in', '10in', '15cm'), chocolateType: literal('dark', 'milk'), poundAddon: literal('none', 'extra-chocolate', 'vanilla-cream'), cupcakeFinish: literal('basic', 'vanilla-fresh-cream', 'chocolate-buttercream'), chocolateIcingCount: integer, chocolateExtra: literal('none', 'eiffel-6', 'pave-100g', 'combo'), brownieCreamOption: literal('none', 'fresh-cream'), vanillaCreamCount: literal(0), partyDecorationCount: literal(0), vanillaCakeSheet: literal('vanilla', 'chocolate'), vanillaCakeFlavor: literal('plain', 'triple-berry'), vanillaCakePointColor: literal('pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'), individualPackaging: bool })
 const cakePriced = guard(v => checked<CakePricedLineV2>(v, object({ kind: literal('cake'), lineId: id, parentCakeLineId: literal(null), productId: literal('pave-cake', 'buttercream-cake', 'fresh-strawberry-vanilla-cream-cake', 'fresh-strawberry-chocolate-cream-cake', 'pound-cake', 'cupcake-half-dozen', 'cupcake-dozen', 'fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16', 'brownie-cheesecake', 'pave-brownie-cheesecake'), quantity: cakeQuantity, options, ...moneyFields, discountPercent: literal(0, 5, 10), chocolateExtraCents: integer, individualPackagingPieces: integer, individualPackagingFeeCents: integer }), l =>
-  l.subtotalCents === sum([l.unitPriceCents * l.quantity, l.chocolateExtraCents]) && l.discountCents <= l.subtotalCents && (l.discountPercent !== 0 || l.discountCents === 0) && l.totalCents === sum([l.subtotalCents - l.discountCents, l.individualPackagingFeeCents])))
+  l.subtotalCents === sum([l.unitPriceCents * l.quantity, l.chocolateExtraCents]) && l.discountCents <= l.subtotalCents && allocatedDiscount(l) && l.totalCents === sum([l.subtotalCents - l.discountCents, l.individualPackagingFeeCents])))
 function parsePricing(value: unknown): CakeOrderV2Pricing {
   return checked<CakeOrderV2Pricing>(value, object({ currency: literal('AUD'), pricingPolicyVersion: literal('cake-order.2026-09.v2'), pricedAt: timestamp, lines: array(either(cakePriced, smorePriced)), subtotalCents: integer, discountCents: integer, individualPackagingFeeCents: integer, totalCents: integer }), p =>
     graph(p.lines, 'cake', false) && p.subtotalCents === sum(p.lines.map(l => l.subtotalCents)) && p.discountCents === sum(p.lines.map(l => l.discountCents)) && p.individualPackagingFeeCents === sum(p.lines.map(l => l.kind === 'cake' ? l.individualPackagingFeeCents : 0)) && p.totalCents === sum(p.lines.map(l => l.totalCents)) && p.totalCents === sum([p.subtotalCents - p.discountCents, p.individualPackagingFeeCents]))

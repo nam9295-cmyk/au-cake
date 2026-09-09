@@ -141,8 +141,8 @@ function reminderOccurrence(sourceType, occurrence) {
 
 export function buildEmailDeliveryEventKey({ template, sourceType, sourceId, occurrence } = {}, { identityPolicy } = {}) {
   if (identityPolicy !== undefined) {
-    if (identityPolicy !== CUSTOM_CAKE_EMAIL_IDENTITY_POLICY || !Object.hasOwn(CUSTOM_CAKE_EMAIL_TEMPLATES, template) || CUSTOM_CAKE_EMAIL_TEMPLATES[template] !== sourceType || !/^[a-f0-9]{36}$/.test(sourceId || '') || occurrence !== undefined) fail('INVALID_EMAIL_DELIVERY_EVENT')
-    return `${template}:${sourceId}`
+    if (identityPolicy !== CUSTOM_CAKE_EMAIL_IDENTITY_POLICY || !Object.hasOwn(CUSTOM_CAKE_EMAIL_TEMPLATES, template) || CUSTOM_CAKE_EMAIL_TEMPLATES[template] !== sourceType || !/^[a-f0-9]{36}$/.test(sourceId || '') || !['customer', 'operator'].includes(occurrence) || (occurrence === 'operator' && !template.endsWith('.received'))) fail('INVALID_EMAIL_DELIVERY_EVENT')
+    return `${template}:${sourceId}:${occurrence}`
   }
   if (!EMAIL_DELIVERY_TEMPLATES.includes(template) || !templateAllowsSourceType(template, sourceType)) {
     fail('INVALID_EMAIL_DELIVERY_EVENT')

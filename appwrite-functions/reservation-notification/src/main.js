@@ -1434,8 +1434,16 @@ export function createReservationNotificationHandler({
   createReservationRepository = createRuntimeReservationRepository,
   createTransport = createResendTransport,
   now = () => new Date(),
+  createCustomCakeRuntime = async input => (await import('./custom-cake-notification-runtime.js')).createCustomCakeNotificationRuntime(input),
 } = {}) {
   return async ({ req, res, log = () => {}, error = () => {} }) => {
+    if (req.headers?.['x-appwrite-trigger'] === 'schedule') {
+      if (env.CUSTOM_CAKE_NOTIFICATIONS_ENABLED !== 'true') return res.json({ ok: true, result: { status: 'disabled' } })
+      try {
+        const runtime = await createCustomCakeRuntime({ req, env, now })
+        return res.json({ ok: true, result: await runtime.run({ log, error }) })
+      } catch { return res.json({ ok: false, code: 'CUSTOM_CAKE_NOTIFICATION_UNAVAILABLE' }, 503) }
+    }
     const body = readRequestBody(req)
     const actionRequest = manualActionData(body)
     if (actionRequest) {

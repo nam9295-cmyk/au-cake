@@ -9,7 +9,7 @@ const moduleUrl = new URL('../appwrite-functions/reservation-notification/src/cu
 const notification = existsSync(moduleUrl) ? await import(moduleUrl.href) : {}
 const fixtures = name => JSON.parse(readFileSync(new URL(`./fixtures/custom-cake-contract/${name}.json`, import.meta.url)))
 const now = new Date('2026-10-03T00:00:00.000Z')
-const mail = { from: 'Cake <cake@example.invalid>', replyTo: null }
+const mail = { from: 'Cake <cake@example.invalid>', replyTo: null, operatorRecipients: ['owner@example.invalid'] }
 const eventId = event => customCakeDocumentId('custom-cake-event-v1', `${event.requestId}/${event.eventType}/${event.quoteVersion}`)
 function event(type = 'custom-cake.received', version) {
   const f = fixtures(type.startsWith('cake-order') ? 'cake-order-v2' : 'custom-v1')
@@ -19,7 +19,7 @@ function event(type = 'custom-cake.received', version) {
 }
 test('new private identity policy is opt-in and does not widen old template validation', () => {
   assert.equal(policy.CUSTOM_CAKE_EMAIL_IDENTITY_POLICY, 'custom-cake-events.v1')
-  const identity = { sourceType: 'custom-cake', sourceId: eventId(event('custom-cake.quoted')), template: 'custom-cake.quoted' }
+  const identity = { sourceType: 'custom-cake', sourceId: eventId(event('custom-cake.quoted')), template: 'custom-cake.quoted', occurrence: 'customer' }
   assert.throws(() => policy.buildEmailDeliveryEventKey(identity), { code: 'INVALID_EMAIL_DELIVERY_EVENT' })
   assert.match(policy.buildEmailDeliveryEventKey(identity, { identityPolicy: policy.CUSTOM_CAKE_EMAIL_IDENTITY_POLICY }), /^custom-cake.quoted:/)
   for (const bad of [{ template: 'custom-cake.completed' }, { sourceType: 'cake' }, { occurrence: 'extra' }]) assert.throws(() => policy.buildEmailDeliveryEventKey({ ...identity, ...bad }, { identityPolicy: policy.CUSTOM_CAKE_EMAIL_IDENTITY_POLICY }))
@@ -42,11 +42,11 @@ test('four saved variants deliver once; quote versions are separate provider ide
     const saved = await repository.get('outbox', eventId(value))
     assert.deepEqual(saved.snapshot, value.snapshot)
     assert.equal(saved.state, 'sent')
-    assert.equal(saved.emailDelivery.attempts, 1)
-    assert.equal(saved.emailPayload.payloadHash, policy.payloadHashForEmail(saved.emailPayload, { identityPolicy: policy.CUSTOM_CAKE_EMAIL_IDENTITY_POLICY }))
+    assert.equal(saved.emailByRole.customer.emailDelivery.attempts, 1)
+    assert.equal(saved.emailByRole.customer.emailPayload.payloadHash, policy.payloadHashForEmail(saved.emailByRole.customer.emailPayload, { identityPolicy: policy.CUSTOM_CAKE_EMAIL_IDENTITY_POLICY }))
   }
-  assert.equal(new Set(sent.map(v => v.headers['Idempotency-Key'])).size, 5)
-  assert.ok(sent[1].body.html.includes('&lt;script&gt;explanation&lt;/script&gt;'))
+  assert.equal(new Set(sent.map(v => v.headers['Idempotency-Key'])).size, 7)
+  assert.ok(sent[2].body.html.includes('&lt;script&gt;explanation&lt;/script&gt;'))
   assert.ok(!JSON.stringify(sent).includes('photo_A'))
   assert.ok(!JSON.stringify(sent).includes('uploadToken'))
   assert.match(sent[0].body.text, /not.*confirmed/i)
@@ -66,13 +66,13 @@ test('same event workers fence sends and preserve original payload across failed
   assert.equal(calls, 2)
   assert.deepEqual(payloads[1], payloads[0])
   const saved = await repository.get('outbox', eventId(value))
-  assert.equal(saved.emailRetryClaim.status, 'sent')
-  assert.equal(saved.emailDelivery.firstAttemptAt, now.toISOString())
-  assert.equal(saved.emailDelivery.attempts, 2)
+  assert.equal(saved.emailByRole.customer.emailRetryClaim.status, 'sent')
+  assert.equal(saved.emailByRole.customer.emailDelivery.firstAttemptAt, now.toISOString())
+  assert.equal(saved.emailByRole.customer.emailDelivery.attempts, 2)
 })
 test('response loss reconciles durable attempt; expired retry and unknown events never send', async () => {
-  const { dispatch, sdk, repository } = await setup()
-  const id = eventId(event())
+  const { dispatch, sdk, repository } = await setup([event('custom-cake.quoted')])
+  const id = eventId(event('custom-cake.quoted'))
   let calls = 0
   sdk.uncertain = true
   const transport = { send: async () => { calls++; throw new ResendTransportError('uncertain', 'resend_timeout') } }
@@ -88,4 +88,36 @@ test('response loss reconciles durable attempt; expired retry and unknown events
     await assert.rejects(dispatch.deliver(eventId(value), { transport, now }), /INVALID_CUSTOM_CAKE_EMAIL_EVENT/)
   }
   assert.equal(calls, 1)
+})
+test('received operator and customer identities retry independently without suppressing either receipt', async () => {
+  const { repository } = await setup()
+  const dispatch = notification.createCustomCakeNotificationDispatcher({ repository, ...mail, operatorRecipients: ['OWNER@example.invalid', 'second@example.invalid', 'owner@example.invalid'] })
+  const value = event(), id = eventId(value), messages = []
+  const transport = { send: async payload => { messages.push(payload); if (payload.occurrence === 'operator') throw new ResendTransportError('failed', 'resend_rate_limit_exceeded'); return { kind: 'accepted', providerMessageId: 'customer-receipt' } } }
+  await dispatch.deliver(id, { transport, now })
+  assert.equal(messages.length, 2)
+  assert.notEqual(messages[0].idempotencyKey, messages[1].idempotencyKey)
+  let saved = await repository.get('outbox', id)
+  assert.equal(saved.emailByRole.customer.emailDelivery.status, 'sent')
+  assert.equal(saved.emailByRole.operator.emailDelivery.status, 'failed')
+  assert.equal(saved.state, 'pending')
+  await dispatch.deliver(id, { now: new Date(now.getTime() + 6 * 60000), transport: { send: async payload => { messages.push(payload); return { kind: 'accepted', providerMessageId: 'operator-receipt' } } } })
+  assert.equal(messages.length, 3)
+  assert.deepEqual(messages[2].to, ['owner@example.invalid', 'second@example.invalid'])
+  saved = await repository.get('outbox', id)
+  assert.equal(saved.emailByRole.customer.emailDelivery.attempts, 1)
+  assert.equal(saved.emailByRole.operator.emailDelivery.attempts, 2)
+  assert.equal(saved.state, 'sent')
+})
+test('missing operator configuration keeps the durable event pending and resumes only the missing role', async () => {
+  const { repository } = await setup()
+  const id = eventId(event()), messages = []
+  const transport = { send: async payload => { messages.push(payload); return { kind: 'accepted', providerMessageId: `mail-${messages.length}` } } }
+  const missing = notification.createCustomCakeNotificationDispatcher({ repository, from: mail.from })
+  assert.equal((await missing.deliver(id, { now, transport })).status, 'configuration_error')
+  assert.equal((await repository.get('outbox', id)).state, 'pending')
+  const repaired = notification.createCustomCakeNotificationDispatcher({ repository, ...mail })
+  assert.equal((await repaired.deliver(id, { now, transport })).status, 'sent')
+  assert.equal(messages.length, 2)
+  assert.deepEqual(messages.map(m => m.occurrence), ['customer', 'operator'])
 })

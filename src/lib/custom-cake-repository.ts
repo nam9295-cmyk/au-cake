@@ -29,6 +29,7 @@ export function createCakeWireRepository(transport: CakeWireTransport) {
     try { execution = await transport(action, data, context) } catch { throw new Error('CAKE_WIRE_UNAVAILABLE') }
     let body: Record<string, unknown>
     const invalid = () => new Error('CAKE_WIRE_INVALID_RESPONSE')
+    if (!Number.isInteger(execution.responseStatusCode)) throw invalid()
     try { body = JSON.parse(execution.responseBody) } catch { throw invalid() }
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw invalid()
     if (body.ok === false) {
@@ -61,5 +62,9 @@ export function createCakeWireRepository(transport: CakeWireTransport) {
 export async function getCakeWireRepository() {
   const { functions, account, appwriteConfig, isAppwriteConfigured } = await import('./appwrite')
   if (!isAppwriteConfigured || appwriteConfig.reservationApiMode === 'off') throw new Error('CAKE_WIRE_UNAVAILABLE')
-  return createCakeWireRepository(createAppwriteCakeWireTransport({ functions, account, functionId: appwriteConfig.reservationApiFunctionId }))
+  const transport = createAppwriteCakeWireTransport({ functions, account, functionId: appwriteConfig.reservationApiFunctionId })
+  return createCakeWireRepository((action, data, context) => {
+    if (appwriteConfig.reservationApiMode !== 'all' && !['get-cake-wire-capabilities', 'get-custom-cake-request', 'get-cake-order-v2', 'read-custom-cake-photo'].includes(action)) throw new Error('CAKE_WIRE_UNAVAILABLE')
+    return transport(action, data, context)
+  })
 }
