@@ -59,4 +59,3 @@ export function cakeReservationResponse(document) {
     updatedAt: document.updatedAt || document.$updatedAt,
   }
 }
-

@@ -55,10 +55,10 @@ test('new browser catalogue prices cannot reprice or reject saved orders', () =>
 test('compatibility reader source has no dependency on live ordering policy', () => {
   for (const file of ['src/lib/stored-order-reader.ts', 'src/lib/stored-order-policy.ts']) {
     const source = readFileSync(file, 'utf8')
-    assert.doesNotMatch(source, /from ['"].*(?:constants|review-coupon-client|active-cake-products|repository)['"]/) 
+    assert.doesNotMatch(source, /from ['"].*(?:constants|review-coupon-client|active-cake-products|repository)['"]/)
   }
   for (const file of ['stored-order-reader.js', 'stored-order-policy.js']) {
     const source = readFileSync(`appwrite-functions/reservation-api/src/${file}`, 'utf8')
-    assert.doesNotMatch(source, /from ['"].*(?:business|active-cake-products)\.js['"]/) 
+    assert.doesNotMatch(source, /from ['"].*(?:business|active-cake-products)\.js['"]/)
   }
 })
