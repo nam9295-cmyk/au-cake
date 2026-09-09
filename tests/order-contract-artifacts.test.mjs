@@ -10,6 +10,7 @@ import { createNotificationArchive } from '../scripts/reservation-notification-d
 import { createBookingReminderArchive } from '../scripts/booking-reminder-deploy-runtime.mjs'
 
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/order-core-golden.json', import.meta.url)))
+const newCanonical = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/canonical.json', import.meta.url)))
 const artifacts = [
   ['reservation-compatibility', () => createReservationApiArchive({ phase: 'compatibility' }), 'src/business.js', true],
   ['reservation-full', () => createReservationApiArchive({ phase: 'full' }), 'src/business.js', true],
@@ -48,7 +49,8 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         const business = await import(pathToFileURL(path.resolve(${JSON.stringify(parserPath)})));
         const { digestCakeRequestPayload } = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'coupon-digest.js')));
         const capture = fn => { try { return {value:JSON.parse(JSON.stringify(fn()))} } catch(e) { return JSON.parse(JSON.stringify({error:{name:e.name,message:e.message,code:e.code,status:e.status}})) } };
-        for (const fixture of JSON.parse(fs.readFileSync(0, 'utf8')).cases) {
+        const fixtures = JSON.parse(fs.readFileSync(0, 'utf8'));
+        for (const fixture of fixtures.cases) {
           if (fixture.input) {
             const canonical = capture(() => business.canonicalCakeRequestPayload(fixture.input));
             assert.deepEqual(canonical, fixture.expected.canonical, fixture.name + ': canonical');
@@ -62,9 +64,17 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
           assert.deepEqual(capture(() => business.publicCakeReservation(document)), fixture.expected.lookupResponse, fixture.name);
           if (${hasCreateResponse}) assert.deepEqual(capture(() => entry.cakeReservationResponse(document)), fixture.expected.createdResponse, fixture.name);
         }
+        const wireInput = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'cake-order-input.js')));
+        for (const fixture of fixtures.newCanonical.cases) {
+          const custom = fixture.name === 'custom-cake.v1';
+          const canonicalize = custom ? wireInput.canonicalCustomCakeV1Request : wireInput.canonicalCakeOrderV2Request;
+          const digest = custom ? wireInput.fingerprintCustomCakeV1Request : wireInput.fingerprintCakeOrderV2Request;
+          assert.equal(canonicalize(fixture.request), fixture.canonicalJson);
+          assert.equal(digest(fixture.permuted, Buffer.alloc(32, 7)), fixture.fingerprint);
+        }
       `
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-        cwd: extracted, input: JSON.stringify(baseline), encoding: 'utf8',
+        cwd: extracted, input: JSON.stringify({ ...baseline, newCanonical }), encoding: 'utf8',
         env: { PATH: process.env.PATH },
       })
       assert.equal(result.status, 0, result.stderr || result.stdout)

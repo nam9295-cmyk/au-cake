@@ -1,4 +1,6 @@
 // Current Cake request validation, normalization and canonical identity; no stored-order reader or pricing execution.
+import { createHmac } from 'node:crypto'
+import { resolveReviewCouponHmacSecret } from './coupon-digest.js'
 import {
   MARKET_TIMEZONE,
   validateEmail,
@@ -35,6 +37,7 @@ import {
   STRAWBERRY_CREAM_CAKE_PRODUCT_IDS,
   INDIVIDUAL_PACKAGING_PRODUCT_PIECES,
   PROMOTIONS,
+  CUSTOM_CAKE_V1_BASE_CENTS,
 } from './cake-order-catalog.js'
 import { isActiveCakeOrderProductId, isCompatCakeOrderProductId } from './active-cake-products.js'
 
@@ -439,4 +442,187 @@ export function canonicalCakeRequestPayload(input, { customerEmailMode = 'requir
     promoCode: reviewCode || staticCode || '',
     orderLines: [...lines].sort((left, right) => canonicalOrderLineKey(left).localeCompare(canonicalOrderLineKey(right))),
   }
+}
+
+// Opt-in wires have strict shapes and stable line identity. These exports do not
+// widen legacy input acceptance or run the submit clock during canonical replay.
+const WIRE_ID = /^[A-Za-z0-9_-]{1,64}$/
+const WIRE_REQUEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+const WIRE_OPTION_ENUMS = {
+  cakeSize: ['6in', '8in', '10in', '15cm'],
+  chocolateType: ['dark', 'milk'],
+  poundAddon: ['none', 'extra-chocolate', 'vanilla-cream'],
+  cupcakeFinish: ['basic', 'vanilla-fresh-cream', 'chocolate-buttercream'],
+  chocolateExtra: ['none', 'eiffel-6', 'pave-100g', 'combo'],
+  brownieCreamOption: ['none', 'fresh-cream'],
+  vanillaCakeSheet: ['vanilla', 'chocolate'],
+  vanillaCakeFlavor: ['plain', 'triple-berry'],
+  vanillaCakePointColor: ['pink', 'red', 'green', 'yellow', 'blue', 'purple', 'orange', 'white'],
+}
+const WIRE_OPTION_KEYS = [
+  'cakeSize', 'chocolateType', 'poundAddon', 'cupcakeFinish', 'chocolateIcingCount',
+  'chocolateExtra', 'brownieCreamOption', 'vanillaCreamCount', 'partyDecorationCount',
+  'vanillaCakeSheet', 'vanillaCakeFlavor', 'vanillaCakePointColor', 'individualPackaging',
+]
+
+function exactWireFields(value, keys) {
+  if (!isPlainObject(value) || Reflect.ownKeys(value).length !== keys.length
+    || keys.some(key => !Object.hasOwn(value, key))) fail('INVALID_REQUEST')
+}
+
+function wireText(value, min = 0, max = 1000) {
+  return requiredText(value, { min, max, code: 'INVALID_REQUEST' })
+}
+
+function wireInputBoundary(run) {
+  try { return run() } catch (error) {
+    if (['INVALID_REQUEST', 'INVALID_LINE_ID', 'INVALID_LINE_REFERENCE', 'INVALID_PHOTO_REFERENCE', 'PROMO_CODE_INVALID'].includes(error.code)) throw error
+    if (error.status) fail('INVALID_REQUEST')
+    throw error
+  }
+}
+
+function normalizeWireOptions(line) {
+  exactWireFields(line.options, WIRE_OPTION_KEYS)
+  for (const [key, values] of Object.entries(WIRE_OPTION_ENUMS)) {
+    if (!values.includes(line.options[key])) fail('INVALID_REQUEST')
+  }
+  const count = line.options.chocolateIcingCount
+  if (!Number.isSafeInteger(count) || count < 0 || Object.is(count, -0)
+    || line.options.vanillaCreamCount !== 0 || Object.is(line.options.vanillaCreamCount, -0)
+    || line.options.partyDecorationCount !== 0 || Object.is(line.options.partyDecorationCount, -0)
+    || typeof line.options.individualPackaging !== 'boolean'
+    || line.productId === 'smore-stick') fail('INVALID_REQUEST')
+  const normalized = normalizedCakeLine({ productId: line.productId, ...line.options }, line.quantity, { cakeCatalogMode: 'required' })
+  return Object.fromEntries(WIRE_OPTION_KEYS.map(key => [key, normalized[key]]))
+}
+
+function normalizeWireLines(lines, custom) {
+  if (!Array.isArray(lines) || lines.length === 0) fail('INVALID_REQUEST')
+  const ids = new Set()
+  const refs = new Set()
+  const aggregate = new Map()
+  const cakeKind = custom ? 'custom-cake' : 'cake'
+  const normalized = lines.map(line => {
+    if (!isPlainObject(line)) fail('INVALID_REQUEST')
+    if (typeof line.lineId !== 'string' || !WIRE_ID.test(line.lineId) || ids.has(line.lineId)) fail('INVALID_LINE_ID')
+    ids.add(line.lineId)
+    if (!Number.isSafeInteger(line.quantity) || line.quantity <= 0) fail('INVALID_REQUEST')
+    if (line.kind === cakeKind) {
+      exactWireFields(line, custom
+        ? ['kind', 'lineId', 'parentCakeLineId', 'productId', 'quantity', 'tier', 'size', 'designNote', 'figurineSource', 'photoRefs']
+        : ['kind', 'lineId', 'parentCakeLineId', 'productId', 'quantity', 'options'])
+      if (line.parentCakeLineId !== null) fail('INVALID_LINE_REFERENCE')
+      if (line.quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_REQUEST')
+      let result = { kind: line.kind, lineId: line.lineId, parentCakeLineId: null, productId: line.productId, quantity: line.quantity }
+      let identity
+      if (custom) {
+        if (line.productId !== 'custom-cake' || !Object.hasOwn(CUSTOM_CAKE_V1_BASE_CENTS, line.tier)
+          || !Object.hasOwn(CUSTOM_CAKE_V1_BASE_CENTS[line.tier], line.size)
+          || !['none', 'customer', 'shop'].includes(line.figurineSource)) fail('INVALID_REQUEST')
+        if (!Array.isArray(line.photoRefs)) fail('INVALID_PHOTO_REFERENCE')
+        for (const ref of line.photoRefs) {
+          if (typeof ref !== 'string' || !WIRE_ID.test(ref) || refs.has(ref)) fail('INVALID_PHOTO_REFERENCE')
+          refs.add(ref)
+        }
+        if (refs.size > 5) fail('INVALID_PHOTO_REFERENCE')
+        result = { ...result, tier: line.tier, size: line.size, designNote: wireText(line.designNote), figurineSource: line.figurineSource, photoRefs: [...line.photoRefs].sort() }
+        // Notes and photos do not allow splitting the same base selection past 5.
+        identity = JSON.stringify([line.tier, line.size])
+      } else {
+        result.options = normalizeWireOptions(line)
+        identity = canonicalOrderLineKey({ productId: result.productId, ...result.options })
+      }
+      const quantity = (aggregate.get(identity) || 0) + line.quantity
+      if (quantity > MAX_RESERVATION_QUANTITY) fail('INVALID_REQUEST')
+      aggregate.set(identity, quantity)
+      return result
+    }
+    exactWireFields(line, ['kind', 'lineId', 'productId', 'quantity', 'parentCakeLineId'])
+    if (!['standalone-smore', 'cake-addon-smore'].includes(line.kind) || line.productId !== 'smore-stick') fail('INVALID_REQUEST')
+    if (line.kind === 'standalone-smore' && line.parentCakeLineId !== null) fail('INVALID_LINE_REFERENCE')
+    return { kind: line.kind, lineId: line.lineId, productId: line.productId, quantity: line.quantity, parentCakeLineId: line.parentCakeLineId }
+  })
+  if (custom && !normalized.some(line => line.kind === cakeKind)) fail('INVALID_REQUEST')
+  const byId = new Map(normalized.map(line => [line.lineId, line]))
+  for (const line of normalized) {
+    if (line.kind === 'cake-addon-smore' && (typeof line.parentCakeLineId !== 'string'
+      || !WIRE_ID.test(line.parentCakeLineId) || line.parentCakeLineId === line.lineId
+      || byId.get(line.parentCakeLineId)?.kind !== cakeKind)) fail('INVALID_LINE_REFERENCE')
+  }
+  return normalized.sort((a, b) => a.lineId < b.lineId ? -1 : a.lineId > b.lineId ? 1 : 0)
+}
+
+function normalizeWireRequest(value, contractVersion) {
+  return wireInputBoundary(() => {
+    const custom = contractVersion === 'custom-cake.v1'
+    exactWireFields(value, ['contractVersion', 'requestId', 'customer', 'pickup', 'requestNote', 'privacyConsent', ...(custom ? [] : ['promoCode']), 'lines'])
+    if (value.contractVersion !== contractVersion || typeof value.requestId !== 'string'
+      || !WIRE_REQUEST_ID.test(value.requestId) || value.privacyConsent !== true) fail('INVALID_REQUEST')
+    exactWireFields(value.customer, ['customerName', 'customerPhone', 'customerEmail'])
+    exactWireFields(value.pickup, ['pickupDate', 'pickupTime'])
+    if (!isValidDateValue(value.pickup.pickupDate) || typeof value.pickup.pickupTime !== 'string'
+      || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value.pickup.pickupTime)
+      || zonedTimestamp(value.pickup.pickupDate, value.pickup.pickupTime) === null) fail('INVALID_REQUEST')
+    const result = {
+      contractVersion,
+      requestId: value.requestId,
+      customer: {
+        customerName: wireText(value.customer.customerName, 2, 80),
+        customerPhone: validateAustralianMobile(value.customer.customerPhone),
+        customerEmail: validateEmail(value.customer.customerEmail),
+      },
+      pickup: { pickupDate: value.pickup.pickupDate, pickupTime: value.pickup.pickupTime },
+      requestNote: wireText(value.requestNote),
+      privacyConsent: true,
+    }
+    if (!custom) {
+      if (typeof value.promoCode !== 'string') fail('INVALID_REQUEST')
+      const promo = value.promoCode.trim()
+      result.promoCode = !promo ? '' : PROMOTIONS.find(p => p.code === promo.toLowerCase())?.code || normalizeReviewCouponCode(promo)
+    }
+    result.lines = normalizeWireLines(value.lines, custom)
+    return result
+  })
+}
+
+export function normalizeCustomCakeV1Request(value) {
+  return normalizeWireRequest(value, 'custom-cake.v1')
+}
+
+export function normalizeCakeOrderV2Request(value) {
+  return normalizeWireRequest(value, 'cake-order.v2')
+}
+
+export function validateNewCakeWirePickup(request, now) {
+  return wireInputBoundary(() => {
+    if (!(now instanceof Date) || !Number.isFinite(now.getTime())) fail('INVALID_REQUEST')
+    const normalized = normalizeWireRequest(request, request.contractVersion)
+    validatePickupDateTime(normalized.pickup.pickupDate, normalized.pickup.pickupTime, now)
+  })
+}
+
+export function canonicalCustomCakeV1Request(value) {
+  const { requestId: _requestId, ...payload } = normalizeCustomCakeV1Request(value)
+  return JSON.stringify(payload)
+}
+
+export function canonicalCakeOrderV2Request(value) {
+  const { requestId: _requestId, ...payload } = normalizeCakeOrderV2Request(value)
+  return JSON.stringify(payload)
+}
+
+function fingerprintWire(canonical, domain, secretValue) {
+  // Reuse the canonical base64url configuration convention even for injected bytes.
+  const encoded = Buffer.isBuffer(secretValue) ? secretValue.toString('base64url') : secretValue
+  const secret = resolveReviewCouponHmacSecret({ REVIEW_COUPON_HMAC_SECRET: encoded })
+  return createHmac('sha256', secret).update(domain, 'utf8').update(canonical, 'utf8').digest('hex')
+}
+
+export function fingerprintCustomCakeV1Request(value, secretValue) {
+  return fingerprintWire(canonicalCustomCakeV1Request(value), 'custom-cake-request-v1\0', secretValue)
+}
+
+export function fingerprintCakeOrderV2Request(value, secretValue) {
+  return fingerprintWire(canonicalCakeOrderV2Request(value), 'cake-request-v2\0', secretValue)
 }
