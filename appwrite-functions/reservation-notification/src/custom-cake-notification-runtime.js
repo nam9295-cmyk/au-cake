@@ -3,11 +3,17 @@ import { Client, Databases, Functions, Storage } from 'node-appwrite'
 import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from '../shared/reservation-api/custom-cake-persistence.js'
 import { checkCustomCakeReadiness } from '../shared/reservation-api/custom-cake-readiness.js'
 import { createResendTransport } from '../shared/email-delivery/resend-transport.js'
-import { normalizeRecipientEmailSet } from '../shared/email-delivery/email-delivery.js'
 import { createCustomCakeNotificationDispatcher } from './custom-cake-notification.js'
 
 export const CUSTOM_CAKE_NOTIFICATION_SCOPES = Object.freeze(['functions.read', 'databases.read', 'collections.read', 'documents.read', 'documents.write', 'buckets.read'])
 const unavailable = () => { throw new Error('CUSTOM_CAKE_NOTIFICATION_UNAVAILABLE') }
+function matchesAdministratorExecution(execute, configuredAdmins) {
+  if (typeof configuredAdmins !== 'string' || !Array.isArray(execute)) return false
+  const admins = [...new Set(configuredAdmins.split(',').map(id => id.trim()).filter(Boolean))]
+  if (!admins.length || admins.some(id => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/.test(id))) return false
+  const expected = admins.map(id => `user:${id}`).sort(), actual = [...new Set(execute)].sort()
+  return actual.length === expected.length && actual.every((role, index) => role === expected[index])
+}
 function servicesForRequest(req, env) {
   const client = new Client().setEndpoint(env.APPWRITE_FUNCTION_API_ENDPOINT).setProject(env.APPWRITE_FUNCTION_PROJECT_ID).setKey(req.headers['x-appwrite-key'])
   return { databases: new Databases(client), storage: new Storage(client), functions: new Functions(client) }
@@ -17,11 +23,13 @@ export async function createCustomCakeNotificationRuntime({ req, env, services, 
     if (Number(process.versions.node.split('.')[0]) < 22 || env.CUSTOM_CAKE_NOTIFICATIONS_ENABLED !== 'true' || !req.headers?.['x-appwrite-key'] || !env.APPWRITE_FUNCTION_API_ENDPOINT || !env.APPWRITE_FUNCTION_PROJECT_ID || !env.APPWRITE_FUNCTION_ID || !env.RESEND_API_KEY?.trim() || !env.RESEND_FROM_EMAIL?.trim() || /[\r\n]/.test(env.RESEND_FROM_EMAIL)) unavailable()
     services ||= servicesForRequest(req, env)
     const fn = await services.functions.get({ functionId: env.APPWRITE_FUNCTION_ID })
-    if (fn.$id !== env.APPWRITE_FUNCTION_ID || fn.enabled !== true || fn.runtime !== 'node-22.0' || fn.timeout < 60 || typeof fn.schedule !== 'string' || fn.schedule.trim().split(/\s+/).length !== 5 || !Array.isArray(fn.execute) || fn.execute.some(role => !/^user:[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/.test(role)) || !Array.isArray(fn.scopes) || !CUSTOM_CAKE_NOTIFICATION_SCOPES.every(scope => fn.scopes.includes(scope))) unavailable()
+    if (fn.$id !== env.APPWRITE_FUNCTION_ID || fn.enabled !== true || fn.runtime !== 'node-22.0' || fn.timeout < 60 || typeof fn.schedule !== 'string' || fn.schedule.trim().split(/\s+/).length !== 5 || !matchesAdministratorExecution(fn.execute, env.REVIEW_ADMIN_USER_IDS) || !Array.isArray(fn.scopes) || !CUSTOM_CAKE_NOTIFICATION_SCOPES.every(scope => fn.scopes.includes(scope))) unavailable()
     const config = resolveCustomCakePersistenceConfig(env)
     await checkCustomCakeReadiness({ ...services, config })
     const repository = createCustomCakeRepository(services.databases, config)
-    const operatorRecipients = normalizeRecipientEmailSet(String(env.RESEND_TO_EMAILS || '').split(',').map(email => email.trim()).filter(Boolean))
+    // Validate recipients only when creating that role's first payload. A missing
+    // operator address must not block customer mail or an immutable saved retry.
+    const operatorRecipients = String(env.RESEND_TO_EMAILS || '').split(',').map(email => email.trim()).filter(Boolean)
     const dispatcher = createCustomCakeNotificationDispatcher({ repository, from: env.RESEND_FROM_EMAIL, replyTo: env.RESEND_REPLY_TO_EMAIL || null, operatorRecipients })
     const transport = createTransport({ apiKey: env.RESEND_API_KEY })
     return {
