@@ -24,7 +24,10 @@ function validJson(value, seen = new Set()) {
   if (typeof value !== 'object' || seen.has(value) || (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype)) fail('PERSISTENCE_INVALID_RECORD')
   seen.add(value)
   if (Array.isArray(value) && Object.keys(value).length !== value.length) fail('PERSISTENCE_INVALID_RECORD')
-  for (const entry of Object.values(value)) validJson(entry, seen)
+  for (const [key, entry] of Object.entries(value)) {
+    if (['token', 'uploadToken', 'base64', 'x-custom-cake-upload-token', 'x-custom-cake-upload-session'].includes(key) || (key === 'promoCode' && entry !== '')) fail('PERSISTENCE_SENSITIVE_RECORD')
+    validJson(entry, seen)
+  }
   seen.delete(value)
 }
 
@@ -34,6 +37,16 @@ function validate(kind, value) {
   if (kind === 'snapshots') {
     const { request, creationResponse, lookupResponse, quoteHistory, transitionAudit } = value
     if (!request || !creationResponse || !lookupResponse || !Array.isArray(quoteHistory) || !Array.isArray(transitionAudit) || !['custom-cake.v1', 'cake-order.v2'].includes(request.contractVersion) || request.contractVersion !== creationResponse.contractVersion || request.contractVersion !== lookupResponse.contractVersion || request.requestId !== creationResponse.requestId) fail('PERSISTENCE_INVALID_RECORD')
+    if (request.contractVersion === 'custom-cake.v1') {
+      validateQuote(creationResponse.quote); validateQuote(lookupResponse.quote)
+      if (creationResponse.status !== 'requested' || creationResponse.quote.quoteVersion !== 1 || creationResponse.quote.designExtraCents !== null || creationResponse.quote.figurineExtraCents !== null || creationResponse.acceptance !== null || creationResponse.requestNumber !== lookupResponse.requestNumber || !['requested', 'quoted', 'confirmed', 'completed', 'cancelled'].includes(lookupResponse.status) || !Array.isArray(lookupResponse.acceptanceHistory)) fail('PERSISTENCE_INVALID_RECORD')
+      for (const acceptance of lookupResponse.acceptanceHistory) if (!Number.isSafeInteger(acceptance.acceptedQuoteVersion) || acceptance.acceptedQuoteVersion < 1 || acceptance.acceptedQuoteVersion > lookupResponse.quote.quoteVersion || !instant(acceptance.acceptedAt)) fail('PERSISTENCE_INVALID_RECORD')
+      if (lookupResponse.acceptance !== null && !lookupResponse.acceptanceHistory.some(value => equal(value, lookupResponse.acceptance))) fail('PERSISTENCE_INVALID_RECORD')
+      if (['confirmed', 'completed'].includes(lookupResponse.status) && (!lookupResponse.quote.isFinalQuote || lookupResponse.acceptance?.acceptedQuoteVersion !== lookupResponse.quote.quoteVersion)) fail('PERSISTENCE_INVALID_RECORD')
+    } else {
+      validatePricing(creationResponse.pricing); validatePricing(lookupResponse.pricing)
+      if (creationResponse.status !== '예약신청' || creationResponse.reservationNumber !== lookupResponse.reservationNumber || !['예약신청', '예약확정', '픽업완료', '취소'].includes(lookupResponse.status)) fail('PERSISTENCE_INVALID_RECORD')
+    }
   }
   if (kind === 'claims') {
     if (!uuid.test(value.requestId) || !['custom-cake.v1', 'cake-order.v2', 'cake-request-v1'].includes(value.wire) || typeof value.creatorScope !== 'string' || !value.creatorScope || value.creatorScope.length > 256 || !/^[a-f0-9]{64}$/.test(value.fingerprint) || !Object.hasOwn(value, 'creationResponse')) fail('PERSISTENCE_INVALID_RECORD')
@@ -48,6 +61,31 @@ function validate(kind, value) {
 }
 
 function instant(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value }
+
+const nonnegative = value => Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0)
+function validateQuote(q) {
+  if (!q || !Number.isSafeInteger(q.quoteVersion) || q.quoteVersion < 1 || q.currency !== 'AUD' || q.pricingPolicyVersion !== 'custom-cake.2026-09.v1' || !instant(q.promotionEligibilityAt)) fail('PERSISTENCE_INVALID_RECORD')
+  for (const key of ['baseCents', 'cakeDiscountCents', 'paidSmoreQuantity', 'paidSmoreTotalCents', 'giftSmoreQuantity', 'knownTotalCents']) if (!nonnegative(q[key])) fail('PERSISTENCE_INVALID_RECORD')
+  for (const key of ['designExtraCents', 'figurineExtraCents']) if (q[key] !== null && !nonnegative(q[key])) fail('PERSISTENCE_INVALID_RECORD')
+  const total = q.baseCents - q.cakeDiscountCents + (q.designExtraCents ?? 0) + (q.figurineExtraCents ?? 0) + q.paidSmoreTotalCents
+  const final = q.designExtraCents !== null && q.figurineExtraCents !== null
+  if (q.cakeDiscountCents > q.baseCents || !nonnegative(total) || q.knownTotalCents !== total || q.isFinalQuote !== final || q.finalTotalCents !== (final ? total : null)) fail('PERSISTENCE_INVALID_RECORD')
+}
+
+function validatePricing(p) {
+  if (!p || p.currency !== 'AUD' || p.pricingPolicyVersion !== 'cake-order.2026-09.v2' || !instant(p.pricedAt) || !Array.isArray(p.lines) || !p.lines.length) fail('PERSISTENCE_INVALID_RECORD')
+  for (const key of ['subtotalCents', 'discountCents', 'individualPackagingFeeCents', 'totalCents']) {
+    if (!nonnegative(p[key])) fail('PERSISTENCE_INVALID_RECORD')
+    let sum = 0
+    for (const line of p.lines) {
+      const amount = key === 'individualPackagingFeeCents' && line.kind !== 'cake' ? 0 : line[key]
+      if (!nonnegative(amount)) fail('PERSISTENCE_INVALID_RECORD')
+      sum += amount
+    }
+    if (!nonnegative(sum) || sum !== p[key]) fail('PERSISTENCE_INVALID_RECORD')
+  }
+  if (p.discountCents > p.subtotalCents || p.totalCents !== p.subtotalCents - p.discountCents + p.individualPackagingFeeCents) fail('PERSISTENCE_INVALID_RECORD')
+}
 
 function metadata(kind, value) {
   const lookupKey = kind === 'snapshots' ? value.lookupResponse.requestNumber || value.lookupResponse.reservationNumber : value.requestId || ''

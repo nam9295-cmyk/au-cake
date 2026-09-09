@@ -123,7 +123,7 @@ test('durable metadata rejects raw tokens and invalid photo/quota states; snapsh
   for (const [kind, value] of [
     ['sessions', { requestId: identity.requestId, token: 'secret' }],
     ['photos', { state: 'public' }], ['quotas', { used: 6 }],
-  ]) assert.throws(() => m.encodeCustomCakeRecord(kind, value), { code: 'PERSISTENCE_INVALID_RECORD' })
+  ]) assert.throws(() => m.encodeCustomCakeRecord(kind, value), { code: kind === 'sessions' ? 'PERSISTENCE_SENSITIVE_RECORD' : 'PERSISTENCE_INVALID_RECORD' })
   const packed = m.encodeCustomCakeRecord('snapshots', receipt())
   assert.equal(packed.lookupKey, 'CUSTOM-EXAMPLE-1')
   assert.equal(packed.state, 'requested')
@@ -182,4 +182,24 @@ test('concurrent quote/status/audit writes have one winner and preserve the orig
   assert.equal(saved.transitionAudit.length, 1); assert.equal(saved.transitionAudit[0].target, saved.lookupResponse.status)
   assert.deepEqual(saved.creationResponse, receipt().creationResponse)
   assert.equal([...sdk.docs.keys()].filter(k => k.startsWith('new_outbox/')).length, 1)
+})
+
+test('saved quote and v2 totals are validated without reconstructing prices from the current catalogue', async () => {
+  const m = await load()
+  const saved = receipt(); saved.lookupResponse.quote.knownTotalCents++
+  assert.throws(() => m.encodeCustomCakeRecord('snapshots', saved), { code: 'PERSISTENCE_INVALID_RECORD' })
+  const f = fixture('cake-order-v2'), ordinary = { request: f.request, creationResponse: f.created, lookupResponse: f.lookup, quoteHistory: [], transitionAudit: [] }
+  assert.deepEqual(m.decodeCustomCakeRecord('snapshots', m.encodeCustomCakeRecord('snapshots', ordinary)), ordinary)
+  ordinary.lookupResponse.pricing.totalCents = -1
+  assert.throws(() => m.encodeCustomCakeRecord('snapshots', ordinary), { code: 'PERSISTENCE_INVALID_RECORD' })
+})
+
+test('durable operation markers and snapshots reject upload secrets, image bytes and raw coupon codes', async () => {
+  const m = await load(), sdk = service(), repo = m.createCustomCakeRepository(sdk, config)
+  for (const result of [{ uploadToken: 'synthetic' }, { nested: { base64: 'AAAA' } }, { token: 'synthetic' }, { promoCode: 'SECRET-COUPON' }]) {
+    await assert.rejects(repo.atomic(`sensitive-${Object.keys(result)[0]}`, async () => result), { code: 'PERSISTENCE_SENSITIVE_RECORD' })
+  }
+  assert.equal(sdk.docs.size, 0)
+  const f = fixture('cake-order-v2'), value = { request: { ...f.request, promoCode: 'SECRET-COUPON' }, creationResponse: f.created, lookupResponse: f.lookup, quoteHistory: [], transitionAudit: [] }
+  assert.throws(() => m.encodeCustomCakeRecord('snapshots', value), { code: 'PERSISTENCE_SENSITIVE_RECORD' })
 })
