@@ -1,9 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, rm, symlink } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createReservationApiArchive } from '../scripts/reservation-api-deploy-rollout.mjs'
 import { createNotificationArchive } from '../scripts/reservation-notification-deploy-runtime.mjs'
@@ -26,9 +26,8 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
     const extracted = await mkdtemp(join(tmpdir(), 'order-contract-artifact-'))
     try {
       execFileSync('tar', ['-xzf', archive.path, '-C', extracted])
-      // Only installed third-party packages are supplied; application source must
-      // resolve inside this extracted archive, never via repository wrappers.
-      await symlink(resolve('node_modules'), join(extracted, 'node_modules'), 'dir')
+      // Each archive must resolve dependencies from its own exact manifest/lock.
+      execFileSync('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: extracted, stdio: 'pipe' })
       const script = `
         import assert from 'node:assert/strict';
         import fs from 'node:fs';
