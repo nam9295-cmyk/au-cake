@@ -45,7 +45,7 @@ function service() {
   return api
 }
 
-const config = { enabled: true, databaseId: 'test-db', claims: 'new_claims', snapshots: 'new_snapshots', sessions: 'new_sessions', photos: 'new_photos', quotas: 'new_quotas', outbox: 'new_outbox', commits: 'new_commits', chunks: 'new_chunks', histories: 'new_histories', bucketId: 'new-photos' }
+const config = { enabled: true, databaseId: 'test-db', claims: 'new_claims', snapshots: 'new_snapshots', sessions: 'new_sessions', photos: 'new_photos', quotas: 'new_quotas', outbox: 'new_outbox', commits: 'new_commits', chunks: 'new_chunks', histories: 'new_histories', ratelimits: 'new_ratelimits', bucketId: 'new-photos' }
 const identity = { requestId: '11111111-1111-4111-8111-111111111111', wire: 'custom-cake.v1', creatorScope: 'anonymous:synthetic', fingerprint: 'a'.repeat(64) }
 const receipt = () => { const f = fixture('custom-v1'); return { request: f.request, creationResponse: f.created, lookupResponse: f.lookup, quoteHistory: [], transitionAudit: [] } }
 

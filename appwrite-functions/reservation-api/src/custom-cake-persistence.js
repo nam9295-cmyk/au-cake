@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { Query } from 'node-appwrite'
 
 export const CUSTOM_CAKE_RECORD_LIMIT = 65535
-export const CUSTOM_CAKE_RESOURCE_KEYS = Object.freeze(['claims', 'snapshots', 'sessions', 'photos', 'quotas', 'outbox', 'commits', 'chunks', 'histories'])
+export const CUSTOM_CAKE_RESOURCE_KEYS = Object.freeze(['claims', 'snapshots', 'sessions', 'photos', 'quotas', 'outbox', 'commits', 'chunks', 'histories', 'ratelimits'])
 const resourceId = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/
 const fail = code => { throw Object.assign(new Error(code), { code }) }

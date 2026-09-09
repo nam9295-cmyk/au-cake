@@ -2,38 +2,14 @@ import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { validateAttributeDefinition, validateCollectionDefinition, validateIndexDefinition, reviewPhotoBucketMismatches, toAppwriteIndexCreate } from './review-schema.mjs'
-import { CUSTOM_CAKE_RECORD_LIMIT, CUSTOM_CAKE_RESOURCE_KEYS } from '../appwrite-functions/reservation-api/src/custom-cake-persistence.js'
+import { customCakeSchemaTargets } from '../appwrite-functions/reservation-api/src/custom-cake-readiness.js'
 
 const fail = code => { throw Object.assign(new Error(code), { code }) }
-const id = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
-const attributes = [
-  { key: 'schemaVersion', type: 'integer', required: true, min: 1, max: 1 },
-  { key: 'payloadJson', type: 'string', size: CUSTOM_CAKE_RECORD_LIMIT, required: true },
-  { key: 'lookupKey', type: 'string', size: 64, required: true },
-  { key: 'state', type: 'string', size: 32, required: true },
-  { key: 'dueAt', type: 'string', size: 24, required: true },
-]
 
 // Intentionally fixed new resource IDs: this runner cannot target an old table,
 // mutate its enums, update permissions, delete, or backfill existing documents.
 export function buildCustomCakeSchemaTargets({ endpoint, projectId, databaseId } = {}) {
-  if (!id.test(projectId || '') || !id.test(databaseId || '')) fail('CUSTOM_CAKE_SCHEMA_TARGET_REQUIRED')
-  let url
-  try { url = new URL(endpoint) } catch { fail('CUSTOM_CAKE_SCHEMA_TARGET_REQUIRED') }
-  if (url.username || url.password || url.search || url.hash || (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)))) fail('CUSTOM_CAKE_SCHEMA_TARGET_REQUIRED')
-  return {
-    endpoint, projectId, databaseId,
-    collections: CUSTOM_CAKE_RESOURCE_KEYS.map(kind => ({
-      kind, collectionId: `custom_cake_${kind}`, name: `custom_cake_${kind}`,
-      permissions: [], documentSecurity: false, enabled: true,
-      attributes: structuredClone(attributes),
-      indexes: [
-        { key: 'lookup_key', type: kind === 'snapshots' ? 'unique' : 'key', attributes: ['lookupKey'], orders: ['ASC'] },
-        { key: 'state_due', type: 'key', attributes: ['state', 'dueAt'], orders: ['ASC', 'ASC'] },
-      ],
-    })),
-    bucket: { bucketId: 'custom-cake-photos', name: 'custom-cake-photos', permissions: [], fileSecurity: false, enabled: true, maximumFileSize: 10485760, allowedFileExtensions: ['webp'], compression: 'none', encryption: true, antivirus: true, transformations: false },
-  }
+  try { return customCakeSchemaTargets({ endpoint, projectId, databaseId }) } catch { fail('CUSTOM_CAKE_SCHEMA_TARGET_REQUIRED') }
 }
 
 function assertTargets(targets) {

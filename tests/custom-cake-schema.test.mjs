@@ -53,7 +53,7 @@ async function harness(run, { existing = false, drift, onRead } = {}) {
 test('dry-run defaults to read-only HTTP preflight and creates no private resources', async () => {
   await harness(async ({ m, adapter, targets, calls }) => {
     const result = await m.runCustomCakeSchemaMigration({ adapter, targets })
-    assert.equal(result.mode, 'dry-run'); assert.equal(result.safeToApply, true); assert.equal(result.create.length, 10)
+    assert.equal(result.mode, 'dry-run'); assert.equal(result.safeToApply, true); assert.equal(result.create.length, 11)
     assert.ok(calls.every(c => c.method === 'GET'))
     assert.equal(typeof result.confirmation, 'string')
   })
@@ -64,7 +64,7 @@ test('confirmed apply adds private schema only and verifies every created resour
     const result = await m.runCustomCakeSchemaMigration({ adapter, targets, mode: 'apply', confirmation: m.customCakeMigrationConfirmation(targets), reconfirm: async value => value, waitOptions: { sleep: async () => {}, attempts: 1 } })
     assert.equal(result.applied, true)
     const writes = calls.filter(c => c.method !== 'GET')
-    assert.equal(writes.length, 73)
+    assert.equal(writes.length, 81)
     assert.ok(writes.every(c => c.method === 'POST'))
     assert.ok(writes.filter(c => c.path.endsWith('/collections') || c.path.endsWith('/buckets')).every(c => c.body.permissions.length === 0))
     assert.ok(writes.every(c => !c.path.includes('/documents')))
