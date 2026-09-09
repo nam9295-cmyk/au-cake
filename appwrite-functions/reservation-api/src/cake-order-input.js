@@ -598,6 +598,7 @@ export function normalizeCakeOrderV2Request(value) {
 
 export function validateNewCakeWirePickup(request, now) {
   return wireInputBoundary(() => {
+    if (!request || typeof request !== 'object' || Array.isArray(request)) fail('INVALID_REQUEST')
     if (!(now instanceof Date) || !Number.isFinite(now.getTime())) fail('INVALID_REQUEST')
     const normalized = normalizeWireRequest(request, request.contractVersion)
     validatePickupDateTime(normalized.pickup.pickupDate, normalized.pickup.pickupTime, now)
