@@ -18,7 +18,7 @@ const artifacts = [
 ]
 
 for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
-  test(`${name}: extracted artifact imports and matches stored/response goldens`, async () => {
+  test(`${name}: extracted artifact imports and matches new/stored/response goldens`, async () => {
     const archive = await createArchive()
     const extracted = await mkdtemp(join(tmpdir(), 'order-contract-artifact-'))
     try {
@@ -46,8 +46,16 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         verify(${JSON.stringify(parserPath)});
         const entry = await import(pathToFileURL(path.resolve('src/main.js')));
         const business = await import(pathToFileURL(path.resolve(${JSON.stringify(parserPath)})));
+        const { digestCakeRequestPayload } = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'coupon-digest.js')));
         const capture = fn => { try { return {value:JSON.parse(JSON.stringify(fn()))} } catch(e) { return JSON.parse(JSON.stringify({error:{name:e.name,message:e.message,code:e.code,status:e.status}})) } };
         for (const fixture of JSON.parse(fs.readFileSync(0, 'utf8')).cases) {
+          if (fixture.input) {
+            const canonical = capture(() => business.canonicalCakeRequestPayload(fixture.input));
+            assert.deepEqual(canonical, fixture.expected.canonical, fixture.name + ': canonical');
+            assert.equal(canonical.value ? JSON.stringify(canonical.value) : null, fixture.expected.canonicalJson, fixture.name + ': canonical bytes');
+            assert.equal(canonical.value ? digestCakeRequestPayload(canonical.value, Buffer.alloc(32, 7)) : null, fixture.expected.requestFingerprint, fixture.name + ': fingerprint');
+            assert.deepEqual(capture(() => business.buildCakeReservation(fixture.input, { ...fixture.options, now: new Date(fixture.options.now) })), fixture.expected.built, fixture.name + ': new order');
+          }
           const document = fixture.document || fixture.expected.built?.value;
           if (!document) continue;
           assert.deepEqual(capture(() => business.parseStoredOrderLines(document)), fixture.expected.parsedStored, fixture.name);
