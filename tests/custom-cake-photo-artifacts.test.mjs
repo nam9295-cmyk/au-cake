@@ -16,6 +16,10 @@ for (const phase of ['compatibility', 'full']) test(`${phase} photo archive inst
       import assert from 'node:assert/strict';
       import sharp from 'sharp';
       import { normalizeCustomCakePhoto } from './src/custom-cake-photo-codec.js';
+      import { createCustomCakePhotoService } from './src/custom-cake-photo-service.js';
+      import { createCustomCakePhotoStorage } from './src/custom-cake-photo-storage.js';
+      assert.throws(() => createCustomCakePhotoService(), {code:'CAPABILITY_UNAVAILABLE'});
+      assert.throws(() => createCustomCakePhotoStorage(), {code:'CAPABILITY_UNAVAILABLE'});
       const bytes = await sharp({create:{width:4,height:3,channels:3,background:'red'}}).png().toBuffer();
       const output = await normalizeCustomCakePhoto(bytes, 'image/png');
       assert.equal(output.width,4); assert.equal(output.height,3);

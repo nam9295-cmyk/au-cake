@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "pretest": "npm run test:custom-cake-contract && npm run test:custom-cake-order-core && npm run test:custom-cake-persistence && node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
+    "pretest": "npm run test:custom-cake-contract && npm run test:custom-cake-order-core && npm run test:custom-cake-persistence && npm run test:custom-cake-photos && node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
+    "test:custom-cake-photos": "node --test tests/custom-cake-photo-codec.test.mjs tests/custom-cake-photo-service.test.mjs tests/custom-cake-photo-storage.test.mjs tests/custom-cake-photo-artifacts.test.mjs",
     "test:custom-cake-persistence": "node --test tests/custom-cake-persistence.test.mjs tests/custom-cake-schema.test.mjs tests/custom-cake-persistence-artifacts.test.mjs",
     "test:custom-cake-order-core": "node --test tests/custom-cake-order-core.test.mjs",
     "test:custom-cake-contract": "node --test tests/custom-cake-contract.test.mjs",

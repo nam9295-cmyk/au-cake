@@ -4,6 +4,19 @@ import sharp from 'sharp'
 
 const load = async () => { try { return await import('../appwrite-functions/reservation-api/src/custom-cake-photo-codec.js') } catch (e) { if (e.code === 'ERR_MODULE_NOT_FOUND') return {}; throw e } }
 const make = (width = 32, height = 16) => sharp({ create: { width, height, channels: 3, background: '#aa5588' } })
+function pngChunk(type, data) {
+  const content = Buffer.concat([Buffer.from(type), data]), chunk = Buffer.alloc(data.length + 12)
+  chunk.writeUInt32BE(data.length); content.copy(chunk, 4)
+  let crc = 0xffffffff
+  for (const byte of content) { crc ^= byte; for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0) }
+  chunk.writeUInt32BE((crc ^ 0xffffffff) >>> 0, chunk.length - 4)
+  return chunk
+}
+function pngData(png) {
+  const chunks = []
+  for (let at = 8; at < png.length;) { const n = png.readUInt32BE(at); if (png.toString('ascii', at + 4, at + 8) === 'IDAT') chunks.push(png.subarray(at + 8, at + 8 + n)); at += n + 12 }
+  return Buffer.concat(chunks)
+}
 
 test('real JPEG PNG and WebP decode to deterministic metadata-free WebP without upscaling', async () => {
   const m = await load(); assert.equal(typeof m.normalizeCustomCakePhoto, 'function')
@@ -40,9 +53,15 @@ test('animation, APNG chunks and JPEG multi-picture markers cannot be flattened'
   const animation = await sharp(pixels, { raw: { width: 4, height: 4, channels: 3, pageHeight: 2 } }).webp({ loop: 0, delay: [100, 100] }).toBuffer()
   assert.equal((await sharp(animation).metadata()).pages, 2, 'fixture must actually contain two frames')
   await assert.rejects(m.normalizeCustomCakePhoto(animation, 'image/webp'), { code: 'PHOTO_INVALID_IMAGE' })
-  const png = await make().png().toBuffer(), chunk = Buffer.alloc(20)
-  chunk.writeUInt32BE(8); chunk.write('acTL', 4); chunk.writeUInt32BE(2, 8)
-  await assert.rejects(m.normalizeCustomCakePhoto(Buffer.concat([png.subarray(0, 33), chunk, png.subarray(33)]), 'image/png'), { code: 'PHOTO_INVALID_IMAGE' })
+  const png = await make().png().toBuffer(), second = await sharp({ create: { width: 32, height: 16, channels: 3, background: 'red' } }).png().toBuffer()
+  const control = Buffer.alloc(8); control.writeUInt32BE(2)
+  const frame = sequence => { const b = Buffer.alloc(26); b.writeUInt32BE(sequence); b.writeUInt32BE(32, 4); b.writeUInt32BE(16, 8); b.writeUInt16BE(1, 20); b.writeUInt16BE(10, 22); return pngChunk('fcTL', b) }
+  const sequence = Buffer.alloc(4); sequence.writeUInt32BE(2)
+  const apng = Buffer.concat([png.subarray(0, 33), pngChunk('acTL', control), frame(0), pngChunk('IDAT', pngData(png)), frame(1), pngChunk('fdAT', Buffer.concat([sequence, pngData(second)])), pngChunk('IEND', Buffer.alloc(0))])
+  assert.ok((await sharp(apng, { failOn: 'warning' }).raw().toBuffer()).length, 'valid APNG can otherwise decode/flatten')
+  await assert.rejects(m.normalizeCustomCakePhoto(apng, 'image/png'), { code: 'PHOTO_INVALID_IMAGE' })
   const jpeg = await make().jpeg().toBuffer(), mpf = Buffer.from([255, 226, 0, 8, 77, 80, 70, 0, 0, 0])
   await assert.rejects(m.normalizeCustomCakePhoto(Buffer.concat([jpeg.subarray(0, 2), mpf, jpeg.subarray(2)]), 'image/jpeg'), { code: 'PHOTO_INVALID_IMAGE' })
+  assert.ok((await sharp(Buffer.concat([jpeg, jpeg]), { failOn: 'warning' }).raw().toBuffer()).length, 'JPEG decoder otherwise ignores an appended second image')
+  await assert.rejects(m.normalizeCustomCakePhoto(Buffer.concat([jpeg, jpeg]), 'image/jpeg'), { code: 'PHOTO_INVALID_IMAGE' })
 })
