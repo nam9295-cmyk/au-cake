@@ -9,6 +9,9 @@ const execFileAsync = promisify(execFile)
 const FUNCTION_ARCHIVE_ENTRIES = Object.freeze(['package.json', 'package-lock.json', 'src', 'shared'])
 const PARSER_SOURCE_PATHS = Object.freeze([
   'appwrite-functions/reservation-api/src/business.js',
+  'appwrite-functions/reservation-api/src/stored-order-reader.js',
+  'appwrite-functions/reservation-api/src/stored-order-policy.js',
+  'appwrite-functions/reservation-api/src/reservation-error.js',
   'appwrite-functions/reservation-api/src/cake-lookup-response.js',
   'appwrite-functions/reservation-api/src/coupon-digest.js',
   'appwrite-functions/reservation-api/src/active-cake-products.js',

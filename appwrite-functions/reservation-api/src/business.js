@@ -1,3 +1,7 @@
+import { ReservationApiError } from './reservation-error.js'
+import { parseStoredOrderLines } from './stored-order-reader.js'
+export { ReservationApiError } from './reservation-error.js'
+export { parseStoredOrderLines } from './stored-order-reader.js'
 import { projectPublicCakeReservation } from './cake-lookup-response.js'
 import { digestReviewCouponCode } from './coupon-digest.js'
 import {
@@ -19,7 +23,6 @@ const REVIEW_COUPON_PATTERN = new RegExp(
   `^(?:${GENERATED_REVIEW_COUPON_ANIMALS.join('|')})(?:${REVIEW_COUPON_FRUITS.join('|')})[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$`,
 )
 const MANUAL_REVIEW_COUPON_PATTERN = /^JENNIE[A-Z0-9]{5}$/
-const MANUAL_REVIEW_COUPON_ID_PATTERN = /^manual:[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const SAFE_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 
 export const PROMO_CODE = 'chocolate'
@@ -109,12 +112,6 @@ function calculateIndividualPackagingFeeCents(individualPackagingPieces, selecte
     : baseFeeCents
 }
 
-function calculateLegacyIndividualPackagingFeeCents(individualPackagingPieces) {
-  if (!Number.isSafeInteger(individualPackagingPieces) || individualPackagingPieces <= 0) return 0
-  return individualPackagingPieces >= 100
-    ? 0
-    : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
-}
 const PROMOTIONS = [
   { code: PROMO_CODE, expiresOn: CHOCOLATE_PROMO_EXPIRES_ON, productIds: CHEESECAKE_PROMO_PRODUCT_IDS },
   { code: LEMON_PROMO_CODE, expiresOn: LEMONI_PROMO_EXPIRES_ON, productIds: FRESH_LEMON_CUPCAKE_PRODUCT_IDS },
@@ -269,14 +266,6 @@ const CLASS_PRICES = {
   '2-friends': 198,
 }
 
-export class ReservationApiError extends Error {
-  constructor(code, status = 400) {
-    super(code)
-    this.name = 'ReservationApiError'
-    this.code = code
-    this.status = status
-  }
-}
 
 function fail(code, status = 400) {
   throw new ReservationApiError(code, status)
@@ -701,60 +690,7 @@ const LEGACY_SINGLE_CAKE_INPUT_KEYS = new Set([
   'cacaoPercent',
 ])
 const LEGACY_ORDER_LINE_FIELDS = new Set([...ORDER_LINE_IDENTITY_KEYS, 'quantity', 'cacaoPercent'])
-const PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
-  ...LEGACY_ORDER_LINE_IDENTITY_KEYS,
-  'quantity',
-  'unitPriceCents',
-  'subtotalCents',
-  'discountPercent',
-  'discountCents',
-  'totalPriceCents',
-])
-const STORED_ORDER_LINE_KEYS = new Set([
-  ...LEGACY_ORDER_LINE_IDENTITY_KEYS,
-  'individualPackaging',
-  'quantity',
-  'unitPriceCents',
-  'subtotalCents',
-  'discountPercent',
-  'discountCents',
-  'individualPackagingPieces',
-  'individualPackagingFeeCents',
-  'totalPriceCents',
-])
-const CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
-  ...PRE_PACKAGING_STORED_ORDER_LINE_KEYS,
-  'chocolateExtra',
-  'chocolateExtraCents',
-])
-const CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS = new Set([
-  ...STORED_ORDER_LINE_KEYS,
-  'chocolateExtra',
-  'chocolateExtraCents',
-])
-const BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
-  ...CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS,
-  'brownieCreamOption',
-])
-const BROWNIE_CREAM_STORED_ORDER_LINE_KEYS = new Set([
-  ...CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS,
-  'brownieCreamOption',
-])
-const PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS = new Set([...PRE_PACKAGING_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'cupcakeFinish'))
-const LEGACY_STORED_ORDER_LINE_KEYS = new Set([...PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS].filter((key) => key !== 'vanillaCakePointColor'))
 const STORED_ORDER_MAX_BYTES = 65535
-const REQUIRED_STORED_ORDER_DOCUMENT_KEYS = new Set([
-  ...LEGACY_ORDER_LINE_IDENTITY_KEYS.filter((key) => key !== 'vanillaCakePointColor' && key !== 'cupcakeFinish'),
-  'quantity',
-  'subtotalCents',
-  'discountBasisCents',
-  'discountPercent',
-  'discountCents',
-  'totalPriceCents',
-  'totalPrice',
-  'orderLineCount',
-  'orderItemCount',
-])
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
@@ -917,19 +853,7 @@ function unitPriceForCakeLine(line) {
     + (line.brownieCreamOption === 'fresh-cream' ? BROWNIE_FRESH_CREAM_SURCHARGE_CENTS : 0)
 }
 
-const LEGACY_STORED_UNIT_PRICE_CENTS = Object.freeze({
-  'pave-cake': Object.freeze({ '15cm': [7500], '19cm': [9500], '22cm': [11500] }),
-  'vanilla-fresh-cream-cake': Object.freeze({ '15cm': [7500], '19cm': [9800], '22cm': [13900] }),
-  'buttercream-cake': Object.freeze({ '15cm': [7500], '19cm': [9800], '22cm': [13900] }),
-  'brownie-cheesecake': Object.freeze({ '15cm': [5800] }),
-  'pave-brownie-cheesecake': Object.freeze({ '15cm': [6800] }),
-})
 
-function isApprovedStoredUnitPrice(line) {
-  if (line.unitPriceCents === unitPriceForCakeLine(line)) return true
-  if (line.productId === 'brownie-cheesecake' && Object.hasOwn(line, 'brownieCreamOption')) return false
-  return LEGACY_STORED_UNIT_PRICE_CENTS[line.productId]?.[line.cakeSize]?.includes(line.unitPriceCents) || false
-}
 
 function validatePricingCoupon(promoCode, reviewCoupon) {
   if (reviewCoupon && typeof promoCode === 'string' && promoCode.trim()) fail('PROMO_CODE_INVALID')
@@ -1287,205 +1211,8 @@ export function matchesLookupPhone(storedPhone, suppliedPhone) {
   return /^04\d{8}$/.test(suppliedDigits) && storedDigits === suppliedDigits
 }
 
-function hasExactOwnKeys(value, allowedKeys) {
-  const keys = isPlainObject(value) ? Reflect.ownKeys(value) : []
-  return keys.length === allowedKeys.size
-    && keys.every((key) => typeof key === 'string' && allowedKeys.has(key))
-}
 
 
-export function parseStoredOrderLines(document) {
-  if (!document || !Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) return null
-  try {
-    if (typeof document.orderLinesJson !== 'string') throw new Error('invalid serialization')
-    if (new TextEncoder().encode(document.orderLinesJson).byteLength > STORED_ORDER_MAX_BYTES) throw new Error('oversized serialization')
-    const payload = JSON.parse(document.orderLinesJson)
-    if (!hasExactOwnKeys(payload, new Set(['version', 'lines'])) || payload.version !== 1 || !Array.isArray(payload.lines) || payload.lines.length === 0) {
-      throw new Error('invalid payload')
-    }
-    if ([...REQUIRED_STORED_ORDER_DOCUMENT_KEYS].some((key) => !Object.hasOwn(document, key))) {
-      throw new Error('missing document projection')
-    }
-
-    const canonicalKeys = new Set()
-    let currentPackagingDocument = null
-    let currentChocolateExtraDocument = null
-    for (const line of payload.lines) {
-      const preCupcakeFinishStoredLine = hasExactOwnKeys(line, PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS)
-      const legacyStoredLine = hasExactOwnKeys(line, LEGACY_STORED_ORDER_LINE_KEYS)
-      const prePackagingStoredLine = hasExactOwnKeys(line, PRE_PACKAGING_STORED_ORDER_LINE_KEYS)
-      const hasPackagingFields = hasExactOwnKeys(line, STORED_ORDER_LINE_KEYS)
-      const hasChocolateExtraPrePackagingFields = hasExactOwnKeys(line, CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS)
-      const hasChocolateExtraPackagingFields = hasExactOwnKeys(line, CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS)
-      const hasBrownieCreamPrePackagingFields = hasExactOwnKeys(line, BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS)
-      const hasBrownieCreamPackagingFields = hasExactOwnKeys(line, BROWNIE_CREAM_STORED_ORDER_LINE_KEYS)
-      const hasBrownieCreamFields = hasBrownieCreamPrePackagingFields || hasBrownieCreamPackagingFields
-      const hasChocolateExtraFields = hasChocolateExtraPrePackagingFields || hasChocolateExtraPackagingFields || hasBrownieCreamFields
-      const hasCurrentPackagingFields = hasPackagingFields || hasChocolateExtraPackagingFields || hasBrownieCreamPackagingFields
-      const hasCupcakeFinish = prePackagingStoredLine || hasCurrentPackagingFields || hasChocolateExtraPrePackagingFields || hasBrownieCreamPrePackagingFields
-      if (!preCupcakeFinishStoredLine && !legacyStoredLine && !prePackagingStoredLine && !hasChocolateExtraFields && !hasCurrentPackagingFields && !hasBrownieCreamFields) throw new Error('invalid line keys')
-      if (currentPackagingDocument === null) currentPackagingDocument = hasCurrentPackagingFields
-      if (currentPackagingDocument !== hasCurrentPackagingFields) throw new Error('mixed line versions')
-      if (currentChocolateExtraDocument === null) currentChocolateExtraDocument = hasChocolateExtraFields
-      if (currentChocolateExtraDocument !== hasChocolateExtraFields) throw new Error('mixed chocolate extra versions')
-      if (hasBrownieCreamFields && !BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS.has(line.productId)) throw new Error('ineligible brownie cream fields')
-      if (!validCakeQuantity(line.productId, line.quantity)) throw new Error('invalid quantity')
-      for (const key of ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount']) {
-        if (!Number.isInteger(line[key]) || line[key] < 0) throw new Error('invalid option count')
-      }
-      for (const key of ['productId', 'cakeSize', 'chocolateType', 'poundAddon', 'vanillaCakeSheet', 'vanillaCakeFlavor']) {
-        if (typeof line[key] !== 'string') throw new Error('invalid option')
-      }
-      const normalized = normalizedCakeLine(line, line.quantity, {
-        allowStoredProduct: true,
-        allowLegacyCupcakeCounts: !hasCupcakeFinish,
-        allowLegacyCreamCakeOptions: true,
-      })
-      if (ORDER_LINE_IDENTITY_KEYS.some((key) =>
-        key !== 'vanillaCakePointColor' &&
-        (key !== 'cupcakeFinish' || hasCupcakeFinish) &&
-        (key !== 'chocolateExtra' || hasChocolateExtraFields) &&
-        (key !== 'brownieCreamOption' || hasBrownieCreamFields) &&
-        (key !== 'individualPackaging' || hasCurrentPackagingFields) &&
-        normalized[key] !== line[key])) {
-        throw new Error('noncanonical line')
-      }
-      if (!legacyStoredLine && normalized.vanillaCakePointColor !== line.vanillaCakePointColor) {
-        throw new Error('noncanonical point color')
-      }
-      const canonicalKey = canonicalOrderLineKey(normalized)
-      if (canonicalKeys.has(canonicalKey)) throw new Error('duplicate line')
-      canonicalKeys.add(canonicalKey)
-      for (const key of ['unitPriceCents', 'subtotalCents', 'discountCents', 'totalPriceCents']) {
-        if (!Number.isSafeInteger(line[key]) || line[key] < 0) throw new Error('invalid price')
-      }
-      if (!isApprovedStoredUnitPrice(line)) throw new Error('invalid unit price')
-      const chocolateExtraCents = hasChocolateExtraFields ? chocolateExtraPriceCents(normalized.chocolateExtra) : 0
-      if (hasChocolateExtraFields && (
-        line.chocolateExtra !== normalized.chocolateExtra || line.chocolateExtraCents !== chocolateExtraCents
-      )) throw new Error('invalid chocolate extra')
-      if (line.subtotalCents !== line.unitPriceCents * line.quantity + chocolateExtraCents) throw new Error('invalid subtotal')
-      if (line.productId === 'smore-stick'
-        ? line.discountPercent !== smoreBulkPercent(line)
-        : line.discountPercent !== 0 && line.discountPercent !== 5 && line.discountPercent !== 10) throw new Error('invalid discount percent')
-      if (hasCurrentPackagingFields) {
-        const expectedPieces = line.individualPackaging
-          ? INDIVIDUAL_PACKAGING_PRODUCT_PIECES[line.productId] * line.quantity
-          : 0
-        if (line.individualPackagingPieces !== expectedPieces) throw new Error('invalid packaging pieces')
-        if (!Number.isInteger(line.individualPackagingFeeCents) || line.individualPackagingFeeCents < 0) throw new Error('invalid packaging fee')
-      }
-      const packagingFeeCents = hasCurrentPackagingFields ? line.individualPackagingFeeCents : 0
-      if (line.totalPriceCents !== line.subtotalCents - line.discountCents + packagingFeeCents) throw new Error('invalid total')
-      if (line.discountPercent === 0 && line.discountCents !== 0) throw new Error('invalid undiscounted line')
-    }
-
-    const discountPercent = document.discountPercent
-    if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10) throw new Error('invalid aggregate discount percent')
-    const hasReviewCoupon = document.reviewCouponId != null
-    const hasPromoLast4 = document.appliedPromoCodeLast4 != null
-    let eligibleIndexes = []
-    if (hasReviewCoupon) {
-      if (
-        typeof document.reviewCouponId !== 'string' || !document.reviewCouponId ||
-        !hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string' ||
-        !SAFE_LAST4_PATTERN.test(document.appliedPromoCodeLast4) ||
-        (discountPercent !== 5 && discountPercent !== 10) ||
-        (document.reviewCouponId.startsWith('manual:') && (
-          !MANUAL_REVIEW_COUPON_ID_PATTERN.test(document.reviewCouponId) || discountPercent !== 5
-        ))
-      ) throw new Error('invalid review discount provenance')
-      eligibleIndexes = payload.lines.map((line, index) => line.productId !== 'smore-stick' ? index : -1).filter((index) => index >= 0)
-      if (eligibleIndexes.length === 0) throw new Error('ineligible review coupon')
-    } else if (discountPercent === 10) {
-      if (!hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string' || !SAFE_LAST4_PATTERN.test(document.appliedPromoCodeLast4)) {
-        throw new Error('invalid static discount provenance')
-      }
-      const matchingPromotions = PROMOTIONS.filter(
-        (promotion) => promotion.code.slice(-4).toUpperCase() === document.appliedPromoCodeLast4,
-      )
-      const createdAt = new Date(document.createdAt)
-      if (matchingPromotions.length !== 1 || !Number.isFinite(createdAt.getTime())) throw new Error('unknown static promotion')
-      const promotion = matchingPromotions[0]
-      eligibleIndexes = payload.lines
-        .map((line, index) => getValidPromoCode(line.productId, promotion.code, createdAt) === promotion.code ? index : -1)
-        .filter((index) => index >= 0)
-      if (eligibleIndexes.length === 0) throw new Error('ineligible static promotion')
-    } else if (discountPercent === 0) {
-      if (hasPromoLast4) throw new Error('unexpected discount provenance')
-    } else {
-      throw new Error('missing review discount provenance')
-    }
-    const eligibleIndexSet = new Set(eligibleIndexes)
-    if (payload.lines.some((line, index) => line.discountPercent !== (eligibleIndexSet.has(index) ? discountPercent : smoreBulkPercent(line)))) {
-      throw new Error('invalid line discount eligibility')
-    }
-    const discountBasisCents = eligibleIndexes.reduce((sum, index) => sum + payload.lines[index].subtotalCents, 0)
-    const promotionDiscountCents = Math.round(discountBasisCents * discountPercent / 100)
-    const discountCents = safeOrderAmount(promotionDiscountCents + payload.lines.reduce((sum, line) => sum + smoreBulkDiscount(line), 0))
-    const expectedAllocations = allocateDiscounts(payload.lines, eligibleIndexes, discountPercent, promotionDiscountCents)
-    if (payload.lines.some((line, index) => line.discountCents !== expectedAllocations[index] + smoreBulkDiscount(line))) throw new Error('invalid discount allocation')
-
-    const individualPackagingPieces = currentPackagingDocument
-      ? payload.lines.reduce((sum, line) => sum + line.individualPackagingPieces, 0)
-      : 0
-    const selectedPackagingProductSubtotalCents = currentPackagingDocument
-      ? payload.lines.reduce((sum, line) => sum + (line.individualPackaging ? line.subtotalCents : 0), 0)
-      : 0
-    const expectedPackagingFeeCents = calculateIndividualPackagingFeeCents(
-      individualPackagingPieces,
-      selectedPackagingProductSubtotalCents,
-    )
-    const legacyPackagingFeeCents = calculateLegacyIndividualPackagingFeeCents(individualPackagingPieces)
-    const storedPackagingFeeCents = currentPackagingDocument
-      ? payload.lines.reduce((sum, line) => sum + line.individualPackagingFeeCents, 0)
-      : 0
-    if (currentPackagingDocument
-      && storedPackagingFeeCents !== expectedPackagingFeeCents
-      && storedPackagingFeeCents !== legacyPackagingFeeCents) {
-      throw new Error('invalid aggregate packaging fee')
-    }
-    const subtotalCents = safeOrderAmount(payload.lines.reduce((sum, line) => sum + line.subtotalCents, 0))
-    const totalPriceCents = safeOrderAmount(payload.lines.reduce((sum, line) => sum + line.totalPriceCents, 0))
-    const orderLineCount = payload.lines.length
-    const orderItemCount = payload.lines.reduce((sum, line) => sum + line.quantity, 0)
-    const expectedDocumentValues = {
-      subtotalCents,
-      discountBasisCents,
-      discountPercent,
-      discountCents,
-      totalPriceCents,
-      orderLineCount,
-      orderItemCount,
-      ...(currentPackagingDocument ? {
-        individualPackagingPieces,
-        individualPackagingFeeCents: storedPackagingFeeCents,
-      } : {}),
-    }
-    for (const [key, expected] of Object.entries(expectedDocumentValues)) {
-      if (document[key] !== expected) throw new Error(`inconsistent ${key}`)
-    }
-    const exactTotal = totalPriceCents / 100
-    if (document.totalPrice !== exactTotal && document.totalPrice !== Math.round(exactTotal)) {
-      throw new Error('inconsistent totalPrice')
-    }
-    const firstLine = payload.lines[0]
-    const firstLineHasCupcakeFinish = Object.hasOwn(firstLine, 'cupcakeFinish')
-    const documentHasCupcakeFinish = typeof document.cupcakeFinish === 'string'
-    if (firstLineHasCupcakeFinish !== documentHasCupcakeFinish) throw new Error('inconsistent cupcakeFinish projection')
-    for (const key of [...ORDER_LINE_IDENTITY_KEYS.filter((key) =>
-      key !== 'vanillaCakePointColor' &&
-      key !== 'chocolateExtra' &&
-      key !== 'brownieCreamOption' &&
-      key !== 'individualPackaging' &&
-      (key !== 'cupcakeFinish' || firstLineHasCupcakeFinish)), 'quantity']) {
-      if (document[key] !== firstLine[key]) throw new Error(`inconsistent ${key}`)
-    }
-    return payload
-  } catch {
-    throw new ReservationApiError('INVALID_STORED_ORDER', 500)
-  }
-}
 
 export function publicCakeReservation(document) {
   return projectPublicCakeReservation(document, parseStoredOrderLines, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS)
