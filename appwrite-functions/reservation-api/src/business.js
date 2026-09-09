@@ -2,7 +2,7 @@ import { MARKET_TIMEZONE, MANUAL_REVIEW_COUPON_PATTERN, SAFE_LAST4_PATTERN, fail
 export { REVIEW_COUPON_ANIMALS, REVIEW_COUPON_FRUITS, normalizeReviewCouponCode, normalizeAustralianMobile, isValidDateValue, sydneyDateValue } from './reservation-input-policy.js'
 import { BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, CAKE_SIZE_LABELS, PRODUCTS } from './cake-order-catalog.js'
 export { PROMO_CODE, LEMON_PROMO_CODE, PROMO_DISCOUNT_RATE, LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS, CUPCAKE_PACK_SIZE, CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS, CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS, INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE, INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS, BROWNIE_FRESH_CREAM_SURCHARGE_CENTS, VANILLA_CAKE_SHEETS, VANILLA_CAKE_FLAVORS, VANILLA_CAKE_POINT_COLORS, CAKE_SIZE_LABELS, CHOCOLATE_PROMO_EXPIRES_ON, LEMONI_PROMO_EXPIRES_ON, MAX_RESERVATION_QUANTITY } from './cake-order-catalog.js'
-import { cakeCustomerEmail, validatePickupDateTime, validCakeQuantity, LEGACY_ORDER_LINE_FIELDS, assertKnownStrawberryPayloadFields, normalizedCakeLine, normalizeCakeOrderLines } from './cake-order-input.js'
+import { normalizeCakeReservationInput } from './cake-order-input.js'
 export { PICKUP_CUTOFF_HOUR, LATE_ORDER_NEXT_DAY_START_MINUTES, AU_CAKE_PICKUP_SCHEDULE, resolveCakeCustomerEmailMode, resolveCakeCatalogMode, isSchoolPickupWindowClosed, isCakePickupServiceTime, normalizeCakeOrderLines, canonicalCakeRequestPayload } from './cake-order-input.js'
 import { priceCakeOrderLines } from './cake-order-pricing.js'
 export { getValidPromoCode } from './cake-order-pricing.js'
@@ -162,25 +162,9 @@ export function buildCakeReservation(input, {
   customerEmailMode = 'required',
   cakeCatalogMode = 'compat',
 } = {}) {
-  if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
-  assertKnownStrawberryPayloadFields(input)
-  if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
-  if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
-  const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
-  const customerPhone = validateAustralianMobile(input.customerPhone)
-  const customerEmail = cakeCustomerEmail(input, customerEmailMode)
-  validatePickupDateTime(input.pickupDate, input.pickupTime, now)
-
-  const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
-  let normalizedLines
-  if (Object.hasOwn(input, 'orderLines')) {
-    if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
-    normalizedLines = normalizeCakeOrderLines(input.orderLines, { cakeCatalogMode })
-  } else {
-    const quantity = input.productId === 'smore-stick' ? input.quantity : Number(input.quantity)
-    if (!validCakeQuantity(input.productId, quantity)) fail('INVALID_QUANTITY')
-    normalizedLines = [normalizedCakeLine(input, quantity, { cakeCatalogMode })]
-  }
+  const { customerName, customerPhone, customerEmail, requestNote, normalizedLines } = normalizeCakeReservationInput(
+    input, { now, customerEmailMode, cakeCatalogMode },
+  )
   const pricing = priceCakeOrderLines(normalizedLines, input.promoCode, now, reviewCoupon)
   const firstLine = pricing.lines[0]
   const orderLineCount = pricing.lines.length

@@ -367,6 +367,29 @@ export function normalizeCakeOrderLines(orderLines, { cakeCatalogMode = 'compat'
   return normalized
 }
 
+export function normalizeCakeReservationInput(input, { now, customerEmailMode, cakeCatalogMode }) {
+  if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
+  assertKnownStrawberryPayloadFields(input)
+  if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
+  if (input.privacyConsent !== true) fail('CONSENT_REQUIRED')
+  const customerName = requiredText(input.customerName, { min: 2, max: 80, code: 'INVALID_NAME' })
+  const customerPhone = validateAustralianMobile(input.customerPhone)
+  const customerEmail = cakeCustomerEmail(input, customerEmailMode)
+  validatePickupDateTime(input.pickupDate, input.pickupTime, now)
+
+  const requestNote = optionalText(input.requestNote, { max: 1000, code: 'REQUEST_NOTE_TOO_LONG' })
+  let normalizedLines
+  if (Object.hasOwn(input, 'orderLines')) {
+    if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
+    normalizedLines = normalizeCakeOrderLines(input.orderLines, { cakeCatalogMode })
+  } else {
+    const quantity = input.productId === 'smore-stick' ? input.quantity : Number(input.quantity)
+    if (!validCakeQuantity(input.productId, quantity)) fail('INVALID_QUANTITY')
+    normalizedLines = [normalizedCakeLine(input, quantity, { cakeCatalogMode })]
+  }
+  return { customerName, customerPhone, customerEmail, requestNote, normalizedLines }
+}
+
 export function canonicalCakeRequestPayload(input, { customerEmailMode = 'required', cakeCatalogMode = 'compat' } = {}) {
   if (!isPlainObject(input)) fail('INVALID_REQUEST')
   assertKnownStrawberryPayloadFields(input)
@@ -408,4 +431,3 @@ export function canonicalCakeRequestPayload(input, { customerEmailMode = 'requir
     orderLines: [...lines].sort((left, right) => canonicalOrderLineKey(left).localeCompare(canonicalOrderLineKey(right))),
   }
 }
-
