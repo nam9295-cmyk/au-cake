@@ -109,6 +109,31 @@ test('received operator and customer identities retry independently without supp
   assert.equal(saved.emailByRole.operator.emailDelivery.attempts, 2)
   assert.equal(saved.state, 'sent')
 })
+test('received operator receipts include contact and immutable custom order selections without exposing photos', () => {
+  const value = event()
+  value.snapshot.lines[0].designNote = '<Blue & gold>'
+  const id = eventId(value)
+  const operator = notification.buildCustomCakeEmailPayload({ id, event: value, ...mail, role: 'operator' })
+  const customer = notification.buildCustomCakeEmailPayload({ id, event: value, ...mail, role: 'customer' })
+  assert.match(operator.text, /Contact phone: 0412345678/)
+  assert.match(operator.text, /Contact email: contract@example\.invalid/)
+  assert.match(operator.text, /Custom Cake cake_A: single 6in × 1; design: <Blue & gold>; figurine: shop/)
+  assert.match(operator.text, /Paid S’more smore_A: × 2; add-on to cake_A; AUD 6\.30/)
+  assert.match(operator.text, /Gift S’more: × 2/)
+  assert.match(operator.html, /design: &lt;Blue &amp; gold&gt;/)
+  assert.doesNotMatch(operator.text, /photo_A|photo_B|uploadToken/)
+  assert.doesNotMatch(operator.html, /photo_A|photo_B|uploadToken/)
+  assert.doesNotMatch(customer.text, /Contact phone:|Contact email:|Custom Cake cake_A:/)
+})
+test('received operator receipts include ordinary v2 selections and paid S’more association', () => {
+  const value = event('cake-order-v2.received'), id = eventId(value)
+  const operator = notification.buildCustomCakeEmailPayload({ id, event: value, ...mail, role: 'operator' })
+  assert.match(operator.text, /Cake cake_A: pave-cake × 1; paid AUD 79\.00/)
+  assert.match(operator.text, /Selections: Cake size=6in; Chocolate type=dark;/)
+  assert.match(operator.text, /Vanilla cake flavor=triple-berry;/)
+  assert.match(operator.text, /Individual packaging=no/)
+  assert.match(operator.text, /Paid S’more smore_A: × 2; add-on to cake_A; AUD 6\.30/)
+})
 test('missing operator configuration keeps the durable event pending and resumes only the missing role', async () => {
   const { repository } = await setup()
   const id = eventId(event()), messages = []

@@ -14,6 +14,26 @@ const instant = v => typeof v === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.
 const cents = n => Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0)
 const money = n => { if (!cents(n)) fail(); return `AUD ${Math.floor(n / 100)}.${String(n % 100).padStart(2, '0')}` }
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+const label = key => key.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/^./, c => c.toUpperCase())
+const display = value => typeof value === 'boolean' ? (value ? 'yes' : 'no') : String(value)
+function operatorOrderSummary(snapshot) {
+  if (snapshot.quote) {
+    const paid = new Map(snapshot.paidSmoreLines.map(line => [line.lineId, line]))
+    const lines = snapshot.lines.map(line => {
+      if (line.kind === 'custom-cake') return `Custom Cake ${line.lineId}: ${line.tier} ${line.size} × ${line.quantity}; design: ${line.designNote || 'None'}; figurine: ${line.figurineSource}`
+      const priced = paid.get(line.lineId)
+      if (!priced) fail()
+      return `Paid S’more ${line.lineId}: × ${line.quantity}; ${line.kind === 'cake-addon-smore' ? `add-on to ${line.parentCakeLineId}` : 'standalone'}; ${money(priced.totalCents)}`
+    })
+    lines.push(`Gift S’more: × ${snapshot.quote.giftSmoreQuantity}`)
+    return lines
+  }
+  return snapshot.pricing.lines.flatMap(line => {
+    if (line.kind !== 'cake') return [`Paid S’more ${line.lineId}: × ${line.quantity}; ${line.kind === 'cake-addon-smore' ? `add-on to ${line.parentCakeLineId}` : 'standalone'}; ${money(line.totalCents)}`]
+    const selections = Object.entries(line.options).map(([key, value]) => `${label(key)}=${display(value)}`).join('; ')
+    return [`Cake ${line.lineId}: ${line.productId} × ${line.quantity}; paid ${money(line.totalCents)}`, `Selections: ${selections}`]
+  })
+}
 function readEvent(id, event) {
   if (!event || event.schemaVersion !== 1 || !Object.hasOwn(variants, event.eventType) || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(event.requestId || '') || !instant(event.occurredAt) || !instant(event.dueAt) || !['pending', 'sent', 'manual'].includes(event.state) || typeof event.explanation !== 'string' || event.explanation.length > 1000 || event.explanation.trim() !== event.explanation || (event.eventType !== 'custom-cake.quoted' && event.explanation !== '')) fail()
   if (customCakeDocumentId('custom-cake-event-v1', `${event.requestId}/${event.eventType}/${event.quoteVersion}`) !== id) fail()
@@ -53,6 +73,7 @@ export function buildCustomCakeEmailPayload({ id, event, from, replyTo = null, r
   const recipients = role === 'operator' ? normalizeRecipientEmailSet(operatorRecipients) : [recipientEmail]
   const title = event.eventType.endsWith('.received') ? 'Request received' : event.eventType.endsWith('.quoted') ? `Custom Cake quote ${event.quoteVersion}` : 'Custom Cake confirmed'
   const details = [title, `Reference: ${event.requestNumber}`, `Customer: ${s.customer.customerName}`, `Pickup: ${s.pickup.pickupDate} ${s.pickup.pickupTime} (Sydney)`]
+  if (role === 'operator') details.push(`Contact phone: ${s.customer.customerPhone}`, `Contact email: ${recipientEmail}`, ...operatorOrderSummary(s))
   if (q) {
     details.push(`Quote version: ${q.quoteVersion}`, `Base: ${money(q.baseCents)}`, `Cake discount: ${money(q.cakeDiscountCents)}`, `Design extra: ${q.designExtraCents === null ? 'Not agreed' : money(q.designExtraCents)}`, `Figurine extra: ${q.figurineExtraCents === null ? 'Not agreed' : money(q.figurineExtraCents)}`, `Paid S’more: ${q.paidSmoreQuantity} — ${money(q.paidSmoreTotalCents)}`, `Gift S’more: ${q.giftSmoreQuantity}`, `${q.isFinalQuote ? 'Final quote' : 'Known amount (extras not yet agreed)'}: ${money(q.knownTotalCents)}`)
   } else details.push(`Total: ${money(s.pricing.totalCents)}`)
