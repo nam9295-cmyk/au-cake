@@ -12,6 +12,7 @@ const productDetailsSource = await readSource('../src/components/ProductDetailRo
 const adminReservationsSource = await readSource('../src/AdminReservationsPage.tsx')
 const constantsSource = await readSource('../src/lib/constants.ts')
 const repositorySource = await readSource('../src/lib/repository.ts')
+const storedReaderSource = await readSource('../src/lib/stored-order-reader.ts')
 
 test('App delegates customer reservation pages to explicit page modules', () => {
   assert.match(appSource, /from '\.\/pages\/ReservePage'/)
@@ -88,8 +89,9 @@ test('completion and lookup render every authoritative order line with legacy fa
   assert.match(lookupSource, /<OrderDetailRows reservation=\{reservation\}/)
   assert.match(completeSource, /reservation\.totalPriceCents[\s\S]*\/ 100/)
   assert.match(lookupSource, /totalPriceCents[\s\S]*\/ 100/)
-  assert.match(repositorySource, /orderLines = payload\.orderLines\?\.map/)
-  assert.match(repositorySource, /'totalPriceCents'/)
+  assert.match(repositorySource, /import \{ toReservation, toPublicReservation, type AppwriteReservationDocument \} from '\.\/stored-order-reader'/)
+  assert.match(storedReaderSource, /orderLines = payload\.orderLines\?\.map/)
+  assert.match(storedReaderSource, /'totalPriceCents'/)
 })
 
 test('cheesecake product detection has one shared domain owner', () => {

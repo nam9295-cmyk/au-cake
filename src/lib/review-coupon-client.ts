@@ -28,7 +28,8 @@ import {
 } from './individual-packaging.js'
 import { CHOCOLATE_EXTRA_OPTIONS, isChocolateExtraEligibleProduct, normalizeChocolateExtra } from './chocolate-extras.js'
 import { isBrownieCheesecakeProduct, normalizeBrownieCreamOption } from './brownie-cream.js'
-import type { BrownieCreamOption, CakeOrderLineRequest, CakeOrderLineResult, CakeOrderRequest, CakeOrderReservation, CakeSize, CacaoPercent, ChocolateExtra, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, ReservationApiCapabilities, ReservationInput, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
+import type { BrownieCreamOption, CakeOrderLineRequest, CakeOrderLineResult, CakeOrderRequest, CakeOrderReservation, CakeSize, CacaoPercent, ChocolateExtra, ChocolateType, CupcakeFinish, PoundAddon, ProductId, Reservation, ReservationInput, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types.js'
+export { parseReservationApiCapabilities } from './reservation-health-contract.js'
 
 const REVIEW_COUPON_ANIMALS = ['FOX', 'CAT', 'DOG', 'OWL', 'PIG', 'BEE', 'COW', 'CUB', 'EMU', 'HEN', 'KOI', 'PUP', 'RAM', 'YAK', 'APE']
 const REVIEW_COUPON_FRUITS = ['KIWI', 'FIG', 'LIME', 'PEAR', 'PLUM', 'APPLE', 'GRAPE', 'GUAVA', 'LEMON', 'MANGO', 'MELON', 'PEACH']
@@ -202,12 +203,6 @@ function readPlainDataRecordSnapshot(value: unknown): Record<string, unknown> | 
   return snapshot
 }
 
-function readExactPlainDataRecordSnapshot(value: unknown, fields: readonly string[]): Record<string, unknown> | null {
-  const snapshot = readPlainDataRecordSnapshot(value)
-  if (!snapshot) return null
-  const keys = Object.keys(snapshot)
-  return keys.length === fields.length && fields.every((key) => Object.hasOwn(snapshot, key)) ? snapshot : null
-}
 
 function hasOwnDataFields(row: Record<string, unknown>, fields: readonly string[]): boolean {
   return fields.every((key) => {
@@ -363,24 +358,6 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
   return promoCode ? { ...request, promoCode } : request
 }
 
-export function parseReservationApiCapabilities(value: unknown): ReservationApiCapabilities {
-  const row = readExactPlainDataRecordSnapshot(value, ['status', 'capabilities'])
-  if (!row || row.status !== 'ready') invalidResponse()
-
-  const legacyCapabilities = readExactPlainDataRecordSnapshot(row.capabilities, ['cakeOrderLines'])
-  if (legacyCapabilities?.cakeOrderLines === 1) return { cakeOrderLines: 1 }
-
-  const smoreCapabilities = readExactPlainDataRecordSnapshot(row.capabilities, [
-    'cakeOrderLines', 'smoreStoredOrders', 'smoreWrites',
-  ])
-  if (
-    !smoreCapabilities
-    || smoreCapabilities.cakeOrderLines !== 1
-    || smoreCapabilities.smoreStoredOrders !== 1
-    || (smoreCapabilities.smoreWrites !== 0 && smoreCapabilities.smoreWrites !== 1)
-  ) invalidResponse()
-  return { cakeOrderLines: 1 }
-}
 
 function projectCakeOrderLine(line: CakeOrderLineRequest): CakeOrderLineRequest {
   if (getCakeServingProfile(line.productId) === 'genoise') {
