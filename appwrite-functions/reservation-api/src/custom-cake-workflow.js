@@ -79,7 +79,7 @@ export async function persistCakeEvent(tx, snapshot, eventType, occurredAt, expl
 }
 
 /** Authenticated transport is resolved by the route; no body-supplied actor is accepted. */
-export function createCustomCakeWorkflow({ repository, fingerprintKey, promotionStartsAt, photos, coupons, assertLegacyAbsent, smoreWritesEnabled, now = () => new Date() }) {
+export function createCustomCakeWorkflow({ repository, fingerprintKey, promotionStartsAt, photos, coupons, assertLegacyAbsent, assertNewReady, smoreWritesEnabled, now = () => new Date() }) {
   async function find(number, wire = 'custom-cake.v1') {
     const rows = await repository.list('snapshots', { lookupKey: number, limit: 2 })
     if (rows.length !== 1 || rows[0].value.request.contractVersion !== wire) cakeWireFail('NOT_FOUND')
@@ -92,6 +92,7 @@ export function createCustomCakeWorkflow({ repository, fingerprintKey, promotion
     const identity = { requestId: request.requestId, wire: request.contractVersion, creatorScope: `customer:${request.customer.customerPhone}`, fingerprint }
     const replay = await repository.findReplay(identity)
     if (replay) return replay
+    if (assertNewReady) await assertNewReady()
     if (!smoreWritesEnabled && request.lines.some(line => line.productId === 'smore-stick')) cakeWireFail('CAPABILITY_UNAVAILABLE')
     try {
       return await repository.atomic(`create/${request.requestId}/${fingerprint}/${randomUUID()}`, async tx => {

@@ -28,6 +28,9 @@ import { digestCakeRequestPayload, resolveReviewCouponHmacSecret } from './coupo
 import { SMORE_WRITES_ENABLED } from './smore-write-policy.js'
 import { cakeReservationResponse } from './cake-create-response.js'
 import { checkReservationReadiness } from './reservation-health.js'
+import { cakeServicesForRequest } from './custom-cake-runtime.js'
+import { isCakeWireAction, handleCakeWireRequest, handleCakePhotoRecovery } from './custom-cake-routes.js'
+import { createLegacyCakeGate } from './custom-cake-legacy-gate.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -306,6 +309,7 @@ export async function createCake(databases, input, {
   now = new Date(),
   runtimeConfig = config,
   smoreWritesEnabled = SMORE_WRITES_ENABLED,
+  legacyGate,
 } = {}) {
   const documentId = documentIdForInput(input)
   const customerPhone = normalizeAustralianMobile(input?.customerPhone)
@@ -324,9 +328,12 @@ export async function createCake(databases, input, {
       requestFingerprint = cakeRequestFingerprint(input, runtimeConfig)
       assertMatchingRequestFingerprint(existing, requestFingerprint)
     }
+    if (!Object.hasOwn(existing, 'requestFingerprint') && legacyGate?.mode === 'required') throw new ReservationApiError('CAKE_ORDER_UPGRADE_REQUIRED', 409)
     return cakeReservationResponse(existing)
   }
+  if (legacyGate) await legacyGate.beforeNew(documentId)
   requestFingerprint = cakeRequestFingerprint(input, runtimeConfig)
+  const sharedIdentity = legacyGate?.identity(documentId, customerPhone, requestFingerprint)
 
   const normalizedReviewCode = reviewCouponInput(input?.promoCode)
   const safeInput = normalizedReviewCode ? { ...input, promoCode: '' } : input
@@ -359,6 +366,10 @@ export async function createCake(databases, input, {
   )
 
   if (!normalizedReviewCode) {
+    if (sharedIdentity) return legacyGate.createPlain(sharedIdentity, async transactionId => {
+      const document = await databases.createDocument({ databaseId: runtimeConfig.cakeDatabaseId, collectionId: runtimeConfig.cakeReservationsId, documentId, data: { ...data, totalPrice: Math.round(data.totalPrice) }, transactionId })
+      return cakeReservationResponse(document)
+    })
     let document
     try {
       document = await databases.createDocument({
@@ -422,6 +433,7 @@ export async function createCake(databases, input, {
       data: { ...data, totalPrice: Math.round(data.totalPrice) },
       transactionId,
     })
+    if (sharedIdentity) await legacyGate.claim(transactionId, sharedIdentity, cakeReservationResponse({ ...data, $id: documentId }))
     await databases.updateDocument({
       databaseId: runtimeConfig.cakeDatabaseId,
       collectionId: couponLedger.collectionId,
@@ -445,6 +457,7 @@ export async function createCake(databases, input, {
     await databases.updateTransaction({ transactionId, commit: true })
   } catch (error) {
     try { await databases.updateTransaction({ transactionId, rollback: true }) } catch { /* already rolled back or committed */ }
+    if (sharedIdentity && (commitAttempted || isConflict(error))) await legacyGate.assertNoForeignClaim(documentId)
     if (error instanceof ReservationApiError) {
       if (error.code !== 'PROMO_CODE_INVALID' || !couponId) throw error
       return reconcileReviewCouponCommit(
@@ -635,17 +648,36 @@ export async function listCalendarEvents(databases, input, env = process.env, no
 
 export { checkReservationReadiness } from './reservation-health.js'
 
-export default async ({ req, res, log, error }) => {
+export function createReservationHandler({ env = process.env, servicesForRequest, now = () => new Date(), smoreWritesEnabled = SMORE_WRITES_ENABLED } = {}) {
+return async ({ req, res, log, error }) => {
   let action = 'unknown'
+  if (isCakeWireAction(req.bodyJson?.action) || req.headers?.['x-appwrite-trigger'] === 'schedule') {
+    const options = { env, now, smoreWritesEnabled }
+    try {
+      options.runtimeConfig = resolveReservationConfig(env)
+      options.services = servicesForRequest ? servicesForRequest(req) : cakeServicesForRequest(req, env)
+    } catch {
+      // Route-owned mapping retains the selected strict wire envelope.
+      options.services = {}
+      options.runtimeConfig = {}
+    }
+    return req.headers?.['x-appwrite-trigger'] === 'schedule'
+      ? handleCakePhotoRecovery({ req, res }, options)
+      : handleCakeWireRequest({ req, res }, options)
+  }
   try {
     const body = requestBody(req)
     action = body.action
-    const runtimeConfig = resolveReservationConfig(process.env)
-    const databases = new Databases(clientForRequest(req))
+    const runtimeConfig = resolveReservationConfig(env)
+    const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req))
 
     let result
     if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig)
-    else if (action === 'create-cake') result = await createCake(databases, body.data, { runtimeConfig })
+    else if (action === 'create-cake') {
+      const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: cakeServicesForRequest(req, env).storage }
+      const legacyGate = createLegacyCakeGate({ env, services })
+      result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, legacyGate })
+    }
     else if (action === 'create-class') result = await createClass(databases, body.data)
     else if (action === 'lookup-cake') result = await lookupCake(databases, body.data || {})
     else if (action === 'calendar-login') result = calendarLogin(body.data || {})
@@ -663,3 +695,6 @@ export default async ({ req, res, log, error }) => {
     return res.json({ ok: false, code }, status)
   }
 }
+}
+
+export default createReservationHandler()

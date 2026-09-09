@@ -243,6 +243,11 @@ export function createCustomCakeRepository(databases, config = {}) {
   }
   return {
     get: (kind, id) => get(kind, id),
+    // Join an existing SDK transaction without committing or changing its owner.
+    inTransaction(transactionId) {
+      if (!resourceId.test(transactionId || '')) fail('PERSISTENCE_INVALID_RECORD')
+      return unit(transactionId)
+    },
     async list(kind, { lookupKey, state, dueBefore, cursor, limit = 100 } = {}) {
       if (!CUSTOM_CAKE_RESOURCE_KEYS.includes(kind) || !Number.isInteger(limit) || limit < 1 || limit > 100 || (dueBefore && !instant(dueBefore))) fail('PERSISTENCE_INVALID_RECORD')
       const queries = [Query.limit(limit), Query.orderAsc('$id')]
