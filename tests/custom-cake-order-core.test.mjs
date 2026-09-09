@@ -115,3 +115,113 @@ test('line identity and parent graph are strict; photos are opaque, unique and m
   duplicateAcross.lines.push({ ...copy(duplicateAcross.lines[0]), lineId: 'cake_B' })
   reject(() => normalize(duplicateAcross), 'INVALID_PHOTO_REFERENCE')
 })
+
+const promotionStartsAt = '2026-09-01T00:00:00.000Z'
+const promotionEligibilityAt = custom.created.quote.promotionEligibilityAt
+const pricedAt = ordinary.created.pricing.pricedAt
+const customPrice = request => pricing.priceCustomCakeV1Request(request, { promotionStartsAt, promotionEligibilityAt })
+
+test('custom initial quote and all six base prices match original fixture amounts', () => {
+  assert.equal(typeof pricing.priceCustomCakeV1Request, 'function')
+  assert.deepEqual(customPrice(custom.request), { quote: custom.created.quote, paidSmoreLines: custom.created.paidSmoreLines })
+  for (const row of custom.sizes) {
+    const request = copy(custom.request)
+    request.lines = [{ ...request.lines[0], tier: row.tier, size: row.size, quantity: row.quantity }]
+    const { quote } = customPrice(request)
+    for (const key of ['baseCents', 'cakeDiscountCents', 'knownTotalCents', 'giftSmoreQuantity']) assert.equal(quote[key], row[key])
+  }
+  const request = copy(custom.request)
+  request.lines = [{ ...request.lines[0], quantity: 3 }, { ...request.lines[0], lineId: 'cake_B', size: '8in', quantity: 2, photoRefs: [] }]
+  const { quote } = customPrice(request)
+  assert.equal(quote.baseCents, 86500)
+  assert.equal(quote.cakeDiscountCents, 4325)
+  assert.equal(quote.giftSmoreQuantity, 10)
+})
+
+test('event eligibility uses first persisted receipt with exclusive end and inclusive activation', () => {
+  for (const row of custom.eventCases) {
+    const request = copy(custom.request)
+    request.lines = [{ ...request.lines[0], quantity: row.quantity }]
+    const { quote } = pricing.priceCustomCakeV1Request(request, { promotionStartsAt, promotionEligibilityAt: row.receivedAt })
+    for (const key of ['baseCents', 'cakeDiscountCents', 'giftSmoreQuantity']) assert.equal(quote[key], row[key])
+    const edited = pricing.reviseCustomCakeV1Quote(quote, { quoteVersion: 2, designExtraCents: 9000, figurineExtraCents: 0 })
+    assert.equal(edited.promotionEligibilityAt, row.receivedAt)
+    assert.equal(edited.cakeDiscountCents, row.cakeDiscountCents)
+    assert.equal(edited.giftSmoreQuantity, row.giftSmoreQuantity)
+  }
+  for (const [at, discount] of [['2026-08-31T23:59:59.999Z', 0], [promotionStartsAt, 775]]) {
+    assert.equal(pricing.priceCustomCakeV1Request(custom.request, { promotionStartsAt, promotionEligibilityAt: at }).quote.cakeDiscountCents, discount)
+  }
+})
+
+test('quote revisions preserve null/zero/positive distinctions and immutable receipt bases', () => {
+  assert.equal(typeof pricing.reviseCustomCakeV1Quote, 'function')
+  for (const row of custom.extraCases) {
+    const initial = copy(custom.created.quote)
+    const quote = pricing.reviseCustomCakeV1Quote(initial, { quoteVersion: 2, designExtraCents: row.designExtraCents, figurineExtraCents: row.figurineExtraCents })
+    for (const key of Object.keys(row)) assert.equal(quote[key], row[key])
+    assert.deepEqual(initial, custom.created.quote)
+    assert.equal(quote.quoteVersion, 2)
+  }
+  assert.deepEqual(pricing.reviseCustomCakeV1Quote(custom.created.quote, { quoteVersion: 2, designExtraCents: 0, figurineExtraCents: 0 }), custom.zeroExtrasQuote)
+  assert.deepEqual(pricing.reviseCustomCakeV1Quote(custom.created.quote, { quoteVersion: 2, designExtraCents: 2000, figurineExtraCents: 1500 }), custom.finalLookup.quote)
+})
+
+test('new paid S’more price is 450 standalone or 315 add-on per stick at 1/6/12', () => {
+  assert.equal(typeof pricing.priceCakeOrderV2Request, 'function')
+  for (const row of ordinary.smoreCases) {
+    const { unitPriceCents: _u, subtotalCents: _s, discountPercent: _p, discountCents: _d, totalCents: _t, ...line } = row
+    for (const template of [ordinary.request, custom.request]) {
+      const request = copy(template)
+      request.lines = template === ordinary.request && line.kind === 'standalone-smore' ? [line] : [request.lines[0], line]
+      const result = template === ordinary.request ? pricing.priceCakeOrderV2Request(request, { pricedAt }).lines : customPrice(request).paidSmoreLines
+      assert.deepEqual(result.find(l => l.lineId === line.lineId), row)
+    }
+  }
+  assert.deepEqual(pricing.priceCakeOrderV2Request(ordinary.request, { pricedAt }), ordinary.created.pricing)
+  assert.deepEqual(pricing.priceCakeOrderV2Request(ordinary.request, { pricedAt, reviewCoupon: { id: 'synthetic', rewardPercent: 5, codeLast4: 'ABCD' } }), ordinary.couponExample)
+  const standalone = copy(ordinary.request)
+  standalone.lines = [{ kind: 'standalone-smore', lineId: 'S', productId: 'smore-stick', quantity: 12, parentCakeLineId: null }]
+  reject(() => pricing.priceCakeOrderV2Request(standalone, { pricedAt, reviewCoupon: { id: 'synthetic', rewardPercent: 5, codeLast4: 'ABCD' } }), 'PROMO_CODE_INVALID')
+})
+
+test('ordinary extras stay per-line, packaging aggregate threshold and coupon remainder ties stay deterministic', () => {
+  const request = copy(ordinary.request)
+  const cake = request.lines[0]
+  request.lines = ['B', 'A'].map(lineId => ({ ...copy(cake), lineId, productId: 'fresh-lemon-cupcakes-6', options: { ...cake.options, cakeSize: '15cm', chocolateIcingCount: 1, individualPackaging: true } }))
+  const result = pricing.priceCakeOrderV2Request(request, { pricedAt, reviewCoupon: { id: 'coupon', rewardPercent: 5, codeLast4: 'ABCD' } })
+  assert.equal(result.subtotalCents, 7300)
+  assert.equal(result.discountCents, 365)
+  assert.equal(result.individualPackagingFeeCents, 600)
+  assert.equal(result.totalCents, 7535)
+  assert.deepEqual(result.lines.map(l => [l.lineId, l.discountCents]), [['A', 183], ['B', 182]])
+  request.lines[0].quantity = 2
+  const freePackaging = pricing.priceCakeOrderV2Request(request, { pricedAt })
+  assert.equal(freePackaging.subtotalCents, 10950)
+  assert.equal(freePackaging.individualPackagingFeeCents, 0)
+  const extras = copy(ordinary.request)
+  extras.lines[0].quantity = 2
+  extras.lines[0].options.chocolateExtra = 'combo'
+  assert.equal(pricing.priceCakeOrderV2Request(extras, { pricedAt }).lines[0].subtotalCents, 17800)
+})
+
+test('pricing rejects unsafe cents, quantities, timestamps and caller supplied money', () => {
+  for (const amount of [-1, -0, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, undefined]) {
+    reject(() => pricing.reviseCustomCakeV1Quote(custom.created.quote, { quoteVersion: 2, designExtraCents: amount, figurineExtraCents: 0 }))
+  }
+  reject(() => pricing.reviseCustomCakeV1Quote(custom.created.quote, { quoteVersion: 2, designExtraCents: Number.MAX_SAFE_INTEGER, figurineExtraCents: 0 }))
+  for (const quoteVersion of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) reject(() => pricing.reviseCustomCakeV1Quote(custom.created.quote, { quoteVersion, designExtraCents: 0, figurineExtraCents: 0 }))
+  for (const at of ['2026-02-30T00:00:00.000Z', '2026-10-02T00:00:00Z', 'not time', undefined]) {
+    reject(() => pricing.priceCakeOrderV2Request(ordinary.request, { pricedAt: at }))
+    reject(() => pricing.priceCustomCakeV1Request(custom.request, { promotionStartsAt, promotionEligibilityAt: at }))
+  }
+  for (const quantity of [Number.MAX_SAFE_INTEGER, Math.floor(Number.MAX_SAFE_INTEGER / 450) + 1]) {
+    const request = copy(ordinary.request); request.lines[1].quantity = quantity
+    reject(() => pricing.priceCakeOrderV2Request(request, { pricedAt }))
+  }
+  const aggregate = copy(ordinary.request)
+  aggregate.lines = ['a', 'b'].map(lineId => ({ kind: 'standalone-smore', lineId, productId: 'smore-stick', quantity: Math.floor(Number.MAX_SAFE_INTEGER / 450), parentCakeLineId: null }))
+  reject(() => pricing.priceCakeOrderV2Request(aggregate, { pricedAt }))
+  const forged = copy(custom.request); forged.lines[0].baseCents = 1
+  reject(() => customPrice(forged))
+})
