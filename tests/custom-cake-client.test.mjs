@@ -108,6 +108,31 @@ test('photo parsers validate every selected response and never return URL shapes
     assert.throws(() => parse(name, { ...value, contractVersion: 'custom-cake.v1' }))
   }
 })
+test('photo read parser accepts the largest observed normalized photo without overflowing the stack', () => {
+  const bytes = Buffer.alloc(4326964, 0x5a)
+  const value = {
+    contractVersion: 'custom-cake-photo.v1',
+    photoRef: 'photo_large',
+    mimeType: 'image/webp',
+    base64: bytes.toString('base64'),
+    width: 2560,
+    height: 2560,
+    byteLength: bytes.length,
+  }
+  assert.deepEqual(parse('parsePhotoReadResponse', value), value)
+})
+test('photo read parser rejects malformed large base64 without overflowing the stack', () => {
+  const canonical = Buffer.alloc(4326964, 0x5a).toString('base64')
+  for (const base64 of [
+    `${canonical.slice(0, 3000000)}!${canonical.slice(3000001)}`,
+    `${canonical.slice(0, -1)}A`,
+  ]) {
+    assert.throws(() => parse('parsePhotoReadResponse', {
+      contractVersion: 'custom-cake-photo.v1', photoRef: 'photo_large', mimeType: 'image/webp',
+      base64, width: 2560, height: 2560, byteLength: 4326964,
+    }), /^Error: CAKE_WIRE_INVALID_RESPONSE$/)
+  }
+})
 test('real Appwrite execution adapter selects actions, isolated headers and strict errors', async () => {
   assert.equal(typeof adapters.createAppwriteCakeWireTransport, 'function')
   assert.equal(typeof adapters.createCakeWireRepository, 'function')

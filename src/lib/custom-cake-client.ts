@@ -28,6 +28,15 @@ function checked<T>(value: unknown, check: Check, refinement: (v: T) => boolean 
 const sum = (values: number[]) => { const total = values.reduce((a, b) => a + b, 0); if (!integer(total)) fail(); return total }
 const contact = object({ customerName: string(2, 80), customerPhone: string(10, 10, /^04\d{8}$/), customerEmail: v => string(3, 120, /^[^\s@]+@[^\s@]+\.[^\s@]+$/)(v) && v === String(v).toLowerCase() })
 const pickup = object({ pickupDate: v => typeof v === 'string' && /^\d{4}-\d\d-\d\d$/.test(v) && Number.isFinite(Date.parse(`${v}T00:00:00.000Z`)) && new Date(`${v}T00:00:00.000Z`).toISOString().slice(0, 10) === v, pickupTime: string(5, 5, /^([01]\d|2[0-3]):[0-5]\d$/) })
+const base64: Check = value => {
+  if (typeof value !== 'string' || value.length < 4 || value.length > 13981016 || value.length % 4 !== 0) return false
+  const padding = value.endsWith('==') ? 2 : value.endsWith('=') ? 1 : 0
+  for (let index = 0; index < value.length - padding; index++) {
+    const code = value.charCodeAt(index)
+    if (!((code >= 65 && code <= 90) || (code >= 97 && code <= 122) || (code >= 48 && code <= 57) || code === 43 || code === 47)) return false
+  }
+  return padding === 0 || !value.slice(0, -padding).includes('=')
+}
 const smoreFields = { kind: literal('standalone-smore', 'cake-addon-smore'), lineId: id, productId: literal('smore-stick'), quantity: positive, parentCakeLineId: nullable(id) }
 const smoreRequest: Check = v => object(smoreFields)(v) && ((v as SmorePricedLine).kind === 'standalone-smore' ? (v as SmorePricedLine).parentCakeLineId === null : id((v as SmorePricedLine).parentCakeLineId))
 const moneyFields = { unitPriceCents: integer, subtotalCents: integer, discountPercent: integer, discountCents: integer, totalCents: integer }
@@ -125,7 +134,7 @@ export function parsePhotoSessionResponse(value: unknown): PhotoSessionResponse 
 }
 export function parsePhotoUploadResponse(value: unknown): PhotoUploadResponse { return checked(value, object({ contractVersion: photoVersion, requestId, photoRef: id, state: literal('staged'), mimeType: literal('image/webp'), ...photoDimensions })) }
 export function parsePhotoReadResponse(value: unknown): PhotoReadResponse {
-  return checked<PhotoReadResponse>(value, object({ contractVersion: photoVersion, photoRef: id, mimeType: literal('image/webp'), base64: string(4, 13981016, /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/), ...photoDimensions }), v => {
+  return checked<PhotoReadResponse>(value, object({ contractVersion: photoVersion, photoRef: id, mimeType: literal('image/webp'), base64, ...photoDimensions }), v => {
     const bytes = atob(v.base64)
     return bytes.length === v.byteLength && btoa(bytes) === v.base64
   })
