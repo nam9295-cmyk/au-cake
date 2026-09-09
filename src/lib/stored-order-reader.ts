@@ -1,13 +1,13 @@
 // Browser compatibility projection. No Appwrite writes or new-order submission.
-import { isStoredCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
-import { DEFAULT_CHOCOLATE_TYPE, DEFAULT_POUND_ADDON, MAX_RESERVATION_QUANTITY, LEMON_PROMO_CODE, PROMO_CODE, PRODUCTS, fromCurrencyCents, getProductById, getCupcakeFinishSurcharge, getValidPromoCode, toCurrencyCents, getReservationPrice, normalizeChocolateIcingCount, normalizeCupcakeFinish, normalizeCupcakeFinishCounts, normalizeVanillaCakePointColor, normalizeStoredVanillaCakeFlavor, normalizeStoredVanillaCakeSheet, usesReservationChocolateType, normalizePoundAddon } from './constants'
-import { isHistoricalWholeCakeSize, isHistoricalWholeCakeUnitPrice, normalizeStoredCakeSize } from './cake-serving'
-import type { ReservationPriceOptions } from './constants'
-import { getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras'
-import { normalizeBrownieCreamOption } from './brownie-cream'
-import { INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS, INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE, getIndividualPackagingPieceCount, isIndividualPackagingEligibleProduct } from './individual-packaging'
+import { isStoredCakeOrderProductId } from './stored-order-policy'
+import { DEFAULT_CHOCOLATE_TYPE, DEFAULT_POUND_ADDON, MAX_RESERVATION_QUANTITY, LEMON_PROMO_CODE, PROMO_CODE, PRODUCTS, fromCurrencyCents, getProductById, getCupcakeFinishSurcharge, getValidPromoCode, toCurrencyCents, getReservationPrice, normalizeChocolateIcingCount, normalizeCupcakeFinish, normalizeCupcakeFinishCounts, normalizeVanillaCakePointColor, normalizeStoredVanillaCakeFlavor, normalizeStoredVanillaCakeSheet, usesReservationChocolateType, normalizePoundAddon } from './stored-order-policy'
+import { isHistoricalWholeCakeSize, isHistoricalWholeCakeUnitPrice, normalizeStoredCakeSize } from './stored-order-policy'
+import type { ReservationPriceOptions } from './stored-order-policy'
+import { getChocolateExtraPrice, normalizeChocolateExtra } from './stored-order-policy'
+import { normalizeBrownieCreamOption } from './stored-order-policy'
+import { INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS, INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE, getIndividualPackagingPieceCount, isIndividualPackagingEligibleProduct } from './stored-order-policy'
 import type { CakeOrderLineRequest, CakeOrderLineResult, CakeSize, ChocolateType, PoundAddon, ProductId, PublicReservation, Reservation, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet } from './types'
-import { getOrderLineBulkDiscountPercent, getOrderLineBulkDiscountCents } from './review-coupon-client'
+import { getOrderLineBulkDiscountPercent, getOrderLineBulkDiscountCents } from './stored-order-policy'
 
 export type AppwriteReservationDocument = Omit<Reservation, 'id' | 'productId' | 'chocolateExtra' | 'cakeSize' | 'chocolateType' | 'poundAddon' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'individualPackaging' | 'individualPackagingPieces' | 'individualPackagingFeeCents' | 'quantity' | 'totalPriceCents' | 'subtotalCents' | 'discountPercent' | 'discountCents' | 'discountBasisCents' | 'orderLines' | 'orderLineCount' | 'orderItemCount' | 'appliedPromoCodeLast4' | 'reviewCouponId'> & {
   $id: string
