@@ -19,6 +19,78 @@ async function setup() {
   return h
 }
 
+for (const rawId of ['AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA', 'aAaAaAaA-aAaA-4AaA-8aAa-AaAaAaAaAaAa']) {
+  for (const quantity of [1, 2]) test(`legacy raw ID case remains distinct for ${rawId} and lowercase with quantity ${quantity}`, async () => {
+    const h = await setup(), upper = { ...oldInput(), requestId: rawId }
+    const first = await h.call('create-cake', upper)
+    assert.equal(first.status, 200)
+    const before = structuredClone(h.sdk.docs.get(`reservations/${rawId}`))
+    const lower = { ...upper, requestId: rawId.toLowerCase(), quantity }
+    const second = await h.call('create-cake', lower)
+    assert.equal(second.status, 200, JSON.stringify(second.body))
+    assert.ok(h.sdk.docs.has(`reservations/${lower.requestId}`), 'lowercase raw ID needs its own legacy document')
+    assert.notEqual(second.body.result.reservationNumber, first.body.result.reservationNumber)
+    assert.equal(second.body.result.totalPriceCents, quantity === 1 ? 7900 : 15800)
+    assert.deepEqual(h.sdk.docs.get(`reservations/${rawId}`), before)
+    assert.deepEqual((await h.call('create-cake', upper)).body, first.body)
+    assert.deepEqual((await h.call('create-cake', lower)).body, second.body)
+    const claims = await h.repository.list('claims')
+    assert.equal(claims.length, 1)
+    assert.equal(claims[0].value.requestId, lower.requestId)
+    assert.deepEqual(claims[0].value.creationResponse, second.body.result)
+  })
+}
+
+test('pre-activation uppercase legacy record remains separate from newly enrolled lowercase legacy ID', async () => {
+  const h = await setup(), upper = { ...oldInput(), requestId: 'AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA' }
+  h.env.CUSTOM_CAKE_PERSISTENCE_ENABLED = 'false'
+  const first = await h.call('create-cake', upper)
+  assert.equal(first.status, 200)
+  assert.equal((await h.repository.list('claims')).length, 0)
+  const before = structuredClone(h.sdk.docs.get(`reservations/${upper.requestId}`))
+  h.env.CUSTOM_CAKE_PERSISTENCE_ENABLED = 'true'
+  const lower = { ...upper, requestId: upper.requestId.toLowerCase(), quantity: 2 }
+  const second = await h.call('create-cake', lower)
+  assert.equal(second.status, 200)
+  assert.equal(second.body.result.totalPriceCents, 15800)
+  assert.ok(h.sdk.docs.has(`reservations/${lower.requestId}`))
+  assert.deepEqual(h.sdk.docs.get(`reservations/${upper.requestId}`), before)
+  assert.equal((await h.repository.list('claims')).length, 1)
+})
+
+test('uppercase legacy ID does not claim the distinct lowercase new-wire ID', async () => {
+  for (const [action, name] of [['create-custom-cake-request', 'custom-v1'], ['create-cake-order-v2', 'cake-order-v2']]) {
+    const h = await setup(), upper = { ...oldInput(), requestId: 'AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA' }
+    const first = await h.call('create-cake', upper)
+    assert.equal(first.status, 200)
+    const before = structuredClone(h.sdk.docs.get(`reservations/${upper.requestId}`))
+    const lower = fixture(name).request; lower.requestId = upper.requestId.toLowerCase()
+    if (name === 'custom-v1') lower.lines[0].photoRefs = []
+    const second = await h.call(action, lower)
+    assert.equal(second.status, 200, JSON.stringify(second.body))
+    assert.ok(await h.repository.get('snapshots', lower.requestId))
+    assert.deepEqual(h.sdk.docs.get(`reservations/${upper.requestId}`), before)
+  }
+})
+
+test('required mode retains exact uppercase stored replay but never treats lowercase as that stored ID', async () => {
+  const h = await setup(), upper = { ...oldInput(), requestId: 'AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA' }
+  const first = await h.call('create-cake', upper)
+  assert.equal(first.status, 200)
+  const before = structuredClone(h.sdk.docs)
+  h.env.CAKE_WIRE_LEGACY_NEW_SUBMISSIONS = 'required'
+  h.clock('2027-01-01T00:00:00.000Z')
+  h.storage.getBucket = async () => { throw new Error('unavailable new provisioning') }
+  assert.deepEqual((await h.call('create-cake', upper)).body, first.body)
+  assert.equal((await h.call('create-cake', { ...upper, quantity: 2 })).body.code, 'REQUEST_ID_CONFLICT')
+  for (const quantity of [1, 2]) {
+    const reply = await h.call('create-cake', { ...upper, requestId: upper.requestId.toLowerCase(), quantity })
+    assert.deepEqual(reply.body, { ok: false, code: 'CAKE_ORDER_UPGRADE_REQUIRED' })
+    assert.equal(reply.status, 409)
+  }
+  assert.deepEqual(h.sdk.docs, before)
+})
+
 test('required old gate authenticates exact stored fingerprint before clock; fingerprintless compat survives but required cannot bypass', async () => {
   const h = await setup(), input = oldInput(), created = await h.call('create-cake', input)
   assert.equal(created.status, 200, JSON.stringify(created.body))

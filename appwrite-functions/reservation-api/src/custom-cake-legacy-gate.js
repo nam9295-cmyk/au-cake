@@ -3,7 +3,8 @@ import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from '
 import { checkCustomCakeReadiness } from './custom-cake-readiness.js'
 import { ReservationApiError } from './business.js'
 const fail = (code, status = 409) => { throw new ReservationApiError(code, status) }
-const sharedId = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value) ? value.toLowerCase() : null
+// Legacy document IDs are case-sensitive; only already-lowercase IDs can equal a new-wire ID.
+const sharedId = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value) ? value : null
 
 export function legacyCakeWireMode(env) {
   const mode = env.CAKE_WIRE_LEGACY_NEW_SUBMISSIONS
