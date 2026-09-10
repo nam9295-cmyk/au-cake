@@ -30,6 +30,12 @@ test('creation and lookup cannot substitute for each other', () => {
   parent.paidSmoreLines[0].parentCakeLineId = parent.paidSmoreLines[0].lineId
   assert.throws(() => parse('parseCustomCakeCreateResponse', parent))
 })
+test('admin list parser accepts only exact arrays of safe lookup responses', () => {
+  const value = { requests: [custom.lookup, custom.finalLookup] }
+  assert.deepEqual(parse('parseCustomCakeAdminListResponse', value), value)
+  assert.throws(() => parse('parseCustomCakeAdminListResponse', { ...value, payloadJson: 'private' }), /^Error: CAKE_WIRE_INVALID_RESPONSE$/)
+  assert.throws(() => parse('parseCustomCakeAdminListResponse', { requests: [{ ...custom.lookup, transitionAudit: [] }] }), /^Error: CAKE_WIRE_INVALID_RESPONSE$/)
+})
 test('custom parser rejects inconsistent money, parent graph, finality, status and history', () => {
   for (const change of [
     v => { v.quote.knownTotalCents++ }, v => { v.quote.baseCents = Number.MAX_SAFE_INTEGER },
@@ -149,6 +155,10 @@ test('real Appwrite execution adapter selects actions, isolated headers and stri
   reply = { responseStatusCode: 200, responseBody: JSON.stringify({ ok: true, result: custom.finalLookup }) }
   await repo.confirmCustomCakeRequest({ contractVersion: 'custom-cake.v1', requestNumber: custom.lookup.requestNumber, expectedQuoteVersion: 2 })
   assert.deepEqual(calls[1].headers, { 'x-appwrite-user-jwt': 'test-admin-jwt' })
+  reply = { responseStatusCode: 200, responseBody: JSON.stringify({ ok: true, result: { requests: [custom.lookup] } }) }
+  assert.deepEqual(await repo.listCustomCakeRequests(), { requests: [custom.lookup] })
+  assert.deepEqual(calls[2].headers, { 'x-appwrite-user-jwt': 'test-admin-jwt' })
+  assert.deepEqual(JSON.parse(calls[2].body), { action: 'admin-list-custom-cake-requests' })
   reply = { responseStatusCode: 409, responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'QUOTE_VERSION_CONFLICT' }) }
   await assert.rejects(repo.confirmCustomCakeRequest({}), /^Error: QUOTE_VERSION_CONFLICT$/)
   reply = { responseStatusCode: NaN, responseBody: JSON.stringify({ ok: true, result: custom.created }) }

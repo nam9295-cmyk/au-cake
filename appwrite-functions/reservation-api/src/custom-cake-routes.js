@@ -1,12 +1,14 @@
 import { exactCakeObject, cakeWireFail } from './custom-cake-workflow.js'
 import { normalizeAustralianMobile } from './business.js'
 import { randomUUID } from 'node:crypto'
+import { listRecentCustomCakeRequests } from './custom-cake-list.js'
 const actions = Object.freeze({
   'get-cake-wire-capabilities': ['custom-cake.v1', 'capabilities'],
   'create-custom-cake-request': ['custom-cake.v1', 'create'], 'get-custom-cake-request': ['custom-cake.v1', 'lookup'],
   'create-cake-order-v2': ['cake-order.v2', 'create'], 'get-cake-order-v2': ['cake-order.v2', 'lookup'],
   'admin-update-custom-cake-quote': ['custom-cake.v1', 'quote'], 'admin-record-custom-cake-acceptance': ['custom-cake.v1', 'accept'],
   'admin-confirm-custom-cake-request': ['custom-cake.v1', 'confirm'], 'admin-complete-custom-cake-request': ['custom-cake.v1', 'complete'], 'admin-cancel-custom-cake-request': ['custom-cake.v1', 'cancel'],
+  'admin-list-custom-cake-requests': ['custom-cake.v1', 'adminList'],
   'create-custom-cake-photo-session': ['custom-cake-photo.v1', 'issueSession'], 'upload-custom-cake-photo': ['custom-cake-photo.v1', 'upload'],
   'read-custom-cake-photo': ['custom-cake-photo.v1', 'read'], 'delete-custom-cake-photo': ['custom-cake-photo.v1', 'delete'],
 })
@@ -20,13 +22,17 @@ export async function handleCakeWireRequest({ req, res }, options) {
   const cache = { 'Cache-Control': 'no-store' }, codes = wire === 'custom-cake-photo.v1' ? photoCodes : orderCodes
   try {
     const body = req.bodyJson
-    exactCakeObject(body, operation === 'capabilities' ? ['action'] : ['action', 'data'])
+    exactCakeObject(body, ['capabilities', 'adminList'].includes(operation) ? ['action'] : ['action', 'data'])
     const size = Buffer.byteLength(typeof req.bodyText === 'string' ? req.bodyText : JSON.stringify(body))
     if (size > (operation === 'upload' ? 13981016 + 4096 : 1048576)) cakeWireFail(operation === 'upload' ? 'PHOTO_TOO_LARGE' : 'INVALID_REQUEST')
     const { createCakeWireRuntime } = await import('./custom-cake-runtime.js')
     const runtime = await createCakeWireRuntime(options), context = { headers: req.headers || {} }
     let result
     if (operation === 'capabilities') result = runtime.capabilities
+    else if (operation === 'adminList') {
+      await runtime.admin(context.headers)
+      result = { requests: await listRecentCustomCakeRequests(runtime.repository) }
+    }
     else if (wire === 'custom-cake-photo.v1') {
       if (!runtime.photos || (['issueSession', 'upload'].includes(operation) && !runtime.newReady)) cakeWireFail('CAPABILITY_UNAVAILABLE')
       result = await runtime.photos[operation](body.data, operation === 'upload' ? context.headers : context)

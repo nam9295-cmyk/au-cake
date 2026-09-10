@@ -159,6 +159,7 @@ test('actual submit handler freezes UUID line IDs, contact and options across ti
   assert.deepEqual(sent[1], sent[0])
   assert.equal(sent[0].data.customer.customerPhone, '0412345678')
   assert.equal(sent[0].data.customer.customerEmail, 'example@example.com')
+  assert.deepEqual(sent[0].data.lines[0].photoRefs, [])
   assert.match(sent[0].data.lines[0].lineId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
   assert.equal(completed.requestId, sent[0].data.requestId)
   page.unmount()
@@ -179,42 +180,46 @@ test('actual photo component sends customer possession proof or authenticated ad
   customer.unmount(); admin.unmount()
 })
 
-test('actual admin search does no initial listing and quote conflict refetches captured search proof with JWT mutation', async () => {
-  const calls = wire(action => action === 'get-custom-cake-request' ? fixture.lookup : { responseStatusCode: 409, responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'QUOTE_VERSION_CONFLICT' }) })
+test('actual admin auto-loads and filters requests, refreshes, and mutates an adopted snapshot', async () => {
+  const calls = wire(action => {
+    if (action === 'admin-list-custom-cake-requests') return { requests: [fixture.lookup] }
+    if (action === 'get-custom-cake-request') return fixture.lookup
+    return { responseStatusCode: 409, responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'QUOTE_VERSION_CONFLICT' }) }
+  })
   const page = mount(AdminCustomCakesSection)
   await page.flush()
-  assert.equal(calls.length, 0)
-  page.find(node => node.type === 'input' && node.props['aria-label'] === 'Request number').props.onChange({ target: { value: 'CUSTOM-EXAMPLE-1' } })
-  page.find(node => node.type === 'input' && node.props['aria-label'] === 'Customer phone').props.onChange({ target: { value: '+61 412 345 678' } })
+  assert.equal(calls[0].action, 'admin-list-custom-cake-requests')
+  assert.equal(calls[0].headers['x-appwrite-user-jwt'], 'synthetic-admin-jwt')
+  assert.ok(page.find(node => node.type === 'tr' && node.props.onClick))
+
+  const search = page.find(node => node.type === 'input' && node.props['aria-label'] === 'Search custom cake requests')
+  search.props.onChange({ target: { value: 'no-match' } })
   page.render()
-  await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} }); page.render()
+  assert.equal(page.find(node => node.type === 'td' && node.props.className === 'empty-cell').props.children, '접수된 커스텀 케이크 주문이 없습니다.')
+  assert.equal(calls.length, 1, 'local filtering performs no request')
+  search.props.onChange({ target: { value: fixture.lookup.customer.customerPhone } })
+  page.render()
   page.find(node => node.type === 'tr' && node.props.onClick).props.onClick(); page.render()
-  page.find(node => node.type === 'input' && node.props['aria-label'] === 'Customer phone').props.onChange({ target: { value: '0499999999' } }); page.render()
   await page.find(node => node.type === 'form' && node.props.className !== 'admin-filters-bar').props.onSubmit({ preventDefault() {} }); page.render()
   assert.equal(calls[1].headers['x-appwrite-user-jwt'], 'synthetic-admin-jwt')
   assert.deepEqual(calls[2].data, { contractVersion: 'custom-cake.v1', requestNumber: 'CUSTOM-EXAMPLE-1', customerPhone: '0412345678' })
   assert.ok(page.find(node => node.props?.role === 'alert'))
+  await page.find(node => node.type === 'button' && node.props['aria-label'] === 'Refresh custom cake requests').props.onClick()
+  await page.flush()
+  assert.equal(calls[3].action, 'admin-list-custom-cake-requests')
   page.unmount()
 })
 
-test('actual photo selection/removal is local, and submitting while a file is being read is blocked', async () => {
-  const calls = wire(() => capabilities)
-  const originalImage = globalThis.Image, originalReader = globalThis.FileReader
-  let finishImage
-  globalThis.Image = class { width = 10; height = 10; set src(_value) { finishImage = () => this.onload() } }
-  globalThis.FileReader = class { readAsDataURL() { this.result = 'data:image/png;base64,AQID'; this.onload() } }
-  const page = mount(CustomCakePage, props)
-  try {
-    await page.flush()
-    const input = page.find(node => node.type === 'input' && node.props.type === 'file')
-    const pending = input.props.onChange({ target: { files: [new File([new Uint8Array([1, 2, 3])], 'a.png', { type: 'image/png' })], value: '' } })
-    await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
-    assert.deepEqual(calls.map(call => call.action), ['get-cake-wire-capabilities'])
-    finishImage(); await pending; page.render()
-    page.find(node => node.type === 'button' && node.props['aria-label'] === 'Remove photo').props.onClick(); page.render()
-    assert.deepEqual(calls.map(call => call.action), ['get-cake-wire-capabilities'])
-    assert.equal(page.find(node => node.type === 'input' && node.props.type === 'file').props.disabled, false)
-  } finally { page.unmount(); globalThis.Image = originalImage; globalThis.FileReader = originalReader }
+test('customer request UI offers no photo upload and directs reference images to post-receipt sharing', () => {
+  const english = renderToStaticMarkup(React.createElement(CustomCakePage, props))
+  const korean = renderToStaticMarkup(React.createElement(CustomCakePage, { ...props, language: 'ko' }))
+  const source = readFileSync('src/pages/CustomCakePage.tsx', 'utf8')
+
+  assert.match(english, /Reference images can be shared with Verygood after your request is received\./)
+  assert.match(korean, /참고 이미지는 접수 후 베리굿과 별도로 공유해 주세요\./)
+  assert.doesNotMatch(english, /type="file"|Add Photo|Reference Photos \(Optional/)
+  assert.doesNotMatch(korean, /사진 추가하기|참고 사진 첨부/)
+  assert.doesNotMatch(source, /\bCamera\b|handlePhotoUpload|custom-cake-upload-box/)
 })
 
 test('completion without its in-memory receipt sends the customer to lookup instead of proposing another request', () => {

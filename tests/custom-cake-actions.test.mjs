@@ -6,6 +6,7 @@ import * as main from '../appwrite-functions/reservation-api/src/main.js'
 import { service } from './custom-cake-persistence.test.mjs'
 import { customCakeSchemaTargets } from '../appwrite-functions/reservation-api/src/custom-cake-readiness.js'
 import { createCustomCakeRepository } from '../appwrite-functions/reservation-api/src/custom-cake-persistence.js'
+import { scanCustomCakeSnapshots } from '../appwrite-functions/reservation-api/src/custom-cake-list.js'
 const fixture = n => JSON.parse(readFileSync(new URL(`./fixtures/custom-cake-contract/${n}.json`, import.meta.url)))
 const custom = () => { const d = fixture('custom-v1').request; d.lines[0].photoRefs = []; return d }
 const admin = { 'x-appwrite-user-id': 'admin-1', 'x-appwrite-user-jwt': 'valid-admin-jwt' }
@@ -218,4 +219,76 @@ test('actual handler enforces allowed source state before version for every cust
     for (const reply of [accept, confirm]) assert.equal(reply.body.code, ['quoted', 'confirmed'].includes(state) ? 'QUOTE_VERSION_CONFLICT' : 'QUOTE_STATE_CONFLICT', state)
     assert.deepEqual(await h.repository.get('snapshots', custom().requestId), before)
   }
+})
+
+test('admin list is authenticated, paginates snapshots, sorts latest first and exposes only lookup wires', async () => {
+  const h = await harness()
+  assert.equal((await h.call('admin-list-custom-cake-requests')).body.code, 'FORBIDDEN')
+  assert.equal((await h.call('admin-list-custom-cake-requests', undefined, { 'x-appwrite-user-jwt': 'not-admin' })).body.code, 'FORBIDDEN')
+
+  await h.call('create-custom-cake-request', custom())
+  const original = await h.repository.get('snapshots', custom().requestId)
+  await h.repository.atomic('seed-admin-list', async tx => {
+    for (let index = 0; index < 205; index++) {
+      const requestId = `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`
+      const requestNumber = `CUSTOM-LIST-${String(index).padStart(3, '0')}`
+      const promotionEligibilityAt = new Date(Date.UTC(2026, 8, 10, 0, index)).toISOString()
+      const snapshot = structuredClone(original)
+      snapshot.request.requestId = requestId
+      snapshot.creationResponse.requestId = requestId
+      snapshot.creationResponse.requestNumber = requestNumber
+      snapshot.lookupResponse.requestNumber = requestNumber
+      snapshot.creationResponse.quote.promotionEligibilityAt = promotionEligibilityAt
+      snapshot.lookupResponse.quote.promotionEligibilityAt = promotionEligibilityAt
+      snapshot.transitionAudit = [{ private: 'must-not-leak' }]
+      await tx.create('snapshots', requestId, snapshot)
+    }
+    return null
+  })
+
+  const response = await h.call('admin-list-custom-cake-requests', undefined, admin)
+  assert.equal(response.status, 200)
+  assert.equal(response.body.result.requests.length, 200)
+  assert.equal(response.body.result.requests[0].requestNumber, 'CUSTOM-LIST-204')
+  assert.equal(response.body.result.requests.at(-1).requestNumber, 'CUSTOM-LIST-005')
+  assert.ok(h.sdk.calls.filter(([operation, params]) => operation === 'list' && params.collectionId === 'custom_cake_snapshots').length >= 3)
+  const json = JSON.stringify(response.body.result)
+  for (const forbidden of ['payloadJson', 'transitionAudit', 'uploadToken', 'tokenDigest', 'commit']) assert.equal(json.includes(forbidden), false)
+})
+
+test('custom snapshot scan stops after the explicit one-thousand-record hard cap', async () => {
+  let pages = 0
+  const repository = { async list(_kind, { cursor }) {
+    pages++
+    const offset = cursor ? Number(cursor.slice(1)) + 1 : 0
+    return Array.from({ length: 100 }, (_, index) => ({ id: `r${offset + index}`, value: {} }))
+  } }
+  const rows = await scanCustomCakeSnapshots(repository)
+  assert.equal(rows.length, 1000)
+  assert.equal(pages, 10)
+})
+
+test('admin list returns an empty list and fails closed on malformed stored snapshots', async () => {
+  const empty = await harness()
+  assert.deepEqual((await empty.call('admin-list-custom-cake-requests', undefined, admin)).body.result, { requests: [] })
+
+  const malformed = await harness()
+  await malformed.call('create-custom-cake-request', custom())
+  const entry = [...malformed.sdk.docs.entries()].find(([key]) => key.startsWith('custom_cake_snapshots/'))
+  entry[1].data.payloadJson = '{malformed'
+  const response = await malformed.call('admin-list-custom-cake-requests', undefined, admin)
+  assert.equal(response.status, 503)
+  assert.equal(response.body.code, 'CAPABILITY_UNAVAILABLE')
+
+  const semanticallyMalformed = await harness()
+  await semanticallyMalformed.call('create-custom-cake-request', custom())
+  const saved = await semanticallyMalformed.repository.get('snapshots', custom().requestId)
+  saved.lookupResponse.transitionAudit = [{ internal: true }]
+  await semanticallyMalformed.repository.atomic('seed-malformed-list-shape', async tx => {
+    await tx.replace('snapshots', custom().requestId, saved)
+    return null
+  })
+  const semanticResponse = await semanticallyMalformed.call('admin-list-custom-cake-requests', undefined, admin)
+  assert.equal(semanticResponse.status, 503)
+  assert.equal(semanticResponse.body.code, 'CAPABILITY_UNAVAILABLE')
 })

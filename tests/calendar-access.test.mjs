@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
+import * as calendarAccess from '../appwrite-functions/reservation-api/src/calendar-access.js'
 import {
   createCalendarToken,
   verifyCalendarToken,
@@ -9,6 +10,14 @@ import {
 import { parseStoredOrderLines } from '../appwrite-functions/reservation-api/src/business.js'
 
 const secret = 'a-test-secret-that-is-long-enough-for-hmac'
+
+const customLookup = (status = 'requested') => ({
+  contractVersion: 'custom-cake.v1', requestNumber: 'CUSTOM-PRIVATE-1', status,
+  customer: { customerName: 'Private Customer', customerPhone: '0412345678', customerEmail: 'private@example.com' },
+  pickup: { pickupDate: '2026-07-25', pickupTime: '12:30' },
+  lines: [{ kind: 'custom-cake', tier: 'double', size: '4in+6in', quantity: 1, designNote: 'Private design', figurineSource: 'shop', photoRefs: ['private-photo'] }],
+  requestNote: 'Private request', transitionAudit: [{ private: true }],
+})
 
 test('calendar tokens are signed, expire, and reject tampering', () => {
   const now = new Date('2026-07-12T00:00:00.000Z')
@@ -47,6 +56,20 @@ test('calendar cake events expose schedule details without customer PII or inter
   })
   assert.equal(JSON.stringify(event).includes('Private'), false)
   assert.equal(JSON.stringify(event).includes('0412345678'), false)
+})
+
+test('custom cake calendar events map lifecycle states and expose schedule data only', () => {
+  assert.equal(typeof calendarAccess.sanitizeCustomCakeCalendarEvent, 'function')
+  const expected = { requested: 'Requested', quoted: 'Quoted', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' }
+  for (const [status, label] of Object.entries(expected)) {
+    const event = calendarAccess.sanitizeCustomCakeCalendarEvent(customLookup(status))
+    assert.deepEqual(event, {
+      id: 'custom-cake:CUSTOM-PRIVATE-1', kind: 'cake', date: '2026-07-25', time: '12:30',
+      label: 'Custom Cake · Double 4in+6in ×1', status: label, isCancelled: status === 'cancelled',
+    })
+    const json = JSON.stringify(event)
+    for (const privateValue of ['Private Customer', '0412345678', 'private@example.com', 'Private design', 'Private request', 'private-photo']) assert.equal(json.includes(privateValue), false)
+  }
 })
 
 test('calendar cheesecake events show the selected variant without irrelevant finish text', () => {

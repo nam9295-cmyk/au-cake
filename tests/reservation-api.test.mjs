@@ -1598,6 +1598,60 @@ test('calendar API returns only sanitised events for the requested month', async
   assert.equal(JSON.stringify(result).includes('0412345678'), false)
 })
 
+test('calendar includes bounded paginated custom cake schedules without customer PII', async () => {
+  const env = {
+    CALENDAR_VIEW_PIN: '123456',
+    CALENDAR_TOKEN_SECRET: 'a-calendar-test-secret-that-is-long-enough',
+    CUSTOM_CAKE_PERSISTENCE_ENABLED: 'true',
+  }
+  const { token } = calendarLogin({ pin: '123456' }, env, now)
+  let databaseCall = 0
+  const databases = { async listDocuments() {
+    databaseCall++
+    if (databaseCall === 1) return { documents: [{ $id: 'cake-1', pickupDate: '2026-07-25', pickupTime: '10:00', productId: 'pave-cake', quantity: 1, status: '예약확정' }] }
+    if (databaseCall === 2) return { documents: [{ $id: 'class-1', classDate: '2026-07-25', classTime: '11:00', status: 'Requested' }] }
+    return { documents: [] }
+  } }
+  const lookup = (requestNumber, status, pickupDate) => ({
+    contractVersion: 'custom-cake.v1', requestNumber, status,
+    customer: { customerName: 'Private Customer', customerPhone: '0412345678', customerEmail: 'private@example.com' },
+    pickup: { pickupDate, pickupTime: '12:30' },
+    lines: [{ kind: 'custom-cake', tier: 'single', size: '6in', quantity: 1, designNote: 'Private design', figurineSource: 'shop', photoRefs: ['private-photo'] }],
+  })
+  const firstPage = Array.from({ length: 100 }, (_, index) => ({
+    id: `page-one-${String(index).padStart(3, '0')}`,
+    value: { request: { contractVersion: 'custom-cake.v1' }, lookupResponse: lookup(`OUTSIDE-${index}`, 'requested', '2026-08-01') },
+  }))
+  const secondPage = [
+    ['CUSTOM-REQUESTED', 'requested'], ['CUSTOM-CONFIRMED', 'confirmed'], ['CUSTOM-CANCELLED', 'cancelled'],
+  ].map(([requestNumber, status], index) => ({ id: `page-two-${index}`, value: { request: { contractVersion: 'custom-cake.v1' }, lookupResponse: lookup(requestNumber, status, '2026-07-26') } }))
+  const cursors = []
+  const repository = { async list(kind, options) {
+    assert.equal(kind, 'snapshots'); cursors.push(options.cursor)
+    return options.cursor ? secondPage : firstPage
+  } }
+
+  const result = await listCalendarEvents(databases, { token, month: '2026-07' }, env, now, repository)
+  assert.deepEqual(cursors, [undefined, 'page-one-099'])
+  assert.deepEqual(result.events.filter(event => event.id.startsWith('custom-cake:')).map(event => [event.id, event.status, event.isCancelled]), [
+    ['custom-cake:CUSTOM-REQUESTED', 'Requested', false],
+    ['custom-cake:CUSTOM-CONFIRMED', 'Confirmed', false],
+    ['custom-cake:CUSTOM-CANCELLED', 'Cancelled', true],
+  ])
+  assert.ok(result.events.some(event => event.id === 'cake:cake-1'))
+  assert.ok(result.events.some(event => event.id === 'class:class-1'))
+  const json = JSON.stringify(result)
+  for (const privateValue of ['Private Customer', '0412345678', 'private@example.com', 'Private design', 'private-photo']) assert.equal(json.includes(privateValue), false)
+})
+
+test('calendar handles empty enabled custom snapshots without changing legacy events', async () => {
+  const env = { CALENDAR_VIEW_PIN: '123456', CALENDAR_TOKEN_SECRET: 'a-calendar-test-secret-that-is-long-enough', CUSTOM_CAKE_PERSISTENCE_ENABLED: 'true' }
+  const { token } = calendarLogin({ pin: '123456' }, env, now)
+  const databases = { async listDocuments() { return { documents: [] } } }
+  const repository = { async list() { return [] } }
+  assert.deepEqual(await listCalendarEvents(databases, { token, month: '2026-07' }, env, now, repository), { month: '2026-07', events: [] })
+})
+
 test('cake creation is idempotent without reading Class or legacy Cake-opening collections', async () => {
   const requestId = 'f65f7e08-20f7-4b4a-b12a-6b42c043b268'
   const documents = new Map()

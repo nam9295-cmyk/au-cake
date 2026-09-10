@@ -172,6 +172,21 @@ test('admin session discards an earlier search and mutation result after a new s
   assert.equal(await mutation, null)
 })
 
+test('admin session adopts an authenticated list snapshot for mutation and conflict refresh proof', async () => {
+  const { createAdminRequestSession } = await import(`${root}/src/lib/custom-cake-admin.ts`)
+  const { createCakeWireRepository } = await import(`${root}/src/lib/custom-cake-repository.ts`)
+  const session = createAdminRequestSession(), calls = []
+  const repo = createCakeWireRepository(async (action, value, context) => {
+    calls.push({ action, value, context })
+    if (action === 'get-custom-cake-request') return { responseStatusCode: 200, responseBody: JSON.stringify({ ok: true, result: fixture.lookup }) }
+    return { responseStatusCode: 409, responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'QUOTE_STATE_CONFLICT' }) }
+  })
+  session.adopt(fixture.lookup)
+  const outcome = await session.mutate(repo, repository => repository.confirmCustomCakeRequest({ contractVersion: 'custom-cake.v1', requestNumber: fixture.lookup.requestNumber, expectedQuoteVersion: 1 }))
+  assert.equal(outcome.error, 'QUOTE_STATE_CONFLICT')
+  assert.deepEqual(calls[1].value, { contractVersion: 'custom-cake.v1', requestNumber: fixture.lookup.requestNumber, customerPhone: fixture.lookup.customer.customerPhone })
+})
+
 test('renewal quota conflict fails safely without creating an order or deleting staged photos', async () => {
   const item = intent(), calls = []
   let now = Date.now(), issues = 0

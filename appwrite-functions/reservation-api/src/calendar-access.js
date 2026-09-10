@@ -144,6 +144,28 @@ export function sanitizeCakeCalendarEvent(document) {
   }
 }
 
+export function sanitizeCustomCakeCalendarEvent(snapshot) {
+  const statuses = { requested: 'Requested', quoted: 'Quoted', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' }
+  const cake = Array.isArray(snapshot?.lines) ? snapshot.lines.find(line => line?.kind === 'custom-cake') : null
+  const sizes = cake?.tier === 'single' ? ['6in', '8in', '10in'] : cake?.tier === 'double' ? ['4in+6in', '6in+8in', '8in+10in'] : []
+  if (snapshot?.contractVersion !== 'custom-cake.v1'
+    || typeof snapshot.requestNumber !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(snapshot.requestNumber)
+    || typeof snapshot.pickup?.pickupDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(snapshot.pickup.pickupDate)
+    || typeof snapshot.pickup?.pickupTime !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(snapshot.pickup.pickupTime)
+    || !Object.hasOwn(statuses, snapshot.status) || !cake || !sizes.includes(cake.size)
+    || !Number.isSafeInteger(cake.quantity) || cake.quantity < 1 || cake.quantity > 5) throw new Error('INVALID_CUSTOM_CAKE_CALENDAR_SNAPSHOT')
+  const tier = cake.tier === 'single' ? 'Single' : 'Double'
+  return {
+    id: `custom-cake:${snapshot.requestNumber}`,
+    kind: 'cake',
+    date: snapshot.pickup.pickupDate,
+    time: snapshot.pickup.pickupTime,
+    label: `Custom Cake · ${tier} ${cake.size} ×${cake.quantity}`,
+    status: statuses[snapshot.status],
+    isCancelled: snapshot.status === 'cancelled',
+  }
+}
+
 function safeClassPricing(document) {
   const totalPriceCents = Number.isInteger(document.totalPriceCents)
     ? document.totalPriceCents
