@@ -122,9 +122,11 @@ export function CustomCakeLookupResult({
           <div className="lookup-dl-row">
             <dt>{language === 'ko' ? '스모어 스틱' : 'S’more Sticks'}</dt>
             <dd>
-              <span className="gift-tag">
-                {language === 'ko' ? `무료 증정 ${quote.giftSmoreQuantity}개` : `Gift: ${quote.giftSmoreQuantity} sticks (Free)`}
-              </span>
+              {quote.giftSmoreQuantity > 0 && (
+                <span className="gift-tag">
+                  {language === 'ko' ? `무료 증정 ${quote.giftSmoreQuantity}개` : `Gift: ${quote.giftSmoreQuantity} sticks (Free)`}
+                </span>
+              )}
               {smoreLine && smoreLine.kind === 'cake-addon-smore' && smoreLine.quantity > 0 && (
                 <span className="addon-tag">
                   {language === 'ko' ? `유료 추가 ${smoreLine.quantity}개` : `Paid Add-on: ${smoreLine.quantity} sticks`}
@@ -148,10 +150,12 @@ export function CustomCakeLookupResult({
             <dd>{formatCents(quote.baseCents)}</dd>
           </div>
 
-          <div className="quote-row discount">
-            <dt>{language === 'ko' ? '9월 커스텀 5% 특별 할인' : 'September 5% Custom Promotion'}</dt>
-            <dd>-{formatCents(quote.cakeDiscountCents)}</dd>
-          </div>
+          {quote.cakeDiscountCents > 0 && (
+            <div className="quote-row discount">
+              <dt>{language === 'ko' ? '적용된 커스텀 케이크 할인' : 'Applied Custom Cake Promotion'}</dt>
+              <dd>-{formatCents(quote.cakeDiscountCents)}</dd>
+            </div>
+          )}
 
           <div className="quote-row extra">
             <dt>{language === 'ko' ? '디자인 추가비' : 'Design Extra'}</dt>
@@ -167,10 +171,12 @@ export function CustomCakeLookupResult({
             </dd>
           </div>
 
-          <div className="quote-row gift">
-            <dt>{language === 'ko' ? '무료 증정 스모어' : 'Gift S’more Sticks'}</dt>
-            <dd>{quote.giftSmoreQuantity} {language === 'ko' ? '개 (무료)' : 'sticks (Complimentary)'}</dd>
-          </div>
+          {quote.giftSmoreQuantity > 0 && (
+            <div className="quote-row gift">
+              <dt>{language === 'ko' ? '무료 증정 스모어' : 'Gift S’more Sticks'}</dt>
+              <dd>{quote.giftSmoreQuantity} {language === 'ko' ? '개 (무료)' : 'sticks (Complimentary)'}</dd>
+            </div>
+          )}
 
           {quote.paidSmoreQuantity > 0 && (
             <div className="quote-row">
@@ -243,8 +249,8 @@ export function CustomCakeLookupResult({
               <h4>{language === 'ko' ? '예약이 확정되었습니다!' : 'Booking Confirmed!'}</h4>
               <p>
                 {language === 'ko'
-                  ? '모든 견적 협의가 완료되어 제작이 확정되었습니다. 약속된 일시에 멜로즈 파크 픽업 장소로 방문해 주세요.'
-                  : 'Your celebration cake is scheduled for preparation. Please arrive at the Melrose Park pickup location at your scheduled time.'}
+                  ? '모든 견적 협의가 완료되어 제작이 확정되었습니다. 주문 확정 후 안내된 전달 장소와 방법을 확인해 주세요.'
+                  : 'Your celebration cake is scheduled for preparation. Please follow the handoff details provided after confirmation.'}
               </p>
             </div>
           </div>

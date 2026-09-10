@@ -77,15 +77,47 @@ test('actual lookup and completion render literal parsed server cents, including
   Object.assign(created.quote, { baseCents: 22222, cakeDiscountCents: 1111, knownTotalCents: 21741 })
   const receipt = renderToStaticMarkup(React.createElement(CustomCakeCompletePage, { ...props, createdResult: parseCustomCakeCreateResponse(created), onGoToLookup() {} }))
   assert.match(receipt, /AUD \$222\.22/)
+  assert.match(receipt, /-AUD \$11\.11/)
   assert.match(receipt, /AUD \$217\.41/)
+  assert.match(receipt, /2 sticks \(Free\)/)
   assert.match(receipt, /To be confirmed/)
   const lookup = structuredClone(fixture.finalLookup)
   lookup.status = 'quoted'
   Object.assign(lookup.quote, { baseCents: 22222, cakeDiscountCents: 1111, designExtraCents: 0, figurineExtraCents: 3729, knownTotalCents: 25470, finalTotalCents: 25470 })
   const result = renderToStaticMarkup(React.createElement(CustomCakeLookupResult, { result: parseCustomCakeLookupResponse(lookup), language: 'en' }))
   assert.match(result, /AUD \$254\.70/)
+  assert.match(result, /-AUD \$11\.11/)
   assert.match(result, /No extra charge \(AUD \$0\.00\)/)
   assert.match(result, /\+AUD \$37\.29/)
+})
+
+test('customer-facing promotion, response-time, and pickup copy stays conditional and appointment-only', () => {
+  const english = renderToStaticMarkup(React.createElement(CustomCakePage, props))
+  const korean = renderToStaticMarkup(React.createElement(CustomCakePage, { ...props, language: 'ko' }))
+
+  assert.match(english, /September Opening Offer · Eligibility is confirmed when your request is received\./)
+  assert.match(korean, /9월 오픈 프로모션 · 혜택 적용 여부는 요청 접수 시 확인됩니다\./)
+  assert.doesNotMatch(english, /September 5% Off|September promo: 5% off|2 Free S’mores|within 24 hours/i)
+  assert.doesNotMatch(korean, /9월 5% 할인|5% 할인 \+ 스모어 2개 증정|24시간 이내/)
+  assert.match(english, /review your request and get back to you after checking the design and availability/)
+  assert.match(korean, /디자인과 제작 가능 여부를 확인한 후 요청 내용을 검토해 연락드리겠습니다/)
+
+  assert.match(english, /Pre-arranged pick-up in Melrose Park, Sydney\. Exact handoff details are provided after your request is confirmed\./)
+  assert.match(korean, /시드니 Melrose Park에서 사전 약속 픽업으로 진행됩니다\. 정확한 전달 장소와 방법은 주문 확정 후 안내드립니다\./)
+  assert.doesNotMatch(english, /our Melrose Park, Sydney kitchen|Melrose Park pickup location/)
+  assert.doesNotMatch(korean, /멜로즈 파크 매장에서 픽업/)
+})
+
+test('receipt and lookup promotion rows reflect only non-zero server quote snapshots', () => {
+  const created = structuredClone(fixture.created)
+  Object.assign(created.quote, { cakeDiscountCents: 0, giftSmoreQuantity: 0, knownTotalCents: 16130 })
+  const receipt = renderToStaticMarkup(React.createElement(CustomCakeCompletePage, { ...props, createdResult: parseCustomCakeCreateResponse(created), onGoToLookup() {} }))
+  assert.doesNotMatch(receipt, /September 5% Promotion|Gift S’more Sticks/)
+
+  const lookup = structuredClone(fixture.lookup)
+  Object.assign(lookup.quote, { cakeDiscountCents: 0, giftSmoreQuantity: 0, knownTotalCents: 16130 })
+  const result = renderToStaticMarkup(React.createElement(CustomCakeLookupResult, { result: parseCustomCakeLookupResponse(lookup), language: 'en' }))
+  assert.doesNotMatch(result, /September 5% Custom Promotion|Gift S’more Sticks|Gift: 0 sticks/)
 })
 
 test('actual request UI has catalogue copy and disables submit until capability is ready', async () => {

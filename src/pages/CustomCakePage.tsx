@@ -294,11 +294,11 @@ export function CustomCakePage({
               </article>
               <article>
                 <span>02</span>
-                <strong>{language === 'ko' ? '시드니 멜로즈 파크 픽업' : 'Melrose Park, Sydney pick-up'}</strong>
+                <strong>{language === 'ko' ? '시드니 Melrose Park 사전 약속 픽업' : 'Pre-arranged Melrose Park, Sydney pick-up'}</strong>
               </article>
               <article>
                 <span>03</span>
-                <strong>{language === 'ko' ? '9월 프로모션: 5% 할인 + 스모어 2개 증정' : 'September promo: 5% off + 2 free S’mores'}</strong>
+                <strong>{language === 'ko' ? '9월 오픈 프로모션 · 혜택 적용 여부는 요청 접수 시 확인됩니다.' : 'September Opening Offer · Eligibility is confirmed when your request is received.'}</strong>
               </article>
             </section>
           </div>
@@ -316,8 +316,7 @@ export function CustomCakePage({
                 </p>
 
                 <div className="cake-detail-badges" aria-label={language === 'ko' ? '주문 안내' : 'Order notes'}>
-                  <span>{language === 'ko' ? '9월 5% 할인' : 'September 5% Off'}</span>
-                  <span>{language === 'ko' ? '스모어 2개 증정' : '2 Free S’mores / cake'}</span>
+                  <span>{language === 'ko' ? '9월 오픈 프로모션 · 접수 시 적용 여부 확인' : 'September Opening Offer · Eligibility confirmed on receipt'}</span>
                   <span>{language === 'ko' ? '맞춤 디자인 & 피규어' : 'Bespoke & Figurines'}</span>
                 </div>
               </div>
@@ -422,10 +421,10 @@ export function CustomCakePage({
                 <legend>{language === 'ko' ? '스모어 스틱 추가 구매' : 'S’more Stick Add-on'}</legend>
                 <div className="custom-cake-smore-banner">
                   <div>
-                    <strong>{language === 'ko' ? '9월 프로모션 무료 증정' : 'September Gift Included'}</strong>
-                    <p>{language === 'ko' ? '이벤트 대상 접수는 케이크 1개당 2개 증정됩니다. 적용 여부는 접수 후 확인됩니다.' : 'Eligible event requests include 2 sticks per cake. Eligibility is confirmed after receipt.'}</p>
+                    <strong>{language === 'ko' ? '9월 오픈 프로모션' : 'September Opening Offer'}</strong>
+                    <p>{language === 'ko' ? '대상 접수에는 케이크 1개당 스모어 2개가 증정됩니다. 적용 여부는 요청 접수 시 확인됩니다.' : 'Eligible requests include 2 S’more sticks per cake. Eligibility is confirmed when your request is received.'}</p>
                   </div>
-                  <span className="smore-promo-tag">{language === 'ko' ? '무료' : 'FREE'}</span>
+                  <span className="smore-promo-tag">{language === 'ko' ? '조건부' : 'ELIGIBLE'}</span>
                 </div>
                 <div className="custom-cake-smore-counter-row">
                   <div>
@@ -483,8 +482,8 @@ export function CustomCakePage({
 
               <p className="cake-detail-confirmation-note">
                 {language === 'ko'
-                  ? '지금 결제되지 않습니다. 요청 접수 후 담당자가 24시간 이내에 세부 견적과 일정을 안내해 드립니다.'
-                  : 'No payment is taken now. Our team will review your request and confirm quote & availability within 24 hours.'}
+                  ? '지금 결제되지 않습니다. 디자인과 제작 가능 여부를 확인한 후 요청 내용을 검토해 연락드리겠습니다.'
+                  : "No payment is taken now. We'll review your request and get back to you after checking the design and availability."}
               </p>
             </div>
           </aside>
@@ -511,8 +510,8 @@ export function CustomCakePage({
               </legend>
               <p className="custom-cake-field-note">
                 {language === 'ko'
-                  ? '시드니 멜로즈 파크 픽업 (금 18:00–20:00 · 토–일 08:00–20:00). 최종 가능 일정은 접수 후 안내됩니다.'
-                  : 'Melrose Park, Sydney pickup (Fri 18:00–20:00 · Sat–Sun 08:00–20:00). Final availability confirmed on review.'}
+                  ? '시드니 Melrose Park에서 사전 약속 픽업으로 진행됩니다. 정확한 전달 장소와 방법은 주문 확정 후 안내드립니다. 운영 시간: 금 18:00–20:00 · 토–일 08:00–20:00.'
+                  : 'Pre-arranged pick-up in Melrose Park, Sydney. Exact handoff details are provided after your request is confirmed. Available times: Fri 18:00–20:00 · Sat–Sun 08:00–20:00.'}
               </p>
               <div className="custom-cake-grid-2col">
                 <div className="custom-cake-field">
@@ -752,8 +751,8 @@ export function CustomCakePage({
               </button>
               <p className="cake-detail-confirmation-note">
                 {language === 'ko'
-                  ? '접수 완료 후 담당자가 24시간 이내에 세부 견적과 제작 가능 여부를 안내해 드립니다.'
-                  : 'Submitting a request does not charge your card. We will review your request and reply with a finalized quote within 24 hours.'}
+                  ? '접수 시 결제되지 않습니다. 디자인과 제작 가능 여부를 확인한 후 요청 내용을 검토해 연락드리겠습니다.'
+                  : "Submitting a request does not charge your card. We'll review your request and get back to you after checking the design and availability."}
               </p>
             </div>
           </form>
@@ -768,16 +767,16 @@ export function CustomCakePage({
               <summary>{language === 'ko' ? '픽업 장소 및 일정' : 'Pick-up Location & Hours'}</summary>
               <p>
                 {language === 'ko'
-                  ? '시드니 멜로즈 파크 매장에서 픽업 가능합니다 (금요일 18:00–20:00, 토–일 08:00–20:00). 특정 일정 조율이 필요한 경우 요청서에 메모를 남겨주세요.'
-                  : 'Pick-up is available from our Melrose Park, Sydney kitchen (Friday 18:00–20:00, Saturday–Sunday 08:00–20:00). Please note any special timing requests in your notes.'}
+                  ? '시드니 Melrose Park에서 사전 약속 픽업으로 진행됩니다. 정확한 전달 장소와 방법은 주문 확정 후 안내드립니다. 운영 시간은 금요일 18:00–20:00, 토–일 08:00–20:00이며 특정 일정 요청은 요청서에 남겨주세요.'
+                  : 'Pre-arranged pick-up in Melrose Park, Sydney. Exact handoff details are provided after your request is confirmed. Available times are Friday 18:00–20:00 and Saturday–Sunday 08:00–20:00; note any special timing request in the form.'}
               </p>
             </details>
             <details>
               <summary>{language === 'ko' ? '견적 및 예약 확정 절차' : 'Quote Review & Confirmation Process'}</summary>
               <p>
                 {language === 'ko'
-                  ? '접수 시 표시되는 금액은 기본 잠정 견적입니다. 요청서가 접수되면 디자인 난이도 및 피규어 실비를 검토하여 최종 견적을 24시간 이내에 안내해 드립니다. 고객 동의 후 제작 일정이 최종 확정됩니다.'
-                  : 'The initial amount is a provisional quote. Once submitted, our team reviews design complexity and figurine requirements to issue a final quote within 24 hours. Production is confirmed upon your approval.'}
+                  ? '접수 시 표시되는 금액은 기본 잠정 견적입니다. 디자인 난이도와 피규어 실비 및 제작 가능 여부를 확인한 후 최종 견적을 안내해 드리며, 고객 동의 후 제작 일정이 확정됩니다.'
+                  : 'The initial amount is a provisional quote. We review design complexity, figurine requirements, and availability before providing a final quote. Production is confirmed upon your approval.'}
               </p>
             </details>
             <details>
@@ -789,11 +788,11 @@ export function CustomCakePage({
               </p>
             </details>
             <details>
-              <summary>{language === 'ko' ? '9월 프로모션 혜택 안내' : 'September Promotion Details'}</summary>
+              <summary>{language === 'ko' ? '9월 오픈 프로모션 안내' : 'September Opening Offer'}</summary>
               <p>
                 {language === 'ko'
-                  ? '9월 한 달간 커스텀 케이크 기본가 5% 할인과 케이크 1개당 스모어 스틱 2개 무료 증정 혜택이 제공됩니다. 추가 스모어 스틱도 30% 할인가(AUD $3.15)로 함께 주문하실 수 있습니다.'
-                  : 'Throughout September, enjoy 5% off the custom cake base subtotal plus 2 complimentary S’more sticks per cake. Additional S’more sticks can be added at the 30% discounted price of AUD $3.15 each.'}
+                  ? '프로모션 대상 접수에는 커스텀 케이크 기본가 5% 할인과 케이크 1개당 스모어 스틱 2개 증정이 적용됩니다. 적용 여부는 서버가 기록한 요청 접수 시각을 기준으로 확인됩니다. 추가 스모어 스틱은 수량과 관계없이 30% 할인가(AUD $3.15)로 주문할 수 있습니다.'
+                  : 'Eligible requests receive 5% off the custom cake base subtotal and 2 complimentary S’more sticks per cake. Eligibility is confirmed from the server-recorded receipt time. Additional S’more sticks are available at the 30% add-on price of AUD $3.15 each.'}
               </p>
             </details>
           </div>

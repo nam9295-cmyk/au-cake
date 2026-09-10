@@ -118,10 +118,12 @@ export function CustomCakeCompletePage({
                 <dd>{formatCents(quote.baseCents)}</dd>
               </div>
 
-              <div className="summary-row discount">
-                <dt>{language === 'ko' ? '9월 프로모션 5% 할인' : 'September 5% Promotion'}</dt>
-                <dd>-{formatCents(quote.cakeDiscountCents)}</dd>
-              </div>
+              {quote.cakeDiscountCents > 0 && (
+                <div className="summary-row discount">
+                  <dt>{language === 'ko' ? '적용된 커스텀 케이크 할인' : 'Applied Custom Cake Promotion'}</dt>
+                  <dd>-{formatCents(quote.cakeDiscountCents)}</dd>
+                </div>
+              )}
 
               <div className="summary-row extra">
                 <dt>{language === 'ko' ? '디자인 추가비' : 'Design Extra'}</dt>
@@ -133,10 +135,12 @@ export function CustomCakeCompletePage({
                 <dd>{formatExtraCents(quote.figurineExtraCents, language)}</dd>
               </div>
 
-              <div className="summary-row gift">
-                <dt>{language === 'ko' ? '무료 증정 스모어' : 'Gift S’more Sticks'}</dt>
-                <dd>{quote.giftSmoreQuantity} {language === 'ko' ? '개 (무료)' : 'sticks (Free)'}</dd>
-              </div>
+              {quote.giftSmoreQuantity > 0 && (
+                <div className="summary-row gift">
+                  <dt>{language === 'ko' ? '무료 증정 스모어' : 'Gift S’more Sticks'}</dt>
+                  <dd>{quote.giftSmoreQuantity} {language === 'ko' ? '개 (무료)' : 'sticks (Free)'}</dd>
+                </div>
+              )}
 
               {quote.paidSmoreQuantity > 0 && (
                 <div className="summary-row">
@@ -172,7 +176,7 @@ export function CustomCakeCompletePage({
               <li>
                 <span className="step-num">1</span>
                 <div>
-                  <strong>{language === 'ko' ? '요청 검토 (24시간 이내)' : 'Review (Within 24 hours)'}</strong>
+                  <strong>{language === 'ko' ? '요청 검토' : 'Request Review'}</strong>
                   <p>{language === 'ko' ? '접수된 디자인 메모와 사진, 희망 일정을 꼼꼼히 확인합니다.' : 'Our team reviews your cake concept, reference photos, and availability.'}</p>
                 </div>
               </li>
