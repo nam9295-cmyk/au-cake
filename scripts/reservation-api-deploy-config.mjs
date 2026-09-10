@@ -181,6 +181,7 @@ export function buildHealthFailureDiagnostic(execution = {}, secrets = []) {
 export function buildDryRunPlan(env = {}) {
   const custom = customCakeDeployment(env, 'api', FUNCTION_SCOPES)
   const variableValues = {
+    ...custom.runtimeVariables,
     MARKET: env.MARKET || 'AU',
     APPWRITE_CAKE_DATABASE_ID: env.APPWRITE_CAKE_DATABASE_ID,
     APPWRITE_KIDS_DATABASE_ID: env.APPWRITE_KIDS_DATABASE_ID,

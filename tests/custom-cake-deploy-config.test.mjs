@@ -32,3 +32,48 @@ test('Node22 deployment requires explicit custom opt-in, exact runtime and recov
   assert.deepEqual(payload.events, ['legacy-event'])
   assert.deepEqual(api.buildRuntimeCandidates('node-22'), ['node-22'])
 })
+
+test('custom cake dry-run variables exactly match the deployed runtime variables', () => {
+  const sharedCustomKeys = [
+    'CUSTOM_CAKE_PERSISTENCE_ENABLED',
+    'APPWRITE_CUSTOM_CAKE_DATABASE_ID',
+    'APPWRITE_CUSTOM_CAKE_PHOTOS_BUCKET_ID',
+    'APPWRITE_CUSTOM_CAKE_CLAIMS_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_SNAPSHOTS_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_SESSIONS_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_PHOTOS_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_QUOTAS_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_OUTBOX_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_COMMITS_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_CHUNKS_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_HISTORIES_TABLE_ID',
+    'APPWRITE_CUSTOM_CAKE_RATELIMITS_TABLE_ID',
+  ]
+  const cases = [
+    {
+      config: api,
+      customKeys: [
+        ...sharedCustomKeys,
+        'CUSTOM_CAKE_RECOVERY_ENABLED',
+        'CUSTOM_CAKE_PROMOTION_STARTS_AT',
+        'CUSTOM_CAKE_PHOTO_TOKEN_HMAC_SECRET',
+        'CAKE_WIRE_LEGACY_NEW_SUBMISSIONS',
+      ],
+    },
+    {
+      config: notification,
+      customKeys: [...sharedCustomKeys, 'CUSTOM_CAKE_NOTIFICATIONS_ENABLED'],
+    },
+  ]
+
+  for (const { config, customKeys } of cases) {
+    const resolved = config.resolveDeployConfig(enabled)
+    const plan = config.buildDryRunPlan(enabled)
+    const variableNames = [...plan.function.variableNames].sort()
+    const maskedVariableNames = Object.keys(plan.function.maskedVariables).sort()
+    assert.deepEqual(variableNames, Object.keys(resolved.runtimeVariables).sort())
+    assert.deepEqual(maskedVariableNames, variableNames)
+    for (const key of customKeys) assert.ok(variableNames.includes(key), `${key} must be represented in dry-run output`)
+    assert.equal(JSON.stringify(plan).includes(enabled.CUSTOM_CAKE_PHOTO_TOKEN_HMAC_SECRET), false)
+  }
+})
