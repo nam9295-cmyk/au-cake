@@ -142,16 +142,16 @@ export default function CakesPage({
             </div>
           </header>
           <div className="cake-catalog-group-products cakes-index-group-products">
-            <article className="cakes-index-card">
+            <article className="cakes-index-card cakes-index-card-custom-cake">
               <a
                 href="/cakes/custom-cake"
                 className="cakes-index-image"
                 onClick={(event) => openCake(event, 'custom-cake')}
               >
                 <img
-                  src="/products/buttercream-cake-sydney.webp"
+                  src="/products/custom-cake.webp"
                   alt={language === 'ko' ? '커스텀 케이크' : 'CUSTOM CAKE'}
-                  width={1080}
+                  width={2160}
                   height={1012}
                   loading="lazy"
                   decoding="async"

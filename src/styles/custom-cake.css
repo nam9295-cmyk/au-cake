@@ -1,565 +1,417 @@
-/* Custom Cake v1 UI Styles */
+/* Custom Cake v1 UI Styles - AU Cake Unified Design System */
 
-.custom-cake-page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 32px 16px 80px;
-  color: var(--text-color, #1a1a1a);
+.custom-cake-detail-page {
+  /* Inherits .cake-detail-page layout: width: min(100%, var(--page-max)); margin: 0 auto; padding: 52px 30px 112px; */
 }
 
-.custom-cake-header {
-  margin-bottom: 32px;
-  text-align: center;
-}
-
-.custom-cake-header h1 {
-  font-family: 'Work Sans', sans-serif;
-  font-size: clamp(24px, 5vw, 36px);
-  font-weight: 700;
-  margin: 8px 0 12px;
-  color: var(--forest-green, #203227);
-}
-
-.custom-cake-hero-lead {
-  font-size: 16px;
-  line-height: 1.5;
-  color: #555;
-  max-width: 520px;
-  margin: 0 auto 20px;
-}
-
-/* 9월 프로모션 배너 */
-.custom-cake-promo-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: linear-gradient(135deg, #f0f7f3 0%, #e6f2eb 100%);
-  border: 1px solid #c3dfce;
-  border-radius: 12px;
-  padding: 14px 18px;
-  text-align: left;
-  margin-top: 16px;
-}
-
-.promo-sparkle {
-  color: #1f6e43;
-  flex-shrink: 0;
-}
-
-.custom-cake-promo-banner strong {
+/* Option button subtitle */
+.cake-detail-option-serves {
   display: block;
-  font-size: 14px;
-  color: #1a5836;
-  margin-bottom: 2px;
-}
-
-.custom-cake-promo-banner p {
-  margin: 0;
-  font-size: 13px;
-  color: #2b4736;
-  line-height: 1.4;
-}
-
-/* 폼 섹션 공통 */
-.custom-cake-form {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-.form-section {
-  background: #fff;
-  border: 1px solid #e8e5df;
-  border-radius: 14px;
-  padding: 24px;
-}
-
-.form-section h2 {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0 0 16px;
-  color: #203227;
-}
-
-.section-note {
-  font-size: 13px;
-  color: #666;
-  margin: -8px 0 16px;
-  line-height: 1.4;
-}
-
-/* 1. Tier Selector */
-.tier-selector {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
-  border: none;
-  padding: 0;
-}
-
-.tier-pill {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: 1px solid #d4cfc5;
-  background: #faf8f5;
-  font-size: 14px;
-  font-weight: 600;
-  color: #555;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.tier-pill.active {
-  background: #203227;
-  color: #fff;
-  border-color: #203227;
-}
-
-/* Size Cards Grid */
-.size-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.size-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #dfdad2;
-  border-radius: 10px;
-  padding: 14px;
-  cursor: pointer;
-  background: #faf9f6;
-  transition: all 0.2s ease;
-}
-
-.size-card input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.size-card.selected {
-  border-color: #203227;
-  background: #f4f7f4;
-  box-shadow: 0 0 0 1px #203227;
-}
-
-.size-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.size-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #203227;
-}
-
-.size-serves {
-  font-size: 12px;
-  color: #777;
-}
-
-.size-price {
-  font-size: 14px;
-  color: #1f6e43;
-  margin-top: 6px;
-}
-
-/* Input rows */
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.field-group:last-child {
-  margin-bottom: 0;
-}
-
-.field-group label,
-.field-group legend {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.field-group input[type="text"],
-.field-group input[type="tel"],
-.field-group input[type="email"],
-.field-group input[type="date"],
-.field-group input[type="time"],
-.field-group select,
-.field-group textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d4cfc5;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-  font-family: inherit;
-  box-sizing: border-box;
-}
-
-.field-group textarea {
-  resize: vertical;
-}
-
-.pickup-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-/* Radio Cards (Figurines) */
-.radio-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.radio-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid #dfdad2;
-  border-radius: 8px;
-  background: #faf9f6;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.radio-card input {
-  margin-top: 3px;
-}
-
-.radio-card.selected {
-  border-color: #203227;
-  background: #f4f7f4;
-}
-
-.radio-card strong {
-  display: block;
-  font-size: 14px;
-  color: #203227;
-}
-
-.radio-card span {
-  display: block;
-  font-size: 12px;
-  color: #666;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
   margin-top: 2px;
 }
 
-/* Photo Uploader */
-.photo-uploader {
+.cake-detail-option.is-selected .cake-detail-option-serves {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* S'more promotion highlight within purchase configurator */
+.custom-cake-smore-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: var(--cream-teal);
+  border-left: 3px solid var(--forest);
+}
+
+.custom-cake-smore-banner strong {
+  display: block;
+  font-size: 12px;
+  color: var(--forest-deep);
+  margin-bottom: 2px;
+}
+
+.custom-cake-smore-banner p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--forest);
+  line-height: 1.4;
+}
+
+.smore-promo-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  background: var(--forest-deep);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.custom-cake-smore-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.custom-cake-smore-counter-row strong {
+  display: block;
+  font-size: 13px;
+  color: var(--forest-deep);
+}
+
+.smore-price-subtext {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.smore-extra-total-line {
+  margin: 4px 0 0;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--forest-deep);
+}
+
+/* Sidebar Checkout Order Summary Micro Lines */
+.custom-cake-quote-lines {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
 }
 
-.photo-upload-button {
+.quote-micro-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.quote-micro-line.is-discount span:last-child {
+  color: #c93b2b;
+  font-weight: 600;
+}
+
+.quote-micro-line.is-gift span:last-child {
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.quote-micro-line.is-tbd span:last-child {
+  font-style: italic;
+  color: #888;
+}
+
+.custom-cake-summary-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.known-total-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.custom-cake-hero-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  margin-top: 16px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Bottom Detailed Request Section
+   ========================================================================== */
+.custom-cake-request-section {
+  max-width: 860px;
+  margin: clamp(48px, 6vw, 80px) auto 0;
+  padding-top: clamp(36px, 5vw, 56px);
+  border-top: 1px solid var(--border);
+}
+
+.custom-cake-section-header {
+  margin-bottom: 36px;
+}
+
+.custom-cake-section-header h2 {
+  color: var(--forest-deep);
+  font-size: clamp(28px, 3.5vw, 42px);
+  line-height: 1.05;
+  margin: 6px 0 12px;
+}
+
+.custom-cake-section-header p:not(.summary-kicker) {
+  color: var(--muted);
+  font-size: 15px;
+  max-width: 640px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.custom-cake-form {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.custom-cake-fieldset {
+  margin: 0;
+  padding: 0 0 32px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.custom-cake-fieldset:last-of-type {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.custom-cake-legend {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--forest-deep);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.legend-number {
+  color: var(--forest);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.custom-cake-field-note {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.custom-cake-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.custom-cake-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.custom-cake-field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--forest-deep);
+}
+
+.custom-cake-field input[type="text"],
+.custom-cake-field input[type="tel"],
+.custom-cake-field input[type="email"],
+.custom-cake-field input[type="date"],
+.custom-cake-field input[type="time"],
+.custom-cake-field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  box-sizing: border-box;
+}
+
+.custom-cake-field input:focus,
+.custom-cake-field textarea:focus {
+  outline: none;
+  border-color: var(--forest);
+  box-shadow: 0 0 0 2px rgba(31, 90, 70, 0.15);
+}
+
+.custom-cake-field textarea {
+  resize: vertical;
+  min-height: 108px;
+  line-height: 1.5;
+}
+
+.custom-cake-char-counter {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* Reference Photos Upload */
+.custom-cake-uploader-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.custom-cake-upload-box {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   align-self: flex-start;
-  padding: 10px 16px;
-  border: 1px dashed #203227;
-  border-radius: 8px;
-  background: #f9faf9;
-  color: #203227;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 12px 20px;
+  border: 1px dashed var(--forest);
+  background: var(--cream-teal);
+  color: var(--forest-deep);
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
 }
 
-.photo-preview-list {
+.custom-cake-upload-box:hover:not(.is-disabled) {
+  background: #dfece3;
+  transform: translateY(-1px);
+}
+
+.custom-cake-upload-box.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.custom-cake-staged-photos {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.photo-preview-item {
+.custom-cake-photo-thumb {
   position: relative;
-  width: 72px;
-  height: 72px;
-  border-radius: 8px;
+  width: 80px;
+  height: 80px;
   overflow: hidden;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
+  background: #e9e4dc;
 }
 
-.photo-preview-item img {
+.custom-cake-photo-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.photo-remove-btn {
+.photo-remove-button {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  border: none;
-  border-radius: 50%;
+  top: 3px;
+  right: 3px;
   width: 22px;
   height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-/* S'more Add-on Section */
-.smore-section {
-  border-left: 4px solid #1f6e43;
-}
-
-.smore-info-box {
-  background: #f4f8f5;
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: #254b33;
-}
-
-.smore-gifts-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #edf6f0;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #1a5836;
-  margin-bottom: 14px;
-}
-
-.gift-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.smore-quantity-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: row;
-}
-
-.smore-qty-control {
-  display: flex;
-  align-items: center;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.smore-qty-control button {
-  background: #f0f0f0;
-  border: none;
-  padding: 6px 14px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.smore-qty-control button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.smore-qty-control span {
-  padding: 0 16px;
-  font-weight: 600;
-}
-
-.smore-subtotal-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f6e43;
-}
-
-/* Quote Breakdown Card */
-.quote-breakdown-card {
-  background: #fff;
-  border: 2px solid #203227;
-  border-radius: 14px;
-  padding: 24px;
-}
-
-.breakdown-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eee;
-}
-
-.breakdown-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #203227;
-}
-
-.quote-badge.provisional {
-  background: #fdf5e6;
-  color: #8c5b10;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.breakdown-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-}
-
-.breakdown-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 14px;
-}
-
-.breakdown-row.discount-row dd {
-  color: #c93b2b;
-  font-weight: 600;
-}
-
-.breakdown-row.gift-row dd {
-  color: #1f6e43;
-  font-weight: 600;
-}
-
-.tbd-text {
-  color: #888;
-  font-style: italic;
-}
-
-.breakdown-divider {
-  height: 1px;
-  background: #e8e5df;
-  margin: 6px 0;
-}
-
-.breakdown-row.total-row {
-  font-size: 16px;
-}
-
-.breakdown-subtext {
-  margin: 2px 0 0;
-  font-size: 11px;
-  font-weight: normal;
-  color: #888;
-}
-
-.breakdown-row.final-row {
-  margin-top: 4px;
-  padding: 8px 12px;
-  background: #faf8f5;
-  border-radius: 6px;
-}
-
-.tbd-highlight {
-  font-weight: 600;
-  color: #8c5b10;
-}
-
-.quote-clarification-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 14px;
-  padding: 10px 12px;
-  background: #f9f8f6;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #666;
-  line-height: 1.4;
-}
-
-.quote-clarification-notice svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-/* Privacy checkbox */
-.privacy-consent-box {
-  margin-top: 16px;
-  padding: 12px;
-  background: #faf8f5;
-  border-radius: 8px;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 13px;
-  color: #444;
-  cursor: pointer;
-  line-height: 1.4;
-}
-
-.checkbox-label input {
-  margin-top: 2px;
-}
-
-/* Submit Actions */
-.form-actions {
-  text-align: center;
-}
-
-.custom-submit-btn {
-  padding: 16px 24px;
-  font-size: 16px;
-  font-weight: 700;
-  background: #203227;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: rgba(32, 50, 39, 0.82);
   color: #fff;
-  border: none;
-  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 160ms ease;
 }
 
-.custom-submit-btn:hover:not(:disabled) {
-  background: #2f4939;
+.photo-remove-button:hover {
+  background: #c93b2b;
 }
 
-.custom-submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* Privacy Consent */
+.custom-cake-consent-box {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
 }
 
-.submit-disclaimer {
+.custom-cake-consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.custom-cake-consent-label input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: var(--forest);
+  width: 16px;
+  height: 16px;
+}
+
+.custom-cake-consent-label span {
   font-size: 12px;
-  color: #777;
-  margin-top: 10px;
-  line-height: 1.4;
+  color: var(--text);
+  line-height: 1.45;
 }
 
-.error-banner {
+/* Error Banner */
+.custom-cake-error-box {
   padding: 12px 16px;
   background: #fde8e8;
-  border: 1px solid #f8b4b4;
+  border-left: 4px solid #c81e1e;
   color: #c81e1e;
-  border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Submit Area */
+.custom-cake-submit-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.custom-cake-submit-cta {
+  max-width: 480px;
+  width: 100%;
+  min-height: 56px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .custom-cake-grid-2col {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .custom-cake-section-header h2 {
+    font-size: clamp(24px, 7vw, 32px);
+  }
+
+  .custom-cake-upload-box {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ==========================================================================
@@ -1446,3 +1298,120 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Custom cake catalogue 2-column wide card & direct navigation */
+.cake-catalog-card-custom-cake,
+.cakes-index-card-custom-cake {
+  grid-column: 1 / -1;
+}
+
+.product-card-image-link {
+  display: block;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake {
+  width: 100%;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2160 / 1012;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--catalogue-card-color, #D9E7D6);
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap::before {
+  display: none;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap img,
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap img:not(.gluten-free-stamp) {
+  position: static;
+  top: auto;
+  left: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: none;
+  margin-inline: 0;
+  object-fit: cover;
+  transform: none;
+  filter: none;
+  border-radius: 8px;
+  transition: transform 420ms ease;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake:hover .product-image-wrap img,
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake:focus-within .product-image-wrap img {
+  transform: scale(1.02);
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-card-detail-link,
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-card-price {
+  width: 100%;
+  margin-inline: 0;
+}
+
+@media (max-width: 768px) {
+  .product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap {
+    aspect-ratio: 2160 / 1012;
+    height: auto;
+    border-radius: 6px;
+  }
+
+  .product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap img,
+  .product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap img:not(.gluten-free-stamp) {
+    position: static;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    object-fit: cover;
+    filter: none;
+    border-radius: 6px;
+  }
+}
+
+/* Cakes index page wide card */
+.cakes-index-card-custom-cake {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cakes-index-card-custom-cake .cakes-index-image {
+  aspect-ratio: 2160 / 1012;
+}
+
+.cakes-index-card-custom-cake .cakes-index-image img {
+  padding: 0;
+  object-fit: cover;
+  filter: none;
+}
+
+.cakes-index-card-custom-cake:hover .cakes-index-image img,
+.cakes-index-card-custom-cake:focus-visible .cakes-index-image img {
+  transform: scale(1.02);
+}
+
+/* Custom cake detail page hero main image */
+.custom-cake-detail-page .cake-detail-main-image {
+  aspect-ratio: 2160 / 1012;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.custom-cake-detail-page .cake-detail-main-image > img {
+  padding: 0;
+  object-fit: cover;
+  filter: none;
+  border-radius: 8px;
+}
+

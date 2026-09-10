@@ -38,24 +38,53 @@ export function PickupLocationCard({ language }: { language: Language }) {
           {PICKUP_LOCATION_ADDRESS}<br />
           <small>{language === 'ko' ? '매장 또는 방문 판매 장소가 아닙니다' : 'Not a storefront or walk-in shop'}</small>
         </p>
-        <a
-          className="secondary-button pickup-map-link"
-          href={PICKUP_MAP_URL}
-          target="_blank"
-          rel="noreferrer"
-          onClick={() => trackEvent('pickup_map_click', { location: 'melrose_park' })}
-        >
-          {copy.openMap}
-        </a>
       </div>
-      <div className="pickup-map-frame" aria-label="Google Map showing Pulse - Melrose Park">
-        <iframe
-          title="Pulse - Melrose Park Google Map"
-          src={PICKUP_MAP_EMBED_URL}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          allowFullScreen
-        />
+      <div className="pickup-map-column">
+        <div className="pickup-map-frame" aria-label="Google Map showing Pulse - Melrose Park">
+          <iframe
+            title="Pulse - Melrose Park Google Map"
+            src={PICKUP_MAP_EMBED_URL}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+        </div>
+        <div className="pickup-location-actions">
+          <a
+            className="secondary-button pickup-map-link"
+            href={PICKUP_MAP_URL}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackEvent('pickup_map_click', { location: 'melrose_park' })}
+          >
+            {copy.openMap}
+          </a>
+          <a
+            className="secondary-button pickup-instagram-link"
+            href="https://www.instagram.com/verygood_syd/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Instagram @verygood_syd"
+            onClick={() => trackEvent('contact_instagram_click', { location: 'melrose_park' })}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+            </svg>
+            <span>Contact Us</span>
+          </a>
+        </div>
       </div>
     </section>
   )
@@ -354,6 +383,14 @@ export function SiteFooter({
             {copy.reviews}
           </a>
           <a href="/lookup" onClick={(event) => { event.preventDefault(); navigate('lookup') }}>{copy.lookup}</a>
+          <a
+            href="https://www.instagram.com/verygood_syd/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Instagram @verygood_syd"
+          >
+            Instagram
+          </a>
         </nav>
         <small>© {new Date().getFullYear()} verygood chocolate</small>
       </div>
