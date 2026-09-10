@@ -1,15 +1,18 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, rm, symlink } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createReservationApiArchive } from '../scripts/reservation-api-deploy-rollout.mjs'
 import { createNotificationArchive } from '../scripts/reservation-notification-deploy-runtime.mjs'
 import { createBookingReminderArchive } from '../scripts/booking-reminder-deploy-runtime.mjs'
 
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/order-core-golden.json', import.meta.url)))
+const newCanonical = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/canonical.json', import.meta.url)))
+const customWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/custom-v1.json', import.meta.url)))
+const ordinaryWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/cake-order-v2.json', import.meta.url)))
 const artifacts = [
   ['reservation-compatibility', () => createReservationApiArchive({ phase: 'compatibility' }), 'src/business.js', true],
   ['reservation-full', () => createReservationApiArchive({ phase: 'full' }), 'src/business.js', true],
@@ -23,9 +26,8 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
     const extracted = await mkdtemp(join(tmpdir(), 'order-contract-artifact-'))
     try {
       execFileSync('tar', ['-xzf', archive.path, '-C', extracted])
-      // Only installed third-party packages are supplied; application source must
-      // resolve inside this extracted archive, never via repository wrappers.
-      await symlink(resolve('node_modules'), join(extracted, 'node_modules'), 'dir')
+      // Each archive must resolve dependencies from its own exact manifest/lock.
+      execFileSync('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: extracted, stdio: 'pipe' })
       const script = `
         import assert from 'node:assert/strict';
         import fs from 'node:fs';
@@ -48,7 +50,8 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         const business = await import(pathToFileURL(path.resolve(${JSON.stringify(parserPath)})));
         const { digestCakeRequestPayload } = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'coupon-digest.js')));
         const capture = fn => { try { return {value:JSON.parse(JSON.stringify(fn()))} } catch(e) { return JSON.parse(JSON.stringify({error:{name:e.name,message:e.message,code:e.code,status:e.status}})) } };
-        for (const fixture of JSON.parse(fs.readFileSync(0, 'utf8')).cases) {
+        const fixtures = JSON.parse(fs.readFileSync(0, 'utf8'));
+        for (const fixture of fixtures.cases) {
           if (fixture.input) {
             const canonical = capture(() => business.canonicalCakeRequestPayload(fixture.input));
             assert.deepEqual(canonical, fixture.expected.canonical, fixture.name + ': canonical');
@@ -62,9 +65,41 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
           assert.deepEqual(capture(() => business.publicCakeReservation(document)), fixture.expected.lookupResponse, fixture.name);
           if (${hasCreateResponse}) assert.deepEqual(capture(() => entry.cakeReservationResponse(document)), fixture.expected.createdResponse, fixture.name);
         }
+        const wireInput = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'cake-order-input.js')));
+        for (const fixture of fixtures.newCanonical.cases) {
+          const custom = fixture.name === 'custom-cake.v1';
+          const canonicalize = custom ? wireInput.canonicalCustomCakeV1Request : wireInput.canonicalCakeOrderV2Request;
+          const digest = custom ? wireInput.fingerprintCustomCakeV1Request : wireInput.fingerprintCakeOrderV2Request;
+          assert.equal(canonicalize(fixture.request), fixture.canonicalJson);
+          assert.equal(digest(fixture.permuted, Buffer.alloc(32, 7)), fixture.fingerprint);
+        }
+        const wireData = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'cake-order-data.js')));
+        const custom = fixtures.customWire;
+        const customData = wireData.buildCustomCakeV1Data(custom.request, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber, promotionStartsAt: '2026-09-01T00:00:00.000Z' });
+        assert.deepEqual(customData.creationResponse, custom.created);
+        assert.deepEqual(customData.lookupResponse, custom.lookup);
+        const ordinary = fixtures.ordinaryWire;
+        const ordinaryData = wireData.buildCakeOrderV2Data(ordinary.request, { now: new Date(ordinary.created.pricing.pricedAt), reservationNumber: ordinary.created.reservationNumber });
+        assert.deepEqual(ordinaryData.creationResponse, ordinary.created);
+        assert.deepEqual(ordinaryData.lookupResponse, ordinary.lookup);
+        if (${JSON.stringify(name)} === 'notification') {
+          verify('src/custom-cake-notification-runtime.js');
+          const runtime = await import(pathToFileURL(path.resolve('src/custom-cake-notification-runtime.js')));
+          assert.equal(typeof runtime.createCustomCakeNotificationRuntime, 'function');
+          const notification = await import(pathToFileURL(path.resolve('src/custom-cake-notification.js')));
+          const { customCakeDocumentId } = await import(pathToFileURL(path.resolve('shared/reservation-api/custom-cake-persistence.js')));
+          for (const [eventType, snapshot] of [['custom-cake.received', custom.lookup], ['custom-cake.quoted', { ...custom.finalLookup, status: 'quoted' }], ['custom-cake.confirmed', custom.finalLookup], ['cake-order-v2.received', ordinary.lookup]]) {
+            const quoteVersion = snapshot.quote?.quoteVersion || 0;
+            const event = { schemaVersion: 1, eventType, requestId: custom.request.requestId, requestNumber: snapshot.requestNumber || snapshot.reservationNumber, quoteVersion, occurredAt: '2026-10-03T00:00:00.000Z', state: 'pending', dueAt: '2026-10-03T00:00:00.000Z', snapshot, explanation: '' };
+            const id = customCakeDocumentId('custom-cake-event-v1', event.requestId + '/' + eventType + '/' + quoteVersion);
+            const payload = notification.buildCustomCakeEmailPayload({ id, event, from: 'Cake <cake@example.invalid>', role: 'customer' });
+            assert.equal(payload.template, eventType);
+            assert.ok(!JSON.stringify(payload).includes('photo_A'));
+          }
+        }
       `
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-        cwd: extracted, input: JSON.stringify(baseline), encoding: 'utf8',
+        cwd: extracted, input: JSON.stringify({ ...baseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',
         env: { PATH: process.env.PATH },
       })
       assert.equal(result.status, 0, result.stderr || result.stdout)

@@ -9,6 +9,7 @@ function identityForPayload(payload) {
     sourceType: payload?.sourceType,
     sourceId: payload?.sourceId,
     template: payload?.template,
+    ...(payload?.occurrence === undefined ? {} : { occurrence: payload.occurrence }),
     recipientHash: payload?.recipientHash,
     payloadHash: payload?.payloadHash,
   }
@@ -33,6 +34,7 @@ export async function retryEmail({
   log = () => {},
   error = () => {},
   logLabel = 'Email retry',
+  identityPolicy,
 } = {}) {
   const identity = identityForPayload(payload)
   let existingClaim = null
@@ -47,7 +49,7 @@ export async function retryEmail({
 
   let decision
   try {
-    decision = evaluateEmailDeliveryRetry({ delivery, identity, retryClaim: existingClaim, now })
+    decision = evaluateEmailDeliveryRetry({ delivery, identity, retryClaim: existingClaim, now, identityPolicy })
   } catch {
     error(logLabel + ' eligibility failed: ' + safeEventKey(identity.eventKey))
     return { status: 'uncertain', retry: 'manual_fallback', safeErrorCode: 'retry_eligibility_unavailable' }
@@ -62,7 +64,7 @@ export async function retryEmail({
     return { ...decision, retry: 'manual_fallback', safeErrorCode: 'retry_claim_unavailable' }
   }
   if (claim.kind !== 'created') {
-    return evaluateEmailDeliveryRetry({ delivery, identity, retryClaim: claim.claim, now })
+    return evaluateEmailDeliveryRetry({ delivery, identity, retryClaim: claim.claim, now, identityPolicy })
   }
 
   let attempted

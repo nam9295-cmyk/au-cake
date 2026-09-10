@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { createHmac, randomUUID } from 'node:crypto'
-import { AppwriteException, Query } from 'node-appwrite'
+import { AppwriteException, Query } from './reservation-sdk.mjs'
 import {
   ReservationApiError,
   buildCakeReservation,

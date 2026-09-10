@@ -115,6 +115,7 @@ async function ensureFunctionRuntime(runtime) {
     entrypoint: 'src/main.js',
     commands: 'npm ci --omit=dev',
     scopes: [...FUNCTION_SCOPES],
+    ...(deployConfig.customCakeFunctionOptions || {}),
   }
 
   try {

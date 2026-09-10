@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { AppwriteException } from 'node-appwrite'
+import { AppwriteException } from './reservation-sdk.mjs'
 import {
   ReservationApiError,
   buildCakeReservation,

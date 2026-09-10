@@ -4,7 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "pretest": "npm run test:custom-cake-contract && node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
+    "pretest": "npm run test:custom-cake-contract && npm run test:custom-cake-order-core && npm run test:custom-cake-persistence && npm run test:custom-cake-photos && npm run test:custom-cake-actions && npm run test:custom-cake-adapters-notifications && node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
+    "test:custom-cake-adapters-notifications": "node --test tests/custom-cake-client.test.mjs tests/custom-cake-browser-transport.test.mjs tests/custom-cake-notification.test.mjs tests/custom-cake-notification-runtime.test.mjs tests/custom-cake-deploy-config.test.mjs",
+    "test:custom-cake-actions": "node --test tests/custom-cake-cutover.test.mjs tests/custom-cake-workflow.test.mjs tests/custom-cake-security.test.mjs tests/custom-cake-readiness.test.mjs",
+    "test:custom-cake-photos": "node --test tests/custom-cake-photo-codec.test.mjs tests/custom-cake-photo-service.test.mjs tests/custom-cake-photo-storage.test.mjs tests/custom-cake-photo-artifacts.test.mjs",
+    "test:custom-cake-persistence": "node --test tests/custom-cake-persistence.test.mjs tests/custom-cake-schema.test.mjs tests/custom-cake-persistence-artifacts.test.mjs",
+    "test:custom-cake-order-core": "node --test tests/custom-cake-order-core.test.mjs",
     "test:custom-cake-contract": "node --test tests/custom-cake-contract.test.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",

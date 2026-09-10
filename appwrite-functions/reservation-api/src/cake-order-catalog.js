@@ -1,6 +1,13 @@
 // Current new-order catalog and option/promotion constants. Independent of stored-order compatibility snapshots.
 import { ACTIVE_CAKE_ORDER_PRODUCT_IDS } from './active-cake-products.js'
 
+export const CUSTOM_CAKE_V1_BASE_CENTS = Object.freeze({
+  single: Object.freeze({ '6in': 15500, '8in': 20000, '10in': 25000 }),
+  double: Object.freeze({ '4in+6in': 25500, '6in+8in': 36500, '8in+10in': 47500 }),
+})
+
+export const CUSTOM_CAKE_V1_PROMOTION_END = '2026-09-30T14:00:00.000Z'
+
 export const PROMO_CODE = 'chocolate'
 
 export const LEMON_PROMO_CODE = 'lemoni'
