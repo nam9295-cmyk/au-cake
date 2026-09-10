@@ -106,6 +106,11 @@ test('customer-facing promotion, response-time, and pickup copy stays conditiona
   assert.match(korean, /시드니 Melrose Park에서 사전 약속 픽업으로 진행됩니다\. 정확한 전달 장소와 방법은 주문 확정 후 안내드립니다\./)
   assert.doesNotMatch(english, /our Melrose Park, Sydney kitchen|Melrose Park pickup location/)
   assert.doesNotMatch(korean, /멜로즈 파크 매장에서 픽업/)
+
+  assert.match(english, /You may provide your own figurines or ask Verygood to source them\. Handoff details and timing for customer-provided figurines will be arranged during order confirmation\./)
+  assert.match(korean, /직접 피규어를 준비하시거나 Verygood에서 준비하도록 요청하실 수 있습니다\. 고객이 준비한 피규어의 전달 방법과 일정은 주문 확정 과정에서 안내드립니다\./)
+  assert.doesNotMatch(english, /2–3 days|safe sanitization|arrive.*before pick-up/i)
+  assert.doesNotMatch(korean, /2~3일|매장으로 전달/)
 })
 
 test('receipt and lookup promotion rows reflect only non-zero server quote snapshots', () => {

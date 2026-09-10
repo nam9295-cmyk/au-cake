@@ -783,8 +783,8 @@ export function CustomCakePage({
               <summary>{language === 'ko' ? '피규어 및 소품 준비' : 'Figurines & Custom Props'}</summary>
               <p>
                 {language === 'ko'
-                  ? '직접 피규어를 준비하시거나 매장에서 준비하도록 요청하실 수 있습니다. 직접 전달 시 픽업 2~3일 전까지 매장으로 전달해 주셔야 안전하게 세팅할 수 있습니다.'
-                  : 'You may provide your own figurines or request us to source them at cost. Customer-provided figurines should arrive 2–3 days before pick-up for safe sanitization and placement.'}
+                  ? '직접 피규어를 준비하시거나 Verygood에서 준비하도록 요청하실 수 있습니다. 고객이 준비한 피규어의 전달 방법과 일정은 주문 확정 과정에서 안내드립니다.'
+                  : 'You may provide your own figurines or ask Verygood to source them. Handoff details and timing for customer-provided figurines will be arranged during order confirmation.'}
               </p>
             </details>
             <details>
