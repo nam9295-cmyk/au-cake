@@ -1,0 +1,283 @@
+{
+  "updates": [
+    {
+      "expectedQuoteVersion": 1,
+      "currentQuoteVersion": 1,
+      "nextQuoteVersion": 2,
+      "result": "ok"
+    },
+    {
+      "expectedQuoteVersion": 1,
+      "currentQuoteVersion": 2,
+      "nextQuoteVersion": 2,
+      "result": "QUOTE_VERSION_CONFLICT"
+    }
+  ],
+  "confirmationCases": [
+    {
+      "name": "not-final",
+      "currentQuoteVersion": 1,
+      "acceptedQuoteVersion": null,
+      "isFinalQuote": false,
+      "acceptedAt": null,
+      "result": "QUOTE_NOT_FINAL",
+      "status": "quoted",
+      "expectedQuoteVersion": 1
+    },
+    {
+      "name": "not-accepted",
+      "currentQuoteVersion": 2,
+      "acceptedQuoteVersion": null,
+      "isFinalQuote": true,
+      "acceptedAt": null,
+      "result": "QUOTE_ACCEPTANCE_REQUIRED",
+      "status": "quoted",
+      "expectedQuoteVersion": 2
+    },
+    {
+      "name": "stale-acceptance",
+      "currentQuoteVersion": 3,
+      "acceptedQuoteVersion": 2,
+      "isFinalQuote": true,
+      "acceptedAt": "2026-10-02T03:00:00.000Z",
+      "result": "QUOTE_VERSION_CONFLICT",
+      "status": "quoted",
+      "expectedQuoteVersion": 3
+    },
+    {
+      "name": "matching-final",
+      "currentQuoteVersion": 2,
+      "acceptedQuoteVersion": 2,
+      "isFinalQuote": true,
+      "acceptedAt": "2026-10-02T03:00:00.000Z",
+      "result": "ok",
+      "status": "quoted",
+      "expectedQuoteVersion": 2
+    },
+    {
+      "name": "cancelled-final",
+      "status": "cancelled",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "acceptedQuoteVersion": 2,
+      "isFinalQuote": true,
+      "acceptedAt": "2026-10-02T03:00:00.000Z",
+      "result": "QUOTE_STATE_CONFLICT"
+    },
+    {
+      "name": "completed-final",
+      "status": "completed",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "acceptedQuoteVersion": 2,
+      "isFinalQuote": true,
+      "acceptedAt": "2026-10-02T03:00:00.000Z",
+      "result": "QUOTE_STATE_CONFLICT"
+    },
+    {
+      "name": "requested-final",
+      "status": "requested",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "acceptedQuoteVersion": 2,
+      "isFinalQuote": true,
+      "acceptedAt": "2026-10-02T03:00:00.000Z",
+      "result": "QUOTE_STATE_CONFLICT"
+    },
+    {
+      "name": "confirmed-replay",
+      "status": "confirmed",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 2,
+      "acceptedQuoteVersion": 2,
+      "isFinalQuote": true,
+      "acceptedAt": "2026-10-02T03:00:00.000Z",
+      "result": "ok"
+    },
+    {
+      "name": "confirmed-wrong-version",
+      "status": "confirmed",
+      "currentQuoteVersion": 2,
+      "expectedQuoteVersion": 1,
+      "acceptedQuoteVersion": 2,
+      "isFinalQuote": true,
+      "acceptedAt": "2026-10-02T03:00:00.000Z",
+      "result": "QUOTE_VERSION_CONFLICT"
+    }
+  ],
+  "revisedLookup": {
+    "contractVersion": "custom-cake.v1",
+    "requestNumber": "CUSTOM-EXAMPLE-1",
+    "status": "quoted",
+    "customer": {
+      "customerName": "Contract Example",
+      "customerPhone": "0412345678",
+      "customerEmail": "contract@example.invalid"
+    },
+    "pickup": {
+      "pickupDate": "2026-10-05",
+      "pickupTime": "12:00"
+    },
+    "lines": [
+      {
+        "kind": "custom-cake",
+        "lineId": "cake_A",
+        "parentCakeLineId": null,
+        "productId": "custom-cake",
+        "quantity": 1,
+        "tier": "single",
+        "size": "6in",
+        "designNote": "Blue flowers",
+        "figurineSource": "shop",
+        "photoRefs": [
+          "photo_A",
+          "photo_B"
+        ]
+      },
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A"
+      }
+    ],
+    "quote": {
+      "currency": "AUD",
+      "pricingPolicyVersion": "custom-cake.2026-09.v1",
+      "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
+      "baseCents": 15500,
+      "cakeDiscountCents": 775,
+      "paidSmoreQuantity": 2,
+      "paidSmoreTotalCents": 630,
+      "giftSmoreQuantity": 2,
+      "knownTotalCents": 19855,
+      "isFinalQuote": true,
+      "designExtraCents": 3000,
+      "figurineExtraCents": 1500,
+      "finalTotalCents": 19855,
+      "quoteVersion": 3
+    },
+    "paidSmoreLines": [
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A",
+        "unitPriceCents": 450,
+        "subtotalCents": 900,
+        "discountPercent": 30,
+        "discountCents": 270,
+        "totalCents": 630
+      }
+    ],
+    "acceptance": {
+      "acceptedQuoteVersion": 2,
+      "acceptedAt": "2026-10-02T03:00:00.000Z"
+    },
+    "acceptanceHistory": [
+      {
+        "acceptedQuoteVersion": 2,
+        "acceptedAt": "2026-10-02T03:00:00.000Z"
+      }
+    ]
+  },
+  "cutover": [
+    {
+      "phase": "compat",
+      "version": "v1",
+      "existing": false,
+      "match": false,
+      "result": "legacy-new-allowed"
+    },
+    {
+      "phase": "compat",
+      "version": "cake-order.v2",
+      "existing": false,
+      "match": false,
+      "result": "v2-new-allowed"
+    },
+    {
+      "phase": "required",
+      "version": "v1",
+      "existing": false,
+      "match": false,
+      "result": "CAKE_ORDER_UPGRADE_REQUIRED"
+    },
+    {
+      "phase": "required",
+      "version": "v1",
+      "existing": true,
+      "match": true,
+      "result": "stored-replay"
+    },
+    {
+      "phase": "required",
+      "version": "v1",
+      "existing": true,
+      "match": false,
+      "result": "REQUEST_ID_CONFLICT"
+    },
+    {
+      "phase": "required",
+      "version": "cake-order.v2",
+      "existing": false,
+      "match": false,
+      "result": "v2-new-allowed"
+    }
+  ],
+  "capabilities": [
+    {
+      "contractVersion": "cake-capabilities.v1",
+      "status": "ready",
+      "customCakeV1": true,
+      "cakeOrderV2": true,
+      "legacyNewSubmissions": "compat"
+    },
+    {
+      "contractVersion": "cake-capabilities.v1",
+      "status": "ready",
+      "customCakeV1": true,
+      "cakeOrderV2": true,
+      "legacyNewSubmissions": "required"
+    }
+  ],
+  "errors": [
+    {
+      "ok": false,
+      "contractVersion": "cake-order.v2",
+      "code": "INVALID_LINE_REFERENCE"
+    },
+    {
+      "ok": false,
+      "contractVersion": "custom-cake.v1",
+      "code": "QUOTE_VERSION_CONFLICT"
+    }
+  ],
+  "mutationRequests": {
+    "update": {
+      "contractVersion": "custom-cake.v1",
+      "requestNumber": "CUSTOM-EXAMPLE-1",
+      "expectedQuoteVersion": 1,
+      "designExtraCents": 2000,
+      "figurineExtraCents": 1500,
+      "explanation": "Agreed design and shop figurine"
+    },
+    "accept": {
+      "contractVersion": "custom-cake.v1",
+      "requestNumber": "CUSTOM-EXAMPLE-1",
+      "quoteVersion": 2,
+      "customerConsent": true
+    },
+    "confirm": {
+      "contractVersion": "custom-cake.v1",
+      "requestNumber": "CUSTOM-EXAMPLE-1",
+      "expectedQuoteVersion": 2
+    }
+  },
+  "legacyUpgradeError": {
+    "ok": false,
+    "code": "CAKE_ORDER_UPGRADE_REQUIRED"
+  }
+}

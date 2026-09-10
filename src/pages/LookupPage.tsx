@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { OrderDetailRows } from '../components/ProductDetailRows'
 import { SiteHeader } from '../components/SiteChrome'
 import { type Page } from '../lib/app-routes'
@@ -7,6 +7,9 @@ import { marketConfig } from '../lib/market'
 import { getReservationByNumber } from '../lib/repository'
 import type { PublicReservation } from '../lib/types'
 import { formatCurrency, isValidPhone, normalizePhone } from '../lib/utils'
+import { getCakeWireRepository } from '../lib/custom-cake-repository'
+import { CustomCakeLookupResult } from '../components/CustomCakeLookupResult'
+import type { CustomCakeLookupResponse } from '../lib/custom-cake-contract'
 
 function formatReservationStatus(status: string) {
   if (marketConfig.market === 'KR') return status
@@ -35,41 +38,70 @@ export function LookupPage({
   language,
   setLanguage,
   cartItemCount,
+  initialRequestNumber = '',
 }: {
   navigate: (page: Page) => void
   language: Language
   setLanguage: (language: Language) => void
   cartItemCount: number
+  initialRequestNumber?: string
 }) {
   const copy = cakeCopy(language)
-  const [reservationNumber, setReservationNumber] = useState('')
+  const [reservationNumber, setReservationNumber] = useState(initialRequestNumber)
   const [phone, setPhone] = useState('')
   const [reservation, setReservation] = useState<PublicReservation | null>(null)
+  const [customCakeResult, setCustomCakeResult] = useState<CustomCakeLookupResponse | null>(null)
   const [message, setMessage] = useState('')
   const totalPriceCents = reservation && 'totalPriceCents' in reservation
     && Number.isSafeInteger(reservation.totalPriceCents)
     ? reservation.totalPriceCents as number
     : null
+  const searchSequence = useRef(0)
   const [searching, setSearching] = useState(false)
 
   async function lookup(event: React.FormEvent) {
     event.preventDefault()
+    const sequence = ++searchSequence.current
     setMessage('')
     setReservation(null)
+    setCustomCakeResult(null)
     const normalizedPhone = normalizePhone(phone)
     if (!isValidPhone(normalizedPhone)) {
       setMessage(copy.errors.phone)
       return
     }
+    const cleanNumber = reservationNumber.trim()
     setSearching(true)
     try {
-      const result = await getReservationByNumber(reservationNumber.trim(), normalizedPhone)
-      setReservation(result)
-      if (!result) setMessage(copy.notFoundText)
-    } catch {
-      setMessage(copy.errors.submit)
+      if (cleanNumber.toUpperCase().startsWith('CUSTOM-')) {
+        const customRes = await (await getCakeWireRepository()).getCustomCakeRequest({ contractVersion: 'custom-cake.v1', requestNumber: cleanNumber, customerPhone: normalizedPhone })
+        if (sequence !== searchSequence.current) return
+        if (customRes) {
+          setCustomCakeResult(customRes)
+        } else {
+          setMessage(copy.notFoundText)
+        }
+      } else {
+        const result = await getReservationByNumber(cleanNumber, normalizedPhone)
+        if (sequence !== searchSequence.current) return
+        if (result) {
+          setReservation(result)
+        } else {
+          // Try custom cake lookup as fallback
+          const customFallback = await (await getCakeWireRepository()).getCustomCakeRequest({ contractVersion: 'custom-cake.v1', requestNumber: cleanNumber, customerPhone: normalizedPhone })
+          if (sequence !== searchSequence.current) return
+          if (customFallback) {
+            setCustomCakeResult(customFallback)
+          } else {
+            setMessage(copy.notFoundText)
+          }
+        }
+      }
+    } catch (error) {
+      if (sequence !== searchSequence.current) return
+      setMessage(error instanceof Error && error.message === 'NOT_FOUND' ? copy.notFoundText : copy.errors.submit)
     } finally {
-      setSearching(false)
+      if (sequence === searchSequence.current) setSearching(false)
     }
   }
 
@@ -81,7 +113,11 @@ export function LookupPage({
           <h1>{copy.lookupTitle}</h1>
           <label>
             {copy.bookingNumber}
-            <input value={reservationNumber} onChange={(event) => setReservationNumber(event.target.value)} />
+            <input
+              value={reservationNumber}
+              placeholder={language === 'ko' ? '예: R-1234 또는 CUSTOM-EXAMPLE-1' : 'e.g. R-1234 or CUSTOM-EXAMPLE-1'}
+              onChange={(event) => setReservationNumber(event.target.value)}
+            />
           </label>
           <label>
             {copy.lookupPhoneLabel}
@@ -99,6 +135,12 @@ export function LookupPage({
           </button>
           {message && <p className="error-text">{message}</p>}
         </form>
+
+        {customCakeResult && (
+          <section className="result-panel">
+            <CustomCakeLookupResult result={customCakeResult} language={language} />
+          </section>
+        )}
 
         {reservation && (
           <section className="result-panel">

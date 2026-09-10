@@ -1,0 +1,361 @@
+{
+  "request": {
+    "contractVersion": "custom-cake.v1",
+    "requestId": "11111111-1111-4111-8111-111111111111",
+    "customer": {
+      "customerName": "Contract Example",
+      "customerPhone": "0412345678",
+      "customerEmail": "contract@example.invalid"
+    },
+    "pickup": {
+      "pickupDate": "2026-10-05",
+      "pickupTime": "12:00"
+    },
+    "requestNote": "",
+    "privacyConsent": true,
+    "lines": [
+      {
+        "kind": "custom-cake",
+        "lineId": "cake_A",
+        "parentCakeLineId": null,
+        "productId": "custom-cake",
+        "quantity": 1,
+        "tier": "single",
+        "size": "6in",
+        "designNote": "Blue flowers",
+        "figurineSource": "shop",
+        "photoRefs": [
+          "photo_A",
+          "photo_B"
+        ]
+      },
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A"
+      }
+    ]
+  },
+  "created": {
+    "contractVersion": "custom-cake.v1",
+    "requestId": "11111111-1111-4111-8111-111111111111",
+    "requestNumber": "CUSTOM-EXAMPLE-1",
+    "status": "requested",
+    "quote": {
+      "currency": "AUD",
+      "pricingPolicyVersion": "custom-cake.2026-09.v1",
+      "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
+      "baseCents": 15500,
+      "cakeDiscountCents": 775,
+      "paidSmoreQuantity": 2,
+      "paidSmoreTotalCents": 630,
+      "giftSmoreQuantity": 2,
+      "knownTotalCents": 15355,
+      "isFinalQuote": false,
+      "designExtraCents": null,
+      "figurineExtraCents": null,
+      "finalTotalCents": null,
+      "quoteVersion": 1
+    },
+    "paidSmoreLines": [
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A",
+        "unitPriceCents": 450,
+        "subtotalCents": 900,
+        "discountPercent": 30,
+        "discountCents": 270,
+        "totalCents": 630
+      }
+    ],
+    "acceptance": null
+  },
+  "lookup": {
+    "contractVersion": "custom-cake.v1",
+    "requestNumber": "CUSTOM-EXAMPLE-1",
+    "status": "requested",
+    "customer": {
+      "customerName": "Contract Example",
+      "customerPhone": "0412345678",
+      "customerEmail": "contract@example.invalid"
+    },
+    "pickup": {
+      "pickupDate": "2026-10-05",
+      "pickupTime": "12:00"
+    },
+    "lines": [
+      {
+        "kind": "custom-cake",
+        "lineId": "cake_A",
+        "parentCakeLineId": null,
+        "productId": "custom-cake",
+        "quantity": 1,
+        "tier": "single",
+        "size": "6in",
+        "designNote": "Blue flowers",
+        "figurineSource": "shop",
+        "photoRefs": [
+          "photo_A",
+          "photo_B"
+        ]
+      },
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A"
+      }
+    ],
+    "quote": {
+      "currency": "AUD",
+      "pricingPolicyVersion": "custom-cake.2026-09.v1",
+      "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
+      "baseCents": 15500,
+      "cakeDiscountCents": 775,
+      "paidSmoreQuantity": 2,
+      "paidSmoreTotalCents": 630,
+      "giftSmoreQuantity": 2,
+      "knownTotalCents": 15355,
+      "isFinalQuote": false,
+      "designExtraCents": null,
+      "figurineExtraCents": null,
+      "finalTotalCents": null,
+      "quoteVersion": 1
+    },
+    "paidSmoreLines": [
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A",
+        "unitPriceCents": 450,
+        "subtotalCents": 900,
+        "discountPercent": 30,
+        "discountCents": 270,
+        "totalCents": 630
+      }
+    ],
+    "acceptance": null,
+    "acceptanceHistory": []
+  },
+  "finalLookup": {
+    "contractVersion": "custom-cake.v1",
+    "requestNumber": "CUSTOM-EXAMPLE-1",
+    "status": "confirmed",
+    "customer": {
+      "customerName": "Contract Example",
+      "customerPhone": "0412345678",
+      "customerEmail": "contract@example.invalid"
+    },
+    "pickup": {
+      "pickupDate": "2026-10-05",
+      "pickupTime": "12:00"
+    },
+    "lines": [
+      {
+        "kind": "custom-cake",
+        "lineId": "cake_A",
+        "parentCakeLineId": null,
+        "productId": "custom-cake",
+        "quantity": 1,
+        "tier": "single",
+        "size": "6in",
+        "designNote": "Blue flowers",
+        "figurineSource": "shop",
+        "photoRefs": [
+          "photo_A",
+          "photo_B"
+        ]
+      },
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A"
+      }
+    ],
+    "quote": {
+      "currency": "AUD",
+      "pricingPolicyVersion": "custom-cake.2026-09.v1",
+      "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
+      "baseCents": 15500,
+      "cakeDiscountCents": 775,
+      "paidSmoreQuantity": 2,
+      "paidSmoreTotalCents": 630,
+      "giftSmoreQuantity": 2,
+      "knownTotalCents": 18855,
+      "isFinalQuote": true,
+      "designExtraCents": 2000,
+      "figurineExtraCents": 1500,
+      "finalTotalCents": 18855,
+      "quoteVersion": 2
+    },
+    "paidSmoreLines": [
+      {
+        "kind": "cake-addon-smore",
+        "lineId": "smore_A",
+        "productId": "smore-stick",
+        "quantity": 2,
+        "parentCakeLineId": "cake_A",
+        "unitPriceCents": 450,
+        "subtotalCents": 900,
+        "discountPercent": 30,
+        "discountCents": 270,
+        "totalCents": 630
+      }
+    ],
+    "acceptance": {
+      "acceptedQuoteVersion": 2,
+      "acceptedAt": "2026-10-02T03:00:00.000Z"
+    },
+    "acceptanceHistory": [
+      {
+        "acceptedQuoteVersion": 2,
+        "acceptedAt": "2026-10-02T03:00:00.000Z"
+      }
+    ]
+  },
+  "zeroExtrasQuote": {
+    "currency": "AUD",
+    "pricingPolicyVersion": "custom-cake.2026-09.v1",
+    "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
+    "baseCents": 15500,
+    "cakeDiscountCents": 775,
+    "paidSmoreQuantity": 2,
+    "paidSmoreTotalCents": 630,
+    "giftSmoreQuantity": 2,
+    "knownTotalCents": 15355,
+    "isFinalQuote": true,
+    "designExtraCents": 0,
+    "figurineExtraCents": 0,
+    "finalTotalCents": 15355,
+    "quoteVersion": 2
+  },
+  "sizes": [
+    {
+      "tier": "single",
+      "size": "6in",
+      "quantity": 1,
+      "baseCents": 15500,
+      "cakeDiscountCents": 775,
+      "knownTotalCents": 14725,
+      "giftSmoreQuantity": 2
+    },
+    {
+      "tier": "single",
+      "size": "8in",
+      "quantity": 1,
+      "baseCents": 20000,
+      "cakeDiscountCents": 1000,
+      "knownTotalCents": 19000,
+      "giftSmoreQuantity": 2
+    },
+    {
+      "tier": "single",
+      "size": "10in",
+      "quantity": 1,
+      "baseCents": 25000,
+      "cakeDiscountCents": 1250,
+      "knownTotalCents": 23750,
+      "giftSmoreQuantity": 2
+    },
+    {
+      "tier": "double",
+      "size": "4in+6in",
+      "quantity": 1,
+      "baseCents": 25500,
+      "cakeDiscountCents": 1275,
+      "knownTotalCents": 24225,
+      "giftSmoreQuantity": 2
+    },
+    {
+      "tier": "double",
+      "size": "6in+8in",
+      "quantity": 1,
+      "baseCents": 36500,
+      "cakeDiscountCents": 1825,
+      "knownTotalCents": 34675,
+      "giftSmoreQuantity": 2
+    },
+    {
+      "tier": "double",
+      "size": "8in+10in",
+      "quantity": 1,
+      "baseCents": 47500,
+      "cakeDiscountCents": 2375,
+      "knownTotalCents": 45125,
+      "giftSmoreQuantity": 2
+    }
+  ],
+  "eventCases": [
+    {
+      "receivedAt": "2026-09-30T13:59:59.999Z",
+      "quoteUpdatedAt": "2026-10-02T00:00:00.000Z",
+      "quantity": 1,
+      "baseCents": 15500,
+      "cakeDiscountCents": 775,
+      "giftSmoreQuantity": 2
+    },
+    {
+      "receivedAt": "2026-09-30T14:00:00.000Z",
+      "quoteUpdatedAt": "2026-10-02T00:00:00.000Z",
+      "quantity": 1,
+      "baseCents": 15500,
+      "cakeDiscountCents": 0,
+      "giftSmoreQuantity": 0
+    },
+    {
+      "receivedAt": "2026-09-29T00:00:00.000Z",
+      "quoteUpdatedAt": "2026-10-03T00:00:00.000Z",
+      "quantity": 2,
+      "baseCents": 31000,
+      "cakeDiscountCents": 1550,
+      "giftSmoreQuantity": 4
+    }
+  ],
+  "extraCases": [
+    {
+      "designExtraCents": null,
+      "figurineExtraCents": null,
+      "isFinalQuote": false,
+      "knownTotalCents": 15355,
+      "finalTotalCents": null
+    },
+    {
+      "designExtraCents": 0,
+      "figurineExtraCents": null,
+      "isFinalQuote": false,
+      "knownTotalCents": 15355,
+      "finalTotalCents": null
+    },
+    {
+      "designExtraCents": null,
+      "figurineExtraCents": 1500,
+      "isFinalQuote": false,
+      "knownTotalCents": 16855,
+      "finalTotalCents": null
+    },
+    {
+      "designExtraCents": 0,
+      "figurineExtraCents": 0,
+      "isFinalQuote": true,
+      "knownTotalCents": 15355,
+      "finalTotalCents": 15355
+    },
+    {
+      "designExtraCents": 2000,
+      "figurineExtraCents": 1500,
+      "isFinalQuote": true,
+      "knownTotalCents": 18855,
+      "finalTotalCents": 18855
+    }
+  ]
+}

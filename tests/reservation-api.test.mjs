@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
-import { AppwriteException } from 'node-appwrite'
+import { AppwriteException } from './reservation-sdk.mjs'
 import {
   ReservationApiError,
   buildCakeReservation,

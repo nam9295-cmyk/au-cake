@@ -707,6 +707,24 @@ dd {
   text-transform: none;
 }
 
+.pickup-map-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pickup-location-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.pickup-instagram-link {
+  width: fit-content;
+  text-decoration: none;
+}
+
 .cake-information-section,
 .cake-faq-section {
   display: grid;

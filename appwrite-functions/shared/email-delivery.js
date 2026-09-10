@@ -6,6 +6,14 @@ const RECIPIENT_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export const EMAIL_DELIVERY_PENDING_LEASE_MS = 5 * 60 * 1000
 export const EMAIL_SAFE_RETRY_WINDOW_MS = 23 * 60 * 60 * 1000
+// Only private event-backed ledgers may opt in. Legacy enums remain unchanged.
+export const CUSTOM_CAKE_EMAIL_IDENTITY_POLICY = 'custom-cake-events.v1'
+const CUSTOM_CAKE_EMAIL_TEMPLATES = Object.freeze({
+  'custom-cake.received': 'custom-cake',
+  'custom-cake.quoted': 'custom-cake',
+  'custom-cake.confirmed': 'custom-cake',
+  'cake-order-v2.received': 'cake-order-v2',
+})
 
 export const EMAIL_DELIVERY_SOURCE_TYPES = Object.freeze(['cake', 'class', 'review', 'system'])
 
@@ -131,7 +139,11 @@ function reminderOccurrence(sourceType, occurrence) {
   fail('INVALID_EMAIL_DELIVERY_EVENT')
 }
 
-export function buildEmailDeliveryEventKey({ template, sourceType, sourceId, occurrence } = {}) {
+export function buildEmailDeliveryEventKey({ template, sourceType, sourceId, occurrence } = {}, { identityPolicy } = {}) {
+  if (identityPolicy !== undefined) {
+    if (identityPolicy !== CUSTOM_CAKE_EMAIL_IDENTITY_POLICY || !Object.hasOwn(CUSTOM_CAKE_EMAIL_TEMPLATES, template) || CUSTOM_CAKE_EMAIL_TEMPLATES[template] !== sourceType || !/^[a-f0-9]{36}$/.test(sourceId || '') || !['customer', 'operator'].includes(occurrence) || (occurrence === 'operator' && !template.endsWith('.received'))) fail('INVALID_EMAIL_DELIVERY_EVENT')
+    return `${template}:${sourceId}:${occurrence}`
+  }
   if (!EMAIL_DELIVERY_TEMPLATES.includes(template) || !templateAllowsSourceType(template, sourceType)) {
     fail('INVALID_EMAIL_DELIVERY_EVENT')
   }
@@ -150,7 +162,7 @@ export function resendIdempotencyKeyForEvent(eventKey) {
   return `verygood:${sha256(eventKey)}`
 }
 
-export function payloadHashForEmail(payload) {
+export function payloadHashForEmail(payload, { identityPolicy } = {}) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) fail('INVALID_EMAIL_DELIVERY_PAYLOAD')
   const hasRecipientEmail = typeof payload.recipientEmail === 'string'
   const hasRecipientEmails = Array.isArray(payload.recipientEmails)
@@ -167,7 +179,9 @@ export function payloadHashForEmail(payload) {
     template: requiredPayloadString(payload, 'template'),
     templateVersion: requiredPayloadString(payload, 'templateVersion'),
   }
-  if (!EMAIL_DELIVERY_TEMPLATES.includes(canonical.template) || !canonical.templateVersion.trim()) {
+  const allowedTemplate = identityPolicy === undefined ? EMAIL_DELIVERY_TEMPLATES.includes(canonical.template)
+    : identityPolicy === CUSTOM_CAKE_EMAIL_IDENTITY_POLICY && Object.hasOwn(CUSTOM_CAKE_EMAIL_TEMPLATES, canonical.template)
+  if (!allowedTemplate || !canonical.templateVersion.trim()) {
     fail('INVALID_EMAIL_DELIVERY_PAYLOAD')
   }
   return sha256(JSON.stringify(canonical))
@@ -177,9 +191,9 @@ function hasValidHash(value) {
   return typeof value === 'string' && SHA256_HEX.test(value)
 }
 
-function validateIdentity(identity) {
+function validateIdentity(identity, options) {
   if (!identity || typeof identity !== 'object' || Array.isArray(identity)) fail('INVALID_EMAIL_DELIVERY_IDENTITY')
-  const eventKey = buildEmailDeliveryEventKey(identity)
+  const eventKey = buildEmailDeliveryEventKey(identity, options)
   if (identity.eventKey !== eventKey || !hasValidHash(identity.recipientHash) || !hasValidHash(identity.payloadHash)) {
     fail('INVALID_EMAIL_DELIVERY_IDENTITY')
   }
@@ -234,8 +248,8 @@ export function retryUntilForEmailDelivery(delivery) {
   return until === null ? null : new Date(until).toISOString()
 }
 
-export function evaluateEmailDeliveryRetry({ delivery, identity, retryClaim = null, now = new Date() } = {}) {
-  validateIdentity(identity)
+export function evaluateEmailDeliveryRetry({ delivery, identity, retryClaim = null, now = new Date(), identityPolicy } = {}) {
+  validateIdentity(identity, { identityPolicy })
   exactDate(now)
   if (!delivery) return retryResult('not_sent', 'not_needed')
 
@@ -271,8 +285,8 @@ export function evaluateEmailDeliveryRetry({ delivery, identity, retryClaim = nu
   return retryResult(effectiveStatus, 'eligible', { retryUntil, safeErrorCode: lastErrorCode })
 }
 
-export function decideEmailDelivery(existing, identity, now = new Date()) {
-  validateIdentity(identity)
+export function decideEmailDelivery(existing, identity, now = new Date(), options) {
+  validateIdentity(identity, options)
   exactDate(now)
   if (!existing) return { kind: 'create_pending' }
   if (existing.eventKey !== identity.eventKey) return { kind: 'identity_mismatch', reason: 'event_key' }
@@ -295,8 +309,8 @@ export function decideEmailDelivery(existing, identity, now = new Date()) {
   }
 }
 
-export function buildPendingEmailDelivery(identity, now = new Date()) {
-  validateIdentity(identity)
+export function buildPendingEmailDelivery(identity, now = new Date(), options) {
+  validateIdentity(identity, options)
   exactDate(now)
   const timestamp = now.toISOString()
   return {

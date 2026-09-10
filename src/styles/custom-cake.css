@@ -1,0 +1,1416 @@
+/* Custom Cake v1 UI Styles - AU Cake Unified Design System */
+
+.custom-cake-detail-page {
+  /* Inherits .cake-detail-page layout: width: min(100%, var(--page-max)); margin: 0 auto; padding: 52px 30px 112px; */
+}
+
+/* Option button subtitle */
+.cake-detail-option-serves {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.cake-detail-option.is-selected .cake-detail-option-serves {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* S'more promotion highlight within purchase configurator */
+.custom-cake-smore-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: var(--cream-teal);
+  border-left: 3px solid var(--forest);
+}
+
+.custom-cake-smore-banner strong {
+  display: block;
+  font-size: 12px;
+  color: var(--forest-deep);
+  margin-bottom: 2px;
+}
+
+.custom-cake-smore-banner p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--forest);
+  line-height: 1.4;
+}
+
+.smore-promo-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  background: var(--forest-deep);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.custom-cake-smore-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.custom-cake-smore-counter-row strong {
+  display: block;
+  font-size: 13px;
+  color: var(--forest-deep);
+}
+
+.smore-price-subtext {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.smore-extra-total-line {
+  margin: 4px 0 0;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--forest-deep);
+}
+
+/* Sidebar Checkout Order Summary Micro Lines */
+.custom-cake-quote-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.quote-micro-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.quote-micro-line.is-discount span:last-child {
+  color: #c93b2b;
+  font-weight: 600;
+}
+
+.quote-micro-line.is-gift span:last-child {
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.quote-micro-line.is-tbd span:last-child {
+  font-style: italic;
+  color: #888;
+}
+
+.custom-cake-summary-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.known-total-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.custom-cake-hero-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  margin-top: 16px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Bottom Detailed Request Section
+   ========================================================================== */
+.custom-cake-request-section {
+  max-width: 860px;
+  margin: clamp(48px, 6vw, 80px) auto 0;
+  padding-top: clamp(36px, 5vw, 56px);
+  border-top: 1px solid var(--border);
+}
+
+.custom-cake-section-header {
+  margin-bottom: 36px;
+}
+
+.custom-cake-section-header h2 {
+  color: var(--forest-deep);
+  font-size: clamp(28px, 3.5vw, 42px);
+  line-height: 1.05;
+  margin: 6px 0 12px;
+}
+
+.custom-cake-section-header p:not(.summary-kicker) {
+  color: var(--muted);
+  font-size: 15px;
+  max-width: 640px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.custom-cake-form {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.custom-cake-fieldset {
+  margin: 0;
+  padding: 0 0 32px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.custom-cake-fieldset:last-of-type {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.custom-cake-legend {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--forest-deep);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.legend-number {
+  color: var(--forest);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.custom-cake-field-note {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.custom-cake-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.custom-cake-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.custom-cake-field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--forest-deep);
+}
+
+.custom-cake-field input[type="text"],
+.custom-cake-field input[type="tel"],
+.custom-cake-field input[type="email"],
+.custom-cake-field input[type="date"],
+.custom-cake-field input[type="time"],
+.custom-cake-field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  box-sizing: border-box;
+}
+
+.custom-cake-field input:focus,
+.custom-cake-field textarea:focus {
+  outline: none;
+  border-color: var(--forest);
+  box-shadow: 0 0 0 2px rgba(31, 90, 70, 0.15);
+}
+
+.custom-cake-field textarea {
+  resize: vertical;
+  min-height: 108px;
+  line-height: 1.5;
+}
+
+.custom-cake-char-counter {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* Reference Photos Upload */
+.custom-cake-uploader-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.custom-cake-upload-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  padding: 12px 20px;
+  border: 1px dashed var(--forest);
+  background: var(--cream-teal);
+  color: var(--forest-deep);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.custom-cake-upload-box:hover:not(.is-disabled) {
+  background: #dfece3;
+  transform: translateY(-1px);
+}
+
+.custom-cake-upload-box.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.custom-cake-staged-photos {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.custom-cake-photo-thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #e9e4dc;
+}
+
+.custom-cake-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-remove-button {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: rgba(32, 50, 39, 0.82);
+  color: #fff;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.photo-remove-button:hover {
+  background: #c93b2b;
+}
+
+/* Privacy Consent */
+.custom-cake-consent-box {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}
+
+.custom-cake-consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.custom-cake-consent-label input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: var(--forest);
+  width: 16px;
+  height: 16px;
+}
+
+.custom-cake-consent-label span {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+/* Error Banner */
+.custom-cake-error-box {
+  padding: 12px 16px;
+  background: #fde8e8;
+  border-left: 4px solid #c81e1e;
+  color: #c81e1e;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Submit Area */
+.custom-cake-submit-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.custom-cake-submit-cta {
+  max-width: 480px;
+  width: 100%;
+  min-height: 56px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .custom-cake-grid-2col {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .custom-cake-section-header h2 {
+    font-size: clamp(24px, 7vw, 32px);
+  }
+
+  .custom-cake-upload-box {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   Completion Page Styles
+   ========================================================================== */
+.custom-cake-complete-page {
+  padding-top: 40px;
+  padding-bottom: 80px;
+}
+
+.completion-card {
+  background: #fff;
+  border: 1px solid #e8e5df;
+  border-radius: 16px;
+  padding: 36px 24px;
+  text-align: center;
+}
+
+.completion-icon-wrapper {
+  display: inline-flex;
+  padding: 16px;
+  border-radius: 50%;
+  background: #fbf5e8;
+  color: #b47814;
+  margin-bottom: 16px;
+}
+
+.provisional-warning-box {
+  background: #fcf9f2;
+  border: 1px solid #faeccb;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: left;
+  margin: 20px 0;
+  font-size: 13px;
+  color: #634305;
+  line-height: 1.5;
+}
+
+.request-number-box {
+  background: #faf9f6;
+  border: 1px dashed #d5d0c7;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.number-label {
+  display: block;
+  font-size: 12px;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.number-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 6px 0;
+}
+
+.number-text {
+  font-size: 20px;
+  font-family: monospace;
+  color: #203227;
+}
+
+.copy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.number-tip {
+  font-size: 12px;
+  color: #888;
+  margin: 4px 0 0;
+}
+
+.quote-summary-section {
+  text-align: left;
+  margin: 28px 0;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.quote-summary-section h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.quote-summary-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  margin: 0;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.summary-row.discount dd {
+  color: #c93b2b;
+}
+
+.summary-row.gift dd {
+  color: #1f6e43;
+}
+
+.summary-divider {
+  height: 1px;
+  background: #eee;
+  margin: 6px 0;
+}
+
+.summary-row.total {
+  font-size: 15px;
+}
+
+.summary-row.final-status dd {
+  color: #8c5b10;
+  font-style: italic;
+}
+
+/* Next Steps */
+.next-steps-section {
+  text-align: left;
+  background: #faf8f5;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 28px 0;
+}
+
+.next-steps-section h3 {
+  font-size: 15px;
+  margin: 0 0 14px;
+  color: #203227;
+}
+
+.next-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 0;
+  list-style: none;
+  margin: 0;
+}
+
+.next-steps-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #203227;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.next-steps-list p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.completion-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+/* ==========================================================================
+   Lookup Result Styles
+   ========================================================================== */
+.custom-cake-lookup-result {
+  text-align: left;
+}
+
+.lookup-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.request-kicker {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #777;
+  letter-spacing: 0.5px;
+}
+
+.request-number {
+  font-size: 20px;
+  margin: 2px 0 0;
+  font-family: monospace;
+}
+
+.status-callout-box {
+  background: #faf8f5;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.status-callout-desc {
+  font-size: 14px;
+  margin: 0;
+  color: #333;
+}
+
+.provisional-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #8c5b10;
+}
+
+.lookup-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.lookup-section h3 {
+  font-size: 15px;
+  margin: 0 0 12px;
+  color: #203227;
+}
+
+.lookup-dl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  margin: 0;
+}
+
+.lookup-dl-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.lookup-dl-row.multiline {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.note-body {
+  background: #fdfbf7;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #444;
+}
+
+.tier-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #eef2ee;
+  color: #254b33;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gift-tag {
+  color: #1f6e43;
+  font-weight: 600;
+}
+
+.addon-tag {
+  margin-left: 8px;
+  color: #555;
+}
+
+.photo-count-badge {
+  font-size: 13px;
+  color: #203227;
+}
+
+/* Quote Table in Lookup */
+.quote-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.quote-version-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: #eef2ee;
+  border-radius: 10px;
+  color: #203227;
+}
+
+.lookup-quote-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  margin: 0;
+}
+
+.quote-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.quote-row.discount dd {
+  color: #c93b2b;
+}
+
+.quote-row.extra dd.pending {
+  color: #888;
+  font-style: italic;
+}
+
+.quote-row.extra dd.settled {
+  font-weight: 600;
+}
+
+.quote-row.gift dd {
+  color: #1f6e43;
+}
+
+.quote-divider {
+  height: 1px;
+  background: #eee;
+  margin: 4px 0;
+}
+
+.final-settled {
+  font-size: 16px;
+  color: #203227;
+}
+
+.final-pending {
+  color: #8c5b10;
+  font-style: italic;
+}
+
+.acceptance-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.acceptance-box.agreed {
+  background: #f0f7f2;
+  color: #1a5836;
+}
+
+.acceptance-box.pending {
+  background: #faf8f5;
+  color: #777;
+}
+
+.confirmed-guidance-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #e9f5ed;
+  border: 1px solid #b7dfc3;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+  color: #14492c;
+}
+
+.confirmed-guidance-box h4 {
+  margin: 0 0 4px;
+}
+
+.confirmed-guidance-box p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   Admin Custom Cake Styles
+   ========================================================================== */
+.admin-table-container {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e5e2db;
+  margin-top: 16px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0ede6;
+}
+
+.admin-table th {
+  background: #faf8f5;
+  font-weight: 600;
+  color: #444;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background: #fbf9f6;
+}
+
+.request-code {
+  font-family: monospace;
+  color: #203227;
+}
+
+.sub-contact {
+  font-size: 11px;
+  color: #888;
+}
+
+.version-pill {
+  padding: 2px 6px;
+  background: #eef2ee;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-settled {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #e6f3eb;
+  color: #1f6e43;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-provisional {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #fdf5e6;
+  color: #8c5b10;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-agreed {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  background: #e6f3eb;
+  color: #1f6e43;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-pending {
+  color: #999;
+  font-size: 12px;
+}
+
+.final-price {
+  color: #203227;
+  font-weight: 700;
+}
+
+.known-price {
+  color: #666;
+}
+
+.small-button {
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px solid #203227;
+  background: #fff;
+  color: #203227;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Admin Drawer */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1000;
+}
+
+.admin-drawer {
+  width: 100%;
+  max-width: 580px;
+  height: 100%;
+  background: #fff;
+  overflow-y: auto;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+  background: #faf9f7;
+}
+
+.drawer-header h2 {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-family: monospace;
+}
+
+.drawer-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.drawer-status-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.version-tag {
+  font-size: 12px;
+  padding: 3px 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.drawer-section h3 {
+  font-size: 15px;
+  margin: 0 0 12px;
+  color: #203227;
+}
+
+.drawer-dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  font-size: 13px;
+  margin: 0;
+}
+
+.drawer-dl dt {
+  font-size: 11px;
+  color: #777;
+  text-transform: uppercase;
+}
+
+.drawer-dl dd {
+  margin: 2px 0 0;
+  color: #222;
+}
+
+.cake-spec-box {
+  background: #faf9f6;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 13px;
+}
+
+.cake-spec-box p {
+  margin: 0 0 6px;
+}
+
+.design-note-display {
+  margin-top: 10px;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.design-note-display p {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+
+.photo-refs-display {
+  margin-top: 10px;
+}
+
+.photo-refs-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.photo-ref-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #eef2ee;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #254b33;
+}
+
+.quote-breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #faf8f5;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 13px;
+}
+
+.qb-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.qb-item span {
+  font-size: 11px;
+  color: #777;
+}
+
+.qb-item strong {
+  margin-top: 2px;
+}
+
+.qb-item.discount strong {
+  color: #c93b2b;
+}
+
+.qb-item.gift strong {
+  color: #1f6e43;
+}
+
+.qb-item.total strong {
+  font-size: 14px;
+  color: #203227;
+}
+
+.qb-item.final strong {
+  font-size: 14px;
+  color: #1f6e43;
+}
+
+/* Edit Section in Drawer */
+.edit-section {
+  background: #fdfcfa;
+  border: 1px solid #e8e3da;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.admin-hint {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.admin-hint code {
+  background: #eee;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.admin-quote-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-form-row label,
+.full-width-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 4px;
+}
+
+.admin-form-row input,
+.full-width-label input {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.admin-form-row small {
+  font-size: 11px;
+  font-weight: normal;
+  color: #888;
+}
+
+/* Agreement and Confirm cards */
+.agreement-status-card,
+.confirmation-card {
+  background: #faf8f5;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.agreement-status-card h4,
+.confirmation-card h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.agreed-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1f6e43;
+  font-size: 13px;
+}
+
+.agreed-info p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #666;
+}
+
+.pending-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #888;
+  font-size: 13px;
+}
+
+.record-btn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 8px 14px;
+}
+
+.confirmation-card p {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 12px;
+}
+
+.confirmation-card code {
+  background: #eee;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #203227;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-requested {
+  background: #fdf5e6;
+  color: #92580a;
+}
+
+.status-quoted {
+  background: #eef2ff;
+  color: #2b45b0;
+}
+
+.status-confirmed {
+  background: #e8f5ec;
+  color: #1d723f;
+}
+
+.status-completed {
+  background: #f0f0f0;
+  color: #444;
+}
+
+.status-cancelled {
+  background: #fde8e8;
+  color: #9b1c1c;
+}
+
+/* Mobile Responsiveness (375px) */
+@media (max-width: 480px) {
+  .custom-cake-page {
+    padding: 20px 12px 60px;
+  }
+
+  .form-section,
+  .quote-breakdown-card,
+  .completion-card {
+    padding: 16px 14px;
+  }
+
+  .pickup-grid,
+  .admin-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .size-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-drawer {
+    max-width: 100%;
+  }
+
+  .quote-breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .drawer-dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Custom cake catalogue 2-column wide card & direct navigation */
+.cake-catalog-card-custom-cake,
+.cakes-index-card-custom-cake {
+  grid-column: 1 / -1;
+}
+
+.product-card-image-link {
+  display: block;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake {
+  width: 100%;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2160 / 1012;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--catalogue-card-color, #D9E7D6);
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap::before {
+  display: none;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap img,
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap img:not(.gluten-free-stamp) {
+  position: static;
+  top: auto;
+  left: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: none;
+  margin-inline: 0;
+  object-fit: cover;
+  transform: none;
+  filter: none;
+  border-radius: 8px;
+  transition: transform 420ms ease;
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake:hover .product-image-wrap img,
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake:focus-within .product-image-wrap img {
+  transform: scale(1.02);
+}
+
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-card-detail-link,
+.product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-card-price {
+  width: 100%;
+  margin-inline: 0;
+}
+
+@media (max-width: 768px) {
+  .product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap {
+    aspect-ratio: 2160 / 1012;
+    height: auto;
+    border-radius: 6px;
+  }
+
+  .product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap img,
+  .product-section .cake-catalog-group-products .cake-catalog-card-custom-cake .product-image-wrap img:not(.gluten-free-stamp) {
+    position: static;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    object-fit: cover;
+    filter: none;
+    border-radius: 6px;
+  }
+}
+
+/* Cakes index page wide card */
+.cakes-index-card-custom-cake {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cakes-index-card-custom-cake .cakes-index-image {
+  aspect-ratio: 2160 / 1012;
+}
+
+.cakes-index-card-custom-cake .cakes-index-image img {
+  padding: 0;
+  object-fit: cover;
+  filter: none;
+}
+
+.cakes-index-card-custom-cake:hover .cakes-index-image img,
+.cakes-index-card-custom-cake:focus-visible .cakes-index-image img {
+  transform: scale(1.02);
+}
+
+/* Custom cake detail page hero main image */
+.custom-cake-detail-page .cake-detail-main-image {
+  aspect-ratio: 2160 / 1012;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.custom-cake-detail-page .cake-detail-main-image > img {
+  padding: 0;
+  object-fit: cover;
+  filter: none;
+  border-radius: 8px;
+}

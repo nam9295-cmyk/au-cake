@@ -4,11 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "pretest": "node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
+    "pretest": "npm run test:custom-cake-contract && npm run test:custom-cake-order-core && npm run test:custom-cake-persistence && npm run test:custom-cake-photos && npm run test:custom-cake-actions && npm run test:custom-cake-adapters-notifications && node --test tests/cake-order-core.test.mjs tests/order-core-golden.test.mjs tests/order-contract-artifacts.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/stored-order-compatibility.test.ts",
+    "test:custom-cake-adapters-notifications": "node --test tests/custom-cake-client.test.mjs tests/custom-cake-browser-transport.test.mjs tests/custom-cake-notification.test.mjs tests/custom-cake-notification-runtime.test.mjs tests/custom-cake-deploy-config.test.mjs",
+    "test:custom-cake-actions": "node --test tests/custom-cake-cutover.test.mjs tests/custom-cake-workflow.test.mjs tests/custom-cake-security.test.mjs tests/custom-cake-readiness.test.mjs",
+    "test:custom-cake-photos": "node --test tests/custom-cake-photo-codec.test.mjs tests/custom-cake-photo-service.test.mjs tests/custom-cake-photo-storage.test.mjs tests/custom-cake-photo-artifacts.test.mjs",
+    "test:custom-cake-persistence": "node --test tests/custom-cake-persistence.test.mjs tests/custom-cake-schema.test.mjs tests/custom-cake-persistence-artifacts.test.mjs",
+    "test:custom-cake-order-core": "node --test tests/custom-cake-order-core.test.mjs",
+    "test:custom-cake-contract": "node --test tests/custom-cake-contract.test.mjs",
+    "test:custom-cake-frontend": "VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/custom-cake-frontend.test.ts",
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/generate-seo-pages.mjs",
     "lint": "eslint .",
-    "test": "npm run test:smore && npm run test:smore-reserve && npm run test:cake && npm run test:class && npm run test:reviews && npm run test:admin-reviews && npm run test:review-messages && npm run test:review-invite-email-client && npm run test:review-invite-button && npm run test:review-page && npm run test:review-photo-client && npm run test:review-coupon-client && npm run test:reservation-capability && npm run test:review-schema && npm run test:au-email-schema-migration && npm run test:email-delivery && npm run test:reservation-notification-email && npm run test:reservation-notification-confirmation && npm run test:booking-confirmation-client && npm run test:review-api && npm run test:review-invite-server && npm run test:review-api-deploy && npm run test:manual-coupon && npm run test:admin-calendar && npm run test:admin-reservation && npm run test:csv-security && npm run test:calendar-access && npm run test:reservation-notification-deploy && npm run test:reservation-api && npm run test:reservation-api-deploy && npm run test:booking-reminder && npm run test:cloudflare-pages && npm run test:pickup-opening",
+    "test": "npm run test:custom-cake-frontend && npm run test:custom-cake-integration && npm run test:smore && npm run test:smore-reserve && npm run test:cake && npm run test:class && npm run test:reviews && npm run test:admin-reviews && npm run test:review-messages && npm run test:review-invite-email-client && npm run test:review-invite-button && npm run test:review-page && npm run test:review-photo-client && npm run test:review-coupon-client && npm run test:reservation-capability && npm run test:review-schema && npm run test:au-email-schema-migration && npm run test:email-delivery && npm run test:reservation-notification-email && npm run test:reservation-notification-confirmation && npm run test:booking-confirmation-client && npm run test:review-api && npm run test:review-invite-server && npm run test:review-api-deploy && npm run test:manual-coupon && npm run test:admin-calendar && npm run test:admin-reservation && npm run test:csv-security && npm run test:calendar-access && npm run test:reservation-notification-deploy && npm run test:reservation-api && npm run test:reservation-api-deploy && npm run test:booking-reminder && npm run test:cloudflare-pages && npm run test:pickup-opening",
     "test:review-coupon-client": "TMP_DIR=/tmp/au-cake-review-coupon-client-test-$(date +%s); VITE_MARKET=AU npx tsc tests/review-coupon-client.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && mkdir -p $TMP_DIR/appwrite-functions/reservation-api/src && cp appwrite-functions/reservation-api/src/active-cake-products.js $TMP_DIR/appwrite-functions/reservation-api/src/active-cake-products.js && VITE_MARKET=AU node --test $TMP_DIR/tests/review-coupon-client.test.js && node --test tests/review-coupon-component.test.mjs",
     "test:reservation-capability": "node --test tests/repository-capability-cache.test.mjs",
     "test:reviews": "TMP_DIR=/tmp/au-cake-reviews-test-$(date +%s); npx tsc tests/reviews.test.ts tests/public-reviews.test.ts tests/public-review-dialog.test.ts --ignoreConfig --module NodeNext --moduleResolution NodeNext --target ES2022 --types node --outDir $TMP_DIR --skipLibCheck && node --test $TMP_DIR/tests/reviews.test.js $TMP_DIR/tests/public-reviews.test.js $TMP_DIR/tests/public-review-dialog.test.js && node --test tests/public-reviews-component.test.mjs",
@@ -52,7 +59,8 @@
     "deploy:review-api": "node scripts/deploy-review-api.mjs",
     "deploy:booking-reminder": "node scripts/deploy-booking-reminder.mjs",
     "issue:manual-coupon": "node scripts/issue-manual-coupon.mjs",
-    "reservation-api:permissions": "node scripts/set-reservation-write-mode.mjs"
+    "reservation-api:permissions": "node scripts/set-reservation-write-mode.mjs",
+    "test:custom-cake-integration": "VITE_MARKET=AU node --test tests/custom-cake-integration.test.mjs && VITE_MARKET=AU node tests/run-custom-cake-ui.mjs"
   },
   "dependencies": {
     "appwrite": "^23.0.0",

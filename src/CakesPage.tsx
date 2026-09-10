@@ -126,6 +126,64 @@ export default function CakesPage({
             </section>
           )
         })}
+
+        <section className="cakes-index-group" aria-labelledby="cakes-index-group-custom-creative">
+          <header className="cake-catalog-group-header cakes-index-group-header">
+            <span className="cake-catalog-group-number" aria-hidden="true">05</span>
+            <div>
+              <h2 id="cakes-index-group-custom-creative">
+                {language === 'ko' ? '커스텀 & 크리에이티브' : 'CUSTOM & CREATIVE'}
+              </h2>
+              <p>
+                {language === 'ko'
+                  ? '원하는 디자인과 구성으로 완성하는 맞춤형 기념 케이크.'
+                  : 'Bespoke cakes tailored to your unique celebration and design.'}
+              </p>
+            </div>
+          </header>
+          <div className="cake-catalog-group-products cakes-index-group-products">
+            <article className="cakes-index-card cakes-index-card-custom-cake">
+              <a
+                href="/cakes/custom-cake"
+                className="cakes-index-image"
+                onClick={(event) => openCake(event, 'custom-cake')}
+              >
+                <img
+                  src="/products/custom-cake.webp"
+                  alt={language === 'ko' ? '커스텀 케이크' : 'CUSTOM CAKE'}
+                  width={2160}
+                  height={1012}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span className="cakes-index-number">09</span>
+              </a>
+              <div className="cakes-index-copy">
+                <h3>
+                  <a href="/cakes/custom-cake" onClick={(event) => openCake(event, 'custom-cake')}>
+                    {language === 'ko' ? '커스텀 케이크' : 'CUSTOM CAKE'}
+                  </a>
+                </h3>
+                <p className="cakes-index-card-description">
+                  {language === 'ko' ? '원하는 디자인으로 완성하는 특별한 기념 케이크.' : 'Your celebration, made your way.'}
+                </p>
+                <div className="cakes-index-card-price">
+                  <strong>From AUD $155</strong>
+                  <span className="cakes-index-card-option">
+                    {language === 'ko' ? '1단 / 2단 · 6가지 사이즈' : 'Single & Double Tier · 6 sizes'}
+                  </span>
+                </div>
+                <a
+                  href="/cakes/custom-cake"
+                  className="secondary-button"
+                  onClick={(event) => openCake(event, 'custom-cake')}
+                >
+                  {language === 'ko' ? '상세 보기' : 'View details'}
+                </a>
+              </div>
+            </article>
+          </div>
+        </section>
       </div>
     </main>
   )

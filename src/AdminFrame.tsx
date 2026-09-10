@@ -15,6 +15,7 @@ export default function AdminFrame({ navigate, children }: { navigate: (page: Pa
         <button className="brand-button" type="button" onClick={() => navigate('home')}>Verygood</button>
         <button type="button" onClick={() => navigate('admin')}>대시보드</button>
         <button type="button" onClick={() => navigate('admin-reservations')}>예약 목록</button>
+        <button type="button" onClick={() => navigate('admin-custom-cakes')}>커스텀 케이크</button>
         <button type="button" onClick={() => navigate('admin-classes')}>클래스 예약</button>
         <button type="button" onClick={() => navigate('admin-reviews')}>리뷰 관리</button>
         <button type="button" onClick={logout}><LogOut size={16} /> 로그아웃</button>

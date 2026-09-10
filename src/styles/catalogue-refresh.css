@@ -100,6 +100,10 @@
   --catalogue-card-color: #F6C9B8;
 }
 
+.cake-catalog-card-custom-cake {
+  --catalogue-card-color: #D9E7D6;
+}
+
 .product-section .cake-catalog-group-products .cake-catalog-card .product-image-wrap::before {
   position: absolute;
   z-index: 0;
