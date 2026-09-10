@@ -337,8 +337,8 @@ function App() {
         <Suspense fallback={<PrivateRouteFallback />}>
           {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
           {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
-          {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} initialTab="regular" />}
-          {page === 'admin-custom-cakes' && <AdminReservationsPage navigate={navigate} initialTab="custom" />}
+          {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
+          {page === 'admin-custom-cakes' && <AdminReservationsPage navigate={navigate} />}
           {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}
           {page === 'admin-reviews' && (
             <AdminReviewsPage

@@ -71,12 +71,15 @@ import { AdminCustomCakesSection } from './components/AdminCustomCakesSection.js
 
 export function AdminReservationsPage({
   navigate,
-  initialTab = 'regular',
 }: {
   navigate: (page: Page) => void
-  initialTab?: 'regular' | 'custom'
 }) {
-  const [activeTab, setActiveTab] = useState<'regular' | 'custom'>(initialTab)
+  const [activeTab, setActiveTab] = useState<'regular' | 'custom'>(() => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/admin/custom-cakes') {
+      return 'custom'
+    }
+    return 'regular'
+  })
   const [authorized, setAuthorized] = useState(false)
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [filters, setFilters] = useState<ReservationFilters>(initialFilters)
@@ -140,14 +143,20 @@ export function AdminReservationsPage({
         <button
           type="button"
           className={`tab-btn ${activeTab === 'regular' ? 'primary-button' : 'secondary-button'}`}
-          onClick={() => setActiveTab('regular')}
+          onClick={() => {
+            setActiveTab('regular')
+            navigate('admin-reservations')
+          }}
         >
           일반 케이크 예약 ({reservations.length})
         </button>
         <button
           type="button"
           className={`tab-btn ${activeTab === 'custom' ? 'primary-button' : 'secondary-button'}`}
-          onClick={() => setActiveTab('custom')}
+          onClick={() => {
+            setActiveTab('custom')
+            navigate('admin-custom-cakes')
+          }}
         >
           커스텀 케이크 견적 관리
         </button>
