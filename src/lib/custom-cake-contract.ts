@@ -77,6 +77,9 @@ export type CustomCakeLookupResponse = {
   | { status: 'requested' | 'quoted' | 'cancelled'; quote: CustomCakeQuote; acceptance: QuoteAcceptance | null }
   | { status: 'confirmed' | 'completed'; quote: FinalQuote & { quoteVersion: number }; acceptance: QuoteAcceptance }
 )
+export type CustomCakeAdminListResponse = {
+  requests: CustomCakeLookupResponse[]
+}
 export type UpdateCustomCakeQuoteRequest = {
   contractVersion: 'custom-cake.v1'
   requestNumber: string

@@ -247,6 +247,11 @@ test('approved custom/v2 contract artifacts exist before frontend/backend split'
   ]) assert.ok(existsSync(path), `missing approved contract artifact: ${path}`)
 })
 
+test('admin list contract contains only strict custom cake lookup snapshots', () => {
+  assert.deepEqual(typeDiagnostics([['C.CustomCakeAdminListResponse', { requests: [custom.lookup, custom.finalLookup] }]]), [])
+  assert.ok(typeDiagnostics([['C.CustomCakeAdminListResponse', { requests: [{ ...custom.lookup, payloadJson: 'private' }] }]]).length > 0)
+})
+
 test('existing immutable golden is still present with 17 cases', () => {
   const golden = JSON.parse(readFileSync('tests/fixtures/order-core-golden.json', 'utf8'))
   assert.equal(golden.cases.length, 17)

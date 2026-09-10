@@ -2,7 +2,7 @@ import type { Account, ExecutionMethod, Functions } from 'appwrite'
 import type { CustomCakeCreateRequest, CustomCakeLookupRequest, UpdateCustomCakeQuoteRequest, AcceptCustomCakeQuoteRequest, ConfirmCustomCakeRequest, CompleteCustomCakeRequest, CancelCustomCakeRequest } from './custom-cake-contract.js'
 import type { CakeOrderV2Request, CakeOrderV2LookupRequest } from './cake-order-v2-contract.js'
 import type { PhotoUploadCredential, PhotoSessionRequest, PhotoUploadRequest, PhotoReadRequest, PhotoDeleteRequest } from './custom-cake-photo-contract.js'
-import { parseCustomCakeCreateResponse, parseCustomCakeLookupResponse, parseCustomCakeMutationResponse, parseCakeOrderV2CreateResponse, parseCakeOrderV2LookupResponse, parseCakeWireCapabilities, parsePhotoSessionResponse, parsePhotoUploadResponse, parsePhotoReadResponse, parsePhotoDeleteResponse } from './custom-cake-client.ts'
+import { parseCustomCakeAdminListResponse, parseCustomCakeCreateResponse, parseCustomCakeLookupResponse, parseCustomCakeMutationResponse, parseCakeOrderV2CreateResponse, parseCakeOrderV2LookupResponse, parseCakeWireCapabilities, parsePhotoSessionResponse, parsePhotoUploadResponse, parsePhotoReadResponse, parsePhotoDeleteResponse } from './custom-cake-client.ts'
 
 type Context = { admin?: boolean; credential?: PhotoUploadCredential }
 type Execution = { responseStatusCode: number; responseBody: string }
@@ -45,6 +45,7 @@ export function createCakeWireRepository(transport: CakeWireTransport) {
     getCapabilities: () => execute('get-cake-wire-capabilities', undefined, 'custom-cake.v1', parseCakeWireCapabilities),
     createCustomCakeRequest: (data: CustomCakeCreateRequest, credential?: PhotoUploadCredential) => execute('create-custom-cake-request', data, 'custom-cake.v1', parseCustomCakeCreateResponse, { credential }),
     getCustomCakeRequest: (data: CustomCakeLookupRequest) => execute('get-custom-cake-request', data, 'custom-cake.v1', parseCustomCakeLookupResponse),
+    listCustomCakeRequests: () => execute('admin-list-custom-cake-requests', undefined, 'custom-cake.v1', parseCustomCakeAdminListResponse, { admin: true }),
     updateCustomCakeQuote: (data: UpdateCustomCakeQuoteRequest) => customMutation('admin-update-custom-cake-quote', data),
     recordCustomCakeAcceptance: (data: AcceptCustomCakeQuoteRequest) => customMutation('admin-record-custom-cake-acceptance', data),
     confirmCustomCakeRequest: (data: ConfirmCustomCakeRequest) => customMutation('admin-confirm-custom-cake-request', data),

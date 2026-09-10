@@ -8,6 +8,15 @@ export function createAdminRequestSession() {
   let proof: CustomCakeLookupRequest | undefined
   return {
     clear() { sequence++; proof = undefined },
+    adopt(snapshot: CustomCakeLookupResponse) {
+      sequence++
+      proof = Object.freeze({
+        contractVersion: 'custom-cake.v1',
+        requestNumber: snapshot.requestNumber,
+        customerPhone: snapshot.customer.customerPhone,
+      })
+      return snapshot
+    },
     async search(repository: Repository, input: CustomCakeLookupRequest) {
       const current = ++sequence
       proof = undefined

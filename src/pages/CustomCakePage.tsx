@@ -1,5 +1,5 @@
-import { useState, useId, useEffect, useRef, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
-import { ArrowLeft, Camera, Minus, Plus, Trash2 } from 'lucide-react'
+import { useState, useId, useEffect, type FormEvent, type ReactNode } from 'react'
+import { ArrowLeft, Minus, Plus } from 'lucide-react'
 import { SiteHeader } from '../components/SiteChrome.js'
 import type { Page } from '../lib/app-routes.js'
 import type { Language } from '../lib/i18n.js'
@@ -7,7 +7,7 @@ import {
   formatExtraCents,
 } from '../lib/custom-cake-ui.js'
 import { getCakeWireRepository } from '../lib/custom-cake-repository'
-import { createSubmissionIntent, type SelectedPhoto } from '../lib/custom-cake-submission'
+import { createSubmissionIntent } from '../lib/custom-cake-submission'
 import type {
   CustomCakeCreateRequest,
   CustomCakeCreateResponse,
@@ -57,15 +57,12 @@ export function CustomCakePage({
   })
   const [locked, setLocked] = useState(false)
   const [ready, setReady] = useState(false)
-  const photoBusy = useRef(false)
-  const previews = useRef(new Set<string>())
   useEffect(() => {
     let active = true
     getCakeWireRepository().then(repo => repo.getCapabilities()).then(capabilities => {
       if (active) setReady(capabilities.customCakeV1)
     }).catch(() => { if (active) setReady(false) })
-    const urls = previews.current
-    return () => { active = false; urls.forEach(url => URL.revokeObjectURL(url)); urls.clear() }
+    return () => { active = false }
   }, [])
   const [tier, setTier] = useState<'single' | 'double'>('single')
   const [singleSize, setSingleSize] = useState<SingleTierSize>('6in')
@@ -75,10 +72,6 @@ export function CustomCakePage({
   const [pickupTime, setPickupTime] = useState('12:00')
   const [designNote, setDesignNote] = useState('')
   const [figurineSource, setFigurineSource] = useState<'none' | 'customer' | 'shop'>('none')
-
-  type StagedPhoto = SelectedPhoto & { previewUrl: string }
-  const [stagedPhotos, setStagedPhotos] = useState<StagedPhoto[]>([])
-  const [photoUploading, setPhotoUploading] = useState(false)
 
   const [paidSmoreQuantity, setPaidSmoreQuantity] = useState(0)
 
@@ -93,62 +86,11 @@ export function CustomCakePage({
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  const handlePhotoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (!intent || intent.locked || photoBusy.current || !e.target.files?.length) return
-    const files = Array.from(e.target.files)
-    e.target.value = ''
-    if (intent.photos.length + files.length > 5) { setErrorMessage('You can select up to 5 photos.'); return }
-    photoBusy.current = true
-    setPhotoUploading(true)
-    setErrorMessage('')
-    try {
-      for (const file of files) {
-        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || /\.hei[cf]$/i.test(file.name)) throw new Error('Use JPEG, PNG or WebP photos.')
-        if (!file.size || file.size > 10485760) throw new Error('Each photo must be between 1 byte and 10 MiB.')
-        const previewUrl = URL.createObjectURL(file)
-        previews.current.add(previewUrl)
-        try {
-          await new Promise<void>((resolve, reject) => {
-            const image = new Image()
-            image.onload = () => image.width > 0 && image.height > 0 && image.width * image.height <= 20000000 ? resolve() : reject(new Error('Photos must be no larger than 20 megapixels.'))
-            image.onerror = () => reject(new Error('This image could not be read.'))
-            image.src = previewUrl
-          })
-          const base64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(String(reader.result).split(',')[1])
-            reader.onerror = () => reject(new Error('This photo could not be read.'))
-            reader.readAsDataURL(file)
-          })
-          const photo = intent.selectPhoto({ name: file.name, mimeType: file.type as SelectedPhoto['mimeType'], base64 })
-          setStagedPhotos(previous => [...previous, { ...photo, previewUrl }])
-        } catch (error) {
-          URL.revokeObjectURL(previewUrl)
-          previews.current.delete(previewUrl)
-          throw error
-        }
-      }
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not select photo.')
-    } finally { photoBusy.current = false; setPhotoUploading(false) }
-  }
-
-  const removePhoto = (uploadId: string) => {
-    if (!intent || intent.locked) return
-    intent.removePhoto(uploadId)
-    const photo = stagedPhotos.find(item => item.uploadId === uploadId)
-    if (photo) { URL.revokeObjectURL(photo.previewUrl); previews.current.delete(photo.previewUrl) }
-    setStagedPhotos(previous => previous.filter(item => item.uploadId !== uploadId))
-  }
-
   const startNewIntent = () => {
-    if (submitting || photoBusy.current) return
+    if (submitting) return
     if (!window.confirm('Start a separate request? If a previous submission timed out, check its status with the shop first to avoid a duplicate.')) return
     try {
       setIntent(createSubmissionIntent())
-      previews.current.forEach(url => URL.revokeObjectURL(url))
-      previews.current.clear()
-      setStagedPhotos([])
       setLocked(false)
       setErrorMessage('')
     } catch { setErrorMessage('Secure request creation is unavailable in this browser.') }
@@ -156,7 +98,7 @@ export function CustomCakePage({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!intent || !ready || submitting || photoBusy.current) return
+    if (!intent || !ready || submitting) return
     setErrorMessage('')
 
     if (!privacyConsent) {
@@ -496,8 +438,8 @@ export function CustomCakePage({
             <h2 id="custom-request-title">{language === 'ko' ? '상세 요청 정보' : 'Request & Design Details'}</h2>
             <p>
               {language === 'ko'
-                ? '희망 픽업 일정, 원하시는 디자인 및 피규어 준비 방식, 참고 사진을 남겨주세요.'
-                : 'Please provide your preferred pickup schedule, design concept, figurine preference, and reference photos.'}
+                ? '희망 픽업 일정, 원하시는 디자인 및 피규어 준비 방식을 남겨주세요.'
+                : 'Please provide your preferred pickup schedule, design concept, and figurine preference.'}
             </p>
           </header>
 
@@ -605,58 +547,17 @@ export function CustomCakePage({
               </div>
             </fieldset>
 
-            {/* 03. Reference Photos */}
+            {/* 03. Reference Images */}
             <fieldset disabled={locked} className="custom-cake-fieldset">
               <legend className="custom-cake-legend">
                 <span className="legend-number">03</span>
-                <span>{language === 'ko' ? '참고 사진 첨부 (선택, 최대 5장)' : 'Reference Photos (Optional, up to 5)'}</span>
+                <span>{language === 'ko' ? '참고 이미지' : 'Reference Images'}</span>
               </legend>
               <p className="custom-cake-field-note">
                 {language === 'ko'
-                  ? 'JPEG, PNG, WebP 지원 · 파일당 최대 10MB · 최대 2000만 화소 (HEIC 제외)'
-                  : 'JPEG, PNG, WebP supported · Max 10MB per file · Max 20MP (No HEIC)'}
+                  ? '참고 이미지는 접수 후 베리굿과 별도로 공유해 주세요.'
+                  : 'Reference images can be shared with Verygood after your request is received.'}
               </p>
-
-              <div className="custom-cake-uploader-wrap">
-                <label
-                  className={`custom-cake-upload-box ${stagedPhotos.length >= 5 || photoUploading ? 'is-disabled' : ''}`}
-                  htmlFor={`${formId}-photos`}
-                >
-                  <Camera size={22} aria-hidden="true" />
-                  <span className="upload-box-text">
-                    {photoUploading
-                      ? (language === 'ko' ? '업로드 처리 중...' : 'Preparing photos...')
-                      : (language === 'ko' ? `사진 추가하기 (${stagedPhotos.length}/5)` : `Add Photo (${stagedPhotos.length}/5)`)}
-                  </span>
-                  <input
-                    id={`${formId}-photos`}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    disabled={stagedPhotos.length >= 5 || photoUploading}
-                    className="visually-hidden"
-                    onChange={handlePhotoUpload}
-                  />
-                </label>
-
-                {stagedPhotos.length > 0 && (
-                  <div className="custom-cake-staged-photos">
-                    {stagedPhotos.map((photo) => (
-                      <div className="custom-cake-photo-thumb" key={photo.uploadId}>
-                        <img src={photo.previewUrl} alt={photo.name} />
-                        <button
-                          type="button"
-                          className="photo-remove-button"
-                          aria-label={language === 'ko' ? '사진 삭제' : 'Remove photo'}
-                          onClick={() => removePhoto(photo.uploadId)}
-                        >
-                          <Trash2 size={13} aria-hidden="true" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </fieldset>
 
             {/* 04. Customer Contact Details */}
@@ -743,7 +644,7 @@ export function CustomCakePage({
               <button
                 type="submit"
                 className="primary-button cake-detail-request custom-cake-submit-cta"
-                disabled={submitting || photoUploading || !ready || !intent}
+                disabled={submitting || !ready || !intent}
               >
                 {submitting
                   ? (language === 'ko' ? '접수 처리 중...' : 'Submitting Request...')

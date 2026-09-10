@@ -20,6 +20,7 @@ import {
 import {
   createCalendarToken,
   sanitizeCakeCalendarEvent,
+  sanitizeCustomCakeCalendarEvent,
   sanitizeClassCalendarEvents,
   secureTextEqual,
   verifyCalendarToken,
@@ -30,6 +31,8 @@ import { cakeReservationResponse } from './cake-create-response.js'
 import { checkReservationReadiness } from './reservation-health.js'
 import { isCakeWireAction, handleCakeWireRequest, handleCakePhotoRecovery } from './custom-cake-routes.js'
 import { createLegacyCakeGate } from './custom-cake-legacy-gate.js'
+import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from './custom-cake-persistence.js'
+import { scanCustomCakeSnapshots } from './custom-cake-list.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -602,7 +605,7 @@ export function calendarLogin(input, env = process.env, now = new Date()) {
   return { token: createCalendarToken(secret, now), expiresInDays: 30 }
 }
 
-export async function listCalendarEvents(databases, input, env = process.env, now = new Date()) {
+export async function listCalendarEvents(databases, input, env = process.env, now = new Date(), injectedCustomCakeRepository) {
   const { secret } = calendarConfig(env)
   if (!verifyCalendarToken(input?.token, secret, now)) throw new ReservationApiError('CALENDAR_UNAUTHORIZED', 401)
   const month = typeof input?.month === 'string' ? input.month : ''
@@ -613,7 +616,10 @@ export async function listCalendarEvents(databases, input, env = process.env, no
   const startDate = `${month}-01`
   const endDate = new Date(Date.UTC(year, monthNumber, 0)).toISOString().slice(0, 10)
 
-  const [cakeResult, primaryClassResult, advancedClassResult] = await Promise.all([
+  const customCakePromise = env.CUSTOM_CAKE_PERSISTENCE_ENABLED === 'true'
+    ? scanCustomCakeSnapshots(injectedCustomCakeRepository || createCustomCakeRepository(databases, resolveCustomCakePersistenceConfig(env)))
+    : Promise.resolve([])
+  const [cakeResult, primaryClassResult, advancedClassResult, customCakeRows] = await Promise.all([
     databases.listDocuments({
       databaseId: config.cakeDatabaseId,
       collectionId: config.cakeReservationsId,
@@ -632,6 +638,7 @@ export async function listCalendarEvents(databases, input, env = process.env, no
       queries: [Query.greaterThanEqual('advancedClassDate', startDate), Query.lessThanEqual('advancedClassDate', endDate), Query.limit(200)],
       total: false,
     }),
+    customCakePromise,
   ])
   const classDocuments = Array.from(new Map(
     [...primaryClassResult.documents, ...advancedClassResult.documents].map((document) => [document.$id, document]),
@@ -639,6 +646,9 @@ export async function listCalendarEvents(databases, input, env = process.env, no
   const events = [
     ...cakeResult.documents.map(sanitizeCakeCalendarEvent),
     ...classDocuments.flatMap(sanitizeClassCalendarEvents),
+    ...customCakeRows
+      .filter(row => row.value.request.contractVersion === 'custom-cake.v1')
+      .map(row => sanitizeCustomCakeCalendarEvent(row.value.lookupResponse)),
   ]
     .filter((event) => event.date >= startDate && event.date <= endDate)
     .sort((left, right) => `${left.date} ${left.time} ${left.kind}`.localeCompare(`${right.date} ${right.time} ${right.kind}`))
@@ -680,7 +690,7 @@ return async ({ req, res, log, error }) => {
     else if (action === 'create-class') result = await createClass(databases, body.data)
     else if (action === 'lookup-cake') result = await lookupCake(databases, body.data || {})
     else if (action === 'calendar-login') result = calendarLogin(body.data || {})
-    else if (action === 'calendar-events') result = await listCalendarEvents(databases, body.data || {})
+    else if (action === 'calendar-events') result = await listCalendarEvents(databases, body.data || {}, env, now())
     else throw new ReservationApiError('UNKNOWN_ACTION', 404)
 
     log(`reservation-api completed: ${safeReservationLogAction(action)}`)

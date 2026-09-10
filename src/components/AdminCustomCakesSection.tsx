@@ -16,18 +16,15 @@ import {
 } from '../lib/custom-cake-ui.js'
 import { getCakeWireRepository } from '../lib/custom-cake-repository'
 import { createAdminRequestSession } from '../lib/custom-cake-admin'
-import { normalizePhone, isValidPhone } from '../lib/utils'
 import { CustomCakePhoto } from './CustomCakePhoto'
 
 export function AdminCustomCakesSection() {
   const [requests, setRequests] = useState<CustomCakeLookupResponse[]>([])
   const [selected, setSelected] = useState<CustomCakeLookupResponse | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchPhone, setSearchPhone] = useState('')
   const [searchError, setSearchError] = useState('')
   const [session] = useState(createAdminRequestSession)
   const searchSequence = useRef(0)
-  useEffect(() => () => { session.clear(); searchSequence.current++ }, [session])
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState('')
 
@@ -38,26 +35,32 @@ export function AdminCustomCakesSection() {
   const [updatingQuote, setUpdatingQuote] = useState(false)
   const [actionError, setActionError] = useState('')
 
-  const search = async (event?: React.FormEvent) => {
-    event?.preventDefault()
+  const loadRequests = async () => {
     const sequence = ++searchSequence.current
     session.clear()
-    setRequests([])
     setSelected(null)
     setSearchError('')
-    const customerPhone = normalizePhone(searchPhone)
-    if (!searchTerm.trim() || !isValidPhone(customerPhone)) { setSearchError('접수번호와 유효한 호주 휴대폰 번호를 입력해 주세요.'); return }
     setLoading(true)
     try {
       const repo = await getCakeWireRepository()
       if (sequence !== searchSequence.current) return
-      const snapshot = await session.search(repo, { contractVersion: 'custom-cake.v1', requestNumber: searchTerm.trim(), customerPhone })
-      if (snapshot && sequence === searchSequence.current) setRequests([snapshot])
-    } catch { if (sequence === searchSequence.current) setSearchError('조회할 수 없습니다. 접수번호와 전화번호를 확인해 주세요.') }
+      const result = await repo.listCustomCakeRequests()
+      if (sequence === searchSequence.current) setRequests(result.requests)
+    } catch { if (sequence === searchSequence.current) setSearchError('커스텀 케이크 접수 목록을 불러오지 못했습니다.') }
     finally { if (sequence === searchSequence.current) setLoading(false) }
   }
 
+  useEffect(() => {
+    let active = true
+    queueMicrotask(() => { if (active) void loadRequests() })
+    const sequence = searchSequence
+    return () => { active = false; session.clear(); sequence.current++ }
+    // This screen owns one session-scoped loader and refreshes explicitly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session])
+
   const openDrawer = (item: CustomCakeLookupResponse) => {
+    session.adopt(item)
     setSelected(item)
     setActionError('')
     setDesignExtraInput(
@@ -84,7 +87,7 @@ export function AdminCustomCakesSection() {
       if (sequence !== searchSequence.current) return
       const outcome = await session.mutate(repository, mutation)
       if (!outcome || sequence !== searchSequence.current) return
-      setRequests([outcome.snapshot])
+      setRequests(current => current.map(item => item.requestNumber === outcome.snapshot.requestNumber ? outcome.snapshot : item))
       openDrawer(outcome.snapshot)
       if (outcome.error) setActionError('다른 변경으로 화면 정보가 바뀌었습니다. 최신 견적을 확인한 후 다시 진행해 주세요.')
       else showToast(message)
@@ -130,7 +133,11 @@ export function AdminCustomCakesSection() {
     const data = { contractVersion: 'custom-cake.v1' as const, requestNumber: selected.requestNumber, expectedStatus: selected.status as 'requested' | 'quoted' | 'confirmed', expectedQuoteVersion: selected.quote.quoteVersion }
     return mutate(repo => repo.cancelCustomCakeRequest(data), '주문이 취소되었습니다.')
   }
-  const filteredRequests = requests
+  const normalizedSearch = searchTerm.trim().toLowerCase()
+  const filteredRequests = normalizedSearch
+    ? requests.filter(item => [item.requestNumber, item.customer.customerName, item.customer.customerPhone]
+        .some(value => value.toLowerCase().includes(normalizedSearch)))
+    : requests
 
   return (
     <div className="admin-custom-cakes-section">
@@ -144,9 +151,9 @@ export function AdminCustomCakesSection() {
         <button
           type="button"
           className="refresh-btn"
-          onClick={() => void search()}
-          disabled={loading || updatingQuote || !searchTerm || !searchPhone}
-          aria-label="Search request"
+          onClick={() => void loadRequests()}
+          disabled={loading || updatingQuote}
+          aria-label="Refresh custom cake requests"
         >
           <RefreshCw size={16} className={loading ? 'spin' : ''} />
           <span>새로고침</span>
@@ -159,21 +166,19 @@ export function AdminCustomCakesSection() {
         </div>
       )}
 
-      <form className="admin-filters-bar" onSubmit={search}>
+      <div className="admin-filters-bar">
         <div className="search-input-wrap">
           <Search size={16} />
           <input
             type="search"
-            aria-label="Request number"
-            placeholder="접수번호"
+            aria-label="Search custom cake requests"
+            placeholder="접수번호, 신청자, 휴대폰 검색"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <input type="tel" aria-label="Customer phone" placeholder="고객 휴대폰 번호" value={searchPhone} onChange={event => setSearchPhone(event.target.value)} />
-        <button type="submit" className="small-button" disabled={loading || updatingQuote}>조회</button>
         <span className="count-label">총 {filteredRequests.length}건</span>
-      </form>
+      </div>
       {searchError && <p role="alert">{searchError}</p>}
 
       <div className="admin-table-container">
@@ -196,7 +201,7 @@ export function AdminCustomCakesSection() {
             {filteredRequests.length === 0 ? (
               <tr>
                 <td colSpan={10} className="empty-cell">
-                  접수번호와 고객 휴대폰 번호로 조회해 주세요.
+                  {loading ? '커스텀 케이크 주문을 불러오는 중입니다.' : '접수된 커스텀 케이크 주문이 없습니다.'}
                 </td>
               </tr>
             ) : (

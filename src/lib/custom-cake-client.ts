@@ -1,5 +1,5 @@
 import type { CakeWireCapabilities } from './cake-wire-types.js'
-import type { CustomCakeCreateResponse, CustomCakeLookupResponse, CustomCakeMutationResponse, CustomCakeQuote, QuoteAcceptance, CustomCakeLine } from './custom-cake-contract.js'
+import type { CustomCakeAdminListResponse, CustomCakeCreateResponse, CustomCakeLookupResponse, CustomCakeMutationResponse, CustomCakeQuote, QuoteAcceptance, CustomCakeLine } from './custom-cake-contract.js'
 import type { CakeOrderV2CreateResponse, CakeOrderV2LookupResponse, CakeOrderV2Pricing, CakePricedLineV2 } from './cake-order-v2-contract.js'
 import type { SmorePricedLine } from './cake-wire-types.js'
 import type { PhotoSessionResponse, PhotoUploadResponse, PhotoReadResponse, PhotoDeleteResponse } from './custom-cake-photo-contract.js'
@@ -90,6 +90,9 @@ export function parseCustomCakeLookupResponse(value: unknown): CustomCakeLookupR
   })
 }
 export function parseCustomCakeMutationResponse(value: unknown): CustomCakeMutationResponse { return parseCustomCakeLookupResponse(value) }
+export function parseCustomCakeAdminListResponse(value: unknown): CustomCakeAdminListResponse {
+  return checked(value, object({ requests: array(guard(parseCustomCakeLookupResponse)) }))
+}
 function allocatedDiscount(line: CakePricedLineV2): boolean {
   const numerator = BigInt(line.subtotalCents) * BigInt(line.discountPercent)
   const discount = BigInt(line.discountCents)
