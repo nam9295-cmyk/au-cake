@@ -5,12 +5,14 @@ import { ReservationDrawer } from './ReservationDrawer'
 import { useTodayInputValue } from './hooks/useTodayInputValue'
 import {
   buildAdminCalendarEvents,
+  buildCustomCakeDashboardEvents,
   currentCalendarMonth,
   getCalendarGridDays,
   getDailyCalendarSummary,
   getMonthLabel,
   shiftCalendarMonth,
   type AdminCalendarEvent,
+  type CustomCakeDashboardEvent,
 } from './lib/admin-calendar'
 import { type Page } from './lib/app-routes'
 import { DEFAULT_SETTINGS } from './lib/constants'
@@ -22,6 +24,7 @@ import {
   updateClassReservation,
   updateReservation,
 } from './lib/repository'
+import { getCakeWireRepository } from './lib/custom-cake-repository'
 import type {
   ClassReservation,
   Reservation,
@@ -36,6 +39,8 @@ function AdminMonthlyCalendar({
   month,
   cakeReservations,
   classReservations,
+  customCakeEvents,
+  onSelectCustomCake,
   onPreviousMonth,
   onCurrentMonth,
   onNextMonth,
@@ -45,14 +50,16 @@ function AdminMonthlyCalendar({
   month: string
   cakeReservations: Reservation[]
   classReservations: ClassReservation[]
+  customCakeEvents: CustomCakeDashboardEvent[]
   onPreviousMonth: () => void
   onCurrentMonth: () => void
   onNextMonth: () => void
   onSelectCake: (reservation: Reservation) => void
   onSelectClass: (reservation: ClassReservation) => void
+  onSelectCustomCake: () => void
 }) {
   const days = getCalendarGridDays(month)
-  const events = buildAdminCalendarEvents(cakeReservations, classReservations)
+  const events = buildAdminCalendarEvents(cakeReservations, classReservations, customCakeEvents)
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   function eventsForDate(date: string) {
@@ -60,7 +67,8 @@ function AdminMonthlyCalendar({
   }
 
   function selectEvent(event: AdminCalendarEvent) {
-    if (event.kind === 'cake') onSelectCake(event.reservation)
+    if (event.kind === 'cake' && event.isCustomCake) onSelectCustomCake()
+    else if (event.kind === 'cake') onSelectCake(event.reservation)
     else onSelectClass(event.reservation)
   }
 
@@ -123,6 +131,7 @@ export function AdminDashboardPage({ navigate }: { navigate: (page: Page) => voi
   const [authorized, setAuthorized] = useState(false)
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [classReservations, setClassReservations] = useState<ClassReservation[]>([])
+  const [customCakeEvents, setCustomCakeEvents] = useState<CustomCakeDashboardEvent[]>([])
   const [selected, setSelected] = useState<Reservation | null>(null)
   const [selectedClass, setSelectedClass] = useState<ClassReservation | null>(null)
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
@@ -143,6 +152,10 @@ export function AdminDashboardPage({ navigate }: { navigate: (page: Page) => voi
       listReservations().then(setReservations)
       listClassReservations().then(setClassReservations)
       getSettings().then(setSettings)
+      getCakeWireRepository()
+        .then((repository) => repository.listCustomCakeRequests())
+        .then((response) => setCustomCakeEvents(buildCustomCakeDashboardEvents(response.requests)))
+        .catch(() => setCustomCakeEvents([]))
     }
   }, [authorized])
 
@@ -208,11 +221,13 @@ export function AdminDashboardPage({ navigate }: { navigate: (page: Page) => voi
         month={calendarMonth}
         cakeReservations={reservations}
         classReservations={classReservations}
+        customCakeEvents={customCakeEvents}
         onPreviousMonth={() => setCalendarMonth((current) => shiftCalendarMonth(current, -1))}
         onCurrentMonth={() => setCalendarMonth(currentCalendarMonth())}
         onNextMonth={() => setCalendarMonth((current) => shiftCalendarMonth(current, 1))}
         onSelectCake={setSelected}
         onSelectClass={setSelectedClass}
+        onSelectCustomCake={() => navigate('admin-custom-cakes')}
       />
       {selected && (
         <ReservationDrawer
