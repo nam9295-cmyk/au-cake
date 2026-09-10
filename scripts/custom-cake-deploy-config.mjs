@@ -6,7 +6,7 @@ export function customCakeDeployment(env, kind, legacyScopes) {
   }
   const required = key => { const value = env[key]; if (typeof value !== 'string' || !value.trim() || value !== value.trim()) throw new Error(`${key} is required for custom backend deployment.`); return value }
   const runtimeKey = kind === 'api' ? 'APPWRITE_RESERVATION_API_RUNTIME' : 'APPWRITE_RESERVATION_NOTIFY_RUNTIME'
-  if (env[runtimeKey] !== 'node-22.0') throw new Error(`${runtimeKey} must explicitly be node-22.0 for custom backend deployment.`)
+  if (env[runtimeKey] !== 'node-22') throw new Error(`${runtimeKey} must explicitly be node-22 for custom backend deployment.`)
   const scheduleKey = kind === 'api' ? 'APPWRITE_CUSTOM_CAKE_API_SCHEDULE' : 'APPWRITE_CUSTOM_CAKE_NOTIFICATION_SCHEDULE'
   const schedule = required(scheduleKey)
   if (!/^[\d*,/\-]+(?:\s+[\d*,/\-]+){4}$/.test(schedule)) throw new Error(`${scheduleKey} must be an explicit five-field schedule.`)

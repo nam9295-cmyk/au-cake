@@ -23,7 +23,7 @@ export async function createCustomCakeNotificationRuntime({ req, env, services, 
     if (Number(process.versions.node.split('.')[0]) < 22 || env.CUSTOM_CAKE_NOTIFICATIONS_ENABLED !== 'true' || !req.headers?.['x-appwrite-key'] || !env.APPWRITE_FUNCTION_API_ENDPOINT || !env.APPWRITE_FUNCTION_PROJECT_ID || !env.APPWRITE_FUNCTION_ID || !env.RESEND_API_KEY?.trim() || !env.RESEND_FROM_EMAIL?.trim() || /[\r\n]/.test(env.RESEND_FROM_EMAIL)) unavailable()
     services ||= servicesForRequest(req, env)
     const fn = await services.functions.get({ functionId: env.APPWRITE_FUNCTION_ID })
-    if (fn.$id !== env.APPWRITE_FUNCTION_ID || fn.enabled !== true || fn.runtime !== 'node-22.0' || fn.timeout < 60 || typeof fn.schedule !== 'string' || fn.schedule.trim().split(/\s+/).length !== 5 || !matchesAdministratorExecution(fn.execute, env.REVIEW_ADMIN_USER_IDS) || !Array.isArray(fn.scopes) || !CUSTOM_CAKE_NOTIFICATION_SCOPES.every(scope => fn.scopes.includes(scope))) unavailable()
+    if (fn.$id !== env.APPWRITE_FUNCTION_ID || fn.enabled !== true || fn.runtime !== 'node-22' || fn.timeout < 60 || typeof fn.schedule !== 'string' || fn.schedule.trim().split(/\s+/).length !== 5 || !matchesAdministratorExecution(fn.execute, env.REVIEW_ADMIN_USER_IDS) || !Array.isArray(fn.scopes) || !CUSTOM_CAKE_NOTIFICATION_SCOPES.every(scope => fn.scopes.includes(scope))) unavailable()
     const config = resolveCustomCakePersistenceConfig(env)
     await checkCustomCakeReadiness({ ...services, config })
     const repository = createCustomCakeRepository(services.databases, config)
