@@ -144,20 +144,23 @@ test('real Appwrite execution adapter selects actions, isolated headers and stri
   assert.equal(typeof adapters.createCakeWireRepository, 'function')
   const calls = []
   let reply = { responseStatusCode: 200, responseBody: JSON.stringify({ ok: true, result: custom.created }) }
-  const transport = adapters.createAppwriteCakeWireTransport({ functionId: 'reservation-api', functions: { createExecution: async input => { calls.push(input); if (reply instanceof Error) throw reply; return reply } }, account: { createJWT: async () => ({ jwt: 'test-admin-jwt' }) } })
+  const transport = adapters.createAppwriteCakeWireTransport({ functionId: 'reservation-api', functions: { createExecution: async input => { calls.push(input); if (reply instanceof Error) throw reply; return reply } } })
   const repo = adapters.createCakeWireRepository(transport)
   const credential = { uploadSessionId: 'session_test', uploadToken: 'secret-test-only' }
   assert.deepEqual(await repo.createCustomCakeRequest(custom.request, credential), custom.created)
   assert.equal(calls[0].method, 'POST')
   assert.equal(calls[0].async, false)
-  assert.equal(calls[0].headers['x-custom-cake-upload-token'], credential.uploadToken)
+  assert.deepEqual(calls[0].headers, {
+    'x-custom-cake-upload-session': credential.uploadSessionId,
+    'x-custom-cake-upload-token': credential.uploadToken,
+  })
   assert.deepEqual(JSON.parse(calls[0].body), { action: 'create-custom-cake-request', data: custom.request })
   reply = { responseStatusCode: 200, responseBody: JSON.stringify({ ok: true, result: custom.finalLookup }) }
   await repo.confirmCustomCakeRequest({ contractVersion: 'custom-cake.v1', requestNumber: custom.lookup.requestNumber, expectedQuoteVersion: 2 })
-  assert.deepEqual(calls[1].headers, { 'x-appwrite-user-jwt': 'test-admin-jwt' })
+  assert.deepEqual(calls[1].headers, {})
   reply = { responseStatusCode: 200, responseBody: JSON.stringify({ ok: true, result: { requests: [custom.lookup] } }) }
   assert.deepEqual(await repo.listCustomCakeRequests(), { requests: [custom.lookup] })
-  assert.deepEqual(calls[2].headers, { 'x-appwrite-user-jwt': 'test-admin-jwt' })
+  assert.deepEqual(calls[2].headers, {})
   assert.deepEqual(JSON.parse(calls[2].body), { action: 'admin-list-custom-cake-requests' })
   reply = { responseStatusCode: 409, responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'QUOTE_VERSION_CONFLICT' }) }
   await assert.rejects(repo.confirmCustomCakeRequest({}), /^Error: QUOTE_VERSION_CONFLICT$/)
@@ -171,4 +174,35 @@ test('real Appwrite execution adapter selects actions, isolated headers and stri
   reply = new Error('timeout containing a secret')
   await assert.rejects(repo.createCakeOrderV2(ordinary.request), /^Error: CAKE_WIRE_UNAVAILABLE$/)
   assert.equal(calls.length, before + 1, 'timeout never triggers a v1 fallback')
+})
+
+test('admin executions rely on Appwrite session identity without creating or forwarding a browser JWT', async () => {
+  const calls = []
+  let createJwtCalls = 0
+  const transport = adapters.createAppwriteCakeWireTransport({
+    functionId: 'reservation-api',
+    functions: {
+      createExecution: async input => {
+        calls.push(input)
+        return {
+          responseStatusCode: 200,
+          responseBody: JSON.stringify({ ok: true, result: { requests: [custom.lookup] } }),
+        }
+      },
+    },
+    account: {
+      createJWT: async () => {
+        createJwtCalls++
+        throw new Error('manual browser JWT creation must not run')
+      },
+    },
+  })
+  const repo = adapters.createCakeWireRepository(transport)
+
+  assert.deepEqual(await repo.listCustomCakeRequests(), { requests: [custom.lookup] })
+  assert.equal(createJwtCalls, 0)
+  assert.equal(calls.length, 1)
+  assert.deepEqual(calls[0].headers, {})
+  assert.equal(Object.hasOwn(calls[0].headers, 'x-appwrite-user-jwt'), false)
+  assert.deepEqual(JSON.parse(calls[0].body), { action: 'admin-list-custom-cake-requests' })
 })
