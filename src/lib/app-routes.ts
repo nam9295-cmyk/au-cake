@@ -6,6 +6,8 @@ export type Page =
   | 'cart'
   | 'cakes'
   | 'cake-detail'
+  | 'custom-cake'
+  | 'custom-cake-complete'
   | 'review'
   | 'reviews'
   | 'reserve'
@@ -17,6 +19,7 @@ export type Page =
   | 'admin-login'
   | 'admin'
   | 'admin-reservations'
+  | 'admin-custom-cakes'
   | 'admin-classes'
   | 'admin-reviews'
   | 'calendar'
@@ -36,6 +39,8 @@ export function getPageFromPath(path: string): Page {
   if (path === '/') return 'home'
   if (path === '/cart') return 'cart'
   if (path === '/cakes') return 'cakes'
+  if (path === '/cakes/custom-cake' || path === '/custom-cake') return 'custom-cake'
+  if (path === '/custom-cake/complete') return 'custom-cake-complete'
   if (getCakeSlugFromPath(path)) return 'cake-detail'
   if (path === '/review' || path === '/review.html') return 'review'
   if (path === '/reviews') return 'reviews'
@@ -48,6 +53,7 @@ export function getPageFromPath(path: string): Page {
   if (path === '/class-complete') return 'class-complete'
   if (path === '/admin/login') return 'admin-login'
   if (path === '/admin/reservations') return 'admin-reservations'
+  if (path === '/admin/custom-cakes') return 'admin-custom-cakes'
   if (path === '/admin/classes') return 'admin-classes'
   if (path === '/admin/reviews') return 'admin-reviews'
   if (path === '/admin') return 'admin'
@@ -61,6 +67,8 @@ export function pathForPage(page: Page): string {
     cart: '/cart',
     cakes: '/cakes',
     'cake-detail': '/cakes',
+    'custom-cake': '/cakes/custom-cake',
+    'custom-cake-complete': '/custom-cake/complete',
     review: '/review',
     reviews: '/reviews',
     reserve: '/reserve',
@@ -72,6 +80,7 @@ export function pathForPage(page: Page): string {
     'admin-login': '/admin/login',
     admin: '/admin',
     'admin-reservations': '/admin/reservations',
+    'admin-custom-cakes': '/admin/custom-cakes',
     'admin-classes': '/admin/classes',
     'admin-reviews': '/admin/reviews',
     calendar: '/calendar',

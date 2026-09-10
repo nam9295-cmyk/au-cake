@@ -23,6 +23,7 @@ const AU_CATALOG_GROUP_MARKERS = {
   'gateau-sharing': '/category-marker-02.svg',
   'chocolatiers-cake': '/category-marker-03.svg',
   'gather-celebrate': '/category-marker-04.svg',
+  'custom-creative': '/category-marker-05.svg',
   // Retained legacy group keys for fallback compatibility
   'gateau-daily': '/category-marker-02.svg',
   'fresh-cream-cakes': '/category-marker-03.svg',
@@ -450,6 +451,68 @@ export function HomePage({
                   </section>
                 )
               })}
+
+              <section className="cake-catalog-group" aria-labelledby="home-cake-group-custom-creative" key="custom-creative">
+                <header className="cake-catalog-group-header">
+                  <img
+                    className="cake-catalog-group-marker"
+                    src={AU_CATALOG_GROUP_MARKERS['custom-creative']}
+                    alt=""
+                    aria-hidden="true"
+                    width={160}
+                    height={110}
+                  />
+                  <div>
+                    <h3 id="home-cake-group-custom-creative">
+                      {language === 'ko' ? '커스텀 & 크리에이티브' : 'CUSTOM & CREATIVE'}
+                    </h3>
+                    <p>
+                      {language === 'ko'
+                        ? '원하는 디자인과 구성으로 완성하는 맞춤형 기념 케이크.'
+                        : 'Bespoke cakes tailored to your unique celebration and design.'}
+                    </p>
+                  </div>
+                </header>
+                <div className="cake-catalog-group-products cake-catalog-group-products-custom">
+                  <article className="product-card cake-catalog-card cake-catalog-card-custom-cake" key="custom-cake">
+                    <a
+                      className="product-card-image-link"
+                      href="/cakes/custom-cake"
+                      aria-label={language === 'ko' ? '커스텀 케이크 주문 제작 페이지로 이동' : 'View CUSTOM CAKE details and request form'}
+                      onClick={(event) => {
+                        event.preventDefault()
+                        navigateToCake('custom-cake')
+                      }}
+                    >
+                      <span className="product-image-wrap">
+                        <img
+                          src="/products/custom-cake.webp"
+                          alt={language === 'ko' ? '커스텀 케이크' : 'CUSTOM CAKE'}
+                          width={2160}
+                          height={1012}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </span>
+                    </a>
+                    <a
+                      className="product-card-detail-link"
+                      href="/cakes/custom-cake"
+                      onClick={(event) => {
+                        event.preventDefault()
+                        navigateToCake('custom-cake')
+                      }}
+                    >
+                      <span className="product-card-kicker">05 CUSTOM</span>
+                      <strong className="product-card-title">{language === 'ko' ? '커스텀 케이크' : 'CUSTOM CAKE'}</strong>
+                    </a>
+                    <span className="product-card-price">
+                      <span className="product-card-price-prefix">From AUD</span>{' '}
+                      <span className="product-card-price-number">$155</span>
+                    </span>
+                  </article>
+                </div>
+              </section>
             </div>
           ) : (
             <div className="product-grid">

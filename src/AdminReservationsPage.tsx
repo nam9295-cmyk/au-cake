@@ -67,11 +67,19 @@ function reservationFinishText(reservation: Reservation) {
   return product.usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-'
 }
 
+import { AdminCustomCakesSection } from './components/AdminCustomCakesSection.js'
+
 export function AdminReservationsPage({
   navigate,
 }: {
   navigate: (page: Page) => void
 }) {
+  const [activeTab, setActiveTab] = useState<'regular' | 'custom'>(() => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/admin/custom-cakes') {
+      return 'custom'
+    }
+    return 'regular'
+  })
   const [authorized, setAuthorized] = useState(false)
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [filters, setFilters] = useState<ReservationFilters>(initialFilters)
@@ -130,14 +138,42 @@ export function AdminReservationsPage({
   return (
     <AdminFrame navigate={navigate}>
       {toast && <div className="toast">{toast}</div>}
-      <div className="admin-header">
-        <h1>예약 목록</h1>
-        <button className="primary-button" type="button" onClick={downloadCsv}>
-          <Download size={16} /> 엑셀 다운로드
+
+      <div className="admin-tabs-bar" style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'regular' ? 'primary-button' : 'secondary-button'}`}
+          onClick={() => {
+            setActiveTab('regular')
+            navigate('admin-reservations')
+          }}
+        >
+          일반 케이크 예약 ({reservations.length})
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'custom' ? 'primary-button' : 'secondary-button'}`}
+          onClick={() => {
+            setActiveTab('custom')
+            navigate('admin-custom-cakes')
+          }}
+        >
+          커스텀 케이크 견적 관리
         </button>
       </div>
 
-      <section className="filters">
+      {activeTab === 'custom' ? (
+        <AdminCustomCakesSection />
+      ) : (
+        <>
+          <div className="admin-header">
+            <h1>예약 목록</h1>
+            <button className="primary-button" type="button" onClick={downloadCsv}>
+              <Download size={16} /> 엑셀 다운로드
+            </button>
+          </div>
+
+          <section className="filters">
         <label>
           <CalendarDays size={16} />
           <input
@@ -287,15 +323,17 @@ export function AdminReservationsPage({
         </table>
       </section>
 
-      {selected && (
-        <ReservationDrawer
-          key={selected.id}
-          reservation={selected}
-          onClose={() => setSelected(null)}
-          onSave={saveReservation}
-          onCopy={copySms}
-          settings={settings}
-        />
+          {selected && (
+            <ReservationDrawer
+              key={selected.id}
+              reservation={selected}
+              onClose={() => setSelected(null)}
+              onSave={saveReservation}
+              onCopy={copySms}
+              settings={settings}
+            />
+          )}
+        </>
       )}
     </AdminFrame>
   )
