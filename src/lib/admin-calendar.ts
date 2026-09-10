@@ -2,6 +2,7 @@ import { getCupcakePackSize, getProductById, isCupcakeProduct } from './constant
 import { formatCupcakeFinishText } from './i18n.js'
 import { getReservationItemCount, getReservationOrderLines } from './order-lines.js'
 import { formatClassBookingType, getClassCoursePlanLabel, getClassTypeLabel } from './class-utils.js'
+import type { CustomCakeLine, CustomCakeLookupResponse } from './custom-cake-contract.js'
 import type { ClassReservation, Reservation } from './types.js'
 
 export type CalendarGridDay = {
@@ -11,27 +12,43 @@ export type CalendarGridDay = {
   isToday: boolean
 }
 
-export type AdminCalendarEvent =
-  | {
-      kind: 'cake'
-      id: string
-      date: string
-      time: string
-      title: string
-      subtitle: string
-      isCancelled: boolean
-      reservation: Reservation
-    }
-  | {
-      kind: 'class'
-      id: string
-      date: string
-      time: string
-      title: string
-      subtitle: string
-      isCancelled: boolean
-      reservation: ClassReservation
-    }
+type RegularCakeDashboardEvent = {
+  kind: 'cake'
+  id: string
+  date: string
+  time: string
+  title: string
+  subtitle: string
+  isCancelled: boolean
+  itemCount: number
+  isCustomCake: false
+  reservation: Reservation
+}
+
+export type CustomCakeDashboardEvent = {
+  kind: 'cake'
+  id: string
+  date: string
+  time: string
+  title: string
+  subtitle: string
+  isCancelled: boolean
+  itemCount: number
+  isCustomCake: true
+}
+
+type ClassDashboardEvent = {
+  kind: 'class'
+  id: string
+  date: string
+  time: string
+  title: string
+  subtitle: string
+  isCancelled: boolean
+  reservation: ClassReservation
+}
+
+export type AdminCalendarEvent = RegularCakeDashboardEvent | CustomCakeDashboardEvent | ClassDashboardEvent
 
 function pad(value: number) {
   return String(value).padStart(2, '0')
@@ -90,7 +107,7 @@ function shortProductName(productId: Reservation['productId']) {
   return getProductById(productId).name
 }
 
-function mapCakeReservation(reservation: Reservation): AdminCalendarEvent {
+function mapCakeReservation(reservation: Reservation): RegularCakeDashboardEvent {
   const product = getProductById(reservation.productId)
   const orderLines = getReservationOrderLines(reservation)
   const isMultiLine = orderLines.length > 1
@@ -109,8 +126,46 @@ function mapCakeReservation(reservation: Reservation): AdminCalendarEvent {
       ? `${orderLines.map((line) => `${shortProductName(line.productId)} x${line.quantity}`).join(' + ')} · ${reservation.paymentStatus}`
       : `${shortProductName(reservation.productId)}${cupcakeSummary ? ` · ${cupcakeSummary}` : ''} x${reservation.quantity} · ${reservation.paymentStatus}`,
     isCancelled: reservation.status === '취소',
+    itemCount: getReservationItemCount(reservation),
+    isCustomCake: false,
     reservation,
   }
+}
+
+function customCakeStatusLabel(status: CustomCakeLookupResponse['status']) {
+  return {
+    requested: 'Requested',
+    quoted: 'Quoted',
+    confirmed: 'Confirmed',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  }[status]
+}
+
+function mapCustomCakeRequest(request: CustomCakeLookupResponse): CustomCakeDashboardEvent | null {
+  const cakeLines = request.lines.filter((line): line is CustomCakeLine => line.kind === 'custom-cake')
+  if (cakeLines.length === 0) return null
+  const itemCount = cakeLines.reduce((total, line) => total + line.quantity, 0)
+  const selectionSummary = cakeLines
+    .map((line) => `${line.tier === 'single' ? 'Single' : 'Double'} ${line.size} ×${line.quantity}`)
+    .join(' + ')
+
+  return {
+    kind: 'cake',
+    id: `custom-cake:${request.requestNumber}`,
+    date: request.pickup.pickupDate,
+    time: request.pickup.pickupTime,
+    title: `Custom Cake · ${selectionSummary}`,
+    subtitle: customCakeStatusLabel(request.status),
+    isCancelled: request.status === 'cancelled',
+    itemCount,
+    isCustomCake: true,
+  }
+}
+
+/** Converts an authenticated admin response to the PII-free schedule shape used by Dashboard. */
+export function buildCustomCakeDashboardEvents(requests: CustomCakeLookupResponse[]): CustomCakeDashboardEvent[] {
+  return requests.map(mapCustomCakeRequest).filter((event): event is CustomCakeDashboardEvent => event !== null)
 }
 
 function classCalendarAudit(reservation: ClassReservation, extensionMinutes = 0) {
@@ -154,10 +209,12 @@ function mapClassReservation(reservation: ClassReservation): AdminCalendarEvent[
 export function buildAdminCalendarEvents(
   cakeReservations: Reservation[],
   classReservations: ClassReservation[],
+  customCakeEvents: CustomCakeDashboardEvent[] = [],
 ): AdminCalendarEvent[] {
   const events: AdminCalendarEvent[] = [
     ...cakeReservations.map(mapCakeReservation),
     ...classReservations.flatMap(mapClassReservation),
+    ...customCakeEvents,
   ]
   return events.sort((a, b) => {
     const dateOrder = a.date.localeCompare(b.date)
@@ -173,7 +230,7 @@ export function getDailyCalendarSummary(events: AdminCalendarEvent[]) {
   const activeEvents = events.filter((event) => !event.isCancelled)
   const cakeCount = activeEvents
     .filter((event): event is Extract<AdminCalendarEvent, { kind: 'cake' }> => event.kind === 'cake')
-    .reduce((total, event) => total + getReservationItemCount(event.reservation), 0)
+    .reduce((total, event) => total + event.itemCount, 0)
   const classCount = activeEvents.filter((event) => event.kind === 'class').length
 
   if (cakeCount === 0 && classCount === 0) return ''

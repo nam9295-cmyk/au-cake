@@ -8,7 +8,8 @@ import { CustomCakeCompletePage } from '../src/pages/CustomCakeCompletePage'
 import { CustomCakeLookupResult } from '../src/components/CustomCakeLookupResult'
 import { CustomCakePhoto } from '../src/components/CustomCakePhoto'
 import { AdminCustomCakesSection } from '../src/components/AdminCustomCakesSection'
-import { functions, account } from '../src/lib/appwrite'
+import { AdminDashboardPage } from '../src/AdminDashboardPage'
+import { functions, account, databases } from '../src/lib/appwrite'
 import { parseCustomCakeCreateResponse, parseCustomCakeLookupResponse } from '../src/lib/custom-cake-client'
 
 const fixture = JSON.parse(readFileSync('tests/fixtures/custom-cake-contract/custom-v1.json', 'utf8'))
@@ -208,6 +209,62 @@ test('actual admin auto-loads and filters requests, refreshes, and mutates an ad
   await page.flush()
   assert.equal(calls[3].action, 'admin-list-custom-cake-requests')
   page.unmount()
+})
+
+test('dashboard loads Custom Cake schedules through the authenticated admin list and retains no customer fields in the event', async () => {
+  const lookup = structuredClone(fixture.lookup)
+  const now = new Date()
+  lookup.pickup.pickupDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`
+  const previousWindow = globalThis.window
+  const previousDocument = globalThis.document
+  const previousAccountGet = account.get
+  const previousListDocuments = databases.listDocuments
+  globalThis.window = {
+    setInterval,
+    clearInterval,
+    addEventListener() {},
+    removeEventListener() {},
+  }
+  globalThis.document = {
+    addEventListener() {},
+    removeEventListener() {},
+  }
+  let completeList
+  const listed = new Promise(resolve => { completeList = resolve })
+  const calls = wire((action) => {
+    if (action === 'admin-list-custom-cake-requests') {
+      setImmediate(completeList)
+      return { requests: [lookup] }
+    }
+    throw new Error(`unexpected action: ${action}`)
+  })
+  account.get = async () => ({ email: 'nam9295@gmail.com' })
+  databases.listDocuments = async () => ({ documents: [], total: 0 })
+  const navigations = []
+  const page = mount(AdminDashboardPage, { navigate(pageName) { navigations.push(pageName) } })
+  try {
+    await page.flush()
+    await page.flush()
+    await listed
+    page.render()
+
+    assert.equal(calls[0].action, 'admin-list-custom-cake-requests')
+    const calendar = page.find(node => typeof node.type === 'function' && node.type.name === 'AdminMonthlyCalendar')
+    const [customEvent] = calendar.props.customCakeEvents
+    assert.equal(customEvent.title, 'Custom Cake · Single 6in ×1')
+    assert.equal(customEvent.subtitle, 'Requested')
+    for (const privateValue of [lookup.customer.customerName, lookup.customer.customerPhone, lookup.customer.customerEmail, lookup.lines[0].designNote, lookup.lines[0].photoRefs[0]]) {
+      assert.equal(JSON.stringify(customEvent).includes(privateValue), false)
+    }
+    calendar.props.onSelectCustomCake()
+    assert.deepEqual(navigations, ['admin-custom-cakes'])
+  } finally {
+    page.unmount()
+    globalThis.window = previousWindow
+    globalThis.document = previousDocument
+    account.get = previousAccountGet
+    databases.listDocuments = previousListDocuments
+  }
 })
 
 test('customer request UI offers no photo upload and directs reference images to post-receipt sharing', () => {

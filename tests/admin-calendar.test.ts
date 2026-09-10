@@ -2,12 +2,14 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import {
   buildAdminCalendarEvents,
+  buildCustomCakeDashboardEvents,
   getCalendarGridDays,
   getDailyCalendarSummary,
   getMonthLabel,
   shiftCalendarMonth,
 } from '../src/lib/admin-calendar.js'
 import type { ClassReservation, Reservation } from '../src/lib/types.js'
+import type { CustomCakeLine, CustomCakeLookupResponse } from '../src/lib/custom-cake-contract.js'
 
 function cake(overrides: Partial<Reservation>): Reservation {
   return {
@@ -67,6 +69,29 @@ function classBooking(overrides: Partial<ClassReservation>): ClassReservation {
     ...overrides,
   }
 }
+function customCake(overrides: Partial<CustomCakeLookupResponse> = {}): CustomCakeLookupResponse {
+  return {
+    contractVersion: 'custom-cake.v1',
+    requestNumber: 'CUSTOM-DASHBOARD-1',
+    customer: { customerName: 'Private Customer', customerPhone: '0412345678', customerEmail: 'private@example.com' },
+    pickup: { pickupDate: '2026-07-09', pickupTime: '10:00' },
+    lines: [{
+      kind: 'custom-cake', lineId: 'custom-cake-line', parentCakeLineId: null, productId: 'custom-cake', quantity: 1,
+      tier: 'single', size: '6in', designNote: 'Private design note', figurineSource: 'customer', photoRefs: ['private-photo-ref'],
+    }],
+    paidSmoreLines: [],
+    acceptanceHistory: [],
+    status: 'requested',
+    quote: {
+      quoteVersion: 1, currency: 'AUD', pricingPolicyVersion: 'custom-cake.2026-09.v1', promotionEligibilityAt: '2026-07-01T00:00:00.000Z',
+      baseCents: 15500, cakeDiscountCents: 0, designExtraCents: null, figurineExtraCents: null,
+      paidSmoreQuantity: 0, paidSmoreTotalCents: 0, giftSmoreQuantity: 2, knownTotalCents: 15500,
+      isFinalQuote: false, finalTotalCents: null,
+    },
+    acceptance: null,
+    ...overrides,
+  } as CustomCakeLookupResponse
+}
 
 test('monthly calendar grid covers full weeks around target month', () => {
   const days = getCalendarGridDays('2026-07')
@@ -111,6 +136,46 @@ test('daily summary counts active cakes by quantity and classes separately', () 
   ])
 
   assert.equal(getDailyCalendarSummary(events), 'Cake 3 · Class 1')
+})
+
+test('dashboard calendar adds safe custom cake events while retaining Cake and Class ordering', () => {
+  const requested = customCake({ requestNumber: 'CUSTOM-REQUESTED' })
+  const requestedCakeLine = requested.lines.find((line): line is CustomCakeLine => line.kind === 'custom-cake')!
+  const cancelled = customCake({
+    requestNumber: 'CUSTOM-CANCELLED', status: 'cancelled', pickup: { pickupDate: '2026-07-09', pickupTime: '12:00' },
+    lines: [{ ...requestedCakeLine, lineId: 'custom-cake-cancelled', quantity: 2 }],
+  })
+  const multiCake = customCake({
+    requestNumber: 'CUSTOM-MULTI', pickup: { pickupDate: '2026-07-09', pickupTime: '13:00' },
+    lines: [
+      { ...requestedCakeLine, lineId: 'custom-cake-multi-single' },
+      { ...requestedCakeLine, lineId: 'custom-cake-multi-double', tier: 'double', size: '4in+6in', quantity: 2 },
+    ],
+  })
+  const events = buildAdminCalendarEvents(
+    [cake({ id: 'cake-regular', pickupTime: '11:00', customerName: 'Jenny' })],
+    [classBooking({ id: 'class-regular', classTime: '09:30', childName: 'Emma' })],
+    buildCustomCakeDashboardEvents([requested, cancelled, multiCake]),
+  )
+
+  assert.deepEqual(events.map(event => [event.id, event.time]), [
+    ['class-regular', '09:30'],
+    ['custom-cake:CUSTOM-REQUESTED', '10:00'],
+    ['cake-regular', '11:00'],
+    ['custom-cake:CUSTOM-CANCELLED', '12:00'],
+    ['custom-cake:CUSTOM-MULTI', '13:00'],
+  ])
+  const customEvents = events.filter(event => event.id.startsWith('custom-cake:'))
+  assert.deepEqual(customEvents.map(event => [event.kind, event.title, event.subtitle, event.isCancelled]), [
+    ['cake', 'Custom Cake · Single 6in ×1', 'Requested', false],
+    ['cake', 'Custom Cake · Single 6in ×2', 'Cancelled', true],
+    ['cake', 'Custom Cake · Single 6in ×1 + Double 4in+6in ×2', 'Requested', false],
+  ])
+  assert.equal(events.find(event => event.id === 'cake-regular')?.title, 'Jenny · Pave Chocolate Cake')
+  assert.equal(events.find(event => event.id === 'class-regular')?.title, 'Basic Cake Class · Emma')
+  assert.equal(getDailyCalendarSummary(events), 'Cake 5 · Class 1')
+  const customJson = JSON.stringify(customEvents)
+  for (const privateValue of ['Private Customer', '0412345678', 'private@example.com', 'Private design note', 'private-photo-ref']) assert.equal(customJson.includes(privateValue), false)
 })
 
 test('admin calendar shows every multi-line cake and counts aggregate items', () => {
