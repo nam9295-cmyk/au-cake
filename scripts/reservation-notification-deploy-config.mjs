@@ -49,7 +49,7 @@ function endpoint(env) {
 function runtime(env) {
   const value = String(env.APPWRITE_RESERVATION_NOTIFY_RUNTIME || 'node-16.0').trim()
   if (env.CUSTOM_CAKE_BACKEND_DEPLOY_ENABLED === 'true') {
-    if (value !== 'node-22.0') throw new Error('APPWRITE_RESERVATION_NOTIFY_RUNTIME must explicitly be node-22.0 for custom backend deployment.')
+    if (value !== 'node-22') throw new Error('APPWRITE_RESERVATION_NOTIFY_RUNTIME must explicitly be node-22 for custom backend deployment.')
     return value
   }
   if (value !== 'node-16.0') throw new Error('APPWRITE_RESERVATION_NOTIFY_RUNTIME must be node-16.0 for this Appwrite deployment.')
@@ -178,7 +178,7 @@ export function buildDryRunPlan(env = {}) {
       source: 'appwrite-functions/reservation-notification/{package.json,package-lock.json,src/**,shared/**}',
       sharedSources: [...ARCHIVE_SHARED_SOURCE_PATHS],
       scopes: custom.functionOptions.scopes || [...FUNCTION_SCOPES],
-      ...(custom.functionOptions.schedule ? { schedule: custom.functionOptions.schedule, customRuntimePrerequisite: 'Operator must verify self-hosted node-22.0 availability before deployment.' } : {}),
+      ...(custom.functionOptions.schedule ? { schedule: custom.functionOptions.schedule, customRuntimePrerequisite: 'Operator must verify self-hosted node-22 availability before deployment.' } : {}),
       anonymousExecution: false,
       exactAdminExecution: true,
       variableNames: Object.keys(variableValues),

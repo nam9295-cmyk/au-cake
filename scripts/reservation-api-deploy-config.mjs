@@ -56,7 +56,7 @@ function endpoint(env) {
 function transactionCompatibleRuntime(env) {
   const value = String(env.APPWRITE_RESERVATION_API_RUNTIME || 'node-16.0').trim()
   if (env.CUSTOM_CAKE_BACKEND_DEPLOY_ENABLED === 'true') {
-    if (value !== 'node-22.0') throw new Error('APPWRITE_RESERVATION_API_RUNTIME must explicitly be node-22.0 for custom backend deployment.')
+    if (value !== 'node-22') throw new Error('APPWRITE_RESERVATION_API_RUNTIME must explicitly be node-22 for custom backend deployment.')
     return value
   }
   if (value !== 'node-16.0') {
@@ -203,7 +203,7 @@ export function buildDryRunPlan(env = {}) {
       runtime: env.APPWRITE_RESERVATION_API_RUNTIME || 'node-16.0',
       source: 'appwrite-functions/reservation-api/{package.json,package-lock.json,src/**}',
       scopes: custom.functionOptions.scopes || [...FUNCTION_SCOPES],
-      ...(custom.functionOptions.schedule ? { schedule: custom.functionOptions.schedule, customRuntimePrerequisite: 'Operator must verify self-hosted node-22.0 availability before deployment.' } : {}),
+      ...(custom.functionOptions.schedule ? { schedule: custom.functionOptions.schedule, customRuntimePrerequisite: 'Operator must verify self-hosted node-22 availability before deployment.' } : {}),
       variableNames: Object.keys(variableValues),
       maskedVariables: Object.fromEntries(Object.entries(variableValues).map(([key, value]) => [key, maskValue(value)])),
     },

@@ -22,7 +22,7 @@ function ready() {
     const c = targets.collections.find(c => c.collectionId === collectionId)
     return { ...structuredClone(c), $id: c.collectionId, databaseId: 'test-db', $permissions: [], attributes: c.attributes.map(a => ({ ...a, status: 'available', array: false, default: null, ...(a.type === 'string' ? { format: '', encrypt: false } : {}) })), indexes: c.indexes.map(i => ({ ...i, status: 'available', lengths: [] })) }
   }
-  const fn = { $id: 'reservation-notification', enabled: true, runtime: 'node-22.0', timeout: 60, execute: ['user:admin'], schedule: '* * * * *', scopes: ['functions.read', 'databases.read', 'collections.read', 'documents.read', 'documents.write', 'buckets.read'] }
+  const fn = { $id: 'reservation-notification', enabled: true, runtime: 'node-22', timeout: 60, execute: ['user:admin'], schedule: '* * * * *', scopes: ['functions.read', 'databases.read', 'collections.read', 'documents.read', 'documents.write', 'buckets.read'] }
   const services = { databases, storage: { getBucket: async () => ({ ...targets.bucket, $id: targets.bucket.bucketId, $permissions: [] }) }, functions: { get: async () => fn } }
   return { env, services, fn, config, req: { headers: { 'x-appwrite-trigger': 'schedule', 'x-appwrite-key': 'platform-synthetic' } } }
 }
