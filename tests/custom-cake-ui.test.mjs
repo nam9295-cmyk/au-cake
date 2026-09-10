@@ -69,7 +69,7 @@ function wire(handler) {
     const response = await handler(body.action, body.data, execution.headers)
     return response?.responseStatusCode ? response : { responseStatusCode: 200, responseBody: JSON.stringify({ ok: true, result: response }) }
   }
-  account.createJWT = async () => ({ jwt: 'synthetic-admin-jwt' })
+  account.createJWT = async () => { throw new Error('manual browser JWT creation must not run') }
   return calls
 }
 test('actual lookup and completion render literal parsed server cents, including zero and unknown extras', () => {
@@ -165,7 +165,7 @@ test('actual submit handler freezes UUID line IDs, contact and options across ti
   page.unmount()
 })
 
-test('actual photo component sends customer possession proof or authenticated admin JWT', async () => {
+test('actual photo component sends customer possession proof or uses platform-authenticated admin execution', async () => {
   const calls = wire(() => photoRead)
   const customer = mount(CustomCakePhoto, { requestNumber: 'CUSTOM-EXAMPLE-1', photoRef: photoRead.photoRef, customerPhone: '0412345678' })
   await customer.flush()
@@ -176,7 +176,7 @@ test('actual photo component sends customer possession proof or authenticated ad
   const admin = mount(CustomCakePhoto, { requestNumber: 'CUSTOM-EXAMPLE-1', photoRef: photoRead.photoRef })
   await admin.flush()
   assert.deepEqual(calls[1].data.authorization, { kind: 'admin' })
-  assert.equal(calls[1].headers['x-appwrite-user-jwt'], 'synthetic-admin-jwt')
+  assert.equal(calls[1].headers['x-appwrite-user-jwt'], undefined)
   customer.unmount(); admin.unmount()
 })
 
@@ -189,7 +189,7 @@ test('actual admin auto-loads and filters requests, refreshes, and mutates an ad
   const page = mount(AdminCustomCakesSection)
   await page.flush()
   assert.equal(calls[0].action, 'admin-list-custom-cake-requests')
-  assert.equal(calls[0].headers['x-appwrite-user-jwt'], 'synthetic-admin-jwt')
+  assert.equal(calls[0].headers['x-appwrite-user-jwt'], undefined)
   assert.ok(page.find(node => node.type === 'tr' && node.props.onClick))
 
   const search = page.find(node => node.type === 'input' && node.props['aria-label'] === 'Search custom cake requests')
@@ -201,7 +201,7 @@ test('actual admin auto-loads and filters requests, refreshes, and mutates an ad
   page.render()
   page.find(node => node.type === 'tr' && node.props.onClick).props.onClick(); page.render()
   await page.find(node => node.type === 'form' && node.props.className !== 'admin-filters-bar').props.onSubmit({ preventDefault() {} }); page.render()
-  assert.equal(calls[1].headers['x-appwrite-user-jwt'], 'synthetic-admin-jwt')
+  assert.equal(calls[1].headers['x-appwrite-user-jwt'], undefined)
   assert.deepEqual(calls[2].data, { contractVersion: 'custom-cake.v1', requestNumber: 'CUSTOM-EXAMPLE-1', customerPhone: '0412345678' })
   assert.ok(page.find(node => node.props?.role === 'alert'))
   await page.find(node => node.type === 'button' && node.props['aria-label'] === 'Refresh custom cake requests').props.onClick()

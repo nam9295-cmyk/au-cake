@@ -1,4 +1,4 @@
-import type { Account, ExecutionMethod, Functions } from 'appwrite'
+import type { ExecutionMethod, Functions } from 'appwrite'
 import type { CustomCakeCreateRequest, CustomCakeLookupRequest, UpdateCustomCakeQuoteRequest, AcceptCustomCakeQuoteRequest, ConfirmCustomCakeRequest, CompleteCustomCakeRequest, CancelCustomCakeRequest } from './custom-cake-contract.js'
 import type { CakeOrderV2Request, CakeOrderV2LookupRequest } from './cake-order-v2-contract.js'
 import type { PhotoUploadCredential, PhotoSessionRequest, PhotoUploadRequest, PhotoReadRequest, PhotoDeleteRequest } from './custom-cake-photo-contract.js'
@@ -7,12 +7,11 @@ import { parseCustomCakeAdminListResponse, parseCustomCakeCreateResponse, parseC
 type Context = { admin?: boolean; credential?: PhotoUploadCredential }
 type Execution = { responseStatusCode: number; responseBody: string }
 export type CakeWireTransport = (action: string, data: unknown, context?: Context) => Promise<Execution>
-export function createAppwriteCakeWireTransport({ functions, account, functionId }: { functions: Pick<Functions, 'createExecution'>; account: Pick<Account, 'createJWT'>; functionId: string }): CakeWireTransport {
+export function createAppwriteCakeWireTransport({ functions, functionId }: { functions: Pick<Functions, 'createExecution'>; functionId: string }): CakeWireTransport {
   return async (action, data, context = {}) => {
     try {
       if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/.test(functionId)) throw new Error()
       const headers: Record<string, string> = {}
-      if (context.admin) headers['x-appwrite-user-jwt'] = (await account.createJWT()).jwt
       if (context.credential) {
         headers['x-custom-cake-upload-session'] = context.credential.uploadSessionId
         headers['x-custom-cake-upload-token'] = context.credential.uploadToken
@@ -61,9 +60,9 @@ export function createCakeWireRepository(transport: CakeWireTransport) {
 }
 /** Actual browser wiring, kept separate from legacy repository and health parsing. */
 export async function getCakeWireRepository() {
-  const { functions, account, appwriteConfig, isAppwriteConfigured } = await import('./appwrite')
+  const { functions, appwriteConfig, isAppwriteConfigured } = await import('./appwrite')
   if (!isAppwriteConfigured || appwriteConfig.reservationApiMode === 'off') throw new Error('CAKE_WIRE_UNAVAILABLE')
-  const transport = createAppwriteCakeWireTransport({ functions, account, functionId: appwriteConfig.reservationApiFunctionId })
+  const transport = createAppwriteCakeWireTransport({ functions, functionId: appwriteConfig.reservationApiFunctionId })
   return createCakeWireRepository((action, data, context) => {
     if (appwriteConfig.reservationApiMode !== 'all' && !['get-cake-wire-capabilities', 'get-custom-cake-request', 'get-cake-order-v2', 'read-custom-cake-photo'].includes(action)) throw new Error('CAKE_WIRE_UNAVAILABLE')
     return transport(action, data, context)
