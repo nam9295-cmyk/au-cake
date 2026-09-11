@@ -94,6 +94,36 @@
   line-height: 1.35;
 }
 
+.kids-holiday-notice {
+  display: grid;
+  gap: 6px;
+  max-width: 520px;
+  margin-top: 22px;
+  padding: 16px 20px;
+  border: 1px solid var(--kids-border);
+  border-radius: 14px;
+  background: var(--kids-cream);
+  color: var(--kids-brown);
+}
+
+.kids-holiday-notice strong {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.kids-holiday-notice span {
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
+.kids-final-cta .kids-holiday-notice {
+  margin-top: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
 .kids-primary-button {
   min-width: 220px;
   min-height: 48px;

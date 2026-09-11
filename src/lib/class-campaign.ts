@@ -9,7 +9,7 @@ export interface SpringClassCampaign {
 }
 
 export const SPRING_CLASS_CAMPAIGN_2026: SpringClassCampaign = Object.freeze({
-  enabled: true,
+  enabled: false,
   timezone: 'Australia/Sydney',
   allowedDates: Object.freeze(['2026-09-26', '2026-10-03', '2026-10-10']),
   sessionTimes: Object.freeze(['10:00', '13:00', '16:00']),

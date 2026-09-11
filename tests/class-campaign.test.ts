@@ -9,34 +9,39 @@ import {
   isSpringClassCampaignActive,
 } from '../src/lib/class-campaign.js'
 
+const openCampaign = { ...SPRING_CLASS_CAMPAIGN_2026, enabled: true }
+
 test('Spring campaign selects the next non-past scheduled date in Sydney', () => {
-  assert.equal(getNextSpringClassDate(new Date('2026-08-23T00:00:00.000Z')), '2026-09-26')
-  assert.equal(getNextSpringClassDate(new Date('2026-09-26T13:59:59.000Z')), '2026-09-26')
-  assert.equal(getNextSpringClassDate(new Date('2026-09-26T14:00:00.000Z')), '2026-10-03')
-  assert.equal(getNextSpringClassDate(new Date('2026-10-03T13:59:59.000Z')), '2026-10-03')
-  assert.equal(getNextSpringClassDate(new Date('2026-10-03T14:00:00.000Z')), '2026-10-10')
-  assert.equal(getNextSpringClassDate(new Date('2026-10-10T13:00:00.000Z')), null)
+  assert.equal(getNextSpringClassDate(new Date('2026-08-23T00:00:00.000Z'), openCampaign), '2026-09-26')
+  assert.equal(getNextSpringClassDate(new Date('2026-09-26T13:59:59.000Z'), openCampaign), '2026-09-26')
+  assert.equal(getNextSpringClassDate(new Date('2026-09-26T14:00:00.000Z'), openCampaign), '2026-10-03')
+  assert.equal(getNextSpringClassDate(new Date('2026-10-03T13:59:59.000Z'), openCampaign), '2026-10-03')
+  assert.equal(getNextSpringClassDate(new Date('2026-10-03T14:00:00.000Z'), openCampaign), '2026-10-10')
+  assert.equal(getNextSpringClassDate(new Date('2026-10-10T13:00:00.000Z'), openCampaign), null)
 })
 
 test('Spring class booking allows the three scheduled Saturdays while the campaign is open', () => {
   const beforeCampaign = new Date('2026-08-23T00:00:00.000Z')
-  assert.equal(isSpringClassBookingDateAllowed('2026-09-26', beforeCampaign), true)
-  assert.equal(isSpringClassBookingDateAllowed('2026-10-03', beforeCampaign), true)
-  assert.equal(isSpringClassBookingDateAllowed('2026-10-10', beforeCampaign), true)
+  assert.equal(isSpringClassBookingDateAllowed('2026-09-26', beforeCampaign, openCampaign), true)
+  assert.equal(isSpringClassBookingDateAllowed('2026-10-03', beforeCampaign, openCampaign), true)
+  assert.equal(isSpringClassBookingDateAllowed('2026-10-10', beforeCampaign, openCampaign), true)
   for (const value of ['2026-09-27', '2026-10-04', '2026-10-11', 'not-a-date']) {
-    assert.equal(isSpringClassBookingDateAllowed(value, beforeCampaign), false, value)
+    assert.equal(isSpringClassBookingDateAllowed(value, beforeCampaign, openCampaign), false, value)
   }
-  assert.equal(isSpringClassBookingDateAllowed('2026-10-03', new Date('2026-10-03T14:00:00.000Z')), false)
-  assert.equal(isSpringClassBookingDateAllowed('2026-10-10', new Date('2026-10-03T14:00:00.000Z')), true)
+  assert.equal(isSpringClassBookingDateAllowed('2026-10-03', new Date('2026-10-03T14:00:00.000Z'), openCampaign), false)
+  assert.equal(isSpringClassBookingDateAllowed('2026-10-10', new Date('2026-10-03T14:00:00.000Z'), openCampaign), true)
 })
 
 test('Spring campaign stays visible through 10 October Sydney and supports the kill switch', () => {
-  assert.equal(isSpringClassCampaignActive(new Date('2026-10-10T12:59:59.000Z')), true)
-  assert.equal(isSpringClassCampaignActive(new Date('2026-10-10T13:00:00.000Z')), false)
+  assert.equal(isSpringClassCampaignActive(new Date('2026-10-10T12:59:59.000Z'), openCampaign), true)
+  assert.equal(isSpringClassCampaignActive(new Date('2026-10-10T13:00:00.000Z'), openCampaign), false)
   assert.equal(isSpringClassCampaignActive(
     new Date('2026-08-23T00:00:00.000Z'),
     { ...SPRING_CLASS_CAMPAIGN_2026, enabled: false },
   ), false)
+  assert.equal(isSpringClassCampaignActive(new Date('2026-08-23T00:00:00.000Z')), false)
+  assert.equal(getNextSpringClassDate(new Date('2026-08-23T00:00:00.000Z')), null)
+  assert.equal(isSpringClassBookingDateAllowed('2026-09-26'), false)
 })
 
 test('Spring campaign exposes the approved English and Korean customer copy', () => {

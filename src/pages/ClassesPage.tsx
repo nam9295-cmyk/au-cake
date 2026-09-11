@@ -5,7 +5,7 @@ import PublicReviewsSection from '../PublicReviewsSection'
 import { SiteHeader } from '../components/SiteChrome'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
-import { getSpringClassCampaignCopy } from '../lib/class-campaign'
+import { getSpringClassCampaignCopy, isSpringClassCampaignActive } from '../lib/class-campaign'
 import { getClassPageCopy, type Language } from '../lib/i18n'
 import { getAuPublicContent } from '../lib/public-content'
 import { formatCurrency } from '../lib/utils'
@@ -14,6 +14,16 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
   const copy = getClassPageCopy(language)
   const publicClassContent = getAuPublicContent().classes
   const campaignCopy = getSpringClassCampaignCopy(language)
+  const isCampaignActive = isSpringClassCampaignActive()
+  const holidayNotice = language === 'ko'
+    ? {
+        title: '키즈 클래스는 방학 기간에만 운영됩니다.',
+        description: '다음 방학 프로그램 예약이 오픈되면 다시 안내드릴게요.',
+      }
+    : {
+        title: 'Kids Classes are available during school holidays only.',
+        description: 'Bookings will reopen for the next school holiday program.',
+      }
 
   return (
     <>
@@ -24,17 +34,26 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
             <h1 id="kids-class-title">{copy.landing.title}</h1>
             <p className="kids-location">{copy.landing.location}</p>
             <p className="kids-hero-text">{copy.landing.intro}</p>
-            <div className="kids-hero-actions">
-              <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
-                {copy.landing.requestSpot}
-              </button>
-              <span>{copy.landing.courseSummary}</span>
-            </div>
-            <aside className="spring-class-callout" aria-label={campaignCopy.calloutTitle}>
-              <strong>{campaignCopy.calloutTitle}</strong>
-              <span>{campaignCopy.calloutDates}</span>
-              <span>{campaignCopy.calloutSessions}</span>
-            </aside>
+            {isCampaignActive ? (
+              <>
+                <div className="kids-hero-actions">
+                  <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
+                    {copy.landing.requestSpot}
+                  </button>
+                  <span>{copy.landing.courseSummary}</span>
+                </div>
+                <aside className="spring-class-callout" aria-label={campaignCopy.calloutTitle}>
+                  <strong>{campaignCopy.calloutTitle}</strong>
+                  <span>{campaignCopy.calloutDates}</span>
+                  <span>{campaignCopy.calloutSessions}</span>
+                </aside>
+              </>
+            ) : (
+              <aside className="kids-holiday-notice" role="status">
+                <strong>{holidayNotice.title}</strong>
+                <span>{holidayNotice.description}</span>
+              </aside>
+            )}
           </div>
 
           <div className="kids-photo-card reveal-up delay-one">
@@ -130,10 +149,19 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
         />
 
         <section className="kids-final-cta reveal-up" aria-label={copy.landing.finalCtaLabel}>
-          <p>{copy.landing.finalCtaText}</p>
-          <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
-            {copy.landing.requestSpot}
-          </button>
+          {isCampaignActive ? (
+            <>
+              <p>{copy.landing.finalCtaText}</p>
+              <button className="kids-primary-button" type="button" onClick={() => navigate('class-reserve')}>
+                {copy.landing.requestSpot}
+              </button>
+            </>
+          ) : (
+            <div className="kids-holiday-notice" role="status">
+              <strong>{holidayNotice.title}</strong>
+              <span>{holidayNotice.description}</span>
+            </div>
+          )}
         </section>
       </main>
     </>
