@@ -19,6 +19,17 @@ const publicContent = JSON.parse(
   readFileSync(new URL('../src/content/au-public-pages.json', import.meta.url), 'utf8'),
 )
 
+test('kids class landing gates booking CTA and spring callout behind campaign status and shows school holiday notice when inactive', () => {
+  assert.match(landing, /isSpringClassCampaignActive/)
+  assert.match(landing, /isCampaignActive\s*\?/)
+  assert.match(landing, /Kids Classes are available during school holidays only/)
+  assert.match(landing, /키즈 클래스는 방학 기간에만 운영됩니다/)
+  assert.match(landing, /Bookings will reopen for the next school holiday program/)
+  assert.match(landing, /다음 방학 프로그램 예약이 오픈되면 다시 안내드릴게요/)
+  assert.doesNotMatch(landing, /temporarily closed|잠시 운영을 쉽니다/)
+  assert.match(css, /\.kids-holiday-notice/)
+})
+
 test('kids class landing presents Basic, Advanced and the Spring campaign dates without stale weekend copy', () => {
   assert.match(landing, /getClassPageCopy\(language\)/)
   assert.match(classCopy, /Basic Cake Class/)
