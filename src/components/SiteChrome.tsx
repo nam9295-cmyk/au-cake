@@ -6,6 +6,7 @@ import headerLogo from '../assets/header-logo.svg'
 import { type Page } from '../lib/app-routes'
 import { getAnalyticsConsent, initializeAnalytics, setAnalyticsConsent, trackEvent, trackPageView } from '../lib/analytics'
 import { cakeCopy, type Language } from '../lib/i18n'
+import { isSpringClassCampaignActive } from '../lib/class-campaign'
 
 const PICKUP_LOCATION_NAME = 'Pulse - Melrose Park'
 const PICKUP_LOCATION_ADDRESS = '1 Bundil Blvd, Melrose Park NSW 2114'
@@ -142,6 +143,7 @@ export function SiteHeader({
   cartItemCount?: number
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const showKidsClasses = isSpringClassCampaignActive()
   const copy = cakeCopy(language || 'en')
   const mobileMenuCopy = language === 'ko'
     ? {
@@ -211,9 +213,11 @@ export function SiteHeader({
           <a className="cakes-nav-button" href="/cakes" onClick={(event) => { event.preventDefault(); navigate('cakes') }}>
             {language === 'ko' ? '케이크' : 'Cakes'}
           </a>
-          <a className="kids-nav-button" href="/classes" onClick={(event) => { event.preventDefault(); navigate('classes') }}>
-            {copy.kidsNav}
-          </a>
+          {showKidsClasses && (
+            <a className="kids-nav-button" href="/classes" onClick={(event) => { event.preventDefault(); navigate('classes') }}>
+              {copy.kidsNav}
+            </a>
+          )}
           <a href="/lookup" rel="nofollow" onClick={(event) => { event.preventDefault(); navigate('lookup') }}>
             {copy.lookupNav}
           </a>
@@ -257,9 +261,11 @@ export function SiteHeader({
             <a className="cakes-nav-button" href="/cakes" onClick={(event) => { event.preventDefault(); navigateFromMobileMenu('cakes') }}>
               {language === 'ko' ? '케이크' : 'Cakes'}
             </a>
-            <a className="kids-nav-button" href="/classes" onClick={(event) => { event.preventDefault(); navigateFromMobileMenu('classes') }}>
-              {copy.kidsNav}
-            </a>
+            {showKidsClasses && (
+              <a className="kids-nav-button" href="/classes" onClick={(event) => { event.preventDefault(); navigateFromMobileMenu('classes') }}>
+                {copy.kidsNav}
+              </a>
+            )}
             <a href="/lookup" rel="nofollow" onClick={(event) => { event.preventDefault(); navigateFromMobileMenu('lookup') }}>
               {copy.lookupNav}
             </a>
@@ -321,6 +327,7 @@ export function SiteFooter({
   language: Language
 }) {
   const contentRef = useRef<HTMLDivElement | null>(null)
+  const showKidsClasses = isSpringClassCampaignActive()
 
   useEffect(() => {
     const node = contentRef.current
@@ -373,7 +380,9 @@ export function SiteFooter({
         <p className="site-footer-address">{copy.description}</p>
         <nav className="site-footer-nav" aria-label={language === 'ko' ? '푸터 메뉴' : 'Footer navigation'}>
           <a href="/reserve" onClick={(event) => { event.preventDefault(); navigate('reserve') }}>{copy.order}</a>
-          <a href="/classes" onClick={(event) => { event.preventDefault(); navigate('classes') }}>{copy.classes}</a>
+          {showKidsClasses && (
+            <a href="/classes" onClick={(event) => { event.preventDefault(); navigate('classes') }}>{copy.classes}</a>
+          )}
           <a href="/reviews"
             onClick={(event) => {
               event.preventDefault()
@@ -392,6 +401,11 @@ export function SiteFooter({
             Instagram
           </a>
         </nav>
+        <p className="site-footer-business">
+          <span>verygood chocolate</span>
+          <span className="site-footer-business-separator" aria-hidden="true"> · </span>
+          <span>ABN 84 144 047 411</span>
+        </p>
         <small>© {new Date().getFullYear()} verygood chocolate</small>
       </div>
     </footer>

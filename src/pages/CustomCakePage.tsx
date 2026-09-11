@@ -361,13 +361,6 @@ export function CustomCakePage({
               {/* S'more Stick Add-on */}
               <fieldset disabled={locked} className="cake-detail-fieldset">
                 <legend>{language === 'ko' ? '스모어 스틱 추가 구매' : 'S’more Stick Add-on'}</legend>
-                <div className="custom-cake-smore-banner">
-                  <div>
-                    <strong>{language === 'ko' ? '9월 오픈 프로모션' : 'September Opening Offer'}</strong>
-                    <p>{language === 'ko' ? '대상 접수에는 케이크 1개당 스모어 2개가 증정됩니다. 적용 여부는 요청 접수 시 확인됩니다.' : 'Eligible requests include 2 S’more sticks per cake. Eligibility is confirmed when your request is received.'}</p>
-                  </div>
-                  <span className="smore-promo-tag">{language === 'ko' ? '조건부' : 'ELIGIBLE'}</span>
-                </div>
                 <div className="custom-cake-smore-counter-row">
                   <div>
                     <strong>{language === 'ko' ? '유료 추가 스틱 (30% 할인가)' : 'Additional sticks (30% off)'}</strong>

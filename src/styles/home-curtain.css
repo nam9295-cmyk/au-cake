@@ -156,6 +156,19 @@
   text-underline-offset: 4px;
 }
 
+.home-shell .site-footer-business {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  color: #a3b8b0;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  margin: 0 0 6px;
+}
+
 .home-shell .site-footer-content small {
   color: #a3b8b0;
   font-size: 11px;

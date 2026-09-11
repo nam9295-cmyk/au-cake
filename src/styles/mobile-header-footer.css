@@ -81,6 +81,23 @@
   text-decoration: underline;
 }
 
+.site-footer-business {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  color: rgba(240, 238, 233, 0.64);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  margin: 0 0 6px;
+}
+
+.site-footer-business-separator {
+  opacity: 0.6;
+}
+
 .site-footer-content small {
   color: rgba(240, 238, 233, 0.64);
   font-size: 11px;
