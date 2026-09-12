@@ -16,7 +16,11 @@ import {
   INDIVIDUAL_PACKAGING_PRODUCT_PIECES,
   BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS,
   CUSTOM_CAKE_V1_BASE_CENTS,
-  CUSTOM_CAKE_V1_PROMOTION_END,
+  CUSTOM_CAKE_V1_PROMO_CODE,
+  CUSTOM_CAKE_V1_PROMOTION_RECEIPT_START_DATE,
+  CUSTOM_CAKE_V1_PROMOTION_RECEIPT_END_DATE,
+  CUSTOM_CAKE_V1_PROMOTION_PICKUP_START_DATE,
+  CUSTOM_CAKE_V1_PROMOTION_PICKUP_END_DATE,
 } from './cake-order-catalog.js'
 import { fail, sydneyDateValue, isValidDateValue, SAFE_LAST4_PATTERN } from './reservation-input-policy.js'
 import { canonicalOrderLineKey, normalizeCustomCakeV1Request, normalizeCakeOrderV2Request } from './cake-order-input.js'
@@ -223,21 +227,28 @@ export function reviseCustomCakeV1Quote(baseQuote, { quoteVersion, designExtraCe
 
 // Both instants are supplied by the server. The transaction must persist the
 // eligibility instant only with the first successful receipt, never an attempt.
-export function priceCustomCakeV1Request(value, { promotionEligibilityAt, promotionStartsAt }) {
+export function priceCustomCakeV1Request(value, { promotionEligibilityAt }) {
   const request = normalizeCustomCakeV1Request(value)
   wireTimestamp(promotionEligibilityAt)
-  wireTimestamp(promotionStartsAt)
-  const eligible = promotionEligibilityAt >= promotionStartsAt && promotionEligibilityAt < CUSTOM_CAKE_V1_PROMOTION_END
+  if (request.promoCode && request.promoCode !== CUSTOM_CAKE_V1_PROMO_CODE) fail('PROMO_CODE_INVALID')
+  const receivedDate = sydneyDateValue(Date.parse(promotionEligibilityAt))
+  const eligible = request.promoCode === CUSTOM_CAKE_V1_PROMO_CODE
+    && receivedDate >= CUSTOM_CAKE_V1_PROMOTION_RECEIPT_START_DATE
+    && receivedDate <= CUSTOM_CAKE_V1_PROMOTION_RECEIPT_END_DATE
+    && request.pickup.pickupDate >= CUSTOM_CAKE_V1_PROMOTION_PICKUP_START_DATE
+    && request.pickup.pickupDate <= CUSTOM_CAKE_V1_PROMOTION_PICKUP_END_DATE
+  if (request.promoCode && !eligible) fail('PROMO_CODE_INVALID')
   const cakeLines = request.lines.filter(line => line.kind === 'custom-cake')
   const baseAmounts = cakeLines.map(line => wireAmount(CUSTOM_CAKE_V1_BASE_CENTS[line.tier][line.size] * line.quantity))
+  const baseCents = wireSum(baseAmounts)
   const paidSmoreLines = request.lines.filter(line => line.kind !== 'custom-cake').map(priceWireSmoreLine)
   const baseQuote = {
     currency: 'AUD', pricingPolicyVersion: 'custom-cake.2026-09.v1', promotionEligibilityAt,
-    baseCents: wireSum(baseAmounts),
-    cakeDiscountCents: eligible ? wireSum(baseAmounts.map(amount => Math.round(amount * 5 / 100))) : 0,
+    baseCents,
+    cakeDiscountCents: eligible ? Math.round(baseCents * 10 / 100) : 0,
     paidSmoreQuantity: wireSum(paidSmoreLines.map(line => line.quantity)),
     paidSmoreTotalCents: wireSum(paidSmoreLines.map(line => line.totalCents)),
-    giftSmoreQuantity: eligible ? wireSum(cakeLines.map(line => line.quantity * 2)) : 0,
+    giftSmoreQuantity: 0,
   }
   const quote = reviseCustomCakeV1Quote(baseQuote, { quoteVersion: 1, designExtraCents: null, figurineExtraCents: null })
   return { quote, paidSmoreLines }

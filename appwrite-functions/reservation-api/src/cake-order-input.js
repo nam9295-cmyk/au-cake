@@ -38,6 +38,7 @@ import {
   INDIVIDUAL_PACKAGING_PRODUCT_PIECES,
   PROMOTIONS,
   CUSTOM_CAKE_V1_BASE_CENTS,
+  CUSTOM_CAKE_V1_PROMO_CODE,
 } from './cake-order-catalog.js'
 import { isActiveCakeOrderProductId, isCompatCakeOrderProductId } from './active-cake-products.js'
 
@@ -558,7 +559,8 @@ function normalizeWireRequest(value, contractVersion) {
   return wireInputBoundary(() => {
     if (!['custom-cake.v1', 'cake-order.v2'].includes(contractVersion)) fail('INVALID_REQUEST')
     const custom = contractVersion === 'custom-cake.v1'
-    exactWireFields(value, ['contractVersion', 'requestId', 'customer', 'pickup', 'requestNote', 'privacyConsent', ...(custom ? [] : ['promoCode']), 'lines'])
+    const customPromoProvided = custom && isPlainObject(value) && Object.hasOwn(value, 'promoCode')
+    exactWireFields(value, ['contractVersion', 'requestId', 'customer', 'pickup', 'requestNote', 'privacyConsent', ...(custom ? (customPromoProvided ? ['promoCode'] : []) : ['promoCode']), 'lines'])
     if (value.contractVersion !== contractVersion || typeof value.requestId !== 'string'
       || !WIRE_REQUEST_ID.test(value.requestId) || value.privacyConsent !== true) fail('INVALID_REQUEST')
     exactWireFields(value.customer, ['customerName', 'customerPhone', 'customerEmail'])
@@ -578,7 +580,13 @@ function normalizeWireRequest(value, contractVersion) {
       requestNote: wireText(value.requestNote),
       privacyConsent: true,
     }
-    if (!custom) {
+    if (custom) {
+      if (value.promoCode !== undefined && typeof value.promoCode !== 'string') fail('INVALID_REQUEST')
+      const promo = value.promoCode?.trim() || ''
+      result.promoCode = promo.toLowerCase() === CUSTOM_CAKE_V1_PROMO_CODE.toLowerCase()
+        ? CUSTOM_CAKE_V1_PROMO_CODE
+        : promo
+    } else {
       if (typeof value.promoCode !== 'string') fail('INVALID_REQUEST')
       const promo = value.promoCode.trim()
       result.promoCode = !promo ? '' : PROMOTIONS.find(p => p.code === promo.toLowerCase())?.code || normalizeReviewCouponCode(promo)

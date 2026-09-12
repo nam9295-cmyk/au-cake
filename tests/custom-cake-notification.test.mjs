@@ -119,7 +119,7 @@ test('received operator receipts include contact and immutable custom order sele
   assert.match(operator.text, /Contact email: contract@example\.invalid/)
   assert.match(operator.text, /Custom Cake cake_A: single 6in × 1; design: <Blue & gold>; figurine: shop/)
   assert.match(operator.text, /Paid S’more smore_A: × 2; add-on to cake_A; AUD 6\.30/)
-  assert.match(operator.text, /Gift S’more: × 2/)
+  assert.doesNotMatch(operator.text, /Gift S.more/)
   assert.match(operator.html, /design: &lt;Blue &amp; gold&gt;/)
   assert.doesNotMatch(operator.text, /photo_A|photo_B|uploadToken/)
   assert.doesNotMatch(operator.html, /photo_A|photo_B|uploadToken/)

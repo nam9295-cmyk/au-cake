@@ -135,13 +135,6 @@ export function CustomCakeCompletePage({
                 <dd>{formatExtraCents(quote.figurineExtraCents, language)}</dd>
               </div>
 
-              {quote.giftSmoreQuantity > 0 && (
-                <div className="summary-row gift">
-                  <dt>{language === 'ko' ? '무료 증정 스모어' : 'Gift S’more Sticks'}</dt>
-                  <dd>{quote.giftSmoreQuantity} {language === 'ko' ? '개 (무료)' : 'sticks (Free)'}</dd>
-                </div>
-              )}
-
               {quote.paidSmoreQuantity > 0 && (
                 <div className="summary-row">
                   <dt>{language === 'ko' ? '유료 추가 스모어' : 'Paid Add-on S’more'}</dt>

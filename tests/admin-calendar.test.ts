@@ -84,8 +84,8 @@ function customCake(overrides: Partial<CustomCakeLookupResponse> = {}): CustomCa
     status: 'requested',
     quote: {
       quoteVersion: 1, currency: 'AUD', pricingPolicyVersion: 'custom-cake.2026-09.v1', promotionEligibilityAt: '2026-07-01T00:00:00.000Z',
-      baseCents: 15500, cakeDiscountCents: 0, designExtraCents: null, figurineExtraCents: null,
-      paidSmoreQuantity: 0, paidSmoreTotalCents: 0, giftSmoreQuantity: 2, knownTotalCents: 15500,
+      baseCents: 15900, cakeDiscountCents: 0, designExtraCents: null, figurineExtraCents: null,
+      paidSmoreQuantity: 0, paidSmoreTotalCents: 0, giftSmoreQuantity: 0, knownTotalCents: 15900,
       isFinalQuote: false, finalTotalCents: null,
     },
     acceptance: null,

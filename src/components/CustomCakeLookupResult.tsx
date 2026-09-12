@@ -122,11 +122,6 @@ export function CustomCakeLookupResult({
           <div className="lookup-dl-row">
             <dt>{language === 'ko' ? '스모어 스틱' : 'S’more Sticks'}</dt>
             <dd>
-              {quote.giftSmoreQuantity > 0 && (
-                <span className="gift-tag">
-                  {language === 'ko' ? `무료 증정 ${quote.giftSmoreQuantity}개` : `Gift: ${quote.giftSmoreQuantity} sticks (Free)`}
-                </span>
-              )}
               {smoreLine && smoreLine.kind === 'cake-addon-smore' && smoreLine.quantity > 0 && (
                 <span className="addon-tag">
                   {language === 'ko' ? `유료 추가 ${smoreLine.quantity}개` : `Paid Add-on: ${smoreLine.quantity} sticks`}
@@ -170,13 +165,6 @@ export function CustomCakeLookupResult({
               {formatExtraCents(quote.figurineExtraCents, language)}
             </dd>
           </div>
-
-          {quote.giftSmoreQuantity > 0 && (
-            <div className="quote-row gift">
-              <dt>{language === 'ko' ? '무료 증정 스모어' : 'Gift S’more Sticks'}</dt>
-              <dd>{quote.giftSmoreQuantity} {language === 'ko' ? '개 (무료)' : 'sticks (Complimentary)'}</dd>
-            </div>
-          )}
 
           {quote.paidSmoreQuantity > 0 && (
             <div className="quote-row">

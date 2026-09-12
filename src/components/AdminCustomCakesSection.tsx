@@ -391,10 +391,12 @@ export function AdminCustomCakesSection() {
                     <span>기본 가격</span>
                     <strong>{formatCents(selected.quote.baseCents)}</strong>
                   </div>
-                  <div className="qb-item discount">
-                    <span>9월 5% 할인</span>
-                    <strong>-{formatCents(selected.quote.cakeDiscountCents)}</strong>
-                  </div>
+                  {selected.quote.cakeDiscountCents > 0 && (
+                    <div className="qb-item discount">
+                      <span>커스텀 케이크 프로모션 할인</span>
+                      <strong>-{formatCents(selected.quote.cakeDiscountCents)}</strong>
+                    </div>
+                  )}
                   <div className="qb-item">
                     <span>디자인 추가비</span>
                     <strong>{formatExtraCents(selected.quote.designExtraCents, 'ko')}</strong>
@@ -402,10 +404,6 @@ export function AdminCustomCakesSection() {
                   <div className="qb-item">
                     <span>피규어 추가비</span>
                     <strong>{formatExtraCents(selected.quote.figurineExtraCents, 'ko')}</strong>
-                  </div>
-                  <div className="qb-item gift">
-                    <span>무료 스모어 증정</span>
-                    <strong>{selected.quote.giftSmoreQuantity}개</strong>
                   </div>
                   <div className="qb-item">
                     <span>유료 스모어</span>

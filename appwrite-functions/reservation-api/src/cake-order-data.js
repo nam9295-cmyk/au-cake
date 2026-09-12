@@ -81,12 +81,12 @@ function requireWireNumber(value) {
 
 // Initial immutable data only: the repository must commit these snapshots with
 // the first receipt. They are never embedded inside orderLinesJson.version 1.
-export function buildCustomCakeV1Data(value, { now, requestNumber, promotionStartsAt }) {
+export function buildCustomCakeV1Data(value, { now, requestNumber }) {
   const request = normalizeCustomCakeV1Request(value)
   validateNewCakeWirePickup(request, now)
   requireWireNumber(requestNumber)
   const { quote, paidSmoreLines } = priceCustomCakeV1Request(request, {
-    promotionEligibilityAt: now.toISOString(), promotionStartsAt,
+    promotionEligibilityAt: now.toISOString(),
   })
   const creationResponse = {
     contractVersion: 'custom-cake.v1', requestId: request.requestId, requestNumber,

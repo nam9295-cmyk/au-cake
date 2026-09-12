@@ -79,7 +79,7 @@ export async function persistCakeEvent(tx, snapshot, eventType, occurredAt, expl
 }
 
 /** Authenticated transport is resolved by the route; no body-supplied actor is accepted. */
-export function createCustomCakeWorkflow({ repository, fingerprintKey, promotionStartsAt, photos, coupons, assertLegacyAbsent, assertNewReady, smoreWritesEnabled, now = () => new Date() }) {
+export function createCustomCakeWorkflow({ repository, fingerprintKey, photos, coupons, assertLegacyAbsent, assertNewReady, smoreWritesEnabled, now = () => new Date() }) {
   async function find(number, wire = 'custom-cake.v1') {
     const rows = await repository.list('snapshots', { lookupKey: number, limit: 2 })
     if (rows.length !== 1 || rows[0].value.request.contractVersion !== wire) cakeWireFail('NOT_FOUND')
@@ -103,8 +103,9 @@ export function createCustomCakeWorkflow({ repository, fingerprintKey, promotion
         validateNewCakeWirePickup(request, receivedAt)
         const number = `${custom ? 'CUSTOM' : 'VG-C-AU'}-${randomBytes(12).toString('hex')}`
         const coupon = custom ? null : await coupons.resolve(request.promoCode, receivedAt, tx.transactionId)
-        const built = custom ? buildCustomCakeV1Data(request, { now: receivedAt, requestNumber: number, promotionStartsAt }) : buildCakeOrderV2Data(request, { now: receivedAt, reservationNumber: number, reviewCoupon: coupon?.pricing })
-        if (!custom) built.request.promoCode = ''
+        const built = custom ? buildCustomCakeV1Data(request, { now: receivedAt, requestNumber: number }) : buildCakeOrderV2Data(request, { now: receivedAt, reservationNumber: number, reviewCoupon: coupon?.pricing })
+        // The claim fingerprint retains promo identity; never persist the raw code.
+        built.request.promoCode = ''
         const snapshot = { ...built, quoteHistory: [], transitionAudit: [], ...(coupon ? { couponAudit: coupon.audit } : {}) }
         await tx.claimRequest(identity, built.creationResponse)
         await tx.create('snapshots', request.requestId, snapshot)

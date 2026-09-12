@@ -43,13 +43,13 @@ test('getStatusInfo provides correct label and class for requested, quoted, and 
 })
 
 test('all six custom base prices match the approved contract', () => {
-  assert.equal(CUSTOM_CAKE_BASE_PRICES.single['6in'], 15500)
-  assert.equal(CUSTOM_CAKE_BASE_PRICES.single['8in'], 20000)
-  assert.equal(CUSTOM_CAKE_BASE_PRICES.single['10in'], 25000)
+  assert.equal(CUSTOM_CAKE_BASE_PRICES.single['6in'], 15900)
+  assert.equal(CUSTOM_CAKE_BASE_PRICES.single['8in'], 21900)
+  assert.equal(CUSTOM_CAKE_BASE_PRICES.single['10in'], 31900)
 
-  assert.equal(CUSTOM_CAKE_BASE_PRICES.double['4in+6in'], 25500)
-  assert.equal(CUSTOM_CAKE_BASE_PRICES.double['6in+8in'], 36500)
-  assert.equal(CUSTOM_CAKE_BASE_PRICES.double['8in+10in'], 47500)
+  assert.equal(CUSTOM_CAKE_BASE_PRICES.double['4in+6in'], 23900)
+  assert.equal(CUSTOM_CAKE_BASE_PRICES.double['6in+8in'], 33900)
+  assert.equal(CUSTOM_CAKE_BASE_PRICES.double['8in+10in'], 45900)
 })
 
 test('customCakeService.createRequest creates valid provisional request matching contract rules', async () => {
@@ -94,12 +94,12 @@ test('customCakeService.createRequest creates valid provisional request matching
   assert.equal(res.contractVersion, 'custom-cake.v1')
   assert.equal(res.status, 'requested')
   assert.equal(res.quote.quoteVersion, 1)
-  assert.equal(res.quote.baseCents, 15500)
-  assert.equal(res.quote.cakeDiscountCents, 775)
-  assert.equal(res.quote.giftSmoreQuantity, 2)
+  assert.equal(res.quote.baseCents, 15900)
+  assert.equal(res.quote.cakeDiscountCents, 0)
+  assert.equal(res.quote.giftSmoreQuantity, 0)
   assert.equal(res.quote.paidSmoreQuantity, 2)
   assert.equal(res.quote.paidSmoreTotalCents, 630)
-  assert.equal(res.quote.knownTotalCents, 15355)
+  assert.equal(res.quote.knownTotalCents, 16530)
   assert.equal(res.quote.isFinalQuote, false)
   assert.equal(res.quote.designExtraCents, null)
   assert.equal(res.quote.figurineExtraCents, null)
@@ -176,9 +176,9 @@ test('customCakeService quote revision, acceptance, and confirmation lifecycle',
   assert.equal(updated.quote.isFinalQuote, true)
   assert.equal(updated.quote.designExtraCents, 2000)
   assert.equal(updated.quote.figurineExtraCents, 1500)
-  // known total: 15500 - 775 + 2000 + 1500 = 18225
-  assert.equal(updated.quote.knownTotalCents, 18225)
-  assert.equal(updated.quote.finalTotalCents, 18225)
+  // known total: 15900 + 2000 + 1500 = 19400
+  assert.equal(updated.quote.knownTotalCents, 19400)
+  assert.equal(updated.quote.finalTotalCents, 19400)
 
   // 3. Confirmation fails before acceptance
   await assert.rejects(
@@ -292,7 +292,7 @@ test('customCakeService cancellation flow from requested status', async () => {
   assert.equal(cancelled.status, 'cancelled')
 })
 
-test('giftSmoreQuantity is proportional to cake quantity (quantity 2 yields 4 gifts)', async () => {
+test('Custom Cake has no automatic gift S’more for multiple cake quantity', async () => {
   const req = {
     contractVersion: 'custom-cake.v1',
     requestId: 'test-req-gift-proportional',
@@ -324,10 +324,9 @@ test('giftSmoreQuantity is proportional to cake quantity (quantity 2 yields 4 gi
   }
 
   const created = await customCakeService.createRequest(req)
-  // Cake qty 2 -> base: 15500 * 2 = 31000
-  assert.equal(created.quote.baseCents, 31000)
-  // Cake qty 2 -> 2 * 2 = 4 gift smore sticks (not hardcoded 2)
-  assert.equal(created.quote.giftSmoreQuantity, 4)
+  // Cake qty 2 -> base: 15900 * 2 = 31800
+  assert.equal(created.quote.baseCents, 31800)
+  assert.equal(created.quote.giftSmoreQuantity, 0)
 })
 
 test('custom-cake-photo.v1 session, upload, read, and delete adapter flow', async () => {
@@ -407,10 +406,14 @@ function getProjectRoot() {
 test('CakesPage source renders Section 05 CUSTOM & CREATIVE and CUSTOM CAKE card', async () => {
   const root = getProjectRoot()
   const cakesPageSource = await readFile(resolve(root, 'src/CakesPage.tsx'), 'utf8')
+  const homePageSource = await readFile(resolve(root, 'src/pages/HomePage.tsx'), 'utf8')
   assert.match(cakesPageSource, /05/)
   assert.match(cakesPageSource, /CUSTOM & CREATIVE/)
   assert.match(cakesPageSource, /CUSTOM CAKE/)
-  assert.match(cakesPageSource, /From AUD \$155/)
+  assert.match(cakesPageSource, /From AUD \$159/)
+  assert.match(homePageSource, /product-card-price-number">\$159/)
+  assert.doesNotMatch(cakesPageSource, /From AUD \$155/)
+  assert.doesNotMatch(homePageSource, /product-card-price-number">\$155/)
   assert.match(cakesPageSource, /Your celebration, made your way\./)
   assert.match(cakesPageSource, /\/cakes\/custom-cake/)
 })

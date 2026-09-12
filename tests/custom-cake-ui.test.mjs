@@ -73,18 +73,47 @@ function wire(handler) {
   account.createJWT = async () => { throw new Error('manual browser JWT creation must not run') }
   return calls
 }
+test('actual request UI explains promo code and date rejection in both languages', async () => {
+  for (const [language, message] of [
+    ['en', 'Please check the promo code and promotion dates.'],
+    ['ko', '프로모션 코드 또는 적용 기간을 확인해 주세요.'],
+  ]) {
+    wire(action => action === 'get-cake-wire-capabilities' ? capabilities : {
+      responseStatusCode: 400,
+      responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'PROMO_CODE_INVALID' }),
+    })
+    let completed = false
+    const page = mount(CustomCakePage, { ...props, language, onComplete() { completed = true } })
+    await page.flush()
+    for (const [suffix, value] of [
+      ['-name', 'Original Customer'], ['-phone', '+61 412 345 678'],
+      ['-email', 'example@example.com'], ['-pickup-date', '2026-12-01'], ['-promo-code', 'VERYGOOD CUSTOM'],
+    ]) {
+      page.find(node => node.type === 'input' && node.props.id?.endsWith(suffix)).props.onChange({ target: { value } })
+      page.render()
+    }
+    page.find(node => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } })
+    page.render()
+    await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
+    page.render()
+    page.find(node => node.props?.children === message)
+    assert.equal(completed, false)
+    page.unmount()
+  }
+})
+
 test('actual lookup and completion render literal parsed server cents, including zero and unknown extras', () => {
   const created = structuredClone(fixture.created)
-  Object.assign(created.quote, { baseCents: 22222, cakeDiscountCents: 1111, knownTotalCents: 21741 })
+  Object.assign(created.quote, { baseCents: 22222, cakeDiscountCents: 1111, giftSmoreQuantity: 2, knownTotalCents: 21741 })
   const receipt = renderToStaticMarkup(React.createElement(CustomCakeCompletePage, { ...props, createdResult: parseCustomCakeCreateResponse(created), onGoToLookup() {} }))
   assert.match(receipt, /AUD \$222\.22/)
   assert.match(receipt, /-AUD \$11\.11/)
   assert.match(receipt, /AUD \$217\.41/)
-  assert.match(receipt, /2 sticks \(Free\)/)
+  assert.doesNotMatch(receipt, /Gift S.more|sticks \(Free\)/)
   assert.match(receipt, /To be confirmed/)
   const lookup = structuredClone(fixture.finalLookup)
   lookup.status = 'quoted'
-  Object.assign(lookup.quote, { baseCents: 22222, cakeDiscountCents: 1111, designExtraCents: 0, figurineExtraCents: 3729, knownTotalCents: 25470, finalTotalCents: 25470 })
+  Object.assign(lookup.quote, { baseCents: 22222, cakeDiscountCents: 1111, designExtraCents: 0, figurineExtraCents: 3729, giftSmoreQuantity: 2, knownTotalCents: 25470, finalTotalCents: 25470 })
   const result = renderToStaticMarkup(React.createElement(CustomCakeLookupResult, { result: parseCustomCakeLookupResponse(lookup), language: 'en' }))
   assert.match(result, /AUD \$254\.70/)
   assert.match(result, /-AUD \$11\.11/)
@@ -96,10 +125,17 @@ test('customer-facing promotion, response-time, and pickup copy stays conditiona
   const english = renderToStaticMarkup(React.createElement(CustomCakePage, props))
   const korean = renderToStaticMarkup(React.createElement(CustomCakePage, { ...props, language: 'ko' }))
 
-  assert.match(english, /September Opening Offer · Eligibility is confirmed when your request is received\./)
-  assert.match(korean, /9월 오픈 프로모션 · 혜택 적용 여부는 요청 접수 시 확인됩니다\./)
-  assert.doesNotMatch(english, /September 5% Off|September promo: 5% off|2 Free S’mores|within 24 hours/i)
-  assert.doesNotMatch(korean, /9월 5% 할인|5% 할인 \+ 스모어 2개 증정|24시간 이내/)
+  assert.match(english, /September Pre-order Offer/)
+  assert.match(english, /10% OFF CUSTOM CAKES/)
+  assert.match(english, /Promo code/)
+  assert.match(english, /VERYGOOD CUSTOM/)
+  assert.match(english, /Order from 13–30 September and reserve your cake for September, October or November pickup\./)
+  assert.match(korean, /9월 선주문 프로모션/)
+  assert.match(korean, /커스텀 케이크 10% 할인/)
+  assert.match(korean, /프로모션 코드/)
+  assert.match(korean, /9월 13일~30일 주문 시 9월·10월·11월 픽업 예약에 적용됩니다\./)
+  assert.doesNotMatch(english, /September Opening Offer|2 complimentary S.more|5% off the custom cake/i)
+  assert.doesNotMatch(korean, /9월 오픈 프로모션|5% 할인과 케이크 1개당 스모어/)
   assert.match(english, /review your request and get back to you after checking the design and availability/)
   assert.match(korean, /디자인과 제작 가능 여부를 확인한 후 요청 내용을 검토해 연락드리겠습니다/)
 
@@ -116,12 +152,12 @@ test('customer-facing promotion, response-time, and pickup copy stays conditiona
 
 test('receipt and lookup promotion rows reflect only non-zero server quote snapshots', () => {
   const created = structuredClone(fixture.created)
-  Object.assign(created.quote, { cakeDiscountCents: 0, giftSmoreQuantity: 0, knownTotalCents: 16130 })
+  Object.assign(created.quote, { cakeDiscountCents: 0, giftSmoreQuantity: 0, knownTotalCents: 16530 })
   const receipt = renderToStaticMarkup(React.createElement(CustomCakeCompletePage, { ...props, createdResult: parseCustomCakeCreateResponse(created), onGoToLookup() {} }))
   assert.doesNotMatch(receipt, /September 5% Promotion|Gift S’more Sticks/)
 
   const lookup = structuredClone(fixture.lookup)
-  Object.assign(lookup.quote, { cakeDiscountCents: 0, giftSmoreQuantity: 0, knownTotalCents: 16130 })
+  Object.assign(lookup.quote, { cakeDiscountCents: 0, giftSmoreQuantity: 0, knownTotalCents: 16530 })
   const result = renderToStaticMarkup(React.createElement(CustomCakeLookupResult, { result: parseCustomCakeLookupResponse(lookup), language: 'en' }))
   assert.doesNotMatch(result, /September 5% Custom Promotion|Gift S’more Sticks|Gift: 0 sticks/)
 })
@@ -135,8 +171,14 @@ test('actual request UI has catalogue copy and disables submit until capability 
   assert.equal(calls.length, 1)
   assert.equal(calls[0].action, 'get-cake-wire-capabilities')
   const html = renderToStaticMarkup(React.createElement(CustomCakePage, props))
-  assert.match(html, /From AUD \$155/)
-  assert.doesNotMatch(html, /Estimated Known Total|Base subtotal|AUD \$147\.25/)
+  assert.match(html, /From AUD \$159/)
+  for (const price of ['159', '219', '319']) assert.match(html, new RegExp(`AUD \\$${price}`))
+  assert.doesNotMatch(html, /Estimated Known Total|Base subtotal|AUD \$143\.10/)
+  page.find(node => node.type?.name === 'OptionButton' && node.props.children?.[0]?.props?.children === 'Double Tier').props.onClick()
+  page.render()
+  for (const price of ['239', '339', '459']) {
+    page.find(node => node.type === 'span' && node.props.children === `From AUD $${price}`)
+  }
   page.unmount()
 })
 
@@ -151,6 +193,7 @@ test('actual submit handler freezes UUID line IDs, contact and options across ti
   await page.flush()
   const change = (suffix, value) => { page.find(node => node.type === 'input' && node.props.id?.endsWith(suffix)).props.onChange({ target: { value } }); page.render() }
   change('-name', 'Original Customer'); change('-phone', '+61 412 345 678'); change('-email', 'EXAMPLE@EXAMPLE.COM'); change('-pickup-date', '2026-10-05')
+  change('-promo-code', ' VeryGood Custom ')
   page.find(node => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } }); page.render()
   await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} }); page.render()
   assert.equal(page.find(node => node.type === 'fieldset').props.disabled, true)
@@ -160,6 +203,7 @@ test('actual submit handler freezes UUID line IDs, contact and options across ti
   assert.deepEqual(sent[1], sent[0])
   assert.equal(sent[0].data.customer.customerPhone, '0412345678')
   assert.equal(sent[0].data.customer.customerEmail, 'example@example.com')
+  assert.equal(sent[0].data.promoCode, ' VeryGood Custom ')
   assert.deepEqual(sent[0].data.lines[0].photoRefs, [])
   assert.match(sent[0].data.lines[0].lineId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
   assert.equal(completed.requestId, sent[0].data.requestId)
@@ -182,9 +226,11 @@ test('actual photo component sends customer possession proof or uses platform-au
 })
 
 test('actual admin auto-loads and filters requests, refreshes, and mutates an adopted snapshot', async () => {
+  const request = structuredClone(fixture.lookup)
+  Object.assign(request.quote, { cakeDiscountCents: 1590, giftSmoreQuantity: 2, knownTotalCents: 14940 })
   const calls = wire(action => {
-    if (action === 'admin-list-custom-cake-requests') return { requests: [fixture.lookup] }
-    if (action === 'get-custom-cake-request') return fixture.lookup
+    if (action === 'admin-list-custom-cake-requests') return { requests: [request] }
+    if (action === 'get-custom-cake-request') return request
     return { responseStatusCode: 409, responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'QUOTE_VERSION_CONFLICT' }) }
   })
   const page = mount(AdminCustomCakesSection)
@@ -201,6 +247,8 @@ test('actual admin auto-loads and filters requests, refreshes, and mutates an ad
   search.props.onChange({ target: { value: fixture.lookup.customer.customerPhone } })
   page.render()
   page.find(node => node.type === 'tr' && node.props.onClick).props.onClick(); page.render()
+  assert.equal(page.find(node => node.type === 'span' && node.props.children === '커스텀 케이크 프로모션 할인').props.children, '커스텀 케이크 프로모션 할인')
+  assert.throws(() => page.find(node => node.type === 'span' && node.props.children === '무료 스모어 증정'))
   await page.find(node => node.type === 'form' && node.props.className !== 'admin-filters-bar').props.onSubmit({ preventDefault() {} }); page.render()
   assert.equal(calls[1].headers['x-appwrite-user-jwt'], undefined)
   assert.deepEqual(calls[2].data, { contractVersion: 'custom-cake.v1', requestNumber: 'CUSTOM-EXAMPLE-1', customerPhone: '0412345678' })

@@ -47,12 +47,12 @@
       "currency": "AUD",
       "pricingPolicyVersion": "custom-cake.2026-09.v1",
       "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
-      "baseCents": 15500,
-      "cakeDiscountCents": 775,
+      "baseCents": 15900,
+      "cakeDiscountCents": 0,
       "paidSmoreQuantity": 2,
       "paidSmoreTotalCents": 630,
-      "giftSmoreQuantity": 2,
-      "knownTotalCents": 15355,
+      "giftSmoreQuantity": 0,
+      "knownTotalCents": 16530,
       "isFinalQuote": false,
       "designExtraCents": null,
       "figurineExtraCents": null,
@@ -116,12 +116,12 @@
       "currency": "AUD",
       "pricingPolicyVersion": "custom-cake.2026-09.v1",
       "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
-      "baseCents": 15500,
-      "cakeDiscountCents": 775,
+      "baseCents": 15900,
+      "cakeDiscountCents": 0,
       "paidSmoreQuantity": 2,
       "paidSmoreTotalCents": 630,
-      "giftSmoreQuantity": 2,
-      "knownTotalCents": 15355,
+      "giftSmoreQuantity": 0,
+      "knownTotalCents": 16530,
       "isFinalQuote": false,
       "designExtraCents": null,
       "figurineExtraCents": null,
@@ -186,16 +186,16 @@
       "currency": "AUD",
       "pricingPolicyVersion": "custom-cake.2026-09.v1",
       "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
-      "baseCents": 15500,
-      "cakeDiscountCents": 775,
+      "baseCents": 15900,
+      "cakeDiscountCents": 0,
       "paidSmoreQuantity": 2,
       "paidSmoreTotalCents": 630,
-      "giftSmoreQuantity": 2,
-      "knownTotalCents": 18855,
+      "giftSmoreQuantity": 0,
+      "knownTotalCents": 20030,
       "isFinalQuote": true,
       "designExtraCents": 2000,
       "figurineExtraCents": 1500,
-      "finalTotalCents": 18855,
+      "finalTotalCents": 20030,
       "quoteVersion": 2
     },
     "paidSmoreLines": [
@@ -227,16 +227,16 @@
     "currency": "AUD",
     "pricingPolicyVersion": "custom-cake.2026-09.v1",
     "promotionEligibilityAt": "2026-09-30T13:59:59.999Z",
-    "baseCents": 15500,
-    "cakeDiscountCents": 775,
+    "baseCents": 15900,
+    "cakeDiscountCents": 0,
     "paidSmoreQuantity": 2,
     "paidSmoreTotalCents": 630,
-    "giftSmoreQuantity": 2,
-    "knownTotalCents": 15355,
+    "giftSmoreQuantity": 0,
+    "knownTotalCents": 16530,
     "isFinalQuote": true,
     "designExtraCents": 0,
     "figurineExtraCents": 0,
-    "finalTotalCents": 15355,
+    "finalTotalCents": 16530,
     "quoteVersion": 2
   },
   "sizes": [
@@ -244,55 +244,55 @@
       "tier": "single",
       "size": "6in",
       "quantity": 1,
-      "baseCents": 15500,
-      "cakeDiscountCents": 775,
-      "knownTotalCents": 14725,
-      "giftSmoreQuantity": 2
+      "baseCents": 15900,
+      "cakeDiscountCents": 0,
+      "knownTotalCents": 15900,
+      "giftSmoreQuantity": 0
     },
     {
       "tier": "single",
       "size": "8in",
       "quantity": 1,
-      "baseCents": 20000,
-      "cakeDiscountCents": 1000,
-      "knownTotalCents": 19000,
-      "giftSmoreQuantity": 2
+      "baseCents": 21900,
+      "cakeDiscountCents": 0,
+      "knownTotalCents": 21900,
+      "giftSmoreQuantity": 0
     },
     {
       "tier": "single",
       "size": "10in",
       "quantity": 1,
-      "baseCents": 25000,
-      "cakeDiscountCents": 1250,
-      "knownTotalCents": 23750,
-      "giftSmoreQuantity": 2
+      "baseCents": 31900,
+      "cakeDiscountCents": 0,
+      "knownTotalCents": 31900,
+      "giftSmoreQuantity": 0
     },
     {
       "tier": "double",
       "size": "4in+6in",
       "quantity": 1,
-      "baseCents": 25500,
-      "cakeDiscountCents": 1275,
-      "knownTotalCents": 24225,
-      "giftSmoreQuantity": 2
+      "baseCents": 23900,
+      "cakeDiscountCents": 0,
+      "knownTotalCents": 23900,
+      "giftSmoreQuantity": 0
     },
     {
       "tier": "double",
       "size": "6in+8in",
       "quantity": 1,
-      "baseCents": 36500,
-      "cakeDiscountCents": 1825,
-      "knownTotalCents": 34675,
-      "giftSmoreQuantity": 2
+      "baseCents": 33900,
+      "cakeDiscountCents": 0,
+      "knownTotalCents": 33900,
+      "giftSmoreQuantity": 0
     },
     {
       "tier": "double",
       "size": "8in+10in",
       "quantity": 1,
-      "baseCents": 47500,
-      "cakeDiscountCents": 2375,
-      "knownTotalCents": 45125,
-      "giftSmoreQuantity": 2
+      "baseCents": 45900,
+      "cakeDiscountCents": 0,
+      "knownTotalCents": 45900,
+      "giftSmoreQuantity": 0
     }
   ],
   "eventCases": [
@@ -300,15 +300,15 @@
       "receivedAt": "2026-09-30T13:59:59.999Z",
       "quoteUpdatedAt": "2026-10-02T00:00:00.000Z",
       "quantity": 1,
-      "baseCents": 15500,
-      "cakeDiscountCents": 775,
-      "giftSmoreQuantity": 2
+      "baseCents": 15900,
+      "cakeDiscountCents": 0,
+      "giftSmoreQuantity": 0
     },
     {
       "receivedAt": "2026-09-30T14:00:00.000Z",
       "quoteUpdatedAt": "2026-10-02T00:00:00.000Z",
       "quantity": 1,
-      "baseCents": 15500,
+      "baseCents": 15900,
       "cakeDiscountCents": 0,
       "giftSmoreQuantity": 0
     },
@@ -316,9 +316,9 @@
       "receivedAt": "2026-09-29T00:00:00.000Z",
       "quoteUpdatedAt": "2026-10-03T00:00:00.000Z",
       "quantity": 2,
-      "baseCents": 31000,
-      "cakeDiscountCents": 1550,
-      "giftSmoreQuantity": 4
+      "baseCents": 31800,
+      "cakeDiscountCents": 0,
+      "giftSmoreQuantity": 0
     }
   ],
   "extraCases": [
@@ -326,36 +326,36 @@
       "designExtraCents": null,
       "figurineExtraCents": null,
       "isFinalQuote": false,
-      "knownTotalCents": 15355,
+      "knownTotalCents": 16530,
       "finalTotalCents": null
     },
     {
       "designExtraCents": 0,
       "figurineExtraCents": null,
       "isFinalQuote": false,
-      "knownTotalCents": 15355,
+      "knownTotalCents": 16530,
       "finalTotalCents": null
     },
     {
       "designExtraCents": null,
       "figurineExtraCents": 1500,
       "isFinalQuote": false,
-      "knownTotalCents": 16855,
+      "knownTotalCents": 18030,
       "finalTotalCents": null
     },
     {
       "designExtraCents": 0,
       "figurineExtraCents": 0,
       "isFinalQuote": true,
-      "knownTotalCents": 15355,
-      "finalTotalCents": 15355
+      "knownTotalCents": 16530,
+      "finalTotalCents": 16530
     },
     {
       "designExtraCents": 2000,
       "figurineExtraCents": 1500,
       "isFinalQuote": true,
-      "knownTotalCents": 18855,
-      "finalTotalCents": 18855
+      "knownTotalCents": 20030,
+      "finalTotalCents": 20030
     }
   ]
 }
