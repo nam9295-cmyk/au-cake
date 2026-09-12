@@ -141,32 +141,31 @@ test('null/zero/positive agreed extras preserve provisional versus final sums', 
   for (const example of custom.extraCases) checkQuote({ ...custom.created.quote, ...example })
   checkQuote(custom.finalLookup.quote)
   checkQuote(lifecycle.revisedLookup.quote)
-  assert.equal(custom.finalLookup.quote.finalTotalCents, 18855)
+  assert.equal(custom.finalLookup.quote.finalTotalCents, 20030)
   for (const value of [-1, 0.5, Number.MAX_SAFE_INTEGER + 1, NaN, Infinity, undefined]) {
     assert.throws(() => checkQuote({ ...custom.finalLookup.quote, designExtraCents: value }))
   }
-  assert.throws(() => checkQuote({ ...custom.created.quote, isFinalQuote: true, finalTotalCents: 15355 }))
+  assert.throws(() => checkQuote({ ...custom.created.quote, isFinalQuote: true, finalTotalCents: 16530 }))
   assert.throws(() => checkQuote({ ...custom.zeroExtrasQuote, isFinalQuote: false, finalTotalCents: null }))
 })
 
-test('all six base prices keep five percent on base only and gifts per cake item', () => {
+test('all six launch base prices have no automatic discount or gift S’more', () => {
   assert.equal(custom.sizes.length, 6)
   for (const row of custom.sizes) {
-    assert.equal(row.cakeDiscountCents, Math.round(row.baseCents * 5 / 100))
-    assert.equal(row.knownTotalCents, row.baseCents - row.cakeDiscountCents)
-    assert.equal(row.giftSmoreQuantity, row.quantity * 2)
+    assert.equal(row.cakeDiscountCents, 0)
+    assert.equal(row.knownTotalCents, row.baseCents)
+    assert.equal(row.giftSmoreQuantity, 0)
   }
   assert.equal(custom.finalLookup.quote.cakeDiscountCents, custom.created.quote.cakeDiscountCents)
   assert.equal(custom.finalLookup.quote.giftSmoreQuantity, custom.created.quote.giftSmoreQuantity)
 })
 
-test('Sydney exclusive event boundary uses initial receipt, not pickup or quote edit', () => {
+test('fixture receipt dates do not create an automatic Custom Cake promotion', () => {
   const format = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
   assert.match(format.format(new Date('2026-09-30T14:00:00.000Z')), /2026-10-01.*00:00/)
   for (const row of custom.eventCases) {
-    const eligible = row.receivedAt < '2026-09-30T14:00:00.000Z'
-    assert.equal(row.cakeDiscountCents, eligible ? Math.round(row.baseCents * 5 / 100) : 0)
-    assert.equal(row.giftSmoreQuantity, eligible ? row.quantity * 2 : 0)
+    assert.equal(row.cakeDiscountCents, 0)
+    assert.equal(row.giftSmoreQuantity, 0)
     assert.ok(row.quoteUpdatedAt > '2026-09-30T14:00:00.000Z')
   }
 })

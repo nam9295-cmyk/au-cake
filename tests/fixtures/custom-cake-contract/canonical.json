@@ -16,6 +16,7 @@
         },
         "requestNote": "",
         "privacyConsent": true,
+        "promoCode": "",
         "lines": [
           {
             "kind": "custom-cake",
@@ -55,6 +56,7 @@
         },
         "requestNote": "",
         "privacyConsent": true,
+        "promoCode": "",
         "lines": [
           {
             "kind": "cake-addon-smore",
@@ -80,9 +82,9 @@
           }
         ]
       },
-      "canonicalJson": "{\"contractVersion\":\"custom-cake.v1\",\"customer\":{\"customerName\":\"Contract Example\",\"customerPhone\":\"0412345678\",\"customerEmail\":\"contract@example.invalid\"},\"pickup\":{\"pickupDate\":\"2026-10-05\",\"pickupTime\":\"12:00\"},\"requestNote\":\"\",\"privacyConsent\":true,\"lines\":[{\"kind\":\"custom-cake\",\"lineId\":\"cake_A\",\"parentCakeLineId\":null,\"productId\":\"custom-cake\",\"quantity\":1,\"tier\":\"single\",\"size\":\"6in\",\"designNote\":\"Blue flowers\",\"figurineSource\":\"shop\",\"photoRefs\":[\"photo_A\",\"photo_B\"]},{\"kind\":\"cake-addon-smore\",\"lineId\":\"smore_A\",\"productId\":\"smore-stick\",\"quantity\":2,\"parentCakeLineId\":\"cake_A\"}]}",
+      "canonicalJson": "{\"contractVersion\":\"custom-cake.v1\",\"customer\":{\"customerName\":\"Contract Example\",\"customerPhone\":\"0412345678\",\"customerEmail\":\"contract@example.invalid\"},\"pickup\":{\"pickupDate\":\"2026-10-05\",\"pickupTime\":\"12:00\"},\"requestNote\":\"\",\"privacyConsent\":true,\"promoCode\":\"\",\"lines\":[{\"kind\":\"custom-cake\",\"lineId\":\"cake_A\",\"parentCakeLineId\":null,\"productId\":\"custom-cake\",\"quantity\":1,\"tier\":\"single\",\"size\":\"6in\",\"designNote\":\"Blue flowers\",\"figurineSource\":\"shop\",\"photoRefs\":[\"photo_A\",\"photo_B\"]},{\"kind\":\"cake-addon-smore\",\"lineId\":\"smore_A\",\"productId\":\"smore-stick\",\"quantity\":2,\"parentCakeLineId\":\"cake_A\"}]}",
       "domain": "custom-cake-request-v1\u0000",
-      "fingerprint": "e5542e361a924e528b9f915302403aa599ede16779613aeef6acef4556fd2785"
+      "fingerprint": "d6e2bf3cbff458ccbc78a804da018992aaf8701944cbf9e0ebab3ec63c7df43f"
     },
     {
       "name": "cake-order.v2",

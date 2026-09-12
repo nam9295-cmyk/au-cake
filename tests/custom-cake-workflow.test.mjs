@@ -12,20 +12,28 @@ const base = (requestNumber, expectedQuoteVersion = 1) => ({ contractVersion: 'c
 async function setup() {
   const m = await load(); assert.equal(typeof m.createCustomCakeWorkflow, 'function')
   const sdk = service(), repository = createCustomCakeRepository(sdk, config)
-  let time = new Date('2026-09-09T00:00:00.000Z')
-  const workflow = m.createCustomCakeWorkflow({ repository, fingerprintKey: Buffer.alloc(32, 7), promotionStartsAt: '2026-09-01T00:00:00.000Z', now: () => time, smoreWritesEnabled: true, assertLegacyAbsent: async () => {}, photos: { attach: async () => {} }, coupons: { resolve: async () => null } })
+  let time = new Date('2026-09-13T00:00:00.000Z')
+  const workflow = m.createCustomCakeWorkflow({ repository, fingerprintKey: Buffer.alloc(32, 7), now: () => time, smoreWritesEnabled: true, assertLegacyAbsent: async () => {}, photos: { attach: async () => {} }, coupons: { resolve: async () => null } })
   return { sdk, repository, workflow, clock: value => { time = new Date(value) } }
 }
 
 test('workflow creates one immutable receipt/event and replays before clock or photo validation', async () => {
   const h = await setup(), input = data(), created = await h.workflow.create(input, {})
-  assert.equal(created.status, 'requested'); assert.equal(created.quote.giftSmoreQuantity, 2)
+  assert.equal(created.status, 'requested'); assert.equal(created.quote.giftSmoreQuantity, 0)
   h.clock('2027-01-01T00:00:00.000Z')
   assert.deepEqual(await h.workflow.create(input, {}), created)
   await assert.rejects(h.workflow.create({ ...input, requestNote: 'changed' }, {}), { code: 'REQUEST_ID_CONFLICT' })
   const events = await h.repository.list('outbox'); assert.equal(events.length, 1)
   assert.equal(events[0].value.eventType, 'custom-cake.received')
   assert.equal(events[0].value.snapshot.status, 'requested')
+})
+
+test('same request ID with a different Custom Cake promo code is not an idempotent replay', async () => {
+  const h = await setup(), request = data()
+  const first = await h.workflow.create(request, {})
+  assert.equal(first.quote.cakeDiscountCents, 0)
+  const changedPromo = { ...request, promoCode: 'VERYGOOD CUSTOM' }
+  await assert.rejects(h.workflow.create(changedPromo, {}), { code: 'REQUEST_ID_CONFLICT' })
 })
 
 test('quote revisions preserve stale agreement; confirmation requires explicit latest final agreement', async () => {
@@ -37,7 +45,7 @@ test('quote revisions preserve stale agreement; confirmation requires explicit l
   await update(2, 2000)
   await assert.rejects(h.workflow.mutate('confirm', base(n, 3), admin), { code: 'QUOTE_ACCEPTANCE_REQUIRED' })
   const accept = v => h.workflow.mutate('accept', { contractVersion: 'custom-cake.v1', requestNumber: n, quoteVersion: v, customerConsent: true }, admin)
-  const a = await accept(3); assert.equal(a.acceptance.acceptedAt, '2026-09-09T00:00:00.000Z')
+  const a = await accept(3); assert.equal(a.acceptance.acceptedAt, '2026-09-13T00:00:00.000Z')
   assert.deepEqual(await accept(3), a)
   const revised = await update(3, 3000)
   assert.equal(revised.acceptance.acceptedQuoteVersion, 3)

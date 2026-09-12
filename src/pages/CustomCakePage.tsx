@@ -70,6 +70,7 @@ export function CustomCakePage({
   const [quantity, setQuantity] = useState(1)
   const [pickupDate, setPickupDate] = useState('')
   const [pickupTime, setPickupTime] = useState('12:00')
+  const [promoCode, setPromoCode] = useState('')
   const [designNote, setDesignNote] = useState('')
   const [figurineSource, setFigurineSource] = useState<'none' | 'customer' | 'shop'>('none')
 
@@ -154,6 +155,7 @@ export function CustomCakePage({
         pickupTime,
       },
       requestNote: requestNote.trim(),
+      promoCode,
       privacyConsent: true,
       lines: [
         {
@@ -192,7 +194,11 @@ export function CustomCakePage({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       setErrorMessage(
-        msg === 'PHOTO_LIMIT_EXCEEDED' ? 'Photo capacity is currently unavailable. Please contact the shop; your request has been kept for retry.' : 'We could not confirm receipt. Retry the same request below, or contact the shop before starting another request.',
+        msg === 'PROMO_CODE_INVALID'
+          ? (language === 'ko' ? '프로모션 코드를 확인해 주세요.' : 'Please check the promo code.')
+          : msg === 'PHOTO_LIMIT_EXCEEDED'
+            ? 'Photo capacity is currently unavailable. Please contact the shop; your request has been kept for retry.'
+            : 'We could not confirm receipt. Retry the same request below, or contact the shop before starting another request.',
       )
     } finally {
       setSubmitting(false)
@@ -240,7 +246,7 @@ export function CustomCakePage({
               </article>
               <article>
                 <span>03</span>
-                <strong>{language === 'ko' ? '9월 오픈 프로모션 · 혜택 적용 여부는 요청 접수 시 확인됩니다.' : 'September Opening Offer · Eligibility is confirmed when your request is received.'}</strong>
+                <strong>{language === 'ko' ? '9월 선주문 · VERYGOOD CUSTOM 코드 입력 시 10% 할인' : 'September Pre-order Offer · 10% off with code VERYGOOD CUSTOM'}</strong>
               </article>
             </section>
           </div>
@@ -250,7 +256,7 @@ export function CustomCakePage({
               <div className="cake-detail-intro">
                 <p className="cake-detail-eyebrow">{language === 'ko' ? 'Sydney · 주문 제작' : 'Sydney · Made to order'}</p>
                 <h1>{language === 'ko' ? '커스텀 케이크' : 'CUSTOM CAKE'}</h1>
-                <p className="cake-detail-price cake-detail-price-primary" aria-live="polite">From AUD $155</p>
+                <p className="cake-detail-price cake-detail-price-primary" aria-live="polite">From AUD $159</p>
                 <p className="cake-detail-description">
                   {language === 'ko'
                     ? '원하시는 디자인과 구성으로 완성하는 특별한 맞춤형 케이크입니다.'
@@ -258,7 +264,7 @@ export function CustomCakePage({
                 </p>
 
                 <div className="cake-detail-badges" aria-label={language === 'ko' ? '주문 안내' : 'Order notes'}>
-                  <span>{language === 'ko' ? '9월 오픈 프로모션 · 접수 시 적용 여부 확인' : 'September Opening Offer · Eligibility confirmed on receipt'}</span>
+                  <span>{language === 'ko' ? '9월 선주문 프로모션 · VERYGOOD CUSTOM 코드 입력 시 10% 할인' : 'September Pre-order Offer · 10% off with code VERYGOOD CUSTOM'}</span>
                   <span>{language === 'ko' ? '맞춤 디자인 & 피규어' : 'Bespoke & Figurines'}</span>
                 </div>
               </div>
@@ -289,21 +295,21 @@ export function CustomCakePage({
                           <strong>6 inch</strong>
                           <span className="cake-detail-option-serves"> ({language === 'ko' ? '약 8–10인용' : 'Serves ~8–10'})</span>
                         </div>
-                        <span>From AUD $155</span>
+                        <span>From AUD $159</span>
                       </OptionButton>
                       <OptionButton active={singleSize === '8in'} onClick={() => setSingleSize('8in')}>
                         <div>
                           <strong>8 inch</strong>
                           <span className="cake-detail-option-serves"> ({language === 'ko' ? '약 14–18인용' : 'Serves ~14–18'})</span>
                         </div>
-                        <span>From AUD $200</span>
+                        <span>From AUD $219</span>
                       </OptionButton>
                       <OptionButton active={singleSize === '10in'} onClick={() => setSingleSize('10in')}>
                         <div>
                           <strong>10 inch</strong>
                           <span className="cake-detail-option-serves"> ({language === 'ko' ? '약 24–28인용' : 'Serves ~24–28'})</span>
                         </div>
-                        <span>From AUD $250</span>
+                        <span>From AUD $319</span>
                       </OptionButton>
                     </>
                   ) : (
@@ -313,21 +319,21 @@ export function CustomCakePage({
                           <strong>4 + 6 inch</strong>
                           <span className="cake-detail-option-serves"> ({language === 'ko' ? '약 15–20인용' : 'Serves ~15–20'})</span>
                         </div>
-                        <span>From AUD $255</span>
+                        <span>From AUD $239</span>
                       </OptionButton>
                       <OptionButton active={doubleSize === '6in+8in'} onClick={() => setDoubleSize('6in+8in')}>
                         <div>
                           <strong>6 + 8 inch</strong>
                           <span className="cake-detail-option-serves"> ({language === 'ko' ? '약 25–35인용' : 'Serves ~25–35'})</span>
                         </div>
-                        <span>From AUD $365</span>
+                        <span>From AUD $339</span>
                       </OptionButton>
                       <OptionButton active={doubleSize === '8in+10in'} onClick={() => setDoubleSize('8in+10in')}>
                         <div>
                           <strong>8 + 10 inch</strong>
                           <span className="cake-detail-option-serves"> ({language === 'ko' ? '약 40–50인용' : 'Serves ~40–50'})</span>
                         </div>
-                        <span>From AUD $475</span>
+                        <span>From AUD $459</span>
                       </OptionButton>
                     </>
                   )}
@@ -406,7 +412,7 @@ export function CustomCakePage({
                   </div>
                   <div className="custom-cake-summary-right">
                     <span>{language === 'ko' ? '기본 카탈로그 가격' : 'Catalogue base price'}</span>
-                    <strong>From AUD $155</strong>
+                    <strong>From AUD $159</strong>
                   </div>
                 </div>
 
@@ -472,10 +478,33 @@ export function CustomCakePage({
               </div>
             </fieldset>
 
-            {/* 02. Design & Figurine */}
             <fieldset disabled={locked} className="custom-cake-fieldset">
               <legend className="custom-cake-legend">
                 <span className="legend-number">02</span>
+                <span>{language === 'ko' ? '9월 선주문 프로모션' : 'September Pre-order Offer'}</span>
+              </legend>
+              <p className="custom-cake-field-note">
+                {language === 'ko'
+                  ? '커스텀 케이크 10% 할인 · 9월 주문 시 9월·10월·11월 픽업 예약에 적용됩니다.'
+                  : '10% OFF CUSTOM CAKES · Order in September and reserve your cake for September, October or November pickup.'}
+              </p>
+              <div className="custom-cake-field">
+                <label htmlFor={`${formId}-promo-code`}>{language === 'ko' ? '프로모션 코드' : 'Promo code'}</label>
+                <input
+                  id={`${formId}-promo-code`}
+                  type="text"
+                  autoComplete="off"
+                  placeholder="VERYGOOD CUSTOM"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                />
+              </div>
+            </fieldset>
+
+            {/* 02. Design & Figurine */}
+            <fieldset disabled={locked} className="custom-cake-fieldset">
+              <legend className="custom-cake-legend">
+                <span className="legend-number">03</span>
                 <span>{language === 'ko' ? '디자인 및 피규어 협의' : 'Design & Figurine Details'}</span>
               </legend>
               <div className="custom-cake-field">
@@ -543,7 +572,7 @@ export function CustomCakePage({
             {/* 03. Reference Images */}
             <fieldset disabled={locked} className="custom-cake-fieldset">
               <legend className="custom-cake-legend">
-                <span className="legend-number">03</span>
+                <span className="legend-number">04</span>
                 <span>{language === 'ko' ? '참고 이미지' : 'Reference Images'}</span>
               </legend>
               <p className="custom-cake-field-note">
@@ -556,7 +585,7 @@ export function CustomCakePage({
             {/* 04. Customer Contact Details */}
             <fieldset disabled={locked} className="custom-cake-fieldset">
               <legend className="custom-cake-legend">
-                <span className="legend-number">04</span>
+                <span className="legend-number">05</span>
                 <span>{language === 'ko' ? '주문자 연락처 정보' : 'Contact Information'}</span>
               </legend>
               <div className="custom-cake-grid-2col">
@@ -682,11 +711,11 @@ export function CustomCakePage({
               </p>
             </details>
             <details>
-              <summary>{language === 'ko' ? '9월 오픈 프로모션 안내' : 'September Opening Offer'}</summary>
+              <summary>{language === 'ko' ? '9월 선주문 프로모션' : 'September Pre-order Offer'}</summary>
               <p>
                 {language === 'ko'
-                  ? '프로모션 대상 접수에는 커스텀 케이크 기본가 5% 할인과 케이크 1개당 스모어 스틱 2개 증정이 적용됩니다. 적용 여부는 서버가 기록한 요청 접수 시각을 기준으로 확인됩니다. 추가 스모어 스틱은 수량과 관계없이 30% 할인가(AUD $3.15)로 주문할 수 있습니다.'
-                  : 'Eligible requests receive 5% off the custom cake base subtotal and 2 complimentary S’more sticks per cake. Eligibility is confirmed from the server-recorded receipt time. Additional S’more sticks are available at the 30% add-on price of AUD $3.15 each.'}
+                  ? 'VERYGOOD CUSTOM 코드를 입력하면 커스텀 케이크 기본가에 10% 할인이 적용됩니다. 적용 여부는 서버가 기록한 접수 시각과 픽업 날짜를 기준으로 확인됩니다. 9월 주문 시 9월·10월·11월 픽업 예약에 적용됩니다. 추가 스모어 스틱은 기존과 같이 개당 AUD $3.15에 구매할 수 있습니다.'
+                  : 'Enter VERYGOOD CUSTOM for 10% off the Custom Cake base price. Eligibility is confirmed from the server-recorded receipt time and pickup date. Order in September for September, October, or November pickup. Additional S’more sticks remain AUD $3.15 each.'}
               </p>
             </details>
           </div>

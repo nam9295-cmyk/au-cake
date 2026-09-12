@@ -2,11 +2,19 @@
 import { ACTIVE_CAKE_ORDER_PRODUCT_IDS } from './active-cake-products.js'
 
 export const CUSTOM_CAKE_V1_BASE_CENTS = Object.freeze({
-  single: Object.freeze({ '6in': 15500, '8in': 20000, '10in': 25000 }),
-  double: Object.freeze({ '4in+6in': 25500, '6in+8in': 36500, '8in+10in': 47500 }),
+  single: Object.freeze({ '6in': 15900, '8in': 21900, '10in': 31900 }),
+  double: Object.freeze({ '4in+6in': 23900, '6in+8in': 33900, '8in+10in': 45900 }),
 })
 
-export const CUSTOM_CAKE_V1_PROMOTION_END = '2026-09-30T14:00:00.000Z'
+export const CUSTOM_CAKE_V1_PROMO_CODE = 'VERYGOOD CUSTOM'
+
+export const CUSTOM_CAKE_V1_PROMOTION_RECEIPT_START_DATE = '2026-09-13'
+
+export const CUSTOM_CAKE_V1_PROMOTION_RECEIPT_END_DATE = '2026-09-30'
+
+export const CUSTOM_CAKE_V1_PROMOTION_PICKUP_START_DATE = '2026-09-13'
+
+export const CUSTOM_CAKE_V1_PROMOTION_PICKUP_END_DATE = '2026-11-30'
 
 export const PROMO_CODE = 'chocolate'
 

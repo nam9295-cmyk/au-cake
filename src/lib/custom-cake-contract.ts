@@ -20,6 +20,7 @@ export type CustomCakeCreateRequest = {
   customer: Contact
   pickup: Pickup
   requestNote: string
+  promoCode?: string
   privacyConsent: true
   lines: (CustomCakeLine | SmoreRequestLine)[]
 }

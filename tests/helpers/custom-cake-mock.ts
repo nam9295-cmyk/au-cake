@@ -31,14 +31,14 @@ import type { Language } from '../../src/lib/i18n.js'
 
 export const CUSTOM_CAKE_BASE_PRICES = {
   single: {
-    '6in': 15500,
-    '8in': 20000,
-    '10in': 25000,
+    '6in': 15900,
+    '8in': 21900,
+    '10in': 31900,
   },
   double: {
-    '4in+6in': 25500,
-    '6in+8in': 36500,
-    '8in+10in': 47500,
+    '4in+6in': 23900,
+    '6in+8in': 33900,
+    '8in+10in': 45900,
   },
 } as const
 
@@ -150,12 +150,12 @@ const INITIAL_FIXTURE_RECORDS: CustomCakeLookupResponse[] = [
       currency: 'AUD',
       pricingPolicyVersion: 'custom-cake.2026-09.v1',
       promotionEligibilityAt: '2026-09-30T13:59:59.999Z',
-      baseCents: 15500,
-      cakeDiscountCents: 775,
+      baseCents: 15900,
+      cakeDiscountCents: 0,
       paidSmoreQuantity: 2,
       paidSmoreTotalCents: 630,
-      giftSmoreQuantity: 2,
-      knownTotalCents: 15355,
+      giftSmoreQuantity: 0,
+      knownTotalCents: 16530,
       isFinalQuote: false,
       designExtraCents: null,
       figurineExtraCents: null,
@@ -323,10 +323,8 @@ export const customCakeService = {
       : CUSTOM_CAKE_BASE_PRICES.double[size as keyof typeof CUSTOM_CAKE_BASE_PRICES.double]
 
     const baseCents = baseUnitCents * customLine.quantity
-    // 5% discount on Custom Cake base subtotal only (September event)
-    const cakeDiscountCents = Math.round((baseUnitCents * customLine.quantity * 5) / 100)
-    // 2 gift S'more per Custom Cake item
-    const giftSmoreQuantity = customLine.quantity * 2
+    const cakeDiscountCents = 0
+    const giftSmoreQuantity = 0
 
     // Paid S'more: 30% off unit price $4.50 -> $3.15 (315 cents)
     const paidSmoreTotalCents = paidSmoreQuantity * 315

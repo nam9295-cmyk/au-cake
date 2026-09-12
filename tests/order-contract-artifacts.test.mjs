@@ -75,7 +75,7 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         }
         const wireData = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'cake-order-data.js')));
         const custom = fixtures.customWire;
-        const customData = wireData.buildCustomCakeV1Data(custom.request, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber, promotionStartsAt: '2026-09-01T00:00:00.000Z' });
+        const customData = wireData.buildCustomCakeV1Data(custom.request, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber });
         assert.deepEqual(customData.creationResponse, custom.created);
         assert.deepEqual(customData.lookupResponse, custom.lookup);
         const ordinary = fixtures.ordinaryWire;
