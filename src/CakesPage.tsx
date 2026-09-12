@@ -168,7 +168,7 @@ export default function CakesPage({
                   {language === 'ko' ? '원하는 디자인으로 완성하는 특별한 기념 케이크.' : 'Your celebration, made your way.'}
                 </p>
                 <div className="cakes-index-card-price">
-                  <strong>From AUD $155</strong>
+                  <strong>From AUD $159</strong>
                   <span className="cakes-index-card-option">
                     {language === 'ko' ? '1단 / 2단 · 6가지 사이즈' : 'Single & Double Tier · 6 sizes'}
                   </span>

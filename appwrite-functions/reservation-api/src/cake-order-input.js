@@ -559,7 +559,7 @@ function normalizeWireRequest(value, contractVersion) {
   return wireInputBoundary(() => {
     if (!['custom-cake.v1', 'cake-order.v2'].includes(contractVersion)) fail('INVALID_REQUEST')
     const custom = contractVersion === 'custom-cake.v1'
-    const customPromoProvided = custom && Object.hasOwn(value, 'promoCode')
+    const customPromoProvided = custom && isPlainObject(value) && Object.hasOwn(value, 'promoCode')
     exactWireFields(value, ['contractVersion', 'requestId', 'customer', 'pickup', 'requestNote', 'privacyConsent', ...(custom ? (customPromoProvided ? ['promoCode'] : []) : ['promoCode']), 'lines'])
     if (value.contractVersion !== contractVersion || typeof value.requestId !== 'string'
       || !WIRE_REQUEST_ID.test(value.requestId) || value.privacyConsent !== true) fail('INVALID_REQUEST')

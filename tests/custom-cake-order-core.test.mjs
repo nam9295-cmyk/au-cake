@@ -17,6 +17,7 @@ const reject = (fn, code = 'INVALID_REQUEST') => assert.throws(fn, { code })
 test('new pickup boundary rejects absent and nonobject requests with the wire error', () => {
   for (const value of [null, undefined, false, 0, '', []]) {
     reject(() => input.validateNewCakeWirePickup(value, new Date('2026-09-09T00:00:00.000Z')))
+    reject(() => input.normalizeCustomCakeV1Request(value))
   }
 })
 

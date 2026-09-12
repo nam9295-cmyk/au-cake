@@ -508,7 +508,7 @@ export function HomePage({
                     </a>
                     <span className="product-card-price">
                       <span className="product-card-price-prefix">From AUD</span>{' '}
-                      <span className="product-card-price-number">$155</span>
+                      <span className="product-card-price-number">$159</span>
                     </span>
                   </article>
                 </div>
