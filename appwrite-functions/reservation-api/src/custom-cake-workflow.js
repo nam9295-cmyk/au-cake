@@ -104,7 +104,8 @@ export function createCustomCakeWorkflow({ repository, fingerprintKey, photos, c
         const number = `${custom ? 'CUSTOM' : 'VG-C-AU'}-${randomBytes(12).toString('hex')}`
         const coupon = custom ? null : await coupons.resolve(request.promoCode, receivedAt, tx.transactionId)
         const built = custom ? buildCustomCakeV1Data(request, { now: receivedAt, requestNumber: number }) : buildCakeOrderV2Data(request, { now: receivedAt, reservationNumber: number, reviewCoupon: coupon?.pricing })
-        if (!custom) built.request.promoCode = ''
+        // The claim fingerprint retains promo identity; never persist the raw code.
+        built.request.promoCode = ''
         const snapshot = { ...built, quoteHistory: [], transitionAudit: [], ...(coupon ? { couponAudit: coupon.audit } : {}) }
         await tx.claimRequest(identity, built.creationResponse)
         await tx.create('snapshots', request.requestId, snapshot)

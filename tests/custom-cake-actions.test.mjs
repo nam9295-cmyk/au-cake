@@ -47,6 +47,48 @@ export async function harness({ smoreWritesEnabled = true } = {}) {
   return { call, handler, env, sdk, storage, files, services, repository: createCustomCakeRepository(sdk, config), clock: value => { time = new Date(value) } }
 }
 
+test('actual handler rejects out-of-period promos without creating orders but permits ordinary orders', async () => {
+  for (const [receivedAt, pickupDate] of [
+    ['2026-09-12T13:59:59.999Z', '2026-11-30'],
+    ['2026-09-30T14:00:00.000Z', '2026-11-30'],
+    ['2026-09-20T00:00:00.000Z', '2026-12-01'],
+  ]) {
+    for (const promoCode of [undefined, '', 'VERYGOOD CUSTOM', 'WRONGCODE']) {
+      const h = await harness(), request = custom()
+      h.clock(receivedAt)
+      request.pickup.pickupDate = pickupDate
+      if (promoCode === undefined) delete request.promoCode
+      else request.promoCode = promoCode
+      const response = await h.call('create-custom-cake-request', request)
+      if (promoCode) {
+        assert.equal(response.status, 400)
+        assert.deepEqual(response.body, { ok: false, contractVersion: 'custom-cake.v1', code: 'PROMO_CODE_INVALID' })
+        for (const kind of ['claims', 'snapshots', 'outbox']) assert.equal((await h.repository.list(kind)).length, 0)
+      } else {
+        assert.equal(response.status, 200, JSON.stringify(response.body))
+        assert.equal(response.body.result.status, 'requested')
+        assert.equal(response.body.result.quote.cakeDiscountCents, 0)
+      }
+    }
+  }
+})
+
+test('actual handler accepts the final Sydney promo day and pickup day and replays after expiry', async () => {
+  const h = await harness(), request = custom()
+  h.clock('2026-09-30T13:59:59.999Z')
+  request.pickup.pickupDate = '2026-11-30'
+  request.promoCode = 'VERYGOOD CUSTOM'
+  const receipt = await h.call('create-custom-cake-request', request)
+  assert.equal(receipt.status, 200, JSON.stringify(receipt.body))
+  assert.equal(receipt.body.result.quote.cakeDiscountCents, 1590)
+  assert.equal((await h.repository.list('snapshots'))[0].value.request.promoCode, '')
+  const changedPromo = await h.call('create-custom-cake-request', { ...request, promoCode: '' })
+  assert.equal(changedPromo.status, 409)
+  assert.equal(changedPromo.body.code, 'REQUEST_ID_CONFLICT')
+  h.clock('2026-09-30T14:00:00.000Z')
+  assert.deepEqual((await h.call('create-custom-cake-request', request)).body, receipt.body)
+})
+
 test('actual handler advertises only provisioned wire and maps strict errors without SDK leakage', async () => {
   const h = await harness()
   assert.deepEqual((await h.call('get-cake-wire-capabilities')).body, { ok: true, result: { contractVersion: 'cake-capabilities.v1', status: 'ready', customCakeV1: true, cakeOrderV2: true, legacyNewSubmissions: 'compat' } })

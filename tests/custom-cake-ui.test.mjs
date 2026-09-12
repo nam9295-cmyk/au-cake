@@ -73,6 +73,35 @@ function wire(handler) {
   account.createJWT = async () => { throw new Error('manual browser JWT creation must not run') }
   return calls
 }
+test('actual request UI explains promo code and date rejection in both languages', async () => {
+  for (const [language, message] of [
+    ['en', 'Please check the promo code and promotion dates.'],
+    ['ko', '프로모션 코드 또는 적용 기간을 확인해 주세요.'],
+  ]) {
+    wire(action => action === 'get-cake-wire-capabilities' ? capabilities : {
+      responseStatusCode: 400,
+      responseBody: JSON.stringify({ ok: false, contractVersion: 'custom-cake.v1', code: 'PROMO_CODE_INVALID' }),
+    })
+    let completed = false
+    const page = mount(CustomCakePage, { ...props, language, onComplete() { completed = true } })
+    await page.flush()
+    for (const [suffix, value] of [
+      ['-name', 'Original Customer'], ['-phone', '+61 412 345 678'],
+      ['-email', 'example@example.com'], ['-pickup-date', '2026-12-01'], ['-promo-code', 'VERYGOOD CUSTOM'],
+    ]) {
+      page.find(node => node.type === 'input' && node.props.id?.endsWith(suffix)).props.onChange({ target: { value } })
+      page.render()
+    }
+    page.find(node => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } })
+    page.render()
+    await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
+    page.render()
+    page.find(node => node.props?.children === message)
+    assert.equal(completed, false)
+    page.unmount()
+  }
+})
+
 test('actual lookup and completion render literal parsed server cents, including zero and unknown extras', () => {
   const created = structuredClone(fixture.created)
   Object.assign(created.quote, { baseCents: 22222, cakeDiscountCents: 1111, giftSmoreQuantity: 2, knownTotalCents: 21741 })

@@ -237,6 +237,7 @@ export function priceCustomCakeV1Request(value, { promotionEligibilityAt }) {
     && receivedDate <= CUSTOM_CAKE_V1_PROMOTION_RECEIPT_END_DATE
     && request.pickup.pickupDate >= CUSTOM_CAKE_V1_PROMOTION_PICKUP_START_DATE
     && request.pickup.pickupDate <= CUSTOM_CAKE_V1_PROMOTION_PICKUP_END_DATE
+  if (request.promoCode && !eligible) fail('PROMO_CODE_INVALID')
   const cakeLines = request.lines.filter(line => line.kind === 'custom-cake')
   const baseAmounts = cakeLines.map(line => wireAmount(CUSTOM_CAKE_V1_BASE_CENTS[line.tier][line.size] * line.quantity))
   const baseCents = wireSum(baseAmounts)

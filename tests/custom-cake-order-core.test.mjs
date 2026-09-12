@@ -180,15 +180,20 @@ test('Custom Cake September promo normalizes into the canonical request and pric
   assert.equal(revised.knownTotalCents, 16740)
 
   for (const [at, pickupDate, discount] of [
-    ['2026-09-12T13:59:59.999Z', '2026-11-30', 0],
+    ['2026-09-12T13:59:59.999Z', '2026-11-30', null],
     ['2026-09-12T14:00:00.000Z', '2026-11-30', 1590],
     ['2026-09-30T13:59:59.999Z', '2026-11-30', 1590],
-    ['2026-09-30T14:00:00.000Z', '2026-11-30', 0],
-    ['2026-09-20T00:00:00.000Z', '2026-12-01', 0],
+    ['2026-09-30T14:00:00.000Z', '2026-11-30', null],
+    ['2026-09-20T00:00:00.000Z', '2026-12-01', null],
+    ['2026-09-13T00:00:00.000Z', '2026-09-12', null],
   ]) {
     const request = copy(eligible)
     request.pickup.pickupDate = pickupDate
-    assert.equal(pricing.priceCustomCakeV1Request(request, { promotionEligibilityAt: at }).quote.cakeDiscountCents, discount)
+    if (discount === null) {
+      reject(() => pricing.priceCustomCakeV1Request(request, { promotionEligibilityAt: at }), 'PROMO_CODE_INVALID')
+    } else {
+      assert.equal(pricing.priceCustomCakeV1Request(request, { promotionEligibilityAt: at }).quote.cakeDiscountCents, discount)
+    }
   }
   const invalid = copy(noCode)
   invalid.promoCode = 'WRONGCODE'

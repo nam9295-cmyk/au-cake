@@ -195,7 +195,7 @@ export function CustomCakePage({
       const msg = err instanceof Error ? err.message : String(err)
       setErrorMessage(
         msg === 'PROMO_CODE_INVALID'
-          ? (language === 'ko' ? '프로모션 코드를 확인해 주세요.' : 'Please check the promo code.')
+          ? (language === 'ko' ? '프로모션 코드 또는 적용 기간을 확인해 주세요.' : 'Please check the promo code and promotion dates.')
           : msg === 'PHOTO_LIMIT_EXCEEDED'
             ? 'Photo capacity is currently unavailable. Please contact the shop; your request has been kept for retry.'
             : 'We could not confirm receipt. Retry the same request below, or contact the shop before starting another request.',
