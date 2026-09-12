@@ -246,7 +246,7 @@ export function CustomCakePage({
               </article>
               <article>
                 <span>03</span>
-                <strong>{language === 'ko' ? '9월 선주문 · VERYGOOD CUSTOM 코드 입력 시 10% 할인' : 'September Pre-order Offer · 10% off with code VERYGOOD CUSTOM'}</strong>
+                <strong>{language === 'ko' ? '9월 선주문 · 인스타그램에서 프로모션 확인' : 'September Pre-order Offer · Check our Instagram'}</strong>
               </article>
             </section>
           </div>
@@ -264,7 +264,7 @@ export function CustomCakePage({
                 </p>
 
                 <div className="cake-detail-badges" aria-label={language === 'ko' ? '주문 안내' : 'Order notes'}>
-                  <span>{language === 'ko' ? '9월 선주문 프로모션 · VERYGOOD CUSTOM 코드 입력 시 10% 할인' : 'September Pre-order Offer · 10% off with code VERYGOOD CUSTOM'}</span>
+                  <span>{language === 'ko' ? '9월 선주문 프로모션 · 인스타그램에서 확인하세요' : 'September Pre-order Offer · Check our Instagram'}</span>
                   <span>{language === 'ko' ? '맞춤 디자인 & 피규어' : 'Bespoke & Figurines'}</span>
                 </div>
               </div>
@@ -484,9 +484,11 @@ export function CustomCakePage({
                 <span>{language === 'ko' ? '9월 선주문 프로모션' : 'September Pre-order Offer'}</span>
               </legend>
               <p className="custom-cake-field-note">
+                {language === 'ko' ? '인스타그램 ' : 'Check our Instagram '}
+                <a href="https://www.instagram.com/verygood_syd/" target="_blank" rel="noopener noreferrer">@verygood_syd</a>
                 {language === 'ko'
-                  ? '커스텀 케이크 10% 할인 · 9월 12일~30일 주문 시 9월·10월·11월 픽업 예약에 적용됩니다.'
-                  : '10% OFF CUSTOM CAKES · Order from 12–30 September and reserve your cake for September, October or November pickup.'}
+                  ? '에서 9월 프로모션과 코드를 확인한 후 아래에 입력해 주세요.'
+                  : ' for the September offer and promo code, then enter it below.'}
               </p>
               <div className="custom-cake-field">
                 <label htmlFor={`${formId}-promo-code`}>{language === 'ko' ? '프로모션 코드' : 'Promo code'}</label>
@@ -494,7 +496,7 @@ export function CustomCakePage({
                   id={`${formId}-promo-code`}
                   type="text"
                   autoComplete="off"
-                  placeholder="VERYGOOD CUSTOM"
+                  placeholder={language === 'ko' ? '프로모션 코드를 입력하세요' : 'Enter promo code'}
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
                 />
@@ -713,9 +715,11 @@ export function CustomCakePage({
             <details>
               <summary>{language === 'ko' ? '9월 선주문 프로모션' : 'September Pre-order Offer'}</summary>
               <p>
+                {language === 'ko' ? '인스타그램 ' : 'Find the promo code on our Instagram '}
+                <a href="https://www.instagram.com/verygood_syd/" target="_blank" rel="noopener noreferrer">@verygood_syd</a>
                 {language === 'ko'
-                  ? 'VERYGOOD CUSTOM 코드를 입력하면 커스텀 케이크 기본가에 10% 할인이 적용됩니다. 적용 여부는 서버가 기록한 접수 시각과 픽업 날짜를 기준으로 확인됩니다. 9월 12일~30일 주문 시 9월·10월·11월 픽업 예약에 적용됩니다. 추가 스모어 스틱은 기존과 같이 개당 AUD $3.15에 구매할 수 있습니다.'
-                  : 'Enter VERYGOOD CUSTOM for 10% off the Custom Cake base price. Eligibility is confirmed from the server-recorded receipt time and pickup date. Order from 12–30 September for September, October, or November pickup. Additional S’more sticks remain AUD $3.15 each.'}
+                  ? '에서 확인한 코드를 입력하면 커스텀 케이크 기본가에 10% 할인이 적용됩니다. 적용 여부는 서버가 기록한 접수 시각과 픽업 날짜를 기준으로 확인됩니다. 9월 12일~30일 주문 시 9월·10월·11월 픽업 예약에 적용됩니다. 추가 스모어 스틱은 기존과 같이 개당 AUD $3.15에 구매할 수 있습니다.'
+                  : ' for 10% off the Custom Cake base price. Eligibility is confirmed from the server-recorded receipt time and pickup date. Order from 12–30 September for September, October, or November pickup. Additional S’more sticks remain AUD $3.15 each.'}
               </p>
             </details>
           </div>
