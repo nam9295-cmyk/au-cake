@@ -63,6 +63,16 @@
     "description": "Read verified customer reviews from verygood chocolate cake orders and kids cake class bookings in Sydney.",
     "intro": "Read reviews shared with permission after verified verygood chocolate cake orders and kids cake class bookings in Sydney."
   },
+  "standalonePages": {
+    "/cakes/custom-cake": {
+      "title": "Custom Cake Sydney | Bespoke Celebration Cakes | verygood chocolate",
+      "description": "Bespoke custom cakes made to order in Sydney. Choose your size, share your design references and request a personalised cake for pre-arranged pickup in Melrose Park.",
+      "h1": "Custom Cake Sydney",
+      "intro": "Bespoke cakes made to order",
+      "priceSummary": "From AUD $159",
+      "pickup": "Pre-arranged pickup in Melrose Park"
+    }
+  },
   "cakePages": {
     "pave-chocolate-cake": {
       "title": "Pave Chocolate Cake Sydney | verygood chocolate",
@@ -263,6 +273,7 @@
   "knownDirectAccessRoutes": [
     "/",
     "/cakes",
+    "/cakes/custom-cake",
     "/cakes/chocolate-pound-cake-and-cupcakes",
     "/cakes/pave-chocolate-cake",
     "/cakes/chocolatiers-basque-cheesecake",

@@ -34,6 +34,8 @@ const template = `<!doctype html>
     <meta name="twitter:title" content="Template" />
     <meta name="twitter:description" content="Template description" />
     <meta name="twitter:image" content="${site}/og-image.jpg" />
+    <script type="module" crossorigin src="/assets/app.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/app.css" />
   </head>
   <body><div id="root"></div></body>
 </html>`
@@ -77,7 +79,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   assert.match(catalogue, /<h1>Choose Your Cake<\/h1>/)
 
   const generatedSitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
-  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, 11)
+  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, 12)
   for (const path of ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']) {
     assert.match(generatedSitemap, new RegExp(`<loc>${(path === '/' ? site : `${site}${path}`).replaceAll('.', '\\.')}</loc>`), path)
   }
@@ -87,6 +89,30 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   for (const legacyPath of ['/cakes/chocolate-pound-cake-and-cupcakes', '/cakes/chocolatiers-basque-cheesecake', '/cakes/buttercream-cake', '/cakes/fresh-strawberry-chocolate-cream-cake']) {
     assert.doesNotMatch(generatedSitemap, new RegExp(`<loc>[^<]*${legacyPath}`), legacyPath)
   }
+})
+
+test('Custom Cake has a standalone directory entry with app assets for direct loads and refreshes', async () => {
+  const { dist } = await generate()
+  const entry = join(dist, 'cakes/custom-cake/index.html')
+  assert.ok((await stat(entry).catch(() => null))?.isFile(), 'Custom Cake direct-load artifact must exist')
+  const html = await readFile(entry, 'utf8')
+  assert.match(html, /<title>Custom Cake Sydney \| Bespoke Celebration Cakes \| verygood chocolate<\/title>/)
+  assert.match(html, /<meta name="robots" content="index, follow"/)
+  assert.match(html, /<link rel="canonical" href="https:\/\/au\.verygood-chocolate\.com\/cakes\/custom-cake"/)
+  assert.match(html, /<h1>Custom Cake Sydney<\/h1>/)
+  assert.match(html, /Bespoke cakes made to order/)
+  assert.match(html, /From AUD \$159/)
+  assert.match(html, /Pre-arranged pickup in Melrose Park/)
+  assert.match(html, /<div id="root">/)
+  assert.match(html, /<script type="module" crossorigin src="\/assets\/app.js"><\/script>/)
+  assert.match(html, /<link rel="stylesheet" crossorigin href="\/assets\/app.css" \/>/)
+  const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
+  assert.equal(sitemap.split('<loc>https://au.verygood-chocolate.com/cakes/custom-cake</loc>').length - 1, 1)
+  const catalogue = await readFile(join(dist, 'cakes.html'), 'utf8')
+  assert.doesNotMatch(catalogue, /\/cakes\/custom-cake/)
+  assert.equal(jsonLd(html).some(item => item['@type'] === 'Product'), false)
+  await assert.rejects(stat(join(dist, 'cakes/not-a-real-cake/index.html')), { code: 'ENOENT' })
+  await assert.rejects(stat(join(dist, 'cakes/not-a-real-cake.html')), { code: 'ENOENT' })
 })
 
 test('public crawl metadata permits search while reserving AI training and private flows retain crawlable noindex policy', async () => {

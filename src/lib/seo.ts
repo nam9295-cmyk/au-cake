@@ -84,6 +84,11 @@ function getBreadcrumbList(pathname: string, name: string): Record<string, unkno
 }
 
 const publicSeo: Record<string, SeoConfig> = {
+  ...Object.fromEntries(Object.entries(publicContent.standalonePages).map(([path, page]) => [path, {
+    title: page.title,
+    description: page.description,
+    canonical: `${SITE_URL}${path}`,
+  }])),
   '/': {
     title: getPublicRoutePage('/')!.title,
     description: getPublicRoutePage('/')!.description,
@@ -276,6 +281,7 @@ function removeMeta(selector: string) {
 
 
 export function getSeoConfig(pathname: string): SeoConfig {
+  if (pathname === '/cakes/custom-cake/') return publicSeo['/cakes/custom-cake']
   if (publicSeo[pathname]) return publicSeo[pathname]
   const cakeDetailSeo = getCakeDetailSeo(pathname)
   if (cakeDetailSeo) return cakeDetailSeo

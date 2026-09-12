@@ -46,7 +46,8 @@ test('typed cake page helpers expose eight sale pages and noindex legacy pages',
 })
 
 test('typed route lists name known direct-access and noindex boundaries', () => {
-  assert.equal(KNOWN_DIRECT_ACCESS_ROUTES.length, 29)
+  assert.equal(KNOWN_DIRECT_ACCESS_ROUTES.length, 30)
+  assert.ok(KNOWN_DIRECT_ACCESS_ROUTES.includes('/cakes/custom-cake'))
   assert.ok(KNOWN_DIRECT_ACCESS_ROUTES.includes('/cakes/smore-stick'))
   assert.ok(KNOWN_DIRECT_ACCESS_ROUTES.includes('/admin/reviews'))
   assert.deepEqual(NOINDEX_OPERATIONAL_ROUTES, [
