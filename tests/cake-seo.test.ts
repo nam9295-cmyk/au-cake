@@ -2,9 +2,31 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { getAuPublicContent, getPublicRoutePage } from '../src/lib/public-content.js'
 import { getSeoConfig } from '../src/lib/seo.js'
+import { getPageFromPath } from '../src/lib/app-routes.js'
 
 const SITE_URL = 'https://au.verygood-chocolate.com'
 const publicContent = getAuPublicContent()
+
+test('Custom Cake runtime SEO stays indexable without becoming a catalogue product', () => {
+  const config = getSeoConfig('/cakes/custom-cake')
+  assert.equal(config.title, 'Custom Cake Sydney | Bespoke Celebration Cakes | verygood chocolate')
+  assert.equal(config.description, 'Bespoke custom cakes made to order in Sydney. Choose your size, share your design references and request a personalised cake for pre-arranged pickup in Melrose Park.')
+  assert.equal(config.canonical, `${SITE_URL}/cakes/custom-cake`)
+  assert.notEqual(config.noindex, true)
+  assert.equal(config.structuredData?.some(item => item['@type'] === 'Product') ?? false, false)
+  assert.equal(getSeoConfig('/cakes/not-a-real-cake').noindex, true)
+  assert.equal(getSeoConfig('/cakes/not-a-real-cake').title, 'Page Not Found | verygood chocolate')
+})
+
+test('Custom Cake directory URLs resolve to the order UI and canonical SEO after direct load or refresh', () => {
+  for (const path of ['/cakes/custom-cake', '/cakes/custom-cake/']) {
+    assert.equal(getPageFromPath(path), 'custom-cake', path)
+    assert.equal(getSeoConfig(path).title, 'Custom Cake Sydney | Bespoke Celebration Cakes | verygood chocolate', path)
+    assert.equal(getSeoConfig(path).canonical, `${SITE_URL}/cakes/custom-cake`, path)
+    assert.notEqual(getSeoConfig(path).noindex, true, path)
+  }
+  assert.equal(getPageFromPath('/cakes/not-a-real-cake/'), 'not-found')
+})
 
 function structuredTypes(path: string) {
   return getSeoConfig(path).structuredData?.map((entry) => entry['@type']) || []

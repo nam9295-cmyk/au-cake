@@ -39,7 +39,7 @@ export function getPageFromPath(path: string): Page {
   if (path === '/') return 'home'
   if (path === '/cart') return 'cart'
   if (path === '/cakes') return 'cakes'
-  if (path === '/cakes/custom-cake' || path === '/custom-cake') return 'custom-cake'
+  if (path === '/cakes/custom-cake' || path === '/cakes/custom-cake/' || path === '/custom-cake') return 'custom-cake'
   if (path === '/custom-cake/complete') return 'custom-cake-complete'
   if (getCakeSlugFromPath(path)) return 'cake-detail'
   if (path === '/review' || path === '/review.html') return 'review'

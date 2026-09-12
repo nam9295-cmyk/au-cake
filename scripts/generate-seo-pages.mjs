@@ -310,6 +310,18 @@ const pages = {
   },
   ...Object.fromEntries(cakeEntries.map(cake => [`/cakes/${cake.slug}`, cakePageConfig(cake)])),
   ...Object.fromEntries(legacyCakeEntries.map(cake => [`/cakes/${cake.slug}`, cakePageConfig(cake, 'noindex, nofollow')])),
+  ...Object.fromEntries(Object.entries(auPublicPages.standalonePages).map(([path, page]) => [path, {
+    title: page.title,
+    description: page.description,
+    robots: 'index, follow',
+    fallbackHtml: `
+      <main class="seo-fallback">
+        <h1>${escapeHtml(page.h1)}</h1>
+        <p>${escapeHtml(page.intro)}</p>
+        <p>${escapeHtml(page.priceSummary)}</p>
+        <p>${escapeHtml(page.pickup)}</p>
+      </main>`,
+  }])),
   ...Object.fromEntries(Object.entries(privatePages).map(([path, page]) => [path, { ...page, robots: 'noindex, nofollow' }])),
 }
 
@@ -379,12 +391,14 @@ function renderPage(template, path, config) {
 
 const template = await readFile(join(distDir, 'index.html'), 'utf8')
 for (const [path, config] of Object.entries(pages)) {
-  const outputPath = path === '/' ? join(distDir, 'index.html') : join(distDir, `${path.slice(1)}.html`)
+  const outputPath = path === '/' ? join(distDir, 'index.html')
+    : Object.hasOwn(auPublicPages.standalonePages, path) ? join(distDir, path.slice(1), 'index.html')
+      : join(distDir, `${path.slice(1)}.html`)
   await mkdir(dirname(outputPath), { recursive: true })
   await writeFile(outputPath, renderPage(template, path, config))
 }
 
-const indexablePaths = ['/', '/cakes', ...cakeEntries.map((cake) => `/cakes/${cake.slug}`), '/classes', '/reviews']
+const indexablePaths = ['/', '/cakes', ...cakeEntries.map((cake) => `/cakes/${cake.slug}`), ...Object.keys(auPublicPages.standalonePages), '/classes', '/reviews']
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${indexablePaths.map((path) => `  <url><loc>${canonicalFor(path)}</loc></url>`).join('\n')}
