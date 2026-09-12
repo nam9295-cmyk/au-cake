@@ -64,7 +64,7 @@ import { digestReviewCouponCode } from './coupon-digest.js'
 
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const SPRING_CLASS_CAMPAIGN_2026 = Object.freeze({
-  enabled: true,
+  enabled: false,
   timezone: MARKET_TIMEZONE,
   allowedDates: Object.freeze(['2026-09-26', '2026-10-03', '2026-10-10']),
   sessionTimes: Object.freeze([...CLASS_SESSION_TIMES]),
@@ -146,12 +146,12 @@ function validateAge(value, code) {
   return age
 }
 
-export function isSpringClassBookingDateAllowed(value, now = new Date()) {
-  if (!isValidDateValue(value) || !SPRING_CLASS_CAMPAIGN_2026.enabled) return false
+export function isSpringClassBookingDateAllowed(value, now = new Date(), campaign = SPRING_CLASS_CAMPAIGN_2026) {
+  if (!isValidDateValue(value) || !campaign.enabled) return false
   const today = sydneyDateValue(now)
-  return today <= SPRING_CLASS_CAMPAIGN_2026.visibleThrough
+  return today <= campaign.visibleThrough
     && value >= today
-    && SPRING_CLASS_CAMPAIGN_2026.allowedDates.includes(value)
+    && campaign.allowedDates.includes(value)
 }
 
 function classExtensionMinutes(value) {
@@ -177,7 +177,7 @@ function classPricing(coursePlan, bookingType, extensionMinutes, advancedExtensi
   return { subtotalCents, discountPercent, discountCents, totalPriceCents: subtotalCents - discountCents }
 }
 
-export function buildClassReservation(input, { now = new Date(), reservationNumber = generateClassReservationNumber(now) } = {}) {
+export function buildClassReservation(input, { now = new Date(), reservationNumber = generateClassReservationNumber(now), bookingDateAllowed = isSpringClassBookingDateAllowed } = {}) {
   if (!input || typeof input !== 'object') fail('INVALID_REQUEST')
   if (typeof input.website === 'string' && input.website.trim()) fail('INVALID_REQUEST')
   const promoFieldIsPresent = (value) => value !== undefined && value !== null &&
@@ -190,7 +190,7 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
   if (!CLASS_TYPES.has(classType)) fail('INVALID_CLASS_TYPE')
   if (coursePlan === 'advanced' && classType !== 'advanced-2-tier-cake-class') fail('INVALID_CLASS_TYPE')
   if (coursePlan !== 'advanced' && classType === 'advanced-2-tier-cake-class') fail('INVALID_CLASS_TYPE')
-  if (!isSpringClassBookingDateAllowed(input.classDate, now)) fail('INVALID_CLASS_DATE')
+  if (!bookingDateAllowed(input.classDate, now)) fail('INVALID_CLASS_DATE')
   if (!CLASS_SESSION_TIMES.includes(input.classTime)) fail('INVALID_CLASS_TIME')
   if (input.parentConsent !== true || input.cancellationAgreement !== true || input.privacyConsent !== true) fail('CONSENT_REQUIRED')
   if (typeof input.photoConsent !== 'boolean') fail('PHOTO_CONSENT_REQUIRED')
@@ -212,7 +212,7 @@ export function buildClassReservation(input, { now = new Date(), reservationNumb
   if (coursePlan === 'basic-advanced-package') {
     advancedClassDate = input.advancedClassDate
     advancedClassTime = input.advancedClassTime
-    if (!isSpringClassBookingDateAllowed(advancedClassDate, now) || !CLASS_SESSION_TIMES.includes(advancedClassTime)) {
+    if (!bookingDateAllowed(advancedClassDate, now) || !CLASS_SESSION_TIMES.includes(advancedClassTime)) {
       fail('INVALID_PACKAGE_SESSION')
     }
     if (advancedClassDate === input.classDate && advancedClassTime === input.classTime) fail('INVALID_PACKAGE_SESSION')

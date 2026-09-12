@@ -6,7 +6,9 @@ import { AppwriteException } from './reservation-sdk.mjs'
 import {
   ReservationApiError,
   buildCakeReservation,
-  buildClassReservation,
+  buildClassReservation as productionBuildClassReservation,
+  isSpringClassBookingDateAllowed,
+  SPRING_CLASS_CAMPAIGN_2026,
   canonicalCakeRequestPayload,
   resolveCakeCatalogMode,
   resolveCakeCustomerEmailMode,
@@ -16,6 +18,9 @@ import { cakeReservationResponse, createCake, resolveReservationConfig } from '.
 import { buildDryRunPlan, resolveDeployConfig } from '../scripts/reservation-api-deploy-config.mjs'
 
 const now = new Date('2026-07-10T00:00:00.000Z')
+// Isolate existing Class email rules from the production campaign closure.
+const bookingDateAllowed = (value, at) => isSpringClassBookingDateAllowed(value, at, { ...SPRING_CLASS_CAMPAIGN_2026, enabled: true })
+const buildClassReservation = (input, options) => productionBuildClassReservation(input, { ...options, bookingDateAllowed })
 const hmacSecret = Buffer.alloc(32, 7)
 
 const cakeInput = {
