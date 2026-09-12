@@ -145,7 +145,7 @@ test('custom initial quote and all six base prices match the launch policy fixtu
 })
 
 test('Custom Cake September promo normalizes into the canonical request and prices only eligible base cents', () => {
-  const receivedAt = '2026-09-13T00:00:00.000Z'
+  const receivedAt = '2026-09-12T00:00:00.000Z'
   const noCode = copy(custom.request)
   delete noCode.promoCode
   const normalizedNoCode = input.normalizeCustomCakeV1Request(noCode)
@@ -180,12 +180,13 @@ test('Custom Cake September promo normalizes into the canonical request and pric
   assert.equal(revised.knownTotalCents, 16740)
 
   for (const [at, pickupDate, discount] of [
-    ['2026-09-12T13:59:59.999Z', '2026-11-30', null],
-    ['2026-09-12T14:00:00.000Z', '2026-11-30', 1590],
+    ['2026-09-11T13:59:59.999Z', '2026-11-30', null],
+    ['2026-09-11T14:00:00.000Z', '2026-11-30', 1590],
+    ['2026-09-11T14:00:00.000Z', '2026-09-12', 1590],
     ['2026-09-30T13:59:59.999Z', '2026-11-30', 1590],
     ['2026-09-30T14:00:00.000Z', '2026-11-30', null],
     ['2026-09-20T00:00:00.000Z', '2026-12-01', null],
-    ['2026-09-13T00:00:00.000Z', '2026-09-12', null],
+    ['2026-09-12T00:00:00.000Z', '2026-09-11', null],
   ]) {
     const request = copy(eligible)
     request.pickup.pickupDate = pickupDate
