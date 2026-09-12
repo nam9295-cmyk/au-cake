@@ -4,7 +4,9 @@ import { AppwriteException } from './reservation-sdk.mjs'
 import {
   ReservationApiError,
   buildCakeReservation,
-  buildClassReservation,
+  buildClassReservation as productionBuildClassReservation,
+  isSpringClassBookingDateAllowed,
+  SPRING_CLASS_CAMPAIGN_2026,
   isCakePickupServiceTime,
   isCakePickupBlocked,
   isSchoolPickupWindowClosed,
@@ -18,6 +20,9 @@ import {
 import { calendarLogin, listCalendarEvents, createCake, createClass, lookupCake } from '../appwrite-functions/reservation-api/src/main.js'
 
 const now = new Date('2026-07-10T00:00:00.000Z')
+// Internal pricing/validation tests explicitly exercise the open campaign.
+const bookingDateAllowed = (value, at) => isSpringClassBookingDateAllowed(value, at, { ...SPRING_CLASS_CAMPAIGN_2026, enabled: true })
+const buildClassReservation = (input, options) => productionBuildClassReservation(input, { ...options, bookingDateAllowed })
 
 const cakeInput = {
   customerName: 'Jenny Cake',
@@ -92,6 +97,102 @@ test('cake API requires and normalizes a customer email address', () => {
       { ...cakeInput, customerEmail },
       { now, reservationNumber: 'VG-C-AU-INVALID-EMAIL' },
     ))
+  }
+})
+
+test('production Class campaign rejects new reservations before slot or reservation writes', async () => {
+  assert.equal(SPRING_CLASS_CAMPAIGN_2026.enabled, false)
+  assertApiError('INVALID_CLASS_DATE', () => productionBuildClassReservation(classInput, { now }))
+  const calls = []
+  const databases = {
+    async getDocument() { calls.push('read'); throw new AppwriteException('Not found', 404) },
+    async createTransaction() { calls.push('transaction'); throw new Error('must not write') },
+    async createDocument() { calls.push('write'); throw new Error('must not write') },
+  }
+  await assert.rejects(createClass(databases, {
+    ...classInput, requestId: '11111111-1111-4111-8111-111111111111',
+    campaign: { enabled: true }, bookingDateAllowed: true,
+  }, { now }), { code: 'INVALID_CLASS_DATE', status: 400 })
+  assert.deepEqual(calls, ['read'])
+})
+
+test('closed Class campaign replays stored success before current date eligibility without changing admin data', async () => {
+  const request = { ...classInput, requestId: '11111111-1111-4111-8111-111111111111' }
+  const stored = { $id: request.requestId, ...buildClassReservation(request, { now, reservationNumber: 'VG-KC-AU-SAVED' }) }
+  const before = structuredClone(stored)
+  const databases = { async getDocument() { return structuredClone(stored) } }
+  const response = await createClass(databases, request, { now: new Date('2027-01-01T00:00:00Z') })
+  assert.equal(response.reservationNumber, 'VG-KC-AU-SAVED')
+  assert.equal(response.totalPriceCents, 9900)
+  assert.equal(response.createdAt, now.toISOString())
+  assert.equal(response.status, 'Requested')
+  assert.deepEqual(await createClass(databases, { ...request, parentPhone: '+61 412 345 678', parentEmail: 'jenny@example.com' }, { now }), response)
+  assert.deepEqual(stored, before)
+  Object.assign(stored, { status: 'Confirmed', paymentStatus: 'Paid', adminMemo: 'Keep this note', totalPriceCents: 12345 })
+  const managed = await createClass(databases, request, { now: new Date('2027-01-01T00:00:00Z') })
+  assert.equal(managed.status, 'Confirmed')
+  assert.equal(managed.paymentStatus, 'Paid')
+  assert.equal(managed.adminMemo, 'Keep this note')
+  assert.equal(managed.totalPriceCents, 12345)
+})
+
+test('Class replay rejects changed payloads under the same request ID', async () => {
+  const request = { ...classInput, requestId: '11111111-1111-4111-8111-111111111111' }
+  const stored = { $id: request.requestId, ...buildClassReservation(request, { now, reservationNumber: 'VG-KC-AU-SAVED' }) }
+  const databases = { async getDocument() { return structuredClone(stored) } }
+  for (const change of [
+    { parentPhone: '0412345679' }, { parentName: 'Other Parent' }, { parentEmail: 'other@example.com' },
+    { childName: 'Other Child' }, { childAge: 9 }, { schoolYear: 'Year 1' },
+    { classDate: '2026-09-26' }, { classDate: 'not-a-date' }, { classTime: '10:00' },
+    { classType: 'cupcake-chocolate-class' }, { extensionMinutes: 30 },
+    { allergyNote: 'Peanuts' }, { emergencyContact: 'Other contact' }, { pickupPerson: 'Other person' },
+    { photoConsent: true }, { parentConsent: false }, { privacyConsent: false },
+    { cancellationAgreement: false }, { promoCode: 'WRONGCODE' },
+    { coursePlan: 'basic-advanced-package', advancedClassDate: '2026-10-10', advancedClassTime: '16:00' },
+  ]) {
+    await assert.rejects(createClass(databases, { ...request, ...change }, { now }), { code: 'REQUEST_ID_CONFLICT', status: 409 })
+  }
+})
+
+test('Class replay compares package sessions and second-child details without reopening bookings', async () => {
+  for (const [extra, changes] of [
+    [{ coursePlan: 'basic-advanced-package', advancedClassDate: '2026-10-10', advancedClassTime: '16:00' }, [
+      { advancedClassDate: '2026-09-26' }, { advancedClassTime: '10:00' }, { advancedExtensionMinutes: 30 },
+    ]],
+    [{ bookingType: '2-friends', secondChildName: 'Leo', secondChildAge: 8, secondChildSchoolYear: 'Year 2' }, [
+      { secondChildName: 'Other Child' }, { secondChildAge: 9 }, { secondChildSchoolYear: 'Year 3' },
+    ]],
+  ]) {
+    const request = { ...classInput, ...extra, requestId: '11111111-1111-4111-8111-111111111111' }
+    const stored = { $id: request.requestId, ...buildClassReservation(request, { now, reservationNumber: 'VG-KC-AU-SAVED' }) }
+    const databases = { async getDocument() { return structuredClone(stored) } }
+    const closed = { now: new Date('2027-01-01T00:00:00Z') }
+    assert.equal((await createClass(databases, request, closed)).reservationNumber, 'VG-KC-AU-SAVED')
+    for (const change of changes) {
+      await assert.rejects(createClass(databases, { ...request, ...change }, closed), { code: 'REQUEST_ID_CONFLICT', status: 409 })
+    }
+  }
+})
+
+test('Class concurrent-create recovery applies the same payload conflict check', async () => {
+  const request = { ...classInput, requestId: '11111111-1111-4111-8111-111111111111' }
+  for (const changed of [false, true]) {
+    let reads = 0, rolledBack = false
+    const stored = { $id: request.requestId, ...buildClassReservation({ ...request, childName: changed ? 'Other Child' : request.childName }, { now, reservationNumber: 'VG-KC-AU-WINNER' }) }
+    const databases = {
+      async getDocument() {
+        if (++reads === 1) throw new AppwriteException('Not found', 404)
+        return structuredClone(stored)
+      },
+      async listDocuments() { return { documents: [] } },
+      async createTransaction() { return { $id: 'tx-conflict' } },
+      async createDocument() { throw new AppwriteException('Already exists', 409) },
+      async updateTransaction({ rollback }) { rolledBack = rollback },
+    }
+    const result = createClass(databases, request, { now, bookingDateAllowed })
+    if (changed) await assert.rejects(result, { code: 'REQUEST_ID_CONFLICT', status: 409 })
+    else assert.equal((await result).reservationNumber, 'VG-KC-AU-WINNER')
+    assert.equal(rolledBack, true)
   }
 })
 
@@ -194,7 +295,7 @@ test('package class creation reserves both slots in the same transaction with ac
   await createClass(databases, {
     ...classInput, requestId: 'f65f7e08-20f7-4b4a-b12a-6b42c043b268', coursePlan: 'basic-advanced-package',
     advancedClassDate: '2026-10-10', advancedClassTime: '16:00', extensionMinutes: 30, advancedExtensionMinutes: 30,
-  }, { now })
+  }, { now, bookingDateAllowed })
   const slotCreates = creates.filter((request) => request.collectionId === 'class_booked_dates')
   assert.equal(slotCreates.length, 2)
   assert.deepEqual(slotCreates.map((request) => request.data), [

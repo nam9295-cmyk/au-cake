@@ -8,6 +8,7 @@ import {
   generateCakeReservationNumber,
   generateClassReservationNumber,
   hashReviewCouponCode,
+  isValidDateValue,
   matchesLookupPhone,
   normalizeAustralianMobile,
   normalizeReviewCouponCode,
@@ -496,18 +497,41 @@ export async function createCake(databases, input, {
   return cakeReservationResponse(document)
 }
 
-export async function createClass(databases, input, { now = new Date(), runtimeConfig = config } = {}) {
+function classReplayResponse(document, input) {
+  let requested
+  try {
+    // Revalidate/normalize the request, but never reapply current campaign eligibility
+    // to an already committed reservation. Return stored prices and admin state.
+    requested = buildClassReservation(input, { reservationNumber: 'pending', bookingDateAllowed: isValidDateValue })
+  } catch (error) {
+    if (!(error instanceof ReservationApiError)) throw error
+    throw new ReservationApiError('REQUEST_ID_CONFLICT', 409)
+  }
+  const stored = classReservationResponse(document)
+  for (const key of [
+    'classType', 'coursePlan', 'classDate', 'classTime', 'extensionMinutes',
+    'advancedClassDate', 'advancedClassTime', 'advancedExtensionMinutes', 'bookingType',
+    'parentName', 'parentPhone', 'parentEmail', 'childName', 'childAge', 'schoolYear',
+    'secondChildName', 'secondChildAge', 'secondChildSchoolYear', 'allergyNote',
+    'emergencyContact', 'pickupPerson', 'parentConsent', 'cancellationAgreement', 'photoConsent',
+  ]) {
+    if (requested[key] !== stored[key]) throw new ReservationApiError('REQUEST_ID_CONFLICT', 409)
+  }
+  return stored
+}
+
+export async function createClass(databases, input, { now = new Date(), runtimeConfig = config, bookingDateAllowed } = {}) {
   const documentId = documentIdForInput(input)
-  const data = buildClassReservation(input, { now, reservationNumber: 'pending' })
   const existing = await getIdempotentDocument(
     databases,
     runtimeConfig.kidsDatabaseId,
     runtimeConfig.classReservationsId,
     documentId,
-    data.parentPhone,
+    normalizeAustralianMobile(input?.parentPhone),
     'parentPhone',
   )
-  if (existing) return classReservationResponse(existing)
+  if (existing) return classReplayResponse(existing, input)
+  const data = buildClassReservation(input, { now, reservationNumber: 'pending', bookingDateAllowed })
   data.reservationNumber = await uniqueReservationNumber(
     databases,
     runtimeConfig.kidsDatabaseId,
@@ -559,7 +583,7 @@ export async function createClass(databases, input, { now = new Date(), runtimeC
         data.parentPhone,
         'parentPhone',
       )
-      if (retryDocument) return classReservationResponse(retryDocument)
+      if (retryDocument) return classReplayResponse(retryDocument, input)
       throw new ReservationApiError('CLASS_SESSION_UNAVAILABLE', 409)
     }
     throw error

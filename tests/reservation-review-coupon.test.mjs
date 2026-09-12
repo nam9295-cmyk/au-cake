@@ -5,7 +5,9 @@ import { AppwriteException, Query } from './reservation-sdk.mjs'
 import {
   ReservationApiError,
   buildCakeReservation,
-  buildClassReservation,
+  buildClassReservation as productionBuildClassReservation,
+  isSpringClassBookingDateAllowed,
+  SPRING_CLASS_CAMPAIGN_2026,
   hashReviewCouponCode,
   normalizeReviewCouponCode,
   publicCakeReservation,
@@ -21,6 +23,9 @@ import reservationHandler, {
   safeReservationLogAction,
 } from '../appwrite-functions/reservation-api/src/main.js'
 const now = new Date('2026-07-10T00:00:00.000Z')
+// Isolate existing Class promo-field rejection from the production campaign closure.
+const bookingDateAllowed = (value, at) => isSpringClassBookingDateAllowed(value, at, { ...SPRING_CLASS_CAMPAIGN_2026, enabled: true })
+const buildClassReservation = (input, options) => productionBuildClassReservation(input, { ...options, bookingDateAllowed })
 const requestId = 'f65f7e08-20f7-4b4a-b12a-6b42c043b268'
 const rawCode = 'FOXKIWI7Q2MK'
 const manualCode = 'JENNIETEST7'
