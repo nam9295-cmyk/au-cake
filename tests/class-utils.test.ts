@@ -16,6 +16,7 @@ import {
   getClassAgeGroupForSchoolYear,
   getClassSchoolYears,
   isClassSchoolYearAllowed,
+  resolveClassSchoolYear,
   getClassDepositAmount,
   getClassDurationMinutes,
   getClassCalendarMonthDays,
@@ -170,6 +171,13 @@ test('Basic accepts Kindy through Year 6 while Advanced and packages start at Ye
   assert.equal(getClassAgeGroupForSchoolYear('Year 1'), 'kindy-year-2')
   assert.equal(getClassAgeGroupForSchoolYear('Year 2'), 'year-2')
   assert.equal(getClassAgeGroupForSchoolYear('Year 3'), 'year-3-6')
+})
+
+test('changing to an advanced plan defaults an ineligible school year to Year 1', () => {
+  assert.equal(resolveClassSchoolYear('basic', 'Kindy'), 'Kindy')
+  assert.equal(resolveClassSchoolYear('advanced', 'Kindy'), 'Year 1')
+  assert.equal(resolveClassSchoolYear('basic-advanced-package', 'Kindy'), 'Year 1')
+  assert.equal(resolveClassSchoolYear('advanced', 'Year 1'), 'Year 1')
 })
 
 test('class request normalization removes stale package-only fields after plan changes', () => {

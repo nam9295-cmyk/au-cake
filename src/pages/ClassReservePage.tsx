@@ -25,6 +25,7 @@ import {
   isClassDateBooked,
   isClassSchoolYearAllowed,
   normalizeClassReservationInput,
+  resolveClassSchoolYear,
   type ClassBookedSlot,
 } from '../lib/class-utils'
 import { cakeCopy, getClassPageCopy, type Language } from '../lib/i18n'
@@ -233,7 +234,7 @@ export function ClassReservePage({ navigate, onComplete, language, setLanguage, 
                       ...form,
                       coursePlan,
                       partySize: coursePlan === 'basic' ? form.partySize : 1,
-                      schoolYear: isClassSchoolYearAllowed(coursePlan, form.schoolYear) ? form.schoolYear : 'Year 2',
+                      schoolYear: resolveClassSchoolYear(coursePlan, form.schoolYear),
                       classType: coursePlan === 'advanced' ? 'advanced-2-tier-cake-class' : form.classType === 'advanced-2-tier-cake-class' ? 'school-holiday-private-cake-class' : form.classType,
                     })}
                   />

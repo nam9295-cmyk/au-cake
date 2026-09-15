@@ -160,6 +160,10 @@ export function isClassSchoolYearAllowed(coursePlan: ClassCoursePlan, schoolYear
   return getClassSchoolYears(coursePlan).includes(schoolYear as never)
 }
 
+export function resolveClassSchoolYear(coursePlan: ClassCoursePlan, schoolYear: string) {
+  return isClassSchoolYearAllowed(coursePlan, schoolYear) ? schoolYear : 'Year 1'
+}
+
 export function getClassAgeGroupForSchoolYear(schoolYear: string): ClassAgeGroup {
   if (schoolYear === 'Kindy' || schoolYear === 'Year 1') return 'kindy-year-2'
   if (schoolYear === 'Year 2') return 'year-2'
