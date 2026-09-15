@@ -101,8 +101,8 @@ test('cake API requires and normalizes a customer email address', () => {
 })
 
 test('production Class campaign rejects new reservations before slot or reservation writes', async () => {
-  assert.equal(SPRING_CLASS_CAMPAIGN_2026.enabled, false)
-  assertApiError('INVALID_CLASS_DATE', () => productionBuildClassReservation(classInput, { now }))
+  assert.equal(SPRING_CLASS_CAMPAIGN_2026.enabled, true)
+  assertApiError('INVALID_CLASS_DATE', () => productionBuildClassReservation({ ...classInput, classDate: '2026-10-13' }, { now }))
   const calls = []
   const databases = {
     async getDocument() { calls.push('read'); throw new AppwriteException('Not found', 404) },
@@ -110,7 +110,7 @@ test('production Class campaign rejects new reservations before slot or reservat
     async createDocument() { calls.push('write'); throw new Error('must not write') },
   }
   await assert.rejects(createClass(databases, {
-    ...classInput, requestId: '11111111-1111-4111-8111-111111111111',
+    ...classInput, classDate: '2026-10-13', requestId: '11111111-1111-4111-8111-111111111111',
     campaign: { enabled: true }, bookingDateAllowed: true,
   }, { now }), { code: 'INVALID_CLASS_DATE', status: 400 })
   assert.deepEqual(calls, ['read'])
@@ -258,7 +258,7 @@ test('class API accepts the three scheduled Spring dates and rejects invalid ext
   assert.doesNotThrow(() => buildClassReservation({ ...classInput, classDate: '2026-10-03' }, { now }))
   assert.doesNotThrow(() => buildClassReservation({ ...classInput, classDate: '2026-10-10' }, { now }))
   assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-07-13' }, { now }))
-  assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-10-04' }, { now }))
+  assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-10-13' }, { now }))
   assertApiError('INVALID_CLASS_DATE', () => buildClassReservation({ ...classInput, classDate: '2026-10-17' }, { now }))
   assertApiError('INVALID_EXTENSION', () => buildClassReservation({ ...classInput, extensionMinutes: 15 }, { now }))
   assertApiError('INVALID_PARTY_SIZE', () => buildClassReservation({
@@ -269,7 +269,7 @@ test('class API accepts the three scheduled Spring dates and rejects invalid ext
     ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: classInput.classDate, advancedClassTime: classInput.classTime,
   }, { now }))
   assertApiError('INVALID_PACKAGE_SESSION', () => buildClassReservation({
-    ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: '2026-10-04', advancedClassTime: '16:00',
+    ...classInput, coursePlan: 'basic-advanced-package', advancedClassDate: '2026-10-13', advancedClassTime: '16:00',
   }, { now }))
 })
 

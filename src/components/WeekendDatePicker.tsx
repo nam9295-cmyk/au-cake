@@ -177,6 +177,10 @@ export function WeekendDatePicker(props: SharedDatePickerProps) {
   return <BookingDatePicker {...props} weekendsOnly />
 }
 
+export function ClassDatePicker(props: SharedDatePickerProps) {
+  return <BookingDatePicker {...props} weekendsOnly={false} />
+}
+
 export function PickupDatePicker(props: SharedDatePickerProps) {
   return <BookingDatePicker {...props} weekendsOnly={false} allowedWeekdays={AU_CAKE_PICKUP_ALLOWED_WEEKDAYS} />
 }

@@ -64,11 +64,12 @@ import { digestReviewCouponCode } from './coupon-digest.js'
 
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00']
 export const SPRING_CLASS_CAMPAIGN_2026 = Object.freeze({
-  enabled: false,
+  enabled: true,
   timezone: MARKET_TIMEZONE,
-  allowedDates: Object.freeze(['2026-09-26', '2026-10-03', '2026-10-10']),
+  allowedDates: Object.freeze(Array.from({ length: 17 }, (_, day) =>
+    new Date(Date.UTC(2026, 8, 26 + day)).toISOString().slice(0, 10))),
   sessionTimes: Object.freeze([...CLASS_SESSION_TIMES]),
-  visibleThrough: '2026-10-10',
+  visibleThrough: '2026-10-12',
 })
 export const CLASS_SESSION_DURATION_MINUTES = 120
 export const CLASS_BASIC_DURATION_MINUTES = 90

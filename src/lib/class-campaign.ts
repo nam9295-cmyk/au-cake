@@ -9,11 +9,12 @@ export interface SpringClassCampaign {
 }
 
 export const SPRING_CLASS_CAMPAIGN_2026: SpringClassCampaign = Object.freeze({
-  enabled: false,
+  enabled: true,
   timezone: 'Australia/Sydney',
-  allowedDates: Object.freeze(['2026-09-26', '2026-10-03', '2026-10-10']),
+  allowedDates: Object.freeze(Array.from({ length: 17 }, (_, day) =>
+    new Date(Date.UTC(2026, 8, 26 + day)).toISOString().slice(0, 10))),
   sessionTimes: Object.freeze(['10:00', '13:00', '16:00']),
-  visibleThrough: '2026-10-10',
+  visibleThrough: '2026-10-12',
 })
 
 export function getSydneyDateValue(date = new Date()) {
@@ -55,19 +56,19 @@ export function getNextSpringClassDate(
 export function getSpringClassCampaignCopy(language: Language) {
   if (language === 'ko') {
     return {
-      dates: ['9월 26일 토요일', '10월 3일 토요일', '10월 10일 토요일'],
+      dates: ['9월 26일–10월 12일 매일'],
       sessions: '10:00 · 13:00 · 16:00',
       calloutTitle: '봄방학 클래스 예약 오픈',
-      calloutDates: '9월 26일·10월 3일·10월 10일 토요일',
+      calloutDates: '9월 26일–10월 12일 매일',
       calloutSessions: '10:00 · 13:00 · 16:00 세 타임',
       closed: '봄방학 클래스 예약이 마감되었습니다.',
     } as const
   }
   return {
-    dates: ['Saturday 26 September', 'Saturday 3 October', 'Saturday 10 October'],
+    dates: ['26 September–12 October, every day'],
     sessions: '10:00 · 13:00 · 16:00',
     calloutTitle: 'Spring vacation bookings open',
-    calloutDates: 'Saturday 26 September · Saturday 3 & Saturday 10 October',
+    calloutDates: '26 September–12 October, every day',
     calloutSessions: 'Three sessions: 10:00 · 13:00 · 16:00',
     closed: 'Spring vacation class bookings are now closed.',
   } as const

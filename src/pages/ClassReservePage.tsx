@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { BankAccountBox } from '../components/BankAccountBox'
 import { SiteHeader } from '../components/SiteChrome'
-import { WeekendDatePicker } from '../components/WeekendDatePicker'
+import { ClassDatePicker } from '../components/WeekendDatePicker'
 import { useTodayInputValue } from '../hooks/useTodayInputValue'
 import { type Page } from '../lib/app-routes'
 import { trackEvent } from '../lib/analytics'
@@ -311,7 +311,7 @@ export function ClassReservePage({ navigate, onComplete, language, setLanguage, 
             <h2 id="session-detail-title">{copy.reserve.sessionTitle(form.coursePlan === 'advanced' ? copy.reserve.coursePlans.advanced.label : copy.reserve.coursePlans.basic.label, getClassDurationMinutes(form.coursePlan === 'advanced' ? 'advanced' : 'basic', form.extensionMinutes))}</h2>
             <div className="class-field">
               <span>{copy.reserve.preferredDate}</span>
-              <WeekendDatePicker
+              <ClassDatePicker
                 label={copy.reserve.preferredDate}
                 locale={language === 'ko' ? 'ko-KR' : 'en-AU'}
                 value={form.classDate}
@@ -358,7 +358,7 @@ export function ClassReservePage({ navigate, onComplete, language, setLanguage, 
                 <h3>{copy.reserve.advancedSessionTitle(getClassDurationMinutes('advanced', form.advancedExtensionMinutes))}</h3>
                 <div className="class-field">
                   <span>{copy.reserve.advancedDate}</span>
-                  <WeekendDatePicker
+                  <ClassDatePicker
                     label={copy.reserve.advancedDate}
                     locale={language === 'ko' ? 'ko-KR' : 'en-AU'}
                     minDate={today}
