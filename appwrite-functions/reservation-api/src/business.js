@@ -77,7 +77,7 @@ export const CLASS_ADVANCED_DURATION_MINUTES = 120
 const CLASS_TYPES = new Set(['school-holiday-private-cake-class', 'cupcake-chocolate-class', 'advanced-2-tier-cake-class'])
 const CLASS_COURSE_PLANS = new Set(['basic', 'advanced', 'basic-advanced-package'])
 const BASIC_CLASS_SCHOOL_YEARS = new Set(['Kindy', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
-const ADVANCED_CLASS_SCHOOL_YEARS = new Set(['Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
+const ADVANCED_CLASS_SCHOOL_YEARS = new Set(['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
 
 export function formatCakeSizeLabel(cakeSize) {
   return CAKE_SIZE_LABELS[cakeSize] || CAKE_SIZE_LABELS['15cm']

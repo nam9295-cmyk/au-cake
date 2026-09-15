@@ -37,7 +37,13 @@ test('campaign copy explains the daily date window in both languages', () => {
 test('class customer copy provides Korean labels for the reservation flow', () => {
   const getClassPageCopy = (i18n as unknown as {
     getClassPageCopy?: (language: 'en' | 'ko') => {
-      reserve: { title: string; submit: string; parentDetails: string }
+      reserve: {
+        title: string
+        submit: string
+        parentDetails: string
+        advancedSchoolGroup: string
+        errors: { advancedSchoolYear: string }
+      }
       complete: { title: string; backToClasses: string }
     }
   }).getClassPageCopy
@@ -47,8 +53,14 @@ test('class customer copy provides Korean labels for the reservation flow', () =
   assert.equal(copy.reserve.title, '키즈 클래스 예약 요청')
   assert.equal(copy.reserve.submit, '예약 요청 보내기')
   assert.equal(copy.reserve.parentDetails, '보호자 정보')
+  assert.equal(copy.reserve.advancedSchoolGroup, '고급 · Year 1–6만 가능')
+  assert.equal(copy.reserve.errors.advancedSchoolYear, '고급 클래스는 Year 1부터 Year 6까지 참여할 수 있습니다.')
   assert.equal(copy.complete.title, '예약 요청을 보냈습니다')
   assert.equal(copy.complete.backToClasses, '클래스 안내로 돌아가기')
+
+  const english = getClassPageCopy!('en')
+  assert.equal(english.reserve.advancedSchoolGroup, 'Advanced · Year 1–6 only')
+  assert.equal(english.reserve.errors.advancedSchoolYear, 'Advanced classes are available from Year 1 to Year 6.')
 })
 
 test('shared Korean navigation uses a Korean kids-class label and neutral language helper', () => {

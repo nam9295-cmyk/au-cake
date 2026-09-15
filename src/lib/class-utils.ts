@@ -7,7 +7,7 @@ export const ADVANCED_CLASS_TYPE_ID = 'advanced-2-tier-cake-class' as const
 export const CLASS_TYPE_IDS: readonly ClassType[] = [CLASS_TYPE_ID, 'cupcake-chocolate-class', ADVANCED_CLASS_TYPE_ID]
 export const CLASS_SESSION_TIMES = ['10:00', '13:00', '16:00'] as const
 export const BASIC_CLASS_SCHOOL_YEARS = ['Kindy', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'] as const
-export const ADVANCED_CLASS_SCHOOL_YEARS = ['Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'] as const
+export const ADVANCED_CLASS_SCHOOL_YEARS = ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'] as const
 /** Safe fallback for legacy booked-slot rows that have no duration. */
 export const CLASS_SESSION_DURATION_MINUTES = 120
 export const CLASS_BASIC_DURATION_MINUTES = 90

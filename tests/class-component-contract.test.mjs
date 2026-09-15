@@ -108,10 +108,10 @@ test('class Appwrite definitions include optional program audit fields and booke
 
 test('kids class public content stays canonical while writes remain server-authoritative', () => {
   const classes = publicContent.classes
-  assert.match(classes.description, /26 September, 3 and 10 October 2026/i)
+  assert.match(classes.description, /26 September to 12 October 2026/i)
   assert.match(classes.description, /10:00, 13:00 and 16:00/)
   assert.match(classes.description, /Kindy/)
-  assert.match(classes.description, /Years 2[–-]6/)
+  assert.match(classes.description, /Years 1[–-]6/)
   assert.equal(classes.baseLowPrice, 99)
   assert.equal(classes.baseHighPrice, 254.6)
   assert.match(landing, /getClassPageCopy\(language\)/)

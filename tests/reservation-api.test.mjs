@@ -239,7 +239,7 @@ test('class API authoritatively prices basic, advanced and package extensions in
   assert.equal(packageBooking.totalPrice, 285)
 })
 
-test('class API allows Basic from Kindy but keeps Advanced and packages at Year 2–6', () => {
+test('class API allows Basic from Kindy and Advanced and packages from Year 1–6', () => {
   const kindyBasic = buildClassReservation({ ...classInput, schoolYear: 'Kindy' }, { now, reservationNumber: 'BASIC-KINDY' })
   const yearOneBasic = buildClassReservation({ ...classInput, schoolYear: 'Year 1' }, { now, reservationNumber: 'BASIC-YEAR-1' })
   assert.equal(kindyBasic.totalPriceCents, 9900)
@@ -247,7 +247,10 @@ test('class API allows Basic from Kindy but keeps Advanced and packages at Year 
   assertApiError('INVALID_SCHOOL_YEAR', () => buildClassReservation({
     ...classInput, coursePlan: 'advanced', classType: 'advanced-2-tier-cake-class', schoolYear: 'Kindy',
   }, { now }))
-  assertApiError('INVALID_SCHOOL_YEAR', () => buildClassReservation({
+  assert.doesNotThrow(() => buildClassReservation({
+    ...classInput, coursePlan: 'advanced', classType: 'advanced-2-tier-cake-class', schoolYear: 'Year 1',
+  }, { now }))
+  assert.doesNotThrow(() => buildClassReservation({
     ...classInput, coursePlan: 'basic-advanced-package', schoolYear: 'Year 1',
     advancedClassDate: '2026-10-10', advancedClassTime: '16:00',
   }, { now }))

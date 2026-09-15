@@ -225,9 +225,9 @@ const CLASS_PAGE_COPY = {
     landing: {
       title: 'Kids Cake Decorating Classes Sydney',
       location: 'Melrose Park, Sydney',
-      intro: 'Cake classes every day in Melrose Park, Sydney from 26 September to 12 October 2026, with sessions at 10:00, 13:00 and 16:00. Basic welcomes children from Kindy to Year 6; Advanced starts from Year 2.',
+      intro: 'Cake classes every day in Melrose Park, Sydney from 26 September to 12 October 2026, with sessions at 10:00, 13:00 and 16:00. Basic welcomes children from Kindy to Year 6; Advanced starts from Year 1.',
       requestSpot: 'Request a spot',
-      courseSummary: 'Basic: Kindy–Year 6 · Advanced: Year 2–6 · Daily Spring classes',
+      courseSummary: 'Basic: Kindy–Year 6 · Advanced: Year 1–6 · Daily Spring classes',
       heroImageAlt: 'Kids professional cake course hero',
       essentialsTitle: 'Class Essentials',
       essentials: [
@@ -241,7 +241,7 @@ const CLASS_PAGE_COPY = {
       courseCards: [
         { title: 'Basic Cake Class', text: 'Kindy–Year 6 · Plan, build, and finish one 15cm chocolate cake to take home.' },
         { title: 'Basic Cupcakes & Chocolate Class', text: 'Kindy–Year 6 · Make four cupcakes and enjoy a guided hands-on chocolate-making activity.' },
-        { title: 'Advanced 2-Tier Cake Class', text: 'Year 2–6 · A 120-minute, one-child class for building and finishing a two-tier cake.' },
+        { title: 'Advanced 2-Tier Cake Class', text: 'Year 1–6 · A 120-minute, one-child class for building and finishing a two-tier cake.' },
       ],
       stepsTitle: 'How it works',
       steps: [
@@ -300,7 +300,7 @@ const CLASS_PAGE_COPY = {
       youngerDetail: 'Younger students',
       olderGroup: 'Year 3–6',
       olderDetail: 'Primary students',
-      advancedSchoolGroup: 'Advanced · Year 2–6 only',
+      advancedSchoolGroup: 'Advanced · Year 1–6 only',
       childrenTitle: '4. Number of Children',
       oneChildOnly: 'Advanced and package bookings are for one child only.',
       oneChildLabel: '1 child',
@@ -359,7 +359,7 @@ const CLASS_PAGE_COPY = {
       errors: {
         names: 'Please enter parent and child name.',
         basicSchoolYear: 'Please choose a school year from Kindy to Year 6.',
-        advancedSchoolYear: 'Advanced classes are available from Year 2 to Year 6.',
+        advancedSchoolYear: 'Advanced classes are available from Year 1 to Year 6.',
         phone: (help: string) => `Please check the mobile number. ${help}`,
         email: 'Please enter a valid email address.',
         basicDate: 'Please choose a date from 26 September to 12 October.',
@@ -388,9 +388,9 @@ const CLASS_PAGE_COPY = {
     landing: {
       title: '시드니 키즈 케이크 데코레이션 클래스',
       location: '시드니 멜로즈 파크',
-      intro: '멜로즈 파크에서 9월 26일부터 10월 12일까지 매일 진행하는 케이크 클래스입니다. 수업은 10:00, 13:00, 16:00에 진행됩니다. 기본 클래스는 Kindy부터 Year 6까지, 고급 클래스는 Year 2부터 참여할 수 있습니다.',
+      intro: '멜로즈 파크에서 9월 26일부터 10월 12일까지 매일 진행하는 케이크 클래스입니다. 수업은 10:00, 13:00, 16:00에 진행됩니다. 기본 클래스는 Kindy부터 Year 6까지, 고급 클래스는 Year 1부터 참여할 수 있습니다.',
       requestSpot: '자리 요청하기',
-      courseSummary: '기본: Kindy–Year 6 · 고급: Year 2–6 · 봄방학 매일 클래스',
+      courseSummary: '기본: Kindy–Year 6 · 고급: Year 1–6 · 봄방학 매일 클래스',
       heroImageAlt: '키즈 케이크 클래스 대표 이미지',
       essentialsTitle: '클래스 안내',
       essentials: [
@@ -404,7 +404,7 @@ const CLASS_PAGE_COPY = {
       courseCards: [
         { title: '기본 케이크 클래스', text: 'Kindy–Year 6 · 15cm 초콜릿 케이크 한 개를 계획하고 만들고 마무리해 가져갑니다.' },
         { title: '기본 컵케이크 & 초콜릿 클래스', text: 'Kindy–Year 6 · 컵케이크 네 개를 만들고 초콜릿 만들기 활동을 함께합니다.' },
-        { title: '고급 2단 케이크 클래스', text: 'Year 2–6 · 2단 케이크를 만들고 마무리하는 1인 120분 수업입니다.' },
+        { title: '고급 2단 케이크 클래스', text: 'Year 1–6 · 2단 케이크를 만들고 마무리하는 1인 120분 수업입니다.' },
       ],
       stepsTitle: '수업 진행 방식',
       steps: [
@@ -463,7 +463,7 @@ const CLASS_PAGE_COPY = {
       youngerDetail: '저학년 그룹',
       olderGroup: 'Year 3–6',
       olderDetail: '초등 고학년 그룹',
-      advancedSchoolGroup: '고급 · Year 2–6만 가능',
+      advancedSchoolGroup: '고급 · Year 1–6만 가능',
       childrenTitle: '4. 참여 어린이 수',
       oneChildOnly: '고급과 패키지 예약은 어린이 1명만 가능합니다.',
       oneChildLabel: '어린이 1명',
@@ -522,7 +522,7 @@ const CLASS_PAGE_COPY = {
       errors: {
         names: '보호자와 어린이 이름을 입력해 주세요.',
         basicSchoolYear: 'Kindy부터 Year 6 사이의 학년을 선택해 주세요.',
-        advancedSchoolYear: '고급 클래스는 Year 2부터 Year 6까지 참여할 수 있습니다.',
+        advancedSchoolYear: '고급 클래스는 Year 1부터 Year 6까지 참여할 수 있습니다.',
         phone: (help: string) => `휴대폰 번호를 확인해 주세요. ${help}`,
         email: '올바른 이메일 주소를 입력해 주세요.',
         basicDate: '9월 26일부터 10월 12일 사이의 날짜를 선택해 주세요.',

@@ -159,13 +159,13 @@ test('class course, school group and child count map to the legacy pricing types
   assert.equal(getClassBookingType('year-3-6', 2), '2-friends')
 })
 
-test('Basic accepts Kindy through Year 6 while Advanced and packages start at Year 2', () => {
+test('Basic accepts Kindy through Year 6 while Advanced and packages start at Year 1', () => {
   assert.deepEqual(getClassSchoolYears('basic'), ['Kindy', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
-  assert.deepEqual(getClassSchoolYears('advanced'), ['Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
-  assert.deepEqual(getClassSchoolYears('basic-advanced-package'), ['Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
+  assert.deepEqual(getClassSchoolYears('advanced'), ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
+  assert.deepEqual(getClassSchoolYears('basic-advanced-package'), ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6'])
   assert.equal(isClassSchoolYearAllowed('basic', 'Kindy'), true)
   assert.equal(isClassSchoolYearAllowed('advanced', 'Kindy'), false)
-  assert.equal(isClassSchoolYearAllowed('basic-advanced-package', 'Year 1'), false)
+  assert.equal(isClassSchoolYearAllowed('basic-advanced-package', 'Year 1'), true)
   assert.equal(getClassAgeGroupForSchoolYear('Kindy'), 'kindy-year-2')
   assert.equal(getClassAgeGroupForSchoolYear('Year 1'), 'kindy-year-2')
   assert.equal(getClassAgeGroupForSchoolYear('Year 2'), 'year-2')
