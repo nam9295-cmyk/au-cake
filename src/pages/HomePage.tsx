@@ -21,8 +21,8 @@ const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().ho
 const AU_CATALOG_GROUP_MARKERS = {
   'signature-gateau': '/category-marker-01.svg',
   'gateau-sharing': '/category-marker-02.svg',
-  'chocolatiers-cake': '/category-marker-03.svg',
-  'gather-celebrate': '/category-marker-04.svg',
+  'gather-celebrate': '/category-marker-03.svg',
+  'chocolatiers-cake': '/category-marker-04.svg',
   'custom-creative': '/category-marker-05.svg',
   // Retained legacy group keys for fallback compatibility
   'gateau-daily': '/category-marker-02.svg',

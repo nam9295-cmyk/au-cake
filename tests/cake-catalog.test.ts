@@ -155,18 +155,18 @@ test('AU catalogue groups own the exact bilingual four-by-two presentation contr
         productIds: ['cupcake', 'bento-cake'],
       },
       {
-        id: 'chocolatiers-cake',
-        number: '03',
-        title: 'CHOCOLATIER’S CAKE',
-        description: 'Classic artisanal cakes crafted with fresh cream and rich chocolate balance.',
-        productIds: ['fresh-strawberry-vanilla-cream', 'brownie-cheesecake'],
-      },
-      {
         id: 'gather-celebrate',
-        number: '04',
+        number: '03',
         title: 'GATHER & CELEBRATE',
         description: 'Refreshing citrus cakes and crowd-pleasing sweets for parties and group orders.',
         productIds: ['fresh-lemon-cupcakes', 'smore-stick'],
+      },
+      {
+        id: 'chocolatiers-cake',
+        number: '04',
+        title: 'CHOCOLATIER’S CAKE',
+        description: 'Classic artisanal cakes crafted with fresh cream and rich chocolate balance.',
+        productIds: ['fresh-strawberry-vanilla-cream', 'brownie-cheesecake'],
       },
     ],
   )
@@ -176,8 +176,8 @@ test('AU catalogue groups own the exact bilingual four-by-two presentation contr
     [
       { title: '시그니처 갸또', description: '진하고 밀도감 있는 시그니처 갸또 쇼콜라 시트로 완성한 케이크.' },
       { title: '갸또 셰어링', description: '여럿이 함께 나누기 좋은 갸또 디저트와 케이크.' },
-      { title: '쇼콜라티에 케이크', description: '신선한 생크림과 진한 초콜릿의 조화로 완성한 케이크.' },
       { title: '개더 & 셀레브레이트', description: '파티와 단체 모임, 특별한 날에 함께하기 좋은 디저트.' },
+      { title: '쇼콜라티에 케이크', description: '신선한 생크림과 진한 초콜릿의 조화로 완성한 케이크.' },
     ],
   )
 
