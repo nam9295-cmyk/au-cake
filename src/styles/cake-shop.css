@@ -425,8 +425,9 @@
   transition: opacity 180ms ease, filter 180ms ease;
 }
 
-.cake-detail-option-preview.is-muted img {
-  filter: grayscale(1);
+.cake-detail-option-preview.is-selected {
+  border-color: var(--pink, #e11d48);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pink, #e11d48) 26%, transparent);
 }
 
 .cake-detail-option-preview-media.is-contained img {

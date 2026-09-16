@@ -54,6 +54,8 @@ function cakeLineLabel(document) {
     'pound-cake': 'Signature Gâteau au Chocolat',
     'cupcake-half-dozen': 'Chocolate Cupcakes',
     'cupcake-dozen': 'Cupcakes',
+    'cupcake-twenty-four': 'Cupcakes · 24 pieces',
+    'cupcake-forty-eight': 'Cupcakes · 48 pieces',
     'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
     'pave-choco-basque-cheesecake': 'Pave chocolate on top',
     'eiffel-tower-basque-cheesecake': 'Cake finishing with Eiffel Tower',
@@ -65,6 +67,8 @@ function cakeLineLabel(document) {
     'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
     'fresh-lemon-cupcakes-12': 'Lemon Cake · 12 pieces',
     'fresh-lemon-cupcakes-16': 'Lemon Cake · 16 pieces',
+    'fresh-lemon-cupcakes-24': 'Lemon Cake · 24 pieces',
+    'fresh-lemon-cupcakes-48': 'Lemon Cake · 48 pieces',
   }
   const finishLabels = {
     'extra-chocolate': 'Extra chocolate',

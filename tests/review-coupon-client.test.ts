@@ -114,7 +114,7 @@ test('coupon normalizers reject non-string runtime values without coercion', () 
 test('static Chocolate and Lemoni campaign eligibility remains unchanged', () => {
   assert.equal(getPromoEntryState('choco-basque-cheesecake', ' Chocolate ', validStaticNow).kind, 'static-valid')
   assert.equal(getPromoEntryState('pave-cake', 'Chocolate', validStaticNow).kind, 'invalid')
-  assert.equal(getPromoEntryState('fresh-lemon-cupcakes-8', 'LEMONI', validStaticNow).kind, 'static-valid')
+  assert.equal(getPromoEntryState('fresh-lemon-cupcakes-12', 'LEMONI', validStaticNow).kind, 'static-valid')
   assert.equal(getPromoEntryState('pound-cake', 'Lemoni', validStaticNow).kind, 'invalid')
   assert.equal(getPromoEntryState('smore-stick', 'Chocolate', validStaticNow).kind, 'invalid')
   assert.equal(getPromoEntryState('smore-stick', 'Lemoni', validStaticNow).kind, 'invalid')
@@ -693,16 +693,16 @@ test('single-line response parser keeps authoritative individual packaging outsi
     productId: 'cupcake-half-dozen' as const, cakeSize: '15cm' as const, chocolateType: 'dark' as const, poundAddon: 'none' as const, cupcakeFinish: 'basic' as const,
     chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
     vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink',
-    individualPackaging: true, quantity: 1, unitPriceCents: 3100, subtotalCents: 3100,
+    individualPackaging: true, quantity: 1, unitPriceCents: 3000, subtotalCents: 3000,
     discountPercent: 0, discountCents: 0, individualPackagingPieces: 6,
-    individualPackagingFeeCents: 300, totalPriceCents: 3400,
+    individualPackagingFeeCents: 300, totalPriceCents: 3300,
   }
   const parsed = parseCakeReservationResult({
     ...reservation({
       ...line,
-      totalPrice: 34,
-      subtotalCents: 3100,
-      totalPriceCents: 3400,
+      totalPrice: 33,
+      subtotalCents: 3000,
+      totalPriceCents: 3300,
       individualPackagingPieces: 6,
       individualPackagingFeeCents: 300,
       appliedPromoCodeLast4: undefined,
@@ -717,7 +717,7 @@ test('single-line response parser keeps authoritative individual packaging outsi
   assert.equal(parsed.individualPackaging, true)
   assert.equal(parsed.individualPackagingPieces, 6)
   assert.equal(parsed.individualPackagingFeeCents, 300)
-  assert.equal(parsed.totalPriceCents, 3400)
+  assert.equal(parsed.totalPriceCents, 3300)
 })
 
 test('multi-line response accepts exact cents represented by authoritative division', () => {
@@ -727,17 +727,17 @@ test('multi-line response accepts exact cents represented by authoritative divis
     quantity: 1, unitPriceCents: 4500, subtotalCents: 4500, discountPercent: 5, discountCents: 225, totalPriceCents: 4275,
   }
   const lemon = {
-    productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 2,
+    productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 3,
     vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
-    quantity: 1, unitPriceCents: 3700, subtotalCents: 3700, discountPercent: 5, discountCents: 185, totalPriceCents: 3515,
+    quantity: 1, unitPriceCents: 3500, subtotalCents: 3500, discountPercent: 5, discountCents: 175, totalPriceCents: 3325,
   }
   const parsed = parseCakeOrderResult(multiOrderResponse({
     ...pound, orderLines: [pound, lemon], orderItemCount: 2,
-    subtotalCents: 8200, discountBasisCents: 8200, discountPercent: 5, discountCents: 410,
-    totalPriceCents: 7790, totalPrice: 77.9, appliedPromoCodeLast4: 'Q2MK', promotionKind: 'review-reward',
+    subtotalCents: 8000, discountBasisCents: 8000, discountPercent: 5, discountCents: 400,
+    totalPriceCents: 7600, totalPrice: 76, appliedPromoCodeLast4: 'Q2MK', promotionKind: 'review-reward',
   }))
-  assert.equal(parsed.totalPriceCents, 7790)
-  assert.equal(parsed.totalPrice, 77.9)
+  assert.equal(parsed.totalPriceCents, 7600)
+  assert.equal(parsed.totalPrice, 76)
 })
 
 test('multi-line response rejects duplicate canonical lines and shifted discount allocation', () => {
@@ -785,7 +785,7 @@ test('multi-line response validates static discount against eligible basis rathe
   const lemon = {
     productId: 'fresh-lemon-cupcakes-6', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
     vanillaCreamCount: 0, partyDecorationCount: 0, vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry',
-    quantity: 1, unitPriceCents: 3600, subtotalCents: 3600, discountPercent: 10, discountCents: 360, totalPriceCents: 3240,
+    quantity: 1, unitPriceCents: 3500, subtotalCents: 3500, discountPercent: 10, discountCents: 350, totalPriceCents: 3150,
   }
   const pave = {
     productId: 'pave-cake', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateIcingCount: 0,
@@ -795,49 +795,49 @@ test('multi-line response validates static discount against eligible basis rathe
   const parsed = parseCakeOrderResult(multiOrderResponse({
     productId: lemon.productId,
     quantity: 1,
-    totalPrice: 111.4,
-    totalPriceCents: 11140,
-    subtotalCents: 11500,
+    totalPrice: 110.5,
+    totalPriceCents: 11050,
+    subtotalCents: 11400,
     discountPercent: 10,
-    discountCents: 360,
+    discountCents: 350,
     appliedPromoCodeLast4: 'MONI',
     promotionKind: 'static',
     orderLines: [lemon, pave],
     orderItemCount: 2,
-    discountBasisCents: 3600,
+    discountBasisCents: 3500,
   }))
-  assert.equal(parsed.discountCents, 360)
-  assert.equal(parsed.discountBasisCents, 3600)
+  assert.equal(parsed.discountCents, 350)
+  assert.equal(parsed.discountBasisCents, 3500)
   assert.throws(() => parseCakeOrderResult({
     ...multiOrderResponse({
       productId: lemon.productId,
       quantity: 1,
-      totalPrice: 111.4,
-      totalPriceCents: 11140,
-      subtotalCents: 11500,
+      totalPrice: 110.5,
+      totalPriceCents: 11050,
+      subtotalCents: 11400,
       discountPercent: 10,
-      discountCents: 360,
+      discountCents: 350,
       appliedPromoCodeLast4: 'ABCD',
       promotionKind: 'static',
       orderLines: [lemon, pave],
       orderItemCount: 2,
-      discountBasisCents: 3600,
+      discountBasisCents: 3500,
     }),
   }), /RESERVATION_API_INVALID_RESPONSE/)
   assert.throws(() => parseCakeOrderResult({
     ...multiOrderResponse({
       productId: lemon.productId,
       quantity: 1,
-      totalPrice: 111.4,
-      totalPriceCents: 11140,
-      subtotalCents: 11500,
+      totalPrice: 110.5,
+      totalPriceCents: 11050,
+      subtotalCents: 11400,
       discountPercent: 10,
-      discountCents: 360,
+      discountCents: 350,
       appliedPromoCodeLast4: 'Q2MK',
       promotionKind: 'review-reward',
       orderLines: [lemon, pave],
       orderItemCount: 2,
-      discountBasisCents: 3600,
+      discountBasisCents: 3500,
     }),
   }), /RESERVATION_API_INVALID_RESPONSE/)
 })

@@ -65,6 +65,16 @@ const koProducts: Partial<Record<ProductId, ProductText>> = {
     description: '박스 전체를 같은 마감으로 완성하는 초콜릿 컵케이크예요.',
     priceNote: '하프 더즌 · 6개와 박스 전체 마감 선택',
   },
+  'cupcake-twenty-four': {
+    name: '초콜릿 컵케이크',
+    description: '박스 전체를 같은 마감으로 완성하는 초콜릿 컵케이크예요.',
+    priceNote: '24개와 박스 전체 마감 선택',
+  },
+  'cupcake-forty-eight': {
+    name: '초콜릿 컵케이크',
+    description: '박스 전체를 같은 마감으로 완성하는 초콜릿 컵케이크예요.',
+    priceNote: '48개와 박스 전체 마감 선택',
+  },
   'choco-basque-cheesecake': {
     name: '쇼콜라티에 바스크 치즈케이크',
     description: `진한 초콜릿과 크림치즈를 높은 온도에서 구운 ${AU_CAKE_SIZE_LABELS['15cm']} 바스크 치즈케이크예요.`,
@@ -110,10 +120,16 @@ const koProducts: Partial<Record<ProductId, ProductText>> = {
   'fresh-lemon-cupcakes-16': {
     name: '레몬 케이크 · 16개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '16개 구성 · 레몬 글레이즈와 꽃 장식 포함',
   },
+  'fresh-lemon-cupcakes-24': {
+    name: '레몬 케이크 · 24개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '24개 구성 · 개당 AUD 5.00',
+  },
+  'fresh-lemon-cupcakes-48': {
+    name: '레몬 케이크 · 48개', description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.', priceNote: '48개 구성 · 개당 AUD 4.69',
+  },
   'smore-stick': {
     name: '스모어 스틱',
     description: '스틱에 꽂은 푹신한 마시멜로에 진한 커버춰 초콜릿을 더한 디저트. 모임과 파티용 대량 주문에 적합합니다.',
-    priceNote: '개당 AUD 4.50 · 6개 이상 10%, 12개 이상 20% 할인',
+    priceNote: '10·25·50개 세트 · 개당 AUD 2.70부터',
   },
 }
 
@@ -126,18 +142,22 @@ const koProductFeatures: Record<ProductId, string[]> = {
   'pound-cake': ['직사각형 갸또 쇼콜라', '고정 사이즈', '기본, 초콜릿 추가, 바닐라 크림 마감'],
   'cupcake-half-dozen': ['하프 더즌 · 6개', '박스 전체 동일 마감', '기본, 바닐라 생크림 또는 초콜릿 버터크림'],
   'cupcake-dozen': ['더즌 · 12개', '박스 전체 동일 마감', '기본, 바닐라 생크림 또는 초콜릿 버터크림'],
+  'cupcake-twenty-four': ['24개', '박스 전체 동일 마감', '기본, 바닐라 생크림 또는 초콜릿 버터크림'],
+  'cupcake-forty-eight': ['48개', '박스 전체 동일 마감', '기본, 바닐라 생크림 또는 초콜릿 버터크림'],
   'choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '쇼콜라티에 바스크 치즈케이크', '부드럽고 꾸덕한 중심'],
   'pave-choco-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 마감', '+AUD 10.00 마감 추가'],
   'eiffel-tower-basque-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15.00 마감 추가'],
   'brownie-cheesecake': ['다크초콜릿 브라우니 베이스', '위에는 바스크 치즈케이크', '두 가지 디저트를 한 번에', AU_CAKE_SIZE_LABELS['15cm'], '두 가지 마감 선택'],
   'pave-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '파베 초콜릿 on top', '+AUD 10.00 마감 추가'],
   'eiffel-tower-brownie-cheesecake': [AU_CAKE_SIZE_LABELS['15cm'], '전체 파베 초콜릿 마감', '+AUD 15.00 마감 추가'],
-  'fresh-lemon-cupcakes-4': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
-  'fresh-lemon-cupcakes-6': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
-  'fresh-lemon-cupcakes-8': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
-  'fresh-lemon-cupcakes-12': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
-  'fresh-lemon-cupcakes-16': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
-  'smore-stick': ['스틱 마시멜로 디저트', '리얼 커버춰 초콜릿 코팅', '개당 AUD 4.50', '6~11개 10% 할인', '12개 이상 20% 대량 할인'],
+  'fresh-lemon-cupcakes-4': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'],
+  'fresh-lemon-cupcakes-6': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'],
+  'fresh-lemon-cupcakes-8': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'],
+  'fresh-lemon-cupcakes-12': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'],
+  'fresh-lemon-cupcakes-16': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'],
+  'fresh-lemon-cupcakes-24': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'],
+  'fresh-lemon-cupcakes-48': ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'],
+  'smore-stick': ['스틱 마시멜로 디저트', '리얼 커버춰 초콜릿 코팅', '10개 · AUD 35', '25개 · AUD 75', '50개 · AUD 135'],
 }
 
 export function getProductText(productId: ProductId, language: Language): ProductText {

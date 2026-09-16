@@ -74,10 +74,11 @@ function singleSmoreRequest(quantity: number): ReservationInput {
   }
 }
 
-for (const [quantity, total] of [[6, '24.30'], [12, '43.20']] as const) {
-  test(`single S’more ${quantity} reaches ReservePage with bulk price and preserved request quantity`, () => {
+for (const [quantity, total] of [[10, '35.00'], [25, '75.00'], [50, '135.00']] as const) {
+  test(`single S’more ${quantity} reaches ReservePage with its fixed set price and preserved request quantity`, () => {
     const html = renderSingleSmoreReserve(quantity)
-    assert.match(html, new RegExp(`name="quantity"[^>]*value="${quantity}"`))
+    assert.match(html, /<select name="quantity">/)
+    assert.match(html, new RegExp(`<option value="${quantity}" selected`))
     assert.match(html, new RegExp(`AUD(?:\\s|&nbsp;|\\u00a0)+${total.replace('.', '\\.')}`))
     assert.equal(buildCakeReservationRequest(singleSmoreRequest(quantity)).quantity, quantity)
   })

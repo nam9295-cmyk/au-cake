@@ -4,7 +4,7 @@
 import type { BrownieCreamOption, CacaoPercent, CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet, ChocolateExtra, CakeOrderLineRequest, CakeOrderLineResult } from './types.js'
 import { storedMarketConfig as marketConfig } from './stored-order-catalog.js'
 
-const STORED_PRODUCT_IDS = new Set<string>(["pave-cake","vanilla-fresh-cream-cake","buttercream-cake","fresh-strawberry-vanilla-cream-cake","fresh-strawberry-chocolate-cream-cake","pound-cake","cupcake-dozen","cupcake-half-dozen","choco-basque-cheesecake","pave-choco-basque-cheesecake","eiffel-tower-basque-cheesecake","brownie-cheesecake","pave-brownie-cheesecake","eiffel-tower-brownie-cheesecake","fresh-lemon-cupcakes-6","fresh-lemon-cupcakes-8","fresh-lemon-cupcakes-12","fresh-lemon-cupcakes-16","smore-stick"])
+const STORED_PRODUCT_IDS = new Set<string>(["pave-cake","vanilla-fresh-cream-cake","buttercream-cake","fresh-strawberry-vanilla-cream-cake","fresh-strawberry-chocolate-cream-cake","pound-cake","cupcake-dozen","cupcake-half-dozen","cupcake-twenty-four","cupcake-forty-eight","choco-basque-cheesecake","pave-choco-basque-cheesecake","eiffel-tower-basque-cheesecake","brownie-cheesecake","pave-brownie-cheesecake","eiffel-tower-brownie-cheesecake","fresh-lemon-cupcakes-6","fresh-lemon-cupcakes-8","fresh-lemon-cupcakes-12","fresh-lemon-cupcakes-16","fresh-lemon-cupcakes-24","fresh-lemon-cupcakes-48","smore-stick"])
 export function isStoredCakeOrderProductId(value: unknown): boolean {
   return typeof value === 'string' && STORED_PRODUCT_IDS.has(value)
 }
@@ -37,7 +37,7 @@ export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
 
 export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
 
-export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
+export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 0
 
 export const CUPCAKE_PACK_SIZE = 12
 
@@ -45,18 +45,28 @@ export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 
-const CUPCAKE_PRODUCT_IDS: ProductId[] = ['cupcake-half-dozen', 'cupcake-dozen']
+const CUPCAKE_PRODUCT_IDS: ProductId[] = ['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight']
 
 const CUPCAKE_FINISH_PRICES: Partial<Record<ProductId, Record<CupcakeFinish, number>>> = {
   'cupcake-half-dozen': {
-    basic: 31,
-    'vanilla-fresh-cream': 36,
-    'chocolate-buttercream': 41,
+    basic: 30,
+    'vanilla-fresh-cream': 35,
+    'chocolate-buttercream': 40,
   },
   'cupcake-dozen': {
     basic: 55,
     'vanilla-fresh-cream': 64,
     'chocolate-buttercream': 73,
+  },
+  'cupcake-twenty-four': {
+    basic: 105,
+    'vanilla-fresh-cream': 123,
+    'chocolate-buttercream': 140,
+  },
+  'cupcake-forty-eight': {
+    basic: 195,
+    'vanilla-fresh-cream': 230,
+    'chocolate-buttercream': 265,
   },
 }
 
@@ -77,6 +87,8 @@ const LEMON_PROMO_PRODUCT_IDS: ProductId[] = [
   'fresh-lemon-cupcakes-8',
   'fresh-lemon-cupcakes-12',
   'fresh-lemon-cupcakes-16',
+  'fresh-lemon-cupcakes-24',
+  'fresh-lemon-cupcakes-48',
 ]
 
 const PROMOTIONS = [
@@ -113,7 +125,30 @@ export function getValidPromoCode(productId: ProductId, code?: string, now = new
   return promo.code
 }
 
-export const PRODUCTS = marketConfig.products
+const CURRENT_PACK_PRODUCTS = {
+  'cupcake-half-dozen': { ...marketConfig.products['cupcake-half-dozen']!, price: 30 },
+  'cupcake-dozen': { ...marketConfig.products['cupcake-dozen']!, price: 55 },
+  'cupcake-twenty-four': {
+    id: 'cupcake-twenty-four' as const, name: 'Cupcakes · 24 pieces', description: '', price: 105, priceNote: '',
+    usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
+  },
+  'cupcake-forty-eight': {
+    id: 'cupcake-forty-eight' as const, name: 'Cupcakes · 48 pieces', description: '', price: 195, priceNote: '',
+    usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
+  },
+  'fresh-lemon-cupcakes-6': { ...marketConfig.products['fresh-lemon-cupcakes-6']!, price: 35 },
+  'fresh-lemon-cupcakes-12': { ...marketConfig.products['fresh-lemon-cupcakes-12']!, price: 65 },
+  'fresh-lemon-cupcakes-24': {
+    id: 'fresh-lemon-cupcakes-24' as const, name: 'Lemon Cake · 24 pieces', description: '', price: 120, priceNote: '',
+    usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
+  },
+  'fresh-lemon-cupcakes-48': {
+    id: 'fresh-lemon-cupcakes-48' as const, name: 'Lemon Cake · 48 pieces', description: '', price: 225, priceNote: '',
+    usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
+  },
+}
+
+export const PRODUCTS: typeof marketConfig.products = { ...marketConfig.products, ...CURRENT_PACK_PRODUCTS }
 
 const CURRENT_WHOLE_CAKE_SIZE_PRICES: Partial<Record<ProductId, Partial<Record<CakeSize, number>>>> = {
   'pave-cake': { '6in': 79, '8in': 109, '10in': 159 },
@@ -176,7 +211,7 @@ export function isFreshLemonCupcakeProduct(productId: ProductId) {
 export function getFreshLemonCupcakePackSize(productId: ProductId) {
   if (!isFreshLemonCupcakeProduct(productId)) return null
   const packSize = Number(productId.split('-').at(-1))
-  return [4, 6, 8, 12, 16].includes(packSize) ? packSize : null
+  return [4, 6, 8, 12, 16, 24, 48].includes(packSize) ? packSize : null
 }
 
 export function normalizeChocolateIcingCount(productId: ProductId, value?: number | null) {
@@ -504,6 +539,8 @@ const INDIVIDUAL_PACKAGING_PIECES_BY_PRODUCT: Partial<Record<ProductId, number>>
   'fresh-lemon-cupcakes-8': 8,
   'fresh-lemon-cupcakes-12': 12,
   'fresh-lemon-cupcakes-16': 16,
+  'fresh-lemon-cupcakes-24': 24,
+  'fresh-lemon-cupcakes-48': 48,
 }
 
 export function isIndividualPackagingEligibleProduct(productId: ProductId) {
@@ -563,11 +600,18 @@ function invalidResponse(): never {
   throw new Error('RESERVATION_API_INVALID_RESPONSE')
 }
 
-export function getOrderLineBulkDiscountPercent(line: Pick<CakeOrderLineRequest, 'productId' | 'quantity'>): 0 | 10 | 20 {
-  return line.productId === 'smore-stick' ? line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0 : 0
+type StoredSmoreLine = Pick<CakeOrderLineRequest, 'productId' | 'quantity'> & Partial<Pick<CakeOrderLineResult, 'unitPriceCents'>>
+
+const CURRENT_SMORE_SET_UNIT_PRICES_CENTS: Partial<Record<number, number>> = { 10: 350, 25: 300, 50: 270 }
+
+export function getOrderLineBulkDiscountPercent(line: StoredSmoreLine): 0 | 10 | 20 {
+  if (line.productId !== 'smore-stick') return 0
+  if (CURRENT_SMORE_SET_UNIT_PRICES_CENTS[line.quantity] === line.unitPriceCents) return 0
+  if (line.unitPriceCents !== 450) invalidResponse()
+  return line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0
 }
 
-export function getOrderLineBulkDiscountCents(line: Pick<CakeOrderLineResult, 'productId' | 'quantity' | 'subtotalCents'>): number {
+export function getOrderLineBulkDiscountCents(line: Pick<CakeOrderLineResult, 'productId' | 'quantity' | 'subtotalCents' | 'unitPriceCents'>): number {
   // Smore has an exact 45c/90c discount per piece. Do not overflow an
   // otherwise valid safe-integer subtotal by multiplying it by 10 or 20.
   const discountCents = line.productId === 'smore-stick'

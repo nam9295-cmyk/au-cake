@@ -37,6 +37,7 @@ import {
   STRAWBERRY_CREAM_CAKE_PRODUCT_IDS,
   INDIVIDUAL_PACKAGING_PRODUCT_PIECES,
   PROMOTIONS,
+  SMORE_STICK_SET_UNIT_PRICES_CENTS,
   CUSTOM_CAKE_V1_BASE_CENTS,
   CUSTOM_CAKE_V1_PROMO_CODE,
 } from './cake-order-catalog.js'
@@ -140,7 +141,7 @@ export function normalizeChocolateIcingCount(productId, value) {
   if (!FRESH_LEMON_CUPCAKE_PRODUCT_IDS.has(productId)) return 0
   const packSize = Number(productId.split('-').at(-1))
   const count = value === undefined || value === null || value === '' ? 0 : Number(value)
-  if (!Number.isInteger(count) || count < 0 || count > packSize) fail('INVALID_ICING_COUNT')
+  if (!Number.isInteger(count) || ![0, packSize / 2, packSize].includes(count)) fail('INVALID_ICING_COUNT')
   return count
 }
 
@@ -266,7 +267,9 @@ export const SMORE_CLIENT_PRICE_KEYS = new Set([
 
 export function validCakeQuantity(productId, quantity) {
   return Number.isSafeInteger(quantity) && quantity > 0
-    && (productId === 'smore-stick' || quantity <= MAX_RESERVATION_QUANTITY)
+    && (productId === 'smore-stick'
+      ? Object.hasOwn(SMORE_STICK_SET_UNIT_PRICES_CENTS, quantity)
+      : quantity <= MAX_RESERVATION_QUANTITY)
 }
 
 export const CAKE_ORDER_REQUEST_KEYS = new Set([

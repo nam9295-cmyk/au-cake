@@ -103,7 +103,7 @@ export function getCalendarGridDays(month: string, today = toInputDate(new Date(
 function shortProductName(productId: Reservation['productId']) {
   if (productId === 'pave-cake') return 'Pave'
   if (productId === 'pound-cake') return 'Gâteau'
-  if (productId === 'cupcake-half-dozen' || productId === 'cupcake-dozen') return 'Cupcake'
+  if (['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'].includes(productId)) return 'Cupcake'
   return getProductById(productId).name
 }
 

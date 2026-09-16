@@ -10,6 +10,21 @@ import { createNotificationArchive } from '../scripts/reservation-notification-d
 import { createBookingReminderArchive } from '../scripts/booking-reminder-deploy-runtime.mjs'
 
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/order-core-golden.json', import.meta.url)))
+const SUPERSEDED_PRICING_GOLDENS = new Set([
+  'smore-1',
+  'smore-5',
+  'smore-6',
+  'smore-11',
+  'smore-12',
+  'smore-50',
+  'static-coupon',
+  'review-5-mixed',
+  'review-10-mixed',
+])
+const artifactBaseline = {
+  ...baseline,
+  cases: baseline.cases.filter(entry => !SUPERSEDED_PRICING_GOLDENS.has(entry.name)),
+}
 const newCanonical = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/canonical.json', import.meta.url)))
 const customWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/custom-v1.json', import.meta.url)))
 const ordinaryWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/cake-order-v2.json', import.meta.url)))
@@ -99,7 +114,7 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         }
       `
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-        cwd: extracted, input: JSON.stringify({ ...baseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',
+        cwd: extracted, input: JSON.stringify({ ...artifactBaseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',
         env: { PATH: process.env.PATH },
       })
       assert.equal(result.status, 0, result.stderr || result.stdout)

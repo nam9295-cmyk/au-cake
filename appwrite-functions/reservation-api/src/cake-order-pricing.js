@@ -1,7 +1,6 @@
 // Current new-order integer-cents pricing, discounts and packaging. Does not interpret stored orders.
 import {
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
-  INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
   CHOCOLATE_EXTRA_PRICES_CENTS,
   PROMOTIONS,
   PRODUCTS,
@@ -12,6 +11,7 @@ import {
   CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS,
   CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS,
   BROWNIE_FRESH_CREAM_SURCHARGE_CENTS,
+  SMORE_STICK_SET_UNIT_PRICES_CENTS,
   PROMO_DISCOUNT_RATE,
   INDIVIDUAL_PACKAGING_PRODUCT_PIECES,
   BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS,
@@ -27,10 +27,8 @@ import { canonicalOrderLineKey, normalizeCustomCakeV1Request, normalizeCakeOrder
 
 export function calculateIndividualPackagingFeeCents(individualPackagingPieces, selectedPackagingProductSubtotalCents) {
   if (!Number.isSafeInteger(individualPackagingPieces) || individualPackagingPieces <= 0) return 0
-  const baseFeeCents = individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
-  return selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
-    ? 0
-    : baseFeeCents
+  void selectedPackagingProductSubtotalCents
+  return individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
 }
 
 export function chocolateExtraPriceCents(chocolateExtra) {
@@ -43,12 +41,13 @@ export function safeOrderAmount(value) {
 }
 
 export function smoreBulkPercent(line) {
-  return line.productId === 'smore-stick' ? (line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0) : 0
+  void line
+  return 0
 }
 
 export function smoreBulkDiscount(line) {
-  // Exact integer cents per piece avoid overflowing subtotal * percent.
-  return line.productId === 'smore-stick' ? line.quantity * (450 * smoreBulkPercent(line) / 100) : 0
+  void line
+  return 0
 }
 
 export function getValidPromoCode(productId, promoCode, now) {
@@ -60,6 +59,9 @@ export function getValidPromoCode(productId, promoCode, now) {
 }
 
 export function unitPriceForCakeLine(line) {
+  if (line.productId === 'smore-stick') {
+    return SMORE_STICK_SET_UNIT_PRICES_CENTS[line.quantity] ?? fail('INVALID_QUANTITY')
+  }
   const product = PRODUCTS[line.productId]
   if (CUPCAKE_PRODUCT_IDS.has(line.productId) && Object.hasOwn(line, 'cupcakeFinish')) {
     return CUPCAKE_FINISH_PRICES_CENTS[line.productId][line.cupcakeFinish]

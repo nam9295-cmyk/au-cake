@@ -248,20 +248,20 @@ test('new paid S’more price is 450 standalone or 315 add-on per stick at 1/6/1
   reject(() => pricing.priceCakeOrderV2Request(standalone, { pricedAt, reviewCoupon: { id: 'synthetic', rewardPercent: 5, codeLast4: 'ABCD' } }), 'PROMO_CODE_INVALID')
 })
 
-test('ordinary extras stay per-line, packaging aggregate threshold and coupon remainder ties stay deterministic', () => {
+test('ordinary extras stay per-line, packaging stays paid and coupon allocation stays deterministic', () => {
   const request = copy(ordinary.request)
   const cake = request.lines[0]
-  request.lines = ['B', 'A'].map(lineId => ({ ...copy(cake), lineId, productId: 'fresh-lemon-cupcakes-6', options: { ...cake.options, cakeSize: '15cm', chocolateIcingCount: 1, individualPackaging: true } }))
+  request.lines = ['B', 'A'].map(lineId => ({ ...copy(cake), lineId, productId: 'fresh-lemon-cupcakes-6', options: { ...cake.options, cakeSize: '15cm', chocolateIcingCount: 3, individualPackaging: true } }))
   const result = pricing.priceCakeOrderV2Request(request, { pricedAt, reviewCoupon: { id: 'coupon', rewardPercent: 5, codeLast4: 'ABCD' } })
-  assert.equal(result.subtotalCents, 7300)
-  assert.equal(result.discountCents, 365)
+  assert.equal(result.subtotalCents, 7000)
+  assert.equal(result.discountCents, 350)
   assert.equal(result.individualPackagingFeeCents, 600)
-  assert.equal(result.totalCents, 7535)
-  assert.deepEqual(result.lines.map(l => [l.lineId, l.discountCents]), [['A', 183], ['B', 182]])
+  assert.equal(result.totalCents, 7250)
+  assert.deepEqual(result.lines.map(l => [l.lineId, l.discountCents]), [['A', 175], ['B', 175]])
   request.lines[0].quantity = 2
   const freePackaging = pricing.priceCakeOrderV2Request(request, { pricedAt })
-  assert.equal(freePackaging.subtotalCents, 10950)
-  assert.equal(freePackaging.individualPackagingFeeCents, 0)
+  assert.equal(freePackaging.subtotalCents, 10500)
+  assert.equal(freePackaging.individualPackagingFeeCents, 900)
   const extras = copy(ordinary.request)
   extras.lines[0].quantity = 2
   extras.lines[0].options.chocolateExtra = 'combo'

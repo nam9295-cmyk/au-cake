@@ -16,7 +16,7 @@ test('stored readers retain existing facade identities and golden stored bytes',
     if (!row || !fixture.expected.parsedStored?.value) continue
     const before = JSON.stringify(row)
     assert.deepEqual(readStored(row), fixture.expected.parsedStored.value)
-    toReservation({ ...row, $id: 'synthetic' } as never)
+    assert.doesNotThrow(() => toReservation({ ...row, $id: 'synthetic' } as never), fixture.name)
     assert.equal(JSON.stringify(row), before)
   }
 })

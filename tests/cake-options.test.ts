@@ -19,11 +19,13 @@ import {
   formatChocolateTypeLabel,
   formatPoundAddonLabel,
   getFreshLemonCupcakePackSize,
+  getCupcakeFinishPrice,
   getLemonIcingCount,
   getChocolateIcingSurcharge,
   getProductById,
   getReservationUnitPrice,
   normalizeCupcakeFinishCounts,
+  normalizeChocolateIcingCount,
   normalizePoundAddon,
   normalizeReservationChocolateType,
   normalizeVanillaCakeFlavor,
@@ -79,9 +81,41 @@ test('Lemon finish preview counts follow the selected pack and clamp chocolate p
   const getCounts = cakeDetailPreviewApi.getLemonFinishPreviewCounts
   assert.ok(getCounts)
   assert.deepEqual(getCounts('fresh-lemon-cupcakes-6', 0), { lemon: 6, chocolate: 0 })
-  assert.deepEqual(getCounts('fresh-lemon-cupcakes-8', 3), { lemon: 5, chocolate: 3 })
-  assert.deepEqual(getCounts('fresh-lemon-cupcakes-12', 8), { lemon: 4, chocolate: 8 })
-  assert.deepEqual(getCounts('fresh-lemon-cupcakes-16', 99), { lemon: 0, chocolate: 16 })
+  assert.deepEqual(getCounts('fresh-lemon-cupcakes-6', 3), { lemon: 3, chocolate: 3 })
+  assert.deepEqual(getCounts('fresh-lemon-cupcakes-12', 6), { lemon: 6, chocolate: 6 })
+  assert.deepEqual(getCounts('fresh-lemon-cupcakes-48', 48), { lemon: 0, chocolate: 48 })
+})
+
+test('current Lemon and Gâteau Cupcake boxes use the published pack prices and finish choices', () => {
+  assert.deepEqual(
+    PRODUCT_GROUPS.find((group) => group.id === 'fresh-lemon-cupcakes')?.productIds,
+    ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-24', 'fresh-lemon-cupcakes-48'],
+  )
+  assert.deepEqual(
+    PRODUCT_GROUPS.find((group) => group.id === 'cupcake')?.productIds,
+    ['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'],
+  )
+  assert.deepEqual(
+    ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-24', 'fresh-lemon-cupcakes-48'].map((productId) =>
+      getReservationUnitPrice(productId as ProductId, {}),
+    ),
+    [35, 65, 120, 225],
+  )
+  assert.deepEqual(
+    ['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'].map((productId) => [
+      getCupcakeFinishPrice(productId as ProductId, 'basic'),
+      getCupcakeFinishPrice(productId as ProductId, 'vanilla-fresh-cream'),
+      getCupcakeFinishPrice(productId as ProductId, 'chocolate-buttercream'),
+    ]),
+    [[30, 35, 40], [55, 64, 73], [105, 123, 140], [195, 230, 265]],
+  )
+})
+
+test('Lemon Cake allows all-basic, half-and-half, or all-chocolate finishing with no surcharge', () => {
+  assert.equal(normalizeChocolateIcingCount('fresh-lemon-cupcakes-6', 1), 0)
+  assert.equal(normalizeChocolateIcingCount('fresh-lemon-cupcakes-6', 3), 3)
+  assert.equal(normalizeChocolateIcingCount('fresh-lemon-cupcakes-6', 6), 6)
+  assert.equal(getChocolateIcingSurcharge('fresh-lemon-cupcakes-6', 6), 0)
 })
 
 test('legacy AU small-batch settings copy is replaced without overwriting custom admin copy', () => {
@@ -100,12 +134,12 @@ test('AU cake chooser follows the final eight-product order and keeps legacy gro
       { id: 'buttercream', defaultProductId: 'buttercream-cake', productIds: ['buttercream-cake'] },
       { id: 'fresh-strawberry-vanilla-cream', defaultProductId: 'fresh-strawberry-vanilla-cream-cake', productIds: ['fresh-strawberry-vanilla-cream-cake'] },
       { id: 'fresh-strawberry-chocolate-cream', defaultProductId: 'fresh-strawberry-chocolate-cream-cake', productIds: ['fresh-strawberry-chocolate-cream-cake'] },
-      { id: 'cupcake', defaultProductId: 'cupcake-dozen', productIds: ['cupcake-half-dozen', 'cupcake-dozen'] },
+      { id: 'cupcake', defaultProductId: 'cupcake-dozen', productIds: ['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'] },
       { id: 'signature-gateau', defaultProductId: 'pound-cake', productIds: ['pound-cake'] },
       {
         id: 'fresh-lemon-cupcakes',
         defaultProductId: 'fresh-lemon-cupcakes-12',
-        productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'],
+        productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-24', 'fresh-lemon-cupcakes-48'],
       },
       {
         id: 'brownie-cheesecake',
@@ -123,7 +157,7 @@ test('AU cake chooser follows the final eight-product order and keeps legacy gro
   assert.equal(getProductGroupByProductId('brownie-cheesecake').id, 'brownie-cheesecake')
   assert.equal(getProductGroupByProductId('vanilla-fresh-cream-cake').id, 'vanilla-fresh-cream')
   assert.equal(getProductGroupByProductId('pave-choco-basque-cheesecake').id, 'cheesecake')
-  assert.equal(getProductGroupByProductId('fresh-lemon-cupcakes-8' as ProductId).id, 'fresh-lemon-cupcakes')
+  assert.equal(getProductGroupByProductId('fresh-lemon-cupcakes-24' as ProductId).id, 'fresh-lemon-cupcakes')
 })
 
 test('cheesecake product detection is shared by customer and admin presentation', () => {
@@ -306,12 +340,12 @@ test('Brownie Cheesecake keeps two product variants, the Fresh cream option, and
   assert.equal(getReservationUnitPrice('eiffel-tower-brownie-cheesecake'), 70)
 })
 
-test('Lemon Cake variants use fixed pack prices and the twelve pack is Most Popular', () => {
+test('Lemon Cake variants use the published fixed pack prices', () => {
   const variants = [
-    ['fresh-lemon-cupcakes-6', 36],
-    ['fresh-lemon-cupcakes-8', 45],
+    ['fresh-lemon-cupcakes-6', 35],
     ['fresh-lemon-cupcakes-12', 65],
-    ['fresh-lemon-cupcakes-16', 85],
+    ['fresh-lemon-cupcakes-24', 120],
+    ['fresh-lemon-cupcakes-48', 225],
   ] as const
 
   for (const [productId, price] of variants) {
@@ -327,8 +361,8 @@ test('Lemon Cake variants use fixed pack prices and the twelve pack is Most Popu
     const korean = getProductText(productId, 'ko')
     assert.match(english.description, /freshly squeezed lemon juice/)
     assert.match(korean.description, /레몬즙을 직접 짜/)
-    assert.deepEqual(getProductFeatures(productId, 'en'), ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'])
-    assert.deepEqual(getProductFeatures(productId, 'ko'), ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'])
+    assert.deepEqual(getProductFeatures(productId, 'en'), ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 12, 24 or 48'])
+    assert.deepEqual(getProductFeatures(productId, 'ko'), ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'])
     assert.doesNotMatch(english.description, /fresh lemon cream/i)
     assert.doesNotMatch(korean.description, /레몬 크림/)
   }
@@ -337,21 +371,21 @@ test('Lemon Cake variants use fixed pack prices and the twelve pack is Most Popu
   assert.equal(getProductById('fresh-lemon-cupcakes-12').priceNote.includes('Most Popular'), true)
 })
 
-test('Lemon Cake special finishing count derives the mix and adds AUD 0.50 per changed piece', () => {
+test('Lemon Cake permits only whole-box, half-and-half, or all-chocolate finishing with no surcharge', () => {
   assert.equal(getFreshLemonCupcakePackSize('fresh-lemon-cupcakes-6'), 6)
   assert.equal(getLemonIcingCount('fresh-lemon-cupcakes-6', 3), 3)
-  assert.equal(getChocolateIcingSurcharge('fresh-lemon-cupcakes-6', 3), 1.5)
-  assert.equal(getReservationUnitPrice('fresh-lemon-cupcakes-6', { chocolateIcingCount: 3 }), 37.5)
-  assert.equal(getLemonIcingCount('fresh-lemon-cupcakes-12', 8), 4)
-  assert.equal(getChocolateIcingSurcharge('fresh-lemon-cupcakes-12', 8), 4)
-  assert.equal(getReservationUnitPrice('fresh-lemon-cupcakes-12', { chocolateIcingCount: 8 }), 69)
+  assert.equal(getChocolateIcingSurcharge('fresh-lemon-cupcakes-6', 3), 0)
+  assert.equal(getReservationUnitPrice('fresh-lemon-cupcakes-6', { chocolateIcingCount: 3 }), 35)
+  assert.equal(getLemonIcingCount('fresh-lemon-cupcakes-12', 8), 12)
+  assert.equal(getChocolateIcingSurcharge('fresh-lemon-cupcakes-12', 8), 0)
+  assert.equal(getReservationUnitPrice('fresh-lemon-cupcakes-12', { chocolateIcingCount: 8 }), 65)
   assert.equal(getChocolateIcingSurcharge('pave-cake', 8), 0)
 })
 
-test('Lemoni discounts the Lemon Cake subtotal after chocolate icing surcharge', () => {
+test('Lemoni discounts the Lemon Cake subtotal without a chocolate-finishing surcharge', () => {
   const subtotal = getReservationUnitPrice('fresh-lemon-cupcakes-6', { chocolateIcingCount: 3 })
-  assert.equal(subtotal, 37.5)
-  assert.equal(applyPromoDiscount(subtotal, 'fresh-lemon-cupcakes-6', 'lemoni', new Date('2026-07-13T00:00:00Z')), 33.75)
+  assert.equal(subtotal, 35)
+  assert.equal(applyPromoDiscount(subtotal, 'fresh-lemon-cupcakes-6', 'lemoni', new Date('2026-07-13T00:00:00Z')), 31.5)
 })
 
 test('AU cheesecake variants keep fixed prices and show the fixed shared size label', () => {
@@ -390,14 +424,14 @@ test('Chocolate Cupcakes use an all-box finish with fixed pack-and-finish prices
   const dozen = getProductById('cupcake-dozen')
 
   assert.equal(halfDozen.name, 'Chocolate Cupcakes')
-  assert.equal(halfDozen.price, 31)
+  assert.equal(halfDozen.price, 30)
   assert.equal(dozen.price, 55)
   assert.equal(halfDozen.usesChocolateTypeOptions, false)
   assert.equal(dozen.usesPoundAddonOptions, false)
   assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), false)
-  assert.equal(getReservationUnitPrice('cupcake-half-dozen' as ProductId, { cupcakeFinish: 'basic' } as ReservationPriceOptions), 31)
-  assert.equal(getReservationUnitPrice('cupcake-half-dozen' as ProductId, { cupcakeFinish: 'vanilla-fresh-cream' } as ReservationPriceOptions), 36)
-  assert.equal(getReservationUnitPrice('cupcake-half-dozen' as ProductId, { cupcakeFinish: 'chocolate-buttercream' } as ReservationPriceOptions), 41)
+  assert.equal(getReservationUnitPrice('cupcake-half-dozen' as ProductId, { cupcakeFinish: 'basic' } as ReservationPriceOptions), 30)
+  assert.equal(getReservationUnitPrice('cupcake-half-dozen' as ProductId, { cupcakeFinish: 'vanilla-fresh-cream' } as ReservationPriceOptions), 35)
+  assert.equal(getReservationUnitPrice('cupcake-half-dozen' as ProductId, { cupcakeFinish: 'chocolate-buttercream' } as ReservationPriceOptions), 40)
   assert.equal(getReservationUnitPrice('cupcake-dozen', { cupcakeFinish: 'basic' } as ReservationPriceOptions), 55)
   assert.equal(getReservationUnitPrice('cupcake-dozen', { cupcakeFinish: 'vanilla-fresh-cream' } as ReservationPriceOptions), 64)
   assert.equal(getReservationUnitPrice('cupcake-dozen', { cupcakeFinish: 'chocolate-buttercream' } as ReservationPriceOptions), 73)
@@ -478,7 +512,7 @@ test('cupcakes default to a Basic dozen while allowing the Half Dozen product wi
   assert.equal(cupcakes.usesPoundAddonOptions, false)
   assert.equal(getReservationUnitPrice('cupcake-dozen'), 55)
   assert.equal(getReservationUnitPrice('cupcake-dozen', { cupcakeFinish: 'vanilla-fresh-cream' } as ReservationPriceOptions), 64)
-  assert.equal(getReservationUnitPrice('cupcake-half-dozen' as ProductId, { cupcakeFinish: 'chocolate-buttercream' } as ReservationPriceOptions), 41)
+  assert.equal(getReservationUnitPrice('cupcake-half-dozen' as ProductId, { cupcakeFinish: 'chocolate-buttercream' } as ReservationPriceOptions), 40)
   assert.equal(usesReservationChocolateType('cupcake-dozen', 'extra-chocolate'), false)
 })
 
@@ -513,7 +547,7 @@ test('Chocolate promo is case-insensitive, cheesecake-only, and valid through 15
   assert.equal(applyPromoDiscount(65, 'pave-choco-basque-cheesecake', 'chocolate', validAt), 58.5)
   assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'ChOcOlAtE', expiredAt), 55)
   assert.equal(applyPromoDiscount(75, 'pave-cake', 'chocolate', validAt), 75)
-  assert.equal(applyPromoDiscount(45, 'fresh-lemon-cupcakes-8', 'chocolate', validAt), 45)
+  assert.equal(applyPromoDiscount(120, 'fresh-lemon-cupcakes-24', 'chocolate', validAt), 120)
   assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'verygoodSYD', validAt), 55)
 })
 
@@ -521,8 +555,8 @@ test('Lemoni promo is case-insensitive, lemon-only, and valid through 16 July Sy
   const validAt = new Date('2026-07-16T13:59:59.000Z')
   const expiredAt = new Date('2026-07-16T14:00:00.000Z')
 
-  assert.equal(applyPromoDiscount(36, 'fresh-lemon-cupcakes-6', 'LEMONI', validAt), 32.4)
-  assert.equal(applyPromoDiscount(45, 'fresh-lemon-cupcakes-8', 'lemoni', validAt), 40.5)
+  assert.equal(applyPromoDiscount(35, 'fresh-lemon-cupcakes-6', 'LEMONI', validAt), 31.5)
+  assert.equal(applyPromoDiscount(120, 'fresh-lemon-cupcakes-24', 'lemoni', validAt), 108)
   assert.equal(applyPromoDiscount(65, 'fresh-lemon-cupcakes-12', 'LeMoNi', expiredAt), 65)
   assert.equal(applyPromoDiscount(55, 'choco-basque-cheesecake', 'lemoni', validAt), 55)
 })

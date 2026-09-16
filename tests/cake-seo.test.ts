@@ -150,11 +150,11 @@ test('seven sale cakes use one Offer at the visible starting price', () => {
   const expectations = new Map([
     ['/cakes/pave-chocolate-cake', { name: 'Pave Chocolate Cake', price: 79 }],
     ['/cakes/fresh-strawberry-vanilla-cream-cake', { name: 'Fresh Strawberry Vanilla Cream Cake', price: 65 }],
-    ['/cakes/chocolate-cupcakes', { name: 'Chocolate Cupcakes', price: 31 }],
+    ['/cakes/chocolate-cupcakes', { name: 'Chocolate Cupcakes', price: 30 }],
     ['/cakes/signature-gateau-au-chocolat', { name: 'Signature Gâteau au Chocolat', price: 45 }],
-    ['/cakes/lemon-cake', { name: 'Lemon Cake', price: 36 }],
+    ['/cakes/lemon-cake', { name: 'Lemon Cake', price: 35 }],
     ['/cakes/brownie-cheesecake', { name: 'Brownie Cheesecake', price: 85 }],
-    ['/cakes/smore-stick', { name: "S'more Stick", price: 4.5 }],
+    ['/cakes/smore-stick', { name: "S'more Stick", price: 35 }],
   ])
 
   for (const [path, expected] of expectations) {

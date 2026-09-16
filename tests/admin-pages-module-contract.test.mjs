@@ -101,6 +101,14 @@ test('admin drawer exposes options for versioned single-line orders including pa
   assert.match(reservationDrawerSource, /<OrderDetailRows reservation=\{reservation\} language="en" \/>/)
 })
 
+test('admin Lemon Cake finish control offers only full-box, half-and-half, or all-chocolate choices', () => {
+  assert.match(reservationDrawerSource, /마감 구성/)
+  assert.match(reservationDrawerSource, /전부 레몬 제스트/)
+  assert.match(reservationDrawerSource, /반반/)
+  assert.match(reservationDrawerSource, /전부 다크 초콜릿/)
+  assert.doesNotMatch(reservationDrawerSource, /다크 커버춰 초콜릿 개수\s*<input/)
+})
+
 test('cake admin list and drawer display customer email without altering SMS controls', () => {
   assert.match(adminReservationsSource, /고객명, 연락처, 이메일, 예약번호/)
   assert.match(adminReservationsSource, /reservation\.customerEmail \|\| '-'/)

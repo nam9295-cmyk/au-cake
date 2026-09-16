@@ -22,7 +22,13 @@ export const LEMON_PROMO_CODE = 'lemoni'
 
 export const PROMO_DISCOUNT_RATE = 0.1
 
-export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
+export const SMORE_STICK_SET_UNIT_PRICES_CENTS = Object.freeze({
+  10: 350,
+  25: 300,
+  50: 270,
+})
+
+export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 0
 
 export const CUPCAKE_PACK_SIZE = 12
 
@@ -32,22 +38,30 @@ export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 
 export const INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE = 50
 
-export const INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS = 10_000
-
 export const BROWNIE_FRESH_CREAM_SURCHARGE_CENTS = 2_000
 
-export const CUPCAKE_PRODUCT_IDS = new Set(['cupcake-half-dozen', 'cupcake-dozen'])
+export const CUPCAKE_PRODUCT_IDS = new Set(['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'])
 
 export const CUPCAKE_FINISH_PRICES_CENTS = {
   'cupcake-half-dozen': {
-    basic: 3100,
-    'vanilla-fresh-cream': 3600,
-    'chocolate-buttercream': 4100,
+    basic: 3000,
+    'vanilla-fresh-cream': 3500,
+    'chocolate-buttercream': 4000,
   },
   'cupcake-dozen': {
     basic: 5500,
     'vanilla-fresh-cream': 6400,
     'chocolate-buttercream': 7300,
+  },
+  'cupcake-twenty-four': {
+    basic: 10500,
+    'vanilla-fresh-cream': 12300,
+    'chocolate-buttercream': 14000,
+  },
+  'cupcake-forty-eight': {
+    basic: 19500,
+    'vanilla-fresh-cream': 23000,
+    'chocolate-buttercream': 26500,
   },
 }
 
@@ -110,18 +124,20 @@ export const CHEESECAKE_PROMO_PRODUCT_IDS = new Set([
 
 export const FRESH_LEMON_CUPCAKE_PRODUCT_IDS = new Set([
   'fresh-lemon-cupcakes-6',
-  'fresh-lemon-cupcakes-8',
   'fresh-lemon-cupcakes-12',
-  'fresh-lemon-cupcakes-16',
+  'fresh-lemon-cupcakes-24',
+  'fresh-lemon-cupcakes-48',
 ])
 
 export const INDIVIDUAL_PACKAGING_PRODUCT_PIECES = Object.freeze({
   'cupcake-half-dozen': 6,
   'cupcake-dozen': 12,
+  'cupcake-twenty-four': 24,
+  'cupcake-forty-eight': 48,
   'fresh-lemon-cupcakes-6': 6,
-  'fresh-lemon-cupcakes-8': 8,
   'fresh-lemon-cupcakes-12': 12,
-  'fresh-lemon-cupcakes-16': 16,
+  'fresh-lemon-cupcakes-24': 24,
+  'fresh-lemon-cupcakes-48': 48,
 })
 
 export const PROMOTIONS = [
@@ -184,6 +200,18 @@ export const PRODUCTS = {
     usesSize: false,
     usesFinish: false,
   },
+  'cupcake-twenty-four': {
+    basePrice: 105,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
+  'cupcake-forty-eight': {
+    basePrice: 195,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
   'choco-basque-cheesecake': {
     basePrice: 55,
     sizePrices: {},
@@ -220,10 +248,10 @@ export const PRODUCTS = {
     usesSize: false,
     usesFinish: false,
   },
-  'fresh-lemon-cupcakes-6': { basePrice: 36, sizePrices: {}, usesSize: false, usesFinish: false },
-  'fresh-lemon-cupcakes-8': { basePrice: 45, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-6': { basePrice: 35, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-12': { basePrice: 65, sizePrices: {}, usesSize: false, usesFinish: false },
-  'fresh-lemon-cupcakes-16': { basePrice: 85, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-24': { basePrice: 120, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-48': { basePrice: 225, sizePrices: {}, usesSize: false, usesFinish: false },
 }
 
 export const FINISH_PRICES = {

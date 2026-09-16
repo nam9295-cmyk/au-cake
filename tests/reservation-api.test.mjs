@@ -605,12 +605,18 @@ test('cake API prices Brownie Cheesecake variants and the approved Cupcake pack-
     { now, reservationNumber: 'VG-C-AU-CHEESE-95' },
   )
   const cupcakeCases = [
-    ['cupcake-half-dozen', 'basic', 31],
-    ['cupcake-half-dozen', 'vanilla-fresh-cream', 36],
-    ['cupcake-half-dozen', 'chocolate-buttercream', 41],
+    ['cupcake-half-dozen', 'basic', 30],
+    ['cupcake-half-dozen', 'vanilla-fresh-cream', 35],
+    ['cupcake-half-dozen', 'chocolate-buttercream', 40],
     ['cupcake-dozen', 'basic', 55],
     ['cupcake-dozen', 'vanilla-fresh-cream', 64],
     ['cupcake-dozen', 'chocolate-buttercream', 73],
+    ['cupcake-twenty-four', 'basic', 105],
+    ['cupcake-twenty-four', 'vanilla-fresh-cream', 123],
+    ['cupcake-twenty-four', 'chocolate-buttercream', 140],
+    ['cupcake-forty-eight', 'basic', 195],
+    ['cupcake-forty-eight', 'vanilla-fresh-cream', 230],
+    ['cupcake-forty-eight', 'chocolate-buttercream', 265],
   ]
 
   assert.equal(basicBrownie.cakeSize, '15cm')
@@ -836,12 +842,12 @@ test('cake API derives protected fields and cents on the server', () => {
   assert.equal(reservation.cacaoPercent, '기본')
 })
 
-test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and supports multiple identical packs', () => {
+test('cake API prices the current Lemon Cake packs and supports multiple identical packs', () => {
   const prices = {
-    'fresh-lemon-cupcakes-6': 36,
-    'fresh-lemon-cupcakes-8': 45,
+    'fresh-lemon-cupcakes-6': 35,
     'fresh-lemon-cupcakes-12': 65,
-    'fresh-lemon-cupcakes-16': 85,
+    'fresh-lemon-cupcakes-24': 120,
+    'fresh-lemon-cupcakes-48': 225,
   }
 
   for (const [productId, expectedPrice] of Object.entries(prices)) {
@@ -858,40 +864,40 @@ test('cake API prices Fresh Lemon Cupcake packs, excludes promo, and supports mu
   }
 
   const twoPacks = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 2, chocolateIcingCount: 3 },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 2, chocolateIcingCount: 0 },
     { now, reservationNumber: 'VG-C-AU-LEMON-TWO-PACKS' },
   )
   assert.equal(twoPacks.quantity, 2)
-  assert.equal(twoPacks.chocolateIcingCount, 3)
-  assert.equal(twoPacks.totalPrice, 75)
-  assert.equal(twoPacks.totalPriceCents, 7500)
+  assert.equal(twoPacks.chocolateIcingCount, 0)
+  assert.equal(twoPacks.totalPrice, 70)
+  assert.equal(twoPacks.totalPriceCents, 7000)
 })
 
-test('cake API prices Lemon Cake chocolate icing per piece before promo', () => {
+test('cake API permits only free whole-box Lemon Cake finish choices', () => {
   const sixPack = buildCakeReservation(
     { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 1, chocolateIcingCount: 3 },
-    { now, reservationNumber: 'VG-C-AU-LEMON-6-3' },
+    { now, reservationNumber: 'VG-C-AU-LEMON-6-HALF' },
   )
   const twelvePack = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-12', quantity: 1, chocolateIcingCount: 8 },
-    { now, reservationNumber: 'VG-C-AU-LEMON-12-8' },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-12', quantity: 1, chocolateIcingCount: 12 },
+    { now, reservationNumber: 'VG-C-AU-LEMON-12-ALL-CHOCOLATE' },
   )
   const promoted = buildCakeReservation(
     { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 1, chocolateIcingCount: 3, promoCode: 'lemoni' },
-    { now, reservationNumber: 'VG-C-AU-LEMON-6-3-PROMO' },
+    { now, reservationNumber: 'VG-C-AU-LEMON-6-HALF-PROMO' },
   )
 
   assert.equal(sixPack.chocolateIcingCount, 3)
-  assert.equal(sixPack.totalPrice, 37.5)
-  assert.equal(sixPack.totalPriceCents, 3750)
-  assert.equal(twelvePack.chocolateIcingCount, 8)
-  assert.equal(twelvePack.totalPrice, 69)
-  assert.equal(promoted.totalPrice, 33.75)
-  assert.equal(promoted.totalPriceCents, 3375)
+  assert.equal(sixPack.totalPrice, 35)
+  assert.equal(sixPack.totalPriceCents, 3500)
+  assert.equal(twelvePack.chocolateIcingCount, 12)
+  assert.equal(twelvePack.totalPrice, 65)
+  assert.equal(promoted.totalPrice, 31.5)
+  assert.equal(promoted.totalPriceCents, 3150)
 })
 
 test('cake API validates Lemon Cake chocolate icing count and clears it for other products', () => {
-  for (const chocolateIcingCount of [-1, 1.5, 7]) {
+  for (const chocolateIcingCount of [-1, 1.5, 1, 2, 4, 7]) {
     assertApiError('INVALID_ICING_COUNT', () => buildCakeReservation(
       { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', quantity: 1, chocolateIcingCount },
       { now, reservationNumber: `VG-C-AU-INVALID-ICING-${chocolateIcingCount}` },
@@ -923,7 +929,7 @@ test('Chocolate promo policy remains scoped to retired Basque IDs and cannot cre
 
 test('cake API applies Lemoni promo only to Fresh Lemon Cupcakes and records an audit note', () => {
   const lemon = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-8', quantity: 1, promoCode: ' LeMoNi ' },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-12', quantity: 1, promoCode: ' LeMoNi ' },
     { now, reservationNumber: 'VG-C-AU-PROMO-LEMONI' },
   )
   const brownie = buildCakeReservation(
@@ -931,9 +937,9 @@ test('cake API applies Lemoni promo only to Fresh Lemon Cupcakes and records an 
     { now, reservationNumber: 'VG-C-AU-LEMONI-BROWNIE' },
   )
 
-  assert.equal(lemon.totalPrice, 40.5)
-  assert.equal(lemon.totalPriceCents, 4050)
-  assert.match(lemon.requestNote, /^\[Promo lemoni\] 10% discount applied: 45\.00 -> 40\.50/)
+  assert.equal(lemon.totalPrice, 58.5)
+  assert.equal(lemon.totalPriceCents, 5850)
+  assert.match(lemon.requestNote, /^\[Promo lemoni\] 10% discount applied: 65\.00 -> 58\.50/)
   assert.equal(brownie.totalPrice, 85)
   assert.equal(brownie.requestNote, 'Happy birthday')
 })
@@ -942,18 +948,18 @@ test('cake API expires Chocolate after 15 July and Lemoni after 16 July in Sydne
   const chocolateValid = getValidPromoCode('choco-basque-cheesecake', 'chocolate', new Date('2026-07-15T13:59:59.000Z'))
   const chocolateExpired = getValidPromoCode('choco-basque-cheesecake', 'chocolate', new Date('2026-07-15T14:00:00.000Z'))
   const lemoniValid = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-8', quantity: 1, pickupDate: '2026-07-18', promoCode: 'lemoni' },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-12', quantity: 1, pickupDate: '2026-07-18', promoCode: 'lemoni' },
     { now: new Date('2026-07-16T13:59:59.000Z'), reservationNumber: 'VG-C-AU-LEMONI-VALID' },
   )
   const lemoniExpired = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-8', quantity: 1, pickupDate: '2026-07-18', promoCode: 'lemoni' },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-12', quantity: 1, pickupDate: '2026-07-18', promoCode: 'lemoni' },
     { now: new Date('2026-07-16T14:00:00.000Z'), reservationNumber: 'VG-C-AU-LEMONI-EXPIRED' },
   )
 
   assert.equal(chocolateValid, 'chocolate')
   assert.equal(chocolateExpired, null)
-  assert.equal(lemoniValid.totalPrice, 40.5)
-  assert.equal(lemoniExpired.totalPrice, 45)
+  assert.equal(lemoniValid.totalPrice, 58.5)
+  assert.equal(lemoniExpired.totalPrice, 65)
 })
 
 test('cake API rejects invalid consent, quantity, mobile and pickup time', () => {
@@ -1104,24 +1110,24 @@ test('public lookup response excludes customer PII, notes and raw dollar totals'
 
 test('cake API preserves one-line Lemoni pricing and promo note while storing a versioned line', () => {
   const reservation = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-8', promoCode: ' LeMoNi ' },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-12', promoCode: ' LeMoNi ' },
     { now, reservationNumber: 'VG-C-AU-LEGACY-LINE' },
   )
   const stored = parseStoredOrderLines(reservation)
 
-  assert.equal(reservation.productId, 'fresh-lemon-cupcakes-8')
+  assert.equal(reservation.productId, 'fresh-lemon-cupcakes-12')
   assert.equal(reservation.quantity, 1)
-  assert.equal(reservation.subtotalCents, 4500)
-  assert.equal(reservation.discountCents, 450)
-  assert.equal(reservation.totalPriceCents, 4050)
-  assert.equal(reservation.totalPrice, 40.5)
-  assert.equal(reservation.requestNote, '[Promo lemoni] 10% discount applied: 45.00 -> 40.50\nHappy birthday')
+  assert.equal(reservation.subtotalCents, 6500)
+  assert.equal(reservation.discountCents, 650)
+  assert.equal(reservation.totalPriceCents, 5850)
+  assert.equal(reservation.totalPrice, 58.5)
+  assert.equal(reservation.requestNote, '[Promo lemoni] 10% discount applied: 65.00 -> 58.50\nHappy birthday')
   assert.equal(reservation.orderLineCount, 1)
   assert.equal(reservation.orderItemCount, 1)
-  assert.equal(reservation.discountBasisCents, 4500)
+  assert.equal(reservation.discountBasisCents, 6500)
   assert.equal(stored.version, 1)
   assert.equal(stored.lines.length, 1)
-  assert.equal(stored.lines[0].unitPriceCents, 4500)
+  assert.equal(stored.lines[0].unitPriceCents, 6500)
   assert.doesNotThrow(() => parseStoredOrderLines({
     ...reservation,
     totalPrice: Math.round(reservation.totalPrice),
@@ -1159,7 +1165,7 @@ test('cake API authoritatively prices individual packaging after product pricing
 
   assert.deepEqual(
     [reservation.subtotalCents, reservation.individualPackagingPieces, reservation.individualPackagingFeeCents, reservation.totalPriceCents],
-    [8600, 18, 900, 9500],
+    [8500, 18, 900, 9400],
   )
   assert.deepEqual(lines.map((line) => [
     line.productId,
@@ -1168,46 +1174,46 @@ test('cake API authoritatively prices individual packaging after product pricing
     line.individualPackagingFeeCents,
     line.totalPriceCents,
   ]), [
-    ['cupcake-half-dozen', true, 6, 300, 3400],
+    ['cupcake-half-dozen', true, 6, 300, 3300],
     ['cupcake-dozen', true, 12, 600, 6100],
   ])
 })
 
-test('cake API makes aggregate selected Cupcake and Lemon packaging free at AUD 100 before discounts', () => {
+test('cake API charges individual packaging above AUD 100 before discounts', () => {
   const reservation = buildCakeReservation(multiCakeInput([
     { productId: 'cupcake-dozen', cupcakeFinish: 'basic', individualPackaging: true, quantity: 1 },
-    { productId: 'fresh-lemon-cupcakes-8', individualPackaging: true, quantity: 1 },
-  ]), { now, reservationNumber: 'VG-C-AU-PACKAGING-FREE' })
+    { productId: 'fresh-lemon-cupcakes-12', individualPackaging: true, quantity: 1 },
+  ]), { now, reservationNumber: 'VG-C-AU-PACKAGING-ALWAYS-PAID' })
   const { lines } = parseStoredOrderLines(reservation)
 
-  assert.equal(reservation.subtotalCents, 10000)
-  assert.equal(reservation.individualPackagingPieces, 20)
-  assert.equal(reservation.individualPackagingFeeCents, 0)
-  assert.equal(reservation.totalPriceCents, reservation.subtotalCents)
-  assert.deepEqual(lines.map((line) => line.individualPackagingFeeCents), [0, 0])
+  assert.equal(reservation.subtotalCents, 12000)
+  assert.equal(reservation.individualPackagingPieces, 24)
+  assert.equal(reservation.individualPackagingFeeCents, 1200)
+  assert.equal(reservation.totalPriceCents, 13200)
+  assert.deepEqual(lines.map((line) => line.individualPackagingFeeCents), [600, 600])
 })
 
-test('stored orders retain a valid legacy piece-based packaging fee for historical display', () => {
+test('stored orders retain a valid legacy free-packaging total for historical display', () => {
   const current = buildCakeReservation(multiCakeInput([
     { productId: 'cupcake-dozen', cupcakeFinish: 'basic', individualPackaging: true, quantity: 2 },
   ]), { now, reservationNumber: 'VG-C-AU-PACKAGING-LEGACY' })
   const currentLine = parseStoredOrderLines(current).lines[0]
   const legacyLine = {
     ...currentLine,
-    individualPackagingFeeCents: 1200,
-    totalPriceCents: 12200,
+    individualPackagingFeeCents: 0,
+    totalPriceCents: 11000,
   }
   const historical = {
     ...current,
-    individualPackagingFeeCents: 1200,
-    totalPriceCents: 12200,
-    totalPrice: 122,
+    individualPackagingFeeCents: 0,
+    totalPriceCents: 11000,
+    totalPrice: 110,
     orderLinesJson: serializeStoredOrderLines([legacyLine]),
   }
 
-  assert.equal(current.individualPackagingFeeCents, 0)
+  assert.equal(current.individualPackagingFeeCents, 1200)
   assert.doesNotThrow(() => parseStoredOrderLines(historical))
-  assert.equal(parseStoredOrderLines(historical).lines[0].individualPackagingFeeCents, 1200)
+  assert.equal(parseStoredOrderLines(historical).lines[0].individualPackagingFeeCents, 0)
 })
 
 test('cake API rejects invalid or ineligible packaging and ignores forged single-order fees', () => {
@@ -1230,7 +1236,7 @@ test('cake API rejects invalid or ineligible packaging and ignores forged single
     totalPriceCents: 1,
   }, { now })
   assert.equal(reservation.individualPackagingFeeCents, 300)
-  assert.equal(reservation.totalPriceCents, 3400)
+  assert.equal(reservation.totalPriceCents, 3300)
 })
 
 test('multi-line cake API rejects client line metadata, forged prices and top-level legacy line fields', () => {
@@ -1303,22 +1309,22 @@ test('multi-line cake API rejects merged quantity overflow, non-integer quantiti
 
 test('static promo discounts only eligible lines from one aggregate basis and writes one bounded audit line', () => {
   const reservation = buildCakeReservation(multiCakeInput([
-    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 3, quantity: 1 },
     { productId: 'pave-cake', cakeSize: '15cm', quantity: 1 },
-    { productId: 'fresh-lemon-cupcakes-8', quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-12', quantity: 1 },
   ], { promoCode: ' LeMoNi ' }), { now, reservationNumber: 'VG-C-AU-MIXED-PROMO' })
   const { lines } = parseStoredOrderLines(reservation)
 
   assert.deepEqual(
     [reservation.subtotalCents, reservation.discountBasisCents, reservation.discountPercent, reservation.discountCents, reservation.totalPriceCents],
-    [16050, 8150, 10, 815, 15235],
+    [17900, 10000, 10, 1000, 16900],
   )
   assert.deepEqual(lines.map((line) => [line.productId, line.discountPercent, line.discountCents]), [
-    ['fresh-lemon-cupcakes-6', 10, 365],
+    ['fresh-lemon-cupcakes-6', 10, 350],
     ['pave-cake', 0, 0],
-    ['fresh-lemon-cupcakes-8', 10, 450],
+    ['fresh-lemon-cupcakes-12', 10, 650],
   ])
-  assert.equal(reservation.requestNote, '[Promo lemoni] 10% discount applied: 81.50 -> 73.35\nHappy birthday')
+  assert.equal(reservation.requestNote, '[Promo lemoni] 10% discount applied: 100.00 -> 90.00\nHappy birthday')
   assert.equal(reservation.requestNote.match(/\[Promo/g)?.length, 1)
 })
 
@@ -1333,13 +1339,13 @@ test('product discounts exclude individual packaging fees', () => {
     reservation.discountCents,
     reservation.individualPackagingFeeCents,
     reservation.totalPriceCents,
-  ], [3600, 3600, 360, 300, 3540])
+  ], [3500, 3500, 350, 300, 3450])
 })
 
 test('aggregate discount allocation breaks equal fractional ties by canonical key, not request order', () => {
   const reservation = buildCakeReservation(multiCakeInput([
-    { productId: 'fresh-lemon-cupcakes-8', chocolateIcingCount: 1, quantity: 1 },
-    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-12', chocolateIcingCount: 6, quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 3, quantity: 1 },
   ], { promoCode: '' }), {
     now,
     reservationNumber: 'VG-C-AU-TIE',
@@ -1348,25 +1354,25 @@ test('aggregate discount allocation breaks equal fractional ties by canonical ke
   const { lines } = parseStoredOrderLines(reservation)
 
   assert.deepEqual(lines.map((line) => [line.productId, line.discountCents]), [
-    ['fresh-lemon-cupcakes-8', 227],
-    ['fresh-lemon-cupcakes-6', 183],
+    ['fresh-lemon-cupcakes-12', 325],
+    ['fresh-lemon-cupcakes-6', 175],
   ])
-  assert.equal(reservation.discountBasisCents, 8200)
-  assert.equal(reservation.discountCents, 410)
+  assert.equal(reservation.discountBasisCents, 10000)
+  assert.equal(reservation.discountCents, 500)
 })
 
 test('review and manual coupon percentages apply once across every normalized line', () => {
-  for (const [rewardPercent, expectedDiscount, expectedTotal] of [[5, 578, 10972], [10, 1155, 10395]]) {
+  for (const [rewardPercent, expectedDiscount, expectedTotal] of [[5, 570, 10830], [10, 1140, 10260]]) {
     const reservation = buildCakeReservation(multiCakeInput([
       { productId: 'pave-cake', quantity: 1 },
-      { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+      { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 3, quantity: 1 },
     ], { promoCode: '' }), {
       now,
       reservationNumber: `VG-C-AU-REVIEW-${rewardPercent}`,
       reviewCoupon: { id: `coupon-${rewardPercent}`, rewardPercent, codeLast4: 'Q2MK' },
     })
     const { lines } = parseStoredOrderLines(reservation)
-    assert.equal(reservation.discountBasisCents, 11550)
+    assert.equal(reservation.discountBasisCents, 11400)
     assert.equal(reservation.discountPercent, rewardPercent)
     assert.equal(reservation.discountCents, expectedDiscount)
     assert.equal(reservation.totalPriceCents, expectedTotal)
@@ -1378,7 +1384,7 @@ test('review and manual coupon percentages apply once across every normalized li
 test('stored order line JSON contains only canonical order and authoritative price fields', () => {
   const rawPromo = ' LeMoNi '
   const reservation = buildCakeReservation(multiCakeInput([
-    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 3, quantity: 1 },
   ], { promoCode: rawPromo }), { now, reservationNumber: 'VG-C-AU-SAFE-JSON' })
   const payload = JSON.parse(reservation.orderLinesJson)
   const allowed = [
@@ -1565,7 +1571,7 @@ test('stored order parser rejects missing, partial, or ineligible discount prove
   assertApiError('INVALID_STORED_ORDER', () => parseStoredOrderLines(partialReview), 500)
 
   const staticOrder = buildCakeReservation(multiCakeInput([
-    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, quantity: 1 },
+    { productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 3, quantity: 1 },
     { productId: 'pave-cake', quantity: 1 },
   ], { promoCode: 'lemoni' }), { now, reservationNumber: 'VG-C-AU-STATIC-PROVENANCE' })
   const ineligiblePayload = JSON.parse(staticOrder.orderLinesJson)
@@ -1794,7 +1800,7 @@ test('cake creation is idempotent without reading Class or legacy Cake-opening c
   const retry = await createCake(databases, { ...futureCakeInput, requestId }, { runtimeConfig })
   assert.equal(creates, 1)
   assert.equal(first.chocolateIcingCount, 3)
-  assert.equal(first.totalPriceCents, 3750)
+  assert.equal(first.totalPriceCents, 3500)
   assert.equal(retry.id, first.id)
   assert.equal(retry.reservationNumber, first.reservationNumber)
 })
