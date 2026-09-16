@@ -7,6 +7,10 @@ export const SMORE_STICK_SET_UNIT_PRICES_CENTS: Record<10 | 25 | 50, number> = {
   50: 270,
 }
 
+export const CUSTOM_SMORE_SET_SIZE = 10
+export const CUSTOM_SMORE_SET_PRICE_CENTS = SMORE_STICK_SET_UNIT_PRICES_CENTS[10] * CUSTOM_SMORE_SET_SIZE
+export const CUSTOM_SMORE_DISCOUNTED_SET_PRICE_CENTS = CUSTOM_SMORE_SET_PRICE_CENTS * 0.9
+
 export type SmorePricing = {
   quantity: number
   unitPriceCents: number

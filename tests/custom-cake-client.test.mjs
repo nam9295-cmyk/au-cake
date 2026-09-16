@@ -9,6 +9,24 @@ const ordinary = fixture('cake-order-v2')
 const repoPath = new URL('../src/lib/custom-cake-repository.ts', import.meta.url)
 const adapters = existsSync(repoPath) ? await import(repoPath.href) : {}
 const parse = (name, value) => { assert.equal(typeof client[name], 'function', `${name} must exist`); return client[name](value) }
+test('custom response parser accepts ten-stick set receipts and rejects inconsistent set discounts', () => {
+  const created = structuredClone(custom.created)
+  Object.assign(created.paidSmoreLines[0], {
+    quantity: 20, unitPriceCents: 350, subtotalCents: 7000, discountPercent: 10, discountCents: 700, totalCents: 6300,
+  })
+  Object.assign(created.quote, { paidSmoreQuantity: 20, paidSmoreTotalCents: 6300, knownTotalCents: 22200 })
+  assert.deepEqual(parse('parseCustomCakeCreateResponse', created), created)
+  const lookup = structuredClone(custom.lookup)
+  lookup.lines[1].quantity = 20
+  lookup.paidSmoreLines = created.paidSmoreLines
+  lookup.quote = created.quote
+  assert.deepEqual(parse('parseCustomCakeLookupResponse', lookup), lookup)
+  for (const change of [{ discountPercent: 30 }, { unitPriceCents: 450 }, { discountCents: 701 }, { quantity: 21 }]) {
+    const bad = structuredClone(created)
+    Object.assign(bad.paidSmoreLines[0], change)
+    assert.throws(() => parse('parseCustomCakeCreateResponse', bad), /CAKE_WIRE_INVALID_RESPONSE/)
+  }
+})
 for (const [name, value] of [
   ['parseCustomCakeCreateResponse', custom.created], ['parseCustomCakeLookupResponse', custom.lookup],
   ['parseCustomCakeMutationResponse', custom.finalLookup], ['parseCakeOrderV2CreateResponse', ordinary.created],

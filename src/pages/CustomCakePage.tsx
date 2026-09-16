@@ -5,7 +5,9 @@ import type { Page } from '../lib/app-routes.js'
 import type { Language } from '../lib/i18n.js'
 import {
   formatExtraCents,
+  formatCents,
 } from '../lib/custom-cake-ui.js'
+import { CUSTOM_SMORE_SET_SIZE, CUSTOM_SMORE_SET_PRICE_CENTS, CUSTOM_SMORE_DISCOUNTED_SET_PRICE_CENTS } from '../lib/smore.js'
 import { getCakeWireRepository } from '../lib/custom-cake-repository'
 import { createSubmissionIntent } from '../lib/custom-cake-submission'
 import type {
@@ -75,6 +77,8 @@ export function CustomCakePage({
   const [figurineSource, setFigurineSource] = useState<'none' | 'customer' | 'shop'>('none')
 
   const [paidSmoreQuantity, setPaidSmoreQuantity] = useState(0)
+  const paidSmoreSets = paidSmoreQuantity / CUSTOM_SMORE_SET_SIZE
+  const paidSmoreTotalCents = paidSmoreSets * CUSTOM_SMORE_DISCOUNTED_SET_PRICE_CENTS
 
   // Customer Contact
   const [customerName, setCustomerName] = useState('')
@@ -369,28 +373,31 @@ export function CustomCakePage({
                 <legend>{language === 'ko' ? '스모어 스틱 추가 구매' : 'S’more Stick Add-on'}</legend>
                 <div className="custom-cake-smore-counter-row">
                   <div>
-                    <strong>{language === 'ko' ? '유료 추가 스틱 (30% 할인가)' : 'Additional sticks (30% off)'}</strong>
-                    <span className="smore-price-subtext">{language === 'ko' ? '개당 AUD $3.15 (정상가 AUD $4.50)' : 'AUD $3.15 each (Reg. AUD $4.50)'}</span>
+                    <strong>{language === 'ko' ? '10개 세트 (10% 할인)' : '10-stick set (10% off)'}</strong>
+                    <span className="smore-price-subtext">{formatCents(CUSTOM_SMORE_DISCOUNTED_SET_PRICE_CENTS)} ({language === 'ko' ? '정상가' : 'Reg.'} {formatCents(CUSTOM_SMORE_SET_PRICE_CENTS)})</span>
                   </div>
-                  <div className="cake-detail-quantity">
+                  <div className="cake-detail-quantity custom-cake-smore-quantity">
                     <button
                       type="button"
                       aria-label="Decrease smore sticks"
                       disabled={paidSmoreQuantity <= 0}
-                      onClick={() => setPaidSmoreQuantity((q) => Math.max(0, q - 1))}
+                      onClick={() => setPaidSmoreQuantity((q) => Math.max(0, q - CUSTOM_SMORE_SET_SIZE))}
                     >
                       <Minus aria-hidden="true" />
                     </button>
-                    <output aria-live="polite">{paidSmoreQuantity}</output>
+                    <output aria-live="polite">{language === 'ko'
+                      ? `${paidSmoreSets}세트 (${paidSmoreQuantity}개)`
+                      : `${paidSmoreSets} ${paidSmoreSets === 1 ? 'set' : 'sets'} (${paidSmoreQuantity} sticks)`}</output>
                     <button
                       type="button"
                       aria-label="Increase smore sticks"
-                      onClick={() => setPaidSmoreQuantity((q) => q + 1)}
+                      onClick={() => setPaidSmoreQuantity((q) => q + CUSTOM_SMORE_SET_SIZE)}
                     >
                       <Plus aria-hidden="true" />
                     </button>
                   </div>
                 </div>
+                <p className="smore-extra-total-line" aria-live="polite">{formatCents(paidSmoreTotalCents)}</p>
               </fieldset>
             </div>
 
@@ -718,8 +725,8 @@ export function CustomCakePage({
                 {language === 'ko' ? '인스타그램 ' : 'Find the promo code on our Instagram '}
                 <a href="https://www.instagram.com/verygood_syd/" target="_blank" rel="noopener noreferrer">@verygood_syd</a>
                 {language === 'ko'
-                  ? '에서 확인한 코드를 입력하면 커스텀 케이크 기본가에 10% 할인이 적용됩니다. 적용 여부는 서버가 기록한 접수 시각과 픽업 날짜를 기준으로 확인됩니다. 9월 12일~30일 주문 시 9월·10월·11월 픽업 예약에 적용됩니다. 추가 스모어 스틱은 기존과 같이 개당 AUD $3.15에 구매할 수 있습니다.'
-                  : ' for 10% off the Custom Cake base price. Eligibility is confirmed from the server-recorded receipt time and pickup date. Order from 12–30 September for September, October, or November pickup. Additional S’more sticks remain AUD $3.15 each.'}
+                  ? '에서 확인한 코드를 입력하면 커스텀 케이크 기본가에 10% 할인이 적용됩니다. 적용 여부는 서버가 기록한 접수 시각과 픽업 날짜를 기준으로 확인됩니다. 9월 12일~30일 주문 시 9월·10월·11월 픽업 예약에 적용됩니다. 스모어 스틱 추가 구매는 별도로 10개 세트 정상가 AUD $35.00에서 10% 할인된 AUD $31.50이며, 10개 단위로 추가할 수 있습니다.'
+                  : ' for 10% off the Custom Cake base price. Eligibility is confirmed from the server-recorded receipt time and pickup date. Order from 12–30 September for September, October, or November pickup. S’more Stick add-ons are separately priced at AUD $31.50 per 10-stick set, 10% off the regular AUD $35.00, and can be added in multiples of 10.'}
               </p>
             </details>
           </div>

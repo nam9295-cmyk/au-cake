@@ -178,7 +178,7 @@
       "schema": "product-offer",
       "availability": "https://schema.org/InStock",
       "startingPrice": 35,
-      "priceSummary": "10 sticks AUD 35.00 (AUD 3.50 each), 25 sticks AUD 75.00 (AUD 3.00 each), or 50 sticks AUD 135.00 (AUD 2.70 each).",
+      "priceSummary": "10 sticks AUD 35.00, 25 sticks AUD 75.00, or 50 sticks AUD 135.00.",
       "optionSummary": "Choose a 10, 25 or 50-stick set",
       "cardOptionLabel": "10, 25 or 50-stick sets",
       "imagePath": "/products/smore-stick-sydney.webp",

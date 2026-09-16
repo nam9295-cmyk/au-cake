@@ -279,23 +279,8 @@ const AU_CAKE_CATALOG_GROUPS: readonly CakeCatalogGroupDefinition[] = [
     catalogIds: ['cupcake', 'bento-cake'],
   },
   {
-    id: 'chocolatiers-cake',
-    number: '03',
-    copy: {
-      en: {
-        title: 'CHOCOLATIER’S CAKE',
-        description: 'Classic artisanal cakes crafted with fresh cream and rich chocolate balance.',
-      },
-      ko: {
-        title: '쇼콜라티에 케이크',
-        description: '신선한 생크림과 진한 초콜릿의 조화로 완성한 케이크.',
-      },
-    },
-    catalogIds: ['fresh-strawberry-vanilla-cream', 'brownie-cheesecake'],
-  },
-  {
     id: 'gather-celebrate',
-    number: '04',
+    number: '03',
     copy: {
       en: {
         title: 'GATHER & CELEBRATE',
@@ -307,6 +292,21 @@ const AU_CAKE_CATALOG_GROUPS: readonly CakeCatalogGroupDefinition[] = [
       },
     },
     catalogIds: ['fresh-lemon-cupcakes', 'smore-stick'],
+  },
+  {
+    id: 'chocolatiers-cake',
+    number: '04',
+    copy: {
+      en: {
+        title: 'CHOCOLATIER’S CAKE',
+        description: 'Classic artisanal cakes crafted with fresh cream and rich chocolate balance.',
+      },
+      ko: {
+        title: '쇼콜라티에 케이크',
+        description: '신선한 생크림과 진한 초콜릿의 조화로 완성한 케이크.',
+      },
+    },
+    catalogIds: ['fresh-strawberry-vanilla-cream', 'brownie-cheesecake'],
   },
 ]
 

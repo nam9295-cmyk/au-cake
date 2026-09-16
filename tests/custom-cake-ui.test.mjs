@@ -73,6 +73,36 @@ function wire(handler) {
   account.createJWT = async () => { throw new Error('manual browser JWT creation must not run') }
   return calls
 }
+test('S’more controls add and remove whole sets and submit the actual twenty-stick quantity', async () => {
+  const calls = wire(action => action === 'get-cake-wire-capabilities' ? capabilities : {
+    responseStatusCode: 400, responseBody: JSON.stringify({ ok: false, code: 'INVALID_REQUEST' }),
+  })
+  const page = mount(CustomCakePage, props)
+  await page.flush()
+  const step = direction => {
+    page.find(node => node.type === 'button' && node.props['aria-label']?.startsWith(`${direction} smore`)).props.onClick()
+    page.render()
+  }
+  step('Increase')
+  page.find(node => node.type === 'output' && node.props.children === '1 set (10 sticks)')
+  page.find(node => node.props.className === 'smore-extra-total-line' && node.props.children === 'AUD $31.50')
+  step('Increase')
+  page.find(node => node.type === 'output' && node.props.children === '2 sets (20 sticks)')
+  page.find(node => node.props.className === 'smore-extra-total-line' && node.props.children === 'AUD $63.00')
+  step('Decrease'); step('Decrease')
+  assert.equal(page.find(node => node.type === 'button' && node.props['aria-label']?.startsWith('Decrease smore')).props.disabled, true)
+  step('Increase'); step('Increase')
+  for (const [suffix, value] of [['-name', 'Test Customer'], ['-phone', '0412345678'], ['-email', 'test@example.com'], ['-pickup-date', '2026-10-05']]) {
+    page.find(node => node.type === 'input' && node.props.id?.endsWith(suffix)).props.onChange({ target: { value } })
+    page.render()
+  }
+  page.find(node => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } })
+  page.render()
+  await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
+  assert.equal(calls.find(call => call.action === 'create-custom-cake-request').data.lines.find(line => line.kind === 'cake-addon-smore').quantity, 20)
+  page.unmount()
+})
+
 test('actual request UI explains promo code and date rejection in both languages', async () => {
   for (const [language, message] of [
     ['en', 'Please check the promo code and promotion dates.'],
