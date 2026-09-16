@@ -246,6 +246,19 @@ test('Chocolate Extra request projection is frontend-ready while Reservation API
   assert.deepEqual(order.orderLines.map((line) => line.chocolateExtra), ['combo', 'none'])
 })
 
+test('single-product requests retain eligible individual packaging for server pricing', () => {
+  const packagedCupcakes = buildCakeReservationRequest({
+    customerName: 'Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
+    productId: 'cupcake-twenty-four', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+    cupcakeFinish: 'basic', chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', individualPackaging: true,
+    quantity: 1, pickupDate: '2099-07-11', pickupTime: '10:00', cacaoPercent: '기본',
+    requestNote: '', privacyConsent: true, requestId: '11111111-1111-4111-8111-111111111111', website: '',
+  } as ReservationInput)
+
+  assert.equal(packagedCupcakes.individualPackaging, true)
+})
+
 test('multi-line request strips the cart default Chocolate Extra from an ineligible Cupcake line', () => {
   const common = {
     cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none', cupcakeFinish: 'basic', chocolateExtra: 'none',

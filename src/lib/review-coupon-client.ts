@@ -341,6 +341,9 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     ...(input.vanillaCakePointColor ? {
       vanillaCakePointColor: normalizeVanillaCakePointColor(input.productId, input.vanillaCakePointColor),
     } : {}),
+    ...(isIndividualPackagingEligibleProduct(input.productId) ? {
+      individualPackaging: input.individualPackaging === true,
+    } : {}),
     quantity: input.quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,

@@ -535,6 +535,8 @@ export const INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS = 10_000
 const INDIVIDUAL_PACKAGING_PIECES_BY_PRODUCT: Partial<Record<ProductId, number>> = {
   'cupcake-half-dozen': 6,
   'cupcake-dozen': 12,
+  'cupcake-twenty-four': 24,
+  'cupcake-forty-eight': 48,
   'fresh-lemon-cupcakes-6': 6,
   'fresh-lemon-cupcakes-8': 8,
   'fresh-lemon-cupcakes-12': 12,
