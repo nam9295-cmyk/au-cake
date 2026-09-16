@@ -727,6 +727,26 @@ export default function CakeDetailPage({
           <div className="cake-detail-configurator">
           {renderProductIntro('cake-detail-intro is-standard-intro')}
 
+          {isSmoreStick && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '세트 선택' : 'Choose your set'}</legend>
+              <div className="cake-detail-options is-stacked">
+                {SMORE_SET_QUANTITIES.map((quantity) => {
+                  const pricing = calculateSmorePricing(quantity, language)
+                  return (
+                    <OptionButton active={selection.quantity === quantity} onClick={() => updateSelection({ quantity })} key={quantity}>
+                      <strong>{quantity} {language === 'ko' ? '개' : 'sticks'}</strong>
+                      <span>{pricing.formattedFinalTotal}<small> · {language === 'ko' ? '개당 ' : ''}{formatCurrency(pricing.unitPriceCents / 100)}{language === 'ko' ? '' : ' each'}</small></span>
+                    </OptionButton>
+                  )
+                })}
+              </div>
+              <p className="cake-detail-extra-help">{language === 'ko'
+                ? '모든 스모어스틱은 낱개 포장이 기본 포함됩니다. 추가 포장 비용은 없습니다.'
+                : 'Each S’more Stick comes individually wrapped. Packaging is included at no extra charge.'}</p>
+            </fieldset>
+          )}
+
           {isFreshLemonCupcakeProduct(product.id) && (
             <LemonFinishMixPreview
               lemonCount={lemonFinishCounts.lemon}
@@ -1034,19 +1054,10 @@ export default function CakeDetailPage({
             <p className="cake-detail-checkout-price" aria-live="polite">{formatCurrency(total)}</p>
           )}
 
-          <fieldset className="cake-detail-fieldset">
-            <legend>{isSmoreStick ? (language === 'ko' ? '수량 (스틱)' : 'Quantity (sticks)') : (language === 'ko' ? '수량' : 'Quantity')}</legend>
-            <div className="cake-detail-quantity">
-              {isSmoreStick ? (
-                <select
-                  value={selection.quantity}
-                  onChange={(event) => updateSelection({ quantity: Number(event.target.value) })}
-                  aria-label={language === 'ko' ? '세트 수량 선택' : 'Choose set quantity'}
-                >
-                  {SMORE_SET_QUANTITIES.map((quantity) => <option value={quantity} key={quantity}>{quantity} {language === 'ko' ? '개' : 'sticks'}</option>)}
-                </select>
-              ) : (
-                <>
+          {!isSmoreStick && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '수량' : 'Quantity'}</legend>
+              <div className="cake-detail-quantity">
                   <button
                     type="button"
                     aria-label={language === 'ko' ? '수량 줄이기' : 'Decrease quantity'}
@@ -1064,20 +1075,9 @@ export default function CakeDetailPage({
                   >
                     <Plus aria-hidden="true" />
                   </button>
-                </>
-              )}
-            </div>
-            {isSmoreStick && (
-              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#666', lineHeight: 1.4 }}>
-                <p style={{ margin: '0 0 0.2rem 0' }}>
-                  {language === 'ko' ? '10개 · AUD 35.00 / 25개 · AUD 75.00 / 50개 · AUD 135.00' : '10 sticks · AUD 35.00 / 25 sticks · AUD 75.00 / 50 sticks · AUD 135.00'}
-                </p>
-                <p style={{ margin: 0 }}>
-                  {language === 'ko' ? '세트별 개당 AUD 3.50 · AUD 3.00 · AUD 2.70' : 'AUD 3.50 · AUD 3.00 · AUD 2.70 per stick by set'}
-                </p>
               </div>
-            )}
-          </fieldset>
+            </fieldset>
+          )}
 
           <div className="cake-detail-order-summary">
             <div>
