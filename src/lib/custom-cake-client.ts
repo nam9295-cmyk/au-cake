@@ -62,7 +62,14 @@ function paid(q: CustomCakeQuote, lines: SmorePricedLine[]) {
   const ids = new Set(lines.map(l => l.lineId))
   return ids.size === lines.length && lines.every(l => l.kind !== 'cake-addon-smore' || !ids.has(l.parentCakeLineId)) && q.paidSmoreQuantity === sum(lines.map(l => l.quantity)) && q.paidSmoreTotalCents === sum(lines.map(l => l.totalCents))
 }
-const customFields = { contractVersion: literal('custom-cake.v1'), requestNumber: string(1, 128), quote: guard(parseQuote), paidSmoreLines: array(smorePriced), acceptance: nullable(acceptance) }
+// Retain the legacy 450/30% receipts, including quantities smaller than a set.
+// New custom add-on receipts must match complete ten-stick sets at 350/10%.
+const customSmorePriced = either(smorePriced, guard(v => checked<SmorePricedLine>(v, object({ ...smoreFields, ...moneyFields }), line =>
+  line.kind === 'cake-addon-smore' && id(line.parentCakeLineId) && line.quantity % 10 === 0 &&
+  line.unitPriceCents === 350 && line.subtotalCents === sum([350 * line.quantity]) &&
+  line.discountPercent === 10 && line.discountCents === sum([35 * line.quantity]) &&
+  line.totalCents === line.subtotalCents - line.discountCents)))
+const customFields = { contractVersion: literal('custom-cake.v1'), requestNumber: string(1, 128), quote: guard(parseQuote), paidSmoreLines: array(customSmorePriced), acceptance: nullable(acceptance) }
 export function parseCustomCakeCreateResponse(value: unknown): CustomCakeCreateResponse {
   return checked<CustomCakeCreateResponse>(value, object({ ...customFields, requestId, status: literal('requested') }), v =>
     v.acceptance === null && v.quote.quoteVersion === 1 && v.quote.designExtraCents === null && v.quote.figurineExtraCents === null && paid(v.quote, v.paidSmoreLines))

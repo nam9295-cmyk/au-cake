@@ -126,10 +126,42 @@ test('line identity and parent graph are strict; photos are opaque, unique and m
 const promotionEligibilityAt = custom.created.quote.promotionEligibilityAt
 const pricedAt = ordinary.created.pricing.pricedAt
 const customPrice = request => pricing.priceCustomCakeV1Request(request, { promotionEligibilityAt })
+const currentCustomRequest = () => {
+  const request = copy(custom.request)
+  request.lines[1].quantity = 10
+  return request
+}
+const currentCustomQuote = { ...custom.created.quote, paidSmoreQuantity: 10, paidSmoreTotalCents: 3150, knownTotalCents: 19050 }
+const currentCustomSmore = { ...custom.created.paidSmoreLines[0], quantity: 10, unitPriceCents: 350, subtotalCents: 3500, discountPercent: 10, discountCents: 350, totalCents: 3150 }
+
+test('custom S’more add-ons price ten-stick sets at ten percent off without extra bulk discounts', () => {
+  for (const [quantity, subtotalCents, discountCents, totalCents] of [
+    [10, 3500, 350, 3150], [20, 7000, 700, 6300], [50, 17500, 1750, 15750],
+  ]) {
+    const request = copy(custom.request)
+    request.lines[1].quantity = quantity
+    const result = customPrice(request)
+    assert.deepEqual(result.paidSmoreLines[0], {
+      ...request.lines[1], unitPriceCents: 350, subtotalCents, discountPercent: 10, discountCents, totalCents,
+    })
+    assert.equal(result.quote.paidSmoreQuantity, quantity)
+    assert.equal(result.quote.paidSmoreTotalCents, totalCents)
+    assert.equal(result.quote.knownTotalCents, 15900 + totalCents)
+  }
+})
+
+test('fresh custom orders reject partial S’more sets while historical request fingerprints remain readable', () => {
+  for (const quantity of [1, 2, 9, 11, 25]) {
+    const request = copy(custom.request)
+    request.lines[1].quantity = quantity
+    reject(() => customPrice(request))
+  }
+  assert.equal(input.normalizeCustomCakeV1Request(custom.request).lines[1].quantity, 2)
+})
 
 test('custom initial quote and all six base prices match the launch policy fixture amounts', () => {
   assert.equal(typeof pricing.priceCustomCakeV1Request, 'function')
-  assert.deepEqual(customPrice(custom.request), { quote: custom.created.quote, paidSmoreLines: custom.created.paidSmoreLines })
+  assert.deepEqual(customPrice(currentCustomRequest()), { quote: currentCustomQuote, paidSmoreLines: [currentCustomSmore] })
   for (const row of custom.sizes) {
     const request = copy(custom.request)
     request.lines = [{ ...request.lines[0], tier: row.tier, size: row.size, quantity: row.quantity }]
@@ -146,7 +178,7 @@ test('custom initial quote and all six base prices match the launch policy fixtu
 
 test('Custom Cake September promo normalizes into the canonical request and prices only eligible base cents', () => {
   const receivedAt = '2026-09-12T00:00:00.000Z'
-  const noCode = copy(custom.request)
+  const noCode = currentCustomRequest()
   delete noCode.promoCode
   const normalizedNoCode = input.normalizeCustomCakeV1Request(noCode)
   assert.equal(normalizedNoCode.promoCode, '')
@@ -172,12 +204,12 @@ test('Custom Cake September promo normalizes into the canonical request and pric
   const initial = pricing.priceCustomCakeV1Request(eligible, { promotionEligibilityAt: receivedAt })
   assert.equal(initial.quote.baseCents, 15900)
   assert.equal(initial.quote.cakeDiscountCents, 1590)
-  assert.equal(initial.quote.paidSmoreTotalCents, 630)
+  assert.equal(initial.quote.paidSmoreTotalCents, 3150)
   assert.equal(initial.quote.giftSmoreQuantity, 0)
-  assert.equal(initial.quote.knownTotalCents, 14940)
+  assert.equal(initial.quote.knownTotalCents, 17460)
   const revised = pricing.reviseCustomCakeV1Quote(initial.quote, { quoteVersion: 2, designExtraCents: 1000, figurineExtraCents: 800 })
   assert.equal(revised.cakeDiscountCents, 1590)
-  assert.equal(revised.knownTotalCents, 16740)
+  assert.equal(revised.knownTotalCents, 19260)
 
   for (const [at, pickupDate, discount] of [
     ['2026-09-11T13:59:59.999Z', '2026-11-30', null],
@@ -213,7 +245,7 @@ test('quote revisions preserve the first persisted receipt without retroactive p
     assert.equal(edited.giftSmoreQuantity, row.giftSmoreQuantity)
   }
   for (const [at, discount] of [['2026-08-31T23:59:59.999Z', 0], ['2026-09-01T00:00:00.000Z', 0]]) {
-    assert.equal(pricing.priceCustomCakeV1Request(custom.request, { promotionEligibilityAt: at }).quote.cakeDiscountCents, discount)
+    assert.equal(pricing.priceCustomCakeV1Request(currentCustomRequest(), { promotionEligibilityAt: at }).quote.cakeDiscountCents, discount)
   }
 })
 
@@ -230,11 +262,12 @@ test('quote revisions preserve null/zero/positive distinctions and immutable rec
   assert.deepEqual(pricing.reviseCustomCakeV1Quote(custom.created.quote, { quoteVersion: 2, designExtraCents: 2000, figurineExtraCents: 1500 }), custom.finalLookup.quote)
 })
 
-test('new paid S’more price is 450 standalone or 315 add-on per stick at 1/6/12', () => {
+test('ordinary v2 S’more pricing and custom standalone pricing retain their existing rules', () => {
   assert.equal(typeof pricing.priceCakeOrderV2Request, 'function')
   for (const row of ordinary.smoreCases) {
     const { unitPriceCents: _u, subtotalCents: _s, discountPercent: _p, discountCents: _d, totalCents: _t, ...line } = row
     for (const template of [ordinary.request, custom.request]) {
+      if (template === custom.request && line.kind === 'cake-addon-smore') continue // Covered by the current custom set tests above.
       const request = copy(template)
       request.lines = template === ordinary.request && line.kind === 'standalone-smore' ? [line] : [request.lines[0], line]
       const result = template === ordinary.request ? pricing.priceCakeOrderV2Request(request, { pricedAt }).lines : customPrice(request).paidSmoreLines
@@ -276,7 +309,7 @@ test('pricing rejects unsafe cents, quantities, timestamps and caller supplied m
   for (const quoteVersion of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) reject(() => pricing.reviseCustomCakeV1Quote(custom.created.quote, { quoteVersion, designExtraCents: 0, figurineExtraCents: 0 }))
   for (const at of ['2026-02-30T00:00:00.000Z', '2026-10-02T00:00:00Z', 'not time', undefined]) {
     reject(() => pricing.priceCakeOrderV2Request(ordinary.request, { pricedAt: at }))
-    reject(() => pricing.priceCustomCakeV1Request(custom.request, { promotionEligibilityAt: at }))
+    reject(() => pricing.priceCustomCakeV1Request(currentCustomRequest(), { promotionEligibilityAt: at }))
   }
   for (const quantity of [Number.MAX_SAFE_INTEGER, Math.floor(Number.MAX_SAFE_INTEGER / 450) + 1]) {
     const request = copy(ordinary.request); request.lines[1].quantity = quantity
@@ -292,10 +325,11 @@ test('pricing rejects unsafe cents, quantities, timestamps and caller supplied m
 test('pure initial data builders emit the exact separate creation and lookup fixture shapes', () => {
   assert.equal(typeof data.buildCustomCakeV1Data, 'function')
   assert.equal(typeof data.buildCakeOrderV2Data, 'function')
-  const customResult = data.buildCustomCakeV1Data(custom.request, { now: new Date(promotionEligibilityAt), requestNumber: custom.created.requestNumber })
-  assert.deepEqual(customResult.request, { ...custom.request, promoCode: '' })
-  assert.deepEqual(customResult.creationResponse, custom.created)
-  assert.deepEqual(customResult.lookupResponse, custom.lookup)
+  const request = currentCustomRequest()
+  const customResult = data.buildCustomCakeV1Data(request, { now: new Date(promotionEligibilityAt), requestNumber: custom.created.requestNumber })
+  assert.deepEqual(customResult.request, { ...request, promoCode: '' })
+  assert.deepEqual(customResult.creationResponse, { ...custom.created, quote: currentCustomQuote, paidSmoreLines: [currentCustomSmore] })
+  assert.deepEqual(customResult.lookupResponse, { ...custom.lookup, lines: request.lines, quote: currentCustomQuote, paidSmoreLines: [currentCustomSmore] })
   const ordinaryResult = data.buildCakeOrderV2Data(ordinary.request, { now: new Date(pricedAt), reservationNumber: ordinary.created.reservationNumber })
   assert.deepEqual(ordinaryResult.request, ordinary.request)
   assert.deepEqual(ordinaryResult.creationResponse, ordinary.created)
@@ -305,10 +339,10 @@ test('pure initial data builders emit the exact separate creation and lookup fix
   ordinaryResult.lookupResponse.pricing.totalCents = 1
   assert.equal(ordinaryResult.creationResponse.pricing.totalCents, 8530)
   for (const now of [new Date('invalid'), new Date('2026-10-06T00:00:00.000Z')]) {
-    reject(() => data.buildCustomCakeV1Data(custom.request, { now, requestNumber: 'CUSTOM-1' }))
+    reject(() => data.buildCustomCakeV1Data(request, { now, requestNumber: 'CUSTOM-1' }))
     reject(() => data.buildCakeOrderV2Data(ordinary.request, { now, reservationNumber: 'VG-C-1' }))
   }
-  reject(() => data.buildCustomCakeV1Data(custom.request, { now: new Date(promotionEligibilityAt), requestNumber: '' }))
+  reject(() => data.buildCustomCakeV1Data(request, { now: new Date(promotionEligibilityAt), requestNumber: '' }))
   reject(() => data.buildCakeOrderV2Data(ordinary.request, { now: new Date(pricedAt), reservationNumber: '' }))
 })
 

@@ -736,7 +736,7 @@ export default function CakeDetailPage({
                   return (
                     <OptionButton active={selection.quantity === quantity} onClick={() => updateSelection({ quantity })} key={quantity}>
                       <strong>{quantity} {language === 'ko' ? '개' : 'sticks'}</strong>
-                      <span>{pricing.formattedFinalTotal}<small> · {language === 'ko' ? '개당 ' : ''}{formatCurrency(pricing.unitPriceCents / 100)}{language === 'ko' ? '' : ' each'}</small></span>
+                      <span>{pricing.formattedFinalTotal}</span>
                     </OptionButton>
                   )
                 })}
@@ -773,8 +773,6 @@ export default function CakeDetailPage({
                 {detail.productIds.map((productId) => {
                   const optionText = getProductText(productId, language)
                   const cupcakePackSize = getCupcakePackSize(productId)
-                  const lemonPackSize = getFreshLemonCupcakePackSize(productId)
-                  const packSize = cupcakePackSize || lemonPackSize
                   const optionPrice = cupcakePackSize
                     ? getCupcakeFinishPrice(productId, 'basic') || 0
                     : getProductById(productId).price
@@ -792,7 +790,6 @@ export default function CakeDetailPage({
                         : optionText.name}</strong>
                       <span>
                         {formatCurrency(optionPrice)}
-                        {packSize && <small>{language === 'ko' ? ` · 개당 ${formatCurrency(optionPrice / packSize)}` : ` · ${formatCurrency(optionPrice / packSize)} each`}</small>}
                         {extraFromBase > 0 && (
                           <span className="cake-detail-option-surcharge">(+{formatCurrency(extraFromBase)})</span>
                         )}

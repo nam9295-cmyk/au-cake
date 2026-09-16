@@ -203,6 +203,18 @@ function priceWireSmoreLine(line) {
   return { ...line, unitPriceCents: 450, subtotalCents, discountPercent, discountCents, totalCents: wireAmount(subtotalCents - discountCents) }
 }
 
+function priceCustomSmoreLine(line) {
+  if (line.kind !== 'cake-addon-smore') return priceWireSmoreLine(line)
+  // Only new receipts reach pricing. Historical requests still normalize for
+  // idempotent replay, and saved quotes keep their original quantities/prices.
+  if (line.quantity % 10 !== 0) fail('INVALID_REQUEST')
+  const unitPriceCents = SMORE_STICK_SET_UNIT_PRICES_CENTS[10]
+  const subtotalCents = wireAmount(unitPriceCents * line.quantity)
+  const discountPercent = 10
+  const discountCents = wireAmount(subtotalCents / 10)
+  return { ...line, unitPriceCents, subtotalCents, discountPercent, discountCents, totalCents: wireAmount(subtotalCents - discountCents) }
+}
+
 // A trusted immutable quote is the only base for negotiated edits. No catalog,
 // pickup clock, promotion activation or line repricing participates in this step.
 export function reviseCustomCakeV1Quote(baseQuote, { quoteVersion, designExtraCents, figurineExtraCents }) {
@@ -243,7 +255,7 @@ export function priceCustomCakeV1Request(value, { promotionEligibilityAt }) {
   const cakeLines = request.lines.filter(line => line.kind === 'custom-cake')
   const baseAmounts = cakeLines.map(line => wireAmount(CUSTOM_CAKE_V1_BASE_CENTS[line.tier][line.size] * line.quantity))
   const baseCents = wireSum(baseAmounts)
-  const paidSmoreLines = request.lines.filter(line => line.kind !== 'custom-cake').map(priceWireSmoreLine)
+  const paidSmoreLines = request.lines.filter(line => line.kind !== 'custom-cake').map(priceCustomSmoreLine)
   const baseQuote = {
     currency: 'AUD', pricingPolicyVersion: 'custom-cake.2026-09.v1', promotionEligibilityAt,
     baseCents,

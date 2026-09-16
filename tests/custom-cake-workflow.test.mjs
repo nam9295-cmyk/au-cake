@@ -3,10 +3,12 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { service, config } from './custom-cake-persistence.test.mjs'
 import { createCustomCakeRepository } from '../appwrite-functions/reservation-api/src/custom-cake-persistence.js'
+import { fingerprintCustomCakeV1Request } from '../appwrite-functions/reservation-api/src/cake-order-input.js'
+import { parseCustomCakeCreateResponse, parseCustomCakeLookupResponse } from '../src/lib/custom-cake-client.ts'
 
 const load = async () => { try { return await import('../appwrite-functions/reservation-api/src/custom-cake-workflow.js') } catch (e) { if (e.code === 'ERR_MODULE_NOT_FOUND') return {}; throw e } }
 const fixture = n => JSON.parse(readFileSync(new URL(`./fixtures/custom-cake-contract/${n}.json`, import.meta.url)))
-const data = () => { const v = fixture('custom-v1').request; v.lines[0].photoRefs = []; return v }
+const data = () => { const v = fixture('custom-v1').request; v.lines[0].photoRefs = []; v.lines[1].quantity = 10; return v }
 const admin = { adminId: 'admin-1' }
 const base = (requestNumber, expectedQuoteVersion = 1) => ({ contractVersion: 'custom-cake.v1', requestNumber, expectedQuoteVersion })
 async function setup() {
@@ -20,12 +22,40 @@ async function setup() {
 test('workflow creates one immutable receipt/event and replays before clock or photo validation', async () => {
   const h = await setup(), input = data(), created = await h.workflow.create(input, {})
   assert.equal(created.status, 'requested'); assert.equal(created.quote.giftSmoreQuantity, 0)
+  assert.equal(created.quote.paidSmoreTotalCents, 3150)
+  assert.equal(created.paidSmoreLines[0].discountPercent, 10)
+  assert.deepEqual(parseCustomCakeCreateResponse(created), created)
+  const saved = await h.workflow.find(created.requestNumber)
+  assert.deepEqual(parseCustomCakeLookupResponse(saved.value.lookupResponse), saved.value.lookupResponse)
   h.clock('2027-01-01T00:00:00.000Z')
   assert.deepEqual(await h.workflow.create(input, {}), created)
   await assert.rejects(h.workflow.create({ ...input, requestNote: 'changed' }, {}), { code: 'REQUEST_ID_CONFLICT' })
   const events = await h.repository.list('outbox'); assert.equal(events.length, 1)
   assert.equal(events[0].value.eventType, 'custom-cake.received')
   assert.equal(events[0].value.snapshot.status, 'requested')
+})
+
+test('historical custom receipts replay before new ten-stick rules and preserve saved money when quoted', async () => {
+  const h = await setup(), historical = fixture('custom-v1'), request = historical.request
+  await h.repository.atomic('seed-historical-custom', async tx => {
+    await tx.claimRequest({
+      requestId: request.requestId, wire: request.contractVersion, creatorScope: `customer:${request.customer.customerPhone}`,
+      fingerprint: fingerprintCustomCakeV1Request(request, Buffer.alloc(32, 7)),
+    }, historical.created)
+    await tx.create('snapshots', request.requestId, {
+      request: { ...request, promoCode: '' }, creationResponse: historical.created, lookupResponse: historical.lookup,
+      quoteHistory: [], transitionAudit: [],
+    })
+    return historical.created
+  })
+  h.clock('2027-01-01T00:00:00.000Z')
+  assert.deepEqual(await h.workflow.create(request, {}), historical.created)
+  const updated = await h.workflow.mutate('quote', {
+    ...base(historical.created.requestNumber), designExtraCents: 0, figurineExtraCents: 0, explanation: 'No extras',
+  }, admin)
+  assert.equal(updated.quote.paidSmoreQuantity, 2)
+  assert.equal(updated.quote.paidSmoreTotalCents, 630)
+  assert.deepEqual(parseCustomCakeLookupResponse(updated), updated)
 })
 
 test('same request ID with a different Custom Cake promo code is not an idempotent replay', async () => {

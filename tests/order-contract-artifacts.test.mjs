@@ -90,9 +90,13 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         }
         const wireData = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'cake-order-data.js')));
         const custom = fixtures.customWire;
-        const customData = wireData.buildCustomCakeV1Data(custom.request, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber });
-        assert.deepEqual(customData.creationResponse, custom.created);
-        assert.deepEqual(customData.lookupResponse, custom.lookup);
+        const currentRequest = structuredClone(custom.request);
+        currentRequest.lines[1].quantity = 10;
+        const customData = wireData.buildCustomCakeV1Data(currentRequest, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber });
+        const currentQuote = { ...custom.created.quote, paidSmoreQuantity: 10, paidSmoreTotalCents: 3150, knownTotalCents: 19050 };
+        const currentSmore = { ...custom.created.paidSmoreLines[0], quantity: 10, unitPriceCents: 350, subtotalCents: 3500, discountPercent: 10, discountCents: 350, totalCents: 3150 };
+        assert.deepEqual(customData.creationResponse, { ...custom.created, quote: currentQuote, paidSmoreLines: [currentSmore] });
+        assert.deepEqual(customData.lookupResponse, { ...custom.lookup, lines: currentRequest.lines, quote: currentQuote, paidSmoreLines: [currentSmore] });
         const ordinary = fixtures.ordinaryWire;
         const ordinaryData = wireData.buildCakeOrderV2Data(ordinary.request, { now: new Date(ordinary.created.pricing.pricedAt), reservationNumber: ordinary.created.reservationNumber });
         assert.deepEqual(ordinaryData.creationResponse, ordinary.created);
