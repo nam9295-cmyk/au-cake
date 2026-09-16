@@ -135,7 +135,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     slug: 'chocolate-cupcakes',
     group: 'more-cakes',
     defaultProductId: 'cupcake-dozen',
-    productIds: ['cupcake-half-dozen', 'cupcake-dozen'],
+    productIds: ['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'],
     imageKey: 'chocolate-cupcakes',
     isPhotoComingSoon: false,
     priceMode: 'from',
@@ -190,7 +190,7 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     slug: 'lemon-cake',
     group: 'more-cakes',
     defaultProductId: 'fresh-lemon-cupcakes-12',
-    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'],
+    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-24', 'fresh-lemon-cupcakes-48'],
     imageKey: 'lemon-cake',
     isPhotoComingSoon: false,
     priceMode: 'from',
@@ -198,13 +198,13 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
       en: {
         name: 'Lemon Cake',
         description: 'Made with freshly squeezed lemon juice and fresh lemon zest, from the cake batter to the lemon syrup and glaze. A bright, citrus-forward little cake finished with real lemon flavour in every step.',
-        features: ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 8, 12 or 16'],
+        features: ['Freshly squeezed lemon juice', 'Fresh lemon zest', 'Lemon syrup & glaze', 'Floral decoration', 'Boxes of 6, 12, 24 or 48'],
         optionLabel: 'Choose a pack size',
       },
       ko: {
         name: '레몬 케이크',
         description: '생 레몬즙을 직접 짜고 신선한 레몬 제스트를 더해 케이크 반죽부터 레몬 시럽, 글레이즈까지 완성합니다. 레몬의 산뜻한 풍미를 단계마다 담아낸 작은 레몬 케이크입니다.',
-        features: ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·8개·12개·16개 구성'],
+        features: ['신선한 레몬즙을 직접 짜서 제조', '신선한 레몬 제스트', '레몬 시럽과 글레이즈', '꽃 장식', '6개·12개·24개·48개 구성'],
         optionLabel: '구성 수량만 선택',
       },
     },
@@ -221,15 +221,15 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
     copy: {
       en: {
         name: 'S’more Stick',
-        description: 'Fluffy marshmallows toasted on a stick and coated in rich couverture chocolate. Designed for gatherings and bulk sharing with automatic discounts from 6 sticks.',
+        description: 'Fluffy marshmallows toasted on a stick and coated in rich couverture chocolate. Available in party-ready sets for gatherings and sharing.',
         features: [
           'Toasted marshmallow on stick',
           'Rich couverture chocolate coating',
-          'AUD 4.50 / stick',
-          '6–11 sticks: 10% off',
-          '12+ sticks: 20% bulk discount',
+          '10 sticks · AUD 35',
+          '25 sticks · AUD 75',
+          '50 sticks · AUD 135',
         ],
-        optionLabel: 'Bulk discounts from 6+ sticks',
+        optionLabel: 'Choose a 10, 25 or 50-stick set',
       },
       ko: {
         name: '스모어 스틱',
@@ -237,11 +237,11 @@ const AU_CAKE_CATALOG: readonly CakeCatalogEntry[] = [
         features: [
           '스틱 마시멜로 디저트',
           '리얼 커버춰 초콜릿 코팅',
-          '개당 AUD 4.50',
-          '6~11개 10% 할인',
-          '12개 이상 20% 대량 할인',
+          '10개 · AUD 35',
+          '25개 · AUD 75',
+          '50개 · AUD 135',
         ],
-        optionLabel: '6개 이상 수량 할인',
+        optionLabel: '10·25·50개 세트 선택',
       },
     },
   },
@@ -324,6 +324,7 @@ export function getCakeCatalogEntryByProductId(productId: ProductId) {
 
 export function getCakeCatalogStartingPrice(entry: CakeCatalogEntry) {
   if (!entry.productIds || entry.productIds.length === 0) return 0
+  if (entry.id === 'smore-stick') return 35
   return Math.min(...entry.productIds.map((productId) => getProductById(productId).price))
 }
 

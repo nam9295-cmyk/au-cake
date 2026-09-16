@@ -12,7 +12,7 @@ const PROMO_CODE = 'chocolate'
 
 const LEMON_PROMO_CODE = 'lemoni'
 
-const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
+const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 0
 
 const CUPCAKE_PACK_SIZE = 12
 
@@ -26,18 +26,28 @@ const INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS = 10_000
 
 const BROWNIE_FRESH_CREAM_SURCHARGE_CENTS = 2_000
 
-const CUPCAKE_PRODUCT_IDS = new Set(['cupcake-half-dozen', 'cupcake-dozen'])
+const CUPCAKE_PRODUCT_IDS = new Set(['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'])
 
 const CUPCAKE_FINISH_PRICES_CENTS = {
   'cupcake-half-dozen': {
-    basic: 3100,
-    'vanilla-fresh-cream': 3600,
-    'chocolate-buttercream': 4100,
+    basic: 3000,
+    'vanilla-fresh-cream': 3500,
+    'chocolate-buttercream': 4000,
   },
   'cupcake-dozen': {
     basic: 5500,
     'vanilla-fresh-cream': 6400,
     'chocolate-buttercream': 7300,
+  },
+  'cupcake-twenty-four': {
+    basic: 10500,
+    'vanilla-fresh-cream': 12300,
+    'chocolate-buttercream': 14000,
+  },
+  'cupcake-forty-eight': {
+    basic: 19500,
+    'vanilla-fresh-cream': 23000,
+    'chocolate-buttercream': 26500,
   },
 }
 
@@ -87,15 +97,27 @@ const FRESH_LEMON_CUPCAKE_PRODUCT_IDS = new Set([
   'fresh-lemon-cupcakes-8',
   'fresh-lemon-cupcakes-12',
   'fresh-lemon-cupcakes-16',
+  'fresh-lemon-cupcakes-24',
+  'fresh-lemon-cupcakes-48',
 ])
 
 const INDIVIDUAL_PACKAGING_PRODUCT_PIECES = Object.freeze({
   'cupcake-half-dozen': 6,
   'cupcake-dozen': 12,
+  'cupcake-twenty-four': 24,
+  'cupcake-forty-eight': 48,
   'fresh-lemon-cupcakes-6': 6,
   'fresh-lemon-cupcakes-8': 8,
   'fresh-lemon-cupcakes-12': 12,
   'fresh-lemon-cupcakes-16': 16,
+  'fresh-lemon-cupcakes-24': 24,
+  'fresh-lemon-cupcakes-48': 48,
+})
+
+const SMORE_STICK_SET_UNIT_PRICES_CENTS = Object.freeze({
+  10: 350,
+  25: 300,
+  50: 270,
 })
 
 function calculateIndividualPackagingFeeCents(individualPackagingPieces, selectedPackagingProductSubtotalCents) {
@@ -104,6 +126,11 @@ function calculateIndividualPackagingFeeCents(individualPackagingPieces, selecte
   return selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
     ? 0
     : baseFeeCents
+}
+
+function calculateCurrentIndividualPackagingFeeCents(individualPackagingPieces) {
+  if (!Number.isSafeInteger(individualPackagingPieces) || individualPackagingPieces <= 0) return 0
+  return individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
 }
 
 function calculateLegacyIndividualPackagingFeeCents(individualPackagingPieces) {
@@ -173,6 +200,18 @@ const PRODUCTS = {
     usesSize: false,
     usesFinish: false,
   },
+  'cupcake-twenty-four': {
+    basePrice: 105,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
+  'cupcake-forty-eight': {
+    basePrice: 195,
+    sizePrices: {},
+    usesSize: false,
+    usesFinish: false,
+  },
   'choco-basque-cheesecake': {
     basePrice: 55,
     sizePrices: {},
@@ -209,10 +248,12 @@ const PRODUCTS = {
     usesSize: false,
     usesFinish: false,
   },
-  'fresh-lemon-cupcakes-6': { basePrice: 36, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-6': { basePrice: 35, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-8': { basePrice: 45, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-12': { basePrice: 65, sizePrices: {}, usesSize: false, usesFinish: false },
   'fresh-lemon-cupcakes-16': { basePrice: 85, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-24': { basePrice: 120, sizePrices: {}, usesSize: false, usesFinish: false },
+  'fresh-lemon-cupcakes-48': { basePrice: 225, sizePrices: {}, usesSize: false, usesFinish: false },
 }
 
 const FINISH_PRICES = {
@@ -403,12 +444,13 @@ function safeOrderAmount(value) {
 }
 
 function smoreBulkPercent(line) {
-  return line.productId === 'smore-stick' ? (line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0) : 0
+  if (line.productId !== 'smore-stick') return 0
+  if (SMORE_STICK_SET_UNIT_PRICES_CENTS[line.quantity] === line.unitPriceCents) return 0
+  return line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0
 }
 
 function smoreBulkDiscount(line) {
-  // Exact integer cents per piece avoid overflowing subtotal * percent.
-  return line.productId === 'smore-stick' ? line.quantity * (450 * smoreBulkPercent(line) / 100) : 0
+  return line.productId === 'smore-stick' ? line.quantity * (line.unitPriceCents * smoreBulkPercent(line) / 100) : 0
 }
 
 const PRE_PACKAGING_STORED_ORDER_LINE_KEYS = new Set([
@@ -536,6 +578,9 @@ function getValidPromoCode(productId, promoCode, now) {
 }
 
 function unitPriceForCakeLine(line) {
+  if (line.productId === 'smore-stick') {
+    return SMORE_STICK_SET_UNIT_PRICES_CENTS[line.quantity] ?? 450
+  }
   const product = PRODUCTS[line.productId]
   if (CUPCAKE_PRODUCT_IDS.has(line.productId) && Object.hasOwn(line, 'cupcakeFinish')) {
     return CUPCAKE_FINISH_PRICES_CENTS[line.productId][line.cupcakeFinish]
@@ -554,10 +599,16 @@ const LEGACY_STORED_UNIT_PRICE_CENTS = Object.freeze({
   'buttercream-cake': Object.freeze({ '15cm': [7500], '19cm': [9800], '22cm': [13900] }),
   'brownie-cheesecake': Object.freeze({ '15cm': [5800] }),
   'pave-brownie-cheesecake': Object.freeze({ '15cm': [6800] }),
+  'cupcake-half-dozen': Object.freeze({ '15cm': [3100, 3600, 4100] }),
 })
 
 function isApprovedStoredUnitPrice(line) {
   if (line.unitPriceCents === unitPriceForCakeLine(line)) return true
+  if (line.productId === 'smore-stick') return line.unitPriceCents === 450
+  if (FRESH_LEMON_CUPCAKE_PRODUCT_IDS.has(line.productId)) {
+    const legacyBaseCents = { 'fresh-lemon-cupcakes-6': 3600, 'fresh-lemon-cupcakes-8': 4500, 'fresh-lemon-cupcakes-12': 6500, 'fresh-lemon-cupcakes-16': 8500 }[line.productId]
+    if (legacyBaseCents !== undefined && line.unitPriceCents === legacyBaseCents + line.chocolateIcingCount * 50) return true
+  }
   if (line.productId === 'brownie-cheesecake' && Object.hasOwn(line, 'brownieCreamOption')) return false
   return LEGACY_STORED_UNIT_PRICE_CENTS[line.productId]?.[line.cakeSize]?.includes(line.unitPriceCents) || false
 }
@@ -585,4 +636,4 @@ function hasExactOwnKeys(value, allowedKeys) {
     && keys.every((key) => typeof key === 'string' && allowedKeys.has(key))
 }
 
-export { STORED_ORDER_MAX_BYTES, hasExactOwnKeys, REQUIRED_STORED_ORDER_DOCUMENT_KEYS, PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS, LEGACY_STORED_ORDER_LINE_KEYS, PRE_PACKAGING_STORED_ORDER_LINE_KEYS, STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, validCakeQuantity, normalizedCakeLine, ORDER_LINE_IDENTITY_KEYS, canonicalOrderLineKey, isApprovedStoredUnitPrice, chocolateExtraPriceCents, smoreBulkPercent, INDIVIDUAL_PACKAGING_PRODUCT_PIECES, SAFE_LAST4_PATTERN, MANUAL_REVIEW_COUPON_ID_PATTERN, PROMOTIONS, getValidPromoCode, safeOrderAmount, smoreBulkDiscount, allocateDiscounts, calculateIndividualPackagingFeeCents, calculateLegacyIndividualPackagingFeeCents }
+export { STORED_ORDER_MAX_BYTES, hasExactOwnKeys, REQUIRED_STORED_ORDER_DOCUMENT_KEYS, PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS, LEGACY_STORED_ORDER_LINE_KEYS, PRE_PACKAGING_STORED_ORDER_LINE_KEYS, STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, validCakeQuantity, normalizedCakeLine, ORDER_LINE_IDENTITY_KEYS, canonicalOrderLineKey, isApprovedStoredUnitPrice, chocolateExtraPriceCents, smoreBulkPercent, INDIVIDUAL_PACKAGING_PRODUCT_PIECES, SAFE_LAST4_PATTERN, MANUAL_REVIEW_COUPON_ID_PATTERN, PROMOTIONS, getValidPromoCode, safeOrderAmount, smoreBulkDiscount, allocateDiscounts, calculateIndividualPackagingFeeCents, calculateCurrentIndividualPackagingFeeCents, calculateLegacyIndividualPackagingFeeCents }

@@ -168,9 +168,9 @@ export function HomePage({
         ? '신선한 레몬즙과 레몬 제스트로 만든 레몬 모양 케이크에 레몬 시럽, 생 레몬 글레이즈와 꽃 장식으로 마무리해요.'
         : 'Lemon-shaped cakes made with freshly squeezed lemon juice and fresh lemon zest, finished with lemon syrup and a fresh lemon glaze.',
       features: language === 'ko'
-        ? ['6, 8, 12, 16개 구성', '12개 · Most Popular', '기본 또는 스페셜 마감 선택']
-        : ['Boxes of 6, 8, 12 or 16', '12 pieces · Most Popular', 'Choose basic or special finishing'],
-      priceLabel: language === 'ko' ? 'AUD 36부터' : 'From AUD 36',
+        ? ['6, 12, 24, 48개 구성', '12개 · Most Popular', '기본, 반반 또는 전체 초코 마감']
+        : ['Boxes of 6, 12, 24 or 48', '12 pieces · Most Popular', 'Choose lemon, half & half, or all chocolate finishing'],
+      priceLabel: language === 'ko' ? 'AUD 35부터' : 'From AUD 35',
       optionLabel: language === 'ko' ? '구성 수량만 선택' : 'Choose a pack size',
     },
   ]

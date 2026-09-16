@@ -2,8 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildCakeReservation, parseStoredOrderLines } from '../appwrite-functions/reservation-api/src/business.js'
 
-for (const [quantity, expectedCents] of [[1, 450], [5, 2250], [6, 2430], [11, 4455], [12, 4320], [20, 7200], [50, 18000], [100, 36000]]) {
-  test(`approved price boundary ${quantity} sticks is exactly ${expectedCents} cents`, () => {
+for (const [quantity, expectedCents] of [[10, 3500], [25, 7500], [50, 13500]]) {
+  test(`published S’more set ${quantity} sticks is exactly ${expectedCents} cents`, () => {
     const document = buildCakeReservation({
       customerName: 'Test Customer', customerPhone: '0400000000', customerEmail: 'customer@example.com',
       pickupDate: '2099-07-11', pickupTime: '12:00', privacyConsent: true,
@@ -14,8 +14,18 @@ for (const [quantity, expectedCents] of [[1, 450], [5, 2250], [6, 2430], [11, 44
     assert.equal(document.orderItemCount, quantity)
     assert.equal(document.totalPriceCents, expectedCents)
     assert.equal(parseStoredOrderLines(document).lines[0].totalPriceCents, expectedCents)
+    assert.equal(document.discountCents, 0)
   })
 }
+
+test('S’more rejects quantities outside the published sets', () => {
+  const input = { customerName: 'Test Customer', customerPhone: '0400000000', customerEmail: 'customer@example.com',
+    pickupDate: '2099-07-11', pickupTime: '12:00', privacyConsent: true }
+  const options = { now: new Date('2099-07-01T00:00:00.000Z') }
+  for (const quantity of [1, 24, 51]) {
+    assert.throws(() => buildCakeReservation({ ...input, orderLines: [{ productId: 'smore-stick', quantity }] }, options), /INVALID_QUANTITY/)
+  }
+})
 
 test('Smore stored first-line projection preserves the actual stick quantity, not a dummy 1', () => {
   const document = buildCakeReservation({

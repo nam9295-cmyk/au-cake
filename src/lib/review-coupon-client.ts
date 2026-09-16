@@ -21,7 +21,6 @@ import { getCakeServingProfile, isHistoricalWholeCakeSize, isHistoricalWholeCake
 import { isValidPhone } from './utils.js'
 import { isActiveCakeOrderProductId, isStoredCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
 import {
-  INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
   getIndividualPackagingPieceCount,
   isIndividualPackagingEligibleProduct,
@@ -38,6 +37,7 @@ const REVIEW_COUPON_PATTERN = new RegExp(
 )
 const MANUAL_REVIEW_COUPON_PATTERN = /^JENNIE[A-Z0-9]{5}$/
 const MANUAL_REVIEW_COUPON_ID_PATTERN = /^manual:[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
+const LEGACY_INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS = 10_000
 const SAFE_LAST4_PATTERN = /^[A-Z0-9]{4}$/
 const VALID_CAKE_SIZES = new Set<CakeSize>(['mini', 'size-1', '6in', '8in', '10in', '15cm', '17cm', '19cm', '22cm'])
 const VALID_CHOCOLATE_TYPES = new Set<ChocolateType>(['dark', 'milk'])
@@ -341,6 +341,9 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     ...(input.vanillaCakePointColor ? {
       vanillaCakePointColor: normalizeVanillaCakePointColor(input.productId, input.vanillaCakePointColor),
     } : {}),
+    ...(isIndividualPackagingEligibleProduct(input.productId) ? {
+      individualPackaging: input.individualPackaging === true,
+    } : {}),
     quantity: input.quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
@@ -426,7 +429,10 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
     !Number.isSafeInteger(line.chocolateIcingCount) || Number(line.chocolateIcingCount) < 0 ||
     !Number.isSafeInteger(line.vanillaCreamCount) || Number(line.vanillaCreamCount) < 0 ||
     !Number.isSafeInteger(line.partyDecorationCount) || Number(line.partyDecorationCount) < 0 ||
-    !Number.isSafeInteger(line.quantity) || Number(line.quantity) < 1 || (line.productId !== 'smore-stick' && Number(line.quantity) > MAX_RESERVATION_QUANTITY)
+    !Number.isSafeInteger(line.quantity) || Number(line.quantity) < 1 ||
+    (line.productId === 'smore-stick'
+      ? !Object.hasOwn(CURRENT_SMORE_SET_UNIT_PRICES_CENTS, Number(line.quantity))
+      : Number(line.quantity) > MAX_RESERVATION_QUANTITY)
   ) return false
   const productId = line.productId as ProductId
   const finishes = normalizeCupcakeFinishCounts(productId, Number(line.vanillaCreamCount), Number(line.partyDecorationCount))
@@ -565,11 +571,18 @@ function safeSum(values: number[]): number {
   return sum
 }
 
-export function getOrderLineBulkDiscountPercent(line: Pick<CakeOrderLineRequest, 'productId' | 'quantity'>): 0 | 10 | 20 {
-  return line.productId === 'smore-stick' ? line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0 : 0
+type StoredSmoreLine = Pick<CakeOrderLineRequest, 'productId' | 'quantity'> & Partial<Pick<CakeOrderLineResult, 'unitPriceCents'>>
+
+const CURRENT_SMORE_SET_UNIT_PRICES_CENTS: Partial<Record<number, number>> = { 10: 350, 25: 300, 50: 270 }
+
+export function getOrderLineBulkDiscountPercent(line: StoredSmoreLine): 0 | 10 | 20 {
+  if (line.productId !== 'smore-stick') return 0
+  if (CURRENT_SMORE_SET_UNIT_PRICES_CENTS[line.quantity] === line.unitPriceCents) return 0
+  if (line.unitPriceCents !== 450) invalidResponse()
+  return line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0
 }
 
-export function getOrderLineBulkDiscountCents(line: Pick<CakeOrderLineResult, 'productId' | 'quantity' | 'subtotalCents'>): number {
+export function getOrderLineBulkDiscountCents(line: Pick<CakeOrderLineResult, 'productId' | 'quantity' | 'subtotalCents' | 'unitPriceCents'>): number {
   // Smore has an exact 45c/90c discount per piece. Do not overflow an
   // otherwise valid safe-integer subtotal by multiplying it by 10 or 20.
   const discountCents = line.productId === 'smore-stick'
@@ -709,16 +722,20 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     const totalPriceCents = nonnegativeInteger(line.totalPriceCents)
     const discountPercent = line.discountPercent
     if (discountPercent !== 0 && discountPercent !== 5 && discountPercent !== 10 && !(productId === 'smore-stick' && discountPercent === 20)) invalidResponse()
-    const authoritativeUnitPriceCents = Math.round(getReservationPrice(productId, {
+    const authoritativeUnitPriceCents = productId === 'smore-stick'
+      ? CURRENT_SMORE_SET_UNIT_PRICES_CENTS[quantity]
+      : Math.round(getReservationPrice(productId, {
       cakeSize, chocolateType, poundAddon, cupcakeFinish, chocolateIcingCount, vanillaCreamCount, partyDecorationCount,
       brownieCreamOption,
     }) * 100)
     const expectedChocolateExtraCents = Math.round(CHOCOLATE_EXTRA_OPTIONS.find((option) => option.value === chocolateExtra)!.price * 100)
     const expectedSubtotalCents = unitPriceCents * quantity + chocolateExtraCents
     if (
-      !Number.isSafeInteger(authoritativeUnitPriceCents) ||
+      (productId === 'smore-stick'
+        ? (unitPriceCents !== CURRENT_SMORE_SET_UNIT_PRICES_CENTS[quantity] && unitPriceCents !== 450)
+        : !Number.isSafeInteger(authoritativeUnitPriceCents)) ||
       !Number.isSafeInteger(expectedSubtotalCents) ||
-      (!isHistoricalWholeCakeSize(productId, cakeSize) && unitPriceCents !== authoritativeUnitPriceCents) ||
+      (productId !== 'smore-stick' && !isHistoricalWholeCakeSize(productId, cakeSize) && unitPriceCents !== authoritativeUnitPriceCents) ||
       (isHistoricalWholeCakeSize(productId, cakeSize) && !isHistoricalWholeCakeUnitPrice(productId, cakeSize, unitPriceCents)) ||
       chocolateExtraCents !== expectedChocolateExtraCents ||
       expectedSubtotalCents !== subtotalCents ||
@@ -795,9 +812,10 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
   const selectedPackagingProductSubtotalCents = safeSum(
     orderLines.filter((line) => line.individualPackaging === true).map((line) => line.subtotalCents),
   )
-  const expectedPackagingFeeCents = selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
+  const legacyPackagingFeeCents = selectedPackagingProductSubtotalCents >= LEGACY_INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
     ? 0
     : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+  const currentPackagingFeeCents = individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
   const itemCount = safeSum(orderLines.map((line) => line.quantity))
   if (
     nonnegativeInteger(row.orderLineCount) !== orderLines.length ||
@@ -808,7 +826,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
     lineTotal !== totalPriceCents ||
     linePackagingPieces !== individualPackagingPieces ||
     linePackagingFeeCents !== individualPackagingFeeCents ||
-    individualPackagingFeeCents !== expectedPackagingFeeCents
+    (individualPackagingFeeCents !== currentPackagingFeeCents && individualPackagingFeeCents !== legacyPackagingFeeCents)
   ) invalidResponse()
 
   const first = orderLines[0]

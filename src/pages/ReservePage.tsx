@@ -4,7 +4,7 @@ import { PickupDatePicker } from '../components/WeekendDatePicker'
 import { BankAccountBox } from '../components/BankAccountBox'
 import { SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
 import { getCakeDetailSelectionTotal, type CakeDetailSelection } from '../lib/cake-detail'
-import { isValidSmoreQuantity, SMORE_STORAGE_MAX_QUANTITY } from '../lib/smore-quantity'
+import { DEFAULT_SMORE_SET_QUANTITY, isValidSmoreQuantity, SMORE_SET_QUANTITIES } from '../lib/smore-quantity'
 import { getAuCakeCatalogCards } from '../lib/cake-catalog'
 import {
   getIndividualPackagingPieceCount,
@@ -29,7 +29,6 @@ import {
   MAX_RESERVATION_QUANTITY,
   formatCakeSizeLabel,
   isPromoEligibleProduct,
-  getChocolateIcingSurcharge,
   getLemonIcingCount,
   getProductById,
   getFreshLemonCupcakePackSize,
@@ -177,7 +176,7 @@ export function ReservePage({
     individualPackaging: initialSelection?.individualPackaging === true,
     pickupDate: todayInputValue(),
     pickupTime: '',
-    quantity: initialSelection?.quantity || 1,
+    quantity: initialSelection?.quantity || (initialFormProductId === 'smore-stick' ? DEFAULT_SMORE_SET_QUANTITY : 1),
     customerName: '',
     customerPhone: '',
     customerEmail: '',
@@ -462,7 +461,7 @@ export function ReservePage({
     vanillaCakePointColor: form.vanillaCakePointColor,
     individualPackaging: form.individualPackaging,
     quantity: selectedProduct.id === 'smore-stick' && !isValidSmoreQuantity(form.quantity)
-      ? 1
+      ? DEFAULT_SMORE_SET_QUANTITY
       : form.quantity,
   }
   const singleSelectionPrice = getCakeDetailSelectionTotal(singleSelection)
@@ -484,7 +483,6 @@ export function ReservePage({
       }])
   const packagingFee = packagingPricing.individualPackagingFeeCents / 100
   const packagingBaseFee = packagingPricing.individualPackagingBaseFeeCents / 100
-  const packagingDiscount = packagingPricing.individualPackagingDiscountCents / 100
   const promoProductId = orderSelections?.find((selection) => getValidPromoCode(selection.productId, form.promoCode))?.productId || selectedProduct.id
   const promoEntry = getPromoEntryState(promoProductId, form.promoCode, undefined, knownReviewRewardPercent)
   const isManualCouponPending = promoEntry.kind === 'review-pending' && promoEntry.normalizedCode.startsWith('JENNIE')
@@ -513,7 +511,6 @@ export function ReservePage({
   const lemonPackSize = getFreshLemonCupcakePackSize(selectedProduct.id) || 0
   const chocolateIcingCount = normalizeChocolateIcingCount(selectedProduct.id, form.chocolateIcingCount)
   const lemonIcingCount = getLemonIcingCount(selectedProduct.id, chocolateIcingCount)
-  const chocolateIcingSurcharge = getChocolateIcingSurcharge(selectedProduct.id, chocolateIcingCount)
   const promoHint = isPromoEligibleProduct(selectedProduct.id)
     ? isFreshLemonCupcakeProduct(selectedProduct.id)
       ? language === 'ko' ? 'Lemoni · 대소문자 구분 없음 · 7월 16일까지 유효' : 'Lemoni · Not case-sensitive · Valid through 16 July'
@@ -660,12 +657,6 @@ export function ReservePage({
                     <dt>{language === 'ko' ? '개별 포장' : 'Individual packaging'}</dt>
                     <dd>{packagingPricing.selectedPackagingPieces} {language === 'ko' ? '개' : 'pieces'} · {formatCurrency(packagingBaseFee)}</dd>
                   </div>
-                  {packagingPricing.individualPackagingDiscountCents > 0 && (
-                    <div>
-                      <dt>{language === 'ko' ? '포장 할인' : 'Packaging discount'}</dt>
-                      <dd>-{formatCurrency(packagingDiscount)} · FREE</dd>
-                    </div>
-                  )}
                 </>
               )}
               {!isMultiOrder && (<>
@@ -688,8 +679,8 @@ export function ReservePage({
                   <div>
                     <dt>{language === 'ko' ? '구성' : 'Pack'}</dt>
                     <dd>{language === 'ko'
-                      ? `${getCupcakePackSize(selectedProduct.id) === 6 ? '하프 더즌' : '더즌'} · ${getCupcakePackSize(selectedProduct.id)}개`
-                      : `${getCupcakePackSize(selectedProduct.id) === 6 ? 'Half Dozen' : 'Dozen'} · ${getCupcakePackSize(selectedProduct.id)} cupcakes`}</dd>
+                      ? getCupcakePackSize(selectedProduct.id) === 6 ? '하프 더즌 · 6개' : getCupcakePackSize(selectedProduct.id) === 12 ? '더즌 · 12개' : `${getCupcakePackSize(selectedProduct.id)}개`
+                      : getCupcakePackSize(selectedProduct.id) === 6 ? 'Half Dozen · 6 cupcakes' : getCupcakePackSize(selectedProduct.id) === 12 ? 'Dozen · 12 cupcakes' : `${getCupcakePackSize(selectedProduct.id)} cupcakes`}</dd>
                   </div>
                   <div>
                     <dt>{language === 'ko' ? '마감' : 'Finish'}</dt>
@@ -889,7 +880,9 @@ export function ReservePage({
                         <span className="choice-copy">
                           <strong>
                             {isCupcakePack
-                              ? `${language === 'ko' ? cupcakePackSize === 6 ? '하프 더즌' : '더즌' : cupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${cupcakePackSize} ${language === 'ko' ? '개' : 'cupcakes'} · ${formatCurrency(optionProduct.price)}`
+                              ? `${language === 'ko'
+                                ? cupcakePackSize === 6 ? '하프 더즌 · 6개' : cupcakePackSize === 12 ? '더즌 · 12개' : `${cupcakePackSize}개`
+                                : cupcakePackSize === 6 ? 'Half Dozen · 6 cupcakes' : cupcakePackSize === 12 ? 'Dozen · 12 cupcakes' : `${cupcakePackSize} cupcakes`} · ${formatCurrency(optionProduct.price)}`
                               : isLemonPack
                               ? `${packSize} ${language === 'ko' ? '개' : 'pieces'} · ${formatCurrency(optionProduct.price)}`
                               : `${optionText.name} · ${formatCurrency(optionProduct.price)}${extraFromBase > 0 ? ` (+${formatCurrency(extraFromBase)})` : ''}`}
@@ -934,40 +927,22 @@ export function ReservePage({
                 <legend>{language === 'ko' ? '마감 구성 선택' : 'Choose finishing'}</legend>
                 <p className="field-help">
                   {language === 'ko'
-                    ? '기본 마감은 생레몬 제스트 아이싱이며, 스페셜 다크 커버춰 초콜릿은 개당 AUD 0.50이 추가돼요.'
-                    : 'Basic finishing: Fresh lemon zest icing. Special finishing: Dark couverture chocolate (+AUD 0.50 per piece).'}
+                    ? '생레몬 제스트 아이싱, 반반, 또는 다크 커버춰 초콜릿 전체 마감 중에서 선택할 수 있어요. 추가금은 없습니다.'
+                    : 'Choose fresh lemon zest icing, half & half, or all dark couverture chocolate. There is no extra charge.'}
                 </p>
                 <div className="icing-mix-summary" aria-live="polite">
                   <div><span>{language === 'ko' ? '기본 · 생레몬 제스트 아이싱' : 'Basic · Fresh lemon zest icing'}</span><strong>{lemonIcingCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
                   <div><span>{language === 'ko' ? '스페셜 · 다크 커버춰 초콜릿' : 'Special · Dark couverture chocolate'}</span><strong>{chocolateIcingCount}{language === 'ko' ? '개' : ' pieces'}</strong></div>
                 </div>
-                <div className="icing-count-stepper">
-                  <button
-                    type="button"
-                    aria-label={language === 'ko' ? '다크 커버춰 초콜릿 한 개 줄이기' : 'Remove one dark couverture chocolate finishing'}
-                    disabled={chocolateIcingCount === 0}
-                    onClick={() => selectChocolateIcingCount(chocolateIcingCount - 1)}
-                  >−</button>
-                  <output>
-                    <strong>{language === 'ko' ? `스페셜 ${chocolateIcingCount}개` : `${chocolateIcingCount} special`}</strong>
-                    <span>+{formatCurrency(chocolateIcingSurcharge)}</span>
-                  </output>
-                  <button
-                    type="button"
-                    aria-label={language === 'ko' ? '다크 커버춰 초콜릿 한 개 늘리기' : 'Add one dark couverture chocolate finishing'}
-                    disabled={chocolateIcingCount === lemonPackSize}
-                    onClick={() => selectChocolateIcingCount(chocolateIcingCount + 1)}
-                  >+</button>
-                </div>
                 <div className="icing-quick-choices">
                   <button type="button" className={chocolateIcingCount === 0 ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(0)}>
-                    {language === 'ko' ? '전부 기본' : 'All basic'}
+                    {language === 'ko' ? '전부 레몬 제스트' : 'All lemon zest'}
                   </button>
                   <button type="button" className={chocolateIcingCount === lemonPackSize / 2 ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(lemonPackSize / 2)}>
                     {language === 'ko' ? '반반' : 'Half & half'}
                   </button>
                   <button type="button" className={chocolateIcingCount === lemonPackSize ? 'is-selected' : ''} onClick={() => selectChocolateIcingCount(lemonPackSize)}>
-                    {language === 'ko' ? '전부 스페셜' : 'All special'}
+                    {language === 'ko' ? '전부 다크 초콜릿' : 'All dark chocolate'}
                   </button>
                 </div>
               </fieldset>
@@ -1008,8 +983,8 @@ export function ReservePage({
                   <span className="choice-copy">
                     <strong>{language === 'ko' ? '개별 포장 추가' : 'Add individual packaging'}</strong>
                     <span>{language === 'ko'
-                      ? '개당 AUD 0.50 · 개별 포장 선택 상품 AUD 100.00 이상 무료'
-                      : 'AUD 0.50 per piece · FREE with AUD 100.00+ of individually packaged cupcakes or Lemon Cake'}</span>
+                      ? '개당 AUD 0.50'
+                      : 'AUD 0.50 per piece'}</span>
                   </span>
                 </label>
               </fieldset>
@@ -1176,16 +1151,15 @@ export function ReservePage({
               <label>
                 {labels.orderQuantity}
                 {selectedProduct.id === 'smore-stick' ? (
-                  <input
+                  <select
                     name="quantity"
-                    type="number"
-                    inputMode="numeric"
-                    min={1}
-                    max={SMORE_STORAGE_MAX_QUANTITY}
-                    step={1}
                     value={form.quantity}
                     onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })}
-                  />
+                  >
+                    {SMORE_SET_QUANTITIES.map((quantity) => (
+                      <option value={quantity} key={quantity}>{quantity}{copy.quantityUnit}</option>
+                    ))}
+                  </select>
                 ) : (
                   <select
                     value={form.quantity}
@@ -1202,7 +1176,7 @@ export function ReservePage({
               </label>
               <p className="field-help">
                 {selectedProduct.id === 'smore-stick'
-                  ? language === 'ko' ? '6개부터 수량 할인이 자동 적용됩니다.' : 'Bulk discounts apply automatically from 6 sticks.'
+                  ? language === 'ko' ? '10개 AUD 35.00 · 25개 AUD 75.00 · 50개 AUD 135.00' : '10 sticks AUD 35.00 · 25 sticks AUD 75.00 · 50 sticks AUD 135.00'
                   : labels.quantityHelp}
               </p>
             </fieldset>

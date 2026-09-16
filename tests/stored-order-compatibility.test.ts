@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { parseStoredOrderLines as readStored } from '../appwrite-functions/reservation-api/src/stored-order-reader.js'
-import { parseStoredOrderLines as readFacade, VANILLA_CAKE_POINT_COLORS } from '../appwrite-functions/reservation-api/src/business.js'
+import { buildCakeReservation, parseStoredOrderLines as readFacade, publicCakeReservation, VANILLA_CAKE_POINT_COLORS } from '../appwrite-functions/reservation-api/src/business.js'
 import { toReservation, toPublicReservation } from '../src/lib/stored-order-reader.js'
 import { toReservation as readAdminFacade } from '../src/lib/repository.js'
 import { getProductById } from '../src/lib/constants.js'
@@ -16,7 +16,7 @@ test('stored readers retain existing facade identities and golden stored bytes',
     if (!row || !fixture.expected.parsedStored?.value) continue
     const before = JSON.stringify(row)
     assert.deepEqual(readStored(row), fixture.expected.parsedStored.value)
-    toReservation({ ...row, $id: 'synthetic' } as never)
+    assert.doesNotThrow(() => toReservation({ ...row, $id: 'synthetic' } as never), fixture.name)
     assert.equal(JSON.stringify(row), before)
   }
 })
@@ -49,6 +49,24 @@ test('new browser catalogue prices cannot reprice or reject saved orders', () =>
   } finally {
     if (original === undefined) delete product.sizePrices['15cm']
     else product.sizePrices['15cm'] = original
+  }
+})
+
+test('browser stored readers accept paid packaging on current 24 and 48 cupcake packs', () => {
+  for (const [productId, packSize] of [
+    ['cupcake-twenty-four', 24],
+    ['cupcake-forty-eight', 48],
+  ] as const) {
+    const document = buildCakeReservation({
+      customerName: 'Packaging Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',
+      pickupDate: '2026-07-11', pickupTime: '10:00', requestNote: '', privacyConsent: true,
+      orderLines: [{ productId, cupcakeFinish: 'basic', individualPackaging: true, quantity: 1 }],
+    }, { now: new Date('2026-07-10T00:00:00.000Z'), reservationNumber: `VG-PACK-${packSize}` })
+    const admin = toReservation({ ...document, $id: `pack-${packSize}` } as never)
+    const lookup = toPublicReservation(publicCakeReservation(document) as never)
+
+    assert.equal(admin.individualPackagingFeeCents, packSize * 50, productId)
+    assert.equal(lookup.individualPackagingFeeCents, packSize * 50, productId)
   }
 })
 

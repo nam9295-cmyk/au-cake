@@ -143,8 +143,8 @@ test('admin Cupcake Half Dozen price comes from the selected whole-box finish', 
   assert.equal(update.cupcakeFinish, 'vanilla-fresh-cream')
   assert.equal(update.vanillaCreamCount, 0)
   assert.equal(update.partyDecorationCount, 0)
-  assert.equal(update.totalPrice, 36)
-  assert.equal(update.totalPriceCents, 3600)
+  assert.equal(update.totalPrice, 35)
+  assert.equal(update.totalPriceCents, 3500)
 })
 
 test('admin preserves legacy cupcake count pricing for historical reservations', () => {
@@ -181,13 +181,13 @@ test('admin reservation edits normalise irrelevant options for selected product'
       assert.equal(update.totalPriceCents, 5500)
 })
 
-test('admin Fresh Lemon Cupcake edits keep one selected pack and ignore irrelevant options', () => {
+test('admin Lemon Cake edits keep one selected pack and accept the half-and-half finish only', () => {
   const update = buildAdminReservationUpdate(baseReservation, {
     productId: 'fresh-lemon-cupcakes-12',
     cakeSize: '22cm',
     chocolateType: 'milk',
     poundAddon: 'extra-chocolate',
-    chocolateIcingCount: 8,
+    chocolateIcingCount: 6,
     quantity: 3,
   })
 
@@ -196,12 +196,12 @@ test('admin Fresh Lemon Cupcake edits keep one selected pack and ignore irreleva
   assert.equal(update.cakeSize, '15cm')
   assert.equal(update.chocolateType, 'dark')
   assert.equal(update.poundAddon, 'none')
-  assert.equal(update.chocolateIcingCount, 8)
-  assert.equal(update.totalPrice, 69)
-  assert.equal(update.totalPriceCents, 6900)
+  assert.equal(update.chocolateIcingCount, 6)
+  assert.equal(update.totalPrice, 65)
+  assert.equal(update.totalPriceCents, 6500)
 })
 
-test('admin Lemon Cake edits clamp chocolate icing count to the selected pack size', () => {
+test('admin changing a historical Lemon Cake pack resets an obsolete individual icing count', () => {
   const twelvePack: Reservation = {
     ...baseReservation,
     productId: 'fresh-lemon-cupcakes-12',
@@ -209,11 +209,26 @@ test('admin Lemon Cake edits clamp chocolate icing count to the selected pack si
     totalPrice: 69,
     totalPriceCents: 6900,
   }
-  const update = buildAdminReservationUpdate(twelvePack, { productId: 'fresh-lemon-cupcakes-4' })
+  const update = buildAdminReservationUpdate(twelvePack, { productId: 'fresh-lemon-cupcakes-6' })
 
-  assert.equal(update.chocolateIcingCount, 4)
-  assert.equal(update.totalPrice, 26)
-  assert.equal(update.totalPriceCents, 2600)
+  assert.equal(update.chocolateIcingCount, 6)
+  assert.equal(update.totalPrice, 35)
+  assert.equal(update.totalPriceCents, 3500)
+})
+
+test('admin schedule-only edits preserve a historical individual Lemon Cake icing count', () => {
+  const legacyTwelvePack: Reservation = {
+    ...baseReservation,
+    productId: 'fresh-lemon-cupcakes-12',
+    chocolateIcingCount: 8,
+    totalPrice: 69,
+    totalPriceCents: 6900,
+  }
+  const update = buildAdminReservationUpdate(legacyTwelvePack, { pickupTime: '13:30' })
+
+  assert.equal(update.chocolateIcingCount, 8)
+  assert.equal(update.totalPrice, 69)
+  assert.equal(update.totalPriceCents, 6900)
 })
 
 test('admin edits preserve an audited promo discount and recalculate the discounted cents', () => {

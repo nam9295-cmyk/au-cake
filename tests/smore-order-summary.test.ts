@@ -6,22 +6,22 @@ import type { Reservation } from '../src/lib/types.js'
 
 const line = {
   productId: 'smore-stick', cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
-  quantity: 50, subtotalCents: 22500, unitPriceCents: 450,
-  discountPercent: 20, discountCents: 4500, totalPriceCents: 18000,
+  quantity: 50, subtotalCents: 13500, unitPriceCents: 270,
+  discountPercent: 0, discountCents: 0, totalPriceCents: 13500,
 } as const
 
-test('admin shared formatter presents Smore quantity, server total and bulk source without cake options', () => {
-  assert.equal(formatOrderLineSummary(line as never), "S'more Stick · x50 · AUD 180.00 · 20% bulk discount")
+test('admin shared formatter presents the S’more set quantity and fixed total without cake options', () => {
+  assert.equal(formatOrderLineSummary(line as never), "S'more Stick · x50 · AUD 135.00")
 })
 
 test('Smore status-only edit retains authoritative quantity and totals; repricing stays locked', () => {
   const reservation = {
-    ...line, id: 'smore-status-fixture', totalPrice: 180, orderLines: [line],
+    ...line, id: 'smore-status-fixture', totalPrice: 135, orderLines: [line],
     orderLineCount: 1, orderItemCount: 50, status: '예약신청', paymentStatus: '입금대기',
   } as unknown as Reservation
   const updated = buildAdminReservationUpdate(reservation, { status: '픽업완료' })
   assert.equal(updated.quantity, 50)
   assert.equal(Object.hasOwn(updated, 'totalPrice'), false)
   assert.equal(Object.hasOwn(updated, 'totalPriceCents'), false)
-  assert.throws(() => buildAdminReservationUpdate(reservation, { quantity: 5 }), /MULTI_LINE_EDIT_UNAVAILABLE/)
+  assert.throws(() => buildAdminReservationUpdate(reservation, { quantity: 10 }), /MULTI_LINE_EDIT_UNAVAILABLE/)
 })

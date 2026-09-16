@@ -70,53 +70,50 @@ test('cart normalizes hidden options before deriving the fixed-order quantity-fr
   assert.equal(getCartLineKey({ ...normalized, quantity: 2 }), getCartLineKey(normalized))
 })
 
-test('S’more cart preserves bulk quantities and automatic totals while normal cakes remain capped elsewhere', () => {
+test('S’more cart preserves only published set quantities and their fixed totals', () => {
   const subtotalAt = (quantity: number) => getCartEstimatedSubtotal(
     addCartLine([], baseSelection({ productId: 'smore-stick', quantity })),
   )
 
   assert.deepEqual([
-    subtotalAt(1),
-    subtotalAt(5),
-    subtotalAt(6),
-    subtotalAt(11),
-    subtotalAt(12),
-    subtotalAt(20),
-  ], [4.5, 22.5, 24.3, 44.55, 43.2, 72])
+    subtotalAt(10),
+    subtotalAt(25),
+    subtotalAt(50),
+  ], [35, 75, 135])
 
-  const six = addCartLine([], baseSelection({ productId: 'smore-stick', quantity: 6 }))
-  assert.equal(six[0]?.selection.quantity, 6)
-  const twelve = addCartLine(six, baseSelection({ productId: 'smore-stick', quantity: 6 }))
-  assert.equal(twelve[0]?.selection.quantity, 12)
-  assert.equal(getCartEstimatedSubtotal(twelve), 43.2)
-  const twenty = updateCartLineQuantity(twelve, twelve[0]!.lineKey, 20)
-  assert.equal(twenty[0]?.selection.quantity, 20)
-  assert.equal(getCartEstimatedSubtotal(twenty), 72)
+  const ten = addCartLine([], baseSelection({ productId: 'smore-stick', quantity: 10 }))
+  assert.equal(ten[0]?.selection.quantity, 10)
+  const twentyFive = addCartLine(ten, baseSelection({ productId: 'smore-stick', quantity: 25 }))
+  assert.equal(twentyFive[0]?.selection.quantity, 25)
+  assert.equal(getCartEstimatedSubtotal(twentyFive), 75)
+  const fifty = updateCartLineQuantity(twentyFive, twentyFive[0]!.lineKey, 50)
+  assert.equal(fifty[0]?.selection.quantity, 50)
+  assert.equal(getCartEstimatedSubtotal(fifty), 135)
 })
 
-test('S’more cart accepts only positive safe integers through the Appwrite storage ceiling', () => {
-  const max = 2_147_483_647
-  const valid = baseSelection({ productId: 'smore-stick', quantity: max })
-  assert.equal(normalizeCartSelection(valid)?.quantity, max)
-  assert.equal(addCartLine([], valid)[0]?.selection.quantity, max)
-  assert.equal(parseCartLines(JSON.stringify({ version: 1, lines: [valid] }))[0]?.selection.quantity, max)
-
-  for (const quantity of [max + 1, Number.MAX_SAFE_INTEGER + 1, 1e308, Infinity, NaN, 1.5]) {
-    const invalid = baseSelection({ productId: 'smore-stick', quantity })
-    assert.equal(normalizeCartSelection(invalid), null, String(quantity))
-    assert.deepEqual(addCartLine([], invalid), [], String(quantity))
+test('S’more cart accepts only 10, 25, and 50-stick sets', () => {
+  for (const quantity of [10, 25, 50]) {
+    const valid = baseSelection({ productId: 'smore-stick', quantity })
+    assert.equal(normalizeCartSelection(valid)?.quantity, quantity)
+    assert.equal(addCartLine([], valid)[0]?.selection.quantity, quantity)
+    assert.equal(parseCartLines(JSON.stringify({ version: 1, lines: [valid] }))[0]?.selection.quantity, quantity)
   }
 
-  for (const quantity of [max + 1, Number.MAX_SAFE_INTEGER + 1, 1e308, 1.5]) {
-    assert.deepEqual(parseCartLines(JSON.stringify({
+  for (const quantity of [1, 24, 26, Number.MAX_SAFE_INTEGER + 1, 1e308, Infinity, NaN, 1.5]) {
+    const invalid = baseSelection({ productId: 'smore-stick', quantity })
+    assert.equal(normalizeCartSelection(invalid)?.quantity, 10, String(quantity))
+    assert.equal(addCartLine([], invalid)[0]?.selection.quantity, 10, String(quantity))
+  }
+
+  for (const quantity of [1, 24, 26, Number.MAX_SAFE_INTEGER + 1, 1e308, 1.5]) {
+    assert.equal(parseCartLines(JSON.stringify({
       version: 1,
       lines: [baseSelection({ productId: 'smore-stick', quantity })],
-    })), [], String(quantity))
+    }))[0]?.selection.quantity, 10, String(quantity))
   }
 
-  const atLimit = addCartLine([], valid)
-  assert.deepEqual(addCartLine(atLimit, baseSelection({ productId: 'smore-stick', quantity: 1 })), atLimit)
-  assert.deepEqual(updateCartLineQuantity(atLimit, atLimit[0]!.lineKey, max + 1), atLimit)
+  const ten = addCartLine([], baseSelection({ productId: 'smore-stick', quantity: 10 }))
+  assert.equal(updateCartLineQuantity(ten, ten[0]!.lineKey, 1)[0]?.selection.quantity, 10)
   assert.equal(normalizeCartSelection(baseSelection({ productId: 'pound-cake', quantity: 6 }))?.quantity, 5)
 })
 
@@ -204,7 +201,7 @@ test('Cupcake cart lines keep pack size and whole-box finish as separate priced 
 
   assert.equal(lines.length, 2)
   assert.notEqual(lines[0].lineKey, lines[1].lineKey)
-  assert.equal(getCartEstimatedSubtotal(lines), 109)
+  assert.equal(getCartEstimatedSubtotal(lines), 108)
   assert.equal((lines[0].selection as CakeDetailSelection & { cupcakeFinish?: string }).cupcakeFinish, 'vanilla-fresh-cream')
   assert.equal(lines[0].selection.vanillaCreamCount, 0)
   assert.equal(lines[0].selection.partyDecorationCount, 0)
@@ -236,36 +233,36 @@ test('cart pricing keeps product subtotal separate and aggregates packaging afte
     ...addCartLine([], baseSelection({ productId: 'pave-cake', cakeSize: '6in', individualPackaging: true })),
   ]
 
-  assert.equal(getCartEstimatedSubtotal(lines), 165)
+  assert.equal(getCartEstimatedSubtotal(lines), 164)
   assert.deepEqual(getCartEstimatedPricing(lines), {
-    productSubtotalCents: 16500,
+    productSubtotalCents: 16400,
     selectedPackagingPieces: 18,
-    selectedPackagingProductSubtotalCents: 8600,
+    selectedPackagingProductSubtotalCents: 8500,
     individualPackagingBaseFeeCents: 900,
     individualPackagingDiscountCents: 0,
     individualPackagingFeeCents: 900,
-    totalPriceCents: 17400,
+    totalPriceCents: 17300,
   })
 })
 
-test('cart makes selected Cupcake and Lemon packaging free when their combined product subtotal reaches AUD 100', () => {
+test('cart always charges selected Cupcake and Lemon packaging above AUD 100', () => {
   const lines = [
     ...addCartLine([], baseSelection({ productId: 'cupcake-dozen', cupcakeFinish: 'basic', individualPackaging: true })),
-    ...addCartLine([], baseSelection({ productId: 'fresh-lemon-cupcakes-8', individualPackaging: true })),
+    ...addCartLine([], baseSelection({ productId: 'fresh-lemon-cupcakes-12', individualPackaging: true })),
   ]
 
   assert.deepEqual(getCartEstimatedPricing(lines), {
-    productSubtotalCents: 10000,
-    selectedPackagingPieces: 20,
-    selectedPackagingProductSubtotalCents: 10000,
-    individualPackagingBaseFeeCents: 1000,
-    individualPackagingDiscountCents: 1000,
-    individualPackagingFeeCents: 0,
-    totalPriceCents: 10000,
+    productSubtotalCents: 12000,
+    selectedPackagingPieces: 24,
+    selectedPackagingProductSubtotalCents: 12000,
+    individualPackagingBaseFeeCents: 1200,
+    individualPackagingDiscountCents: 0,
+    individualPackagingFeeCents: 1200,
+    totalPriceCents: 13200,
   })
 })
 
-test('current Strawberry orders ignore legacy Vanilla fields while Lemon options stay separate with no total line cap', () => {
+test('current Strawberry orders ignore legacy Vanilla fields while Lemon finishes use only three box-wide choices', () => {
   const selections: CakeDetailSelection[] = [
     baseSelection({ productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '6in' }),
     baseSelection({ productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in' }),
@@ -276,10 +273,10 @@ test('current Strawberry orders ignore legacy Vanilla fields while Lemon options
   ]
   const lines = selections.reduce(addCartLine, [])
 
-  assert.equal(lines.length, 5)
-  assert.equal(new Set(lines.map((line) => line.lineKey)).size, 5)
+  assert.equal(lines.length, 4)
+  assert.equal(new Set(lines.map((line) => line.lineKey)).size, 4)
   assert.equal(lines[0].selection.quantity, 2)
-  assert.notEqual(lines[3].lineKey, lines[4].lineKey)
+  assert.equal(lines[3].selection.quantity, 2)
   assert.equal(getCartTotalQuantity(lines), 6)
 })
 

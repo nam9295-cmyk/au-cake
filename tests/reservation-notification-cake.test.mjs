@@ -226,7 +226,7 @@ test('AU operator notification shows authoritative individual packaging pieces a
   const rows = rowsByLabel(reservation)
 
   assert.equal(rows['Individual packaging'], '6 pieces · AUD 3.00')
-  assert.equal(rows.Total, 'AUD 34.00')
+  assert.equal(rows.Total, 'AUD 33.00')
 })
 
 test('AU operator notification renders every validated stored order line and one aggregate total', () => {

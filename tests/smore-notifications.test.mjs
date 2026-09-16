@@ -28,8 +28,8 @@ test('server-generated Smore-only and coupon-mixed orders survive all existing e
     for (const payload of payloads) {
       assert.match(payload.text, /S'more Stick/)
       assert.match(payload.text, /50/)
-      assert.match(payload.text, /AUD 180\.00/)
-      assert.match(payload.text, /20% bulk discount/)
+      assert.match(payload.text, /AUD 135\.00/)
+      assert.doesNotMatch(payload.text, /bulk discount/)
     }
     assert.match(sanitizeCakeCalendarEvent(document).label, /S'more Stick ×50/)
   }
@@ -38,19 +38,19 @@ test('server-generated Smore-only and coupon-mixed orders survive all existing e
 const reservation = {
   $id: 'smore-fixture', reservationNumber: 'VG-C-AU-SMORE',
   customerName: 'Test Customer', customerPhone: '0400000000', customerEmail: 'customer@example.com',
-  productId: 'smore-stick', quantity: 100, cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
+  productId: 'smore-stick', quantity: 50, cakeSize: '15cm', chocolateType: 'dark', poundAddon: 'none',
   pickupDate: '2099-07-11', pickupTime: '12:00', status: '예약확정', paymentStatus: '입금대기',
-  totalPriceCents: 36000, totalPrice: 360, discountPercent: 20, discountCents: 9000,
+  totalPriceCents: 13500, totalPrice: 135, discountPercent: 0, discountCents: 0,
   createdAt: '2099-07-01T00:00:00.000Z', requestNote: '',
 }
 const from = 'Bookings <bookings@example.com>'
 
-test('Smore operator rows show full stick quantity, bulk audit and no cake options', () => {
+test('Smore operator rows show full fixed-set quantity and no cake options', () => {
   const rows = Object.fromEntries(buildCakeNotificationRows(reservation))
   assert.equal(rows.Product, "S'more Stick")
-  assert.match(rows.Quantity, /^100/)
-  assert.equal(rows['Bulk discount'], '20% bulk discount')
-  assert.equal(rows['Line total'], 'AUD 360.00')
+  assert.match(rows.Quantity, /^50/)
+  assert.equal('Bulk discount' in rows, false)
+  assert.equal(rows['Line total'], 'AUD 135.00')
   for (const option of ['Size', 'Chocolate', 'Finish', 'Icing mix']) assert.equal(option in rows, false)
 })
 
@@ -62,23 +62,23 @@ test('Smore existing operator/customer receipt and confirmation templates retain
   ]
   for (const payload of payloads) {
     assert.match(payload.text, /S'more Stick/)
-    assert.match(payload.text, /100/)
-    assert.match(payload.text, /AUD 360\.00/)
-    assert.match(payload.text, /20% bulk discount/)
+    assert.match(payload.text, /50/)
+    assert.match(payload.text, /AUD 135\.00/)
+    assert.doesNotMatch(payload.text, /bulk discount/)
     assert.doesNotMatch(payload.text, /6" \| serves 8/)
   }
   assert.deepEqual(payloads[0].to, ['operator@example.com'])
   assert.deepEqual(payloads[1].to, ['customer@example.com'])
 })
 
-test('Smore reminder does not cap 100 sticks at 99 or show cake size', () => {
+test('Smore reminder keeps the 50-stick set and omits cake size', () => {
   const payload = buildCakeReminderPayload({ reservation, from })
-  assert.match(payload.text, /S'more Stick × 100/)
-  assert.match(payload.text, /AUD 360\.00/)
-  assert.match(payload.text, /20% bulk discount/)
+  assert.match(payload.text, /S'more Stick × 50/)
+  assert.match(payload.text, /AUD 135\.00/)
+  assert.doesNotMatch(payload.text, /bulk discount/)
   assert.doesNotMatch(payload.text, /serves 8/)
 })
 
 test('calendar Smore label has no meaningless Basic finish', () => {
-  assert.equal(sanitizeCakeCalendarEvent(reservation).label, "S'more Stick ×100")
+  assert.equal(sanitizeCakeCalendarEvent(reservation).label, "S'more Stick ×50")
 })
