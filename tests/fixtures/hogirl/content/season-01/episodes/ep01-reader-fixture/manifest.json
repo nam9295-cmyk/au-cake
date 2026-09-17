@@ -1,0 +1,22 @@
+{
+  "number": 1,
+  "slug": "ep01-reader-fixture",
+  "locales": {
+    "en": { "status": "published" },
+    "ko": { "status": "published" },
+    "ja": { "status": "draft" }
+  },
+  "media": {
+    "ogImagePanelId": "panel-001",
+    "panels": [
+      {
+        "id": "panel-001",
+        "media": {
+          "key": "hogirl/fixture/season-01/ep01/panel-001",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      }
+    ]
+  }
+}

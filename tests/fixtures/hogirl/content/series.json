@@ -1,0 +1,21 @@
+{
+  "fixture": true,
+  "notice": "Test-only fixture. Not HOGIRL Season 1 production content.",
+  "id": "hogirl-test-fixture",
+  "locales": {
+    "en": {
+      "status": "published",
+      "title": "HOGIRL test fixture",
+      "description": "Test-only reader and static-route fixture."
+    },
+    "ko": {
+      "status": "published",
+      "title": "HOGIRL 테스트 픽스처",
+      "description": "리더와 정적 경로 검증 전용 테스트 콘텐츠입니다."
+    },
+    "ja": { "status": "draft" }
+  },
+  "publishedSeasons": [
+    { "number": 1, "slug": "season-1", "directory": "season-01" }
+  ]
+}

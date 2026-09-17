@@ -16,6 +16,10 @@ const defaultPrivatePages = [
   ['ReadOnlyCalendarPage', './ReadOnlyCalendarPage'],
 ]
 
+const publicLazyPages = [
+  ['HogirlApp', './stories/hogirl/HogirlApp'],
+]
+
 const eagerModules = [
   './CakeDetailPage',
   './CakesPage',
@@ -33,7 +37,7 @@ const eagerModules = [
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-test('exactly six private route modules use React.lazy with the required export adapters', () => {
+test('private route modules remain lazy and HOGIRL adds one isolated public lazy boundary', () => {
   for (const [component, modulePath] of [...namedPrivatePages, ...defaultPrivatePages]) {
     assert.doesNotMatch(
       appSource,
@@ -60,7 +64,20 @@ test('exactly six private route modules use React.lazy with the required export 
     )
   }
 
-  assert.equal((appSource.match(/\blazy\(\(\) =>\s*import\(/g) || []).length, 6)
+  for (const [component, modulePath] of publicLazyPages) {
+    assert.doesNotMatch(
+      appSource,
+      new RegExp(`^import(?:[\\s\\S]*?)from ['"]${escapeRegExp(modulePath)}['"]`, 'm'),
+      `${component} must not have a static import`,
+    )
+    assert.match(
+      appSource,
+      new RegExp(`const ${component} = lazy\\(\\(\\) => import\\('${escapeRegExp(modulePath)}'\\)\\)`),
+      `${component} must lazy-load its default export directly`,
+    )
+  }
+
+  assert.equal((appSource.match(/\blazy\(\(\) =>\s*import\(/g) || []).length, 7)
 })
 
 test('review, public, and booking route modules stay eager', () => {
@@ -78,7 +95,7 @@ test('the review early return remains before the private Suspense boundary', () 
   assert.ok(privateSuspense > reviewReturn, 'private Suspense must remain after the review early return')
 })
 
-test('one accessible neutral fallback and Suspense boundary are limited to private route renders', () => {
+test('private routes retain their neutral fallback while HOGIRL receives its own public lazy fallback', () => {
   const fallback = appSource.match(/function PrivateRouteFallback\(\) \{([\s\S]*?)\n\}/)?.[1] || ''
   assert.match(fallback, /role="status"/)
   assert.match(fallback, /aria-live="polite"/)
@@ -86,7 +103,7 @@ test('one accessible neutral fallback and Suspense boundary are limited to priva
   assert.doesNotMatch(fallback, /<(?:nav|header|footer|button|a)\b/)
   assert.doesNotMatch(fallback, /navigate|settings|language|reservation|customer|admin/i)
 
-  assert.equal((appSource.match(/<Suspense\b/g) || []).length, 1)
+  assert.equal((appSource.match(/<Suspense\b/g) || []).length, 2)
   assert.equal((appSource.match(/fallback=\{<PrivateRouteFallback \/>\}/g) || []).length, 1)
 
   const privateBoundary = appSource.match(/\{isPrivatePage && \(\s*<Suspense fallback=\{<PrivateRouteFallback \/>\}>([\s\S]*?)<\/Suspense>\s*\)\}/)?.[1] || ''
@@ -99,4 +116,7 @@ test('one accessible neutral fallback and Suspense boundary are limited to priva
   for (const component of ['ReviewPage', 'HomePage', 'CakesPage', 'CakeDetailPage', 'ClassesPage', 'ClassReservePage', 'ClassCompletePage', 'ReservePage', 'CompletePage', 'LookupPage', 'SiteHeader', 'SiteFooter']) {
     assert.doesNotMatch(privateBoundary, new RegExp(`<${component}\\b`), `${component} must stay outside private Suspense`)
   }
+
+  const hogirlBoundary = appSource.match(/\{page === 'hogirl' && \(\s*<Suspense fallback=\{<HogirlRouteFallback \/>\}>([\s\S]*?)<\/Suspense>\s*\)\}/)?.[1] || ''
+  assert.match(hogirlBoundary, /<HogirlApp pathname=\{pathname\} \/>/)
 })

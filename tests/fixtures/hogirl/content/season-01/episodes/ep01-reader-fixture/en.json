@@ -1,0 +1,12 @@
+{
+  "title": "Reader fixture",
+  "description": "Test-only direct-access fixture episode.",
+  "panels": {
+    "panel-001": {
+      "alt": "Fixture clean artwork",
+      "captions": [
+        { "placement": "after", "text": "Fixture narration visible to readers." }
+      ]
+    }
+  }
+}

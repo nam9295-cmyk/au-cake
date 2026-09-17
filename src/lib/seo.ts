@@ -12,7 +12,7 @@ import type { PublicCakePage } from './public-content.js'
 const publicContent = getAuPublicContent()
 const brand = publicContent.site.brand
 
-type SeoConfig = {
+export type SeoConfig = {
   title: string
   description: string
   canonical?: string
@@ -23,6 +23,10 @@ type SeoConfig = {
   imageType?: string
   imageWidth?: number
   imageHeight?: number
+  alternateLinks?: Array<{
+    hreflang: string
+    href: string
+  }>
   structuredData?: Array<Record<string, unknown>>
 }
 
@@ -301,8 +305,7 @@ export function getSeoConfig(pathname: string): SeoConfig {
   }
 }
 
-export function applySeo(pathname: string) {
-  const config = getSeoConfig(pathname)
+export function applySeoConfig(config: SeoConfig, pathname: string) {
   const canonical = config.canonical || `${SITE_URL}${pathname}`
   const defaultImage = publicContent.site.defaultSocialImage
   const image = config.omitImage ? null : config.image || SITE_URL + defaultImage.path
@@ -339,6 +342,16 @@ export function applySeo(pathname: string) {
   const canonicalElement = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
   if (canonicalElement) canonicalElement.href = canonical
 
+  document.head.querySelectorAll('link[data-vg-hreflang]').forEach((element) => element.remove())
+  config.alternateLinks?.forEach(({ hreflang, href }) => {
+    const link = document.createElement('link')
+    link.rel = 'alternate'
+    link.hreflang = hreflang
+    link.href = href
+    link.dataset.vgHreflang = 'true'
+    document.head.appendChild(link)
+  })
+
   document.head.querySelectorAll('script[data-vg-structured-data]').forEach((element) => element.remove())
   config.structuredData?.forEach((data) => {
     const script = document.createElement('script')
@@ -347,4 +360,8 @@ export function applySeo(pathname: string) {
     script.text = JSON.stringify({ '@context': 'https://schema.org', ...data })
     document.head.appendChild(script)
   })
+}
+
+export function applySeo(pathname: string) {
+  applySeoConfig(getSeoConfig(pathname), pathname)
 }

@@ -1,0 +1,7 @@
+{
+  "number": 1,
+  "slug": "season-1",
+  "episodes": [
+    { "number": 1, "slug": "ep01-reader-fixture" }
+  ]
+}

@@ -33,3 +33,18 @@ test('cart has a stable direct route and page path', () => {
   assert.equal(getPageFromPath('/cart'), 'cart')
   assert.equal(pathForPage('cart'), '/cart')
 })
+
+test('HOGIRL route family accepts canonical English and published Korean paths without enabling future locales', () => {
+  for (const path of [
+    '/stories/hogirl',
+    '/stories/hogirl/',
+    '/stories/hogirl/season-1',
+    '/stories/hogirl/season-1/ep01-i-know-what-i-want',
+    '/ko/stories/hogirl',
+    '/ko/stories/hogirl/season-1',
+    '/ko/stories/hogirl/season-1/ep01-i-know-what-i-want',
+  ]) assert.equal(getPageFromPath(path), 'hogirl', path)
+
+  assert.equal(getPageFromPath('/ja/stories/hogirl/season-1/ep01-i-know-what-i-want'), 'not-found')
+  assert.equal(getPageFromPath('/stories/hogirl/season-1/not-an-episode'), 'not-found')
+})

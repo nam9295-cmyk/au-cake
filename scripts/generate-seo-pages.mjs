@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
+import { getHogirlSeoDefinitions } from './hogirl-seo.mjs'
 import { renderAuLlms } from './render-au-llms.mjs'
 
 const siteUrl = auPublicPages.site.url
@@ -342,7 +343,7 @@ function removeHeadTag(html, pattern) {
 }
 
 function renderPage(template, path, config) {
-  const canonical = canonicalFor(path)
+  const canonical = config.canonical || canonicalFor(path)
   const title = escapeHtml(config.title)
   const description = escapeHtml(config.description)
   const image = config.omitImage ? null : config.image || defaultSocialImageUrl
@@ -361,6 +362,10 @@ function renderPage(template, path, config) {
     .replace(/<meta\s+name="twitter:title"[\s\S]*?\/>/, `<meta name="twitter:title" content="${title}" />`)
     .replace(/<meta\s+name="twitter:description"[\s\S]*?\/>/, `<meta name="twitter:description" content="${description}" />`)
 
+  if (config.htmlLang) {
+    rendered = rendered.replace(/<html\s+lang="[^"]*">/, `<html lang="${escapeHtml(config.htmlLang)}">`)
+  }
+
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:type"[\s\S]*?\/>/, `<meta property="og:type" content="${config.ogType || 'website'}" />`)
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:site_name"[\s\S]*?\/>/, `<meta property="og:site_name" content="${brand}" />`)
   if (image) {
@@ -378,6 +383,14 @@ function renderPage(template, path, config) {
   }
   rendered = upsertHeadTag(rendered, /<meta\s+name="twitter:card"[\s\S]*?\/>/, '<meta name="twitter:card" content="summary_large_image" />')
 
+  rendered = rendered.replace(/\s*<link\s+rel="alternate"\s+data-vg-hreflang="static"[^>]*>/g, '')
+  if (config.alternateLinks?.length) {
+    const alternateTags = config.alternateLinks
+      .map((link) => `<link rel="alternate" data-vg-hreflang="static" hreflang="${escapeHtml(link.hreflang)}" href="${escapeHtml(link.href)}" />`)
+      .join('\n    ')
+    rendered = rendered.replace('</head>', `    ${alternateTags}\n  </head>`)
+  }
+
   if (config.structuredData?.length) {
     const scripts = config.structuredData
       .map((data) => `<script type="application/ld+json" data-vg-structured-data="static">${JSON.stringify({ '@context': 'https://schema.org', ...data })}</script>`)
@@ -390,15 +403,27 @@ function renderPage(template, path, config) {
 }
 
 const template = await readFile(join(distDir, 'index.html'), 'utf8')
-for (const [path, config] of Object.entries(pages)) {
+const hogirlSeo = await getHogirlSeoDefinitions({ siteUrl, brand })
+const allPages = { ...pages, ...hogirlSeo.pages }
+for (const [path, config] of Object.entries(allPages)) {
   const outputPath = path === '/' ? join(distDir, 'index.html')
-    : Object.hasOwn(auPublicPages.standalonePages, path) ? join(distDir, path.slice(1), 'index.html')
+    : config.output === 'directory' || Object.hasOwn(auPublicPages.standalonePages, path) ? join(distDir, path.slice(1), 'index.html')
       : join(distDir, `${path.slice(1)}.html`)
   await mkdir(dirname(outputPath), { recursive: true })
   await writeFile(outputPath, renderPage(template, path, config))
 }
 
-const indexablePaths = ['/', '/cakes', ...cakeEntries.map((cake) => `/cakes/${cake.slug}`), ...Object.keys(auPublicPages.standalonePages), '/classes', '/reviews']
+const indexablePaths = [
+  ...new Set([
+    '/',
+    '/cakes',
+    ...cakeEntries.map((cake) => `/cakes/${cake.slug}`),
+    ...Object.keys(auPublicPages.standalonePages),
+    '/classes',
+    '/reviews',
+    ...hogirlSeo.indexablePaths,
+  ]),
+]
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${indexablePaths.map((path) => `  <url><loc>${canonicalFor(path)}</loc></url>`).join('\n')}
@@ -411,7 +436,7 @@ try {
   if (error?.code !== 'ENOENT') throw error
 }
 
-const llms = renderAuLlms(auPublicPages)
+const llms = renderAuLlms(auPublicPages, hogirlSeo.llmsEntries)
 await writeFile(join(distDir, 'llms.txt'), llms)
 try {
   await writeFile(join(process.cwd(), 'public', 'llms.txt'), llms)
@@ -419,4 +444,4 @@ try {
   if (error?.code !== 'ENOENT') throw error
 }
 
-console.log(`Generated ${Object.keys(pages).length} route-specific SEO pages and ${indexablePaths.length} sitemap URLs.`)
+console.log(`Generated ${Object.keys(allPages).length} route-specific SEO pages and ${indexablePaths.length} sitemap URLs.`)

@@ -1,4 +1,7 @@
 import { getCakeDetailBySlug } from './cake-detail.js'
+import { getHogirlRouteFromPath } from '../stories/hogirl/routes.js'
+
+export { isHogirlPath } from '../stories/hogirl/routes.js'
 
 export type Page =
   | 'home'
@@ -16,6 +19,7 @@ export type Page =
   | 'classes'
   | 'class-reserve'
   | 'class-complete'
+  | 'hogirl'
   | 'admin-login'
   | 'admin'
   | 'admin-reservations'
@@ -36,6 +40,7 @@ export function pathForCake(slug: string): string {
 }
 
 export function getPageFromPath(path: string): Page {
+  if (getHogirlRouteFromPath(path)) return 'hogirl'
   if (path === '/') return 'home'
   if (path === '/cart') return 'cart'
   if (path === '/cakes') return 'cakes'
@@ -77,6 +82,7 @@ export function pathForPage(page: Page): string {
     classes: '/classes',
     'class-reserve': '/class-reserve',
     'class-complete': '/class-complete',
+    hogirl: '/stories/hogirl',
     'admin-login': '/admin/login',
     admin: '/admin',
     'admin-reservations': '/admin/reservations',

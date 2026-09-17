@@ -1,0 +1,98 @@
+.hogirl-reader {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 32px 16px 72px;
+}
+
+.hogirl-reader-header,
+.hogirl-unpublished {
+  color: var(--text);
+}
+
+.hogirl-reader-header > p,
+.hogirl-kicker {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hogirl-reader h1 {
+  font-size: clamp(36px, 9vw, 56px);
+  line-height: 0.96;
+}
+
+.hogirl-panel-list {
+  display: grid;
+  gap: 28px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hogirl-panel figure {
+  margin: 0;
+}
+
+.hogirl-panel picture,
+.hogirl-panel img {
+  display: block;
+  width: 100%;
+}
+
+.hogirl-panel img {
+  height: auto;
+  aspect-ratio: 4 / 5;
+  background: var(--surface-soft);
+  object-fit: contain;
+}
+
+.hogirl-panel-captions {
+  margin: 0 0 12px;
+}
+
+.hogirl-panel figcaption .hogirl-panel-captions {
+  margin: 12px 0 0;
+}
+
+.hogirl-panel-captions p:last-child {
+  margin-bottom: 0;
+}
+
+.hogirl-unpublished {
+  min-height: 50vh;
+}
+
+.hogirl-unpublished a {
+  color: var(--forest);
+  font-weight: 700;
+}
+
+.hogirl-episode-navigation,
+.hogirl-reader-navigation {
+  display: flex;
+  gap: 16px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hogirl-episode-navigation {
+  flex-direction: column;
+}
+
+.hogirl-reader-navigation {
+  width: min(100%, 720px);
+  justify-content: space-between;
+  margin-right: auto;
+  margin-left: auto;
+  padding: 0 16px 72px;
+}
+
+.hogirl-episode-navigation a,
+.hogirl-reader-navigation a {
+  color: var(--forest);
+  font-weight: 700;
+}

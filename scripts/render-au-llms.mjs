@@ -2,7 +2,7 @@ function formatAud(value) {
   return 'AUD ' + value.toFixed(2)
 }
 
-export function renderAuLlms(content) {
+export function renderAuLlms(content, additionalEntries = []) {
   const { site, home, classes, cakePages } = content
   const cakes = Object.entries(cakePages).map(([slug, cake]) =>
     '- ' + cake.name + ': ' + cake.description + ' ' + cake.priceSummary + ' '
@@ -28,6 +28,7 @@ export function renderAuLlms(content) {
     '- ' + classes.packageSummary,
     '- ' + classes.extensionSummary,
     '- ' + site.url + '/classes',
+    ...(additionalEntries.length ? ['', '## HOGIRL', ...additionalEntries] : []),
     '',
   ].join('\n')
 }

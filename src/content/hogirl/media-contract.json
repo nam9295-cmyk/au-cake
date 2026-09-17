@@ -1,0 +1,5 @@
+{
+  "mediaOriginEnvironmentVariable": "VITE_HOGIRL_MEDIA_ORIGIN",
+  "responsiveWidths": [540, 720, 1080],
+  "belowMinimumWidth": "original"
+}

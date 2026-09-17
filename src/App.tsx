@@ -22,7 +22,7 @@ import { HomePage } from './pages/HomePage'
 import { LookupPage } from './pages/LookupPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ReservePage } from './pages/ReservePage'
-import { getCakeSlugFromPath, getPageFromPath, pathForCake, pathForPage, type Page } from './lib/app-routes'
+import { getCakeSlugFromPath, getPageFromPath, isHogirlPath, pathForCake, pathForPage, type Page } from './lib/app-routes'
 import { type CakeDetailSelection } from './lib/cake-detail'
 import type { CartLine } from './lib/cart'
 import type { CustomCakeCreateResponse } from './lib/custom-cake-contract'
@@ -58,9 +58,14 @@ const AdminReservationsPage = lazy(() => import('./AdminReservationsPage').then(
 const AdminClassesPage = lazy(() => import('./AdminClassesPage').then(({ AdminClassesPage }) => ({ default: AdminClassesPage })))
 const AdminReviewsPage = lazy(() => import('./AdminReviewsPage'))
 const ReadOnlyCalendarPage = lazy(() => import('./ReadOnlyCalendarPage'))
+const HogirlApp = lazy(() => import('./stories/hogirl/HogirlApp'))
 
 function PrivateRouteFallback() {
   return <div role="status" aria-live="polite">Loading…</div>
+}
+
+function HogirlRouteFallback() {
+  return <div role="status" aria-live="polite">Loading story…</div>
 }
 
 function App() {
@@ -97,7 +102,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (page === 'review') return
+    if (page === 'review' || page === 'hogirl') return
     document.documentElement.lang = language === 'ko'
       ? 'ko'
       : getAuPublicContent().site.language
@@ -129,6 +134,7 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (isHogirlPath(pathname)) return
     applySeo(pathname)
     if (!pathname.startsWith('/admin') && page !== 'calendar' && page !== 'review') trackPageView(pathname)
   }, [page, pathname])
@@ -228,6 +234,11 @@ function App() {
       {!isPrivatePage && <AnnouncementTicker language={language} />}
 
       {page === 'home' && <HomePage navigate={navigate} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
+      {page === 'hogirl' && (
+        <Suspense fallback={<HogirlRouteFallback />}>
+          <HogirlApp pathname={pathname} />
+        </Suspense>
+      )}
       {page === 'not-found' && (
         <>
           <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />

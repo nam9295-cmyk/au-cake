@@ -19,10 +19,15 @@ test('SEO and analytics effects react to pathname changes, not only page categor
   assert.match(appSource, /\}, \[page, pathname\]\)/)
 })
 
+test('HOGIRL URLs defer route-specific metadata and analytics until the lazy reader owns them', () => {
+  assert.match(appSource, /if \(isHogirlPath\(pathname\)\) return/)
+  assert.match(appSource, /import \{[^}]*isHogirlPath[^}]*\} from '\.\/lib\/app-routes'/)
+})
+
 test('the UI language toggle updates only the document language', () => {
   assert.match(
     appSource,
-    /if \(page === 'review'\) return[\s\S]*document\.documentElement\.lang = language\s*===\s*'ko'\s*\?\s*'ko'\s*:\s*getAuPublicContent\(\)\.site\.language/,
+    /if \(page === 'review' \|\| page === 'hogirl'\) return[\s\S]*document\.documentElement\.lang = language\s*===\s*'ko'\s*\?\s*'ko'\s*:\s*getAuPublicContent\(\)\.site\.language/,
   )
   assert.match(appSource, /\}, \[language, page\]\)/)
   assert.doesNotMatch(appSource, /hreflang|\/ko\//)
