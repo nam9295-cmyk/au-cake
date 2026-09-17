@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { getHogirlMediaOriginFromEnvironment, getHogirlMediaUrl } from '../src/stories/hogirl/media-contract.mjs'
+import { getHogirlSeoDefinitions } from '../scripts/hogirl-seo.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const generatorPath = join(root, 'scripts/generate-seo-pages.mjs')
@@ -132,4 +133,59 @@ test('ordinary SEO generation never publishes the HOGIRL test fixture', async ()
   await assert.rejects(readFile(join(dist, 'stories/hogirl/index.html')))
   assert.doesNotMatch(sitemap, /hogirl/i)
   assert.doesNotMatch(llms, /hogirl test fixture/i)
+  assert.doesNotMatch(sitemap, /prologue-a-tiger-dream|ep01-i-know-what-i-want/)
+  assert.doesNotMatch(llms, /A TIGER DREAM|I KNOW WHAT I WANT/)
+})
+
+test('a future published Prologue receives its own static reader and never an episode label', async () => {
+  const contentRoot = await mkdtemp(join(tmpdir(), 'hogirl-prologue-seo-'))
+  const prologueDirectory = join(contentRoot, 'prologue-a-tiger-dream')
+  await mkdir(prologueDirectory, { recursive: true })
+  await writeFile(join(contentRoot, 'series.json'), JSON.stringify({
+    id: 'hogirl',
+    locales: {
+      en: { status: 'published', title: 'HOGIRL', description: 'A published series.' },
+      ko: { status: 'published', title: '호걸', description: '공개된 시리즈입니다.' },
+    },
+    publishedPrologue: { slug: 'prologue-a-tiger-dream', directory: 'prologue-a-tiger-dream' },
+    publishedSeasons: [],
+  }))
+  await writeFile(join(prologueDirectory, 'manifest.json'), JSON.stringify({
+    kind: 'prologue',
+    slug: 'prologue-a-tiger-dream',
+    locales: { en: { status: 'published' }, ko: { status: 'published' } },
+    media: {
+      ogImagePanelId: 'panel-001',
+      panels: [{ id: 'panel-001', media: { key: 'hogirl/test/prologue/01', sourceWidth: 1080, sourceHeight: 1350 } }],
+    },
+  }))
+  for (const [locale, title, description] of [
+    ['en', 'A TIGER DREAM', 'A published prologue.'],
+    ['ko', '호랑이 꿈', '공개된 프롤로그입니다.'],
+  ]) {
+    await writeFile(join(prologueDirectory, `${locale}.json`), JSON.stringify({
+      title,
+      description,
+      panels: { 'panel-001': { alt: 'Clean prologue artwork.', captions: [{ placement: 'after', text: description }] } },
+    }))
+  }
+
+  const definition = await getHogirlSeoDefinitions({
+    siteUrl: site,
+    brand: 'verygood chocolate',
+    mediaOrigin: 'https://hogirl-cdn.test',
+    useTestFixture: false,
+    contentRoot,
+  })
+  const english = definition.pages['/stories/hogirl/prologue-a-tiger-dream']
+
+  assert.ok(english)
+  assert.equal(english.canonical, `${site}/stories/hogirl/prologue-a-tiger-dream`)
+  assert.equal(english.image, 'https://hogirl-cdn.test/hogirl/test/prologue/01-1080.webp')
+  assert.match(english.fallbackHtml, /<p>Prologue<\/p>/)
+  assert.doesNotMatch(english.fallbackHtml, /Episode/)
+  assert.match(english.fallbackHtml, /A published prologue\./)
+  assert.deepEqual(english.alternateLinks.map((link) => link.hreflang), ['en-AU', 'ko', 'x-default'])
+  assert.equal(english.structuredData[1]['@type'], 'CreativeWork')
+  assert.equal(english.structuredData[2]['@type'], 'BreadcrumbList')
 })

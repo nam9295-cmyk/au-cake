@@ -2,9 +2,11 @@ import type { HogirlRoute } from './routes.js'
 import type {
   HogirlEpisodeLocaleContent,
   HogirlEpisodeManifest,
+  HogirlPrologueManifest,
   HogirlSeasonManifest,
   HogirlSeriesManifest,
   LoadedHogirlEpisode,
+  LoadedHogirlPrologue,
 } from './types.js'
 
 type JsonLoader = () => Promise<unknown>
@@ -15,6 +17,12 @@ const episodeManifestLoaders = import.meta.glob('../../content/hogirl/season-*/e
   import: 'default',
 }) as Record<string, JsonLoader>
 const episodeLocaleLoaders = import.meta.glob('../../content/hogirl/season-*/episodes/*/*.json', {
+  import: 'default',
+}) as Record<string, JsonLoader>
+const prologueManifestLoaders = import.meta.glob('../../content/hogirl/prologue-*/manifest.json', {
+  import: 'default',
+}) as Record<string, JsonLoader>
+const prologueLocaleLoaders = import.meta.glob('../../content/hogirl/prologue-*/*.json', {
   import: 'default',
 }) as Record<string, JsonLoader>
 const seriesLoaders = import.meta.glob('../../content/hogirl/series.json', {
@@ -33,9 +41,18 @@ function episodeContentPath(seasonSlug: string, episodeSlug: string, filename: s
   return `../../content/hogirl/${seasonDirectoryForSlug(seasonSlug)}/episodes/${episodeSlug}/${filename}`
 }
 
+function prologueContentPath(storySlug: string, filename: string) {
+  return `../../content/hogirl/${storySlug}/${filename}`
+}
+
 export async function loadHogirlEpisodeManifest(seasonSlug: string, episodeSlug: string) {
   const loader = episodeManifestLoaders[episodeContentPath(seasonSlug, episodeSlug, 'manifest.json')]
   return loader ? loader() as Promise<HogirlEpisodeManifest> : null
+}
+
+export async function loadHogirlPrologueManifest(storySlug: string) {
+  const loader = prologueManifestLoaders[prologueContentPath(storySlug, 'manifest.json')]
+  return loader ? loader() as Promise<HogirlPrologueManifest> : null
 }
 
 export async function loadHogirlSeries() {
@@ -56,6 +73,19 @@ export async function loadHogirlEpisode(route: Extract<HogirlRoute, { kind: 'epi
   if (!series || !manifest || series.locales?.[route.locale]?.status !== 'published' || manifest.locales[route.locale]?.status !== 'published') return null
 
   const loader = episodeLocaleLoaders[episodeContentPath(route.seasonSlug, route.episodeSlug, `${route.locale}.json`)]
+  if (!loader) return null
+  const locale = await loader() as HogirlEpisodeLocaleContent
+  return { series, manifest, locale }
+}
+
+export async function loadHogirlPrologue(route: Extract<HogirlRoute, { kind: 'prologue' }>): Promise<LoadedHogirlPrologue | null> {
+  const [series, manifest] = await Promise.all([
+    loadHogirlSeries(),
+    loadHogirlPrologueManifest(route.storySlug),
+  ])
+  if (!series || !manifest || series.locales?.[route.locale]?.status !== 'published' || manifest.locales[route.locale]?.status !== 'published') return null
+
+  const loader = prologueLocaleLoaders[prologueContentPath(route.storySlug, `${route.locale}.json`)]
   if (!loader) return null
   const locale = await loader() as HogirlEpisodeLocaleContent
   return { series, manifest, locale }

@@ -39,6 +39,9 @@ test('the homepage entry does not contain HOGIRL content, media URLs, or lazy re
   for (const payload of [entry, ...homepageCss]) {
     assert.doesNotMatch(payload, /Fixture narration visible to readers\./)
     assert.doesNotMatch(payload, /hogirl\/fixture\//)
+    assert.doesNotMatch(payload, /hogirl\/v1\/prologue-a-tiger-dream\//)
+    assert.doesNotMatch(payload, /hogirl\/v1\/season-1\/ep01-i-know-what-i-want\//)
+    assert.doesNotMatch(payload, /I found something I wanted to go after\./)
     assert.doesNotMatch(payload, /media\.example\.test/)
     assert.doesNotMatch(payload, /hogirl-reader/)
     assert.doesNotMatch(payload, /publishedSeasons/)

@@ -1,26 +1,28 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { trackPageView } from '../../lib/analytics.js'
 import { HogirlReader } from './HogirlReader.js'
-import { loadHogirlEpisode, loadHogirlSeason, loadHogirlSeries } from './loaders.js'
+import { loadHogirlEpisode, loadHogirlPrologue, loadHogirlSeason, loadHogirlSeries } from './loaders.js'
 import { getHogirlMediaOriginFromEnvironment } from './media.js'
 import { getHogirlRouteFromPath, pathForHogirlRoute, type HogirlRoute } from './routes.js'
 import {
   applyPublishedHogirlEpisodeSeo,
+  applyPublishedHogirlPrologueSeo,
   applyPublishedHogirlSeasonSeo,
   applyPublishedHogirlSeriesSeo,
   applyUnpublishedHogirlSeo,
 } from './seo.js'
-import type { HogirlSeasonManifest, HogirlSeriesManifest, LoadedHogirlEpisode } from './types.js'
+import type { HogirlSeasonManifest, HogirlSeriesManifest, LoadedHogirlEpisode, LoadedHogirlPrologue } from './types.js'
 
 type HogirlContentState = {
   pathname: string
   series: HogirlSeriesManifest | null
   season: HogirlSeasonManifest | null
   episode: LoadedHogirlEpisode | null
+  prologue: LoadedHogirlPrologue | null
 }
 
 function emptyContent(pathname: string): HogirlContentState {
-  return { pathname, series: null, season: null, episode: null }
+  return { pathname, series: null, season: null, episode: null, prologue: null }
 }
 
 const mediaOrigin = getHogirlMediaOriginFromEnvironment(import.meta.env)
@@ -40,8 +42,12 @@ function useHogirlStylesheet() {
   }, [])
 }
 
-function isPublishedForRoute(route: HogirlRoute, series: HogirlSeriesManifest | null) {
-  return series?.locales?.[route.locale]?.status === 'published'
+function isPublishedForRoute(route: HogirlRoute, content: HogirlContentState) {
+  if (content.series?.locales?.[route.locale]?.status !== 'published') return false
+  if (route.kind === 'series') return true
+  if (route.kind === 'prologue') return content.prologue !== null
+  if (route.kind === 'season') return content.series.publishedSeasons.some((season) => season.slug === route.seasonSlug)
+  return content.episode !== null
 }
 
 function UnpublishedHogirlPage({ locale }: { locale: HogirlRoute['locale'] }) {
@@ -66,6 +72,9 @@ function SeriesPage({ route, series }: { route: Extract<HogirlRoute, { kind: 'se
       <p>{copy.description}</p>
       <nav aria-label="HOGIRL seasons">
         <ol className="hogirl-episode-navigation">
+          {series.publishedPrologue && (
+            <li><a href={pathForHogirlRoute({ kind: 'prologue', locale: route.locale, storySlug: series.publishedPrologue.slug })}>Prologue — A TIGER DREAM</a></li>
+          )}
           {series.publishedSeasons.map((season) => (
             <li key={season.slug}><a href={pathForHogirlRoute({ kind: 'season', locale: route.locale, seasonSlug: season.slug })}>Season {season.number}</a></li>
           ))}
@@ -93,16 +102,58 @@ function SeasonPage({ route, season }: { route: Extract<HogirlRoute, { kind: 'se
   )
 }
 
-function EpisodeNavigation({ route, season }: { route: Extract<HogirlRoute, { kind: 'episode' }>; season: HogirlSeasonManifest | null }) {
+function EpisodeNavigation({ route, episode, season }: { route: Extract<HogirlRoute, { kind: 'episode' }>; episode: LoadedHogirlEpisode; season: HogirlSeasonManifest | null }) {
   const currentIndex = season?.episodes.findIndex((episode) => episode.slug === route.episodeSlug) ?? -1
   const previous = currentIndex > 0 ? season?.episodes[currentIndex - 1] : null
   const next = currentIndex >= 0 ? season?.episodes[currentIndex + 1] : null
-  if (!previous && !next) return null
+  const previousStory = !previous && episode.manifest.previous?.kind === 'prologue' ? episode.manifest.previous : null
+  if (!previous && !previousStory && !next) return null
   return (
     <nav className="hogirl-reader-navigation" aria-label="Episode navigation">
-      {previous ? <a href={pathForHogirlRoute({ kind: 'episode', locale: route.locale, seasonSlug: route.seasonSlug, episodeSlug: previous.slug })}>Previous episode</a> : <span />}
+      {previous
+        ? <a href={pathForHogirlRoute({ kind: 'episode', locale: route.locale, seasonSlug: route.seasonSlug, episodeSlug: previous.slug })}>Previous episode</a>
+        : previousStory
+          ? <a href={pathForHogirlRoute({ kind: 'prologue', locale: route.locale, storySlug: previousStory.storySlug })}>Prologue — A TIGER DREAM</a>
+          : <span />}
       {next ? <a href={pathForHogirlRoute({ kind: 'episode', locale: route.locale, seasonSlug: route.seasonSlug, episodeSlug: next.slug })}>Next episode</a> : null}
     </nav>
+  )
+}
+
+function PrologueNavigation({ route, prologue }: { route: Extract<HogirlRoute, { kind: 'prologue' }>; prologue: LoadedHogirlPrologue }) {
+  const next = prologue.manifest.next
+  if (!next || next.kind !== 'episode') return null
+  const korean = route.locale === 'ko'
+  return (
+    <nav className="hogirl-reader-navigation" aria-label="Story navigation">
+      <span />
+      <a href={pathForHogirlRoute({ kind: 'episode', locale: route.locale, seasonSlug: next.seasonSlug, episodeSlug: next.episodeSlug })}>
+        {korean ? '시즌 1 EP01 시작하기 — I KNOW WHAT I WANT' : 'Start Season 1 / EP01 — I KNOW WHAT I WANT'}
+      </a>
+    </nav>
+  )
+}
+
+function ProloguePage({ route, prologue }: { route: Extract<HogirlRoute, { kind: 'prologue' }>; prologue: LoadedHogirlPrologue }) {
+  if (!mediaOrigin) return <UnpublishedHogirlPage locale={route.locale} />
+  return (
+    <>
+      <HogirlReader
+        locale={route.locale === 'ko' ? 'ko' : 'en-AU'}
+        mediaOrigin={mediaOrigin}
+        episode={{
+          eyebrow: 'Prologue',
+          title: prologue.locale.title,
+          panels: prologue.manifest.media.panels.map((panel) => ({
+            id: panel.id,
+            media: panel.media,
+            alt: prologue.locale.panels[panel.id]?.alt || '',
+            captions: prologue.locale.panels[panel.id]?.captions || [],
+          })),
+        }}
+      />
+      <PrologueNavigation route={route} prologue={prologue} />
+    </>
   )
 }
 
@@ -124,7 +175,7 @@ function EpisodePage({ route, episode, season }: { route: Extract<HogirlRoute, {
           })),
         }}
       />
-      <EpisodeNavigation route={route} season={season} />
+      <EpisodeNavigation route={route} episode={episode} season={season} />
     </>
   )
 }
@@ -139,9 +190,10 @@ export default function HogirlApp({ pathname }: { pathname: string }) {
     let cancelled = false
     void (async () => {
       const series = await loadHogirlSeries()
-      const season = route.kind === 'series' ? null : await loadHogirlSeason(route.seasonSlug)
+      const season = route.kind === 'season' || route.kind === 'episode' ? await loadHogirlSeason(route.seasonSlug) : null
       const episode = route.kind === 'episode' ? await loadHogirlEpisode(route) : null
-      if (!cancelled) setContent({ pathname, series, season, episode })
+      const prologue = route.kind === 'prologue' ? await loadHogirlPrologue(route) : null
+      if (!cancelled) setContent({ pathname, series, season, episode, prologue })
     })()
     return () => { cancelled = true }
   }, [pathname, route])
@@ -153,13 +205,23 @@ export default function HogirlApp({ pathname }: { pathname: string }) {
   }, [pathname, route])
 
   useEffect(() => {
-    if (!route || content.pathname !== pathname || !isPublishedForRoute(route, content.series)) return
+    if (!route || content.pathname !== pathname || !isPublishedForRoute(route, content)) return
     if (route.kind === 'series') {
       applyPublishedHogirlSeriesSeo({ route, series: content.series! })
       return
     }
     if (route.kind === 'season' && content.season) {
       applyPublishedHogirlSeasonSeo({ route, series: content.series!, season: content.season })
+      return
+    }
+    if (route.kind === 'prologue' && content.prologue && mediaOrigin) {
+      applyPublishedHogirlPrologueSeo({
+        route,
+        series: content.prologue.series,
+        prologue: content.prologue.manifest,
+        copy: content.prologue.locale,
+        mediaOrigin,
+      })
       return
     }
     if (route.kind === 'episode' && content.episode && mediaOrigin) {
@@ -175,8 +237,9 @@ export default function HogirlApp({ pathname }: { pathname: string }) {
 
   if (!route) return null
   if (content.pathname !== pathname) return <div className="hogirl-reader" role="status" aria-live="polite">Loading story…</div>
-  if (!isPublishedForRoute(route, content.series)) return <UnpublishedHogirlPage locale={route.locale} />
+  if (!isPublishedForRoute(route, content)) return <UnpublishedHogirlPage locale={route.locale} />
   if (route.kind === 'series') return <SeriesPage route={route} series={content.series!} />
+  if (route.kind === 'prologue' && content.prologue) return <ProloguePage route={route} prologue={content.prologue} />
   if (route.kind === 'season' && content.season) return <SeasonPage route={route} season={content.season} />
   if (route.kind === 'episode' && content.episode) return <EpisodePage route={route} episode={content.episode} season={content.season} />
   return <UnpublishedHogirlPage locale={route.locale} />

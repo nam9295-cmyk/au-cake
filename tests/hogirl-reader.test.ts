@@ -64,3 +64,25 @@ test('reader uses the optimized original without inventing a derivative below 54
   assert.doesNotMatch(html, /panel-small-500\.(?:avif|webp)/)
   assert.doesNotMatch(html, /<source\b/)
 })
+
+test('a Prologue uses the shared reader without an episode number and supports an HTML text overlay', () => {
+  const html = renderToStaticMarkup(createElement(HogirlReader, {
+    locale: 'en-AU',
+    mediaOrigin: 'https://hogirl-cdn.test',
+    episode: {
+      eyebrow: 'Prologue',
+      title: 'A TIGER DREAM',
+      panels: [{
+        id: 'panel-007',
+        media: { key: 'hogirl/fixture/plain-panel', sourceWidth: 1080, sourceHeight: 1350 },
+        alt: 'Plain fixture background.',
+        captions: [{ placement: 'overlay', text: 'A year before graduation,' }],
+      }],
+    },
+  }))
+
+  assert.match(html, /<p>Prologue<\/p>/)
+  assert.doesNotMatch(html, /Episode undefined|Episode NaN/)
+  assert.match(html, /hogirl-panel-captions--overlay/)
+  assert.match(html, /A year before graduation,/)
+})

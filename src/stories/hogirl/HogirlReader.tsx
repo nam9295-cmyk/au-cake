@@ -1,10 +1,5 @@
 import { getHogirlMediaUrl, getHogirlResponsiveWidths } from './media.js'
-import type { HogirlMediaAsset } from './types.js'
-
-type HogirlCaption = {
-  placement: 'before' | 'after'
-  text: string
-}
+import type { HogirlCaption, HogirlMediaAsset } from './types.js'
 
 type HogirlReaderPanel = {
   id: string
@@ -14,7 +9,8 @@ type HogirlReaderPanel = {
 }
 
 type HogirlReaderEpisode = {
-  number: number
+  number?: number
+  eyebrow?: string
   title: string
   panels: HogirlReaderPanel[]
 }
@@ -25,11 +21,11 @@ function srcSetFor(media: HogirlMediaAsset, mediaOrigin: string, format: 'avif' 
     .join(', ')
 }
 
-function PanelCaptions({ captions }: { captions: HogirlCaption[] }) {
+function PanelCaptions({ captions, overlay = false }: { captions: HogirlCaption[]; overlay?: boolean }) {
   if (captions.length === 0) return null
   return (
-    <div className="hogirl-panel-captions">
-      {captions.map((caption, index) => <p key={`${caption.placement}-${index}`}>{caption.text}</p>)}
+    <div className={`hogirl-panel-captions${overlay ? ' hogirl-panel-captions--overlay' : ''}`}>
+      {captions.map((caption, index) => <p className={caption.emphasis ? 'hogirl-panel-caption--emphasis' : undefined} key={`${caption.placement}-${index}`}>{caption.text}</p>)}
     </div>
   )
 }
@@ -46,7 +42,7 @@ export function HogirlReader({
   return (
     <main className="hogirl-reader" lang={locale}>
       <header className="hogirl-reader-header">
-        <p>Episode {episode.number}</p>
+        {(episode.eyebrow || episode.number !== undefined) && <p>{episode.eyebrow || `Episode ${episode.number}`}</p>}
         <h1>{episode.title}</h1>
       </header>
       <ol className="hogirl-panel-list">
@@ -55,12 +51,13 @@ export function HogirlReader({
           const largestWidth = widths.at(-1)
           const beforeCaptions = panel.captions.filter((caption) => caption.placement === 'before')
           const afterCaptions = panel.captions.filter((caption) => caption.placement === 'after')
+          const overlayCaptions = panel.captions.filter((caption) => caption.placement === 'overlay')
           const firstVisiblePanel = index === 0
 
           return (
             <li key={panel.id} className="hogirl-panel" data-hogirl-panel={panel.id}>
               <PanelCaptions captions={beforeCaptions} />
-              <figure>
+              <figure className={overlayCaptions.length > 0 ? 'hogirl-panel-figure--with-overlay' : undefined}>
                 <picture>
                   {widths.length > 0 && <source type="image/avif" srcSet={srcSetFor(panel.media, mediaOrigin, 'avif')} sizes="(min-width: 768px) 680px, calc(100vw - 32px)" />}
                   {widths.length > 0 && <source type="image/webp" srcSet={srcSetFor(panel.media, mediaOrigin, 'webp')} sizes="(min-width: 768px) 680px, calc(100vw - 32px)" />}
@@ -74,6 +71,7 @@ export function HogirlReader({
                     decoding="async"
                   />
                 </picture>
+                {overlayCaptions.length > 0 && <figcaption><PanelCaptions captions={overlayCaptions} overlay /></figcaption>}
                 {afterCaptions.length > 0 && <figcaption><PanelCaptions captions={afterCaptions} /></figcaption>}
               </figure>
             </li>

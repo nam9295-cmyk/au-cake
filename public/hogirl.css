@@ -36,6 +36,10 @@
   margin: 0;
 }
 
+.hogirl-panel-figure--with-overlay {
+  position: relative;
+}
+
 .hogirl-panel picture,
 .hogirl-panel img {
   display: block;
@@ -55,6 +59,22 @@
 
 .hogirl-panel figcaption .hogirl-panel-captions {
   margin: 12px 0 0;
+}
+
+.hogirl-panel figcaption .hogirl-panel-captions--overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  padding: 12%;
+  color: var(--forest);
+}
+
+.hogirl-panel-caption--emphasis {
+  color: var(--forest);
+  font-weight: 700;
 }
 
 .hogirl-panel-captions p:last-child {

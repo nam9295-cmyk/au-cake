@@ -4,6 +4,7 @@ import { pathForHogirlRoute, type HogirlRoute } from './routes.js'
 import type {
   HogirlEpisodeLocaleContent,
   HogirlEpisodeManifest,
+  HogirlPrologueManifest,
   HogirlSeasonManifest,
   HogirlSeriesManifest,
 } from './types.js'
@@ -82,14 +83,16 @@ function languageTag(locale: string) {
   return locale === 'en' ? 'en-AU' : locale
 }
 
-function publishedEpisodeLocales(series: HogirlSeriesManifest, episode: HogirlEpisodeManifest) {
+function publishedEpisodeLocales(series: HogirlSeriesManifest, episode: HogirlEpisodeManifest | HogirlPrologueManifest) {
   return Object.entries(series.locales || {})
     .filter(([locale, seriesLocale]) => seriesLocale.status === 'published' && episode.locales[locale]?.status === 'published')
     .map(([locale]) => locale)
 }
 
-function alternateLinks(route: Extract<HogirlRoute, { kind: 'episode' }>, locales: string[]) {
-  const suffix = `/${route.seasonSlug}/${route.episodeSlug}`
+function storyAlternateLinks(route: Extract<HogirlRoute, { kind: 'episode' | 'prologue' }>, locales: string[]) {
+  const suffix = route.kind === 'episode'
+    ? `/${route.seasonSlug}/${route.episodeSlug}`
+    : `/${route.storySlug}`
   const links = [
     ...locales.map((locale) => ({
       hreflang: languageTag(locale),
@@ -100,7 +103,7 @@ function alternateLinks(route: Extract<HogirlRoute, { kind: 'episode' }>, locale
   return links
 }
 
-function seriesAlternateLinks(route: Exclude<HogirlRoute, { kind: 'episode' }>, locales: string[]) {
+function seriesAlternateLinks(route: Extract<HogirlRoute, { kind: 'series' | 'season' }>, locales: string[]) {
   const suffix = route.kind === 'series' ? '' : `/${route.seasonSlug}`
   const links = [
     ...locales.map((locale) => ({
@@ -165,7 +168,7 @@ export function applyPublishedHogirlEpisodeSeo({
       imageWidth: socialImage!.sourceWidth,
       imageHeight: socialImage!.sourceHeight,
     } : { omitImage: true }),
-    alternateLinks: alternateLinks(route, publishedEpisodeLocales(series, episode)),
+    alternateLinks: storyAlternateLinks(route, publishedEpisodeLocales(series, episode)),
     structuredData: [
       {
         '@type': 'WebPage',
@@ -194,6 +197,73 @@ export function applyPublishedHogirlEpisodeSeo({
           { '@type': 'ListItem', position: 2, name: seriesCopy?.title || 'HOGIRL', item: `${SITE_URL}${pathForHogirlRoute({ kind: 'series', locale: route.locale })}` },
           { '@type': 'ListItem', position: 3, name: `Season ${route.seasonSlug.replace('season-', '')}`, item: `${SITE_URL}${pathForHogirlRoute({ kind: 'season', locale: route.locale, seasonSlug: route.seasonSlug })}` },
           { '@type': 'ListItem', position: 4, name: copy.title, item: `${SITE_URL}${path}` },
+        ],
+      },
+    ],
+  })
+}
+
+export function applyPublishedHogirlPrologueSeo({
+  route,
+  series,
+  prologue,
+  copy,
+  mediaOrigin,
+}: {
+  route: Extract<HogirlRoute, { kind: 'prologue' }>
+  series: HogirlSeriesManifest
+  prologue: HogirlPrologueManifest
+  copy: HogirlEpisodeLocaleContent
+  mediaOrigin: string
+}) {
+  const path = pathForHogirlRoute(route)
+  const socialImageKey = resolveHogirlSocialImage(prologue.media)
+  const socialImage = prologue.media.socialImage || prologue.media.panels.find((panel) => panel.media.key === socialImageKey)?.media
+  const socialWidth = socialImage ? getHogirlResponsiveWidths(socialImage.sourceWidth).at(-1) : undefined
+  const image = socialImage
+    ? getHogirlMediaUrl({ mediaOrigin, key: socialImage.key, width: socialWidth, format: 'webp' })
+    : undefined
+  const language = languageTag(route.locale)
+  const seriesCopy = series.locales?.[route.locale]
+
+  document.documentElement.lang = language
+  applyHogirlSeoConfig({
+    title: `${copy.title} | HOGIRL | ${brand}`,
+    description: copy.description,
+    canonical: `${SITE_URL}${path}`,
+    ...(image ? {
+      image,
+      imageType: 'image/webp',
+      imageWidth: socialImage!.sourceWidth,
+      imageHeight: socialImage!.sourceHeight,
+    } : { omitImage: true }),
+    alternateLinks: storyAlternateLinks(route, publishedEpisodeLocales(series, prologue)),
+    structuredData: [
+      {
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}${path}#webpage`,
+        name: copy.title,
+        description: copy.description,
+        url: `${SITE_URL}${path}`,
+        inLanguage: language,
+        mainEntity: { '@id': `${SITE_URL}${path}#creative-work` },
+      },
+      {
+        '@type': 'CreativeWork',
+        '@id': `${SITE_URL}${path}#creative-work`,
+        name: copy.title,
+        abstract: copy.description,
+        ...(image ? { image } : {}),
+        isPartOf: { '@id': `${SITE_URL}${pathForHogirlRoute({ kind: 'series', locale: route.locale })}#series` },
+        inLanguage: language,
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${SITE_URL}${path}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: seriesCopy?.title || 'HOGIRL', item: `${SITE_URL}${pathForHogirlRoute({ kind: 'series', locale: route.locale })}` },
+          { '@type': 'ListItem', position: 3, name: copy.title, item: `${SITE_URL}${path}` },
         ],
       },
     ],

@@ -1,0 +1,22 @@
+{
+  "title": "A TIGER DREAM",
+  "description": "내가 태어나기 전, 엄마는 이상한 꿈을 꿨다고 했다.",
+  "panels": {
+    "panel-001": { "alt": "한 여성이 동굴 안의 큰 호랑이와 마주하고 있다.", "captions": [{ "placement": "after", "text": "내가 태어나기 전, 엄마는 이상한 꿈을 꿨다고 했다." }] },
+    "panel-002": { "alt": "불빛이 비치는 동굴 입구가 있는 달밤의 산 풍경.", "captions": [{ "placement": "after", "text": "내가 태어나기 전, 엄마는 이상한 꿈을 꿨다고 했다." }] },
+    "panel-003": { "alt": "한 여성이 불빛이 비치는 동굴 입구에 서 있다.", "captions": [] },
+    "panel-004": { "alt": "한 여성이 동굴 안의 호랑이 형상 앞에 서 있다.", "captions": [{ "placement": "after", "text": "안에는 무언가가 있었다." }] },
+    "panel-005": { "alt": "여러 마리의 큰 호랑이 형상이 동굴을 채우고 있다.", "captions": [{ "placement": "after", "text": "호랑이들." }, { "placement": "after", "text": "그것도 아주 큰 호랑이들." }] },
+    "panel-006": { "alt": "한 여성이 동굴 안의 큰 호랑이 앞에 서 있다.", "captions": [{ "placement": "after", "text": "그런데 이상하게도" }, { "placement": "after", "text": "무섭지 않았다고 했다." }] },
+    "panel-007": { "alt": "한 여성이 동굴 안의 앉아 있는 호랑이와 마주하고 있다.", "captions": [{ "placement": "after", "text": "......" }] },
+    "panel-008": { "alt": "한 여성이 큰 호랑이에게 손을 뻗고 있다.", "captions": [{ "placement": "after", "text": "엄마는 손을 내밀었다." }] },
+    "panel-009": { "alt": "한 여성이 호랑이의 이마에 손을 대고 있다.", "captions": [{ "placement": "after", "text": "그리고 그중 한 마리를 쓰다듬었다." }] },
+    "panel-010": { "alt": "한 여성이 밤의 동굴 밖으로 걸어 나오고 있다.", "captions": [{ "placement": "after", "text": "그리고 엄마는 굴 밖으로 나왔다." }] },
+    "panel-011": { "alt": "어두운 배경.", "captions": [{ "placement": "after", "text": "엄마는 그게 내 태몽이었다고 했다." }] },
+    "panel-012": { "alt": "한 아이가 신발끈을 묶고 있고 뒤로 호랑이 모습이 희미해지고 있다.", "captions": [{ "placement": "after", "text": "그리고 시간이 흘렀다." }] },
+    "panel-013": { "alt": "배낭을 멘 아이가 문을 열고 있다.", "captions": [{ "placement": "after", "text": "어디가?" }, { "placement": "after", "text": "밖에." }, { "placement": "after", "text": "왜?" }] },
+    "panel-014": { "alt": "배낭을 멘 아이가 열린 문 앞에 서 있다.", "captions": [{ "placement": "after", "text": "보고 싶은게 있어서." }] },
+    "panel-015": { "alt": "한 아이가 열린 문을 지나 풍경 속으로 달려가고 있다.", "captions": [{ "placement": "after", "text": "그때는 아무도 몰랐다." }, { "placement": "after", "text": "그 굴의 호랑이가" }, { "placement": "after", "text": "평생 이렇게 어딘가" }, { "placement": "after", "text": "돌아다니게 될 줄은." }] },
+    "panel-016": { "alt": "HOGIRL이 작은 가방을 들고 긴 크림색 옷을 입고 서 있다.", "captions": [{ "placement": "after", "text": "넘어져도 내 손에는 진주가 있어." }] }
+  }
+}

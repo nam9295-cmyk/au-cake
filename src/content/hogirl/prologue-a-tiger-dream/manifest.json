@@ -1,0 +1,37 @@
+{
+  "kind": "prologue",
+  "slug": "prologue-a-tiger-dream",
+  "historicalPublication": {
+    "status": "published"
+  },
+  "next": {
+    "kind": "episode",
+    "seasonSlug": "season-1",
+    "episodeSlug": "ep01-i-know-what-i-want"
+  },
+  "locales": {
+    "en": { "status": "draft" },
+    "ko": { "status": "draft" }
+  },
+  "media": {
+    "ogImagePanelId": "panel-001",
+    "panels": [
+      { "id": "panel-001", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/01", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-002", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/02", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-003", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/03", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-004", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/04", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-005", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/05", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-006", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/06", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-007", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/07", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-008", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/08", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-009", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/09", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-010", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/10", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-011", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/11", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-012", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/12", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-013", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/13", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-014", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/14", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-015", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/15", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-016", "media": { "key": "hogirl/v1/prologue-a-tiger-dream/16", "sourceWidth": 1080, "sourceHeight": 1350 } }
+    ]
+  }
+}

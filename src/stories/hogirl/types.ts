@@ -8,6 +8,7 @@ export type HogirlMediaAsset = {
 
 export type HogirlPanel = {
   id: string
+  presentation?: 'integrated-cover'
   media: HogirlMediaAsset
 }
 
@@ -21,18 +22,39 @@ export type HogirlEpisodeMedia = {
   panels: HogirlPanel[]
 }
 
+export type HogirlStoryReference =
+  | { kind: 'prologue'; storySlug: string }
+  | { kind: 'episode'; seasonSlug: string; episodeSlug: string }
+
 export type HogirlLocalePublication = {
   status: HogirlPublicationStatus
 }
 
+export type HogirlHistoricalPublication = {
+  status: 'published'
+}
+
 export type HogirlCaption = {
-  placement: 'before' | 'after'
+  placement: 'before' | 'after' | 'overlay'
   text: string
+  emphasis?: boolean
 }
 
 export type HogirlEpisodeManifest = {
+  kind?: 'episode'
   number: number
   slug: string
+  historicalPublication?: HogirlHistoricalPublication
+  previous?: HogirlStoryReference
+  locales: Record<string, HogirlLocalePublication>
+  media: HogirlEpisodeMedia
+}
+
+export type HogirlPrologueManifest = {
+  kind: 'prologue'
+  slug: string
+  historicalPublication?: HogirlHistoricalPublication
+  next?: HogirlStoryReference
   locales: Record<string, HogirlLocalePublication>
   media: HogirlEpisodeMedia
 }
@@ -53,7 +75,12 @@ export type HogirlSeriesLocaleContent = HogirlLocalePublication & {
 
 export type HogirlSeriesManifest = {
   id: string
+  historicalPublication?: HogirlHistoricalPublication
   locales?: Record<string, HogirlSeriesLocaleContent>
+  publishedPrologue?: {
+    slug: string
+    directory: string
+  }
   publishedSeasons: Array<{
     number: number
     slug: string
@@ -73,5 +100,11 @@ export type HogirlSeasonManifest = {
 export type LoadedHogirlEpisode = {
   series: HogirlSeriesManifest
   manifest: HogirlEpisodeManifest
+  locale: HogirlEpisodeLocaleContent
+}
+
+export type LoadedHogirlPrologue = {
+  series: HogirlSeriesManifest
+  manifest: HogirlPrologueManifest
   locale: HogirlEpisodeLocaleContent
 }

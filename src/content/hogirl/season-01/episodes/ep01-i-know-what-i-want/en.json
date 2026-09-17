@@ -1,0 +1,22 @@
+{
+  "title": "I KNOW WHAT I WANT",
+  "description": "I spent my time on what I wanted.",
+  "panels": {
+    "panel-001": { "alt": "Cover artwork showing HOGIRL in a school uniform.", "captions": [] },
+    "panel-002": { "alt": "HOGIRL studies at a desk in a classroom.", "captions": [{ "placement": "after", "text": "I spent my time on what I wanted." }, { "placement": "after", "text": "What I wanted was always clearer than what I was supposed to do." }] },
+    "panel-003": { "alt": "HOGIRL writes in an open workbook at a desk.", "captions": [{ "placement": "after", "text": "I was picky, even about what I studied." }] },
+    "panel-004": { "alt": "HOGIRL sits at a desk with open books.", "captions": [{ "placement": "after", "text": "The subjects I didn't like?" }, { "placement": "after", "text": "Really didn't care." }] },
+    "panel-005": { "alt": "HOGIRL leaves a school building at sunset.", "captions": [{ "placement": "after", "text": "Evening self-study." }, { "placement": "after", "text": "I headed out." }] },
+    "panel-006": { "alt": "HOGIRL walks past language academy signs in the evening.", "captions": [{ "placement": "after", "text": "Beyond school was a bigger world," }, { "placement": "after", "text": "full of things I wanted to learn." }] },
+    "panel-007": { "alt": "Plain beige background.", "captions": [{ "placement": "overlay", "text": "A year before graduation," }, { "placement": "overlay", "text": "I found something I wanted to go after." }] },
+    "panel-008": { "alt": "HOGIRL wears a cabin crew uniform beside an airport window.", "captions": [{ "placement": "after", "text": "Cabin crew." }] },
+    "panel-009": { "alt": "HOGIRL looks at a cabin crew image at a desk.", "captions": [{ "placement": "after", "text": "To me, it meant" }, { "placement": "after", "text": "freedom, challenge, professionalism." }] },
+    "panel-010": { "alt": "HOGIRL writes at a desk in a darkened classroom.", "captions": [{ "placement": "after", "text": "Once I choose a goal," }] },
+    "panel-011": { "alt": "Several scenes show HOGIRL studying and running.", "captions": [{ "placement": "after", "text": "I get pretty serious." }] },
+    "panel-012": { "alt": "HOGIRL stands near buses with a large bag.", "captions": [{ "placement": "after", "text": "So I left Daegu." }] },
+    "panel-013": { "alt": "The Seoul Station sign above a building entrance.", "captions": [{ "placement": "after", "text": "For Seoul." }] },
+    "panel-014": { "alt": "HOGIRL stands beside a small airplane and an airport control tower.", "captions": [{ "placement": "after", "text": "I didn’t know which path was mine yet." }] },
+    "panel-015": { "alt": "HOGIRL walks beside a small airplane and an airport control tower.", "captions": [{ "placement": "after", "text": "But I knew what I wanted to try next." }] },
+    "panel-016": { "alt": "HOGIRL knocks on a partly open door.", "captions": [{ "placement": "after", "text": "And not long after," }, { "placement": "after", "text": "a door opened." }, { "placement": "after", "text": "NEXT — THE CHOCOLATE ROOM" }] }
+  }
+}

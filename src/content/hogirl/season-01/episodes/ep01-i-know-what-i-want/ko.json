@@ -1,0 +1,22 @@
+{
+  "title": "I KNOW WHAT I WANT",
+  "description": "나는 내가 원하는 것에 시간을 썼다.",
+  "panels": {
+    "panel-001": { "alt": "교복을 입은 HOGIRL이 보이는 표지 아트워크.", "captions": [] },
+    "panel-002": { "alt": "HOGIRL이 교실 책상에서 공부하고 있다.", "captions": [{ "placement": "after", "text": "나는 내가 원하는 것에 시간을 썼다." }, { "placement": "after", "text": "해야 하는 것보다, 하고 싶은 것이 더 선명했으니까." }] },
+    "panel-003": { "alt": "HOGIRL이 책상에서 펼친 문제집에 글을 쓰고 있다.", "captions": [{ "placement": "after", "text": "학창시절 공부도 좀 편식했다." }] },
+    "panel-004": { "alt": "HOGIRL이 펼친 책들과 함께 책상에 앉아 있다.", "captions": [{ "placement": "after", "text": "관심 없는 과목은?" }, { "placement": "after", "text": "정말 관심이 없었다." }] },
+    "panel-005": { "alt": "HOGIRL이 해 질 무렵 학교 건물을 나서고 있다.", "captions": [{ "placement": "after", "text": "야간자율학습 시간." }, { "placement": "after", "text": "나는 학교 밖으로 나갔다." }] },
+    "panel-006": { "alt": "HOGIRL이 저녁의 외국어 학원 간판들 사이를 걷고 있다.", "captions": [{ "placement": "after", "text": "학교 밖엔 더 큰 세상이 있었다." }, { "placement": "after", "text": "그리고 그곳엔 배우고 싶은 것들이 가득했다." }] },
+    "panel-007": { "alt": "평범한 베이지색 배경.", "captions": [{ "placement": "overlay", "text": "졸업을 1년 앞두고," }, { "placement": "overlay", "text": "처음으로 도전해보고 싶은" }, { "placement": "overlay", "text": "꿈이 생겼다.", "emphasis": true }] },
+    "panel-008": { "alt": "HOGIRL이 공항 창가에서 승무원 유니폼을 입고 있다.", "captions": [{ "placement": "after", "text": "승무원." }] },
+    "panel-009": { "alt": "HOGIRL이 책상에서 승무원 사진을 보고 있다.", "captions": [{ "placement": "after", "text": "그때 내 눈에는 승무원이란 직업이" }, { "placement": "after", "text": "자유롭고, 도전적이고, 프로페셔널해 보였다." }] },
+    "panel-010": { "alt": "HOGIRL이 어두운 교실에서 책상에 글을 쓰고 있다.", "captions": [{ "placement": "after", "text": "그리고 목표가 생기면," }] },
+    "panel-011": { "alt": "HOGIRL이 공부하고 달리는 여러 장면.", "captions": [{ "placement": "after", "text": "나는 꽤 집요해진다." }] },
+    "panel-012": { "alt": "HOGIRL이 큰 가방을 들고 버스들 근처에 서 있다.", "captions": [{ "placement": "after", "text": "그래서 대구를 떠났다." }] },
+    "panel-013": { "alt": "건물 입구 위의 서울역 표지판.", "captions": [{ "placement": "after", "text": "서울로." }] },
+    "panel-014": { "alt": "HOGIRL이 작은 비행기와 공항 관제탑 옆에 서 있다.", "captions": [{ "placement": "after", "text": "아직 내 길이 뭔지는 몰랐다." }] },
+    "panel-015": { "alt": "HOGIRL이 작은 비행기와 공항 관제탑 옆을 걷고 있다.", "captions": [{ "placement": "after", "text": "근데 지금 뭘 해보고 싶은지는 알았다." }] },
+    "panel-016": { "alt": "HOGIRL이 조금 열린 문을 두드리고 있다.", "captions": [{ "placement": "after", "text": "그리고 얼마 뒤," }, { "placement": "after", "text": "전혀 예상하지 못했던 문 하나가 열렸다." }, { "placement": "after", "text": "NEXT — THE CHOCOLATE ROOM" }] }
+  }
+}

@@ -77,6 +77,9 @@ async function readJson(contentRoot, relativePath) {
 }
 
 function readerFallback({ locale, episode, copy, mediaOrigin, season, previousEpisode, nextEpisode }) {
+  const previousStory = !previousEpisode && episode.previous?.kind === 'prologue'
+    ? `<a href="${pathFor(locale, `/${episode.previous.storySlug}`)}">Prologue — A TIGER DREAM</a>`
+    : ''
   return `
       <main class="hogirl-static-reader" lang="${languageTag(locale)}">
         <p><a href="${pathFor(locale)}">HOGIRL</a></p>
@@ -97,16 +100,42 @@ function readerFallback({ locale, episode, copy, mediaOrigin, season, previousEp
         </ol>
         <nav aria-label="Episode navigation">
           <a href="${pathFor(locale, `/${season.slug}`)}">Season ${season.number}</a>
-          ${previousEpisode ? `<a href="${pathFor(locale, `/${season.slug}/${previousEpisode.slug}`)}">Previous episode</a>` : ''}
+          ${previousEpisode ? `<a href="${pathFor(locale, `/${season.slug}/${previousEpisode.slug}`)}">Previous episode</a>` : previousStory}
           ${nextEpisode ? `<a href="${pathFor(locale, `/${season.slug}/${nextEpisode.slug}`)}">Next episode</a>` : ''}
         </nav>
+      </main>`
+}
+
+function prologueReaderFallback({ locale, prologue, copy, mediaOrigin }) {
+  const next = prologue.next?.kind === 'episode'
+    ? `<a href="${pathFor(locale, `/${prologue.next.seasonSlug}/${prologue.next.episodeSlug}`)}">Start Season 1 / EP01 — I KNOW WHAT I WANT</a>`
+    : ''
+  return `
+      <main class="hogirl-static-reader" lang="${languageTag(locale)}">
+        <p><a href="${pathFor(locale)}">HOGIRL</a></p>
+        <p>Prologue</p>
+        <h1>${escapeHtml(copy.title)}</h1>
+        <p>${escapeHtml(copy.description)}</p>
+        <ol>
+          ${prologue.media.panels.map((panel, index) => {
+            const panelCopy = copy.panels[panel.id]
+            if (!panelCopy) throw new Error(`HOGIRL Prologue ${prologue.slug} locale ${locale} lacks panel ${panel.id} copy`)
+            return `<li>
+              <figure>
+                ${fallbackImage({ mediaOrigin, media: panel.media, alt: panelCopy.alt, eager: index === 0 })}
+                ${panelCopy.captions.map((caption) => `<figcaption>${escapeHtml(caption.text)}</figcaption>`).join('')}
+              </figure>
+            </li>`
+          }).join('')}
+        </ol>
+        ${next ? `<nav aria-label="Story navigation">${next}</nav>` : ''}
       </main>`
 }
 
 async function pagesForContent({ contentRoot, siteUrl, brand, mediaOrigin, includeLlms }) {
   const series = await readJson(contentRoot, 'series.json')
   const seriesLocales = publishedLocales(series.locales)
-  if (seriesLocales.length === 0 || !Array.isArray(series.publishedSeasons) || series.publishedSeasons.length === 0) {
+  if (seriesLocales.length === 0 || (!series.publishedPrologue && (!Array.isArray(series.publishedSeasons) || series.publishedSeasons.length === 0))) {
     return { pages: {}, indexablePaths: [], llmsEntries: [] }
   }
   if (!mediaOrigin) throw new Error(`Published HOGIRL content requires ${HOGIRL_MEDIA_ORIGIN_ENV}`)
@@ -150,9 +179,75 @@ async function pagesForContent({ contentRoot, siteUrl, brand, mediaOrigin, inclu
           <h1>${escapeHtml(seriesCopy.title)}</h1>
           <p>${escapeHtml(seriesCopy.description)}</p>
           <ol>
+            ${series.publishedPrologue ? `<li><a href="${pathFor(locale, `/${series.publishedPrologue.slug}`)}">Prologue</a></li>` : ''}
             ${series.publishedSeasons.map((season) => `<li><a href="${pathFor(locale, `/${season.slug}`)}">Season ${season.number}</a></li>`).join('')}
           </ol>
         </main>`,
+    }
+  }
+
+  if (series.publishedPrologue) {
+    const prologueReference = series.publishedPrologue
+    const prologue = await readJson(contentRoot, `${prologueReference.directory}/manifest.json`)
+    if (prologue.kind !== 'prologue' || prologue.slug !== prologueReference.slug) {
+      throw new Error(`HOGIRL Prologue manifest does not match series entry ${prologueReference.directory}`)
+    }
+    const prologueLocales = publishedLocales(prologue.locales).filter((locale) => seriesLocales.includes(locale))
+    const socialPanel = prologue.media?.panels?.find((panel) => panel.id === prologue.media.ogImagePanelId)
+    if (!socialPanel) throw new Error(`HOGIRL Prologue ${prologue.slug} lacks its designated OG panel`)
+    const imageAsset = prologue.media.socialImage || socialPanel.media
+    const image = mediaUrl(mediaOrigin, imageAsset)
+    for (const locale of prologueLocales) {
+      const path = pathFor(locale, `/${prologue.slug}`)
+      const copy = await readJson(contentRoot, `${prologueReference.directory}/${locale}.json`)
+      if (includeLlms && locale === llmsLocale) {
+        llmsEntries.push(`- ${copy.title}: ${canonicalFor(siteUrl, path)}`)
+      }
+      pages[path] = {
+        title: `${copy.title} | HOGIRL | ${brand}`,
+        description: copy.description,
+        robots: 'index, follow',
+        ogType: 'website',
+        canonical: canonicalFor(siteUrl, path),
+        image,
+        imageType: 'image/webp',
+        imageWidth: imageAsset.sourceWidth,
+        imageHeight: imageAsset.sourceHeight,
+        htmlLang: languageTag(locale),
+        output: 'directory',
+        alternateLinks: alternates(siteUrl, prologueLocales, `/${prologue.slug}`),
+        structuredData: [
+          {
+            '@type': 'WebPage',
+            '@id': `${canonicalFor(siteUrl, path)}#webpage`,
+            name: copy.title,
+            description: copy.description,
+            url: canonicalFor(siteUrl, path),
+            inLanguage: languageTag(locale),
+            mainEntity: { '@id': `${canonicalFor(siteUrl, path)}#creative-work` },
+          },
+          {
+            '@type': 'CreativeWork',
+            '@id': `${canonicalFor(siteUrl, path)}#creative-work`,
+            name: copy.title,
+            abstract: copy.description,
+            image,
+            isPartOf: { '@id': `${canonicalFor(siteUrl, pathFor(locale))}#series` },
+            inLanguage: languageTag(locale),
+          },
+          breadcrumb(siteUrl, path, [
+            { name: 'Home', path: '/' },
+            { name: series.locales[locale].title, path: pathFor(locale) },
+            { name: copy.title, path },
+          ]),
+        ],
+        fallbackHtml: prologueReaderFallback({
+          locale,
+          prologue,
+          copy,
+          mediaOrigin,
+        }),
+      }
     }
   }
 

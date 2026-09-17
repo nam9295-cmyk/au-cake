@@ -1,0 +1,37 @@
+{
+  "kind": "episode",
+  "number": 1,
+  "slug": "ep01-i-know-what-i-want",
+  "historicalPublication": {
+    "status": "published"
+  },
+  "previous": {
+    "kind": "prologue",
+    "storySlug": "prologue-a-tiger-dream"
+  },
+  "locales": {
+    "en": { "status": "draft" },
+    "ko": { "status": "draft" }
+  },
+  "media": {
+    "ogImagePanelId": "panel-001",
+    "panels": [
+      { "id": "panel-001", "presentation": "integrated-cover", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/01", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-002", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/02", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-003", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/03", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-004", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/04", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-005", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/05", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-006", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/06", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-007", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/07", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-008", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/08", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-009", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/09", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-010", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/10", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-011", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/11", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-012", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/12", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-013", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/13", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-014", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/14", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-015", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/15", "sourceWidth": 1080, "sourceHeight": 1350 } },
+      { "id": "panel-016", "media": { "key": "hogirl/v1/season-1/ep01-i-know-what-i-want/16", "sourceWidth": 1080, "sourceHeight": 1350 } }
+    ]
+  }
+}
