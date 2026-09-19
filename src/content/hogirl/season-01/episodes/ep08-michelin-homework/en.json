@@ -1,0 +1,111 @@
+{
+  "title": "MICHELIN HOMEWORK",
+  "description": "MICHELIN HOMEWORK",
+  "panels": {
+    "panel-001": {
+      "alt": "MICHELIN HOMEWORK cover.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "HOGIRL marking places on a phone map.",
+      "captions": [{"placement": "after", "text": "Back then,\nthere was so much I wanted to see."}]
+    },
+    "panel-003": {
+      "alt": "HOGIRL and friends studying a recipe in a kitchen.",
+      "captions": [{"placement": "after", "text": "There was no end to what I wanted\nto taste, to learn, and to understand."}]
+    },
+    "panel-004": {
+      "alt": "HOGIRL asking questions in a shop.",
+      "captions": [
+        {"placement": "after", "text": "When something was good,\nI wanted to know why."},
+        {"placement": "after", "text": "What’s your signature?"},
+        {"placement": "after", "text": "What’s the most popular?"}
+      ]
+    },
+    "panel-005": {
+      "alt": "HOGIRL photographing a chocolate dessert.",
+      "captions": [
+        {"placement": "after", "text": "“Delicious” and “beautiful”\nweren’t enough."},
+        {"placement": "after", "text": "I wanted to know\nhow it was made."}
+      ]
+    },
+    "panel-006": {
+      "alt": "HOGIRL and friends researching places in Paris.",
+      "captions": [{"placement": "after", "text": "One thing always\nled to another."}]
+    },
+    "panel-007": {
+      "alt": "HOGIRL and friends eating macarons.",
+      "captions": []
+    },
+    "panel-008": {
+      "alt": "A pear-shaped dessert and friends tasting desserts.",
+      "captions": [{"placement": "after", "text": "Every discovery felt like\nI had learned something new."}]
+    },
+    "panel-009": {
+      "alt": "A Paris street with the Eiffel Tower.",
+      "captions": [{"placement": "after", "text": "When class ended,\nall of Paris became my classroom."}]
+    },
+    "panel-010": {
+      "alt": "HOGIRL and friends walking beside the Seine.",
+      "captions": [{"placement": "after", "text": "The old.\nThe new."}]
+    },
+    "panel-011": {
+      "alt": "People looking through goods at an outdoor flea market.",
+      "captions": [{"placement": "after", "text": "Everything I saw became something else\nin my head."}]
+    },
+    "panel-012": {
+      "alt": "HOGIRL holding up a plate at a flea market.",
+      "captions": []
+    },
+    "panel-013": {
+      "alt": "HOGIRL photographing a display in a chocolate shop.",
+      "captions": []
+    },
+    "panel-014": {
+      "alt": "HOGIRL looking toward a class in a modern pastry lab.",
+      "captions": [{"placement": "after", "text": "I was soaking it all in\nlike a sponge."}]
+    },
+    "panel-015": {
+      "alt": "HOGIRL and friends at a worktable with pastry tools.",
+      "captions": [{"placement": "after", "text": "The more I learned,\nthe more I wanted to know."}]
+    },
+    "panel-016": {
+      "alt": "HOGIRL observing a chef and chocolate work.",
+      "captions": [
+        {"placement": "after", "text": "The days felt too short."},
+        {"placement": "after", "text": "Even after using every bit of one,\nI couldn’t wait for the next."}
+      ]
+    },
+    "panel-017": {
+      "alt": "HOGIRL and friends watching an outdoor fashion show.",
+      "captions": [
+        {"placement": "after", "text": "Curiosity was bigger than worry."},
+        {"placement": "after", "text": "Excitement came faster\nthan hesitation."}
+      ]
+    },
+    "panel-018": {
+      "alt": "HOGIRL outside a Paris hotel entrance.",
+      "captions": [
+        {"placement": "after", "text": "I knew what I wanted to do.\nAnd I was doing it."},
+        {"placement": "after", "text": "Back then,\nthat was enough to make me happy."}
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL and friends on a Paris shopping street.",
+      "captions": [
+        {"placement": "after", "text": "Back then,\nI thought life would keep going like this."},
+        {"placement": "after", "text": "Of course,\nlife can’t always stay that way."}
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL outside a Paris hotel entrance.",
+      "captions": [
+        {"placement": "after", "text": "Still, whenever I think\nof those days,"},
+        {"placement": "after", "text": "I was shining so brightly then."},
+        {"placement": "after", "text": "I’m proud of the girl I was."},
+        {"placement": "after", "text": "The girl who gave herself so fully\nto life, and to her dreams."},
+        {"placement": "after", "text": "NEXT — THIS IS MY THING"}
+      ]
+    }
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "title": "THE CHOCOLATE ROOM",
+  "description": "Beyond chocolate, a whole new world opened up.",
+  "panels": {
+    "panel-001": {
+      "alt": "Cover artwork for THE CHOCOLATE ROOM.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Beyond chocolate,\na whole new world opened up."
+        }
+      ]
+    },
+    "panel-002": {
+      "alt": "HOGIRL works in a hotel VIP lounge in Myeong-dong.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Before that door opened,\nI was working in the VIP lounge\nof a five-star hotel in Myeong-dong."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "Hotel staff prepare a new experience for their guests.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "This luxurious hotel was always creating\nnew experiences for its guests."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "HOGIRL discovers a boutique filled with chocolates.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "A boutique filled with chocolates\nfrom around the world!"
+        },
+        {
+          "placement": "after",
+          "text": "Oh, chocolate.\nI miss my mom."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "HOGIRL remembers sharing chocolate with her mother.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "There was always chocolate\nin my mom’s grocery bag."
+        },
+        {
+          "placement": "after",
+          "text": "It brings back memories\nof sharing chocolate with my mom\nwhen I was little."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "HOGIRL looks at unfamiliar chocolate creations.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "But this wasn’t\nthe chocolate I knew."
+        },
+        {
+          "placement": "after",
+          "text": "All of this…\nis chocolate?"
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "A three-tier cake is decorated with white roses.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "It looked like a work of art."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "A sculpture made of chocolate.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "It didn’t just look like art. It was art."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "A chocolate fashion show.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "There were chocolate\nsculptures—and even\nchocolate fashion shows."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "HOGIRL asks a colleague where she can study chocolate.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Is there anywhere in Korea\nwhere I can actually learn this?"
+        },
+        {
+          "placement": "after",
+          "text": "K Culinary Arts School\noffers a chocolate course."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "HOGIRL learns professional chocolate-making techniques.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "There, I trained from the basics to advanced techniques."
+        },
+        {
+          "placement": "after",
+          "text": "I even earned\na professional chocolatier certification."
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "HOGIRL makes a chocolate creation with her own hands.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "The world that had once been\nbeyond the glass\nwas now in my hands."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "A Belgian chocolatier demonstrates chocolate-making.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I attended a seminar\nby a Belgian chocolatier."
+        },
+        {
+          "placement": "after",
+          "text": "It was the same chocolate, but something felt different.\nI could feel years of experience in his hands—\nand a culture that had become second nature."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "A cacao tree and its fruit.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Chocolate starts on a tree?\nCacao beans are fermented and roasted?"
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "HOGIRL arrives in Malaysia.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "So I went to Malaysia."
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "HOGIRL explores cacao fruit, fermentation and roasting.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I opened a freshly picked cacao pod,\ntasted the pulp,\nand watched the beans\nbeing fermented and roasted."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "A chocolatier creates art with chocolate.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "CHOCOLATIERS—\nthe people who turn chocolate into art."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "HOGIRL is absorbed in the world of chocolate.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "That was it.\nI was completely hooked."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL decides to study chocolate seriously.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "This is crazy.\nI’m going all the way with this."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL researches culinary schools around the world.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "So where do I go next?\nI started looking at culinary schools around the world."
+        }
+      ]
+    },
+    "panel-021": {
+      "alt": "The Statue of Liberty and an American flag accompany HOGIRL’s decision.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "America?\nCIA?\nOkay."
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — AMERICA SAID NO"
+        }
+      ]
+    }
+  }
+}

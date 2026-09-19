@@ -1,0 +1,114 @@
+{
+  "title": "MICHELIN HOMEWORK",
+  "description": "MICHELIN HOMEWORK",
+  "panels": {
+    "panel-001": {
+      "alt": "MICHELIN HOMEWORK 표지.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "휴대전화 지도에 장소를 표시하는 HOGIRL.",
+      "captions": [{"placement": "after", "text": "그때의 나는\n보고 싶은 게 너무 많았다."}]
+    },
+    "panel-003": {
+      "alt": "주방에서 레시피를 살피는 HOGIRL과 친구들.",
+      "captions": [{"placement": "after", "text": "먹어보고 싶은 것도,\n배우고 싶은 것도,\n궁금한 것도 끝이 없었다."}]
+    },
+    "panel-004": {
+      "alt": "가게에서 질문하는 HOGIRL.",
+      "captions": [
+        {"placement": "after", "text": "좋은 걸 보면\n왜 좋은지 궁금했다."},
+        {"placement": "after", "text": "시그니처는 뭐예요?"},
+        {"placement": "after", "text": "가장 인기 있는 건요?"}
+      ]
+    },
+    "panel-005": {
+      "alt": "초콜릿 디저트를 촬영하는 HOGIRL.",
+      "captions": [
+        {"placement": "after", "text": "맛있다, 예쁘다로는\n부족했다."},
+        {"placement": "after", "text": "어떻게 만들었는지가\n궁금했다."}
+      ]
+    },
+    "panel-006": {
+      "alt": "파리의 장소를 함께 조사하는 HOGIRL과 친구들.",
+      "captions": [{"placement": "after", "text": "하나를 보면\n또 하나가 궁금해졌다."}]
+    },
+    "panel-007": {
+      "alt": "마카롱을 먹는 HOGIRL과 친구들.",
+      "captions": []
+    },
+    "panel-008": {
+      "alt": "배 모양 디저트와 디저트를 맛보는 친구들.",
+      "captions": [{"placement": "after", "text": "처음 보는 걸 만나면\n또 하나를 배운 것 같아\n신이 났다."}]
+    },
+    "panel-009": {
+      "alt": "에펠탑이 보이는 파리 거리.",
+      "captions": [
+        {"placement": "after", "text": "수업이 끝나면,"},
+        {"placement": "after", "text": "온 파리가 교실이었다."}
+      ]
+    },
+    "panel-010": {
+      "alt": "센 강변을 걷는 HOGIRL과 친구들.",
+      "captions": [{"placement": "after", "text": "오래된 것도,\n새로 생긴 것도."}]
+    },
+    "panel-011": {
+      "alt": "야외 벼룩시장에서 물건을 살펴보는 사람들.",
+      "captions": [{"placement": "after", "text": "보는 것마다\n머릿속에서는\n다른 것이 만들어졌다."}]
+    },
+    "panel-012": {
+      "alt": "벼룩시장에서 접시를 들어 보는 HOGIRL.",
+      "captions": []
+    },
+    "panel-013": {
+      "alt": "초콜릿 가게에서 진열을 촬영하는 HOGIRL.",
+      "captions": []
+    },
+    "panel-014": {
+      "alt": "현대적인 제과 실험실 강의를 바라보는 HOGIRL.",
+      "captions": [{"placement": "after", "text": "나는 정말 스폰지처럼\n모든 걸 빨아들이고 있었다."}]
+    },
+    "panel-015": {
+      "alt": "친구들과 제과 도구가 놓인 작업대에 있는 HOGIRL.",
+      "captions": [{"placement": "after", "text": "알면 알수록\n더 궁금해졌다."}]
+    },
+    "panel-016": {
+      "alt": "셰프와 초콜릿 작업을 관찰하는 HOGIRL.",
+      "captions": [
+        {"placement": "after", "text": "하루가 짧았다."},
+        {"placement": "after", "text": "하루를 다 쓰고도\n내일이 기다려졌다."}
+      ]
+    },
+    "panel-017": {
+      "alt": "야외 패션쇼를 지켜보는 HOGIRL과 친구들.",
+      "captions": [
+        {"placement": "after", "text": "걱정보다\n호기심이 컸고,"},
+        {"placement": "after", "text": "망설임보다\n설렘이 빨랐다."}
+      ]
+    },
+    "panel-018": {
+      "alt": "파리 호텔 입구 앞의 HOGIRL.",
+      "captions": [
+        {"placement": "after", "text": "하고 싶은 게 있었고,\n그걸 할 수 있었고,"},
+        {"placement": "after", "text": "그것만으로\n충분히 행복했다."}
+      ]
+    },
+    "panel-019": {
+      "alt": "파리 상점가에 있는 HOGIRL과 친구들.",
+      "captions": [
+        {"placement": "after", "text": "그때의 나는\n삶이 계속 이렇게 흘러갈 줄 알았다."},
+        {"placement": "after", "text": "물론,\n삶이 언제까지나\n그럴 수는 없다."}
+      ]
+    },
+    "panel-020": {
+      "alt": "파리 호텔 입구 앞의 HOGIRL.",
+      "captions": [
+        {"placement": "after", "text": "그래도 가끔\n그 시절을 떠올리면,"},
+        {"placement": "after", "text": "그때의 나는\n참 환하게 빛났다."},
+        {"placement": "after", "text": "참 기특하다."},
+        {"placement": "after", "text": "그토록 삶에,\n꿈에 충실했던 내가."},
+        {"placement": "after", "text": "NEXT — THIS IS MY THING"}
+      ]
+    }
+  }
+}

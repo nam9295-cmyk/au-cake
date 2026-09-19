@@ -1,0 +1,184 @@
+{
+  "kind": "episode",
+  "number": 9,
+  "slug": "ep09-this-is-my-thing",
+  "previous": {
+    "kind": "episode",
+    "seasonSlug": "season-1",
+    "episodeSlug": "ep07-my-name-starts-with-c"
+  },
+  "locales": {
+    "en": {
+      "status": "draft"
+    },
+    "ko": {
+      "status": "draft"
+    }
+  },
+  "media": {
+    "ogImagePanelId": "panel-001",
+    "panels": [
+      {
+        "id": "panel-001",
+        "presentation": "integrated-cover",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/01",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-002",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/02",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-003",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/03",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-004",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/04",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-005",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/05",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-006",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/06",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-007",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/07",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-008",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/08",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-009",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/09",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-010",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/10",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-011",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/11",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-012",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/12",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-013",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/13",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-014",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/14",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-015",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/15",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-016",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/16",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-017",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/17",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-018",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/18",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-019",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/19",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-020",
+        "media": {
+          "key": "hogirl/v1/season-1/ep09-this-is-my-thing/20",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      }
+    ]
+  }
+}

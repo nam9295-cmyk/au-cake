@@ -26,6 +26,7 @@ function emptyContent(pathname: string): HogirlContentState {
 }
 
 const mediaOrigin = getHogirlMediaOriginFromEnvironment(import.meta.env)
+const allowDrafts = import.meta.env.DEV
 const hogirlStylesheetHref = '/hogirl.css'
 
 function useHogirlStylesheet() {
@@ -42,11 +43,31 @@ function useHogirlStylesheet() {
   }, [])
 }
 
+function visiblePrologue(series: HogirlSeriesManifest, previewDrafts: boolean) {
+  return series.publishedPrologue || (previewDrafts ? series.draftPrologue : undefined)
+}
+
+function visibleSeasons(series: HogirlSeriesManifest, previewDrafts: boolean) {
+  if (!previewDrafts) return series.publishedSeasons
+  const bySlug = new Map(series.publishedSeasons.map((season) => [season.slug, season]))
+  for (const season of series.draftSeasons || []) bySlug.set(season.slug, season)
+  return [...bySlug.values()]
+}
+
 function isPublishedForRoute(route: HogirlRoute, content: HogirlContentState) {
   if (content.series?.locales?.[route.locale]?.status !== 'published') return false
   if (route.kind === 'series') return true
   if (route.kind === 'prologue') return content.prologue !== null
   if (route.kind === 'season') return content.series.publishedSeasons.some((season) => season.slug === route.seasonSlug)
+  return content.episode !== null
+}
+
+function isVisibleForRoute(route: HogirlRoute, content: HogirlContentState) {
+  const locale = content.series?.locales?.[route.locale]
+  if (!locale || (locale.status !== 'published' && !allowDrafts)) return false
+  if (route.kind === 'series') return true
+  if (route.kind === 'prologue') return content.prologue !== null
+  if (route.kind === 'season') return content.series ? visibleSeasons(content.series, allowDrafts).some((season) => season.slug === route.seasonSlug) : false
   return content.episode !== null
 }
 
@@ -65,6 +86,8 @@ function UnpublishedHogirlPage({ locale }: { locale: HogirlRoute['locale'] }) {
 function SeriesPage({ route, series }: { route: Extract<HogirlRoute, { kind: 'series' }>; series: HogirlSeriesManifest }) {
   const copy = series.locales?.[route.locale]
   if (!copy) return <UnpublishedHogirlPage locale={route.locale} />
+  const prologue = visiblePrologue(series, allowDrafts)
+  const seasons = visibleSeasons(series, allowDrafts)
   return (
     <main className="hogirl-reader" lang={route.locale === 'ko' ? 'ko' : 'en-AU'}>
       <p className="hogirl-kicker">HOGIRL</p>
@@ -72,10 +95,10 @@ function SeriesPage({ route, series }: { route: Extract<HogirlRoute, { kind: 'se
       <p>{copy.description}</p>
       <nav aria-label="HOGIRL seasons">
         <ol className="hogirl-episode-navigation">
-          {series.publishedPrologue && (
-            <li><a href={pathForHogirlRoute({ kind: 'prologue', locale: route.locale, storySlug: series.publishedPrologue.slug })}>Prologue — A TIGER DREAM</a></li>
+          {prologue && (
+            <li><a href={pathForHogirlRoute({ kind: 'prologue', locale: route.locale, storySlug: prologue.slug })}>Prologue — A TIGER DREAM</a></li>
           )}
-          {series.publishedSeasons.map((season) => (
+          {seasons.map((season) => (
             <li key={season.slug}><a href={pathForHogirlRoute({ kind: 'season', locale: route.locale, seasonSlug: season.slug })}>Season {season.number}</a></li>
           ))}
         </ol>
@@ -149,6 +172,7 @@ function ProloguePage({ route, prologue }: { route: Extract<HogirlRoute, { kind:
             media: panel.media,
             alt: prologue.locale.panels[panel.id]?.alt || '',
             captions: prologue.locale.panels[panel.id]?.captions || [],
+            captionLayout: prologue.locale.panels[panel.id]?.captionLayout,
           })),
         }}
       />
@@ -172,6 +196,7 @@ function EpisodePage({ route, episode, season }: { route: Extract<HogirlRoute, {
             media: panel.media,
             alt: episode.locale.panels[panel.id]?.alt || '',
             captions: episode.locale.panels[panel.id]?.captions || [],
+            captionLayout: episode.locale.panels[panel.id]?.captionLayout,
           })),
         }}
       />
@@ -191,8 +216,8 @@ export default function HogirlApp({ pathname }: { pathname: string }) {
     void (async () => {
       const series = await loadHogirlSeries()
       const season = route.kind === 'season' || route.kind === 'episode' ? await loadHogirlSeason(route.seasonSlug) : null
-      const episode = route.kind === 'episode' ? await loadHogirlEpisode(route) : null
-      const prologue = route.kind === 'prologue' ? await loadHogirlPrologue(route) : null
+      const episode = route.kind === 'episode' ? await loadHogirlEpisode(route, allowDrafts) : null
+      const prologue = route.kind === 'prologue' ? await loadHogirlPrologue(route, allowDrafts) : null
       if (!cancelled) setContent({ pathname, series, season, episode, prologue })
     })()
     return () => { cancelled = true }
@@ -237,7 +262,7 @@ export default function HogirlApp({ pathname }: { pathname: string }) {
 
   if (!route) return null
   if (content.pathname !== pathname) return <div className="hogirl-reader" role="status" aria-live="polite">Loading story…</div>
-  if (!isPublishedForRoute(route, content)) return <UnpublishedHogirlPage locale={route.locale} />
+  if (!isVisibleForRoute(route, content)) return <UnpublishedHogirlPage locale={route.locale} />
   if (route.kind === 'series') return <SeriesPage route={route} series={content.series!} />
   if (route.kind === 'prologue' && content.prologue) return <ProloguePage route={route} prologue={content.prologue} />
   if (route.kind === 'season' && content.season) return <SeasonPage route={route} season={content.season} />

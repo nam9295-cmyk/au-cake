@@ -1,0 +1,305 @@
+{
+  "title": "MY NAME STARTS WITH C",
+  "description": "MY NAME STARTS WITH C",
+  "panels": {
+    "panel-001": {
+      "alt": "Cover artwork for MY NAME STARTS WITH C.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "HOGIRL. J. C"
+        },
+        {
+          "placement": "after",
+          "text": "C was my lucky letter."
+        }
+      ]
+    },
+    "panel-002": {
+      "alt": "HOGIRL enters culinary school in Paris.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Finally,\nclasses began."
+        },
+        {
+          "placement": "after",
+          "text": "LE CORDON BLEU PARIS."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "A chef, translator and students exchange greetings.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "CHEF"
+        },
+        {
+          "placement": "after",
+          "text": "Bonjour tout le monde!"
+        },
+        {
+          "placement": "after",
+          "text": "TRANSLATOR"
+        },
+        {
+          "placement": "after",
+          "text": "Hello, everyone!"
+        },
+        {
+          "placement": "after",
+          "text": "STUDENTS"
+        },
+        {
+          "placement": "after",
+          "text": "Bonjour, Chef!"
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "Students listen to a live-translated class.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "The chef taught in French,\nwith live English translation."
+        },
+        {
+          "placement": "after",
+          "text": "That meant students\nfrom all over the world\ncould learn together."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "A busy schedule of culinary classes.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "The pace was intense."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "A chef demonstrates the full pastry-making process.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "SIX HOURS OF DEMONSTRATION."
+        },
+        {
+          "placement": "after",
+          "text": "From start to finish,\nwe watched the entire process."
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "HOGIRL practises what she has learned.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "The next day—\nPRACTICAL."
+        },
+        {
+          "placement": "after",
+          "text": "This time,\nI made it myself."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "Students are assigned numbered workstations.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Our stations were assigned\nin alphabetical order."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "HOGIRL discovers her assigned station.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "My surname\nstarts with C."
+        },
+        {
+          "placement": "after",
+          "text": "HOGIRL"
+        },
+        {
+          "placement": "after",
+          "text": "3번?"
+        },
+        {
+          "placement": "after",
+          "text": "YES!!"
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "HOGIRL checks the temperature in a saucepan at a worktable.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "PERFECT SPOT."
+        },
+        {
+          "placement": "after",
+          "text": "I could see\nthe chef’s hands up close."
+        },
+        {
+          "placement": "after",
+          "text": "And get feedback\nin real time."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "Pastry ingredients and results illustrate small differences.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Pastry was science."
+        },
+        {
+          "placement": "after",
+          "text": "Tiny differences\nchanged the result."
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "Sugar work illustrates temperature and texture.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Sugar crystals changed\nwith temperature."
+        },
+        {
+          "placement": "after",
+          "text": "Different crystals created\ndifferent textures and forms."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "Chocolate work illustrates the effect of temperature.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "In chocolate,\ntemperature changed\nhow its molecular structure aligned."
+        },
+        {
+          "placement": "after",
+          "text": "A few degrees\nchanged the final result."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "French desserts show colour, shape and balance.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "We eat with our eyes first."
+        },
+        {
+          "placement": "after",
+          "text": "A dish begins\nwith how it looks."
+        },
+        {
+          "placement": "after",
+          "text": "COLOR · SHAPE · VOLUME · BALANCE"
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "Desserts offer contrasting textures.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Texture amplifies flavor."
+        },
+        {
+          "placement": "after",
+          "text": "Engage all five senses."
+        },
+        {
+          "placement": "after",
+          "text": "SOFT · CRISP · CREAMY · CRUNCHY · SMOOTH"
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "HOGIRL discovers fresh ingredients.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Fresh ingredients\nwere a given."
+        },
+        {
+          "placement": "after",
+          "text": "Our job was simply\nto conduct them well—"
+        },
+        {
+          "placement": "after",
+          "text": "like a maestro."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "Students experience French dining etiquette.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Attitude was part\nof the experience, too."
+        },
+        {
+          "placement": "after",
+          "text": "Dress well.\nKnow your cutlery."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "A sequence of dishes tells a story.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "STORYTELLING."
+        },
+        {
+          "placement": "after",
+          "text": "How it begins."
+        },
+        {
+          "placement": "after",
+          "text": "How it flows."
+        },
+        {
+          "placement": "after",
+          "text": "How it ends."
+        },
+        {
+          "placement": "after",
+          "text": "A meal has\na story, too."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL stands at home by an open window overlooking the Eiffel Tower at night.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "ROOPRETELCHAM."
+        },
+        {
+          "placement": "after",
+          "text": "A spell for making things happen."
+        },
+        {
+          "placement": "after",
+          "text": "I’m inside the world I once dreamed of."
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — MICHELIN HOMEWORK"
+        }
+      ]
+    }
+  }
+}

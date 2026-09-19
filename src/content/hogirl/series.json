@@ -3,5 +3,28 @@
   "historicalPublication": {
     "status": "published"
   },
-  "publishedSeasons": []
+  "publishedSeasons": [],
+  "locales": {
+    "en": {
+      "status": "draft",
+      "title": "HOGIRL",
+      "description": ""
+    },
+    "ko": {
+      "status": "draft",
+      "title": "HOGIRL",
+      "description": ""
+    }
+  },
+  "draftPrologue": {
+    "slug": "prologue-a-tiger-dream",
+    "directory": "prologue-a-tiger-dream"
+  },
+  "draftSeasons": [
+    {
+      "number": 1,
+      "slug": "season-1",
+      "directory": "season-01"
+    }
+  ]
 }

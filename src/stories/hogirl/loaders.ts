@@ -45,6 +45,10 @@ function prologueContentPath(storySlug: string, filename: string) {
   return `../../content/hogirl/${storySlug}/${filename}`
 }
 
+function localeIsVisible(status: string | undefined, allowDrafts: boolean) {
+  return status === 'published' || (allowDrafts && status === 'draft')
+}
+
 export async function loadHogirlEpisodeManifest(seasonSlug: string, episodeSlug: string) {
   const loader = episodeManifestLoaders[episodeContentPath(seasonSlug, episodeSlug, 'manifest.json')]
   return loader ? loader() as Promise<HogirlEpisodeManifest> : null
@@ -65,12 +69,12 @@ export async function loadHogirlSeason(seasonSlug: string) {
   return loader ? loader() as Promise<HogirlSeasonManifest> : null
 }
 
-export async function loadHogirlEpisode(route: Extract<HogirlRoute, { kind: 'episode' }>): Promise<LoadedHogirlEpisode | null> {
+export async function loadHogirlEpisode(route: Extract<HogirlRoute, { kind: 'episode' }>, allowDrafts = false): Promise<LoadedHogirlEpisode | null> {
   const [series, manifest] = await Promise.all([
     loadHogirlSeries(),
     loadHogirlEpisodeManifest(route.seasonSlug, route.episodeSlug),
   ])
-  if (!series || !manifest || series.locales?.[route.locale]?.status !== 'published' || manifest.locales[route.locale]?.status !== 'published') return null
+  if (!series || !manifest || !localeIsVisible(series.locales?.[route.locale]?.status, allowDrafts) || !localeIsVisible(manifest.locales[route.locale]?.status, allowDrafts)) return null
 
   const loader = episodeLocaleLoaders[episodeContentPath(route.seasonSlug, route.episodeSlug, `${route.locale}.json`)]
   if (!loader) return null
@@ -78,12 +82,12 @@ export async function loadHogirlEpisode(route: Extract<HogirlRoute, { kind: 'epi
   return { series, manifest, locale }
 }
 
-export async function loadHogirlPrologue(route: Extract<HogirlRoute, { kind: 'prologue' }>): Promise<LoadedHogirlPrologue | null> {
+export async function loadHogirlPrologue(route: Extract<HogirlRoute, { kind: 'prologue' }>, allowDrafts = false): Promise<LoadedHogirlPrologue | null> {
   const [series, manifest] = await Promise.all([
     loadHogirlSeries(),
     loadHogirlPrologueManifest(route.storySlug),
   ])
-  if (!series || !manifest || series.locales?.[route.locale]?.status !== 'published' || manifest.locales[route.locale]?.status !== 'published') return null
+  if (!series || !manifest || !localeIsVisible(series.locales?.[route.locale]?.status, allowDrafts) || !localeIsVisible(manifest.locales[route.locale]?.status, allowDrafts)) return null
 
   const loader = prologueLocaleLoaders[prologueContentPath(route.storySlug, `${route.locale}.json`)]
   if (!loader) return null

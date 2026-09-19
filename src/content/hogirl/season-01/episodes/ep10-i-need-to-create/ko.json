@@ -1,0 +1,277 @@
+{
+  "title": "I NEED TO CREATE",
+  "description": "I NEED TO CREATE",
+  "panels": {
+    "panel-001": {
+      "alt": "I NEED TO CREATE 표지.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "전시를 찾은 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "SOY SHIN"
+        },
+        {
+          "placement": "after",
+          "text": "EN FACE DE LA VIE"
+        },
+        {
+          "placement": "after",
+          "text": "좋아하는 언니의 전시."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "전시 오프닝을 위한 디저트를 만드는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "오프닝에 맞춰\n공간에 어울리는 디저트를\n만들어 보았다."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "친구의 프랜치-차이니즈 디저트와 두리안 타르트를 접한 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "중국 친구가 만든\n프랜치-차이니즈\n디저트."
+        },
+        {
+          "placement": "after",
+          "text": "오, 멋진데?"
+        },
+        {
+          "placement": "after",
+          "text": "두리안 타르트."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "디저트의 포장과 표현을 고민하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "어떻게 담고, 보여줄까."
+        },
+        {
+          "placement": "after",
+          "text": "만든다고 끝이 아니구나.."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "방돔 광장의 리츠 파리.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "RITZ PARIS"
+        },
+        {
+          "placement": "after",
+          "text": "PLACE VENDÔME"
+        },
+        {
+          "placement": "after",
+          "text": "학교는 끝났지만,\n배움은 끝나지 않았다."
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "리츠 파리에서 배움을 이어가는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "다른 곳에서 더 배워보면"
+        },
+        {
+          "placement": "after",
+          "text": "해답을 찾을 수 있을까?"
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "각자의 길을 준비하는 HOGIRL과 친구들.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "각자의 길로\n나아가야 할 때였다."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "안시를 여행하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "ANNECY"
+        },
+        {
+          "placement": "after",
+          "text": "움직이고,"
+        },
+        {
+          "placement": "after",
+          "text": "보면서,\n계속 생각했다."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "레만호에서 생각에 잠긴 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "LAC LÉMAN"
+        },
+        {
+          "placement": "after",
+          "text": "처음에는,\n\n답이 어딘가에\n있을 줄 알았다."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "몽블랑에서 새로운 기회를 고민하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "MONT BLANC"
+        },
+        {
+          "placement": "after",
+          "text": "중국에 자리가 있는데,\n가볼래?"
+        },
+        {
+          "placement": "after",
+          "text": "한국으로 들어올래?"
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "프라하를 찾은 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그러나,"
+        },
+        {
+          "placement": "after",
+          "text": "PRAGUE"
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "밀라노에서 삶을 돌아보는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "MILANO"
+        },
+        {
+          "placement": "after",
+          "text": "인생은\n\n수를 넣으면 답이 나오는\n수학 공식 같은 게 아니었다."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "피렌체를 다시 찾은 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "FLORENCE"
+        },
+        {
+          "placement": "after",
+          "text": "내가 가장 사랑한 곳."
+        },
+        {
+          "placement": "after",
+          "text": "고민이 생기면\n늘 이곳으로 왔다."
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "페루자에서 창작을 고민하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "내가 정말 하고 싶은 건 뭘까."
+        },
+        {
+          "placement": "after",
+          "text": "PERUGIA"
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "칸에서 어려운 질문을 마주한 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "CANNES"
+        },
+        {
+          "placement": "after",
+          "text": "이번엔 좀 더\n풀기 어려운 \n과제를 받았다."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "바르셀로나의 건축을 둘러보는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "BARCELONA"
+        },
+        {
+          "placement": "after",
+          "text": "누군가는\n자기 생각을\n\n이렇게 큰 세계로\n만들어 놓기도 했다."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "보르도에서 생각에 잠긴 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "BORDEAUX"
+        },
+        {
+          "placement": "after",
+          "text": "그럼 나는?"
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "자신만의 창작을 준비하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "다음 스테이지로 가자."
+        },
+        {
+          "placement": "after",
+          "text": "인풋은 충분했다.\n이제는 아웃풋을 할 차례."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "한국으로 돌아가는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "KOREA"
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — LE VOILÀ"
+        },
+        {
+          "placement": "after",
+          "text": "한국으로 간다."
+        }
+      ]
+    }
+  }
+}

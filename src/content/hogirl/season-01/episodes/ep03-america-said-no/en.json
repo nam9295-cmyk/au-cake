@@ -1,0 +1,219 @@
+{
+  "title": "AMERICA SAID NO",
+  "description": "America said no. So I found another way.",
+  "panels": {
+    "panel-001": {
+      "alt": "Cover artwork for AMERICA SAID NO.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "HOGIRL imagines studying in an American culinary classroom.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "The CIA.\nIn America."
+        },
+        {
+          "placement": "after",
+          "text": "Perfect. Let’s go."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "HOGIRL holds a book and focuses on her goal.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I knew where I wanted to go\nand what I wanted to learn."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "HOGIRL prepares to study in America.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I started preparing\nto study in America."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "HOGIRL attends a visa interview.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Then came\nthe final hurdle,\nthe visa interview."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "A dark background for the visa rejection.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "DECLINED."
+        }
+      ],
+      "captionLayout": {
+        "x": 10,
+        "y": 47,
+        "maxWidth": 80,
+        "align": "center",
+        "tone": "light"
+      }
+    },
+    "panel-007": {
+      "alt": "HOGIRL pauses after the rejection.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "For a moment,"
+        },
+        {
+          "placement": "after",
+          "text": "everything stopped."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "HOGIRL resolves to try again.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "You think I’d give up\njust because one door closed?"
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "HOGIRL renews her resolve beside the Han River in four panels.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I’ll come back\nwith an acceptance letter."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "HOGIRL opens her research materials again.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "How else\ncould I get there…?"
+        },
+        {
+          "placement": "after",
+          "text": "Then I opened\neverything up again."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "Belgian and Swiss landmarks and chocolate-making scenes.",
+      "captions": []
+    },
+    "panel-012": {
+      "alt": "HOGIRL discovers countries known for chocolate.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "One by one,\nthe countries famous for chocolate\nbegan to appear."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "HOGIRL reconsiders her choice of America.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Wait."
+        },
+        {
+          "placement": "after",
+          "text": "Why does it\nhave to be America?"
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "HOGIRL considers Europe on a map.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I looked at the map again.\nAnd suddenly, the answer was obvious."
+        },
+        {
+          "placement": "after",
+          "text": "Wait… Europe."
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "HOGIRL discovers Le Cordon Bleu.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "A long history.\nLe Cordon Bleu."
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "HOGIRL imagines Paris with bright anticipation.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Where it all began.\nParis."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "HOGIRL discovers French culinary culture.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "And then—\nFrance."
+        },
+        {
+          "placement": "after",
+          "text": "The world’s culinary capital."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "HOGIRL finds another way forward.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "America said no."
+        },
+        {
+          "placement": "after",
+          "text": "So I found\nanother way."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL reaches for a pearl.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Even when I fall,\nI’ll find the pearl."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL prepares an eight-slide presentation to persuade her family.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "NEXT — EIGHT SLIDES"
+        },
+        {
+          "placement": "after",
+          "text": "There was only\none thing left to do."
+        },
+        {
+          "placement": "after",
+          "text": "Convince my family."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "title": "THIS IS MY THING",
+  "description": "THIS IS MY THING",
+  "panels": {
+    "panel-001": {
+      "alt": "THIS IS MY THING 표지.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "요리학교 모자를 쓴 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "좋아하는 것이\n어디까지 깊어질 수 있을까?"
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "요리학교를 졸업하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "드디어,\n졸업!"
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "은메달을 목에 건 HOGIRL과 졸업 동료들이 카페 테라스에서 대화한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "학교를 떠나\n모두 이력을 준비했다."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "앞으로의 진로를 이야기하는 친구들.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "유명 호텔!"
+        },
+        {
+          "placement": "after",
+          "text": "나는 요즘 핫한\n세드릭 밑으로 갈 거야!"
+        },
+        {
+          "placement": "after",
+          "text": "나는 무조건 대기업."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "초콜릿 전문 일터를 질문하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "학교 이름만큼\n중요한 경력이었다."
+        },
+        {
+          "placement": "after",
+          "text": "초콜릿만 전문적으로\n다루는 곳이 있을까요?"
+        },
+        {
+          "placement": "after",
+          "text": "유명한 곳이 아니라도 괜찮아요."
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "햇살이 비치는 파리의 식료품 상점 거리를 걷는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "RUE DE SÈVRES, PARIS."
+        },
+        {
+          "placement": "after",
+          "text": "LE BON MARCHÉ"
+        },
+        {
+          "placement": "after",
+          "text": "파리에서도\n미식가들이 모이는 곳."
+        },
+        {
+          "placement": "after",
+          "text": "LA GRANDE ÉPICERIE DE PARIS"
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "파리의 작은 초콜릿 가게.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그 한가운데—\n아주 작은\n초콜릿 가게."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "초콜릿 가게에서 셰프 옆에 앉아 서류에 서명하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "내일부터 나오세요."
+        },
+        {
+          "placement": "after",
+          "text": "네! 쉐프님."
+        },
+        {
+          "placement": "after",
+          "text": "À demain."
+        },
+        {
+          "placement": "after",
+          "text": "Oui, Chef."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "셰프복을 입고 매장에서 초콜릿 작업실로 이어지는 계단을 내려가는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "첫 출근."
+        },
+        {
+          "placement": "after",
+          "text": "좁은 계단을 따라\n내려갔다."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "초콜릿 몰드 100개를 마주한 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "첫날부터—"
+        },
+        {
+          "placement": "after",
+          "text": "몰드 100개."
+        },
+        {
+          "placement": "after",
+          "text": "100 MOULDS."
+        },
+        {
+          "placement": "after",
+          "text": "헉."
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "일을 마친 뒤 손이 아픈 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "엄마아아아ㅠㅠ"
+        },
+        {
+          "placement": "after",
+          "text": "손 너무 아파아ㅠㅠ"
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "초콜릿 제조 기계를 발견한 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "처음 보는 기계들."
+        },
+        {
+          "placement": "after",
+          "text": "TEMPERING.\nENROBING."
+        },
+        {
+          "placement": "after",
+          "text": "와… 초콜릿에\n이런 세계가 있구나."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "다음 날 다시 일어나는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "다음 날이면\n또 일어났다."
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "힘든 작업 속에서도 배움을 이어가는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "힘들었지만,"
+        },
+        {
+          "placement": "after",
+          "text": "보고 싶은 게 있었다."
+        },
+        {
+          "placement": "after",
+          "text": "더 알고 싶은 게 있었다."
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "고단한 하루를 돌아보는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "아… 너무 지쳤어."
+        },
+        {
+          "placement": "after",
+          "text": "내일 아침엔 또 씩씩하게 일어나겠지."
+        },
+        {
+          "placement": "after",
+          "text": "십년은 늙은 것 같아."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "전문 장비로 가득한 초콜릿 공방.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "작은 가게 아래에는\n전문 장비들이 \n좁은 공간을 가득 채웠다."
+        },
+        {
+          "placement": "after",
+          "text": "템퍼링. 엔로빙.\n공기 제거. 진공 포장. 급냉."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "수출을 준비하는 초콜릿.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "수출.\n"
+        },
+        {
+          "placement": "after",
+          "text": "내가 몰랐던\n진짜 초콜릿의 세계가\n있었다."
+        },
+        {
+          "placement": "after",
+          "text": "지중해와 인도양을 건너,\n일본으로 향하는 초콜릿까지.\n"
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "작업대에서 노트에 새로운 초콜릿 아이디어를 그리는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "반복은 기준을 가르쳐줬다."
+        },
+        {
+          "placement": "after",
+          "text": "이걸 바꾸면? 저걸 섞으면?\n아직 없는 걸 만들면?"
+        },
+        {
+          "placement": "after",
+          "text": "그리고— 다음 질문이 생겼다."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "무엇을 만들고 싶은지 고민하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "NEXT — I NEED TO CREATE"
+        },
+        {
+          "placement": "after",
+          "text": "나는\n무엇을 만들고\n싶은가."
+        }
+      ]
+    }
+  }
+}

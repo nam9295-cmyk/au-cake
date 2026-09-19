@@ -1,0 +1,223 @@
+{
+  "title": "THE CHOCOLATE ROOM",
+  "description": "초콜릿 너머, 새로운 세계가 펼쳐졌다.",
+  "panels": {
+    "panel-001": {
+      "alt": "THE CHOCOLATE ROOM 표지.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "초콜릿 너머,\n새로운 세계가 펼쳐졌다."
+        }
+      ]
+    },
+    "panel-002": {
+      "alt": "HOGIRL이 명동 호텔의 VIP 라운지에서 일하고 있다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그 문이 열리기 전,\n나는 명동의 5성급 호텔\nVIP 라운지에 있었다."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "호텔 직원들이 손님을 위한 새로운 경험을 준비한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "럭셔리한 이곳은 늘 손님을 위해\n새로운 경험을 준비했다."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "HOGIRL이 여러 나라의 초콜릿을 모은 편집숍을 발견한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "세계 각국의 초콜릿을 모은 편집숍!"
+        },
+        {
+          "placement": "after",
+          "text": "우와, 초콜릿이네.\n우리 엄마 보고 싶다."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "HOGIRL이 엄마와 초콜릿을 나누던 어린 시절을 떠올린다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "엄마의 장가방에는\n늘 초콜릿이 있었다."
+        },
+        {
+          "placement": "after",
+          "text": "엄마와 나눠 먹던\n작고 반가운 선물."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "HOGIRL이 낯선 초콜릿 작품들을 바라본다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그런데,\n이건 내가 알던\n초콜릿이 아니었다."
+        },
+        {
+          "placement": "after",
+          "text": "이게 다,\n초콜릿이라고?"
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "흰 장미로 장식한 삼단 케이크.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "마치 예술품 같았다."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "초콜릿으로 만든 조각 작품.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "예술품 같은 게 아니라, 정말 예술이었다."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "초콜릿 패션쇼.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "초콜릿으로\n조각도 하고,\n패션쇼도 있다."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "HOGIRL이 선배에게 초콜릿을 배울 곳을 묻는다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "한국에서 초콜릿을 배울 수 있는 곳이 있을까요?"
+        },
+        {
+          "placement": "after",
+          "text": "K 컬리너리 아트 스쿨에\n초콜릿 과정이 있어요."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "HOGIRL이 전문적인 초콜릿 제작 기술을 배운다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그곳에서 기초부터 고급 과정까지 배웠다."
+        },
+        {
+          "placement": "after",
+          "text": "초콜릿 전문가 자격도 땄다."
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "HOGIRL이 자신의 손으로 초콜릿 작품을 만든다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "유리 너머에 있던 세계가,\n어느새 내 손 안에 들어와 있었다."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "벨기에 쇼콜라티에의 초콜릿 제작 시연.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "벨기에 쇼콜라티에의 세미나를 들었다."
+        },
+        {
+          "placement": "after",
+          "text": "같은 초콜릿인데, 뭔가 달랐다.\n손길에 쌓인 시간, 몸에 밴 문화가 신선하게 느껴졌다."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "카카오나무와 열매.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "초콜릿이 나무에서 시작된다고?\n카카오콩을 발효하고,\n볶는 거라고?"
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "HOGIRL이 말레이시아에 도착한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그래서 말레이시아에 갔다."
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "HOGIRL이 카카오 열매와 발효·로스팅 과정을 경험한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "갓 딴 카카오 열매를 열어\n과육째 먹어보고,\n발효하고 로스팅하는 과정을\n직접 봤다."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "초콜릿을 재료로 작품을 만드는 쇼콜라티에.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "쇼콜라티에.\n초콜릿을 재료로\n작품을 만드는 사람들."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "초콜릿의 세계에 몰입한 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그때 완전히 빠졌다."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL이 초콜릿을 본격적으로 배우기로 결심한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "미쳤다.\n나 이거 제대로 배워볼 거야."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL이 전 세계 요리학교를 탐색한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그럼, 어디로 가야 하지?\n전 세계 요리학교를 찾아봤다."
+        }
+      ]
+    },
+    "panel-021": {
+      "alt": "자유의 여신상과 성조기를 배경으로 미국행을 결심하는 장면.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "미국?\nCIA?\n좋아."
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — AMERICA SAID NO"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "kind": "episode",
+  "number": 10,
+  "slug": "ep10-i-need-to-create",
+  "previous": {
+    "kind": "episode",
+    "seasonSlug": "season-1",
+    "episodeSlug": "ep05-night-bus-university"
+  },
+  "locales": {
+    "en": {
+      "status": "draft"
+    },
+    "ko": {
+      "status": "draft"
+    }
+  },
+  "media": {
+    "ogImagePanelId": "panel-001",
+    "panels": [
+      {
+        "id": "panel-001",
+        "presentation": "integrated-cover",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/01",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-002",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/02",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-003",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/03",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-004",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/04",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-005",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/05",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-006",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/06",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-007",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/07",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-008",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/08",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-009",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/09",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-010",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/10",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-011",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/11",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-012",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/12",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-013",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/13",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-014",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/14",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-015",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/15",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-016",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/16",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-017",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/17",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-018",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/18",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-019",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/19",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-020",
+        "media": {
+          "key": "hogirl/v1/season-1/ep10-i-need-to-create/20",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      }
+    ]
+  }
+}

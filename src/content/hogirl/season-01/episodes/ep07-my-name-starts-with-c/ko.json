@@ -1,0 +1,317 @@
+{
+  "title": "MY NAME STARTS WITH C",
+  "description": "MY NAME STARTS WITH C",
+  "panels": {
+    "panel-001": {
+      "alt": "MY NAME STARTS WITH C 표지.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "HOGIRL. J. C"
+        },
+        {
+          "placement": "after",
+          "text": "C was my lucky letter."
+        }
+      ]
+    },
+    "panel-002": {
+      "alt": "파리 요리학교에 들어서는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "드디어\n수업이 시작됐다."
+        },
+        {
+          "placement": "after",
+          "text": "LE CORDON BLEU PARIS."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "인사를 주고받는 셰프와 통역사, 학생들.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "CHEF"
+        },
+        {
+          "placement": "after",
+          "text": "Bonjour tout le monde!"
+        },
+        {
+          "placement": "after",
+          "text": "TRANSLATOR"
+        },
+        {
+          "placement": "after",
+          "text": "Hello, everyone!"
+        },
+        {
+          "placement": "after",
+          "text": "STUDENTS"
+        },
+        {
+          "placement": "after",
+          "text": "Bonjour, Chef!"
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "실시간 통역 수업을 듣는 학생들.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "셰프의 프랑스어 수업은\n실시간으로 영어로 통역됐다."
+        },
+        {
+          "placement": "after",
+          "text": "그래서 전 세계에서 온 친구들이\n함께 수업을 들을 수 있었다."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "촘촘하게 이어지는 요리 수업.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "수업은\n빡세게 돌아갔다."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "제과의 전 과정을 시연하는 셰프.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "6시간의 데모 수업."
+        },
+        {
+          "placement": "after",
+          "text": "처음부터 끝까지\n전 과정을 본다."
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "배운 내용을 실습하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "다음 날은 실습."
+        },
+        {
+          "placement": "after",
+          "text": "이번엔—\n내가 만든다."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "번호가 정해진 학생들의 작업대.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "자리는\n이름 순으로 정해졌다."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "자신의 실습 자리를 확인한 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "내 성은\nC로 시작한다."
+        },
+        {
+          "placement": "after",
+          "text": "HOGIRL"
+        },
+        {
+          "placement": "after",
+          "text": "3번?"
+        },
+        {
+          "placement": "after",
+          "text": "YES!!"
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "작업대에서 냄비의 온도를 확인하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "PERFECT SPOT."
+        },
+        {
+          "placement": "after",
+          "text": "셰프의 손이\n바로 보였다."
+        },
+        {
+          "placement": "after",
+          "text": "그리고—\n피드백도 바로 받았다."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "작은 차이가 만드는 제과의 재료와 결과.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "제과는\n과학이었다."
+        },
+        {
+          "placement": "after",
+          "text": "미세한 차이가\n결과를 바꿨다."
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "온도와 질감의 변화를 보여주는 설탕공예.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "설탕은\n온도에 따라"
+        },
+        {
+          "placement": "after",
+          "text": "결정이 변했다."
+        },
+        {
+          "placement": "after",
+          "text": "결정이 달라지면\n질감도, 형태도 달라졌다."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "온도에 따른 변화를 보여주는 초콜릿 작업.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "초콜릿은\n온도에 따라"
+        },
+        {
+          "placement": "after",
+          "text": "분자구조의 배열이 달라졌다."
+        },
+        {
+          "placement": "after",
+          "text": "몇 도의 차이가\n결과를 바꿨다."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "색과 형태, 균형이 돋보이는 프랑스 디저트.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "음식은\n눈으로 먼저 먹는다."
+        },
+        {
+          "placement": "after",
+          "text": "비주얼부터\n그 음식의 시작이다."
+        },
+        {
+          "placement": "after",
+          "text": "COLOR · SHAPE · VOLUME · BALANCE"
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "다양한 식감의 디저트.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "입 안의 재미는\n맛을 극대화한다."
+        },
+        {
+          "placement": "after",
+          "text": "오감을 자극하라."
+        },
+        {
+          "placement": "after",
+          "text": "SOFT · CRISP · CREAMY · CRUNCHY · SMOOTH"
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "신선한 식재료를 접하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "신선한 재료는\n기본값이다."
+        },
+        {
+          "placement": "after",
+          "text": "우리는 이 재료들을\n적절히 지휘하는"
+        },
+        {
+          "placement": "after",
+          "text": "마에스트로의 역할을\n할 뿐이었다."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "프랑스 식사 예절을 경험하는 학생들.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "에티튜드 또한\n맛의 일부분이었다."
+        },
+        {
+          "placement": "after",
+          "text": "잘 입고."
+        },
+        {
+          "placement": "after",
+          "text": "커틀러리도\n제대로 사용한다."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "이야기처럼 이어지는 코스 요리.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "STORYTELLING."
+        },
+        {
+          "placement": "after",
+          "text": "어떻게 시작하고,"
+        },
+        {
+          "placement": "after",
+          "text": "어떻게 이어지고,"
+        },
+        {
+          "placement": "after",
+          "text": "어떻게 끝나는지."
+        },
+        {
+          "placement": "after",
+          "text": "식사에도\n서사가 있었다."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "밤의 에펠탑이 보이는 집 안 열린 창가에 선 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "ROOPRETELCHAM."
+        },
+        {
+          "placement": "after",
+          "text": "모든 것을 이루어지게 하는 주문."
+        },
+        {
+          "placement": "after",
+          "text": "꿈꾸던 세계 안에 왔다."
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — MICHELIN HOMEWORK"
+        }
+      ]
+    }
+  }
+}

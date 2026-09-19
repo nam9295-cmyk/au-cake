@@ -34,10 +34,19 @@ export type HogirlHistoricalPublication = {
   status: 'published'
 }
 
+export type HogirlCaptionLayout = {
+  x: number
+  y: number
+  maxWidth: number
+  align: 'left' | 'center' | 'right'
+  tone?: 'light' | 'forest'
+}
+
 export type HogirlCaption = {
   placement: 'before' | 'after' | 'overlay'
   text: string
   emphasis?: boolean
+  layout?: HogirlCaptionLayout
 }
 
 export type HogirlEpisodeManifest = {
@@ -59,13 +68,16 @@ export type HogirlPrologueManifest = {
   media: HogirlEpisodeMedia
 }
 
+export type HogirlEpisodeLocalePanel = {
+  alt: string
+  captions: HogirlCaption[]
+  captionLayout?: HogirlCaptionLayout
+}
+
 export type HogirlEpisodeLocaleContent = {
   title: string
   description: string
-  panels: Record<string, {
-    alt: string
-    captions: HogirlCaption[]
-  }>
+  panels: Record<string, HogirlEpisodeLocalePanel>
 }
 
 export type HogirlSeriesLocaleContent = HogirlLocalePublication & {
@@ -81,6 +93,15 @@ export type HogirlSeriesManifest = {
     slug: string
     directory: string
   }
+  draftPrologue?: {
+    slug: string
+    directory: string
+  }
+  draftSeasons?: Array<{
+    number: number
+    slug: string
+    directory: string
+  }>
   publishedSeasons: Array<{
     number: number
     slug: string

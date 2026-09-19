@@ -86,3 +86,45 @@ test('a Prologue uses the shared reader without an episode number and supports a
   assert.match(html, /hogirl-panel-captions--overlay/)
   assert.match(html, /A year before graduation,/)
 })
+
+test('ordinary captions render inside the artwork and expose swipe progress markup', () => {
+  const html = renderToStaticMarkup(createElement(HogirlReader, {
+    episode,
+    locale: 'en',
+    mediaOrigin: 'https://media.example.test',
+  }))
+
+  const firstPanel = html.match(/data-hogirl-panel="panel-001"[\s\S]*?<\/li>/)?.[0] || ''
+  const secondPanel = html.match(/data-hogirl-panel="panel-002"[\s\S]*?<\/li>/)?.[0] || ''
+  assert.match(firstPanel, /hogirl-panel-caption-layer--bottom/)
+  assert.match(secondPanel, /hogirl-panel-caption-layer--bottom/)
+  assert.match(html, /class="hogirl-swipe-progress"/)
+  assert.match(html, />1 \/ 2</)
+})
+
+test('reader supports proportional panel and per-caption layout without nth-child CSS', () => {
+  const html = renderToStaticMarkup(createElement(HogirlReader, {
+    locale: 'en',
+    mediaOrigin: 'https://media.example.test',
+    episode: {
+      title: 'Layout fixture',
+      panels: [{
+        id: 'panel-layout',
+        media: { key: 'hogirl/fixture/layout', sourceWidth: 1080, sourceHeight: 1350 },
+        alt: 'Layout fixture',
+        captionLayout: { x: 8, y: 18, maxWidth: 58, align: 'left' as const },
+        captions: [
+          { placement: 'after' as const, text: 'Shared layout.' },
+          { placement: 'after' as const, text: 'Independent.', layout: { x: 43, y: 28, maxWidth: 24, align: 'center' as const } },
+        ],
+      }],
+    },
+  }))
+
+  assert.match(html, /hogirl-panel-caption-layer--positioned/)
+  assert.match(html, /--hogirl-caption-x:8%/)
+  assert.match(html, /--hogirl-caption-y:18%/)
+  assert.match(html, /--hogirl-caption-width:58%/)
+  assert.match(html, /--hogirl-caption-x:43%/)
+  assert.doesNotMatch(html, /nth-child/)
+})

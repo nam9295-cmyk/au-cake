@@ -1,0 +1,184 @@
+{
+  "kind": "episode",
+  "number": 4,
+  "slug": "ep04-eight-slides",
+  "previous": {
+    "kind": "episode",
+    "seasonSlug": "season-1",
+    "episodeSlug": "ep03-america-said-no"
+  },
+  "locales": {
+    "en": {
+      "status": "draft"
+    },
+    "ko": {
+      "status": "draft"
+    }
+  },
+  "media": {
+    "ogImagePanelId": "panel-001",
+    "panels": [
+      {
+        "id": "panel-001",
+        "presentation": "integrated-cover",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/01",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-002",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/02",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-003",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/03",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-004",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/04",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-005",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/05",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-006",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/06",
+          "sourceWidth": 1092,
+          "sourceHeight": 1440
+        }
+      },
+      {
+        "id": "panel-007",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/07",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-008",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/08",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-009",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/09",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-010",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/10",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-011",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/11",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-012",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/12",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-013",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/13",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-014",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/14",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-015",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/15",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-016",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/16",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-017",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/17",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-018",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/18",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-019",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/19",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-020",
+        "media": {
+          "key": "hogirl/v1/season-1/ep04-eight-slides/20",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      }
+    ]
+  }
+}

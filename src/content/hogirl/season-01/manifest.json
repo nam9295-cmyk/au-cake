@@ -2,6 +2,45 @@
   "number": 1,
   "slug": "season-1",
   "episodes": [
-    { "number": 1, "slug": "ep01-i-know-what-i-want" }
+    {
+      "number": 1,
+      "slug": "ep01-i-know-what-i-want"
+    },
+    {
+      "number": 2,
+      "slug": "ep02-the-chocolate-room"
+    },
+    {
+      "number": 3,
+      "slug": "ep03-america-said-no"
+    },
+    {
+      "number": 4,
+      "slug": "ep04-eight-slides"
+    },
+    {
+      "number": 5,
+      "slug": "ep05-night-bus-university"
+    },
+    {
+      "number": 6,
+      "slug": "ep06-never-again-australia"
+    },
+    {
+      "number": 7,
+      "slug": "ep07-my-name-starts-with-c"
+    },
+    {
+      "number": 8,
+      "slug": "ep08-michelin-homework"
+    },
+    {
+      "number": 9,
+      "slug": "ep09-this-is-my-thing"
+    },
+    {
+      "number": 10,
+      "slug": "ep10-i-need-to-create"
+    }
   ]
 }

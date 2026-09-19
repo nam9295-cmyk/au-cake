@@ -1,0 +1,200 @@
+{
+  "kind": "episode",
+  "number": 6,
+  "slug": "ep06-never-again-australia",
+  "previous": {
+    "kind": "episode",
+    "seasonSlug": "season-1",
+    "episodeSlug": "ep05-night-bus-university"
+  },
+  "locales": {
+    "en": {
+      "status": "draft"
+    },
+    "ko": {
+      "status": "draft"
+    }
+  },
+  "media": {
+    "ogImagePanelId": "panel-001",
+    "panels": [
+      {
+        "id": "panel-001",
+        "presentation": "integrated-cover",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/01",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-002",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/02",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-003",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/03",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-004",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/04",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-005",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/05",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-006",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/06",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-007",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/07",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-008",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/08",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-009",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/09",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-010",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/10",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-011",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/11",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-012",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/12",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-013",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/13",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-014",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/14",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-015",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/15",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-016",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/16",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-017",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/17",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-018",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/18",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-019",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/19",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-020",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/20",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-021",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/21",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-022",
+        "media": {
+          "key": "hogirl/v1/season-1/ep06-never-again-australia/22",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      }
+    ]
+  }
+}

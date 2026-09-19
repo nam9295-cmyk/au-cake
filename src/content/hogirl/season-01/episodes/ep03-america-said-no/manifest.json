@@ -1,0 +1,184 @@
+{
+  "kind": "episode",
+  "number": 3,
+  "slug": "ep03-america-said-no",
+  "previous": {
+    "kind": "episode",
+    "seasonSlug": "season-1",
+    "episodeSlug": "ep02-the-chocolate-room"
+  },
+  "locales": {
+    "en": {
+      "status": "draft"
+    },
+    "ko": {
+      "status": "draft"
+    }
+  },
+  "media": {
+    "ogImagePanelId": "panel-001",
+    "panels": [
+      {
+        "id": "panel-001",
+        "presentation": "integrated-cover",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/01",
+          "sourceWidth": 1080,
+          "sourceHeight": 1350
+        }
+      },
+      {
+        "id": "panel-002",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/02",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-003",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/03",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-004",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/04",
+          "sourceWidth": 1121,
+          "sourceHeight": 1403
+        }
+      },
+      {
+        "id": "panel-005",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/05",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-006",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/06",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-007",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/07",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-008",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/08",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-009",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/09",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-010",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/10",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-011",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/11",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-012",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/12",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-013",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/13",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-014",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/14",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-015",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/15",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-016",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/16",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-017",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/17",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-018",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/18",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-019",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/19",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      },
+      {
+        "id": "panel-020",
+        "media": {
+          "key": "hogirl/v1/season-1/ep03-america-said-no/20",
+          "sourceWidth": 1122,
+          "sourceHeight": 1402
+        }
+      }
+    ]
+  }
+}

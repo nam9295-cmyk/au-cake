@@ -1,0 +1,225 @@
+{
+  "title": "NIGHT BUS UNIVERSITY",
+  "description": "NIGHT BUS UNIVERSITY",
+  "panels": {
+    "panel-001": {
+      "alt": "NIGHT BUS UNIVERSITY 표지.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "옥스포드 교실에서 공부하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "옥스포드에서의\n생활이 시작됐다.\n\n첫 번째 목표.\nIELTS."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "수업과 공부, 식사와 귀가로 이어지는 HOGIRL의 평일.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "월요일부터 금요일까지.\n학교, 도서관, 집."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "금요일 저녁 친구들에게 인사하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "금요일 밤마다\n내가 향한 곳은"
+        },
+        {
+          "placement": "after",
+          "text": "호걸아, 파티 가자!"
+        },
+        {
+          "placement": "after",
+          "text": "빠이!"
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "야간버스에 오르는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "스튜던트 트립."
+        },
+        {
+          "placement": "after",
+          "text": "NIGHT BUS."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "해저터널을 건너는 버스와 잠든 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "밤새 달리고,"
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "새로운 도시에 도착한 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그리고 눈을 뜨면— 새로운 도시."
+        },
+        {
+          "placement": "after",
+          "text": "유럽을\n먹으러 왔다."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "룩셈부르크를 걷는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "LUXEMBOURG"
+        },
+        {
+          "placement": "after",
+          "text": "걷고,"
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "벨기에 와플과 초콜릿을 맛보는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "BELGIUM"
+        },
+        {
+          "placement": "after",
+          "text": "먹고,"
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "독일 거리를 둘러보는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "GERMANY"
+        },
+        {
+          "placement": "after",
+          "text": "보고,"
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "파리에서 디저트를 즐기는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "FRANCE"
+        },
+        {
+          "placement": "after",
+          "text": "또 걷고,"
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "바르셀로나에서 추로스를 먹는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "SPAIN"
+        },
+        {
+          "placement": "after",
+          "text": "또 먹고,"
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "로마에서 젤라토를 즐기는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "ITALY"
+        },
+        {
+          "placement": "after",
+          "text": "또 먹고."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "음식을 먹고 잔디 위에서 쉬는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "더는 못 먹겠다."
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "쇼윈도의 디저트를 발견한 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "잠깐,"
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "호기심 어린 HOGIRL의 눈 클로즈업.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "저건 안 먹어봤잖아?"
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "돌아오는 버스에서 잠든 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "일요일 밤.\n다시—\nNIGHT BUS."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "공부하고 어학시험에 응시하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그 시간을\n최대한 온전히 쓰고 싶었다."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "옥스포드 방의 책상에서 공부하는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "첫 번째 관문.\n어학성적."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "성적표를 들고 기뻐 뛰는 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "해냈다!!!"
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — NEVER AGAIN, AUSTRALIA"
+        }
+      ]
+    }
+  }
+}

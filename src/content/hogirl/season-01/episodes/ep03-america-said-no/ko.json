@@ -1,0 +1,219 @@
+{
+  "title": "AMERICA SAID NO",
+  "description": "길이 막힌 것 같았다. 그런데 돌아보니 다른 길이 있었다.",
+  "panels": {
+    "panel-001": {
+      "alt": "AMERICA SAID NO 표지.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "HOGIRL이 미국 요리학교의 교실을 상상한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "미국의 CIA."
+        },
+        {
+          "placement": "after",
+          "text": "좋아, 미국으로 가자!"
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "HOGIRL이 책을 들고 목표를 생각한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "가고 싶은 곳도,\n배우고 싶은 것도 정했다."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "HOGIRL이 미국 유학을 준비한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "미국을 목표로\n하나씩 준비하기 시작했다."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "HOGIRL이 비자 인터뷰를 본다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그리고\n마지막 관문인 비자 인터뷰."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "비자 거절을 알리는 어두운 배경.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "거절."
+        }
+      ],
+      "captionLayout": {
+        "x": 10,
+        "y": 47,
+        "maxWidth": 80,
+        "align": "center",
+        "tone": "light"
+      }
+    },
+    "panel-007": {
+      "alt": "거절 후 멈춰 선 HOGIRL.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "잠깐,"
+        },
+        {
+          "placement": "after",
+          "text": "모든 게 멈췄다."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "HOGIRL이 다시 도전하기로 한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "닫힌 문 앞에서 포기할 줄 알고?"
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "한강에서 결심을 다지는 HOGIRL의 네 장면.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "학교 입학 허가서 받고\n다시 두드리면 돼."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "HOGIRL이 자료를 다시 펼친다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "어떻게 하면 갈 수 있을까..?"
+        },
+        {
+          "placement": "after",
+          "text": "다시 자료를 펼쳤다."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "벨기에와 스위스의 상징물과 초콜릿 제작 장면.",
+      "captions": []
+    },
+    "panel-012": {
+      "alt": "HOGIRL이 초콜릿으로 유명한 나라들을 알아본다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "초콜릿으로 유명한 나라들이\n하나둘 보이기 시작했다."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "HOGIRL이 미국이라는 선택을 다시 생각한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "잠깐."
+        },
+        {
+          "placement": "after",
+          "text": "꼭 미국이어야 하나?"
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "HOGIRL이 지도를 보며 유럽을 생각한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "지도를 다시 봤다."
+        },
+        {
+          "placement": "after",
+          "text": "유럽이잖아?"
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "HOGIRL이 르 꼬르동 블루를 발견한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "오랜 역사의 르 꼬르동 블루."
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "HOGIRL이 설레는 표정으로 파리를 상상한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "본교.. 파리!"
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "HOGIRL이 프랑스 미식 문화를 발견한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "그리고 프랑스."
+        },
+        {
+          "placement": "after",
+          "text": "전 세계 미식의 중심."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "HOGIRL이 다른 길을 찾는다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "길이 막힌 것 같았다."
+        },
+        {
+          "placement": "after",
+          "text": "그런데 돌아보니\n다른 길이 있었다."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL이 진주를 찾는다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "넘어져도,\n나는 진주를 찾을 거야."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL이 가족을 설득할 여덟 장의 발표를 준비한다.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "NEXT — EIGHT SLIDES"
+        },
+        {
+          "placement": "after",
+          "text": "이제 남은 건 하나."
+        },
+        {
+          "placement": "after",
+          "text": "가족을 설득하는 것."
+        }
+      ]
+    }
+  }
+}

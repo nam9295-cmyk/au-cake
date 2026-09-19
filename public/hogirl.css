@@ -26,7 +26,7 @@
 
 .hogirl-panel-list {
   display: grid;
-  gap: 28px;
+  gap: 16px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -36,7 +36,7 @@
   margin: 0;
 }
 
-.hogirl-panel-figure--with-overlay {
+.hogirl-panel-figure--captioned {
   position: relative;
 }
 
@@ -53,32 +53,77 @@
   object-fit: contain;
 }
 
-.hogirl-panel-captions {
-  margin: 0 0 12px;
-}
-
-.hogirl-panel figcaption .hogirl-panel-captions {
-  margin: 12px 0 0;
-}
-
-.hogirl-panel figcaption .hogirl-panel-captions--overlay {
+.hogirl-panel-caption-layer {
   position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hogirl-panel-caption-layer--bottom {
+  inset: 45% 0 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 7% 6%;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.68));
+  color: #fff;
+}
+
+.hogirl-panel-caption-layer--center {
   inset: 0;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  margin: 0;
   padding: 12%;
   color: var(--forest);
 }
 
-.hogirl-panel-caption--emphasis {
+.hogirl-panel-caption-layer--positioned {
+  left: var(--hogirl-caption-x);
+  top: var(--hogirl-caption-y);
+  width: var(--hogirl-caption-width);
+  max-width: calc(96% - var(--hogirl-caption-x));
+  color: #fff;
+}
+
+.hogirl-panel-caption-layer--forest {
   color: var(--forest);
+}
+
+.hogirl-panel-caption-layer--forest .hogirl-panel-captions {
+  text-shadow: none;
+}
+
+.hogirl-panel-captions {
+  width: 100%;
+  margin: 0;
+  font-size: clamp(17px, 2.4vw, 21px);
   font-weight: 700;
+  line-height: 1.35;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.38);
+}
+
+.hogirl-panel-captions--overlay {
+  text-shadow: none;
+}
+
+.hogirl-panel-captions p {
+  margin: 0 0 0.28em;
 }
 
 .hogirl-panel-captions p:last-child {
   margin-bottom: 0;
+}
+
+.hogirl-panel-caption--emphasis {
+  font-weight: 800;
+}
+
+.hogirl-panel-caption-layer--bottom .hogirl-panel-caption--emphasis {
+  color: inherit;
+}
+
+.hogirl-swipe-progress {
+  display: none;
 }
 
 .hogirl-unpublished {
@@ -115,4 +160,161 @@
 .hogirl-reader-navigation a {
   color: var(--forest);
   font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .hogirl-reader {
+    width: 100%;
+    padding: 24px 0 56px;
+  }
+
+  .hogirl-reader-header,
+  .hogirl-unpublished {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .hogirl-panel-list {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    perspective: 1400px;
+    touch-action: pan-y;
+    user-select: none;
+    outline: none;
+  }
+
+  .hogirl-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hogirl-panel--active,
+  .hogirl-panel--candidate {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .hogirl-panel--active {
+    z-index: 2;
+  }
+
+  .hogirl-panel--candidate {
+    z-index: 1;
+  }
+
+  .hogirl-panel figure {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform, filter;
+  }
+
+  .hogirl-panel--active figure {
+    transform:
+      translate3d(var(--hogirl-turn-x), 0, 0)
+      rotateY(var(--hogirl-turn-rotate))
+      scaleX(calc(1 - (var(--hogirl-turn-reveal) * 0.012)));
+    filter: brightness(calc(1 - (var(--hogirl-turn-reveal) * 0.035)));
+  }
+
+  .hogirl-panel--candidate figure {
+    transform: scale(calc(0.978 + (var(--hogirl-turn-reveal) * 0.022)));
+    filter: brightness(calc(0.86 + (var(--hogirl-turn-reveal) * 0.14)));
+  }
+
+  .hogirl-panel-list--next .hogirl-panel--active figure {
+    transform-origin: left center;
+  }
+
+  .hogirl-panel-list--previous .hogirl-panel--active figure {
+    transform-origin: right center;
+  }
+
+  .hogirl-panel--active figure::before,
+  .hogirl-panel--active figure::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hogirl-panel--active figure::before {
+    width: 6%;
+    opacity: calc(var(--hogirl-turn-reveal) * 0.9);
+  }
+
+  .hogirl-panel--active figure::after {
+    width: 22%;
+    opacity: calc(var(--hogirl-turn-reveal) * 0.92);
+  }
+
+  .hogirl-panel-list--next .hogirl-panel--active figure::before {
+    right: 0;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08));
+  }
+
+  .hogirl-panel-list--next .hogirl-panel--active figure::after {
+    right: 0;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(31, 24, 20, 0.12) 42%, rgba(15, 10, 8, 0.42));
+    box-shadow: 12px 0 26px rgba(20, 14, 10, 0.22);
+  }
+
+  .hogirl-panel-list--previous .hogirl-panel--active figure::before {
+    left: 0;
+    background: linear-gradient(270deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08));
+  }
+
+  .hogirl-panel-list--previous .hogirl-panel--active figure::after {
+    left: 0;
+    background: linear-gradient(270deg, rgba(0, 0, 0, 0), rgba(31, 24, 20, 0.12) 42%, rgba(15, 10, 8, 0.42));
+    box-shadow: -12px 0 26px rgba(20, 14, 10, 0.22);
+  }
+
+  .hogirl-panel-list--settling .hogirl-panel--active figure,
+  .hogirl-panel-list--settling .hogirl-panel--candidate figure {
+    transition:
+      transform 480ms cubic-bezier(0.18, 0.78, 0.18, 1),
+      filter 480ms cubic-bezier(0.18, 0.78, 0.18, 1);
+  }
+
+  .hogirl-panel-list--settling .hogirl-panel--active figure::before,
+  .hogirl-panel-list--settling .hogirl-panel--active figure::after {
+    transition: opacity 480ms cubic-bezier(0.18, 0.78, 0.18, 1);
+  }
+
+  .hogirl-panel-caption-layer--bottom {
+    padding: 0 7% 7%;
+  }
+
+  .hogirl-panel-captions {
+    font-size: clamp(17px, 4.8vw, 21px);
+  }
+
+  .hogirl-swipe-progress {
+    display: block;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hogirl-panel-list--settling .hogirl-panel--active figure,
+  .hogirl-panel-list--settling .hogirl-panel--candidate figure {
+    transition-duration: 0.01ms;
+  }
 }

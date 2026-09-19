@@ -1,0 +1,229 @@
+{
+  "title": "EIGHT SLIDES",
+  "description": "EIGHT SLIDES",
+  "panels": {
+    "panel-001": {
+      "alt": "Cover artwork for EIGHT SLIDES.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "HOGIRL prepares for her first study abroad.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Twenty-six.\nMy first study abroad.\nMy first time in Europe."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "HOGIRL creates a presentation on a laptop.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I made an\neight-slide presentation."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "HOGIRL reviews her study plans.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Where. What.\nAnd for how long."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "Chocolatiers work with chocolate.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "And what life as a chocolatier\ncould look like."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "HOGIRL faces her family across a table.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "..."
+        },
+        {
+          "placement": "after",
+          "text": "..."
+        },
+        {
+          "placement": "after",
+          "text": "..."
+        },
+        {
+          "placement": "after",
+          "text": "..."
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "A family member folds his arms as HOGIRL waits.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "NO."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "HOGIRL's younger brothers raise their hands.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Where are you going, sis?\nI wanna study abroad too!!"
+        },
+        {
+          "placement": "after",
+          "text": "Mom!\nMe too!! Me too!!"
+        },
+        {
+          "placement": "after",
+          "text": "Ugh…"
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "An outstretched hand gives HOGIRL permission to go.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Go."
+        },
+        {
+          "placement": "after",
+          "text": "Do what you want to do."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "HOGIRL looks up with a cup in her hands.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I’ll take care of it.\nDon’t worry. Just go."
+        },
+        {
+          "placement": "after",
+          "text": "Really?"
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "HOGIRL packs a suitcase.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I’ll work hard."
+        },
+        {
+          "placement": "after",
+          "text": "And I’m not getting\na part-time job there."
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "HOGIRL explores a European street.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "It wasn't an opportunity that came easily.\nSo I wanted to make the most of every moment."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "HOGIRL tastes and studies food.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "To see. To taste.\nTo learn. To go."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "HOGIRL travels through the airport and boards a plane.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Ladies and gentlemen, this is flight KE907 bound for London Heathrow Airport.\n"
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "HOGIRL arrives in London.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "ENGLAND."
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "HOGIRL explores London with curiosity.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "My first time in Europe felt unfamiliar.\nEverything fascinated me."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "HOGIRL rides a red double-decker bus.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "The first hurdle."
+        },
+        {
+          "placement": "after",
+          "text": "THE LANGUAGE SCORE."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "HOGIRL arrives at a new home in Oxford.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "A new town. A new home."
+        },
+        {
+          "placement": "after",
+          "text": "OXFORD."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL heads to school and boards a bus.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "With my school bag on,\nI got on a red\ndouble-decker bus."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL arrives at Kings College.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "But where do you go\nevery Friday night?"
+        },
+        {
+          "placement": "after",
+          "text": "KINGS\nCOLLEGE"
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — NIGHT BUS UNIVERSITY"
+        }
+      ]
+    }
+  }
+}

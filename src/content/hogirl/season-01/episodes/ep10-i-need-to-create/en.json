@@ -1,0 +1,277 @@
+{
+  "title": "I NEED TO CREATE",
+  "description": "I NEED TO CREATE",
+  "panels": {
+    "panel-001": {
+      "alt": "Cover artwork for I NEED TO CREATE.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "HOGIRL visits an exhibition.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "SOY SHIN"
+        },
+        {
+          "placement": "after",
+          "text": "EN FACE DE LA VIE"
+        },
+        {
+          "placement": "after",
+          "text": "An exhibition by someone I admired."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "HOGIRL prepares desserts for an exhibition opening.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "For the opening,\nI made desserts\nthat belonged in the space."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "HOGIRL discovers a friend's French-Chinese desserts and durian tart.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "A Chinese friend of mine\nwas creating a French-Chinese\ndessert brand."
+        },
+        {
+          "placement": "after",
+          "text": "Oh, that’s cool."
+        },
+        {
+          "placement": "after",
+          "text": "Durian tart."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "HOGIRL explores dessert packaging and presentation.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "How should we package it?\nHow should we present it?"
+        },
+        {
+          "placement": "after",
+          "text": "So making it\nisn’t the end of it…"
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "The Ritz Paris at Place Vendôme.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "RITZ PARIS"
+        },
+        {
+          "placement": "after",
+          "text": "PLACE VENDÔME"
+        },
+        {
+          "placement": "after",
+          "text": "School was over,\nbut learning wasn’t."
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "HOGIRL continues learning at the Ritz Paris.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "What if I learned somewhere else?"
+        },
+        {
+          "placement": "after",
+          "text": "Would I find a different answer?"
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "HOGIRL and her friends prepare to follow their own paths.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "It was time\nfor each of us to go our own way."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "HOGIRL travels through Annecy.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "ANNECY"
+        },
+        {
+          "placement": "after",
+          "text": "I kept moving."
+        },
+        {
+          "placement": "after",
+          "text": "I kept looking.\nI kept thinking."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "HOGIRL reflects beside Lac Léman.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "LAC LÉMAN"
+        },
+        {
+          "placement": "after",
+          "text": "At first,\nI thought the answer\nwas somewhere out there."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "HOGIRL considers opportunities while visiting Mont Blanc.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "MONT BLANC"
+        },
+        {
+          "placement": "after",
+          "text": "There’s an opportunity for you\nin China.\nWant to give it a try?"
+        },
+        {
+          "placement": "after",
+          "text": "Do you want to come back\nto Korea?"
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "HOGIRL visits Prague.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "But,"
+        },
+        {
+          "placement": "after",
+          "text": "PRAGUE"
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "HOGIRL reflects on life in Milan.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "MILANO"
+        },
+        {
+          "placement": "after",
+          "text": "Life wasn’t a math formula\nwhere you plug in the numbers\nand get an answer."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "HOGIRL returns to Florence.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "FLORENCE"
+        },
+        {
+          "placement": "after",
+          "text": "The place I loved most."
+        },
+        {
+          "placement": "after",
+          "text": "Whenever I felt lost,\nI came back here."
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "HOGIRL considers what to create in Perugia.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "What do I really\nwant to create?"
+        },
+        {
+          "placement": "after",
+          "text": "PERUGIA"
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "HOGIRL faces a difficult question in Cannes.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "CANNES"
+        },
+        {
+          "placement": "after",
+          "text": "This time,\nI had a harder question to solve."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "HOGIRL explores architecture in Barcelona.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "BARCELONA"
+        },
+        {
+          "placement": "after",
+          "text": "Someone could take an idea\nand turn it into\nan entire world."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "HOGIRL reflects in Bordeaux.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "BORDEAUX"
+        },
+        {
+          "placement": "after",
+          "text": "Then what about me?"
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL prepares to create something of her own.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Let’s move on\nto the next stage."
+        },
+        {
+          "placement": "after",
+          "text": "I had taken in enough.\n\nNow it was time\nto put something of my own\nout into the world."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL heads back to Korea.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "KOREA"
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — LE VOILÀ"
+        },
+        {
+          "placement": "after",
+          "text": "I’m heading back to Korea."
+        }
+      ]
+    }
+  }
+}

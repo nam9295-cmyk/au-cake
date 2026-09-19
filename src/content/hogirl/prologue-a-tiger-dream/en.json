@@ -2,21 +2,263 @@
   "title": "A TIGER DREAM",
   "description": "Before I was born, my mother had a strange dream.",
   "panels": {
-    "panel-001": { "alt": "A woman faces a large tiger in a cave.", "captions": [{ "placement": "after", "text": "Before I was born, my mother had a strange dream." }] },
-    "panel-002": { "alt": "A moonlit mountain landscape with a lit cave entrance.", "captions": [{ "placement": "after", "text": "Before I was born, my mother had a strange dream." }] },
-    "panel-003": { "alt": "A woman stands at the entrance to a lit cave.", "captions": [] },
-    "panel-004": { "alt": "A woman stands inside a cave before tiger figures.", "captions": [{ "placement": "after", "text": "There was something inside." }] },
-    "panel-005": { "alt": "Several large tiger figures fill a cave.", "captions": [{ "placement": "after", "text": "Tigers. Big ones." }] },
-    "panel-006": { "alt": "A woman stands before a large tiger in a cave.", "captions": [{ "placement": "after", "text": "Strangely... she wasn't afraid." }] },
-    "panel-007": { "alt": "A woman faces a seated tiger in a cave.", "captions": [{ "placement": "after", "text": "......" }] },
-    "panel-008": { "alt": "A woman reaches toward a large tiger.", "captions": [{ "placement": "after", "text": "So she reached out..." }] },
-    "panel-009": { "alt": "A woman touches a tiger's forehead.", "captions": [{ "placement": "after", "text": "... and touched one." }] },
-    "panel-010": { "alt": "A woman walks away from a cave at night.", "captions": [{ "placement": "after", "text": "Then she walked out." }] },
-    "panel-011": { "alt": "A dark background.", "captions": [{ "placement": "after", "text": "She later told me that was my birth dream." }] },
-    "panel-012": { "alt": "A child ties a shoe as a tiger image fades behind them.", "captions": [{ "placement": "after", "text": "Years later..." }] },
-    "panel-013": { "alt": "A child with a backpack opens a door.", "captions": [{ "placement": "after", "text": "Where are you going?" }, { "placement": "after", "text": "Out." }, { "placement": "after", "text": "Why?" }] },
-    "panel-014": { "alt": "A child with a backpack stands at an open door.", "captions": [{ "placement": "after", "text": "I wanna see something." }] },
-    "panel-015": { "alt": "A child runs through an open doorway into a landscape.", "captions": [{ "placement": "after", "text": "Nobody knew it then..." }, { "placement": "after", "text": "that the tiger from that cave" }, { "placement": "after", "text": "would spend her life going somewhere." }] },
-    "panel-016": { "alt": "HOGIRL stands in a long cream-colored dress holding a small bag.", "captions": [{ "placement": "after", "text": "Even when I fall, there's a pearl in my hand." }] }
+    "panel-001": {
+      "alt": "A woman faces a large tiger in a cave.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Before I was born, my mother had a strange dream."
+        }
+      ],
+      "captionLayout": {
+        "x": 50,
+        "y": 52,
+        "maxWidth": 43,
+        "align": "center"
+      }
+    },
+    "panel-002": {
+      "alt": "A moonlit mountain landscape with a lit cave entrance.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Before I was born, my mother had a strange dream."
+        }
+      ],
+      "captionLayout": {
+        "x": 7,
+        "y": 18,
+        "maxWidth": 55,
+        "align": "left"
+      }
+    },
+    "panel-003": {
+      "alt": "A woman stands at the entrance to a lit cave.",
+      "captions": []
+    },
+    "panel-004": {
+      "alt": "A woman stands inside a cave before tiger figures.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "There was something inside."
+        }
+      ],
+      "captionLayout": {
+        "x": 10,
+        "y": 29,
+        "maxWidth": 48,
+        "align": "left"
+      }
+    },
+    "panel-005": {
+      "alt": "Several large tiger figures fill a cave.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Tigers. Big ones."
+        }
+      ],
+      "captionLayout": {
+        "x": 7,
+        "y": 27,
+        "maxWidth": 48,
+        "align": "left"
+      }
+    },
+    "panel-006": {
+      "alt": "A woman stands before a large tiger in a cave.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Strangely... she wasn't afraid."
+        }
+      ],
+      "captionLayout": {
+        "x": 10,
+        "y": 23,
+        "maxWidth": 48,
+        "align": "left"
+      }
+    },
+    "panel-007": {
+      "alt": "A woman faces a seated tiger in a cave.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "......"
+        }
+      ],
+      "captionLayout": {
+        "x": 23,
+        "y": 42,
+        "maxWidth": 20,
+        "align": "left"
+      }
+    },
+    "panel-008": {
+      "alt": "A woman reaches toward a large tiger.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "So she reached out..."
+        }
+      ],
+      "captionLayout": {
+        "x": 8,
+        "y": 22,
+        "maxWidth": 46,
+        "align": "left"
+      }
+    },
+    "panel-009": {
+      "alt": "A woman touches a tiger's forehead.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "... and touched one."
+        }
+      ],
+      "captionLayout": {
+        "x": 8,
+        "y": 18,
+        "maxWidth": 58,
+        "align": "left"
+      }
+    },
+    "panel-010": {
+      "alt": "A woman walks away from a cave at night.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Then she walked out."
+        }
+      ],
+      "captionLayout": {
+        "x": 7,
+        "y": 40,
+        "maxWidth": 58,
+        "align": "left"
+      }
+    },
+    "panel-011": {
+      "alt": "A dark background.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "She later told me that was my birth dream."
+        }
+      ],
+      "captionLayout": {
+        "x": 22.5,
+        "y": 44,
+        "maxWidth": 55,
+        "align": "center"
+      }
+    },
+    "panel-012": {
+      "alt": "A child ties a shoe as a tiger image fades behind them.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Years later..."
+        }
+      ],
+      "captionLayout": {
+        "x": 45,
+        "y": 23,
+        "maxWidth": 48,
+        "align": "right"
+      }
+    },
+    "panel-013": {
+      "alt": "A child with a backpack opens a door.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Where are you going?",
+          "layout": {
+            "x": 8,
+            "y": 12,
+            "maxWidth": 45,
+            "align": "left"
+          }
+        },
+        {
+          "placement": "after",
+          "text": "Out.",
+          "layout": {
+            "x": 43,
+            "y": 28,
+            "maxWidth": 25,
+            "align": "left"
+          }
+        },
+        {
+          "placement": "after",
+          "text": "Why?",
+          "layout": {
+            "x": 10,
+            "y": 40,
+            "maxWidth": 20,
+            "align": "left"
+          }
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "A child with a backpack stands at an open door.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I wanna see something."
+        }
+      ],
+      "captionLayout": {
+        "x": 6,
+        "y": 10,
+        "maxWidth": 53,
+        "align": "left"
+      }
+    },
+    "panel-015": {
+      "alt": "A child runs through an open doorway into a landscape.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Nobody knew it then..."
+        },
+        {
+          "placement": "after",
+          "text": "that the tiger from that cave"
+        },
+        {
+          "placement": "after",
+          "text": "would spend her life going somewhere."
+        }
+      ],
+      "captionLayout": {
+        "x": 40,
+        "y": 11,
+        "maxWidth": 55,
+        "align": "right"
+      }
+    },
+    "panel-016": {
+      "alt": "HOGIRL stands in a long cream-colored dress holding a small bag.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Even when I fall, there's a pearl in my hand."
+        }
+      ],
+      "captionLayout": {
+        "x": 7,
+        "y": 20,
+        "maxWidth": 44,
+        "align": "left",
+        "tone": "forest"
+      }
+    }
   }
 }

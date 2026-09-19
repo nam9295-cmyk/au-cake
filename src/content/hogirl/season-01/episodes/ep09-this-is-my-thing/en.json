@@ -1,0 +1,269 @@
+{
+  "title": "THIS IS MY THING",
+  "description": "THIS IS MY THING",
+  "panels": {
+    "panel-001": {
+      "alt": "Cover artwork for THIS IS MY THING.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "HOGIRL wears her culinary-school hat.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "How deep could I go\ninto something I loved?"
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "HOGIRL graduates from culinary school.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Finally—\ngraduation!"
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "HOGIRL and her fellow graduates talk at a cafe terrace, wearing silver medals.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Leaving school,\neveryone began building their careers."
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "Friends discuss their next career steps.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "A famous hotel!"
+        },
+        {
+          "placement": "after",
+          "text": "I’m going to work under Cédric—\nthe chef everyone’s talking about right now!"
+        },
+        {
+          "placement": "after",
+          "text": "I’m definitely going to a big company."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "HOGIRL asks about a specialist chocolate workplace.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Experience mattered\nas much as the school name."
+        },
+        {
+          "placement": "after",
+          "text": "Is there a chocolate-only place?"
+        },
+        {
+          "placement": "after",
+          "text": "It doesn’t have to be famous."
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "HOGIRL walks past food shops on a sunny Paris street.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "RUE DE SÈVRES, PARIS."
+        },
+        {
+          "placement": "after",
+          "text": "LE BON MARCHÉ"
+        },
+        {
+          "placement": "after",
+          "text": "A place where food lovers\ngather in Paris."
+        },
+        {
+          "placement": "after",
+          "text": "LA GRANDE ÉPICERIE DE PARIS"
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "A small chocolate shop in Paris.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "A small chocolate shop,\nright in the middle of it all."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "HOGIRL signs a document beside the chef in a chocolate shop.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "À demain."
+        },
+        {
+          "placement": "after",
+          "text": "Oui, Chef."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "Wearing a chef jacket, HOGIRL descends the stairs from the shop to the chocolate workshop.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "My first day."
+        },
+        {
+          "placement": "after",
+          "text": "I went down the narrow stairs."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "HOGIRL encounters a hundred chocolate moulds.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "100 MOULDS."
+        },
+        {
+          "placement": "after",
+          "text": "Gasp."
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "HOGIRL's hands hurt after work.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Moooommm..."
+        },
+        {
+          "placement": "after",
+          "text": "My hands hurt so much..."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "HOGIRL discovers chocolate-making machinery.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "TEMPERING.\nENROBING."
+        },
+        {
+          "placement": "after",
+          "text": "Wow… There’s a whole world\nof chocolate I never knew."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "HOGIRL gets up for another day.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "And the next morning,\nI got up again."
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "HOGIRL keeps learning despite the hard work.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "It was hard."
+        },
+        {
+          "placement": "after",
+          "text": "But there was more\nI wanted to see."
+        },
+        {
+          "placement": "after",
+          "text": "More I wanted to know."
+        }
+      ]
+    },
+    "panel-016": {
+      "alt": "HOGIRL reflects on a tiring workday.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I’m exhausted."
+        },
+        {
+          "placement": "after",
+          "text": "Tomorrow, I’ll probably pop right back up."
+        },
+        {
+          "placement": "after",
+          "text": "I think I aged 10 years today."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "Professional equipment fills the chocolate atelier.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "TEMPERING. ENROBING.\nAIR REMOVAL.\nVACUUM PACKING.\nRAPID FREEZING."
+        },
+        {
+          "placement": "after",
+          "text": "Professional equipment\nfilled the narrow space."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "Chocolate is prepared for export.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "EXPORT."
+        },
+        {
+          "placement": "after",
+          "text": "A real world of chocolate\nI hadn’t known."
+        },
+        {
+          "placement": "after",
+          "text": "Across the Mediterranean\nand the Indian Ocean,\nchocolate bound for Japan."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL sketches new chocolate ideas in a notebook at her worktable.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Repetition taught me standards."
+        },
+        {
+          "placement": "after",
+          "text": "What if I changed this?\nCombined it with that?\nMade something that didn’t exist yet?"
+        },
+        {
+          "placement": "after",
+          "text": "And then—a new question emerged."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL considers what she wants to create.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "NEXT — I NEED TO CREATE"
+        },
+        {
+          "placement": "after",
+          "text": "What do I want\nto create?"
+        }
+      ]
+    }
+  }
+}

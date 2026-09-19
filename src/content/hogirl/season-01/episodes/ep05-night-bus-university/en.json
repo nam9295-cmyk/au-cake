@@ -1,0 +1,220 @@
+{
+  "title": "NIGHT BUS UNIVERSITY",
+  "description": "NIGHT BUS UNIVERSITY",
+  "panels": {
+    "panel-001": {
+      "alt": "Cover artwork for NIGHT BUS UNIVERSITY.",
+      "captions": []
+    },
+    "panel-002": {
+      "alt": "HOGIRL studies in an Oxford classroom.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Life in Oxford began.\nFirst goal—\nIELTS."
+        }
+      ]
+    },
+    "panel-003": {
+      "alt": "HOGIRL attends classes, studies, eats and walks home.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Monday to Friday.\nSchool. Library. Home."
+        }
+      ]
+    },
+    "panel-004": {
+      "alt": "HOGIRL waves goodbye to friends on a Friday evening.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Every Friday night,\nthis is where I headed."
+        },
+        {
+          "placement": "after",
+          "text": "Hogirl, let’s\ngo to a party!"
+        },
+        {
+          "placement": "after",
+          "text": "BYE!"
+        }
+      ]
+    },
+    "panel-005": {
+      "alt": "HOGIRL boards a night bus.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "STUDENT TRIP"
+        },
+        {
+          "placement": "after",
+          "text": "NIGHT BUS."
+        }
+      ]
+    },
+    "panel-006": {
+      "alt": "A bus crosses the Channel Tunnel as HOGIRL sleeps.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Ride all night."
+        }
+      ]
+    },
+    "panel-007": {
+      "alt": "HOGIRL arrives in a new city.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "A NEW CITY."
+        },
+        {
+          "placement": "after",
+          "text": "I came to\ntaste Europe."
+        }
+      ]
+    },
+    "panel-008": {
+      "alt": "HOGIRL walks through Luxembourg.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "LUXEMBOURG"
+        },
+        {
+          "placement": "after",
+          "text": "Walk."
+        }
+      ]
+    },
+    "panel-009": {
+      "alt": "HOGIRL tastes Belgian waffles and chocolate.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "BELGIUM"
+        },
+        {
+          "placement": "after",
+          "text": "Taste."
+        }
+      ]
+    },
+    "panel-010": {
+      "alt": "HOGIRL explores a German street.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "GERMANY"
+        },
+        {
+          "placement": "after",
+          "text": "See."
+        }
+      ]
+    },
+    "panel-011": {
+      "alt": "HOGIRL enjoys pastries in Paris.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "FRANCE"
+        },
+        {
+          "placement": "after",
+          "text": "Walk again."
+        }
+      ]
+    },
+    "panel-012": {
+      "alt": "HOGIRL eats churros in Barcelona.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "SPAIN"
+        },
+        {
+          "placement": "after",
+          "text": "Taste again."
+        }
+      ]
+    },
+    "panel-013": {
+      "alt": "HOGIRL enjoys gelato in Rome.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "ITALY"
+        },
+        {
+          "placement": "after",
+          "text": "And taste again."
+        }
+      ]
+    },
+    "panel-014": {
+      "alt": "HOGIRL rests on the grass after eating.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I CAN’T EAT ANOTHER BITE."
+        }
+      ]
+    },
+    "panel-015": {
+      "alt": "HOGIRL notices desserts in a shop window.",
+      "captions": []
+    },
+    "panel-016": {
+      "alt": "A close-up of HOGIRL's curious eye.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "But I haven’t tried THAT one."
+        }
+      ]
+    },
+    "panel-017": {
+      "alt": "HOGIRL sleeps on the return bus.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "Sunday night.\nBack on the bus."
+        }
+      ]
+    },
+    "panel-018": {
+      "alt": "HOGIRL studies and takes a language test.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I wanted to make the most of every moment."
+        }
+      ]
+    },
+    "panel-019": {
+      "alt": "HOGIRL studies at her desk in Oxford.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "The first hurdle.\nA language test score."
+        }
+      ]
+    },
+    "panel-020": {
+      "alt": "HOGIRL jumps with joy holding her test results.",
+      "captions": [
+        {
+          "placement": "after",
+          "text": "I DID IT!!!"
+        },
+        {
+          "placement": "after",
+          "text": "NEXT — NEVER AGAIN, AUSTRALIA"
+        }
+      ]
+    }
+  }
+}
