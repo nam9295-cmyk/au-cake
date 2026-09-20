@@ -3,16 +3,2707 @@
   "children": [
     {
       "type": "frame",
-      "id": "bi8Au",
+      "id": "WJPZm",
       "x": 0,
       "y": 0,
-      "name": "Frame",
+      "name": "00 — Design System",
       "clip": true,
-      "width": 800,
-      "height": 600,
+      "width": 1200,
       "fill": "#FFFFFF",
-      "layout": "none"
+      "layout": "vertical",
+      "gap": 32,
+      "padding": 40,
+      "children": [
+        {
+          "type": "text",
+          "id": "Xnpbf",
+          "name": "DS Title",
+          "fill": "#352F31",
+          "content": "AU-CAKE Design System Baseline v1.0",
+          "fontFamily": "Work Sans",
+          "fontSize": 28,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "text",
+          "id": "PX3zn",
+          "name": "DS Subtitle",
+          "fill": "#1F5A46",
+          "content": "Clean product-focused structure inspired by ACME Cups NZ • Pure white base, Tiger wallpaper preserved, No shadows/glass/gradients",
+          "fontFamily": "Noto Sans KR",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "sFHdU",
+          "name": "Color Swatches Row",
+          "width": "fill_container",
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "XUsNE",
+              "name": "Pure White (#FFFFFF)",
+              "width": 160,
+              "height": 120,
+              "fill": "#FFFFFF",
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QqyoX",
+                  "name": "Color Label",
+                  "fill": "#352F31",
+                  "content": "Background",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "TwXHa",
+                  "name": "Color Hex",
+                  "fill": "#352F31",
+                  "content": "#FFFFFF",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HQmDF",
+              "name": "Primary Green (#1F5A46)",
+              "width": 160,
+              "height": 120,
+              "fill": "#1F5A46",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "M29fZP",
+                  "name": "Color Label",
+                  "fill": "#FFFFFF",
+                  "content": "Brand Primary",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "X2AlZ",
+                  "name": "Color Hex",
+                  "fill": "#FFFFFF",
+                  "content": "#1F5A46",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JKRat",
+              "name": "Soft Pink (#EDC5C4)",
+              "width": 160,
+              "height": 120,
+              "fill": "#EDC5C4",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "G5zzE",
+                  "name": "Color Label",
+                  "fill": "#352F31",
+                  "content": "Secondary Accent",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "KZggb",
+                  "name": "Color Hex",
+                  "fill": "#352F31",
+                  "content": "#EDC5C4",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yMi0c",
+              "name": "Accent Pink (#F05D88)",
+              "width": 160,
+              "height": 120,
+              "fill": "#F05D88",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qnqpr",
+                  "name": "Color Label",
+                  "fill": "#FFFFFF",
+                  "content": "Highlight Pink",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "e6nZM",
+                  "name": "Color Hex",
+                  "fill": "#FFFFFF",
+                  "content": "#F05D88",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "m0I2lN",
+              "name": "Berry (#B02E3B)",
+              "width": 160,
+              "height": 120,
+              "fill": "#B02E3B",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "z1avu",
+                  "name": "Color Label",
+                  "fill": "#FFFFFF",
+                  "content": "Badge / Notice",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "OXAna",
+                  "name": "Color Hex",
+                  "fill": "#FFFFFF",
+                  "content": "#B02E3B",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "idkA0",
+              "name": "Text (#352F31)",
+              "width": 160,
+              "height": 120,
+              "fill": "#352F31",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O8FFE",
+                  "name": "Color Label",
+                  "fill": "#FFFFFF",
+                  "content": "Primary Body & Headings",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "I81Amy",
+                  "name": "Color Hex",
+                  "fill": "#FFFFFF",
+                  "content": "#352F31",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gj53d",
+          "name": "Typography Section",
+          "width": "fill_container",
+          "stroke": "#E8E4E5",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 24,
+          "children": [
+            {
+              "type": "text",
+              "id": "G9552v",
+              "name": "Typo Display",
+              "fill": "#352F31",
+              "content": "Work Sans — Display, Headings & Product Titles (Retained)",
+              "fontFamily": "Work Sans",
+              "fontSize": 20,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "text",
+              "id": "P3unP",
+              "name": "Typo Body",
+              "fill": "#352F31",
+              "content": "SUIT Variable — Body, UI Controls, Descriptions & Korean text (Retained)",
+              "fontFamily": "Noto Sans KR",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "q298nw",
+          "name": "UI Components & Atoms",
+          "width": "fill_container",
+          "stroke": "#E8E4E5",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 20,
+          "padding": 24,
+          "children": [
+            {
+              "type": "text",
+              "id": "s7XTvL",
+              "name": "Comp Section Title",
+              "fill": "#352F31",
+              "content": "Buttons, Links, Stickers & Borders",
+              "fontFamily": "Work Sans",
+              "fontSize": 18,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "frame",
+              "id": "PXrSF",
+              "name": "Comp Row",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "U76xpt",
+                  "name": "Primary Button",
+                  "fill": "#1F5A46",
+                  "padding": [
+                    12,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "m1i1t",
+                      "name": "Btn Text",
+                      "fill": "#FFFFFF",
+                      "content": "PRIMARY ACTION",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 12,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "J8ZrP",
+                  "name": "Secondary Button",
+                  "fill": "#FFFFFF",
+                  "stroke": "#1F5A46",
+                  "strokeWidth": 1,
+                  "padding": [
+                    12,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "p42ZlJ",
+                      "name": "Btn Sec Text",
+                      "fill": "#1F5A46",
+                      "content": "SECONDARY BUTTON",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 12,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PjNol",
+                  "name": "Text Link Frame",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "CWXhj",
+                      "name": "Link Text",
+                      "fill": "#B02E3B",
+                      "content": "EXPLORE ALL →",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 13,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hPqyV",
+                  "name": "HOGIRL Ranking Sticker Component",
+                  "fill": "#FFFFFF",
+                  "stroke": "#EDC5C4",
+                  "strokeWidth": 1,
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "czc0l",
+                      "name": "Tiger Mascot Icon",
+                      "width": 20,
+                      "height": 20,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/tiger.png",
+                        "mode": "fit"
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "Dfo07",
+                      "name": "Sticker Text",
+                      "fill": "#B02E3B",
+                      "content": "HOGIRL #1",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 11,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zyIOB",
+              "name": "1px Divider Spec",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "T8XVK",
+                  "name": "Divider Label",
+                  "fill": "#352F31",
+                  "content": "1px Divider / Border Spec: #E8E4E5 (No shadows, No glass, Pure crisp border lines)",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "j2GaU",
+                  "name": "Divider Line Sample",
+                  "width": "fill_container",
+                  "height": 1,
+                  "fill": "#E8E4E5"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YP6zi",
+          "name": "Photography Aspect Ratios & Specifications",
+          "width": "fill_container",
+          "stroke": "#E8E4E5",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 24,
+          "children": [
+            {
+              "type": "text",
+              "id": "KFuyx",
+              "name": "Ratio Title",
+              "fill": "#352F31",
+              "content": "Desktop & Mobile Image Aspect Ratios (Product-First)",
+              "fontFamily": "Work Sans",
+              "fontSize": 18,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "frame",
+              "id": "U07iL",
+              "name": "Ratio Grid",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "w0CCXo",
+                  "name": "Product Card (1:1 Square)",
+                  "width": 340,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "b6mXO",
+                      "name": "Sample Box",
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/pound-cake-card.jpg",
+                        "mode": "fill"
+                      },
+                      "stroke": "#E8E4E5",
+                      "strokeWidth": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "eL5hd",
+                      "name": "Spec Title",
+                      "fill": "#1F5A46",
+                      "content": "Product Card (1:1 Square)",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 13,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "b5bkK",
+                      "name": "Spec Desc",
+                      "fill": "#352F31",
+                      "content": "1:1 ratio (Desktop 340×340, Mobile 170×170) • Pure white / clean backdrop",
+                      "fontFamily": "Noto Sans KR",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "X6qFbs",
+                  "name": "Hero Visual (16:9 Wide)",
+                  "width": 340,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "pa4vQ",
+                      "name": "Sample Box",
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/hero-cake-1.webp",
+                        "mode": "fill"
+                      },
+                      "stroke": "#E8E4E5",
+                      "strokeWidth": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "Mbxv1",
+                      "name": "Spec Title",
+                      "fill": "#1F5A46",
+                      "content": "Hero Visual (16:9 Wide)",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 13,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "oKKB5",
+                      "name": "Spec Desc",
+                      "fill": "#352F31",
+                      "content": "16:9 ratio (Desktop 960×540, Mobile 350×240) • Hero editorial photography",
+                      "fontFamily": "Noto Sans KR",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KquKc",
+                  "name": "Category Tile (4:3 Classic)",
+                  "width": 340,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "wSmFh",
+                      "name": "Sample Box",
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/hero-cake-2.webp",
+                        "mode": "fill"
+                      },
+                      "stroke": "#E8E4E5",
+                      "strokeWidth": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "o8AkY",
+                      "name": "Spec Title",
+                      "fill": "#1F5A46",
+                      "content": "Category Tile (4:3 Classic)",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 13,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "V3rQ8f",
+                      "name": "Spec Desc",
+                      "fill": "#352F31",
+                      "content": "4:3 ratio (Desktop 540×405, Mobile 350×260) • Editorial category focus",
+                      "fontFamily": "Noto Sans KR",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "OUT4W",
+      "x": 1300,
+      "y": 0,
+      "name": "01 — Home / Desktop / Draft",
+      "clip": true,
+      "width": 1440,
+      "fill": [
+        "#FFFFFF",
+        {
+          "type": "image",
+          "opacity": 0.12,
+          "enabled": true,
+          "url": "au-site-redesign-assets/tiger-pattern-desktop.webp",
+          "mode": "fill"
+        }
+      ],
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "BCuLY",
+          "name": "Header Desktop",
+          "width": "fill_container",
+          "height": 72,
+          "fill": "#FFFFFF",
+          "stroke": "#E8E4E5",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "padding": [
+            0,
+            48
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "MCFvZ",
+              "name": "Header Logo",
+              "fill": "#1F5A46",
+              "content": "AU-CAKE",
+              "fontFamily": "Work Sans",
+              "fontSize": 20,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "frame",
+              "id": "CkhAG",
+              "name": "Desktop Nav Links",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oFjIc",
+                  "name": "Nav Link SHOP",
+                  "fill": "#352F31",
+                  "content": "SHOP",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 13,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "DQUzf",
+                  "name": "Nav Link CUSTOM CAKES",
+                  "fill": "#352F31",
+                  "content": "CUSTOM CAKES",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 13,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "XhdM0",
+                  "name": "Nav Link EVENTS & BUSINESS",
+                  "fill": "#352F31",
+                  "content": "EVENTS & BUSINESS",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 13,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "QQ6tX",
+                  "name": "Nav Link ABOUT",
+                  "fill": "#352F31",
+                  "content": "ABOUT",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 13,
+                  "fontWeight": "bold"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "C4bKv",
+              "name": "Header Actions",
+              "gap": 20,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fDd2r",
+                  "name": "Currency Indicator",
+                  "fill": "#352F31",
+                  "content": "AUD ($)",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "LwmFi",
+                  "name": "Cart Button",
+                  "fill": "#1F5A46",
+                  "content": "CART (0)",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 13,
+                  "fontWeight": "bold"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "V6JTvZ",
+          "name": "Hero Section Desktop (Product-First)",
+          "width": "fill_container",
+          "stroke": "#E8E4E5",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "layout": "vertical",
+          "gap": 32,
+          "padding": 48,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "p2p5As",
+              "name": "Hero Header Stack",
+              "layout": "vertical",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "uoLON",
+                  "name": "Hero Badge",
+                  "fill": "#B02E3B",
+                  "content": "SYDNEY ARTISAN CAKES & BESPOKE ATELIER",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "cSbaN",
+                  "name": "Hero Copy TBD",
+                  "fill": "#352F31",
+                  "content": "HERO COPY TBD",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 44,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "R9PDl",
+                  "name": "Hero Subtitle",
+                  "fill": "#1F5A46",
+                  "content": "실사 제품 중심 쇼핑몰과 1:1 맞춤 케이크·기업 상담 • 오리지널 레시피와 호랑이 벽지 정체성 보존",
+                  "fontFamily": "Noto Sans KR",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "qQaeX",
+                  "name": "Hero CTA Button",
+                  "fill": "#1F5A46",
+                  "padding": [
+                    14,
+                    36
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "NiCxq",
+                      "name": "Hero CTA Label",
+                      "fill": "#FFFFFF",
+                      "content": "EXPLORE SHOP →",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 13,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E2uJU3",
+              "name": "Hero Large Photography Showcase",
+              "width": "fill_container",
+              "height": 500,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "au-site-redesign-assets/hero-cake-1.webp",
+                "mode": "fill"
+              },
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "d8Nyb",
+          "name": "Best 3 Section Desktop",
+          "width": "fill_container",
+          "stroke": "#E8E4E5",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "layout": "vertical",
+          "gap": 28,
+          "padding": 48,
+          "children": [
+            {
+              "type": "frame",
+              "id": "qTIgE",
+              "name": "Best 3 Header",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "e73lv",
+                  "name": "Best 3 Title",
+                  "fill": "#352F31",
+                  "content": "HOGIRL's Curated Best 3",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 24,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "ycRGs",
+                  "name": "Best 3 Subtitle",
+                  "fill": "#1F5A46",
+                  "content": "호걸이가 추천하는 베스트 시그니처 • 호걸이 랭킹 스티커 & 실사 제품 쇼케이스 (가격 정책 협의 중)",
+                  "fontFamily": "Noto Sans KR",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mGW3O",
+              "name": "Best 3 Cards Grid",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L2uR1",
+                  "name": "Best Card #1",
+                  "width": 420,
+                  "fill": "#FFFFFF",
+                  "stroke": "#E8E4E5",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "s6WJI",
+                      "name": "Card Image Frame",
+                      "width": "fill_container",
+                      "height": 320,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/pound-cake-card.jpg",
+                        "mode": "fill"
+                      },
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "B3td0d",
+                          "name": "HOGIRL Ranking Sticker",
+                          "fill": "#FFFFFF",
+                          "stroke": "#EDC5C4",
+                          "strokeWidth": 1,
+                          "gap": 6,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "X7Il9",
+                              "name": "Tiger Icon",
+                              "width": 18,
+                              "height": 18,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "au-site-redesign-assets/tiger.png",
+                                "mode": "fit"
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "gPhIN",
+                              "name": "Sticker Rank",
+                              "fill": "#B02E3B",
+                              "content": "HOGIRL #1",
+                              "fontFamily": "Work Sans",
+                              "fontSize": 11,
+                              "fontWeight": "bold"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "q8tmQE",
+                      "name": "Card Info Frame",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 20,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lmLtA",
+                          "name": "Product Title",
+                          "fill": "#352F31",
+                          "content": "Pound Cake (파운드 케이크)",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 16,
+                          "fontWeight": "bold"
+                        },
+                        {
+                          "type": "text",
+                          "id": "WKpHV",
+                          "name": "Product Price TBD",
+                          "fill": "#1F5A46",
+                          "content": "PRICE TBD",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 14,
+                          "fontWeight": "bold"
+                        },
+                        {
+                          "type": "text",
+                          "id": "HGK7q",
+                          "name": "Product Short Desc",
+                          "fill": "#352F31",
+                          "content": "진한 풍미의 오리지널 시그니처 파운드",
+                          "fontFamily": "Noto Sans KR",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GKmc3",
+                  "name": "Best Card #2",
+                  "width": 420,
+                  "fill": "#FFFFFF",
+                  "stroke": "#E8E4E5",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RpHkP",
+                      "name": "Card Image Frame",
+                      "width": "fill_container",
+                      "height": 320,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/pave-cake-card.jpg",
+                        "mode": "fill"
+                      },
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "gV0xG",
+                          "name": "HOGIRL Ranking Sticker",
+                          "fill": "#FFFFFF",
+                          "stroke": "#EDC5C4",
+                          "strokeWidth": 1,
+                          "gap": 6,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Mv7ug",
+                              "name": "Tiger Icon",
+                              "width": 18,
+                              "height": 18,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "au-site-redesign-assets/tiger.png",
+                                "mode": "fit"
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "xvmAC",
+                              "name": "Sticker Rank",
+                              "fill": "#B02E3B",
+                              "content": "HOGIRL #2",
+                              "fontFamily": "Work Sans",
+                              "fontSize": 11,
+                              "fontWeight": "bold"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Df6AQ",
+                      "name": "Card Info Frame",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 20,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "KGi1X",
+                          "name": "Product Title",
+                          "fill": "#352F31",
+                          "content": "Gâteau Pavé (갸또 파베)",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 16,
+                          "fontWeight": "bold"
+                        },
+                        {
+                          "type": "text",
+                          "id": "M5d1N0",
+                          "name": "Product Price TBD",
+                          "fill": "#1F5A46",
+                          "content": "PRICE TBD",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 14,
+                          "fontWeight": "bold"
+                        },
+                        {
+                          "type": "text",
+                          "id": "FE5C4",
+                          "name": "Product Short Desc",
+                          "fill": "#352F31",
+                          "content": "입안에서 부드럽게 녹아내리는 파베 초콜릿 케이크",
+                          "fontFamily": "Noto Sans KR",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Kwh9u",
+                  "name": "Best Card #3",
+                  "width": 420,
+                  "fill": "#FFFFFF",
+                  "stroke": "#E8E4E5",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "pRtsW",
+                      "name": "Card Image Frame",
+                      "width": "fill_container",
+                      "height": 320,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/basquecheesecake.webp",
+                        "mode": "fill"
+                      },
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "A8COOe",
+                          "name": "HOGIRL Ranking Sticker",
+                          "fill": "#FFFFFF",
+                          "stroke": "#EDC5C4",
+                          "strokeWidth": 1,
+                          "gap": 6,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "FQmDy",
+                              "name": "Tiger Icon",
+                              "width": 18,
+                              "height": 18,
+                              "fill": {
+                                "type": "image",
+                                "enabled": true,
+                                "url": "au-site-redesign-assets/tiger.png",
+                                "mode": "fit"
+                              }
+                            },
+                            {
+                              "type": "text",
+                              "id": "xT7NH",
+                              "name": "Sticker Rank",
+                              "fill": "#B02E3B",
+                              "content": "HOGIRL #3",
+                              "fontFamily": "Work Sans",
+                              "fontSize": 11,
+                              "fontWeight": "bold"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bgRD3",
+                      "name": "Card Info Frame",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 20,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rTWjo",
+                          "name": "Product Title",
+                          "fill": "#352F31",
+                          "content": "Cheesecake (치즈 케이크)",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 16,
+                          "fontWeight": "bold"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kPCqM",
+                          "name": "Product Price TBD",
+                          "fill": "#1F5A46",
+                          "content": "PRICE TBD",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 14,
+                          "fontWeight": "bold"
+                        },
+                        {
+                          "type": "text",
+                          "id": "BNJ1F",
+                          "name": "Product Short Desc",
+                          "fill": "#352F31",
+                          "content": "고소하고 부드러운 정통 치즈 케이크 (종류 미확정)",
+                          "fontFamily": "Noto Sans KR",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Pai13",
+          "name": "Shop Collections Section Desktop (2x2 Editorial)",
+          "width": "fill_container",
+          "stroke": "#E8E4E5",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "layout": "vertical",
+          "gap": 32,
+          "padding": 48,
+          "children": [
+            {
+              "type": "frame",
+              "id": "B44Li",
+              "name": "Category Section Header",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "t6s35j",
+                  "name": "Category Title",
+                  "fill": "#352F31",
+                  "content": "Shop Collections & Bespoke Services",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 24,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "y7XoM",
+                  "name": "Category Subtitle",
+                  "fill": "#1F5A46",
+                  "content": "정돈된 상품 중심 에디토리얼 그리드 • 사진 중심 카테고리 & 1:1 상담 서비스",
+                  "fontFamily": "Noto Sans KR",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vfNK4",
+              "name": "Editorial Row",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "hwe2R",
+                  "name": "Category Tile CAKES",
+                  "width": 660,
+                  "fill": "#FFFFFF",
+                  "stroke": "#E8E4E5",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mK7Mo",
+                      "name": "Tile Photo",
+                      "width": "fill_container",
+                      "height": 380,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/hero-cake-2.webp",
+                        "mode": "fill"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "aNhFI",
+                      "name": "Tile Content Bar",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "rPbqY",
+                          "name": "Text Stack",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "hNqOz",
+                              "name": "Tile Heading",
+                              "fill": "#352F31",
+                              "content": "CAKES",
+                              "fontFamily": "Work Sans",
+                              "fontSize": 18,
+                              "fontWeight": "bold"
+                            },
+                            {
+                              "type": "text",
+                              "id": "fuiD3",
+                              "name": "Tile Sub",
+                              "fill": "#1F5A46",
+                              "content": "Signature Whole Cakes & Layered Slices",
+                              "fontFamily": "Noto Sans KR",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "fyQYO",
+                          "name": "Tile Action",
+                          "fill": "#B02E3B",
+                          "content": "SHOP CAKES →",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 12,
+                          "fontWeight": "bold"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "i6wOd7",
+                  "name": "Category Tile CHOCOLATES",
+                  "width": 660,
+                  "fill": "#FFFFFF",
+                  "stroke": "#E8E4E5",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "bSCHV",
+                      "name": "Tile Photo",
+                      "width": "fill_container",
+                      "height": 380,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/pave-chocolate-cake-sydney.webp",
+                        "mode": "fill"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "m8VFz",
+                      "name": "Tile Content Bar",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "C0tPeo",
+                          "name": "Text Stack",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "C94VAe",
+                              "name": "Tile Heading",
+                              "fill": "#352F31",
+                              "content": "CHOCOLATES",
+                              "fontFamily": "Work Sans",
+                              "fontSize": 18,
+                              "fontWeight": "bold"
+                            },
+                            {
+                              "type": "text",
+                              "id": "UgK9h",
+                              "name": "Tile Sub",
+                              "fill": "#1F5A46",
+                              "content": "Handmade Almond Chocoball & Pavé Collections",
+                              "fontFamily": "Noto Sans KR",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "STvlJ",
+                          "name": "Tile Action",
+                          "fill": "#B02E3B",
+                          "content": "SHOP CHOCOLATES →",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 12,
+                          "fontWeight": "bold"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "NnEIZ",
+              "name": "Editorial Row",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OFQ7g",
+                  "name": "Category Tile CUSTOM CAKES",
+                  "width": 660,
+                  "fill": "#FFFFFF",
+                  "stroke": "#E8E4E5",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "cBN7f",
+                      "name": "Tile Photo",
+                      "width": "fill_container",
+                      "height": 380,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/custom-cake.webp",
+                        "mode": "fill"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "prjkp",
+                      "name": "Tile Content Bar",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "W3OjC8",
+                          "name": "Text Stack",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "z06YX",
+                              "name": "Tile Heading",
+                              "fill": "#352F31",
+                              "content": "CUSTOM CAKES",
+                              "fontFamily": "Work Sans",
+                              "fontSize": 18,
+                              "fontWeight": "bold"
+                            },
+                            {
+                              "type": "text",
+                              "id": "pAEZ9",
+                              "name": "Tile Sub",
+                              "fill": "#1F5A46",
+                              "content": "1:1 Bespoke Atelier Orders & Consultation",
+                              "fontFamily": "Noto Sans KR",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "J7cMh7",
+                          "name": "Tile Action",
+                          "fill": "#B02E3B",
+                          "content": "CONSULT NOW →",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 12,
+                          "fontWeight": "bold"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Z1Sqs",
+                  "name": "Category Tile EVENTS & BUSINESS",
+                  "width": 660,
+                  "fill": "#FFFFFF",
+                  "stroke": "#E8E4E5",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "kY8JM",
+                      "name": "Tile Photo",
+                      "width": "fill_container",
+                      "height": 380,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "au-site-redesign-assets/cupcake-hero.webp",
+                        "mode": "fill"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "CP1tg",
+                      "name": "Tile Content Bar",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "mSY97",
+                          "name": "Text Stack",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "d4Zc1",
+                              "name": "Tile Heading",
+                              "fill": "#352F31",
+                              "content": "EVENTS & BUSINESS",
+                              "fontFamily": "Work Sans",
+                              "fontSize": 18,
+                              "fontWeight": "bold"
+                            },
+                            {
+                              "type": "text",
+                              "id": "B77viW",
+                              "name": "Tile Sub",
+                              "fill": "#1F5A46",
+                              "content": "Corporate Catering, Wholesale & Café Supply",
+                              "fontFamily": "Noto Sans KR",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "FaB8p",
+                          "name": "Tile Action",
+                          "fill": "#B02E3B",
+                          "content": "VIEW SERVICES →",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 12,
+                          "fontWeight": "bold"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "s9QoA",
+          "name": "Footer Desktop",
+          "width": "fill_container",
+          "height": 200,
+          "fill": "#FFFFFF",
+          "padding": 48,
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "UY21Z",
+              "name": "Footer Brand Block",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hkAbs",
+                  "name": "Footer Logo",
+                  "fill": "#1F5A46",
+                  "content": "AU-CAKE / Very Good Cake",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 16,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "km4Zl",
+                  "name": "Footer Copyright",
+                  "fill": "#352F31",
+                  "content": "© 2026 AU-CAKE. All rights reserved. Handcrafted in Sydney.",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Le3hx",
+              "name": "Footer Tiger Note",
+              "fill": "#1F5A46",
+              "content": "[호랑이 벽지 정체성 보존 레이어 유지]",
+              "fontFamily": "Noto Sans KR",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Q591d",
+      "x": 2840,
+      "y": 0,
+      "name": "02 — Home / Mobile / Draft",
+      "clip": true,
+      "width": 390,
+      "fill": [
+        "#FFFFFF",
+        {
+          "type": "image",
+          "opacity": 0.12,
+          "enabled": true,
+          "url": "au-site-redesign-assets/tiger-pattern-mobile.webp",
+          "mode": "fill"
+        }
+      ],
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "xCHQe",
+          "name": "Header Mobile (Refined)",
+          "width": "fill_container",
+          "height": 56,
+          "fill": "#FFFFFF",
+          "stroke": "#E8E4E5",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "padding": [
+            0,
+            20
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "lFDzI",
+              "name": "Mobile Brand Logo",
+              "fill": "#1F5A46",
+              "content": "AU-CAKE",
+              "fontFamily": "Work Sans",
+              "fontSize": 18,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "frame",
+              "id": "T3w21",
+              "name": "Mobile Header Actions",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BBUsK",
+                  "name": "Mobile Menu Action",
+                  "fill": "#352F31",
+                  "content": "MENU",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "T9aHyf",
+                  "name": "Mobile Cart Action",
+                  "fill": "#1F5A46",
+                  "content": "CART (0)",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "F4kxkV",
+          "name": "Hero Section Mobile (Product-First)",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "stroke": "#E8E4E5",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "w1mZsN",
+              "name": "Mobile Hero Photo Showcase",
+              "width": "fill_container",
+              "height": 240,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "au-site-redesign-assets/hero-cake-1.webp",
+                "mode": "fill"
+              },
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1
+            },
+            {
+              "type": "text",
+              "id": "GLR4Y",
+              "name": "Mobile Hero Badge",
+              "fill": "#B02E3B",
+              "content": "SYDNEY ARTISAN CAKES",
+              "fontFamily": "Work Sans",
+              "fontSize": 11,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "text",
+              "id": "wG0Oj",
+              "name": "Mobile Hero Heading",
+              "fill": "#352F31",
+              "content": "HERO COPY TBD",
+              "fontFamily": "Work Sans",
+              "fontSize": 26,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "text",
+              "id": "U5HQG",
+              "name": "Mobile Hero Sub",
+              "fill": "#1F5A46",
+              "content": "실사 제품 중심 쇼핑몰 & 상담 아틀리에 • 호랑이 벽지 보존",
+              "fontFamily": "Noto Sans KR",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "zdChV",
+              "name": "Mobile Hero CTA",
+              "fill": "#1F5A46",
+              "padding": [
+                10,
+                24
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KgciT",
+                  "name": "CTA Label",
+                  "fill": "#FFFFFF",
+                  "content": "EXPLORE SHOP →",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 12,
+                  "fontWeight": "bold"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "T19bhn",
+          "name": "Best 3 Mobile Section",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "stroke": "#E8E4E5",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "XHAvm",
+              "name": "Mobile Best Header",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XJDxM",
+                  "name": "Mobile Best Title",
+                  "fill": "#352F31",
+                  "content": "HOGIRL Best 3",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 18,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "a4tL9K",
+                  "name": "Mobile Best Sub",
+                  "fill": "#1F5A46",
+                  "content": "호걸이 랭킹 스티커 & 실사 제품 (가격 협의 중)",
+                  "fontFamily": "Noto Sans KR",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "kRxXx",
+              "name": "Mobile Best Card #1",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iDsUI",
+                  "name": "Photo Frame",
+                  "width": "fill_container",
+                  "height": 180,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/pound-cake-card.jpg",
+                    "mode": "fill"
+                  },
+                  "padding": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "F0DeHN",
+                      "name": "Sticker",
+                      "fill": "#FFFFFF",
+                      "stroke": "#EDC5C4",
+                      "strokeWidth": 1,
+                      "gap": 4,
+                      "padding": [
+                        4,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "jo6wW",
+                          "name": "Tiger",
+                          "width": 14,
+                          "height": 14,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "au-site-redesign-assets/tiger.png",
+                            "mode": "fit"
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "Mka0X",
+                          "name": "Sticker Label",
+                          "fill": "#B02E3B",
+                          "content": "HOGIRL #1",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 10,
+                          "fontWeight": "bold"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qhfPb",
+                  "name": "Card Body",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "anCta",
+                      "name": "Title",
+                      "fill": "#352F31",
+                      "content": "Pound Cake (파운드 케이크)",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 14,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "FTQsG",
+                      "name": "Price",
+                      "fill": "#1F5A46",
+                      "content": "PRICE TBD",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 12,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zWAvl",
+              "name": "Mobile Best Card #2",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "wYuhj",
+                  "name": "Photo Frame",
+                  "width": "fill_container",
+                  "height": 180,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/pave-cake-card.jpg",
+                    "mode": "fill"
+                  },
+                  "padding": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "JKPXA",
+                      "name": "Sticker",
+                      "fill": "#FFFFFF",
+                      "stroke": "#EDC5C4",
+                      "strokeWidth": 1,
+                      "gap": 4,
+                      "padding": [
+                        4,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ZHOt3",
+                          "name": "Tiger",
+                          "width": 14,
+                          "height": 14,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "au-site-redesign-assets/tiger.png",
+                            "mode": "fit"
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "H7C4Hf",
+                          "name": "Sticker Label",
+                          "fill": "#B02E3B",
+                          "content": "HOGIRL #2",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 10,
+                          "fontWeight": "bold"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gYW3y",
+                  "name": "Card Body",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "K4wZF",
+                      "name": "Title",
+                      "fill": "#352F31",
+                      "content": "Gâteau Pavé (갸또 파베)",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 14,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "d1E0Eu",
+                      "name": "Price",
+                      "fill": "#1F5A46",
+                      "content": "PRICE TBD",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 12,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CfHNR",
+              "name": "Mobile Best Card #3",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WeP1g",
+                  "name": "Photo Frame",
+                  "width": "fill_container",
+                  "height": 180,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/basquecheesecake.webp",
+                    "mode": "fill"
+                  },
+                  "padding": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "s2zdM",
+                      "name": "Sticker",
+                      "fill": "#FFFFFF",
+                      "stroke": "#EDC5C4",
+                      "strokeWidth": 1,
+                      "gap": 4,
+                      "padding": [
+                        4,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "l59oH",
+                          "name": "Tiger",
+                          "width": 14,
+                          "height": 14,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "au-site-redesign-assets/tiger.png",
+                            "mode": "fit"
+                          }
+                        },
+                        {
+                          "type": "text",
+                          "id": "C89jjv",
+                          "name": "Sticker Label",
+                          "fill": "#B02E3B",
+                          "content": "HOGIRL #3",
+                          "fontFamily": "Work Sans",
+                          "fontSize": 10,
+                          "fontWeight": "bold"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Ewkaw",
+                  "name": "Card Body",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZoXXs",
+                      "name": "Title",
+                      "fill": "#352F31",
+                      "content": "Cheesecake (치즈 케이크)",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 14,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "boVFZ",
+                      "name": "Price",
+                      "fill": "#1F5A46",
+                      "content": "PRICE TBD",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 12,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "g8KGT",
+          "name": "Categories Section Mobile",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "stroke": "#E8E4E5",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "qQcZw",
+              "name": "Cat Mob Header",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "p3qCi7",
+                  "name": "Cat Mob Title",
+                  "fill": "#352F31",
+                  "content": "Shop Collections & Bespoke",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 18,
+                  "fontWeight": "bold"
+                },
+                {
+                  "type": "text",
+                  "id": "YZIAb",
+                  "name": "Cat Mob Sub",
+                  "fill": "#1F5A46",
+                  "content": "사진 중심 4대 카테고리 & 1:1 상담",
+                  "fontFamily": "Noto Sans KR",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VgXA7",
+              "name": "Cat Mob Card CAKES",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "YS1Tt",
+                  "name": "Cat Photo",
+                  "width": "fill_container",
+                  "height": 160,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/hero-cake-2.webp",
+                    "mode": "fill"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "q4fK5H",
+                  "name": "Bar",
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "G6iTRm",
+                      "name": "Title",
+                      "fill": "#352F31",
+                      "content": "CAKES",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 14,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "R1dNWd",
+                      "name": "Action",
+                      "fill": "#B02E3B",
+                      "content": "SHOP →",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 11,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HPljs",
+              "name": "Cat Mob Card CHOCOLATES",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "DvsEr",
+                  "name": "Cat Photo",
+                  "width": "fill_container",
+                  "height": 160,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/pave-chocolate-cake-sydney.webp",
+                    "mode": "fill"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "B45XWy",
+                  "name": "Bar",
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XCQ5H",
+                      "name": "Title",
+                      "fill": "#352F31",
+                      "content": "CHOCOLATES",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 14,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pdb6d",
+                      "name": "Action",
+                      "fill": "#B02E3B",
+                      "content": "SHOP →",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 11,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DzMTk",
+              "name": "Cat Mob Card CUSTOM CAKES",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZC5pv",
+                  "name": "Cat Photo",
+                  "width": "fill_container",
+                  "height": 160,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/custom-cake.webp",
+                    "mode": "fill"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "hpmdM",
+                  "name": "Bar",
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "B8gIF4",
+                      "name": "Title",
+                      "fill": "#352F31",
+                      "content": "CUSTOM CAKES",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 14,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "rfnZB",
+                      "name": "Action",
+                      "fill": "#B02E3B",
+                      "content": "INQUIRE →",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 11,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HVjkF",
+              "name": "Cat Mob Card EVENTS & BUSINESS",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "stroke": "#E8E4E5",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "v7Frd",
+                  "name": "Cat Photo",
+                  "width": "fill_container",
+                  "height": 160,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/cupcake-hero.webp",
+                    "mode": "fill"
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "TOzVs",
+                  "name": "Bar",
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "A6mMxq",
+                      "name": "Title",
+                      "fill": "#352F31",
+                      "content": "EVENTS & BUSINESS",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 14,
+                      "fontWeight": "bold"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HSnYv",
+                      "name": "Action",
+                      "fill": "#B02E3B",
+                      "content": "SERVICES →",
+                      "fontFamily": "Work Sans",
+                      "fontSize": 11,
+                      "fontWeight": "bold"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "g1UQSB",
+          "name": "Footer Mobile",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "gap": 8,
+          "padding": 20,
+          "children": [
+            {
+              "type": "text",
+              "id": "gKOe3",
+              "name": "Footer Logo Mobile",
+              "fill": "#1F5A46",
+              "content": "AU-CAKE / Very Good Cake",
+              "fontFamily": "Work Sans",
+              "fontSize": 14,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "text",
+              "id": "oqp63",
+              "name": "Footer Copyright Mobile",
+              "fill": "#352F31",
+              "content": "© 2026 AU-CAKE. Handcrafted in Sydney.",
+              "fontFamily": "Work Sans",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "GgoBT",
+      "x": 0,
+      "y": 1053,
+      "name": "11 — Product Card / Desktop",
+      "clip": true,
+      "width": 340,
+      "fill": "#FFFFFF",
+      "stroke": "#E8E4E5",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "CApiP",
+          "name": "Product Photo Frame",
+          "width": "fill_container",
+          "height": 320,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "au-site-redesign-assets/pound-cake-card.jpg",
+            "mode": "fill"
+          },
+          "padding": 14,
+          "children": [
+            {
+              "type": "frame",
+              "id": "wRZOA",
+              "name": "Sticker",
+              "fill": "#FFFFFF",
+              "stroke": "#EDC5C4",
+              "strokeWidth": 1,
+              "gap": 6,
+              "padding": [
+                6,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "cnZ7z",
+                  "name": "Tiger Icon",
+                  "width": 16,
+                  "height": 16,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/tiger.png",
+                    "mode": "fit"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "UUjuY",
+                  "name": "Sticker Text",
+                  "fill": "#B02E3B",
+                  "content": "HOGIRL #1",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 10,
+                  "fontWeight": "bold"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Ek0HD",
+          "name": "Product Info",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "RV5qA",
+              "name": "Product Badge",
+              "fill": "#B02E3B",
+              "content": "HOGIRL BEST 1",
+              "fontFamily": "Work Sans",
+              "fontSize": 11,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "text",
+              "id": "xYAyA",
+              "name": "Product Name",
+              "fill": "#352F31",
+              "content": "Almond Chocoball (아몬드 초코볼)",
+              "fontFamily": "Work Sans",
+              "fontSize": 16,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "text",
+              "id": "oExFo",
+              "name": "Product Price",
+              "fill": "#1F5A46",
+              "content": "PRICE TBD (미정)",
+              "fontFamily": "Work Sans",
+              "fontSize": 14,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "text",
+              "id": "b2eSJx",
+              "name": "Product Policy Note",
+              "fill": "#352F31",
+              "content": "단품 / 5+1 / 검은통 패키지 정책 확정 대기",
+              "fontFamily": "Noto Sans KR",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lgc5t",
+      "x": 395,
+      "y": 1061,
+      "name": "12 — Product Card / Mobile",
+      "clip": true,
+      "width": 170,
+      "fill": "#FFFFFF",
+      "stroke": "#E8E4E5",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "q4Ta0s",
+          "name": "Mobile Photo Frame",
+          "width": "fill_container",
+          "height": 160,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "au-site-redesign-assets/pound-cake-card.jpg",
+            "mode": "fill"
+          },
+          "padding": 8,
+          "children": [
+            {
+              "type": "frame",
+              "id": "rRDN8",
+              "name": "Mobile Sticker",
+              "fill": "#FFFFFF",
+              "stroke": "#EDC5C4",
+              "strokeWidth": 1,
+              "gap": 4,
+              "padding": [
+                4,
+                6
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "c5GtGw",
+                  "name": "Tiger Icon",
+                  "width": 12,
+                  "height": 12,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "au-site-redesign-assets/tiger.png",
+                    "mode": "fit"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "VvRHC",
+                  "name": "Sticker Text",
+                  "fill": "#B02E3B",
+                  "content": "#1",
+                  "fontFamily": "Work Sans",
+                  "fontSize": 9,
+                  "fontWeight": "bold"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RGSZC",
+          "name": "Mobile Product Info",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "padding": 10,
+          "children": [
+            {
+              "type": "text",
+              "id": "o2KQj",
+              "name": "Mobile Product Name",
+              "fill": "#352F31",
+              "content": "Almond Chocoball",
+              "fontFamily": "Work Sans",
+              "fontSize": 13,
+              "fontWeight": "bold"
+            },
+            {
+              "type": "text",
+              "id": "D9krrG",
+              "name": "Mobile Product Price",
+              "fill": "#1F5A46",
+              "content": "PRICE TBD",
+              "fontFamily": "Work Sans",
+              "fontSize": 12,
+              "fontWeight": "bold"
+            }
+          ]
+        }
+      ]
     }
   ],
-  "fileToken": "0424c6b8-2b22-4cb4-91f0-d4afdfb8954d"
+  "variables": {
+    "bg-primary": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "brand-green": {
+      "type": "color",
+      "value": "#1F5A46"
+    },
+    "soft-pink": {
+      "type": "color",
+      "value": "#EDC5C4"
+    },
+    "accent-pink": {
+      "type": "color",
+      "value": "#F05D88"
+    },
+    "berry": {
+      "type": "color",
+      "value": "#B02E3B"
+    },
+    "text-main": {
+      "type": "color",
+      "value": "#352F31"
+    },
+    "border-light": {
+      "type": "color",
+      "value": "#E8E4E5"
+    }
+  },
+  "fileToken": "58f95e46-842e-48ea-9520-5d1fd32467af"
 }
