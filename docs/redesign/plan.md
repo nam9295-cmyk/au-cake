@@ -34,18 +34,20 @@
 | 구분 | 이 문서 작성 시점의 상태 |
 |---|---|
 | 요구사항 수집 | 사용자 목록과 후속 디자인 결정이 이 두 문서에 정리됨 |
-| 문서 파일 | `design.md`, `plan.md` 작성. 사용자 원본 ACME MD·팔레트를 참고 자료로 동봉 |
-| 저장소 저장 | 이 패키지는 전달용 파일이다. 실제 Git 저장소에 복사·commit·push했다는 뜻이 아님 |
-| 코드 기준 후보 | `40ac23c91e9ec51103e6f23f65b4a2c69fde29ea` |
-| GitHub main | 2026-09-20 재조회에서 위 커밋과 identical, ahead/behind 0 확인 [P-S01] |
+| 문서 파일 | v1.0 `design.md`, `plan.md`를 통합 worktree의 `docs/redesign/`에 등록함. 컨트롤 폴더 원본과 바이트 단위 동일성을 확인함 |
+| 저장소 저장 | `feat/au-site-redesign`의 docs-only commit `b527515254e59156b486386387f88f636cc3bb8d`로 등록. `feat/au-redesign-ui`도 fast-forward로 같은 commit을 포함함 |
+| 코드 기준 | `40ac23c91e9ec51103e6f23f65b4a2c69fde29ea` |
+| GitHub main | 2026-09-20 `git fetch --prune origin` 후 `origin/main = 40ac23c91e9ec51103e6f23f65b4a2c69fde29ea` 확인 |
 | HOGIRL 소스 | 기준 커밋에서 EN/KO draft, `publishedSeasons: []`, 공개 prologue 없음 확인 [P-S03] |
 | 실제 production 배포 SHA | 아직 Cloudflare production deployment와 대조 확정하지 않음 |
-| baseline tag | 이 문서 작성 중 생성하지 않음. 현재 존재 여부는 G0에서 재조회 |
-| HOGIRL branch/worktree 정리 | 이 문서 작성 중 실행하지 않음. 이전 clean 확인만으로 삭제 승인으로 간주하지 않음 |
-| `feat/au-site-redesign` | 이 문서 작성 중 생성하지 않음. 실제 유무부터 확인 |
+| baseline tag | annotated `production-pre-redesign-2026-09-20`를 `40ac23c`에 생성하고 remote push 완료. local/remote peeled commit 모두 `40ac23c91e9ec51103e6f23f65b4a2c69fde29ea` |
+| 통합 branch/worktree | `feat/au-site-redesign` / `/Users/nam9295/Desktop/john_2.0/code/au-cake-redesign`. 시작 HEAD는 `40ac23c`, 현재는 docs commit `b527515`, clean |
+| frontend branch/worktree | `feat/au-redesign-ui` / `/Users/nam9295/Desktop/john_2.0/code/au-cake-redesign-ui`. 시작 HEAD는 `40ac23c`, docs commit으로 fast-forward한 현재 `b527515`, clean |
+| 기존 worktree 보호 | `feat/custom-cake-frontend` 및 `feat/menu-direction` worktree를 보존. 후자의 기존 untracked `docs/menu-direction/*`도 변경하지 않음 |
+| HOGIRL branch/worktree 정리 | 미수행. `feat/hogirl-web-comic`, 관련 remote branch, server worktree, publish/draft 상태를 삭제·수정·변경하지 않음 |
 | Pencil 원본·시안 | 미제작. 기존 다른 `.pen` 파일을 승인된 개편 시안으로 간주하지 않음 |
-| 프론트·백엔드 구현 | 이번 문서 작성에서 수행하지 않음 |
-| 테스트·배포 | 이번 문서 작성에서 제품 테스트·빌드·배포를 실행하지 않음 |
+| 프론트·백엔드 구현 | `src`, backend, Appwrite 수정 미수행 |
+| 테스트·배포 | 제품 테스트·빌드·배포 미수행 |
 
 ### 0.2 세션 시작 시 수행할 일
 
@@ -58,9 +60,9 @@
 
 ### 0.3 다음 작업
 
-**다음 단계는 문서 검토와 G0 읽기 전용 점검이다.** John의 승인 후 문서를 안전한 작업 브랜치에 등록하고, macOS 작업 경로와 Herdr/Pencil 연결을 확인한 뒤 1차 Pencil 시안 Task를 시작한다.
+**문서 등록·Git baseline·통합/frontend worktree 준비까지 완료했다.** 남은 G0는 production frontend/backend deployment와 HOGIRL 실제 worktree의 읽기 전용 대조이며, HOGIRL 정리·Herdr/Pencil 연결·Pencil 시안은 아직 시작하지 않는다.
 
-이 문서가 존재한다는 이유로 HOGIRL 삭제, 태그 생성, main 변경, 결제 연결, 로그인 공개를 자동 실행하지 않는다.
+이 문서와 baseline tag가 존재한다는 이유로 HOGIRL 삭제, main 변경, 결제 연결, 로그인 공개를 자동 실행하지 않는다.
 
 ---
 
@@ -929,10 +931,11 @@ git diff --check
 
 | Task | 상태 | 담당 | branch / 시작·결과 SHA | 승인/증거 |
 |---|---|---|---|---|
-| 문서 작성 | 검토 대기 | GPT | 저장소 미등록 | 이 두 Markdown과 참고 자료 |
-| T00 | 대기 | Astra | 아직 등록 안 됨 | 문서 리뷰·등록 범위 승인 필요 |
-| T01 | 부분 확인 | Astra | GitHub main=40ac23c 확인 | 실배포·로컬 상태 재확인 필요 |
-| T02–T03 | 대기 | Astra | 미생성/미실행 | G0–G3 |
+| 문서 작성 | 등록 완료 | GPT / Astra | `feat/au-site-redesign` / `b527515254e59156b486386387f88f636cc3bb8d` | `docs/redesign/design.md`, `docs/redesign/plan.md`만 포함한 docs-only commit |
+| T00 | 부분 완료 | Astra | `feat/au-site-redesign` / `b527515` | 두 기준 문서 등록·상대 링크 확인. 컨트롤 폴더에 `references/`가 없어 참고 자료 등록은 범위 밖으로 남음 |
+| T01 | 부분 완료 | Astra | `origin/main = 40ac23c` | fetch 후 Git 기준·기존/신규 worktree 상태 확인. production frontend/backend 대조는 미수행 |
+| T02 | 부분 완료 | Astra | annotated tag `production-pre-redesign-2026-09-20` → `40ac23c`, remote push 완료 | HOGIRL 보존·정리는 별도 server worktree 확인 전 미수행 |
+| T03 | 부분 완료 | Astra | integration `/Users/nam9295/Desktop/john_2.0/code/au-cake-redesign`, frontend `/Users/nam9295/Desktop/john_2.0/code/au-cake-redesign-ui` | 두 branch 모두 `40ac23c`에서 생성, 현재 docs commit `b527515`이며 clean. Herdr/Pencil 연결은 미수행 |
 | T04 | 대기 | Astra + John | 미실행 | 최소 계약 |
 | T05–T06 | 대기 | Anti + John | .pen 미제작 | Pencil/시안 승인 |
 | T07–T19 | 대기 | 각 담당 | 미실행 | 앞선 Gate 완료 후 |
