@@ -15,6 +15,9 @@
 .au-redesign-shell .au-redesign-header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 64px; padding: 12px 48px; border-bottom: 1px solid var(--au-line); background: #FFFFFF; }
 .au-redesign-shell .au-redesign-header a { color: var(--au-green); text-decoration: none; }
 .au-redesign-shell .au-redesign-wordmark { color: var(--au-green); font-family: var(--font-display); font-size: 16px; font-weight: 700; text-decoration: none; }
+/* Header-only wordmark: the Home drawer shares this rule; footer marks do not. */
+.au-home-shell .rd-header-logo,
+.au-redesign-shell .au-redesign-header .au-redesign-wordmark { font-family: var(--font-display); font-size: 26px; font-weight: 400; line-height: 1; letter-spacing: -.06em; text-transform: none; }
 .au-redesign-shell .au-redesign-desktop-nav { display: flex; gap: 24px; }
 .au-redesign-shell .au-redesign-desktop-nav a { color: var(--au-text); font-size: 11px; font-weight: 700; padding: 12px 0; }
 .au-redesign-shell .au-redesign-header-actions { display: flex; gap: 24px; align-items: center; font-size: 12px; font-weight: 700; white-space: nowrap; }
@@ -38,15 +41,18 @@
 .au-redesign-shell .au-redesign-atelier-note { line-height: 1.6; padding-right: 16px; }
 .au-redesign-shell .au-redesign-atelier-note p { margin-top: 8px; color: var(--au-text); }
 .au-redesign-shell .au-redesign-category[data-au-category="chocolates"] { --au-category-columns: 3; }
-.au-redesign-shell .au-redesign-product-grid { display: grid; grid-template-columns: repeat(var(--au-category-columns, 4), minmax(0, 1fr)); gap: 16px; }
+.au-redesign-shell .au-redesign-product-grid { display: grid; grid-template-columns: repeat(var(--au-category-columns, 4), minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 16px; }
+.au-redesign-shell .au-redesign-product-grid:has(.au-redesign-card-bottom small) { --au-card-price-height: 68px; }
 .au-redesign-shell .au-redesign-product-card { min-width: 0; border: 1px solid var(--au-line); background: #FFFFFF; }
-.au-redesign-shell .au-redesign-product-card > a { display: flex; flex-direction: column; height: 100%; text-decoration: none; color: var(--au-text); }
-.au-redesign-shell .au-redesign-product-card header { min-height: 74px; padding: 16px 14px 6px; }
-.au-redesign-shell .au-redesign-product-card h3 { margin: 0 0 6px; font-size: 12px; line-height: 1.3; font-weight: 700; }
-.au-redesign-shell .au-redesign-product-card p { margin: 0; font-size: 11px; line-height: 1.5; }
-.au-redesign-shell .au-redesign-product-card img { display: block; width: 100%; height: auto; aspect-ratio: 1.4 / 1; object-fit: contain; }
-.au-redesign-shell .au-redesign-card-bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: auto; padding: 18px 14px; color: var(--au-green); font-size: 12px; font-weight: 700; }
-.au-redesign-shell .au-redesign-card-bottom > span:last-child { margin-left: auto; }
+.au-redesign-shell .au-redesign-product-card > a { display: grid; grid-template-rows: 1fr auto auto; height: 100%; text-decoration: none; color: var(--au-text); }
+.au-redesign-shell .au-redesign-product-card header { display: grid; grid-template-rows: 1fr auto; gap: 6px; padding: 16px 14px 6px; }
+.au-redesign-shell .au-redesign-product-card h3 { min-height: 2lh; margin: 0; font-size: 12px; line-height: 1.3; font-weight: 700; }
+.au-redesign-shell .au-redesign-product-card p { min-height: 3lh; margin: 0; font-size: 11px; line-height: 1.5; }
+.au-redesign-shell .au-redesign-card-image { width: 100%; aspect-ratio: 1.4 / 1; }
+.au-redesign-shell .au-redesign-product-card img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.au-redesign-shell .au-redesign-card-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; align-items: baseline; gap: 4px 8px; min-height: var(--au-card-price-height, 52px); padding: 18px 14px; color: var(--au-green); font-size: 12px; line-height: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.au-redesign-shell .au-redesign-card-bottom > span:last-child { grid-column: 2; grid-row: 1; }
+.au-redesign-shell .au-redesign-card-bottom small { grid-column: 1; font-size: 10px; line-height: 12px; }
 .au-redesign-shell .au-redesign-product-card a:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
 .au-redesign-shell .au-redesign-wide-photo { margin: 0; }
 .au-redesign-shell .au-redesign-wide-photo img { display: block; width: 100%; height: 480px; object-fit: cover; }
@@ -120,8 +126,7 @@
 .au-redesign-shell .au-redesign-party h3 { font-size: 13px; margin: 18px 0 10px; }
 .au-redesign-shell .au-redesign-party p { font-size: 13px; line-height: 1.6; }
 .au-redesign-shell .au-redesign-related .au-redesign-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.au-redesign-shell .au-redesign-related .au-redesign-product-card img { max-height: 300px; }
-.au-redesign-shell .au-redesign-related .au-redesign-product-card header { min-height: 0; }
+.au-redesign-shell .au-redesign-related .au-redesign-card-image { max-height: 300px; }
 .au-redesign-shell :is(.au-redesign-custom-hero, .au-redesign-chocolate-hero) { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 48px; align-items: start; padding-bottom: 64px; }
 .au-redesign-shell .au-redesign-custom-hero > img { width: 100%; height: 470px; object-fit: cover; }
 .au-redesign-shell :is(.au-redesign-custom-hero, .au-redesign-chocolate-hero) h1 { color: var(--au-text); font-size: 32px; line-height: 1.15; margin: 12px 0 20px; }
@@ -177,7 +182,8 @@
 }
 @media (max-width: 767px) {
   .au-redesign-shell .au-redesign-header { padding: 8px 20px; min-height: 60px; gap: 16px; }
-  .au-redesign-shell .au-redesign-header .au-redesign-wordmark { font-size: 14px; }
+  .au-home-shell .rd-header-logo,
+  .au-redesign-shell .au-redesign-header .au-redesign-wordmark { font-size: 24px; }
   .au-redesign-shell .au-redesign-desktop-nav, .au-redesign-shell .au-redesign-currency { display: none; }
   .au-redesign-shell .au-redesign-header-actions { gap: 16px; font-size: 11px; }
   .au-redesign-shell .au-redesign-mobile-menu { display: block; }
@@ -194,10 +200,11 @@
   .au-redesign-shell .au-redesign-category-rail nav { display: flex; overflow-x: auto; gap: 24px; margin: 0 0 24px; padding: 8px 0; }
   .au-redesign-shell .au-redesign-category-rail nav a { flex: 0 0 auto; font-size: 10px; }
   .au-redesign-shell .au-redesign-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .au-redesign-shell .au-redesign-product-card header { padding: 12px 10px 4px; min-height: 85px; }
+  .au-redesign-shell .au-redesign-product-card header { padding: 12px 10px 4px; }
   .au-redesign-shell .au-redesign-product-card h3 { font-size: 11px; }
   .au-redesign-shell .au-redesign-product-card p { font-size: 10px; }
-  .au-redesign-shell .au-redesign-card-bottom { padding: 14px 10px; font-size: 11px; }
+  .au-redesign-shell .au-redesign-product-grid:has(.au-redesign-card-bottom small) { --au-card-price-height: 58px; }
+  .au-redesign-shell .au-redesign-card-bottom { min-height: var(--au-card-price-height, 44px); padding: 14px 10px; font-size: 11px; line-height: 14px; }
   .au-redesign-shell .au-redesign-wide-photo img { height: 240px; }
   .au-redesign-shell .au-redesign-availability-note { padding-inline: 20px; }
   .au-redesign-shell .au-redesign-footer { padding: 28px 20px; gap: 20px; }

@@ -216,7 +216,7 @@ function AuHomePage({
               navigate('home')
             }}
           >
-            VERYGOOD
+            verygood
           </a>
 
           <nav className="rd-header-nav" aria-label="Main navigation">
@@ -268,7 +268,7 @@ function AuHomePage({
             />
             <div className="rd-mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
               <div className="rd-mobile-drawer-header">
-                <span className="rd-header-logo">VERYGOOD</span>
+                <span className="rd-header-logo">verygood</span>
                 <button
                   type="button"
                   className="rd-mobile-drawer-close"
@@ -406,7 +406,7 @@ function AuHomePage({
                 />
                 <div className="rd-hogirl-sticker">
                   <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
-                  <span className="rd-hogirl-label">HOGIRL #1</span>
+                  <span className="rd-hogirl-label">#1</span>
                 </div>
               </a>
               <a
@@ -433,7 +433,7 @@ function AuHomePage({
                 />
                 <div className="rd-hogirl-sticker">
                   <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
-                  <span className="rd-hogirl-label">HOGIRL #2</span>
+                  <span className="rd-hogirl-label">#2</span>
                 </div>
               </a>
               <a
@@ -460,7 +460,7 @@ function AuHomePage({
                 />
                 <div className="rd-hogirl-sticker">
                   <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
-                  <span className="rd-hogirl-label">HOGIRL #3</span>
+                  <span className="rd-hogirl-label">#3</span>
                 </div>
               </a>
               <a

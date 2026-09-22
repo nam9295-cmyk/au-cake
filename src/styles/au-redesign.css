@@ -68,12 +68,8 @@
 }
 
 :where(.au-home-shell) .rd-header-logo {
-  font-family: var(--rd-font-display);
-  font-size: 20px;
-  font-weight: 700;
   color: var(--rd-green);
   text-decoration: none;
-  letter-spacing: -0.01em;
   cursor: pointer;
 }
 
@@ -301,7 +297,7 @@
   max-width: 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   box-sizing: border-box;
 }
 
@@ -309,14 +305,16 @@
   background: var(--rd-bg);
   border-right: 1px solid var(--rd-border-grid);
   padding: 24px 26px 28px 26px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(40px, 1fr) auto 32px;
+  min-width: 0;
   gap: 12px;
   box-sizing: border-box;
 }
 
 :where(.au-home-shell) .rd-best-col:last-child {
-  border-right: none;
+  border-right-color: transparent;
 }
 
 :where(.au-home-shell) .rd-best-title {
@@ -342,7 +340,8 @@
 :where(.au-home-shell) .rd-best-photo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
   transition: transform 0.2s ease;
 }
@@ -359,8 +358,11 @@
   border: 1px solid var(--rd-soft-pink);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: 4px;
+  padding: 4px 6px;
+  min-width: 46px;
+  box-sizing: border-box;
+  white-space: nowrap;
   border-radius: 2px;
   z-index: 2;
 }
@@ -374,7 +376,9 @@
 
 :where(.au-home-shell) .rd-hogirl-label {
   font-family: var(--rd-font-display);
-  font-size: 10px;
+  font-size: 11px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
   color: var(--rd-berry);
 }
@@ -404,6 +408,8 @@
   font-weight: 700;
   color: var(--rd-card-title);
   letter-spacing: 0.04em;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 :where(.au-home-shell) .rd-best-price-label {
@@ -411,6 +417,9 @@
   font-size: 11px;
   font-weight: 700;
   color: var(--rd-card-title);
+  line-height: 1.2;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 /* --------------------------------------------------------------------------
@@ -898,6 +907,21 @@
 /* --------------------------------------------------------------------------
    Mobile Responsive Adjustments (390px viewport target)
    -------------------------------------------------------------------------- */
+/* Stack the action copy before three-column cards become too narrow for prices. */
+@media (max-width: 840px) {
+  :where(.au-home-shell) .rd-best-col {
+    grid-template-rows: minmax(40px, 1fr) auto 52px;
+  }
+
+  :where(.au-home-shell) .rd-best-action-row {
+    height: 52px;
+    display: grid;
+    align-content: center;
+    justify-content: start;
+    gap: 4px;
+  }
+}
+
 @media (max-width: 768px) {
   :where(.au-home-shell) .rd-header {
     height: 56px;
@@ -1041,6 +1065,11 @@
     scroll-snap-align: start;
     border: 1px solid var(--rd-border);
     padding: 12px;
+    grid-template-rows: minmax(32px, 1fr) auto 52px;
+  }
+
+  :where(.au-home-shell) .rd-best-col:last-child {
+    border-right-color: var(--rd-border);
   }
 
   :where(.au-home-shell) .rd-best-title {

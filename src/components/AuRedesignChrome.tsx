@@ -11,7 +11,7 @@ export function AuRedesignHeader({ cartItemCount }: { cartItemCount: number }) {
   </>
   return (
     <header className="au-redesign-header">
-      <a className="au-redesign-wordmark" href="/">VERYGOOD</a>
+      <a className="au-redesign-wordmark" href="/">verygood</a>
       <nav className="au-redesign-desktop-nav" aria-label="Main navigation">{links}</nav>
       <div className="au-redesign-header-actions">
         <span className="au-redesign-currency">AUD</span>
@@ -57,7 +57,9 @@ export function AuProductCard({ slug, href, name, image, description, price, una
   return <article className="au-redesign-product-card" data-au-product={slug}>
     <a href={href} onClick={open}>
       <header><h3>{name}</h3><p>{description}</p></header>
-      <img src={image} alt={name} width={1080} height={1012} loading="lazy" decoding="async" />
+      <div className="au-redesign-card-image">
+        <img src={image} alt={name} width={1080} height={1012} loading="lazy" decoding="async" />
+      </div>
       <div className="au-redesign-card-bottom">
         <span>{unavailable ? 'Coming Soon' : price}</span>
         {unavailable && price && <small>{price}</small>}
