@@ -82,89 +82,12 @@ const CATEGORY_TABS: readonly {
   { key: 'CUSTOM_CREATIVE', label: 'CUSTOM & CREATIVE', count: 1, heading: 'Custom & Creative [1]' },
 ]
 
-const REDESIGN_PRODUCTS: readonly RedesignProduct[] = [
-  {
-    id: 'pave',
-    name: 'PAVÉ CHOCOLATE GÂTEAU',
-    sub: 'Signature Ganache 4-Layer',
-    photo: '/products/pave-chocolate-cake-sydney.webp',
-    price: 'From AUD 79',
-    slug: 'pave-chocolate-cake',
-    category: 'SIGNATURE_GATEAU',
-  },
-  {
-    id: 'signature-gateau',
-    name: 'SIGNATURE GÂTEAU LOAF',
-    sub: 'Rich Dark Chocolate Loaf',
-    photo: '/products/signature-gateau-au-chocolat-sydney.webp',
-    price: 'AUD 45',
-    slug: 'signature-gateau-au-chocolat',
-    category: 'SIGNATURE_GATEAU',
-  },
-  {
-    id: 'cupcake',
-    name: 'CHOCOLATE CUPCAKES',
-    sub: 'Sharing Box of 6 · 12 · 24 · 48',
-    photo: '/products/chocolate-cupcakes-sydney.webp',
-    price: 'From AUD 30',
-    slug: 'chocolate-cupcakes',
-    category: 'GATEAU_SHARING',
-  },
-  {
-    id: 'bento-cake',
-    name: 'BENTO CAKE',
-    sub: 'Petite Lunchbox Celebration Cake',
-    photo: '/products/bento-cake-sydney.webp',
-    price: 'COMING SOON',
-    slug: 'bento-cake',
-    category: 'GATEAU_SHARING',
-  },
-  {
-    id: 'fresh-lemon-cupcakes',
-    name: 'LEMON GLAZE CAKE',
-    sub: 'Fresh Squeezed Lemon Glaze',
-    photo: '/products/lemon-cake-sydney.webp',
-    price: 'From AUD 35',
-    slug: 'lemon-cake',
-    category: 'GATHER_CELEBRATE',
-  },
-  {
-    id: 'smore-stick',
-    name: 'S’MORE STICK',
-    sub: 'Couverture Marshmallow Sticks',
-    photo: '/products/smore-stick-sydney.webp',
-    price: 'From AUD 35',
-    slug: 'smore-stick',
-    category: 'GATHER_CELEBRATE',
-  },
-  {
-    id: 'fresh-strawberry-vanilla-cream',
-    name: 'VANILLA FRESH CREAM CAKE',
-    sub: 'Seasonal Strawberry & Pure Cream',
-    photo: '/products/fresh-strawberry-vanilla-cream-cake-sydney.webp',
-    price: 'From AUD 65',
-    slug: 'fresh-strawberry-vanilla-cream-cake',
-    category: 'CHOCOLATIERS_CAKE',
-  },
-  {
-    id: 'brownie-cheesecake',
-    name: 'BROWNIE CHEESECAKE',
-    sub: 'Dark Choco Brownie + Basque Cheese',
-    photo: '/products/brownie-cheesecake-sydney.webp',
-    price: 'From AUD 85',
-    slug: 'brownie-cheesecake',
-    category: 'CHOCOLATIERS_CAKE',
-  },
-  {
-    id: 'custom-cake',
-    name: 'CUSTOM CAKE SYDNEY',
-    sub: 'Bespoke Celebration Cake',
-    photo: '/products/custom-cake.webp',
-    price: 'From AUD 159',
-    slug: 'custom-cake',
-    category: 'CUSTOM_CREATIVE',
-  },
-]
+const REDESIGN_CATEGORY_BY_GROUP: Record<string, Exclude<RedesignCategoryKey, 'ALL'>> = {
+  'signature-gateau': 'SIGNATURE_GATEAU',
+  'gateau-sharing': 'GATEAU_SHARING',
+  'gather-celebrate': 'GATHER_CELEBRATE',
+  'chocolatiers-cake': 'CHOCOLATIERS_CAKE',
+}
 
 export function HomePage(props: Parameters<typeof LegacyHomePage>[0]) {
   return marketConfig.market === 'AU' ? <AuHomePage {...props} /> : <LegacyHomePage {...props} />
@@ -221,6 +144,12 @@ function AuHomePage({
 
   const catalogGroups = marketConfig.market === 'AU' ? getAuCakeCatalogGroups(language) : []
   const catalogCards = catalogGroups.flatMap((group) => group.cards)
+  const redesignProducts: RedesignProduct[] = catalogGroups.flatMap((group) => group.cards.map((card) => ({
+    id: card.id, name: card.name, sub: card.optionLabel, photo: card.imagePath,
+    price: card.priceLabel, slug: card.slug, category: REDESIGN_CATEGORY_BY_GROUP[group.id]!,
+  })))
+  redesignProducts.push({ id: 'custom-cake', name: 'CUSTOM CAKES', sub: 'Bespoke celebration cakes',
+    photo: '/products/custom-cake.webp', price: 'BY QUOTE', slug: 'custom-cake', category: 'CUSTOM_CREATIVE' })
   const quickViewCard = catalogCards.find((card) => card.id === quickViewCardId) || null
   const closeQuickView = () => setQuickViewCardId(null)
 
@@ -265,8 +194,8 @@ function AuHomePage({
 
   const activeProducts =
     activeCategory === 'ALL'
-      ? REDESIGN_PRODUCTS
-      : REDESIGN_PRODUCTS.filter((prod) => prod.category === activeCategory)
+      ? redesignProducts
+      : redesignProducts.filter((prod) => prod.category === activeCategory)
 
   const activeTab =
     CATEGORY_TABS.find((tab) => tab.key === activeCategory) || CATEGORY_TABS[0]
@@ -405,7 +334,7 @@ function AuHomePage({
             />
           </div>
           <div className="rd-hero-bottom-row">
-            <span className="rd-hero-copy">HERO COPY TBD</span>
+            <h1 className="rd-hero-copy">{publicHomeContent?.h1}</h1>
             <a
               className="rd-hero-cta"
               href="/cakes"
@@ -429,7 +358,7 @@ function AuHomePage({
           <div className="rd-intro-center">
             <div className="rd-intro-mobile-bar">
               <img className="rd-intro-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
-              <span className="rd-intro-mobile-tag">VERYGOOD CHOCOLATIER [LOGO MOTION]</span>
+              <span className="rd-intro-mobile-tag">VERYGOOD CHOCOLATIER</span>
             </div>
             <h2 className="rd-intro-statement rd-desktop-only">
               Born from a pure dedication to artisan couverture chocolate and honest, handcrafted cakes in Sydney.
@@ -465,9 +394,9 @@ function AuHomePage({
             {/* Col #1 */}
             <div className="rd-best-col">
               <h3 className="rd-best-title">Chocolatier’s GÂTEAU AU CHOCOLAT</h3>
-              <div
+              <a
                 className="rd-best-photo-frame"
-                onClick={() => navigateToCake('signature-gateau-au-chocolat')}
+                href="/cakes/signature-gateau-au-chocolat"
               >
                 <img
                   className="rd-best-photo"
@@ -479,22 +408,22 @@ function AuHomePage({
                   <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
                   <span className="rd-hogirl-label">HOGIRL #1</span>
                 </div>
-              </div>
-              <div
+              </a>
+              <a
                 className="rd-best-action-row"
-                onClick={() => navigateToCake('signature-gateau-au-chocolat')}
+                href="/cakes/signature-gateau-au-chocolat"
               >
-                <span className="rd-best-action-label">ADD TO CART</span>
-                <span className="rd-best-price-label">AUD 45</span>
-              </div>
+                <span className="rd-best-action-label">CHOOSE OPTIONS</span>
+                <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'signature-gateau')?.priceLabel}</span>
+              </a>
             </div>
 
             {/* Col #2 */}
             <div className="rd-best-col">
               <h3 className="rd-best-title">PAVÉ CHOCOLATE GÂTEAU</h3>
-              <div
+              <a
                 className="rd-best-photo-frame"
-                onClick={() => navigateToCake('pave-chocolate-cake')}
+                href="/cakes/pave-chocolate-cake"
               >
                 <img
                   className="rd-best-photo"
@@ -506,22 +435,22 @@ function AuHomePage({
                   <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
                   <span className="rd-hogirl-label">HOGIRL #2</span>
                 </div>
-              </div>
-              <div
+              </a>
+              <a
                 className="rd-best-action-row"
-                onClick={() => navigateToCake('pave-chocolate-cake')}
+                href="/cakes/pave-chocolate-cake"
               >
-                <span className="rd-best-action-label">ADD TO CART</span>
-                <span className="rd-best-price-label">From AUD 79</span>
-              </div>
+                <span className="rd-best-action-label">CHOOSE OPTIONS</span>
+                <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'pave')?.priceLabel}</span>
+              </a>
             </div>
 
             {/* Col #3 */}
             <div className="rd-best-col">
               <h3 className="rd-best-title">Chocolatier’s BROWNIE CHEESECAKE</h3>
-              <div
+              <a
                 className="rd-best-photo-frame"
-                onClick={() => navigateToCake('brownie-cheesecake')}
+                href="/cakes/brownie-cheesecake"
               >
                 <img
                   className="rd-best-photo"
@@ -533,14 +462,14 @@ function AuHomePage({
                   <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
                   <span className="rd-hogirl-label">HOGIRL #3</span>
                 </div>
-              </div>
-              <div
+              </a>
+              <a
                 className="rd-best-action-row"
-                onClick={() => navigateToCake('brownie-cheesecake')}
+                href="/cakes/brownie-cheesecake"
               >
-                <span className="rd-best-action-label">ADD TO CART</span>
-                <span className="rd-best-price-label">From AUD 85</span>
-              </div>
+                <span className="rd-best-action-label">CHOOSE OPTIONS</span>
+                <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'brownie-cheesecake')?.priceLabel}</span>
+              </a>
             </div>
           </div>
         </section>
@@ -555,7 +484,7 @@ function AuHomePage({
         {/* =================================================================
             06. Unified Catalogue Collection (Option A: 5 Categories + ALL)
             ================================================================= */}
-        <section className="rd-collection-section" aria-label="Product Collections">
+        <section id="au-collection" className="rd-collection-section" aria-label="Product Collections">
           <aside className="rd-collection-sidebar">
             <div className="rd-collection-sidebar-brand">VERYGOOD</div>
             <nav className="rd-collection-nav" aria-label="Collection categories">
@@ -588,8 +517,8 @@ function AuHomePage({
                 <article
                   className="rd-product-card"
                   key={prod.id}
-                  onClick={() => navigateToCake(prod.slug)}
                 >
+                  <a href={`/cakes/${prod.slug}`}>
                   <header className="rd-product-card-header">
                     <h3 className="rd-product-name">{prod.name}</h3>
                     <p className="rd-product-sub">{prod.sub}</p>
@@ -598,6 +527,7 @@ function AuHomePage({
                     <img className="rd-product-photo" src={prod.photo} alt={prod.name} loading="lazy" />
                   </div>
                   <div className="rd-product-price-row">{prod.price}</div>
+                  </a>
                 </article>
               ))}
             </div>
@@ -618,41 +548,39 @@ function AuHomePage({
           <h2 className="rd-bespoke-heading">BESPOKE & BUSINESS</h2>
           <div className="rd-bespoke-divider" />
           <div className="rd-bespoke-grid">
-            <div className="rd-bespoke-item" onClick={() => navigate('custom-cake')}>
+            <a className="rd-bespoke-item" href="/cakes/custom-cake">
               <div className="rd-bespoke-item-content">
                 <h3 className="rd-bespoke-title">CUSTOM CAKES</h3>
                 <p className="rd-bespoke-desc">Custom-designed cakes & atelier orders</p>
                 <span className="rd-bespoke-action">INQUIRE →</span>
               </div>
               <span className="rd-bespoke-arrow">→</span>
-            </div>
+            </a>
 
-            <div className="rd-bespoke-item" onClick={() => navigate('classes')}>
+            <a className="rd-bespoke-item" href="/classes">
               <div className="rd-bespoke-item-content">
                 <h3 className="rd-bespoke-title">EVENTS & BUSINESS</h3>
                 <p className="rd-bespoke-desc">Corporate catering, private events & parties</p>
-                <span className="rd-bespoke-action">INQUIRE →</span>
+                <span className="rd-bespoke-action">EXPLORE CLASSES & EVENTS →</span>
               </div>
               <span className="rd-bespoke-arrow">→</span>
-            </div>
+            </a>
 
-            <div className="rd-bespoke-item" onClick={() => navigate('classes')}>
+            <article className="rd-bespoke-item" data-au-coming-soon="service">
               <div className="rd-bespoke-item-content">
                 <h3 className="rd-bespoke-title">CAFÉ SUPPLY</h3>
                 <p className="rd-bespoke-desc">Wholesale cakes & artisan dessert supply</p>
-                <span className="rd-bespoke-action">INQUIRE →</span>
+                <span className="rd-bespoke-action">Coming Soon</span>
               </div>
-              <span className="rd-bespoke-arrow">→</span>
-            </div>
+            </article>
 
-            <div className="rd-bespoke-item" onClick={() => navigate('classes')}>
+            <article className="rd-bespoke-item" data-au-coming-soon="service">
               <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">MENU DIRECTION</h3>
+                <h3 className="rd-bespoke-title">MENU & EXPERIENCE DIRECTION</h3>
                 <p className="rd-bespoke-desc">Menu curation & culinary experience direction</p>
-                <span className="rd-bespoke-action">INQUIRE →</span>
+                <span className="rd-bespoke-action">Coming Soon</span>
               </div>
-              <span className="rd-bespoke-arrow">→</span>
-            </div>
+            </article>
           </div>
         </section>
 
@@ -666,9 +594,8 @@ function AuHomePage({
           <div className="rd-story-stack">
             <span className="rd-story-tag">ARTISAN CHOCOLATIER • SYDNEY</span>
             <h2 className="rd-story-heading">VERYGOOD ATELIER</h2>
-            <div className="rd-story-copy-tbd">BRAND STORY COPY TBD</div>
             <p className="rd-story-body">
-              Verygood은 단순한 케이크 쇼핑몰을 넘어, 시드니 현지에서 정통 쇼콜라티에 기법과 정직한 재료로 수제 초콜릿과 아티장 케이크를 빚어내는 디저트 아틀리에입니다.
+              Handcrafted cakes and chocolate creations, made to order in our Sydney atelier. Thoughtful ingredients, chocolatier-grade couverture and something special to share.
             </p>
           </div>
         </section>
@@ -678,6 +605,7 @@ function AuHomePage({
             ================================================================= */}
         <footer className="rd-footer">
           <span className="rd-footer-brand">VERYGOOD / AU-CAKE</span>
+          <nav aria-label="Footer navigation"><a href="/lookup">ORDER LOOKUP</a><a href="/reviews">REVIEWS</a><a href="/chocolates">CHOCOLATES</a></nav>
           <span className="rd-footer-copyright">© 2026 VERYGOOD. Sydney, Australia. All rights reserved.</span>
         </footer>
       </div>

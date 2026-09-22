@@ -77,6 +77,8 @@ import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-e
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
 import type { ChocolateExtra, PoundAddon, ProductId } from './lib/types'
+import { marketConfig } from './lib/market'
+import { AuProductStory } from './components/AuProductStory'
 
 const detailImages: Record<CakeDetailImageKey, string> = {
   'pound-side': '/products/chocolate-pound-cake-sydney.webp',
@@ -568,7 +570,9 @@ export default function CakeDetailPage({
   const total = getCakeDetailSelectionEstimatedTotal(selection)
   const galleryCount = detail.gallery.length
   const currentImageKey = detail.gallery[Math.min(activeImage, Math.max(0, galleryCount - 1))]
-  const addLabel = language === 'ko' ? '주문에 담기' : 'Add to order'
+  const isAuRedesign = marketConfig.market === 'AU'
+  const isPartyTemplate = isCupcakeProduct(product.id) || isFreshLemonCupcakeProduct(product.id) || isSmoreStick
+  const addLabel = isAuRedesign ? 'Add to Cart' : language === 'ko' ? '주문에 담기' : 'Add to order'
   const editorial = getCakeEditorialBySlug(slug, language)
   const compactOrderingNotice = editorial?.layout === 'compact' ? editorial.orderingNotice : null
   const relatedProducts = editorial
@@ -640,7 +644,7 @@ export default function CakeDetailPage({
   }
 
   return (
-    <main className="cake-detail-page">
+    <main className={`cake-detail-page${isAuRedesign ? ' au-redesign-detail' : ''}`} data-au-template={isAuRedesign ? isPartyTemplate ? 'party' : 'cake' : undefined}>
       <nav className="cake-detail-breadcrumb" aria-label={language === 'ko' ? '경로' : 'Breadcrumb'}>
         <button type="button" onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" />
@@ -653,7 +657,7 @@ export default function CakeDetailPage({
         aria-label={detail.name}
       >
         <div className="cake-detail-gallery">
-          {renderProductIntro('cake-detail-intro is-desktop-gallery-intro')}
+          {!isAuRedesign && renderProductIntro('cake-detail-intro is-desktop-gallery-intro')}
           <div className="cake-detail-main-image">
             {currentImageKey ? (
               <img
@@ -1099,7 +1103,7 @@ export default function CakeDetailPage({
           </div>
 
           <button type="button" className="primary-button cake-detail-request" onClick={addToOrder}>
-            {addLabel}
+            {addLabel}{isAuRedesign ? ` — ${formatCurrency(total)}` : ''}
           </button>
           {addedToOrder && (
             <div className="cake-detail-added">
@@ -1133,7 +1137,9 @@ export default function CakeDetailPage({
         </aside>
       </section>
 
-      {editorial ? (
+      {isAuRedesign ? (
+        <AuProductStory detail={detail} editorial={editorial} party={isPartyTemplate} language={language} onOpenCake={onOpenCake} />
+      ) : editorial ? (
         <CakeEditorialDetail
           editorial={editorial}
           language={language}

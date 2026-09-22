@@ -15,6 +15,9 @@ import type {
   CustomCakeCreateResponse,
 } from '../lib/custom-cake-contract.js'
 import { isValidPhone, normalizePhone } from '../lib/utils.js'
+import { marketConfig } from '../lib/market.js'
+import { AuRedesignHeader } from '../components/AuRedesignChrome'
+import { AuCustomCakeIntro } from '../components/AuCustomCakeIntro'
 
 type SingleTierSize = '6in' | '8in' | '10in'
 type DoubleTierSize = '4in+6in' | '6in+8in' | '8in+10in'
@@ -54,6 +57,7 @@ export function CustomCakePage({
   onComplete: (result: CustomCakeCreateResponse) => void
 }) {
   const formId = useId()
+  const isAuRedesign = marketConfig.market === 'AU'
   const [intent, setIntent] = useState(() => {
     try { return createSubmissionIntent() } catch { return null }
   })
@@ -211,23 +215,25 @@ export function CustomCakePage({
 
   return (
     <>
-      <SiteHeader
+      {isAuRedesign ? <AuRedesignHeader cartItemCount={cartItemCount} /> : <SiteHeader
         navigate={navigate}
         language={language}
         setLanguage={setLanguage}
         cartItemCount={cartItemCount}
-      />
-      <main className="cake-detail-page custom-cake-detail-page">
-        <nav className="cake-detail-breadcrumb" aria-label={language === 'ko' ? '경로' : 'Breadcrumb'}>
+      />}
+      <main className={`cake-detail-page custom-cake-detail-page${isAuRedesign ? ' au-redesign-custom' : ''}`}>
+        {isAuRedesign && <AuCustomCakeIntro />}
+        {!isAuRedesign && <nav className="cake-detail-breadcrumb" aria-label={language === 'ko' ? '경로' : 'Breadcrumb'}>
           <button type="button" onClick={() => navigate('cakes')}>
             <ArrowLeft size={16} aria-hidden="true" />
             {language === 'ko' ? '케이크로 돌아가기' : 'Back to cakes'}
           </button>
-        </nav>
+        </nav>}
+        {isAuRedesign && <h2 className="au-redesign-request-heading" id="custom-cake-options">YOUR CUSTOM CAKE REQUEST</h2>}
 
         {/* 1. Desktop Two-Column Hero with configurator */}
         <section className="cake-detail-hero" aria-label={language === 'ko' ? '커스텀 케이크' : 'CUSTOM CAKE'}>
-          <div className="cake-detail-gallery">
+          {!isAuRedesign && <div className="cake-detail-gallery">
             <div className="cake-detail-main-image">
               <img
                 src="/products/custom-cake.webp"
@@ -253,11 +259,11 @@ export function CustomCakePage({
                 <strong>{language === 'ko' ? '9월 선주문 · 인스타그램에서 프로모션 확인' : 'September Pre-order Offer · Check our Instagram'}</strong>
               </article>
             </section>
-          </div>
+          </div>}
 
           <aside className="cake-detail-purchase">
             <div className="cake-detail-configurator">
-              <div className="cake-detail-intro">
+              {!isAuRedesign && <div className="cake-detail-intro">
                 <p className="cake-detail-eyebrow">{language === 'ko' ? 'Sydney · 주문 제작' : 'Sydney · Made to order'}</p>
                 <h1>{language === 'ko' ? '커스텀 케이크' : 'CUSTOM CAKE'}</h1>
                 <p className="cake-detail-price cake-detail-price-primary" aria-live="polite">From AUD $159</p>
@@ -271,7 +277,7 @@ export function CustomCakePage({
                   <span>{language === 'ko' ? '9월 선주문 프로모션 · 인스타그램에서 확인하세요' : 'September Pre-order Offer · Check our Instagram'}</span>
                   <span>{language === 'ko' ? '맞춤 디자인 & 피규어' : 'Bespoke & Figurines'}</span>
                 </div>
-              </div>
+              </div>}
 
               {/* Tier Selection */}
               <fieldset disabled={locked} className="cake-detail-fieldset">

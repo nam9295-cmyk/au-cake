@@ -2,10 +2,10 @@ import { test } from 'node:test'
 import { execFileSync } from 'node:child_process'
 import * as assert from 'node:assert/strict'
 
-test('home market rendering and CSS isolation regressions pass', () => {
+test('home and Phase 1 market rendering and CSS isolation regressions pass', () => {
   const env = { ...process.env }
   delete env.NODE_TEST_CONTEXT
-  execFileSync(process.execPath, ['--test', 'tests/home-market-boundary.test.mjs'], { stdio: 'pipe', env })
+  execFileSync(process.execPath, ['--test', 'tests/home-market-boundary.test.mjs', 'tests/phase1-market-boundary.test.mjs'], { stdio: 'pipe', env })
 })
 import { marketConfig } from '../src/lib/market.js'
 import { getProductFeatures } from '../src/lib/i18n.js'

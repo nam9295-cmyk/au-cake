@@ -100,7 +100,8 @@ test('App owns cart once, adds detail selections, and renders the direct cart ro
   assert.match(appSource, /<CartPage[\s\S]*lines=\{cartLines\}[\s\S]*onUpdate=\{updateCartLine\}[\s\S]*onRemove=\{removeCartLine\}/)
   assert.match(appSource, /<CakeDetailPage[\s\S]*onAddToOrder=\{addCartLine\}[\s\S]*onViewOrder=\{\(\) => navigate\(['"]cart['"]\)\}/)
   assert.doesNotMatch(appSource, /requestCakeSelection/)
-  assert.match(appSource, /!isPrivatePage && <SiteFooter/)
+  assert.match(appSource, /!isPrivatePage && \(isAuRedesignPage \? <AuRedesignFooter \/> : <SiteFooter/)
+  assert.match(appSource, /const isAuRedesignPage = marketConfig\.market === 'AU'/)
 })
 
 test('cart-to-reserve handoff snapshots selections and subtracts only successful origin quantities', () => {

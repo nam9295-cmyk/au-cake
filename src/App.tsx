@@ -1,6 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
 import CakesPage from './CakesPage'
+import { AuRedesignFooter, AuRedesignHeader } from './components/AuRedesignChrome'
+import { AuCategoryPage } from './pages/AuCategoryPage'
+import { AuChocolatePage } from './pages/AuChocolatePage'
 import CartPage from './CartPage'
 import { useCart } from './CartProvider'
 import ReviewPage from './ReviewPage'
@@ -22,7 +25,7 @@ import { HomePage } from './pages/HomePage'
 import { LookupPage } from './pages/LookupPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ReservePage } from './pages/ReservePage'
-import { getCakeSlugFromPath, getPageFromPath, isHogirlPath, pathForCake, pathForPage, type Page } from './lib/app-routes'
+import { getCakeSlugFromPath, getChocolateSlugFromPath, getPageFromPath, isHogirlPath, pathForCake, pathForPage, type Page } from './lib/app-routes'
 import { type CakeDetailSelection } from './lib/cake-detail'
 import type { CartLine } from './lib/cart'
 import type { CustomCakeCreateResponse } from './lib/custom-cake-contract'
@@ -222,17 +225,18 @@ function App() {
     page === 'admin-reviews'
   const isPrivatePage = isAdminPage || page === 'calendar'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
+  const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake'].includes(page)
 
   if (page === 'review') return <ReviewPage onOrderCake={orderCakeFromReview} />
 
   return (
     <>
       {page === 'home' && <HomeTigerBackground />}
-      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
+      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage ? ' au-redesign-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && (
         <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}
-      {!isPrivatePage && <AnnouncementTicker language={language} />}
+      {!isPrivatePage && !isAuRedesignPage && <AnnouncementTicker language={language} />}
 
       {page === 'home' && <HomePage navigate={navigate} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'hogirl' && (
@@ -248,10 +252,14 @@ function App() {
       )}
       {page === 'cakes' && (
         <>
-          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
+          {isAuRedesignPage ? <AuRedesignHeader cartItemCount={cartItemCount} /> : <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
           <CakesPage language={language} onOpenCake={navigateToCake} />
         </>
       )}
+      {(page === 'chocolates' || page === 'chocolate-detail') && isAuRedesignPage && <>
+        <AuRedesignHeader cartItemCount={cartItemCount} />
+        {page === 'chocolates' ? <AuCategoryPage category="chocolates" language={language} /> : <AuChocolatePage slug={getChocolateSlugFromPath(pathname) || ''} />}
+      </>}
       {page === 'custom-cake' && (
         <CustomCakePage
           navigate={navigate}
@@ -287,7 +295,7 @@ function App() {
       )}
       {page === 'cake-detail' && (
         <>
-          <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
+          {isAuRedesignPage ? <AuRedesignHeader cartItemCount={cartItemCount} /> : <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
           <CakeDetailPage
             key={currentCakeSlug}
             slug={currentCakeSlug}
@@ -362,7 +370,7 @@ function App() {
           {page === 'calendar' && <ReadOnlyCalendarPage />}
         </Suspense>
       )}
-      {!isPrivatePage && <SiteFooter navigate={navigate} language={language} />}
+      {!isPrivatePage && (isAuRedesignPage ? <AuRedesignFooter /> : <SiteFooter navigate={navigate} language={language} />)}
       {!isPrivatePage && <AnalyticsConsentBanner language={language} />}
     </div>
     </>

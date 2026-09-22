@@ -1,5 +1,7 @@
 import { getCakeDetailBySlug } from './cake-detail.js'
 import { getAuCakeCatalog } from './cake-catalog.js'
+import { getAuChocolatePreview } from './au-chocolate-preview.js'
+import { marketConfig } from './market.js'
 import {
   getPublicCakePage,
   getAuPublicContent,
@@ -285,6 +287,17 @@ function removeMeta(selector: string) {
 
 
 export function getSeoConfig(pathname: string): SeoConfig {
+  const chocolateSlug = /^\/chocolates\/([a-z0-9-]+)$/.exec(pathname)?.[1]
+  const chocolate = chocolateSlug ? getAuChocolatePreview(chocolateSlug) : null
+  if (marketConfig.market === 'AU' && (pathname === '/chocolates' || chocolate)) {
+    return {
+      title: `${chocolate?.name || 'Chocolates'} — Coming Soon | ${brand}`,
+      description: 'Preview the verygood chocolate collection. Independent chocolate orders are not available yet.',
+      canonical: `${SITE_URL}${pathname}`,
+      noindex: true,
+      omitImage: true,
+    }
+  }
   if (pathname === '/cakes/custom-cake/') return publicSeo['/cakes/custom-cake']
   if (publicSeo[pathname]) return publicSeo[pathname]
   const cakeDetailSeo = getCakeDetailSeo(pathname)
