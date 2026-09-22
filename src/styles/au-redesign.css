@@ -538,18 +538,19 @@
   max-width: 100%;
   min-width: 0;
   display: grid;
+  grid-auto-rows: 1fr;
   box-sizing: border-box;
 }
 
 /* 4 columns for ALL products */
 :where(.au-home-shell) .rd-collection-grid.is-all {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px 20px;
 }
 
 /* 2 columns (large cards) for 2-item categories */
 :where(.au-home-shell) .rd-collection-grid.is-duo {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 36px 32px;
 }
 
@@ -600,6 +601,10 @@
   font-size: 14px;
 }
 
+:where(.au-home-shell) .rd-collection-grid.is-single :is(.rd-product-name, .rd-product-sub) {
+  min-height: 0;
+}
+
 :where(.au-home-shell) .rd-collection-grid.is-single .rd-product-price-row {
   font-size: 16px;
   font-weight: 700;
@@ -609,6 +614,7 @@
 :where(.au-home-shell) .rd-product-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 12px;
   cursor: pointer;
   border: 1px solid var(--rd-border);
@@ -623,6 +629,9 @@
 }
 
 :where(.au-home-shell) .rd-product-card-header {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 4px;
   min-height: 42px;
 }
 
@@ -632,6 +641,7 @@
   font-weight: 700;
   color: var(--rd-card-title);
   line-height: 1.25;
+  min-height: 2lh;
   margin: 0;
 }
 
@@ -640,7 +650,9 @@
   font-size: 12px;
   font-weight: 400;
   color: var(--rd-text);
-  margin: 2px 0 0;
+  line-height: 1.5;
+  min-height: 3lh;
+  margin: 0;
   opacity: 0.85;
 }
 
@@ -655,7 +667,8 @@
 :where(.au-home-shell) .rd-product-photo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
   transition: transform 0.2s ease;
 }
@@ -669,7 +682,11 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--rd-green);
-  margin-top: 2px;
+  line-height: 1.5;
+  min-height: 1.5em;
+  margin-top: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
@@ -907,6 +924,17 @@
 /* --------------------------------------------------------------------------
    Mobile Responsive Adjustments (390px viewport target)
    -------------------------------------------------------------------------- */
+/* Leave room for the category rail before switching to the mobile carousel. */
+@media (min-width: 769px) and (max-width: 1100px) {
+  :where(.au-home-shell) .rd-collection-grid.is-all {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.au-home-shell) .rd-collection-grid.is-duo .rd-product-card {
+    padding: 20px 12px 16px;
+  }
+}
+
 /* Stack the action copy before three-column cards become too narrow for prices. */
 @media (max-width: 840px) {
   :where(.au-home-shell) .rd-best-col {
@@ -1163,7 +1191,7 @@
 
   :where(.au-home-shell) .rd-collection-grid.is-duo {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
     overflow-x: visible;
     width: 100%;
