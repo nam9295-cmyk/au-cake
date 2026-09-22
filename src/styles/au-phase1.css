@@ -17,7 +17,7 @@
 .au-redesign-shell .au-redesign-wordmark { color: var(--au-green); font-family: var(--font-display); font-size: 16px; font-weight: 700; text-decoration: none; }
 /* Header-only wordmark: the Home drawer shares this rule; footer marks do not. */
 .au-home-shell .rd-header-logo,
-.au-redesign-shell .au-redesign-header .au-redesign-wordmark { font-family: var(--font-display); font-size: 26px; font-weight: 400; line-height: 1; letter-spacing: -.06em; text-transform: none; }
+.au-redesign-shell .au-redesign-header .au-redesign-wordmark { font-family: var(--font-display); font-size: 26px; font-weight: 800; line-height: 1; letter-spacing: -.06em; text-transform: none; }
 .au-redesign-shell .au-redesign-desktop-nav { display: flex; gap: 24px; }
 .au-redesign-shell .au-redesign-desktop-nav a { color: var(--au-text); font-size: 11px; font-weight: 700; padding: 12px 0; }
 .au-redesign-shell .au-redesign-header-actions { display: flex; gap: 24px; align-items: center; font-size: 12px; font-weight: 700; white-space: nowrap; }

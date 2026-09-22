@@ -56,7 +56,7 @@ async (page) => {
       })
       const label = `${route} @ ${width}px`
       check(layout.logo.text === 'verygood' && layout.logo.href === '/', `${label}: lowercase Home logo link`)
-      check(layout.logo.font.includes('Work Sans') && Number(layout.logo.weight) < 700, `${label}: lighter Work Sans logo`)
+      check(layout.logo.font.includes('Work Sans') && Number(layout.logo.weight) === 800, `${label}: ExtraBold Work Sans logo`)
       check(!layout.overflow, `${label}: page overflow`)
       check(layout.cards.length > 0, `${label}: expected product cards`)
       check(aligned(layout.cards.map((card) => card.card.height)), `${label}: inconsistent card heights`)
