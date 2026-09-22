@@ -39,6 +39,7 @@ import {
   type Language,
 } from './lib/i18n'
 import { getAuPublicContent } from './lib/public-content'
+import { marketConfig } from './lib/market'
 import { getSettings, supportsCakeOrderLines } from './lib/repository'
 import { applySeo } from './lib/seo'
 import {
@@ -227,7 +228,7 @@ function App() {
   return (
     <>
       {page === 'home' && <HomeTigerBackground />}
-      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
+      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && (
         <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}
