@@ -230,6 +230,7 @@ export async function checkReservationReadiness(databases, runtimeConfig) {
     status: 'ready',
     capabilities: {
       cakeOrderLines: 1,
+      chocolateOrderLines: 1,
       smoreStoredOrders: 1,
       smoreWrites: SMORE_WRITES_ENABLED ? 1 : 0,
     },

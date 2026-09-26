@@ -19,6 +19,7 @@ const PARSER_SOURCE_PATHS = Object.freeze([
   'appwrite-functions/reservation-api/src/reservation-input-policy.js',
   'appwrite-functions/reservation-api/src/stored-order-reader.js',
   'appwrite-functions/reservation-api/src/stored-order-policy.js',
+  'appwrite-functions/reservation-api/src/chocolate-products.js',
   'appwrite-functions/reservation-api/src/reservation-error.js',
   'appwrite-functions/reservation-api/src/cake-lookup-response.js',
   'appwrite-functions/reservation-api/src/coupon-digest.js',

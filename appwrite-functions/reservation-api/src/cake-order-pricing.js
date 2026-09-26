@@ -24,6 +24,7 @@ import {
 } from './cake-order-catalog.js'
 import { fail, sydneyDateValue, isValidDateValue, SAFE_LAST4_PATTERN } from './reservation-input-policy.js'
 import { canonicalOrderLineKey, normalizeCustomCakeV1Request, normalizeCakeOrderV2Request } from './cake-order-input.js'
+import { getChocolateProduct, isProductCouponEligible } from './chocolate-products.js'
 
 export function calculateIndividualPackagingFeeCents(individualPackagingPieces, selectedPackagingProductSubtotalCents) {
   if (!Number.isSafeInteger(individualPackagingPieces) || individualPackagingPieces <= 0) return 0
@@ -59,6 +60,8 @@ export function getValidPromoCode(productId, promoCode, now) {
 }
 
 export function unitPriceForCakeLine(line) {
+  const chocolate = getChocolateProduct(line.productId)
+  if (chocolate) return chocolate.unitPriceCents
   if (line.productId === 'smore-stick') {
     return SMORE_STICK_SET_UNIT_PRICES_CENTS[line.quantity] ?? fail('INVALID_QUANTITY')
   }
@@ -117,7 +120,7 @@ export function priceCakeOrderLines(lines, promoCode, now, reviewCoupon) {
   const eligibleIndexes = []
   for (let index = 0; index < baseLines.length; index += 1) {
     const linePromoCode = reviewCoupon ? null : getValidPromoCode(baseLines[index].productId, promoCode, now)
-    if ((reviewCoupon && baseLines[index].productId !== 'smore-stick') || linePromoCode) eligibleIndexes.push(index)
+    if ((reviewCoupon && isProductCouponEligible(baseLines[index].productId)) || linePromoCode) eligibleIndexes.push(index)
     if (linePromoCode) appliedPromoCode = linePromoCode
   }
   if (reviewCoupon && eligibleIndexes.length === 0) fail('PROMO_CODE_INVALID')

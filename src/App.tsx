@@ -5,6 +5,8 @@ import { AuRedesignFooter, AuRedesignHeader } from './components/AuRedesignChrom
 import { AuCategoryPage } from './pages/AuCategoryPage'
 import { AuChocolatePage } from './pages/AuChocolatePage'
 import CartPage from './CartPage'
+import { isChocolateProductId } from '../appwrite-functions/reservation-api/src/chocolate-products.js'
+import { supportsChocolateOrderLines } from './lib/repository'
 import { useCart } from './CartProvider'
 import ReviewPage from './ReviewPage'
 import ReviewsArchive from './ReviewsArchive'
@@ -93,6 +95,8 @@ function App() {
   const [reservationSelection, setReservationSelection] = useState<CakeDetailSelection | null>(null)
   const [reservationOrderLines, setReservationOrderLines] = useState<CakeDetailSelection[] | null>(null)
   const [cakeOrderLinesAvailable, setCakeOrderLinesAvailable] = useState<boolean | null>(null)
+  const [chocolateOrderLinesAvailable, setChocolateOrderLinesAvailable] = useState<boolean | null>(null)
+  const hasChocolate = cartLines.some((line) => isChocolateProductId(line.selection.productId))
   const [reservationSessionKey, setReservationSessionKey] = useState(0)
   const [pendingReviewCoupon, setPendingReviewCoupon] = useState('')
   const [pendingReviewRewardPercent, setPendingReviewRewardPercent] = useState<5 | 10 | null>(null)
@@ -126,6 +130,15 @@ function App() {
     })
     return () => { cancelled = true }
   }, [cartLines.length, page])
+
+  useEffect(() => {
+    if (page !== 'cart' || !hasChocolate) return
+    let cancelled = false
+    supportsChocolateOrderLines().then((available) => {
+      if (!cancelled) setChocolateOrderLinesAvailable(available)
+    })
+    return () => { cancelled = true }
+  }, [hasChocolate, page])
 
   useEffect(() => {
     const handlePop = () => {
@@ -188,7 +201,7 @@ function App() {
 
   const continueCartOrder = useCallback(() => {
     const snapshot: CartLine[] = cartLines.map((line) => ({ lineKey: line.lineKey, selection: { ...line.selection } }))
-    if (snapshot.length === 0 || (snapshot.length > 1 && cakeOrderLinesAvailable !== true)) return
+    if (snapshot.length === 0 || (snapshot.length > 1 && cakeOrderLinesAvailable !== true) || (hasChocolate && chocolateOrderLinesAvailable !== true)) return
     const first = snapshot[0]
     setReservationProductId(first.selection.productId)
     setReservationSelection({ ...first.selection })
@@ -196,7 +209,7 @@ function App() {
     cartOriginLinesRef.current = snapshot
     setReservationSessionKey((current) => current + 1)
     pushPage('reserve')
-  }, [cakeOrderLinesAvailable, cartLines, pushPage])
+  }, [cakeOrderLinesAvailable, chocolateOrderLinesAvailable, hasChocolate, cartLines, pushPage])
 
   const orderCakeFromReview = useCallback((couponCode: string, rewardPercent: 5 | 10) => {
     const normalized = normalizeReviewCouponCode(couponCode)
@@ -258,7 +271,7 @@ function App() {
       )}
       {(page === 'chocolates' || page === 'chocolate-detail') && isAuRedesignPage && <>
         <AuRedesignHeader cartItemCount={cartItemCount} />
-        {page === 'chocolates' ? <AuCategoryPage category="chocolates" language={language} /> : <AuChocolatePage slug={getChocolateSlugFromPath(pathname) || ''} />}
+        {page === 'chocolates' ? <AuCategoryPage category="chocolates" language={language} /> : <AuChocolatePage key={pathname} slug={getChocolateSlugFromPath(pathname) || ''} onAddToOrder={addCartLine} onViewOrder={() => navigate('cart')} />}
       </>}
       {page === 'custom-cake' && (
         <CustomCakePage
@@ -286,6 +299,7 @@ function App() {
             language={language}
             lines={cartLines}
             cakeOrderLinesAvailable={cakeOrderLinesAvailable}
+            chocolateOrderLinesAvailable={chocolateOrderLinesAvailable}
             onUpdate={updateCartLine}
             onRemove={removeCartLine}
             onContinue={continueCartOrder}

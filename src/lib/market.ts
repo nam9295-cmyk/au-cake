@@ -1,4 +1,5 @@
 import type { CacaoPercent, CakeSize, ChocolateType, PaymentStatus, PoundAddon, ProductId, ReservationStatus, StoreSettings } from './types.js'
+import { CHOCOLATE_PRODUCTS } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 
 export type Market = 'KR' | 'AU'
 
@@ -362,6 +363,12 @@ export const MARKET_CONFIG: Record<Market, MarketConfig> = {
     phoneRegex: /^(?:04\d{8}|(?:\+?61|61)\s?4\d{8})$/,
     reservationCodePrefix: 'VG-C-AU',
     products: {
+      ...Object.fromEntries(Object.values(CHOCOLATE_PRODUCTS).map((product) => [product.id, {
+        id: product.id, name: product.name, description: product.saleUnit,
+        price: product.unitPriceCents / 100, priceNote: product.saleUnit,
+        usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false,
+        usesPoundAddonOptions: false, sizePrices: {},
+      }])),
       'pave-cake': {
         id: 'pave-cake',
         name: 'Pave Chocolate Cake',

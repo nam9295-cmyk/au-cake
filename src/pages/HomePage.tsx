@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HomePage as LegacyHomePage } from './LegacyHomePage'
+import { AuHeroVideo } from '../components/AuHeroVideo'
 import heroCake2Img from '../assets/hero-cake-2.webp'
 import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
@@ -11,6 +12,8 @@ import { getAuCakeCatalogGroups, getAuHomeHeroCards, type CakeCatalogCard, type 
 import { cakeCopy, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 import { getAuPublicContent, getPublicCakePage } from '../lib/public-content'
+import { getAuChocolatePreviews } from '../lib/au-chocolate-preview'
+import { auChocolateAssets } from '../lib/au-chocolate-assets'
 
 const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().home : null
 
@@ -57,12 +60,14 @@ type RedesignCategoryKey =
   | 'GATHER_CELEBRATE'
   | 'CHOCOLATIERS_CAKE'
   | 'CUSTOM_CREATIVE'
+  | 'CHOCOLATES'
 
 interface RedesignProduct {
   id: string
   name: string
   sub: string
   photo: string
+  photoAlt?: string
   price: string
   slug: string
   category: Exclude<RedesignCategoryKey, 'ALL'>
@@ -71,15 +76,15 @@ interface RedesignProduct {
 const CATEGORY_TABS: readonly {
   key: RedesignCategoryKey
   label: string
-  count: number
   heading: string
 }[] = [
-  { key: 'ALL', label: 'ALL PRODUCTS', count: 9, heading: 'All Creations [9]' },
-  { key: 'SIGNATURE_GATEAU', label: 'SIGNATURE GÂTEAU', count: 2, heading: 'Signature Gâteau [2]' },
-  { key: 'GATEAU_SHARING', label: 'GÂTEAU SHARING', count: 2, heading: 'Gâteau Sharing [2]' },
-  { key: 'GATHER_CELEBRATE', label: 'GATHER & CELEBRATE', count: 2, heading: 'Gather & Celebrate [2]' },
-  { key: 'CHOCOLATIERS_CAKE', label: 'CHOCOLATIER’S CAKE', count: 2, heading: 'Chocolatier’s Cake [2]' },
-  { key: 'CUSTOM_CREATIVE', label: 'CUSTOM & CREATIVE', count: 1, heading: 'Custom & Creative [1]' },
+  { key: 'ALL', label: 'ALL PRODUCTS', heading: 'All Creations' },
+  { key: 'SIGNATURE_GATEAU', label: 'SIGNATURE GÂTEAU', heading: 'Signature Gâteau' },
+  { key: 'GATEAU_SHARING', label: 'GÂTEAU SHARING', heading: 'Gâteau Sharing' },
+  { key: 'GATHER_CELEBRATE', label: 'GATHER & CELEBRATE', heading: 'Gather & Celebrate' },
+  { key: 'CHOCOLATIERS_CAKE', label: 'CHOCOLATIER’S CAKE', heading: 'Chocolatier’s Cake' },
+  { key: 'CUSTOM_CREATIVE', label: 'CUSTOM & CREATIVE', heading: 'Custom & Creative' },
+  { key: 'CHOCOLATES', label: 'CHOCOLATES', heading: 'Chocolates' },
 ]
 
 const REDESIGN_CATEGORY_BY_GROUP: Record<string, Exclude<RedesignCategoryKey, 'ALL'>> = {
@@ -150,6 +155,15 @@ function AuHomePage({
   })))
   redesignProducts.push({ id: 'custom-cake', name: 'CUSTOM CAKES', sub: 'Bespoke celebration cakes',
     photo: '/products/custom-cake.webp', price: 'BY QUOTE', slug: 'custom-cake', category: 'CUSTOM_CREATIVE' })
+  redesignProducts.push(...getAuChocolatePreviews().map((product): RedesignProduct => ({
+    id: product.slug, name: product.name, sub: product.packLabel,
+    photo: auChocolateAssets[product.slug].src, photoAlt: auChocolateAssets[product.slug].alt,
+    price: product.price, slug: product.slug, category: 'CHOCOLATES',
+  })))
+  const categoryTabs = CATEGORY_TABS.map((tab) => ({
+    ...tab,
+    count: tab.key === 'ALL' ? redesignProducts.length : redesignProducts.filter((product) => product.category === tab.key).length,
+  }))
   const quickViewCard = catalogCards.find((card) => card.id === quickViewCardId) || null
   const closeQuickView = () => setQuickViewCardId(null)
 
@@ -198,8 +212,8 @@ function AuHomePage({
       : redesignProducts.filter((prod) => prod.category === activeCategory)
 
   const activeTab =
-    CATEGORY_TABS.find((tab) => tab.key === activeCategory) || CATEGORY_TABS[0]
-  const collectionHeading = activeTab.heading
+    categoryTabs.find((tab) => tab.key === activeCategory) || categoryTabs[0]
+  const collectionHeading = `${activeTab.heading} [${activeTab.count}]`
 
   return (
     <>
@@ -221,6 +235,7 @@ function AuHomePage({
 
           <nav className="rd-header-nav" aria-label="Main navigation">
             <button type="button" onClick={() => navigate('cakes')}>SHOP</button>
+            <a href="/chocolates">CHOCOLATES</a>
             <button type="button" onClick={() => navigate('custom-cake')}>CUSTOM CAKES</button>
             <button type="button" onClick={() => navigate('classes')}>EVENTS & BUSINESS</button>
             <button type="button" onClick={() => navigate('reviews')}>ABOUT</button>
@@ -288,6 +303,7 @@ function AuHomePage({
                 >
                   SHOP
                 </button>
+                <a href="/chocolates">CHOCOLATES</a>
                 <button
                   type="button"
                   onClick={() => {
@@ -325,14 +341,7 @@ function AuHomePage({
             ================================================================= */}
         <section className="rd-hero" aria-label="Hero">
           <div className="rd-hero-wordmark-mobile">VERYGOOD</div>
-          <div className="rd-hero-photo-wrap">
-            <img
-              className="rd-hero-photo"
-              src="/redesign/53935.jpg"
-              alt="Handcrafted artisan cake"
-              loading="eager"
-            />
-          </div>
+          <AuHeroVideo />
           <div className="rd-hero-bottom-row">
             <h1 className="rd-hero-copy">{publicHomeContent?.h1}</h1>
             <a
@@ -482,17 +491,18 @@ function AuHomePage({
         </section>
 
         {/* =================================================================
-            06. Unified Catalogue Collection (Option A: 5 Categories + ALL)
+            06. Unified Catalogue Collection
             ================================================================= */}
         <section id="au-collection" className="rd-collection-section" aria-label="Product Collections">
           <aside className="rd-collection-sidebar">
             <div className="rd-collection-sidebar-brand">VERYGOOD</div>
             <nav className="rd-collection-nav" aria-label="Collection categories">
-              {CATEGORY_TABS.map((tab) => (
+              {categoryTabs.map((tab) => (
                 <button
                   key={tab.key}
                   type="button"
                   className={`rd-collection-tab${activeCategory === tab.key ? ' is-active' : ''}`}
+                  aria-pressed={activeCategory === tab.key}
                   onClick={() => setActiveCategory(tab.key)}
                 >
                   <span>{tab.label}</span>
@@ -517,14 +527,15 @@ function AuHomePage({
                 <article
                   className="rd-product-card"
                   key={prod.id}
+                  data-au-product={prod.slug}
                 >
-                  <a href={`/cakes/${prod.slug}`}>
+                  <a href={`/${prod.category === 'CHOCOLATES' ? 'chocolates' : 'cakes'}/${prod.slug}`}>
                   <header className="rd-product-card-header">
                     <h3 className="rd-product-name">{prod.name}</h3>
                     <p className="rd-product-sub">{prod.sub}</p>
                   </header>
                   <div className="rd-product-photo-wrap">
-                    <img className="rd-product-photo" src={prod.photo} alt={prod.name} loading="lazy" />
+                    <img className="rd-product-photo" src={prod.photo} alt={prod.photoAlt || prod.name} loading="lazy" />
                   </div>
                   <div className="rd-product-price-row">{prod.price}</div>
                   </a>

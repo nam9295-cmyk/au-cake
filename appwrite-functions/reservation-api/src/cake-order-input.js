@@ -42,6 +42,7 @@ import {
   CUSTOM_CAKE_V1_PROMO_CODE,
 } from './cake-order-catalog.js'
 import { isActiveCakeOrderProductId, isCompatCakeOrderProductId } from './active-cake-products.js'
+import { isChocolateProductId, CHOCOLATE_OPTIONS_V1 } from './chocolate-products.js'
 
 export const PICKUP_CUTOFF_HOUR = 20
 
@@ -296,6 +297,12 @@ export function hasOnlyKnownStrawberryPayloadFields(input, allowedKeys) {
 }
 
 export function assertKnownStrawberryPayloadFields(input) {
+  if (isChocolateProductId(input.productId) && Object.hasOwn(input, 'cacaoPercent')) fail('INVALID_ORDER_LINE')
+  if ((isChocolateProductId(input.productId)
+    || (Array.isArray(input.orderLines) && input.orderLines.some(line => isChocolateProductId(line?.productId))))
+    && !hasOnlyKnownStrawberryPayloadFields(input, Object.hasOwn(input, 'orderLines') ? CAKE_ORDER_REQUEST_KEYS : LEGACY_SINGLE_CAKE_INPUT_KEYS)) {
+    fail('INVALID_ORDER_LINE')
+  }
   if (Object.hasOwn(input, 'orderLines')) {
     if (!Array.isArray(input.orderLines)) return
     if (input.orderLines.some((line) => isPlainObject(line) && STRAWBERRY_CREAM_CAKE_PRODUCT_IDS.has(line.productId))
@@ -311,6 +318,12 @@ export function assertKnownStrawberryPayloadFields(input) {
 }
 
 export function normalizedCakeLine(input, quantity, options) {
+  if (isChocolateProductId(input.productId)) {
+    for (const [key, value] of Object.entries(CHOCOLATE_OPTIONS_V1)) {
+      if (input[key] !== undefined && input[key] !== value) fail('INVALID_ORDER_LINE')
+    }
+    return { productId: input.productId, ...CHOCOLATE_OPTIONS_V1, quantity }
+  }
   if (input.productId === 'smore-stick') input = { productId: input.productId }
   const {
     cakeSize,
@@ -399,7 +412,7 @@ export function normalizeCakeReservationInput(input, { now, customerEmailMode, c
     if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
     normalizedLines = normalizeCakeOrderLines(input.orderLines, { cakeCatalogMode })
   } else {
-    const quantity = input.productId === 'smore-stick' ? input.quantity : Number(input.quantity)
+    const quantity = input.productId === 'smore-stick' || isChocolateProductId(input.productId) ? input.quantity : Number(input.quantity)
     if (!validCakeQuantity(input.productId, quantity)) fail('INVALID_QUANTITY')
     normalizedLines = [normalizedCakeLine(input, quantity, { cakeCatalogMode })]
   }
@@ -420,7 +433,7 @@ export function canonicalCakeRequestPayload(input, { customerEmailMode = 'requir
     if ([...LEGACY_ORDER_LINE_FIELDS].some((field) => Object.hasOwn(input, field))) fail('INVALID_ORDER_LINE')
     lines = normalizeCakeOrderLines(input.orderLines, { cakeCatalogMode })
   } else {
-    const quantity = input.productId === 'smore-stick' ? input.quantity : Number(input.quantity)
+    const quantity = input.productId === 'smore-stick' || isChocolateProductId(input.productId) ? input.quantity : Number(input.quantity)
     if (!validCakeQuantity(input.productId, quantity)) fail('INVALID_QUANTITY')
     lines = [normalizedCakeLine(input, quantity, { cakeCatalogMode })]
   }
@@ -487,6 +500,7 @@ function wireInputBoundary(run) {
 }
 
 function normalizeWireOptions(line) {
+  if (isChocolateProductId(line.productId)) fail('INVALID_REQUEST')
   exactWireFields(line.options, WIRE_OPTION_KEYS)
   for (const [key, values] of Object.entries(WIRE_OPTION_ENUMS)) {
     if (!values.includes(line.options[key])) fail('INVALID_REQUEST')

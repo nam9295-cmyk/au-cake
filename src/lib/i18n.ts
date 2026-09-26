@@ -133,7 +133,7 @@ const koProducts: Partial<Record<ProductId, ProductText>> = {
   },
 }
 
-const koProductFeatures: Record<ProductId, string[]> = {
+const koProductFeatures: Partial<Record<ProductId, string[]>> = {
   'pave-cake': ['시그니처 갸또 쇼콜라 시트', '각 층을 채운 파베 초콜릿 가나슈', '크림보다 초콜릿이 중심인 진한 맛'],
   'vanilla-fresh-cream-cake': ['시그니처 갸또 쇼콜라 시트', '실제 바닐라빈을 넣은 바닐라 생크림', '눈에 보이는 실제 바닐라빈', '6" · 7.5" · 9" 사이즈'],
   'buttercream-cake': ['시그니처 갸또 쇼콜라 시트', '이탈리안 머랭·실제 버터·코코아 파우더', '케이크 포인트 컬러 선택'],

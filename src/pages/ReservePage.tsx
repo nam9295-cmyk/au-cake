@@ -6,6 +6,9 @@ import { SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteC
 import { getCakeDetailSelectionTotal, type CakeDetailSelection } from '../lib/cake-detail'
 import { DEFAULT_SMORE_SET_QUANTITY, isValidSmoreQuantity, SMORE_SET_QUANTITIES } from '../lib/smore-quantity'
 import { getAuCakeCatalogCards } from '../lib/cake-catalog'
+import { getChocolateProduct, isChocolateProductId, isProductCouponEligible } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
+import { auChocolateAssets } from '../lib/au-chocolate-assets'
+import { requireChocolateOrderSupport, CHOCOLATE_ORDER_LINES_UNAVAILABLE_ERROR } from '../lib/repository'
 import {
   getIndividualPackagingPieceCount,
   getIndividualPackagingPricing,
@@ -262,6 +265,7 @@ export function ReservePage({
 
     setSubmitting(true)
     try {
+      await requireChocolateOrderSupport((orderSelections || [form]).map((line) => line.productId))
       const reservationInput = {
         customerName: form.customerName,
         customerPhone: phone,
@@ -290,7 +294,7 @@ export function ReservePage({
         requestId,
         website: form.website,
       }
-      const demoProductPricing = reviewDemoMode ? getDemoReviewPricingAudit(currentPrice, submittedPromo) : null
+      const demoProductPricing = reviewDemoMode && !(orderSelections || [form]).some((line) => isChocolateProductId(line.productId)) ? getDemoReviewPricingAudit(currentPrice, submittedPromo) : null
       const demoPackagingPricing = getIndividualPackagingPricing([{
         productId: form.productId,
         quantity: form.quantity,
@@ -385,6 +389,8 @@ export function ReservePage({
         setError(copy.errors.pickupTimeUnavailable)
       } else if (submitError instanceof Error && submitError.message === PICKUP_TIME_TOO_SOON_ERROR) {
         setError(copy.errors.pickupLeadTime)
+      } else if (submitError instanceof Error && submitError.message === CHOCOLATE_ORDER_LINES_UNAVAILABLE_ERROR) {
+        setError('Chocolate ordering is not available on this server yet. Your order has been kept. You can remove the chocolates and continue with cakes, or try again later.')
       } else if (submitError instanceof Error && submitError.message === CAKE_ORDER_LINES_UNAVAILABLE_ERROR) {
         setError(language === 'ko'
           ? '여러 케이크 동시 신청을 현재 사용할 수 없어요. 장바구니에서 잠시 후 다시 확인해 주세요.'
@@ -420,7 +426,9 @@ export function ReservePage({
       })
   const catalogCards = marketConfig.market === 'AU' ? getAuCakeCatalogCards(language) : []
   const selectedCatalogCard = catalogCards.find((card) => card.productId === selectedProduct.id)
-  const selectedProductImage = selectedCatalogCard?.isPhotoComingSoon
+  const selectedChocolate = marketConfig.market === 'AU' ? getChocolateProduct(selectedProduct.id) : undefined
+  const selectedChocolatePhoto = selectedChocolate ? auChocolateAssets[selectedChocolate.family] : undefined
+  const selectedProductImage = selectedChocolatePhoto?.src || (selectedCatalogCard?.isPhotoComingSoon
     ? null
     : selectedCatalogCard?.imagePath || (selectedProduct.id === 'pound-cake'
     ? productCardImages.pound
@@ -430,7 +438,7 @@ export function ReservePage({
         ? productCardImages.basque
         : isFreshLemonCupcakeProduct(selectedProduct.id)
           ? productCardImages.lemon
-          : productCardImages.pave)
+          : productCardImages.pave))
   const priceOptions = {
     cacaoPercent: form.cacaoPercent,
     cakeSize: form.cakeSize,
@@ -487,12 +495,14 @@ export function ReservePage({
   const promoEntry = getPromoEntryState(promoProductId, form.promoCode, undefined, knownReviewRewardPercent)
   const isManualCouponPending = promoEntry.kind === 'review-pending' && promoEntry.normalizedCode.startsWith('JENNIE')
   const isPromoApplied = promoEntry.kind === 'static-valid' || promoEntry.kind === 'review-pending'
-  const basePromoPriceDisplay = getPromoPriceDisplay(currentPrice, promoEntry)
+  const couponBasisCents = (orderSelections || [singleSelection]).reduce((sum, selection) =>
+    isProductCouponEligible(selection.productId) ? sum + Math.round(getCakeDetailSelectionTotal(selection) * 100) : sum, 0)
+  const basePromoPriceDisplay = getPromoPriceDisplay(currentPrice, promoEntry, couponBasisCents)
   const productPromoPriceDisplay = orderSelections && promoEntry.kind === 'static-valid'
     ? (() => {
         const eligibleBasisCents = orderSelections.reduce((sum, selection) => {
           if (!getValidPromoCode(selection.productId, promoEntry.normalizedCode)) return sum
-          return sum + Math.round(getReservationPrice(selection.productId, selection, selection.quantity) * 100)
+          return sum + Math.round(getCakeDetailSelectionTotal(selection) * 100)
         }, 0)
         return {
           finalPrice: Math.max(0, Math.round(currentPrice * 100) - Math.round(eligibleBasisCents * promoEntry.discountPercent / 100)) / 100,
@@ -618,11 +628,13 @@ export function ReservePage({
             <div className="summary-product-photo">
               {isVanillaFreshCreamCakeProduct(selectedProduct.id) || !selectedProductImage
                 ? <VanillaFreshCreamCakeSilhouette productName={selectedProductText.name} />
-                : <img src={selectedProductImage} alt={selectedProductText.name} width={1080} height={1012} loading="eager" decoding="async" />}
+                : <img src={selectedProductImage} alt={selectedChocolatePhoto?.alt || selectedProductText.name} width={1080} height={1012} loading="eager" decoding="async" />}
             </div>
-            <p className="summary-kicker">{copy.productSectionTitle}</p>
+            {selectedChocolate && <p>{selectedChocolate.family === 'almond-chocoball' && selectedChocolate.id !== 'almond-chocoball-80g' ? 'Reference photo: single 80g pouch. Selected packaging is not pictured.' : selectedChocolatePhoto?.caption}</p>}
+            <p className="summary-kicker">{selectedChocolate ? 'Chocolate selection' : copy.productSectionTitle}</p>
             <h1>{labels.title}</h1>
             <dl>
+              {selectedChocolate && <div><dt>Pack</dt><dd>{selectedChocolate.saleUnit}</dd></div>}
               <div>
                 <dt>{labels.product}</dt>
                 <dd>{isMultiOrder
@@ -755,8 +767,8 @@ export function ReservePage({
                 <dd>{language === 'ko' ? copy.dailyLimitText : settings.dailyLimitText}</dd>
               </div>
             </dl>
-            <button className="change-cake-button" type="button" onClick={() => isMultiOrder ? navigate('cart') : setShowCakeSelector(true)}>
-              {isMultiOrder ? (language === 'ko' ? '장바구니에서 수정' : 'Edit order') : labels.changeCake}
+            <button className="change-cake-button" type="button" onClick={() => isMultiOrder || selectedChocolate ? navigate('cart') : setShowCakeSelector(true)}>
+              {isMultiOrder || selectedChocolate ? (language === 'ko' ? '장바구니에서 수정' : 'Edit order') : labels.changeCake}
             </button>
             <p>{language === 'ko' ? copy.reservationCompleteText : settings.reservationNotice}</p>
           </aside>
@@ -774,6 +786,7 @@ export function ReservePage({
                   {orderSelections.map((selection, index) => (
                     <li key={`${selection.productId}-${index}`}>
                       <span>{getProductText(selection.productId, language).name}</span>
+                      {getChocolateProduct(selection.productId) && <span>{getChocolateProduct(selection.productId)?.saleUnit}</span>}
                       <strong>{selection.quantity}{copy.quantityUnit} · {formatCurrency(getCakeDetailSelectionTotal(selection))}</strong>
                       {selection.individualPackaging && (
                         <small>{language === 'ko' ? '개별 포장' : 'Individual packaging'} · {getIndividualPackagingPieceCount(selection.productId, selection.quantity)} {language === 'ko' ? '개' : 'pieces'}</small>
@@ -851,7 +864,7 @@ export function ReservePage({
               </fieldset>
             )}
 
-            {selectedProductGroup.productIds.length > 1 && (
+            {!selectedChocolate && selectedProductGroup.productIds.length > 1 && (
               <fieldset>
               <legend>{selectedProductGroup.id === 'cupcake'
                   ? language === 'ko' ? '구성' : 'Pack Size'
@@ -1177,7 +1190,7 @@ export function ReservePage({
               <p className="field-help">
                 {selectedProduct.id === 'smore-stick'
                   ? language === 'ko' ? '10개 AUD 35.00 · 25개 AUD 75.00 · 50개 AUD 135.00' : '10 sticks AUD 35.00 · 25 sticks AUD 75.00 · 50 sticks AUD 135.00'
-                  : labels.quantityHelp}
+                  : selectedChocolate ? `${formatCurrency(unitPrice)} per ${selectedChocolate.saleUnit} pack, up to 5 packs.` : labels.quantityHelp}
               </p>
             </fieldset>
             </>)}

@@ -20,6 +20,7 @@ import {
 import { getCakeServingProfile, isHistoricalWholeCakeSize, isHistoricalWholeCakeUnitPrice } from './cake-serving.js'
 import { isValidPhone } from './utils.js'
 import { isActiveCakeOrderProductId, isStoredCakeOrderProductId } from '../../appwrite-functions/reservation-api/src/active-cake-products.js'
+import { CHOCOLATE_OPTIONS_V1, isChocolateProductId, isProductCouponEligible } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import {
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
   getIndividualPackagingPieceCount,
@@ -97,14 +98,14 @@ export function getPromoEntryState(
   return { kind: 'invalid', normalizedCode: trimmed, discountPercent: 0 }
 }
 
-export function getPromoPriceDisplay(currentPrice: number, promo: PromoEntryState): {
+export function getPromoPriceDisplay(currentPrice: number, promo: PromoEntryState, eligibleBasisCents = Math.round(currentPrice * 100)): {
   finalPrice: number
   estimatedPrice: number | null
 } {
   if (promo.kind === 'review-pending') {
     const estimatedPrice = promo.discountPercent === null
       ? null
-      : Math.max(0, Math.round(currentPrice * 100 * (1 - promo.discountPercent / 100)) / 100)
+      : Math.max(0, Math.round(currentPrice * 100) - Math.round(eligibleBasisCents * promo.discountPercent / 100)) / 100
     return { finalPrice: currentPrice, estimatedPrice }
   }
   const discountedPrice = Math.max(0, Math.round(currentPrice * 100 * (1 - promo.discountPercent / 100)) / 100)
@@ -299,7 +300,7 @@ export function getOptionalReservationPricingAudit(value: unknown): ReservationP
   }
 }
 
-export function buildCakeReservationRequest(input: ReservationInput): ReservationInput {
+export function buildCakeReservationRequest(input: ReservationInput): Omit<ReservationInput, 'cacaoPercent'> & { cacaoPercent?: ReservationInput['cacaoPercent'] } {
   if (getCakeServingProfile(input.productId) === 'genoise') {
     const request = {
       customerName: input.customerName,
@@ -318,7 +319,7 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     const promoCode = typeof input.promoCode === 'string' ? input.promoCode.trim() : ''
     return promoCode ? { ...request, promoCode } : request
   }
-  const request: ReservationInput = {
+  const request = {
     customerName: input.customerName,
     customerPhone: input.customerPhone,
     customerEmail: input.customerEmail.trim().toLowerCase(),
@@ -337,7 +338,7 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     vanillaCreamCount: input.vanillaCreamCount,
     partyDecorationCount: input.partyDecorationCount,
     vanillaCakeSheet: normalizeVanillaCakeSheet(input.productId, input.vanillaCakeSheet),
-    vanillaCakeFlavor: normalizeVanillaCakeFlavor(input.productId, input.vanillaCakeFlavor),
+    vanillaCakeFlavor: isChocolateProductId(input.productId) ? CHOCOLATE_OPTIONS_V1.vanillaCakeFlavor : normalizeVanillaCakeFlavor(input.productId, input.vanillaCakeFlavor),
     ...(input.vanillaCakePointColor ? {
       vanillaCakePointColor: normalizeVanillaCakePointColor(input.productId, input.vanillaCakePointColor),
     } : {}),
@@ -347,7 +348,7 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
     quantity: input.quantity,
     pickupDate: input.pickupDate,
     pickupTime: input.pickupTime,
-    cacaoPercent: input.cacaoPercent,
+    ...(!isChocolateProductId(input.productId) ? { cacaoPercent: input.cacaoPercent } : {}),
     requestNote: input.requestNote,
     privacyConsent: input.privacyConsent,
     requestId: input.requestId,
@@ -363,6 +364,7 @@ export function buildCakeReservationRequest(input: ReservationInput): Reservatio
 
 
 function projectCakeOrderLine(line: CakeOrderLineRequest): CakeOrderLineRequest {
+  if (isChocolateProductId(line.productId)) return { ...CHOCOLATE_OPTIONS_V1, productId: line.productId, quantity: line.quantity }
   if (getCakeServingProfile(line.productId) === 'genoise') {
     return { productId: line.productId, cakeSize: line.cakeSize, quantity: line.quantity } as CakeOrderLineRequest
   }
@@ -404,7 +406,7 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
   }
   const line = value as Record<string, unknown>
   if (
-    typeof line.productId !== 'string' || (!isActiveCakeOrderProductId(line.productId) && getCakeServingProfile(line.productId as ProductId) === null) || !Object.prototype.hasOwnProperty.call(PRODUCTS, line.productId) ||
+    typeof line.productId !== 'string' || (!isActiveCakeOrderProductId(line.productId) && !isChocolateProductId(line.productId) && getCakeServingProfile(line.productId as ProductId) === null) || !Object.prototype.hasOwnProperty.call(PRODUCTS, line.productId) ||
     typeof line.cakeSize !== 'string' || !VALID_CAKE_SIZES.has(line.cakeSize as CakeSize) ||
     typeof line.chocolateType !== 'string' || !VALID_CHOCOLATE_TYPES.has(line.chocolateType as ChocolateType) ||
     typeof line.poundAddon !== 'string' || !VALID_POUND_ADDONS.has(line.poundAddon as PoundAddon) ||
@@ -435,6 +437,7 @@ function isValidCakeOrderLine(value: unknown): value is CakeOrderLineRequest {
       : Number(line.quantity) > MAX_RESERVATION_QUANTITY)
   ) return false
   const productId = line.productId as ProductId
+  if (isChocolateProductId(productId)) return Object.entries(CHOCOLATE_OPTIONS_V1).every(([key, expected]) => line[key] === undefined || line[key] === expected)
   const finishes = normalizeCupcakeFinishCounts(productId, Number(line.vanillaCreamCount), Number(line.partyDecorationCount))
   return (
     line.cakeSize === normalizeCakeSize(productId, line.cakeSize as CakeSize) &&
@@ -526,7 +529,7 @@ function requiredSetValue<T extends string>(row: Record<string, unknown>, key: s
 
 function requiredProductId(row: Record<string, unknown>): ProductId {
   const value = requiredString(row, 'productId')
-  if (!isStoredCakeOrderProductId(value) || !Object.prototype.hasOwnProperty.call(PRODUCTS, value)) invalidResponse()
+  if ((!isStoredCakeOrderProductId(value) && !isChocolateProductId(value)) || !Object.prototype.hasOwnProperty.call(PRODUCTS, value)) invalidResponse()
   return value as ProductId
 }
 
@@ -796,7 +799,7 @@ export function parseCakeOrderResult(value: unknown): CakeOrderReservation {
       .filter((index) => index >= 0)
     if (eligibleIndexes.length === 0) invalidResponse()
   } else if (promotionKind === 'review-reward' || promotionKind === 'manual-coupon') {
-    eligibleIndexes = orderLines.map((line, index) => line.productId !== 'smore-stick' ? index : -1).filter((index) => index >= 0)
+    eligibleIndexes = orderLines.map((line, index) => isProductCouponEligible(line.productId) ? index : -1).filter((index) => index >= 0)
   }
   const eligibleIndexSet = new Set(eligibleIndexes)
   if (orderLines.some((line, index) => line.discountPercent !== (line.productId === 'smore-stick' ? getOrderLineBulkDiscountPercent(line) : eligibleIndexSet.has(index) ? discountPercent : 0))) invalidResponse()

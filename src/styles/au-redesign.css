@@ -40,13 +40,20 @@
 
 :where(.au-home-shell) .home-redesign-wrap {
   width: 100%;
-  max-width: 1440px;
+  max-width: none;
   margin: 0 auto;
   background-color: var(--rd-bg);
   position: relative;
   box-shadow: none;
   overflow-x: hidden;
   box-sizing: border-box;
+}
+
+/* Only the Hero expands beyond the existing editorial page width. */
+:where(.au-home-shell) .home-redesign-wrap > :is(header, section, footer):not(.rd-hero) {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
 }
 
 /* --------------------------------------------------------------------------
@@ -137,7 +144,7 @@
 :where(.au-home-shell) .rd-hero {
   width: 100%;
   border-bottom: 1px solid var(--rd-border);
-  padding: 56px 48px 32px;
+  padding: 0 0 32px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -151,13 +158,19 @@
 
 :where(.au-home-shell) .rd-hero-photo-wrap {
   width: 100%;
-  max-width: 1440px;
-  height: clamp(380px, 46vw, 680px);
-  border: 1px solid var(--rd-border);
+  aspect-ratio: 16 / 9;
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
   background: #FAFAFA;
+}
+
+:where(.au-home-shell) .rd-hero-poster,
+:where(.au-home-shell) video.rd-hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 :where(.au-home-shell) .rd-hero-photo {
@@ -168,12 +181,35 @@
   display: block;
 }
 
+:where(.au-home-shell) .rd-hero-video-toggle {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--rd-green);
+  border-radius: 0;
+  background: var(--rd-bg);
+  color: var(--rd-green);
+  font-family: var(--rd-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:where(.au-home-shell) .rd-hero-video-toggle:focus-visible {
+  outline: 2px solid var(--rd-green);
+  outline-offset: 3px;
+}
+
 :where(.au-home-shell) .rd-hero-bottom-row {
   width: 100%;
+  max-width: 1440px;
+  box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
+  padding: 4px 48px;
 }
 
 :where(.au-home-shell) .rd-hero-copy {
@@ -480,6 +516,7 @@
 }
 
 :where(.au-home-shell) .rd-collection-tab {
+  text-decoration: none;
   font-family: var(--rd-font-display);
   font-size: 14px;
   font-weight: 700;
@@ -935,6 +972,29 @@
   }
 }
 
+/* Keep the five Home navigation links separate from the logo and cart on tablets. */
+@media (min-width: 769px) and (max-width: 1100px) {
+  :where(.au-home-shell) .rd-header {
+    padding: 0 24px;
+    gap: 20px;
+  }
+
+  :where(.au-home-shell) .rd-header-nav {
+    gap: 16px;
+  }
+
+  :where(.au-home-shell) .rd-header-nav a,
+  :where(.au-home-shell) .rd-header-nav button {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  :where(.au-home-shell) .rd-header-actions {
+    gap: 16px;
+    white-space: nowrap;
+  }
+}
+
 /* Stack the action copy before three-column cards become too narrow for prices. */
 @media (max-width: 840px) {
   :where(.au-home-shell) .rd-best-col {
@@ -979,7 +1039,7 @@
   }
 
   :where(.au-home-shell) .rd-hero {
-    padding: 20px 20px 24px;
+    padding: 0 0 24px;
     gap: 16px;
   }
 
@@ -990,11 +1050,22 @@
     font-size: 24px;
     font-weight: 700;
     color: var(--rd-text);
-    margin: 0 0 4px;
+    margin: 0;
+    padding: 20px 20px 0;
+    box-sizing: border-box;
   }
 
   :where(.au-home-shell) .rd-hero-photo-wrap {
-    height: 260px;
+    aspect-ratio: 4 / 5;
+  }
+
+  :where(.au-home-shell) .rd-hero-bottom-row {
+    padding: 4px 20px;
+  }
+
+  :where(.au-home-shell) .rd-hero-video-toggle {
+    right: 16px;
+    bottom: 16px;
   }
 
   /* Intro Mobile */

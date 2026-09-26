@@ -1,5 +1,6 @@
 // Browser compatibility projection. No Appwrite writes or new-order submission.
-import { isStoredCakeOrderProductId } from './stored-order-policy'
+import { isStoredCakeOrderProductId, getStoredChocolateProduct, isStoredProductCouponEligible } from './stored-order-policy'
+import { CHOCOLATE_OPTIONS_V1 } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { DEFAULT_CHOCOLATE_TYPE, DEFAULT_POUND_ADDON, MAX_RESERVATION_QUANTITY, LEMON_PROMO_CODE, PROMO_CODE, PRODUCTS, fromCurrencyCents, getProductById, getCupcakeFinishSurcharge, getValidPromoCode, toCurrencyCents, getReservationPrice, normalizeChocolateIcingCount, normalizeCupcakeFinish, normalizeCupcakeFinishCounts, normalizeVanillaCakePointColor, normalizeStoredVanillaCakeFlavor, normalizeStoredVanillaCakeSheet, usesReservationChocolateType, normalizePoundAddon } from './stored-order-policy'
 import { isHistoricalWholeCakeSize, isHistoricalWholeCakeUnitPrice, normalizeStoredCakeSize } from './stored-order-policy'
 import type { ReservationPriceOptions } from './stored-order-policy'
@@ -135,6 +136,11 @@ function normalizePublicOrderLine(
   if (!line || typeof line !== 'object' || Array.isArray(line)
     || typeof line.productId !== 'string' || !isStoredCakeOrderProductId(line.productId) || !Object.hasOwn(PRODUCTS, line.productId)) throw new Error('INVALID_RESERVATION_RESPONSE')
   const product = getProductById(line.productId)
+  if (getStoredChocolateProduct(line.productId)) {
+    for (const [key, expected] of Object.entries(CHOCOLATE_OPTIONS_V1)) {
+      if (Object.hasOwn(line, key) && line[key as keyof typeof line] !== expected) throw new Error('INVALID_RESERVATION_RESPONSE')
+    }
+  }
   const poundAddon = normalizePoundAddon(product.id, line.poundAddon || DEFAULT_POUND_ADDON)
   const normalized = {
     productId: product.id,
@@ -387,7 +393,7 @@ export function toPublicReservation(reservation: PublicReservation): PublicReser
     }
     const eligibleIndexes = payload.discountPercent === 0
       ? []
-      : pricedLines.map((line, index) => line.productId !== 'smore-stick' && line.discountPercent === payload.discountPercent ? index : -1).filter((index) => index >= 0)
+      : pricedLines.map((line, index) => isStoredProductCouponEligible(line.productId) && line.discountPercent === payload.discountPercent ? index : -1).filter((index) => index >= 0)
     validateOrderPricing(pricedLines, {
       subtotalCents: payload.subtotalCents!,
       discountBasisCents: payload.discountBasisCents!,
@@ -593,7 +599,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
       || (document.reviewCouponId.startsWith('manual:')
         && (!MANUAL_REVIEW_COUPON_ID_PATTERN.test(document.reviewCouponId) || aggregateDiscountPercent !== 5))
     ) invalidStoredOrder()
-    eligibleIndexes = orderLines.map((line, index) => line.productId !== 'smore-stick' ? index : -1).filter((index) => index >= 0)
+    eligibleIndexes = orderLines.map((line, index) => isStoredProductCouponEligible(line.productId) ? index : -1).filter((index) => index >= 0)
   } else if (aggregateDiscountPercent === 10) {
     if (!hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string'
       || !SAFE_PROMO_LAST4_PATTERN.test(document.appliedPromoCodeLast4)) invalidStoredOrder()

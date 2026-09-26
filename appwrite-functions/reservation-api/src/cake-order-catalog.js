@@ -1,5 +1,6 @@
 // Current new-order catalog and option/promotion constants. Independent of stored-order compatibility snapshots.
 import { ACTIVE_CAKE_ORDER_PRODUCT_IDS } from './active-cake-products.js'
+export { CHOCOLATE_EXTRA_PRICES_CENTS } from './chocolate-products.js'
 
 export const CUSTOM_CAKE_V1_BASE_CENTS = Object.freeze({
   single: Object.freeze({ '6in': 15900, '8in': 21900, '10in': 31900 }),
@@ -81,13 +82,6 @@ export const STRAWBERRY_CREAM_CAKE_PRODUCT_IDS = new Set([
   'fresh-strawberry-vanilla-cream-cake',
   'fresh-strawberry-chocolate-cream-cake',
 ])
-
-export const CHOCOLATE_EXTRA_PRICES_CENTS = Object.freeze({
-  none: 0,
-  'eiffel-6': 1000,
-  'pave-100g': 1200,
-  combo: 2000,
-})
 
 export const BROWNIE_CREAM_OPTIONS = new Set(['none', 'fresh-cream'])
 

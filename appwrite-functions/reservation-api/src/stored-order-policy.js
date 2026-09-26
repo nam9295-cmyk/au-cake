@@ -1,6 +1,12 @@
 // Compatibility rules captured from 896574f. Validate saved values without
 // repricing or rewriting them. Independent of future new-order policy changes.
 import { ReservationApiError } from './reservation-error.js'
+import { CHOCOLATE_PRODUCTS_V1, CHOCOLATE_OPTIONS_V1 } from './chocolate-products.js'
+
+export function isStoredProductCouponEligible(productId) {
+  return Object.hasOwn(CHOCOLATE_PRODUCTS_V1, productId)
+    ? CHOCOLATE_PRODUCTS_V1[productId].couponEligible : productId !== 'smore-stick'
+}
 
 const MARKET_TIMEZONE = 'Australia/Sydney'
 
@@ -524,6 +530,12 @@ function isPlainObject(value) {
 }
 
 function normalizedCakeLine(input, quantity, options) {
+  if (Object.hasOwn(CHOCOLATE_PRODUCTS_V1, input.productId)) {
+    for (const [key, value] of Object.entries(CHOCOLATE_OPTIONS_V1)) {
+      if (input[key] !== undefined && input[key] !== value) fail('INVALID_ORDER_LINE')
+    }
+    return { productId: input.productId, ...CHOCOLATE_OPTIONS_V1, quantity }
+  }
   if (input.productId === 'smore-stick') input = { productId: input.productId }
   const {
     cakeSize,
@@ -578,6 +590,7 @@ function getValidPromoCode(productId, promoCode, now) {
 }
 
 function unitPriceForCakeLine(line) {
+  if (Object.hasOwn(CHOCOLATE_PRODUCTS_V1, line.productId)) return CHOCOLATE_PRODUCTS_V1[line.productId].unitPriceCents
   if (line.productId === 'smore-stick') {
     return SMORE_STICK_SET_UNIT_PRICES_CENTS[line.quantity] ?? 450
   }

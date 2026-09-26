@@ -10,6 +10,8 @@ import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } f
 import { DEFAULT_CHOCOLATE_EXTRA, normalizeChocolateExtra } from './chocolate-extras.js'
 import { DEFAULT_BROWNIE_CREAM_OPTION, normalizeBrownieCreamOption } from './brownie-cream.js'
 import { DEFAULT_SMORE_SET_QUANTITY, isValidSmoreQuantity } from './smore-quantity.js'
+import { isChocolateProductId } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
+import { marketConfig } from './market.js'
 import type {
   CakeSize,
   ChocolateType,
@@ -38,7 +40,7 @@ export function normalizeCartQuantity(value: number, productId?: ProductId): num
 }
 
 export function normalizeCartSelection(selection: CakeDetailSelection): CakeDetailSelection | null {
-  if (!getCakeCatalogEntryByProductId(selection.productId)) return null
+  if (!getCakeCatalogEntryByProductId(selection.productId) && !(marketConfig.market === 'AU' && isChocolateProductId(selection.productId))) return null
   const quantity = normalizeCartQuantity(selection.quantity, selection.productId)
   if (quantity < 1) return null
   const normalized = selectCakeDetailProduct(selection, selection.productId)
@@ -252,7 +254,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
   ) return null
 
   const currentProduct = getCakeCatalogEntryByProductId(productId as ProductId)
-  if (!currentProduct) return null
+  if (!currentProduct && !(marketConfig.market === 'AU' && isChocolateProductId(productId))) return null
 
   return normalizeCartSelection({
     productId: productId as ProductId,

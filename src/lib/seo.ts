@@ -291,8 +291,8 @@ export function getSeoConfig(pathname: string): SeoConfig {
   const chocolate = chocolateSlug ? getAuChocolatePreview(chocolateSlug) : null
   if (marketConfig.market === 'AU' && (pathname === '/chocolates' || chocolate)) {
     return {
-      title: `${chocolate?.name || 'Chocolates'} — Coming Soon | ${brand}`,
-      description: 'Preview the verygood chocolate collection. Independent chocolate orders are not available yet.',
+      title: `${chocolate?.name || 'Chocolates'} | ${brand}`,
+      description: 'Explore the verygood chocolate collection, choose your pack and request Melrose Park pick-up.',
       canonical: `${SITE_URL}${pathname}`,
       noindex: true,
       omitImage: true,

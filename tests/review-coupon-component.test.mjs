@@ -66,7 +66,7 @@ test('canonical npm test includes server and client review coupon suites', () =>
 })
 
 test('pending review coupon never feeds its estimate into the final summary or bank amount', () => {
-  assert.match(reserve, /const basePromoPriceDisplay = getPromoPriceDisplay\(currentPrice, promoEntry\)/)
+  assert.match(reserve, /const basePromoPriceDisplay = getPromoPriceDisplay\(currentPrice, promoEntry, couponBasisCents\)/)
   assert.match(reserve, /orderSelections && promoEntry\.kind === 'static-valid'/)
   assert.match(reserve, /BankAccountBox settings=\{settings\} totalPrice=\{promoPriceDisplay\.finalPrice\}/)
   assert.doesNotMatch(reserve, /BankAccountBox settings=\{settings\} totalPrice=\{discountedPrice\}/)

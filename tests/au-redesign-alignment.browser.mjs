@@ -33,6 +33,8 @@ async (page) => {
         }
         const logo = document.querySelector('.rd-header > .rd-header-logo, .au-redesign-header > .au-redesign-wordmark')
         const logoStyle = getComputedStyle(logo)
+        const homeHeader = [...document.querySelectorAll('.rd-header > .rd-header-logo, .rd-header > .rd-header-nav, .rd-header > .rd-header-actions, .rd-header > .rd-mobile-actions')]
+          .filter((element) => element.getClientRects().length).map(rect)
         const best = !!document.querySelector('.rd-best-grid')
         const cards = [...document.querySelectorAll(best ? '.rd-best-col' : '.au-redesign-product-card')].map((card) => {
           const price = card.querySelector(best ? '.rd-best-price-label' : '.au-redesign-card-bottom > span')
@@ -50,7 +52,7 @@ async (page) => {
             badge: badge ? { text: badge.textContent.trim(), ...rect(badge) } : null,
           }
         })
-        return { best, cards, overflow: document.documentElement.scrollWidth > innerWidth,
+        return { best, cards, homeHeader, overflow: document.documentElement.scrollWidth > innerWidth,
           logo: { text: logo.textContent.trim(), href: logo.getAttribute('href'),
             font: logoStyle.fontFamily, size: logoStyle.fontSize, weight: logoStyle.fontWeight } }
       })
@@ -58,6 +60,10 @@ async (page) => {
       check(layout.logo.text === 'verygood' && layout.logo.href === '/', `${label}: lowercase Home logo link`)
       check(layout.logo.font.includes('Work Sans') && Number(layout.logo.weight) === 800, `${label}: ExtraBold Work Sans logo`)
       check(!layout.overflow, `${label}: page overflow`)
+      for (let index = 1; index < layout.homeHeader.length; index += 1) {
+        check(layout.homeHeader[index].left - layout.homeHeader[index - 1].right >= 8,
+          `${label}: Home logo, navigation and cart need separate hit areas`)
+      }
       check(layout.cards.length > 0, `${label}: expected product cards`)
       check(aligned(layout.cards.map((card) => card.card.height)), `${label}: inconsistent card heights`)
 

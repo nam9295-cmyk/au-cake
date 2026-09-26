@@ -33,7 +33,8 @@ test('CartPage has the exact bilingual Phase B2a request copy', () => {
   }
 
   assert.match(cartPageSource, /lines\.length === 0/)
-  assert.match(cartPageSource, /const canContinue = lines\.length === 1 \|\| \(lines\.length > 1 && cakeOrderLinesAvailable === true\)/)
+  // The cake/chocolate capability combinations are rendered behaviorally in
+  // chocolate-commerce-ui.test.ts; avoid pinning a particular expression here.
   assert.match(cartPageSource, /lines\.length > 1/)
   assert.match(cartPageSource, /disabled=\{!canContinue\}/)
 })

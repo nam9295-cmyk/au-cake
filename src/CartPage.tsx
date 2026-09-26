@@ -1,4 +1,5 @@
 import { Minus, Plus, Trash2 } from 'lucide-react'
+import { getChocolateProduct } from '../appwrite-functions/reservation-api/src/chocolate-products.js'
 import {
   CUPCAKE_FINISH_OPTIONS,
   MAX_RESERVATION_QUANTITY,
@@ -39,6 +40,7 @@ type CartPageProps = {
   language: Language
   lines: readonly CartLine[]
   cakeOrderLinesAvailable: boolean | null
+  chocolateOrderLinesAvailable?: boolean | null
   onUpdate: (lineKey: string, quantity: number) => void
   onRemove: (lineKey: string) => void
   onContinue: () => void
@@ -47,6 +49,8 @@ type CartPageProps = {
 
 function CartLineOptions({ line, language }: { line: CartLine; language: Language }) {
   const selection = line.selection
+  const chocolate = getChocolateProduct(selection.productId)
+  if (chocolate) return <dl className="cart-line-options"><div><dt>{language === 'ko' ? '구성' : 'Pack'}</dt><dd>{chocolate.saleUnit}</dd></div></dl>
   const product = getProductById(selection.productId)
   const copy = cakeCopy(language)
   const cupcakePackSize = getCupcakePackSize(product.id)
@@ -155,12 +159,14 @@ export default function CartPage({
   language,
   lines,
   cakeOrderLinesAvailable,
+  chocolateOrderLinesAvailable = null,
   onUpdate,
   onRemove,
   onContinue,
   onBrowseCakes,
 }: CartPageProps) {
-  const canContinue = lines.length === 1 || (lines.length > 1 && cakeOrderLinesAvailable === true)
+  const hasChocolate = lines.some((line) => getChocolateProduct(line.selection.productId))
+  const canContinue = (!hasChocolate || chocolateOrderLinesAvailable === true) && (lines.length === 1 || (lines.length > 1 && cakeOrderLinesAvailable === true))
   const pricing = getCartEstimatedPricing(lines)
   const copy = language === 'ko'
     ? {
@@ -284,7 +290,8 @@ export default function CartPage({
                 <span>{copy.total}</span>
                 <strong>{formatCurrency(pricing.totalPriceCents / 100)}</strong>
               </div>
-              {lines.length > 1 && <p className="cart-multi-notice" role="status">{copy.multiNotice}</p>}
+              {lines.length > 1 && <p className="cart-multi-notice" role="status">{hasChocolate && cakeOrderLinesAvailable && language === 'en' ? 'You can request all of these items together.' : copy.multiNotice}</p>}
+              {hasChocolate && chocolateOrderLinesAvailable !== true && <p role="status">{chocolateOrderLinesAvailable === null ? 'Checking chocolate ordering availability.' : 'Chocolate ordering is not available on this server yet. Your order has been kept. You can remove the chocolates and continue with cakes, or try again later.'}</p>}
               <button
                 type="button"
                 className="primary-button"

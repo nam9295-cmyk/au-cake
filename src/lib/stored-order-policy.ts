@@ -3,10 +3,21 @@
 // changes must not automatically alter this historical acceptance contract.
 import type { BrownieCreamOption, CacaoPercent, CakeSize, ChocolateType, CupcakeFinish, PoundAddon, ProductId, VanillaCakeFlavor, VanillaCakePointColor, VanillaCakeSheet, ChocolateExtra, CakeOrderLineRequest, CakeOrderLineResult } from './types.js'
 import { storedMarketConfig as marketConfig } from './stored-order-catalog.js'
+import { MARKET } from './market.js'
+import { CHOCOLATE_PRODUCTS_V1 } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
+
+export function getStoredChocolateProduct(productId: string) {
+  return MARKET === 'AU' && Object.hasOwn(CHOCOLATE_PRODUCTS_V1, productId)
+    ? CHOCOLATE_PRODUCTS_V1[productId as keyof typeof CHOCOLATE_PRODUCTS_V1] : undefined
+}
+
+export function isStoredProductCouponEligible(productId: string) {
+  return getStoredChocolateProduct(productId)?.couponEligible ?? productId !== 'smore-stick'
+}
 
 const STORED_PRODUCT_IDS = new Set<string>(["pave-cake","vanilla-fresh-cream-cake","buttercream-cake","fresh-strawberry-vanilla-cream-cake","fresh-strawberry-chocolate-cream-cake","pound-cake","cupcake-dozen","cupcake-half-dozen","cupcake-twenty-four","cupcake-forty-eight","choco-basque-cheesecake","pave-choco-basque-cheesecake","eiffel-tower-basque-cheesecake","brownie-cheesecake","pave-brownie-cheesecake","eiffel-tower-brownie-cheesecake","fresh-lemon-cupcakes-6","fresh-lemon-cupcakes-8","fresh-lemon-cupcakes-12","fresh-lemon-cupcakes-16","fresh-lemon-cupcakes-24","fresh-lemon-cupcakes-48","smore-stick"])
 export function isStoredCakeOrderProductId(value: unknown): boolean {
-  return typeof value === 'string' && STORED_PRODUCT_IDS.has(value)
+  return typeof value === 'string' && (STORED_PRODUCT_IDS.has(value) || !!getStoredChocolateProduct(value))
 }
 
 export const DEFAULT_PRODUCT_ID: ProductId = 'pave-cake'
@@ -148,7 +159,11 @@ const CURRENT_PACK_PRODUCTS = {
   },
 }
 
-export const PRODUCTS: typeof marketConfig.products = { ...marketConfig.products, ...CURRENT_PACK_PRODUCTS }
+const STORED_CHOCOLATES = MARKET === 'AU' ? Object.fromEntries(Object.values(CHOCOLATE_PRODUCTS_V1).map(product => [product.id, {
+  id: product.id, name: product.name, description: '', price: product.unitPriceCents / 100, priceNote: product.saleUnit,
+  usesCacaoOptions: false, usesSizeOptions: false, usesChocolateTypeOptions: false, usesPoundAddonOptions: false, sizePrices: {},
+}])) : {}
+export const PRODUCTS: typeof marketConfig.products = { ...marketConfig.products, ...CURRENT_PACK_PRODUCTS, ...STORED_CHOCOLATES }
 
 const CURRENT_WHOLE_CAKE_SIZE_PRICES: Partial<Record<ProductId, Partial<Record<CakeSize, number>>>> = {
   'pave-cake': { '6in': 79, '8in': 109, '10in': 159 },

@@ -55,6 +55,19 @@ test('AU renders the editorial home, product tabs and redesign navigation', asyn
   assert.match(html, /class="rd-footer"/)
 })
 
+test('AU Hero provides responsive first-frame artwork before video playback is available', async () => {
+  const html = await renderHome('AU')
+  const hero = html.match(/<section class="rd-hero"[\s\S]*?<\/section>/)?.[0]
+  assert.ok(hero)
+  assert.match(hero, /<picture/)
+  assert.match(hero, /media="\(max-width: 768px\)"[^>]*srcSet="\/redesign\/hero\/cake-mobile.webp"/)
+  assert.match(hero, /src="\/redesign\/hero\/cake-desktop.webp"/)
+  assert.match(hero, /alt="Chocolate cake with a cut slice"/)
+  assert.doesNotMatch(hero, /53935\.jpg|<video/)
+  const kr = await renderHome('KR')
+  assert.doesNotMatch(kr, /\/redesign\/hero\/|rd-hero-video/)
+})
+
 test('KR renders exactly the pre-redesign home, with carousel and no AU editorial DOM', async () => {
   const actual = await renderHome('KR')
   const previous = await renderHome('KR', true)

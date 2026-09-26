@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { formatCakeSizeLabel, parseStoredOrderLines } from './business.js'
+import { getChocolateProduct } from './chocolate-products.js'
 
 const CALENDAR_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60
 
@@ -43,6 +44,8 @@ export function verifyCalendarToken(token, secret, now = new Date()) {
 }
 
 function cakeLineLabel(document) {
+  const chocolate = getChocolateProduct(document.productId)
+  if (chocolate) return `${chocolate.name} · ${chocolate.saleUnit} ×${document.quantity}`
   if (document.productId === 'smore-stick') {
     const quantity = Number.isSafeInteger(document.quantity) && document.quantity >= 1 ? document.quantity : 1
     return `S'more Stick ×${quantity}`

@@ -1,6 +1,7 @@
 import { AuProductCard } from '../components/AuRedesignChrome'
 import { auEditorialImages, getAuOrderableCakeCards } from '../lib/au-catalog'
 import { getAuChocolatePreviews } from '../lib/au-chocolate-preview'
+import { auChocolateAssets } from '../lib/au-chocolate-assets'
 import type { Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 
@@ -18,7 +19,7 @@ export function AuCategoryPage({ category, language, onOpenCake }: {
       <h1>{isCake ? 'CAKES' : 'CHOCOLATES'} <span>[{isCake ? cakes.length : chocolates.length}]</span></h1>
       <p>{isCake
         ? 'Handcrafted cakes, made to order for your celebrations. Pre-arranged pick-up in Melrose Park, Sydney.'
-        : 'A look at our artisan chocolate collection. Independent chocolate orders are coming soon.'}</p>
+        : 'Explore our artisan chocolates and choose a pack for pre-arranged pick-up in Melrose Park, Sydney.'}</p>
     </header>
     <div className="au-redesign-category-layout">
       <aside className="au-redesign-category-rail">
@@ -29,7 +30,9 @@ export function AuCategoryPage({ category, language, onOpenCake }: {
           <a href="/chocolates" aria-current={!isCake ? 'page' : undefined}>CHOCOLATES [{chocolates.length}]</a>
           <a href="/cakes/custom-cake">CUSTOM CAKES</a>
         </nav>
-        <div className="au-redesign-atelier-note"><strong>MELROSE PARK ATELIER</strong><p>Pre-arranged pick-up only. Availability is confirmed after your request.</p></div>
+        <div className="au-redesign-atelier-note"><strong>MELROSE PARK ATELIER</strong><p>{isCake
+          ? 'Pre-arranged pick-up only. Availability is confirmed after your request.'
+          : 'Choose your chocolates and pack, then add them to your order.'}</p></div>
       </aside>
       <div className="au-redesign-product-grid">
         {isCake ? cakes.map((card) => <AuProductCard key={card.slug} slug={card.slug}
@@ -37,11 +40,10 @@ export function AuCategoryPage({ category, language, onOpenCake }: {
           description={card.optionLabel} price={card.priceLabel}
           onOpen={onOpenCake ? () => onOpenCake(card.slug) : undefined} />)
           : chocolates.map((card) => <AuProductCard key={card.slug} slug={card.slug}
-            href={`/chocolates/${card.slug}`} name={card.name} image={card.image}
-            description={card.weight || card.description} price={card.price} unavailable />)}
+            href={`/chocolates/${card.slug}`} name={card.name} image={auChocolateAssets[card.slug].src} imageAlt={auChocolateAssets[card.slug].alt}
+            description={card.packLabel} price={card.price} />)}
       </div>
     </div>
-    {!isCake && <p className="au-redesign-availability-note">Coming Soon · These previews cannot be added to your cart. Reference photography will be updated before release.</p>}
     <figure className="au-redesign-wide-photo"><img src={isCake ? auEditorialImages.making : auEditorialImages.craft} alt="Chocolate and cake making in the atelier" loading="lazy" width={1440} height={480} /></figure>
   </main>
 }

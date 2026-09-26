@@ -1057,6 +1057,7 @@ test('reservation readiness returns only generic ready after complete private co
     status: 'ready',
     capabilities: {
       cakeOrderLines: 1,
+      chocolateOrderLines: 1,
       smoreStoredOrders: 1,
       smoreWrites: 1,
     },

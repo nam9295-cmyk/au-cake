@@ -66,6 +66,25 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         const { digestCakeRequestPayload } = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'coupon-digest.js')));
         const capture = fn => { try { return {value:JSON.parse(JSON.stringify(fn()))} } catch(e) { return JSON.parse(JSON.stringify({error:{name:e.name,message:e.message,code:e.code,status:e.status}})) } };
         const fixtures = JSON.parse(fs.readFileSync(0, 'utf8'));
+        const chocolateOrder = { ...business.buildCakeReservation({
+          customerName: 'Buyer', customerPhone: '0412345678', customerEmail: 'buyer@example.com',
+          pickupDate: '2026-09-28', pickupTime: '10:00', privacyConsent: true,
+          orderLines: [{ productId: 'almond-chocoball-6pack', quantity: 1 }, { productId: 'pave-chocolate-100g', quantity: 2 }],
+        }, { now: new Date('2026-09-26T00:00:00Z'), reservationNumber: 'VG-C-AU-CHOC' }), $id: 'artifact-chocolate' };
+        assert.deepEqual(business.parseStoredOrderLines(chocolateOrder).lines.map(line => line.totalPriceCents), [6000, 2400]);
+        if (${JSON.stringify(name)} === 'notification') {
+          const receipt = entry.buildBookingConfirmationPayload({ reservation: chocolateOrder, sourceType: 'cake', from: 'shop@example.com' });
+          assert.match(receipt.text, /Almond Chocoball 6 Pack/);
+          assert.match(receipt.text, /80g × 6/);
+          assert.doesNotMatch(receipt.text, /serves 8|15cm/);
+        }
+        if (${JSON.stringify(name)} === 'reminder') {
+          const reminder = await import(pathToFileURL(path.resolve('src/reminder-business.js')));
+          const receipt = reminder.buildCakeReminderPayload({ reservation: chocolateOrder, from: 'shop@example.com' });
+          assert.match(receipt.text, /Pavé Chocolate · 100g/);
+          assert.match(receipt.text, /80g × 6/);
+          assert.doesNotMatch(receipt.text, /serves 8|15cm/);
+        }
         for (const fixture of fixtures.cases) {
           if (fixture.input) {
             const canonical = capture(() => business.canonicalCakeRequestPayload(fixture.input));

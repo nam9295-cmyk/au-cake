@@ -239,3 +239,17 @@
   .au-redesign-shell .au-redesign-chocolate-info { padding-top: 0; }
   .au-home-shell .rd-footer nav { width: 100%; }
 }
+.au-redesign-shell .au-chocolate-control {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+.au-redesign-shell .au-chocolate-control select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}

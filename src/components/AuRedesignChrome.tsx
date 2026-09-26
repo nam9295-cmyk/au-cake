@@ -38,11 +38,12 @@ export function AuRedesignFooter() {
   </footer>
 }
 
-export function AuProductCard({ slug, href, name, image, description, price, unavailable, onOpen }: {
+export function AuProductCard({ slug, href, name, image, imageAlt, description, price, unavailable, onOpen }: {
   slug: string
   href: string
   name: string
   image: string
+  imageAlt?: string
   description: string
   price: string | null
   unavailable?: boolean
@@ -58,11 +59,11 @@ export function AuProductCard({ slug, href, name, image, description, price, una
     <a href={href} onClick={open}>
       <header><h3>{name}</h3><p>{description}</p></header>
       <div className="au-redesign-card-image">
-        <img src={image} alt={name} width={1080} height={1012} loading="lazy" decoding="async" />
+        <img src={image} alt={imageAlt || name} width={1080} height={1012} loading="lazy" decoding="async" />
       </div>
       <div className="au-redesign-card-bottom">
-        <span>{unavailable ? 'Coming Soon' : price}</span>
-        {unavailable && price && <small>{price}</small>}
+        <span>{unavailable ? price ?? 'PRICE TBD' : price}</span>
+        {unavailable && <small>Preview</small>}
         <span aria-hidden="true">→</span>
       </div>
     </a>
