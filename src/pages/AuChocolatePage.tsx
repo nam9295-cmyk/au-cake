@@ -37,12 +37,11 @@ export function AuChocolatePage({ slug, onAddToOrder, onViewOrder }: { slug: str
                 <strong>{label}</strong>
                 {variant.id !== 'almond-chocoball-80g' && <span>{variant.saleUnit}</span>}
                 <span>AUD {(variant.unitPriceCents / 100).toFixed(2)}</span>
-                {variant.id === 'almond-chocoball-6pack' && <span>BUY 5, GET 1 FREE</span>}
               </button>
             })}
           </div>
         </fieldset>}
-        {selected.id === 'almond-chocoball-6pack' && <p className="au-chocolate-promo-note">BUY 5, GET 1 FREE — 6 PACK / AUD 60<br />Coupons do not apply to this six pack.</p>}
+        {selected.id === 'almond-chocoball-6pack' && <p className="au-chocolate-promo-note"><strong>BUY 5, GET 1 FREE — 6 PACK / AUD 60</strong><br />Coupons do not apply to this six pack.</p>}
         <fieldset className="cake-detail-fieldset au-chocolate-control">
           <legend>Quantity</legend>
           <div className="cake-detail-quantity au-chocolate-quantity">

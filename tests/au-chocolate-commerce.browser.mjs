@@ -44,6 +44,10 @@ async (page) => {
 
     const variants = page.locator('.au-chocolate-variants button')
     check(await variants.count() === 3, `Almond must show three variant cards at ${width}px`)
+    const cardHeights = await variants.evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height))
+    check(cardHeights.every((height) => height <= 72), `Almond variant cards are taller than the cake option rhythm at ${width}px: ${cardHeights.join(', ')}`)
+    check(Math.max(...cardHeights) - Math.min(...cardHeights) <= 1, `Almond variant cards have uneven heights at ${width}px`)
+    check(!(await variants.allTextContents()).some((label) => label.includes('BUY 5, GET 1 FREE')), 'Six-pack promotion belongs below the option cards')
     check(await variants.nth(0).getAttribute('aria-pressed') === 'true', '80g must be selected initially')
     check(await page.locator('.au-chocolate-promo-note').count() === 0, 'Single must not show six-pack promo note')
     await quantity(5, 'Single')
