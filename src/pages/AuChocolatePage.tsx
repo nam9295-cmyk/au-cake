@@ -2,6 +2,7 @@ import { AuBreadcrumb, AuProductCard } from '../components/AuRedesignChrome'
 import { getAuChocolatePreview, getAuChocolatePreviews } from '../lib/au-chocolate-preview'
 import { auChocolateAssets } from '../lib/au-chocolate-assets'
 import { useState } from 'react'
+import { Minus, Plus } from 'lucide-react'
 import { CHOCOLATE_OPTIONS_V1 } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import type { CakeDetailSelection } from '../lib/cake-detail'
 
@@ -24,11 +25,34 @@ export function AuChocolatePage({ slug, onAddToOrder, onViewOrder }: { slug: str
         <p className="au-redesign-price">AUD {(selected.unitPriceCents / 100).toFixed(2)}</p>
         <p>{selected.saleUnit}</p>
         <p>{product.description}.</p>
-        {product.variants.length > 1 && <label className="au-chocolate-control">Pack<select aria-label="Pack" value={selected.id} onChange={(event) => { setVariantIndex(product.variants.findIndex((variant) => variant.id === event.target.value)); setAdded(false) }}>
-          {product.variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.name} · {variant.saleUnit} · AUD {(variant.unitPriceCents / 100).toFixed(2)}</option>)}
-        </select></label>}
-        {selected.id === 'almond-chocoball-6pack' && <p>BUY 5, GET 1 FREE — 6 PACK / AUD 60<br />Coupons do not apply to this six pack.</p>}
-        <label className="au-chocolate-control">Quantity<select aria-label="Quantity" value={quantity} onChange={(event) => { setQuantity(Number(event.target.value)); setAdded(false) }}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+        {product.variants.length > 1 && <fieldset className="cake-detail-fieldset au-chocolate-control">
+          <legend>Pack</legend>
+          <div className="cake-detail-options au-chocolate-variants">
+            {product.variants.map((variant, index) => {
+              const active = selected.id === variant.id
+              const label = variant.id === 'almond-chocoball-80g' ? '80g'
+                : variant.id === 'almond-chocoball-6pack' ? '6 PACK' : 'BLACK TUB'
+              return <button key={variant.id} type="button" className={`cake-detail-option${active ? ' is-selected' : ''}`}
+                aria-pressed={active} onClick={() => { setVariantIndex(index); setAdded(false) }}>
+                <strong>{label}</strong>
+                {variant.id !== 'almond-chocoball-80g' && <span>{variant.saleUnit}</span>}
+                <span>AUD {(variant.unitPriceCents / 100).toFixed(2)}</span>
+                {variant.id === 'almond-chocoball-6pack' && <span>BUY 5, GET 1 FREE</span>}
+              </button>
+            })}
+          </div>
+        </fieldset>}
+        {selected.id === 'almond-chocoball-6pack' && <p className="au-chocolate-promo-note">BUY 5, GET 1 FREE — 6 PACK / AUD 60<br />Coupons do not apply to this six pack.</p>}
+        <fieldset className="cake-detail-fieldset au-chocolate-control">
+          <legend>Quantity</legend>
+          <div className="cake-detail-quantity au-chocolate-quantity">
+            <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1}
+              onClick={() => { setQuantity((value) => Math.max(1, value - 1)); setAdded(false) }}><Minus aria-hidden="true" /></button>
+            <output aria-live="polite">{quantity}</output>
+            <button type="button" aria-label="Increase quantity" disabled={quantity >= 5}
+              onClick={() => { setQuantity((value) => Math.min(5, value + 1)); setAdded(false) }}><Plus aria-hidden="true" /></button>
+          </div>
+        </fieldset>
         <p>Total · AUD {(selected.unitPriceCents * quantity / 100).toFixed(2)}</p>
         <button className="primary-button" type="button" onClick={() => { onAddToOrder({ ...CHOCOLATE_OPTIONS_V1, productId: selected.id, quantity }); setAdded(true) }}>Add to order</button>
         {added && <p role="status">Added to your order.</p>}

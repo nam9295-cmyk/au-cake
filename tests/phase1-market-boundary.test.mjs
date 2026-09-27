@@ -134,7 +134,7 @@ test('chocolate routes show approved sale units and real add-to-order controls',
   assert.match(chocolate, /80g/)
   assert.match(chocolate, /AUD 12\.00/)
   assert.match(chocolate, /Add to order/)
-  assert.match(chocolate, /Black Tub/)
+  assert.match(chocolate, /BLACK TUB/)
   const confirmed = [
     { slug: 'almond-chocoball', packLabel: '80g', price: 'AUD 12.00' },
     { slug: 'pave-chocolate', packLabel: '100g', price: 'AUD 12.00' },
@@ -144,7 +144,8 @@ test('chocolate routes show approved sale units and real add-to-order controls',
   for (const detail of chocolateDetails) {
     const hero = detail.match(/<section class="au-redesign-chocolate-hero">([\s\S]*?)<\/section>/)[1]
     assert.match(hero, /Add to order/)
-    assert.match(hero, /aria-label="Quantity"/)
+    assert.match(hero, /<legend>Quantity<\/legend>/)
+    assert.match(hero, /aria-label="Increase quantity"/)
     assert.doesNotMatch(hero, /Coming Soon/)
   }
   for (const [index, { slug, packLabel, price }] of confirmed.entries()) {
@@ -163,6 +164,24 @@ test('chocolate routes show approved sale units and real add-to-order controls',
   assert.equal(kr.chocolate, '')
   assert.deepEqual(kr.chocolateDetails, ['', '', ''])
   assert.deepEqual(kr.chocolateProducts, [])
+})
+
+test('AU chocolate detail renders button variants and a bounded quantity stepper', async () => {
+  const { chocolateDetails } = await render('AU')
+  const almond = chocolateDetails[0]
+  assert.doesNotMatch(almond, /<select\b/)
+  assert.equal((almond.match(/aria-pressed="(?:true|false)"/g) || []).length, 3)
+  assert.equal((almond.match(/aria-pressed="true"/g) || []).length, 1)
+  for (const text of ['80g', '6 PACK', 'BLACK TUB', 'AUD 12.00', 'AUD 60.00', 'AUD 25.00']) {
+    assert.ok(almond.includes(text), `Almond option missing ${text}`)
+  }
+  assert.doesNotMatch(almond, /Coupons do not apply to this six pack/)
+  for (const detail of chocolateDetails) {
+    assert.doesNotMatch(detail, /<select\b/)
+    assert.match(detail, /aria-label="Decrease quantity"[^>]*disabled/)
+    assert.match(detail, /aria-label="Increase quantity"/)
+    assert.match(detail, /<output[^>]*>1<\/output>/)
+  }
 })
 
 test('AU Home filters chocolates inline while standalone category navigation remains available', async () => {
