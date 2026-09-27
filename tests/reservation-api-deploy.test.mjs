@@ -127,7 +127,7 @@ test('deployment and permission transition health gates require the multi-line c
   }), true)
   assert.equal(isReadyReservationRolloutHealth(200, {
     ok: true,
-    result: { status: 'ready', capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 0 } },
+    result: { status: 'ready', capabilities: { cakeOrderLines: 1, chocolateOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 0 } },
   }, 'compatibility'), true)
   for (const [statusCode, response] of [
     [503, { ok: true, result: { status: 'ready', capabilities: { cakeOrderLines: 1 } } }],
@@ -139,7 +139,7 @@ test('deployment and permission transition health gates require the multi-line c
   }
 
   const deploySource = readFileSync('scripts/deploy-reservation-api.mjs', 'utf8')
-  assert.match(deploySource, /isReadyReservationRolloutHealth\(execution\.responseStatusCode, response, phase\)/)
+  assert.match(deploySource, /isReadyReservationRolloutHealth\(execution\.responseStatusCode, response, phase, runtimeVariables\.MARKET\)/)
   assert.match(deploySource, /runReservationApiRollout\(/)
   assert.match(deploySource, /activate: false/)
   assert.doesNotMatch(deploySource, /activate: true/)
@@ -147,6 +147,33 @@ test('deployment and permission transition health gates require the multi-line c
   assert.match(permissionSource, /isReadyCakeOrderLinesHealth\(execution\.responseStatusCode, response\)/)
   assert.match(permissionSource, /if \(mode === 'function'\) await verifyReservationApiHealth\(\)/)
   assert.ok(permissionSource.indexOf("if (mode === 'function') await verifyReservationApiHealth()") < permissionSource.indexOf('await updateCollectionPermissions'))
+})
+
+test('AU rollout requires Chocolate capability in both phases while retaining Cake and Smore gates', () => {
+  const response = (capabilities) => ({ ok: true, result: { status: 'ready', capabilities } })
+  for (const [phase, smoreWrites] of [['compatibility', 0], ['full', 1]]) {
+    const required = { cakeOrderLines: 1, chocolateOrderLines: 1, smoreStoredOrders: 1, smoreWrites }
+    assert.equal(isReadyReservationRolloutHealth(200, response(required), phase, 'AU'), true)
+    for (const missing of Object.keys(required)) {
+      const capabilities = { ...required }
+      delete capabilities[missing]
+      assert.equal(isReadyReservationRolloutHealth(200, response(capabilities), phase, 'AU'), false, `${phase}: missing ${missing}`)
+      const wrongValue = missing === 'smoreWrites' && smoreWrites === 0 ? 1 : 0
+      assert.equal(isReadyReservationRolloutHealth(200, response({ ...required, [missing]: wrongValue }), phase, 'AU'), false, `${phase}: invalid ${missing}`)
+    }
+    assert.equal(isReadyReservationRolloutHealth(503, response(required), phase, 'AU'), false)
+  }
+})
+
+test('KR rollout keeps the existing Cake and Smore health contract', () => {
+  const capabilities = { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 1 }
+  const response = { ok: true, result: { status: 'ready', capabilities } }
+  assert.equal(isReadyReservationRolloutHealth(200, response, 'full', 'KR'), true)
+  assert.equal(isReadyReservationRolloutHealth(200, response, 'compatibility', 'KR'), false)
+  assert.equal(isReadyReservationRolloutHealth(200, { ...response, result: { ...response.result, capabilities: { ...capabilities, smoreWrites: 0 } } }, 'compatibility', 'KR'), true)
+  assert.equal(isReadyReservationRolloutHealth(200, { ...response, result: { ...response.result, capabilities: { ...capabilities, cakeOrderLines: 0 } } }, 'full', 'KR'), false)
+  assert.equal(isReadyReservationRolloutHealth(200, response, 'full', 'AU'), false)
+  assert.equal(isReadyReservationRolloutHealth(200, response, 'full', 'au'), false)
 })
 
 test('actual reservation deploy CLI dry-run exits before credentials, dotenv and network setup', () => {

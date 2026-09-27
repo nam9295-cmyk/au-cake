@@ -100,7 +100,7 @@ async function assertCompatibilityContract(db, existingRequest) {
 test('rollout health proves reader compatibility and the exact immutable write phase', () => {
   const response = writes => ({
     ok: true,
-    result: { status: 'ready', capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: writes } },
+    result: { status: 'ready', capabilities: { cakeOrderLines: 1, chocolateOrderLines: 1, smoreStoredOrders: 1, smoreWrites: writes } },
   })
   assert.equal(isReadyReservationRolloutHealth(200, response(0), 'compatibility'), true)
   assert.equal(isReadyReservationRolloutHealth(200, response(1), 'full'), true)

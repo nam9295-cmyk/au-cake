@@ -160,10 +160,11 @@ export function isReadyCakeOrderLinesHealth(responseStatusCode, response) {
     response.result?.capabilities?.cakeOrderLines === 1
 }
 
-export function isReadyReservationRolloutHealth(responseStatusCode, response, phase) {
+export function isReadyReservationRolloutHealth(responseStatusCode, response, phase, market = 'AU') {
   const expectedWrites = phase === 'compatibility' ? 0 : phase === 'full' ? 1 : null
   return expectedWrites !== null &&
     isReadyCakeOrderLinesHealth(responseStatusCode, response) &&
+    (market === 'KR' || response.result.capabilities.chocolateOrderLines === 1) &&
     response.result.capabilities.smoreStoredOrders === 1 &&
     response.result.capabilities.smoreWrites === expectedWrites
 }

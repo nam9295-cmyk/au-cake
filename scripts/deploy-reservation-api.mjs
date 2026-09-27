@@ -213,7 +213,7 @@ async function verifyHealth(phase) {
   } catch {
     throw new Error(`Reservation API health check returned invalid JSON (HTTP ${execution.responseStatusCode}).`)
   }
-  if (!isReadyReservationRolloutHealth(execution.responseStatusCode, response, phase)) {
+  if (!isReadyReservationRolloutHealth(execution.responseStatusCode, response, phase, runtimeVariables.MARKET)) {
     const secrets = [
       apiKey,
       ...Object.entries(runtimeVariables)
