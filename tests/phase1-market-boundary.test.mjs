@@ -53,7 +53,7 @@ async function renderPages(market, original) {
             routes: ['/chocolates', '/chocolates/almond-chocoball', '/chocolates/pave-chocolate', '/chocolates/eiffel-tower-chocolate', '/chocolates/unknown'].map(getPageFromPath) }));
         `
         const relative = id.replace(`${resolve('.')}/`, '')
-        if (original && ['src/CakesPage.tsx', 'src/CakeDetailPage.tsx', 'src/pages/CustomCakePage.tsx', 'src/pages/HomePage.tsx'].includes(relative)) {
+        if (original && ['src/CakesPage.tsx', 'src/CakeDetailPage.tsx', 'src/pages/CustomCakePage.tsx', 'src/pages/HomePage.tsx', 'src/lib/smore.ts', 'src/lib/smore-quantity.ts'].includes(relative)) {
           return execFileSync('git', ['show', `${baseline}:${relative}`], { encoding: 'utf8' })
         }
         if (/\.(png|jpg|webp|svg)$/.test(id)) return `export default ${JSON.stringify(relative)}`

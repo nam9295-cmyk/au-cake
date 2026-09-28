@@ -10,21 +10,6 @@ import { createNotificationArchive } from '../scripts/reservation-notification-d
 import { createBookingReminderArchive } from '../scripts/booking-reminder-deploy-runtime.mjs'
 
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/order-core-golden.json', import.meta.url)))
-const SUPERSEDED_PRICING_GOLDENS = new Set([
-  'smore-1',
-  'smore-5',
-  'smore-6',
-  'smore-11',
-  'smore-12',
-  'smore-50',
-  'static-coupon',
-  'review-5-mixed',
-  'review-10-mixed',
-])
-const artifactBaseline = {
-  ...baseline,
-  cases: baseline.cases.filter(entry => !SUPERSEDED_PRICING_GOLDENS.has(entry.name)),
-}
 const newCanonical = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/canonical.json', import.meta.url)))
 const customWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/custom-v1.json', import.meta.url)))
 const ordinaryWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/cake-order-v2.json', import.meta.url)))
@@ -109,13 +94,9 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         }
         const wireData = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'cake-order-data.js')));
         const custom = fixtures.customWire;
-        const currentRequest = structuredClone(custom.request);
-        currentRequest.lines[1].quantity = 10;
-        const customData = wireData.buildCustomCakeV1Data(currentRequest, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber });
-        const currentQuote = { ...custom.created.quote, paidSmoreQuantity: 10, paidSmoreTotalCents: 3150, knownTotalCents: 19050 };
-        const currentSmore = { ...custom.created.paidSmoreLines[0], quantity: 10, unitPriceCents: 350, subtotalCents: 3500, discountPercent: 10, discountCents: 350, totalCents: 3150 };
-        assert.deepEqual(customData.creationResponse, { ...custom.created, quote: currentQuote, paidSmoreLines: [currentSmore] });
-        assert.deepEqual(customData.lookupResponse, { ...custom.lookup, lines: currentRequest.lines, quote: currentQuote, paidSmoreLines: [currentSmore] });
+        const customData = wireData.buildCustomCakeV1Data(custom.request, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber });
+        assert.deepEqual(customData.creationResponse, custom.created);
+        assert.deepEqual(customData.lookupResponse, custom.lookup);
         const ordinary = fixtures.ordinaryWire;
         const ordinaryData = wireData.buildCakeOrderV2Data(ordinary.request, { now: new Date(ordinary.created.pricing.pricedAt), reservationNumber: ordinary.created.reservationNumber });
         assert.deepEqual(ordinaryData.creationResponse, ordinary.created);
@@ -137,7 +118,7 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         }
       `
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-        cwd: extracted, input: JSON.stringify({ ...artifactBaseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',
+        cwd: extracted, input: JSON.stringify({ ...baseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',
         env: { PATH: process.env.PATH },
       })
       assert.equal(result.status, 0, result.stderr || result.stdout)

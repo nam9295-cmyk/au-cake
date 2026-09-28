@@ -37,7 +37,7 @@ import {
 import { DEFAULT_CHOCOLATE_EXTRA, getChocolateExtraPrice, normalizeChocolateExtra } from './chocolate-extras.js'
 import { DEFAULT_BROWNIE_CREAM_OPTION, normalizeBrownieCreamOption } from './brownie-cream.js'
 import { calculateSmorePricing } from './smore.js'
-import { DEFAULT_SMORE_SET_QUANTITY, isValidSmoreQuantity } from './smore-quantity.js'
+import { isValidSmoreQuantity } from './smore-quantity.js'
 import { CHOCOLATE_OPTIONS_V1, getChocolateProduct } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { marketConfig } from './market.js'
 import type {
@@ -315,7 +315,7 @@ const DETAIL_OPERATION_COPY: Record<Language, {
 }
 
 function normalizeQuantity(value: number, productId?: ProductId) {
-  if (productId === 'smore-stick') return isValidSmoreQuantity(value) ? value : DEFAULT_SMORE_SET_QUANTITY
+  if (productId === 'smore-stick') return isValidSmoreQuantity(value) ? value : 1
   if (!Number.isFinite(value)) return 1
   return Math.min(5, Math.max(1, Math.floor(value)))
 }
@@ -411,7 +411,7 @@ export function createCakeDetailSelection(slug: string): CakeDetailSelection | n
     vanillaCakeFlavor: DEFAULT_VANILLA_CAKE_FLAVOR,
     vanillaCakePointColor: DEFAULT_VANILLA_CAKE_POINT_COLOR,
     individualPackaging: false,
-    quantity: entry.defaultProductId === 'smore-stick' ? DEFAULT_SMORE_SET_QUANTITY : 1,
+    quantity: 1,
   }, entry.defaultProductId)
 }
 

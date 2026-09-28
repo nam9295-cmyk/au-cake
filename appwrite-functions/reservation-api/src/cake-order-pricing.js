@@ -1,6 +1,7 @@
 // Current new-order integer-cents pricing, discounts and packaging. Does not interpret stored orders.
 import {
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
+  INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS,
   CHOCOLATE_EXTRA_PRICES_CENTS,
   PROMOTIONS,
   PRODUCTS,
@@ -11,7 +12,6 @@ import {
   CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS,
   CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS,
   BROWNIE_FRESH_CREAM_SURCHARGE_CENTS,
-  SMORE_STICK_SET_UNIT_PRICES_CENTS,
   PROMO_DISCOUNT_RATE,
   INDIVIDUAL_PACKAGING_PRODUCT_PIECES,
   BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS,
@@ -28,8 +28,10 @@ import { getChocolateProduct, isProductCouponEligible } from './chocolate-produc
 
 export function calculateIndividualPackagingFeeCents(individualPackagingPieces, selectedPackagingProductSubtotalCents) {
   if (!Number.isSafeInteger(individualPackagingPieces) || individualPackagingPieces <= 0) return 0
-  void selectedPackagingProductSubtotalCents
-  return individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+  const baseFeeCents = individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+  return selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
+    ? 0
+    : baseFeeCents
 }
 
 export function chocolateExtraPriceCents(chocolateExtra) {
@@ -42,13 +44,12 @@ export function safeOrderAmount(value) {
 }
 
 export function smoreBulkPercent(line) {
-  void line
-  return 0
+  return line.productId === 'smore-stick' ? (line.quantity >= 12 ? 20 : line.quantity >= 6 ? 10 : 0) : 0
 }
 
 export function smoreBulkDiscount(line) {
-  void line
-  return 0
+  // Exact integer cents per piece avoid overflowing subtotal * percent.
+  return line.productId === 'smore-stick' ? line.quantity * (450 * smoreBulkPercent(line) / 100) : 0
 }
 
 export function getValidPromoCode(productId, promoCode, now) {
@@ -62,9 +63,6 @@ export function getValidPromoCode(productId, promoCode, now) {
 export function unitPriceForCakeLine(line) {
   const chocolate = getChocolateProduct(line.productId)
   if (chocolate) return chocolate.unitPriceCents
-  if (line.productId === 'smore-stick') {
-    return SMORE_STICK_SET_UNIT_PRICES_CENTS[line.quantity] ?? fail('INVALID_QUANTITY')
-  }
   const product = PRODUCTS[line.productId]
   if (CUPCAKE_PRODUCT_IDS.has(line.productId) && Object.hasOwn(line, 'cupcakeFinish')) {
     return CUPCAKE_FINISH_PRICES_CENTS[line.productId][line.cupcakeFinish]
@@ -206,18 +204,6 @@ function priceWireSmoreLine(line) {
   return { ...line, unitPriceCents: 450, subtotalCents, discountPercent, discountCents, totalCents: wireAmount(subtotalCents - discountCents) }
 }
 
-function priceCustomSmoreLine(line) {
-  if (line.kind !== 'cake-addon-smore') return priceWireSmoreLine(line)
-  // Only new receipts reach pricing. Historical requests still normalize for
-  // idempotent replay, and saved quotes keep their original quantities/prices.
-  if (line.quantity % 10 !== 0) fail('INVALID_REQUEST')
-  const unitPriceCents = SMORE_STICK_SET_UNIT_PRICES_CENTS[10]
-  const subtotalCents = wireAmount(unitPriceCents * line.quantity)
-  const discountPercent = 10
-  const discountCents = wireAmount(subtotalCents / 10)
-  return { ...line, unitPriceCents, subtotalCents, discountPercent, discountCents, totalCents: wireAmount(subtotalCents - discountCents) }
-}
-
 // A trusted immutable quote is the only base for negotiated edits. No catalog,
 // pickup clock, promotion activation or line repricing participates in this step.
 export function reviseCustomCakeV1Quote(baseQuote, { quoteVersion, designExtraCents, figurineExtraCents }) {
@@ -258,7 +244,7 @@ export function priceCustomCakeV1Request(value, { promotionEligibilityAt }) {
   const cakeLines = request.lines.filter(line => line.kind === 'custom-cake')
   const baseAmounts = cakeLines.map(line => wireAmount(CUSTOM_CAKE_V1_BASE_CENTS[line.tier][line.size] * line.quantity))
   const baseCents = wireSum(baseAmounts)
-  const paidSmoreLines = request.lines.filter(line => line.kind !== 'custom-cake').map(priceCustomSmoreLine)
+  const paidSmoreLines = request.lines.filter(line => line.kind !== 'custom-cake').map(priceWireSmoreLine)
   const baseQuote = {
     currency: 'AUD', pricingPolicyVersion: 'custom-cake.2026-09.v1', promotionEligibilityAt,
     baseCents,
