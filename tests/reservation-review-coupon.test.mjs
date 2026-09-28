@@ -1077,6 +1077,13 @@ test('reservation readiness returns only generic ready after complete private co
   }
 })
 
+test('checkpoint readiness keeps Cake and S’more ready without advertising Chocolate ordering', async () => {
+  assert.deepEqual(await checkReservationReadiness(readinessDatabase(), runtimeConfig, { chocolateWritesEnabled: false }), {
+    status: 'ready',
+    capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 1 },
+  })
+})
+
 test('reservation readiness fails closed for every coupon privacy or digest drift', async () => {
   const cases = [
     { reviewCollection: { $permissions: [] } },
