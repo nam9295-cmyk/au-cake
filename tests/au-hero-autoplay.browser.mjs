@@ -98,6 +98,10 @@ async (page) => {
       check(firstAttempt.muted && firstAttempt.defaultMuted, 'Autoplay was requested before muting')
       await blockedPage.evaluate(() => window.__rejectHeroPlay())
       await blockedPage.getByRole('button', { name: 'Play hero video' }).waitFor()
+      const deniedAttempts = await blockedPage.evaluate(() => window.__heroPlayAttempts.length)
+      await blockedPage.locator('video.rd-hero-photo').evaluate(video => video.dispatchEvent(new Event('canplay')))
+      check(await blockedPage.evaluate(() => window.__heroPlayAttempts.length) === deniedAttempts,
+        'A policy-denied autoplay request was retried on canplay')
       check(await blockedPage.locator('video.rd-hero-photo').evaluate(video => getComputedStyle(video).opacity === '0'),
         'Rejected autoplay revealed an unplayed video frame')
       await blockedPage.evaluate(() => { window.__allowHeroPlay = true })
@@ -160,7 +164,7 @@ async (page) => {
           window.__heroPlayCalls += 1
           return window.__heroReady
             ? originalPlay.call(this)
-            : Promise.reject(new DOMException('Autoplay denied', 'NotAllowedError'))
+            : Promise.reject(new DOMException('Media not ready', 'InvalidStateError'))
         }
       })
       await canPlayPage.goto(`${origin}/`, { waitUntil: 'networkidle' })

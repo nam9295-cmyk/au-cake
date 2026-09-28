@@ -28,6 +28,7 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
   const videoRef = useRef<HTMLVideoElement>(null)
   const manuallyPausedRef = useRef(manuallyPaused)
   const requestPlaybackRef = useRef<() => void>(() => {})
+  const pauseIntentionallyRef = useRef<() => void>(() => {})
   const [playbackState, setPlaybackState] = useState<PlaybackState>('loading')
   const failed = playbackState === 'failed'
   const mediaPath = `/redesign/hero/cake-${variant}`
@@ -41,42 +42,86 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
     let disposed = false
     let pending = false
     let attempt = 0
-    let canPlayRetried = false
-    let abortRetryUsed = false
+    let retryUsed = false
+    let canPlayWhilePending = false
+    let policyBlocked = false
+    let blockedFailure = false
+    let hasPlayed = false
+    let intentionalPauseEvents = 0
 
     const requestPlayback = () => {
-      if (disposed || document.hidden || !inView || manuallyPausedRef.current || pending || !video.paused) return
+      if (disposed || document.hidden || !inView || manuallyPausedRef.current || pending || !video.paused) return false
       video.defaultMuted = true
       video.muted = true
+      blockedFailure = false
       const currentAttempt = ++attempt
       pending = true
       void video.play().then(() => {
         if (disposed || currentAttempt !== attempt) return
         pending = false
+        canPlayWhilePending = false
       }).catch((error: unknown) => {
         if (disposed || currentAttempt !== attempt) return
         pending = false
+        if (error instanceof DOMException && error.name === 'NotAllowedError') {
+          policyBlocked = true
+          blockedFailure = true
+          setPlaybackState('blocked')
+          return
+        }
+        if (video.error || (error instanceof DOMException && error.name === 'NotSupportedError')) {
+          setPlaybackState('failed')
+          return
+        }
+        if (canPlayWhilePending && !retryUsed) {
+          canPlayWhilePending = false
+          if (retryOnce()) return
+        }
         if (error instanceof DOMException && error.name === 'AbortError') {
-          if (!abortRetryUsed && !document.hidden && inView && !manuallyPausedRef.current) {
-            abortRetryUsed = true
-            queueMicrotask(requestPlayback)
+          if (document.hidden || !inView || manuallyPausedRef.current) return
+          if (!retryUsed) queueMicrotask(retryOnce)
+          else {
+            blockedFailure = true
+            setPlaybackState('blocked')
           }
           return
         }
-        setPlaybackState(video.error || (error instanceof DOMException && error.name === 'NotSupportedError')
-          ? 'failed'
-          : 'blocked')
+        blockedFailure = true
+        setPlaybackState('blocked')
       })
+      return true
     }
-    requestPlaybackRef.current = requestPlayback
+    const retryOnce = () => {
+      if (retryUsed) return false
+      if (!requestPlayback()) return false
+      retryUsed = true
+      return true
+    }
+    const pauseIntentionally = () => {
+      attempt += 1
+      pending = false
+      canPlayWhilePending = false
+      if (!video.paused) intentionalPauseEvents += 1
+      video.pause()
+    }
+    requestPlaybackRef.current = () => {
+      retryUsed = false
+      policyBlocked = false
+      canPlayWhilePending = false
+      setPlaybackState('loading')
+      requestPlayback()
+    }
+    pauseIntentionallyRef.current = pauseIntentionally
 
     const syncPlayback = () => {
       if (document.hidden || !inView || manuallyPausedRef.current) {
-        attempt += 1
-        pending = false
-        abortRetryUsed = false
-        video.pause()
-      } else requestPlayback()
+        setPlaybackState('loading')
+        pauseIntentionally()
+      } else {
+        retryUsed = false
+        policyBlocked = false
+        requestPlayback()
+      }
     }
     const observer = new IntersectionObserver(([entry]) => {
       const wasInView = inView
@@ -84,23 +129,57 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
       if (!inView || !wasInView) syncPlayback()
     })
     const onCanPlay = () => {
-      if (canPlayRetried) return
-      canPlayRetried = true
-      requestPlayback()
+      if (retryUsed || policyBlocked) return
+      if (pending) {
+        canPlayWhilePending = true
+        return
+      }
+      retryOnce()
     }
     const onPlaying = () => {
       if (document.hidden || !inView || manuallyPausedRef.current) {
-        video.pause()
+        pauseIntentionally()
         return
       }
-      abortRetryUsed = false
+      hasPlayed = true
+      retryUsed = false
+      canPlayWhilePending = false
+      policyBlocked = false
+      blockedFailure = false
       setPlaybackState('playing')
+    }
+    const onPause = () => {
+      if (disposed) return
+      const intentional = intentionalPauseEvents > 0
+      if (intentional) intentionalPauseEvents -= 1
+      if (video.error) {
+        setPlaybackState('failed')
+        return
+      }
+      if (blockedFailure) return
+      if (intentional) {
+        if (video.paused) setPlaybackState('loading')
+        return
+      }
+      if (!video.paused) return
+      if (retryUsed && pending) {
+        setPlaybackState('loading')
+        return
+      }
+      const interruptedPending = pending
+      attempt += 1
+      pending = false
+      canPlayWhilePending = false
+      setPlaybackState('loading')
+      if (document.hidden || !inView || manuallyPausedRef.current || retryUsed || (!hasPlayed && !interruptedPending)) return
+      queueMicrotask(retryOnce)
     }
     const onError = () => setPlaybackState('failed')
     observer.observe(video)
     document.addEventListener('visibilitychange', syncPlayback)
     video.addEventListener('canplay', onCanPlay)
     video.addEventListener('playing', onPlaying)
+    video.addEventListener('pause', onPause)
     video.addEventListener('error', onError)
     syncPlayback()
     return () => {
@@ -110,8 +189,10 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
       document.removeEventListener('visibilitychange', syncPlayback)
       video.removeEventListener('canplay', onCanPlay)
       video.removeEventListener('playing', onPlaying)
+      video.removeEventListener('pause', onPause)
       video.removeEventListener('error', onError)
       requestPlaybackRef.current = () => {}
+      pauseIntentionallyRef.current = () => {}
       video.pause()
     }
   }, [failed])
@@ -122,7 +203,10 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
     const pause = !video.paused
     manuallyPausedRef.current = pause
     onManualPause(pause)
-    if (pause) video.pause()
+    if (pause) {
+      setPlaybackState('loading')
+      pauseIntentionallyRef.current()
+    }
     else requestPlaybackRef.current()
   }
 
