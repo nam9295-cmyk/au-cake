@@ -14,6 +14,7 @@ import {
   createReservationApiArchive,
   runReservationApiRollout,
 } from './reservation-api-deploy-rollout.mjs'
+import { waitForActiveFunctionDeployment } from './function-deployment-activation.mjs'
 
 if (process.argv.includes('--dry-run')) {
   process.stdout.write(`${JSON.stringify(buildDryRunPlan(process.env), null, 2)}\n`)
@@ -55,10 +56,11 @@ try {
     createDeployment: deployFunction,
     waitForDeployment,
     activateDeployment,
+    waitForActivation: (deploymentId) => waitForActiveFunctionDeployment({ functions, functionId, deploymentId, sleep }),
     verifyHealth,
   })
-  console.log(`compatibility rollback checkpoint ${rollout.compatibilityDeploymentId}`)
-  console.log(`active full writer deployment ${rollout.fullDeploymentId}`)
+  console.log(`Chocolate-readable rollback checkpoint ${rollout.checkpointDeploymentId}`)
+  console.log(`active full Chocolate deployment ${rollout.fullDeploymentId}`)
   console.log('Reservation API two-phase deployment and read-only health checks complete.')
   console.log('Database collection permissions were not changed.')
 } catch (error) {
@@ -213,7 +215,7 @@ async function verifyHealth(phase) {
   } catch {
     throw new Error(`Reservation API health check returned invalid JSON (HTTP ${execution.responseStatusCode}).`)
   }
-  if (!isReadyReservationRolloutHealth(execution.responseStatusCode, response, phase)) {
+  if (!isReadyReservationRolloutHealth(execution.responseStatusCode, response, phase, runtimeVariables.MARKET)) {
     const secrets = [
       apiKey,
       ...Object.entries(runtimeVariables)

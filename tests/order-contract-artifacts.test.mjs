@@ -10,26 +10,11 @@ import { createNotificationArchive } from '../scripts/reservation-notification-d
 import { createBookingReminderArchive } from '../scripts/booking-reminder-deploy-runtime.mjs'
 
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/order-core-golden.json', import.meta.url)))
-const SUPERSEDED_PRICING_GOLDENS = new Set([
-  'smore-1',
-  'smore-5',
-  'smore-6',
-  'smore-11',
-  'smore-12',
-  'smore-50',
-  'static-coupon',
-  'review-5-mixed',
-  'review-10-mixed',
-])
-const artifactBaseline = {
-  ...baseline,
-  cases: baseline.cases.filter(entry => !SUPERSEDED_PRICING_GOLDENS.has(entry.name)),
-}
 const newCanonical = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/canonical.json', import.meta.url)))
 const customWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/custom-v1.json', import.meta.url)))
 const ordinaryWire = JSON.parse(readFileSync(new URL('./fixtures/custom-cake-contract/cake-order-v2.json', import.meta.url)))
 const artifacts = [
-  ['reservation-compatibility', () => createReservationApiArchive({ phase: 'compatibility' }), 'src/business.js', true],
+  ['reservation-checkpoint', () => createReservationApiArchive({ phase: 'checkpoint' }), 'src/business.js', true],
   ['reservation-full', () => createReservationApiArchive({ phase: 'full' }), 'src/business.js', true],
   ['notification', () => createNotificationArchive(), 'shared/reservation-api/business.js', false],
   ['reminder', () => createBookingReminderArchive(), 'shared/reservation-api/business.js', false],
@@ -66,6 +51,25 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         const { digestCakeRequestPayload } = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'coupon-digest.js')));
         const capture = fn => { try { return {value:JSON.parse(JSON.stringify(fn()))} } catch(e) { return JSON.parse(JSON.stringify({error:{name:e.name,message:e.message,code:e.code,status:e.status}})) } };
         const fixtures = JSON.parse(fs.readFileSync(0, 'utf8'));
+        const chocolateOrder = { ...business.buildCakeReservation({
+          customerName: 'Buyer', customerPhone: '0412345678', customerEmail: 'buyer@example.com',
+          pickupDate: '2026-09-28', pickupTime: '10:00', privacyConsent: true,
+          orderLines: [{ productId: 'almond-chocoball-6pack', quantity: 1 }, { productId: 'pave-chocolate-100g', quantity: 2 }],
+        }, { now: new Date('2026-09-26T00:00:00Z'), reservationNumber: 'VG-C-AU-CHOC' }), $id: 'artifact-chocolate' };
+        assert.deepEqual(business.parseStoredOrderLines(chocolateOrder).lines.map(line => line.totalPriceCents), [6000, 2400]);
+        if (${JSON.stringify(name)} === 'notification') {
+          const receipt = entry.buildBookingConfirmationPayload({ reservation: chocolateOrder, sourceType: 'cake', from: 'shop@example.com' });
+          assert.match(receipt.text, /Almond Chocoball 6 Pack/);
+          assert.match(receipt.text, /80g × 6/);
+          assert.doesNotMatch(receipt.text, /serves 8|15cm/);
+        }
+        if (${JSON.stringify(name)} === 'reminder') {
+          const reminder = await import(pathToFileURL(path.resolve('src/reminder-business.js')));
+          const receipt = reminder.buildCakeReminderPayload({ reservation: chocolateOrder, from: 'shop@example.com' });
+          assert.match(receipt.text, /Pavé Chocolate · 100g/);
+          assert.match(receipt.text, /80g × 6/);
+          assert.doesNotMatch(receipt.text, /serves 8|15cm/);
+        }
         for (const fixture of fixtures.cases) {
           if (fixture.input) {
             const canonical = capture(() => business.canonicalCakeRequestPayload(fixture.input));
@@ -90,13 +94,9 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         }
         const wireData = await import(pathToFileURL(path.resolve(path.dirname(${JSON.stringify(parserPath)}), 'cake-order-data.js')));
         const custom = fixtures.customWire;
-        const currentRequest = structuredClone(custom.request);
-        currentRequest.lines[1].quantity = 10;
-        const customData = wireData.buildCustomCakeV1Data(currentRequest, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber });
-        const currentQuote = { ...custom.created.quote, paidSmoreQuantity: 10, paidSmoreTotalCents: 3150, knownTotalCents: 19050 };
-        const currentSmore = { ...custom.created.paidSmoreLines[0], quantity: 10, unitPriceCents: 350, subtotalCents: 3500, discountPercent: 10, discountCents: 350, totalCents: 3150 };
-        assert.deepEqual(customData.creationResponse, { ...custom.created, quote: currentQuote, paidSmoreLines: [currentSmore] });
-        assert.deepEqual(customData.lookupResponse, { ...custom.lookup, lines: currentRequest.lines, quote: currentQuote, paidSmoreLines: [currentSmore] });
+        const customData = wireData.buildCustomCakeV1Data(custom.request, { now: new Date(custom.created.quote.promotionEligibilityAt), requestNumber: custom.created.requestNumber });
+        assert.deepEqual(customData.creationResponse, custom.created);
+        assert.deepEqual(customData.lookupResponse, custom.lookup);
         const ordinary = fixtures.ordinaryWire;
         const ordinaryData = wireData.buildCakeOrderV2Data(ordinary.request, { now: new Date(ordinary.created.pricing.pricedAt), reservationNumber: ordinary.created.reservationNumber });
         assert.deepEqual(ordinaryData.creationResponse, ordinary.created);
@@ -118,7 +118,7 @@ for (const [name, createArchive, parserPath, hasCreateResponse] of artifacts) {
         }
       `
       const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-        cwd: extracted, input: JSON.stringify({ ...artifactBaseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',
+        cwd: extracted, input: JSON.stringify({ ...baseline, newCanonical, customWire, ordinaryWire }), encoding: 'utf8',
         env: { PATH: process.env.PATH },
       })
       assert.equal(result.status, 0, result.stderr || result.stdout)

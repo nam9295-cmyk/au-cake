@@ -33,7 +33,8 @@ test('CartPage has the exact bilingual Phase B2a request copy', () => {
   }
 
   assert.match(cartPageSource, /lines\.length === 0/)
-  assert.match(cartPageSource, /const canContinue = lines\.length === 1 \|\| \(lines\.length > 1 && cakeOrderLinesAvailable === true\)/)
+  // The cake/chocolate capability combinations are rendered behaviorally in
+  // chocolate-commerce-ui.test.ts; avoid pinning a particular expression here.
   assert.match(cartPageSource, /lines\.length > 1/)
   assert.match(cartPageSource, /disabled=\{!canContinue\}/)
 })
@@ -78,17 +79,19 @@ test('CartPage quantity and removal callbacks always receive the rendered line e
   assert.doesNotMatch(cartPageSource, /as Reservation/)
 })
 
-test('CartPage and reservation summary display selected packaging and the final total separately', () => {
+test('CartPage and reservation summary display selected packaging, its free discount, and the final total separately', () => {
   assert.match(cartPageSource, /getCartEstimatedPricing\(lines\)/)
   assert.match(cartPageSource, /Individual packaging/)
   assert.match(cartPageSource, /개별 포장/)
   assert.match(cartPageSource, /selectedPackagingPieces/)
   assert.match(cartPageSource, /individualPackagingBaseFeeCents/)
+  assert.match(cartPageSource, /individualPackagingDiscountCents/)
   assert.match(cartPageSource, /individualPackagingFeeCents/)
+  assert.match(cartPageSource, /Packaging discount/)
+  assert.match(cartPageSource, /포장 할인/)
   assert.match(reserveSource, /individualPackagingBaseFeeCents/)
-  assert.match(reserveSource, /individualPackagingFeeCents/)
-  assert.doesNotMatch(cartPageSource, /Packaging discount|포장 할인|FREE/)
-  assert.doesNotMatch(reserveSource, /Packaging discount|포장 할인|FREE/)
+  assert.match(reserveSource, /individualPackagingDiscountCents/)
+  assert.match(cartPageSource, /FREE/)
 })
 
 test('App owns cart once, adds detail selections, and renders the direct cart route in the public shell', () => {
@@ -100,7 +103,8 @@ test('App owns cart once, adds detail selections, and renders the direct cart ro
   assert.match(appSource, /<CartPage[\s\S]*lines=\{cartLines\}[\s\S]*onUpdate=\{updateCartLine\}[\s\S]*onRemove=\{removeCartLine\}/)
   assert.match(appSource, /<CakeDetailPage[\s\S]*onAddToOrder=\{addCartLine\}[\s\S]*onViewOrder=\{\(\) => navigate\(['"]cart['"]\)\}/)
   assert.doesNotMatch(appSource, /requestCakeSelection/)
-  assert.match(appSource, /!isPrivatePage && <SiteFooter/)
+  assert.match(appSource, /!isPrivatePage && \(isAuRedesignPage \? <AuRedesignFooter \/> : <SiteFooter/)
+  assert.match(appSource, /const isAuRedesignPage = marketConfig\.market === 'AU'/)
 })
 
 test('cart-to-reserve handoff snapshots selections and subtracts only successful origin quantities', () => {

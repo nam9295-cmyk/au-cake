@@ -16,7 +16,7 @@ test('stored readers retain existing facade identities and golden stored bytes',
     if (!row || !fixture.expected.parsedStored?.value) continue
     const before = JSON.stringify(row)
     assert.deepEqual(readStored(row), fixture.expected.parsedStored.value)
-    assert.doesNotThrow(() => toReservation({ ...row, $id: 'synthetic' } as never), fixture.name)
+    toReservation({ ...row, $id: 'synthetic' } as never)
     assert.equal(JSON.stringify(row), before)
   }
 })
@@ -52,10 +52,10 @@ test('new browser catalogue prices cannot reprice or reject saved orders', () =>
   }
 })
 
-test('browser stored readers accept paid packaging on current 24 and 48 cupcake packs', () => {
+test('browser stored readers accept paid packaging on active production cupcake packs', () => {
   for (const [productId, packSize] of [
-    ['cupcake-twenty-four', 24],
-    ['cupcake-forty-eight', 48],
+    ['cupcake-half-dozen', 6],
+    ['cupcake-dozen', 12],
   ] as const) {
     const document = buildCakeReservation({
       customerName: 'Packaging Customer', customerPhone: '0412345678', customerEmail: 'customer@example.com',

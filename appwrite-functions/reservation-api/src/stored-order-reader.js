@@ -1,5 +1,6 @@
 import { ReservationApiError } from './reservation-error.js'
-import { STORED_ORDER_MAX_BYTES, hasExactOwnKeys, REQUIRED_STORED_ORDER_DOCUMENT_KEYS, PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS, LEGACY_STORED_ORDER_LINE_KEYS, PRE_PACKAGING_STORED_ORDER_LINE_KEYS, STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, validCakeQuantity, normalizedCakeLine, ORDER_LINE_IDENTITY_KEYS, canonicalOrderLineKey, isApprovedStoredUnitPrice, chocolateExtraPriceCents, smoreBulkPercent, INDIVIDUAL_PACKAGING_PRODUCT_PIECES, SAFE_LAST4_PATTERN, MANUAL_REVIEW_COUPON_ID_PATTERN, PROMOTIONS, getValidPromoCode, safeOrderAmount, smoreBulkDiscount, allocateDiscounts, calculateIndividualPackagingFeeCents, calculateCurrentIndividualPackagingFeeCents, calculateLegacyIndividualPackagingFeeCents } from './stored-order-policy.js'
+import { isStoredProductCouponEligible } from './stored-order-policy.js'
+import { STORED_ORDER_MAX_BYTES, hasExactOwnKeys, REQUIRED_STORED_ORDER_DOCUMENT_KEYS, PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS, LEGACY_STORED_ORDER_LINE_KEYS, PRE_PACKAGING_STORED_ORDER_LINE_KEYS, STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, validCakeQuantity, normalizedCakeLine, ORDER_LINE_IDENTITY_KEYS, canonicalOrderLineKey, isApprovedStoredUnitPrice, chocolateExtraPriceCents, smoreBulkPercent, INDIVIDUAL_PACKAGING_PRODUCT_PIECES, SAFE_LAST4_PATTERN, MANUAL_REVIEW_COUPON_ID_PATTERN, PROMOTIONS, getValidPromoCode, safeOrderAmount, smoreBulkDiscount, allocateDiscounts, calculateIndividualPackagingFeeCents, calculateLegacyIndividualPackagingFeeCents } from './stored-order-policy.js'
 
 export function parseStoredOrderLines(document) {
   if (!document || !Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) return null
@@ -102,7 +103,7 @@ export function parseStoredOrderLines(document) {
           !MANUAL_REVIEW_COUPON_ID_PATTERN.test(document.reviewCouponId) || discountPercent !== 5
         ))
       ) throw new Error('invalid review discount provenance')
-      eligibleIndexes = payload.lines.map((line, index) => line.productId !== 'smore-stick' ? index : -1).filter((index) => index >= 0)
+      eligibleIndexes = payload.lines.map((line, index) => isStoredProductCouponEligible(line.productId) ? index : -1).filter((index) => index >= 0)
       if (eligibleIndexes.length === 0) throw new Error('ineligible review coupon')
     } else if (discountPercent === 10) {
       if (!hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string' || !SAFE_LAST4_PATTERN.test(document.appliedPromoCodeLast4)) {
@@ -143,14 +144,12 @@ export function parseStoredOrderLines(document) {
       individualPackagingPieces,
       selectedPackagingProductSubtotalCents,
     )
-    const currentPackagingFeeCents = calculateCurrentIndividualPackagingFeeCents(individualPackagingPieces)
     const legacyPackagingFeeCents = calculateLegacyIndividualPackagingFeeCents(individualPackagingPieces)
     const storedPackagingFeeCents = currentPackagingDocument
       ? payload.lines.reduce((sum, line) => sum + line.individualPackagingFeeCents, 0)
       : 0
     if (currentPackagingDocument
       && storedPackagingFeeCents !== expectedPackagingFeeCents
-      && storedPackagingFeeCents !== currentPackagingFeeCents
       && storedPackagingFeeCents !== legacyPackagingFeeCents) {
       throw new Error('invalid aggregate packaging fee')
     }

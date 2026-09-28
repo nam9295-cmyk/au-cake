@@ -1,0 +1,273 @@
+/* Phase 1 editorial layouts. Every selector requires an AU-only DOM boundary. */
+.app-shell.au-redesign-shell {
+  --au-green: #1F5A46;
+  --au-text: #352F31;
+  --au-line: #E8E4E5;
+  --au-pink: #EDC5C4;
+  --au-accent: #F05D88;
+  --au-berry: #B02E3B;
+  --canvas: #FFFFFF;
+  background: #FFFFFF;
+  color: var(--au-text);
+  min-height: 100vh;
+}
+.au-redesign-shell :is(a, button, summary, input, textarea):focus-visible { outline: 2px solid var(--au-green); outline-offset: 4px; }
+.au-redesign-shell .au-redesign-header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 64px; padding: 12px 48px; border-bottom: 1px solid var(--au-line); background: #FFFFFF; }
+.au-redesign-shell .au-redesign-header a { color: var(--au-green); text-decoration: none; }
+.au-redesign-shell .au-redesign-wordmark { color: var(--au-green); font-family: var(--font-display); font-size: 16px; font-weight: 700; text-decoration: none; }
+/* Header-only wordmark: the Home drawer shares this rule; footer marks do not. */
+.au-home-shell .rd-header-logo,
+.au-redesign-shell .au-redesign-header .au-redesign-wordmark { font-family: var(--font-display); font-size: 26px; font-weight: 800; line-height: 1; letter-spacing: -.06em; text-transform: none; }
+.au-redesign-shell .au-redesign-desktop-nav { display: flex; gap: 24px; }
+.au-redesign-shell .au-redesign-desktop-nav a { color: var(--au-text); font-size: 11px; font-weight: 700; padding: 12px 0; }
+.au-redesign-shell .au-redesign-header-actions { display: flex; gap: 24px; align-items: center; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.au-redesign-shell .au-redesign-header-actions > a { padding: 12px 0; }
+.au-redesign-shell .au-redesign-currency { font-size: 10px; font-weight: 400; }
+.au-redesign-shell .au-redesign-mobile-menu { display: none; }
+.au-redesign-shell .au-redesign-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px; padding: 36px 48px; border-top: 1px solid var(--au-line); }
+.au-redesign-shell .au-redesign-footer .au-redesign-wordmark { font-size: 11px; }
+.au-redesign-shell .au-redesign-footer nav { display: flex; gap: 24px; }
+.au-redesign-shell .au-redesign-footer nav a { font-size: 10px; color: var(--au-green); }
+.au-redesign-shell .au-redesign-footer small { font-size: 10px; }
+.au-redesign-shell .au-redesign-category { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0; }
+.au-redesign-shell .au-redesign-category-heading { padding: 48px 48px 32px; border-bottom: 1px solid var(--au-line); }
+.au-redesign-shell .au-redesign-category-heading h1 { margin: 0 0 12px; font-size: 30px; letter-spacing: -.03em; }
+.au-redesign-shell .au-redesign-category-heading p { max-width: 620px; font-size: 14px; line-height: 1.6; margin: 0; }
+.au-redesign-shell .au-redesign-category-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 48px; padding: 36px 48px 48px; align-items: start; }
+.au-redesign-shell .au-redesign-category-rail { position: sticky; top: 100px; color: var(--au-green); font-size: 11px; }
+.au-redesign-shell .au-redesign-category-rail nav { display: grid; margin: 18px 0 32px; }
+.au-redesign-shell .au-redesign-category-rail nav a { display: flex; align-items: center; min-height: 44px; color: var(--au-text); text-decoration: none; font-size: 12px; }
+.au-redesign-shell .au-redesign-category-rail nav a[aria-current] { color: var(--au-green); font-weight: 700; text-decoration: underline; text-underline-offset: 6px; }
+.au-redesign-shell .au-redesign-atelier-note { line-height: 1.6; padding-right: 16px; }
+.au-redesign-shell .au-redesign-atelier-note p { margin-top: 8px; color: var(--au-text); }
+.au-redesign-shell .au-redesign-category[data-au-category="chocolates"] { --au-category-columns: 3; }
+.au-redesign-shell .au-redesign-product-grid { display: grid; grid-template-columns: repeat(var(--au-category-columns, 4), minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 16px; }
+.au-redesign-shell .au-redesign-product-grid:has(.au-redesign-card-bottom small) { --au-card-price-height: 68px; }
+.au-redesign-shell .au-redesign-product-card { min-width: 0; border: 1px solid var(--au-line); background: #FFFFFF; }
+.au-redesign-shell .au-redesign-product-card > a { display: grid; grid-template-rows: 1fr auto auto; height: 100%; text-decoration: none; color: var(--au-text); }
+.au-redesign-shell .au-redesign-product-card header { display: grid; grid-template-rows: 1fr auto; gap: 6px; padding: 16px 14px 6px; }
+.au-redesign-shell .au-redesign-product-card h3 { min-height: 2lh; margin: 0; font-size: 12px; line-height: 1.3; font-weight: 700; }
+.au-redesign-shell .au-redesign-product-card p { min-height: 3lh; margin: 0; font-size: 11px; line-height: 1.5; }
+.au-redesign-shell .au-redesign-card-image { width: 100%; aspect-ratio: 1.4 / 1; }
+.au-redesign-shell .au-redesign-product-card img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.au-redesign-shell .au-redesign-card-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; align-items: baseline; gap: 4px 8px; min-height: var(--au-card-price-height, 52px); padding: 18px 14px; color: var(--au-green); font-size: 12px; line-height: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.au-redesign-shell .au-redesign-card-bottom > span:last-child { grid-column: 2; grid-row: 1; }
+.au-redesign-shell .au-redesign-card-bottom small { grid-column: 1; font-size: 10px; line-height: 12px; }
+.au-redesign-shell .au-redesign-product-card a:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+.au-redesign-shell .au-redesign-wide-photo { margin: 0; }
+.au-redesign-shell .au-redesign-wide-photo img { display: block; width: 100%; height: 480px; object-fit: cover; }
+.au-redesign-shell .au-redesign-availability-note { margin: 0; padding: 0 48px 32px; font-size: 13px; }
+.au-redesign-shell :is(.au-redesign-detail, .au-redesign-custom, .au-redesign-chocolate) { width: 100%; max-width: 1440px; margin: 0 auto; padding: 24px 48px 64px; }
+.au-redesign-shell :is(.au-redesign-breadcrumb, .cake-detail-breadcrumb) { display: flex; align-items: center; gap: 16px; margin: 0 0 28px; font-size: 11px; text-transform: uppercase; }
+.au-redesign-shell .au-redesign-breadcrumb a { color: var(--au-text); text-decoration: none; }
+.au-redesign-shell .cake-detail-breadcrumb button { min-height: 44px; font-size: 11px; }
+.au-redesign-shell .cake-detail-hero.is-desktop-three-column { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr); gap: 64px; align-items: start; }
+.au-redesign-shell .au-redesign-detail .cake-detail-gallery { display: block; min-width: 0; }
+.au-redesign-shell .au-redesign-detail .cake-detail-main-image { width: 100%; max-height: none; aspect-ratio: 1 / 1; background: #FFFFFF; }
+.au-redesign-shell .au-redesign-detail .cake-detail-main-image > img { padding: 0; filter: none; object-fit: contain; }
+.au-redesign-shell .au-redesign-detail .cake-detail-gallery-arrow { background: #FFFFFF; backdrop-filter: none; border: 1px solid var(--au-line); }
+.au-redesign-shell .au-redesign-detail .cake-detail-thumbnails { display: flex; gap: 12px; overflow-x: auto; padding: 4px; margin: 12px -4px 0; }
+.au-redesign-shell .au-redesign-detail .cake-detail-thumbnails button { flex: 0 0 28%; max-width: 160px; min-width: 72px; background: #FFFFFF; border: 1px solid var(--au-line); opacity: 1; }
+.au-redesign-shell .au-redesign-detail .cake-detail-thumbnails button.is-selected { border-color: var(--au-green); }
+.au-redesign-shell .au-redesign-detail .cake-detail-thumbnails img { padding: 0; }
+.au-redesign-shell .au-redesign-detail .cake-detail-purchase { display: block; position: sticky; top: 88px; padding: 0; min-width: 0; }
+.au-redesign-shell .au-redesign-detail .cake-detail-configurator { display: block; }
+.au-redesign-shell .au-redesign-detail .is-standard-intro { display: block; }
+.au-redesign-shell .cake-detail-configurator h1 { font-size: clamp(26px, 2.4vw, 36px); line-height: 1.1; color: var(--au-text); letter-spacing: -.035em; margin: 0 0 12px; overflow-wrap: normal; }
+.au-redesign-shell .cake-detail-eyebrow { color: var(--au-green); letter-spacing: .04em; margin-bottom: 10px; }
+.au-redesign-shell .cake-detail-price-primary { display: block; font-size: 20px; margin-bottom: 14px; color: var(--au-green); }
+.au-redesign-shell .cake-detail-description { font-size: 14px; line-height: 1.7; color: var(--au-text); }
+.au-redesign-shell .cake-detail-badges { margin-bottom: 24px; }
+.au-redesign-shell .cake-detail-badges span { border: 0; padding: 0 12px 0 0; background: none; font-size: 10px; }
+.au-redesign-shell .cake-detail-fieldset { padding: 16px 0; border-color: var(--au-line); }
+.au-redesign-shell .cake-detail-fieldset legend { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--au-text); }
+.au-redesign-shell .cake-detail-options, .au-redesign-shell .cake-detail-options.is-stacked { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.au-redesign-shell .cake-detail-option { border: 1px solid var(--au-line); border-radius: 0; background: #FFFFFF; box-shadow: none; padding: 12px; min-height: 56px; font-size: 12px; color: var(--au-text); }
+.au-redesign-shell .cake-detail-option.is-selected { background: var(--au-green); color: #FFFFFF; border-color: var(--au-green); }
+.au-redesign-shell .cake-detail-option.is-selected :is(strong, span) { color: inherit; }
+.au-redesign-shell .cake-detail-option-preview { grid-template-columns: 80px minmax(0, 1fr); background: #FFFFFF; border: 1px solid var(--au-line); padding: 8px; }
+.au-redesign-shell .cake-detail-option-preview-media { width: 80px; height: 64px; background: #FFFFFF; }
+.au-redesign-shell .cake-detail-option-preview-copy strong { font-size: 12px; }
+.au-redesign-shell .cake-detail-option-preview-copy > span { font-size: 9px; }
+.au-redesign-shell .cake-detail-checkout { position: static; }
+.au-redesign-shell .cake-detail-checkout-card { border: 0; border-top: 1px solid var(--au-line); background: #FFFFFF; padding: 12px 0 0; box-shadow: none; }
+.au-redesign-shell .cake-detail-checkout .cake-detail-quantity { width: 150px; grid-template-columns: 44px minmax(44px, 1fr) 44px; }
+.au-redesign-shell .cake-detail-quantity button { min-width: 44px; min-height: 44px; background: #FFFFFF; }
+.au-redesign-shell .cake-detail-checkout-price { display: none; }
+.au-redesign-shell .cake-detail-order-summary { display: flex; justify-content: space-between; gap: 16px; border: 0; margin: 0; padding: 12px 0; }
+.au-redesign-shell .cake-detail-order-summary > strong, .au-redesign-shell .cake-detail-order-product { display: block; }
+.au-redesign-shell .cake-detail-order-product { font-size: 12px; }
+.au-redesign-shell .cake-detail-order-summary > div > span { font-size: 10px; }
+.au-redesign-shell .cake-detail-request { width: 100%; min-height: 48px; padding: 14px; border: 1px solid var(--au-green); border-radius: 0; background: var(--au-green); color: #FFFFFF; box-shadow: none; font-size: 12px; }
+.au-redesign-shell .cake-detail-confirmation-note, .au-redesign-shell .cake-detail-extra-help { font-size: 12px; line-height: 1.6; }
+.au-redesign-shell .cake-detail-ordering-notice { margin-top: 18px; padding: 14px 0; border-color: var(--au-line); background: #FFFFFF; }
+.au-redesign-shell .cake-detail-serving-guide { margin-bottom: 16px; font-size: 12px; }
+.au-redesign-shell .cake-detail-serving-guide summary { min-height: 44px; padding-top: 12px; cursor: pointer; }
+.au-redesign-shell .au-redesign-product-story { margin-top: 64px; }
+.au-redesign-shell .au-redesign-highlights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; border-block: 1px solid var(--au-line); padding: 32px 0; }
+.au-redesign-shell .au-redesign-highlights article { padding: 20px; border: 1px solid var(--au-line); }
+.au-redesign-shell .au-redesign-highlights span { color: var(--au-green); font-size: 11px; }
+.au-redesign-shell .au-redesign-highlights h2 { font-size: 14px; margin: 10px 0; }
+.au-redesign-shell .au-redesign-highlights p { margin: 0; font-size: 13px; line-height: 1.6; }
+.au-redesign-shell .au-redesign-occasion { position: relative; margin: 48px 0; }
+.au-redesign-shell .au-redesign-occasion img { display: block; width: 100%; height: 440px; object-fit: cover; }
+.au-redesign-shell .au-redesign-occasion figcaption { position: absolute; bottom: 24px; left: 24px; max-width: min(480px, 80%); background: #FFFFFF; padding: 20px; font-size: 13px; }
+.au-redesign-shell .au-redesign-occasion figcaption p { margin: 8px 0 0; }
+.au-redesign-shell :is(.au-redesign-specifications, .au-redesign-party, .au-redesign-related, .au-redesign-process, .au-redesign-occasions) { padding: 36px 0; border-top: 1px solid var(--au-line); }
+.au-redesign-shell :is(.au-redesign-specifications, .au-redesign-party, .au-redesign-related, .au-redesign-process, .au-redesign-occasions) > h2 { font-size: 17px; margin: 0 0 24px; }
+.au-redesign-shell .au-redesign-specifications dl { display: grid; grid-template-columns: 220px minmax(0, 1fr); margin: 0; }
+.au-redesign-shell .au-redesign-spec-row { display: contents; }
+.au-redesign-shell .au-redesign-specifications :is(dt, dd) { margin: 0; padding: 20px 0; border-bottom: 1px solid var(--au-line); font-size: 13px; line-height: 1.7; }
+.au-redesign-shell .au-redesign-specifications dt { padding-right: 24px; font-weight: 700; }
+.au-redesign-shell .au-redesign-specifications dd { text-align: left; font-weight: 400; }
+.au-redesign-shell .au-redesign-specifications dd p { margin: 0 0 6px; }
+.au-redesign-shell .au-redesign-party > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.au-redesign-shell .au-redesign-party img { width: 100%; height: 300px; object-fit: cover; }
+.au-redesign-shell .au-redesign-party h3 { font-size: 13px; margin: 18px 0 10px; }
+.au-redesign-shell .au-redesign-party p { font-size: 13px; line-height: 1.6; }
+.au-redesign-shell .au-redesign-related .au-redesign-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.au-redesign-shell .au-redesign-related .au-redesign-card-image { max-height: 300px; }
+.au-redesign-shell :is(.au-redesign-custom-hero, .au-redesign-chocolate-hero) { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 48px; align-items: start; padding-bottom: 64px; }
+.au-redesign-shell .au-redesign-custom-hero > img { width: 100%; height: 470px; object-fit: cover; }
+.au-redesign-shell :is(.au-redesign-custom-hero, .au-redesign-chocolate-hero) h1 { color: var(--au-text); font-size: 32px; line-height: 1.15; margin: 12px 0 20px; }
+.au-redesign-shell :is(.au-redesign-custom-hero, .au-redesign-chocolate-hero) p { font-size: 14px; line-height: 1.7; }
+.au-redesign-shell .au-redesign-kicker { color: var(--au-green); font-size: 11px; font-weight: 700; }
+.au-redesign-shell .au-redesign-design-principle { border: 1px solid var(--au-green); padding: 20px; margin: 24px 0; }
+.au-redesign-shell .au-redesign-design-principle h2 { font-size: 12px; }
+.au-redesign-shell .au-redesign-design-principle p { font-size: 13px; margin: 0; }
+.au-redesign-shell .au-redesign-primary-link { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 16px; background: var(--au-green); color: #FFFFFF; font-size: 12px; font-weight: 700; text-decoration: none; }
+.au-redesign-shell .au-redesign-microcopy { margin: 14px 0 0; font-size: 12px; }
+.au-redesign-shell .au-redesign-process ol { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.au-redesign-shell .au-redesign-process li { padding: 20px; border: 1px solid var(--au-line); }
+.au-redesign-shell .au-redesign-process li > span { color: var(--au-green); font-size: 12px; }
+.au-redesign-shell .au-redesign-process h3 { font-size: 12px; margin: 16px 0 8px; }
+.au-redesign-shell .au-redesign-process p { font-size: 12px; line-height: 1.6; margin: 0; }
+.au-redesign-shell .au-redesign-occasions > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.au-redesign-shell .au-redesign-occasions figure { margin: 0; }
+.au-redesign-shell .au-redesign-occasions img { display: block; width: 100%; height: auto; aspect-ratio: 1.25; object-fit: cover; }
+.au-redesign-shell .au-redesign-occasions figcaption { padding-top: 14px; font-size: 12px; font-weight: 700; }
+.au-redesign-shell .au-redesign-request-heading { scroll-margin-top: 96px; font-size: 24px; padding-top: 36px; border-top: 1px solid var(--au-line); }
+.au-redesign-shell .au-redesign-custom > .cake-detail-hero { display: block; }
+.au-redesign-shell .au-redesign-custom .cake-detail-purchase { position: static; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+.au-redesign-shell .au-redesign-custom .cake-detail-checkout { align-self: start; position: sticky; top: 88px; }
+.au-redesign-shell .custom-cake-request-section { padding: 36px 0; margin-top: 36px; border-color: var(--au-line); scroll-margin-top: 88px; }
+.au-redesign-shell .custom-cake-fieldset { border-color: var(--au-line); background: #FFFFFF; border-radius: 0; box-shadow: none; }
+.au-redesign-shell .custom-cake-consent-box { background: #FFFFFF; border: 1px solid var(--au-line); border-radius: 0; }
+.au-redesign-shell .au-redesign-chocolate-hero figure { margin: 0; }
+.au-redesign-shell .au-redesign-chocolate-hero figure img { width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; }
+.au-redesign-shell .au-redesign-chocolate-hero figcaption { font-size: 11px; margin-top: 12px; }
+.au-redesign-shell .au-redesign-chocolate-info { padding-top: 32px; }
+.au-redesign-shell .au-redesign-price { font-size: 22px; color: var(--au-green); font-weight: 700; }
+.au-redesign-shell .au-redesign-coming-soon { padding: 24px; margin: 32px 0; border: 1px solid var(--au-green); color: var(--au-green); }
+.au-redesign-shell .au-redesign-coming-soon p { margin: 8px 0 0; }
+.au-redesign-shell .au-redesign-text-link { display: inline-block; padding: 14px 0; color: var(--au-green); }
+/* Home changes retain the existing Home-only boundary. */
+.au-home-shell .rd-hero-copy { margin: 0; font-weight: 400; line-height: 1.5; }
+.au-home-shell #au-collection { scroll-margin-top: 80px; }
+.au-home-shell .rd-product-card > a { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto auto; row-gap: inherit; height: 100%; color: inherit; text-decoration: none; }
+.au-home-shell a.rd-bespoke-item { color: inherit; text-decoration: none; }
+.au-home-shell [data-au-coming-soon="service"] { cursor: default; }
+.au-home-shell .rd-footer nav { display: flex; flex-wrap: wrap; gap: 20px; }
+.au-home-shell .rd-footer nav a { color: var(--rd-green); font-size: 11px; }
+.au-home-shell .rd-best-photo-frame, .au-home-shell .rd-best-action-row { color: inherit; text-decoration: none; }
+.au-home-shell .rd-best-photo-frame { display: block; }
+.au-home-shell .rd-product-card a:focus-visible, .au-home-shell a.rd-bespoke-item:focus-visible { outline: 2px solid var(--rd-green); outline-offset: 4px; }
+@media (max-width: 1100px) {
+  .au-redesign-shell .au-redesign-header { padding-inline: 24px; }
+  .au-redesign-shell .au-redesign-desktop-nav { gap: 16px; }
+  .au-redesign-shell .au-redesign-category-layout { grid-template-columns: 150px minmax(0, 1fr); padding-inline: 24px; gap: 20px; }
+  .au-redesign-shell .au-redesign-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .au-redesign-shell :is(.au-redesign-detail, .au-redesign-custom, .au-redesign-chocolate) { padding-inline: 24px; }
+  .au-redesign-shell .cake-detail-hero.is-desktop-three-column { gap: 32px; grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr); }
+}
+@media (max-width: 767px) {
+  .au-redesign-shell .au-redesign-header { padding: 8px 20px; min-height: 60px; gap: 16px; }
+  .au-home-shell .rd-header-logo,
+  .au-redesign-shell .au-redesign-header .au-redesign-wordmark { font-size: 24px; }
+  .au-redesign-shell .au-redesign-desktop-nav, .au-redesign-shell .au-redesign-currency { display: none; }
+  .au-redesign-shell .au-redesign-header-actions { gap: 16px; font-size: 11px; }
+  .au-redesign-shell .au-redesign-mobile-menu { display: block; }
+  .au-redesign-shell .au-redesign-mobile-menu summary { list-style: none; display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+  .au-redesign-shell .au-redesign-mobile-menu summary::-webkit-details-marker { display: none; }
+  .au-redesign-shell .au-redesign-mobile-menu nav { position: absolute; top: 100%; left: 0; right: 0; padding: 16px 24px; border-bottom: 1px solid var(--au-green); background: #FFFFFF; }
+  .au-redesign-shell .au-redesign-mobile-menu nav a { display: flex; min-height: 48px; align-items: center; }
+  .au-redesign-shell .au-redesign-category-heading { padding: 32px 20px 24px; }
+  .au-redesign-shell .au-redesign-category-heading h1 { font-size: 26px; }
+  .au-redesign-shell .au-redesign-category-heading p { font-size: 13px; }
+  .au-redesign-shell .au-redesign-category-layout { display: block; padding: 0 20px 32px; }
+  .au-redesign-shell .au-redesign-category-rail { position: static; }
+  .au-redesign-shell .au-redesign-category-rail > strong, .au-redesign-shell .au-redesign-atelier-note { display: none; }
+  .au-redesign-shell .au-redesign-category-rail nav { display: flex; overflow-x: auto; gap: 24px; margin: 0 0 24px; padding: 8px 0; }
+  .au-redesign-shell .au-redesign-category-rail nav a { flex: 0 0 auto; font-size: 10px; }
+  .au-redesign-shell .au-redesign-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .au-redesign-shell .au-redesign-product-card header { padding: 12px 10px 4px; }
+  .au-redesign-shell .au-redesign-product-card h3 { font-size: 11px; }
+  .au-redesign-shell .au-redesign-product-card p { font-size: 10px; }
+  .au-redesign-shell .au-redesign-product-grid:has(.au-redesign-card-bottom small) { --au-card-price-height: 58px; }
+  .au-redesign-shell .au-redesign-card-bottom { min-height: var(--au-card-price-height, 44px); padding: 14px 10px; font-size: 11px; line-height: 14px; }
+  .au-redesign-shell .au-redesign-wide-photo img { height: 240px; }
+  .au-redesign-shell .au-redesign-availability-note { padding-inline: 20px; }
+  .au-redesign-shell .au-redesign-footer { padding: 28px 20px; gap: 20px; }
+  .au-redesign-shell .au-redesign-footer nav { width: 100%; gap: 20px; }
+  .au-redesign-shell :is(.au-redesign-detail, .au-redesign-custom, .au-redesign-chocolate) { padding: 16px 20px 40px; }
+  .au-redesign-shell :is(.au-redesign-breadcrumb, .cake-detail-breadcrumb) { gap: 10px; margin-bottom: 16px; flex-wrap: wrap; font-size: 10px; }
+  .au-redesign-shell .cake-detail-hero.is-desktop-three-column { display: flex; flex-direction: column; gap: 28px; }
+  .au-redesign-shell .au-redesign-detail .cake-detail-gallery { width: 100%; }
+  .au-redesign-shell .au-redesign-detail .cake-detail-purchase { position: static; width: 100%; }
+  .au-redesign-shell .cake-detail-configurator h1 { font-size: 28px; line-height: 1.1; }
+  .au-redesign-shell .cake-detail-options, .au-redesign-shell .cake-detail-options.is-stacked { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .au-redesign-shell .cake-detail-request { min-height: 52px; }
+  .au-redesign-shell .au-redesign-product-story { margin-top: 36px; }
+  .au-redesign-shell .au-redesign-highlights { grid-template-columns: 1fr; gap: 12px; padding: 24px 0; }
+  .au-redesign-shell .au-redesign-highlights article { padding: 16px; }
+  .au-redesign-shell .au-redesign-occasion { margin: 28px 0; }
+  .au-redesign-shell .au-redesign-occasion img { height: 280px; }
+  .au-redesign-shell .au-redesign-occasion figcaption { position: static; max-width: none; padding: 18px 0 0; }
+  .au-redesign-shell .au-redesign-specifications dl { grid-template-columns: 1fr; }
+  .au-redesign-shell .au-redesign-specifications dt { border: 0; padding: 16px 0 4px; }
+  .au-redesign-shell .au-redesign-specifications dd { padding: 0 0 16px; }
+  .au-redesign-shell .au-redesign-party > div { grid-template-columns: 1fr; gap: 24px; }
+  .au-redesign-shell .au-redesign-party img { height: 220px; }
+  .au-redesign-shell :is(.au-redesign-custom-hero, .au-redesign-chocolate-hero) { grid-template-columns: 1fr; gap: 28px; padding-bottom: 32px; }
+  .au-redesign-shell .au-redesign-custom-hero > img { height: 290px; }
+  .au-redesign-shell :is(.au-redesign-custom-hero, .au-redesign-chocolate-hero) h1 { font-size: 28px; }
+  .au-redesign-shell .au-redesign-process ol { grid-template-columns: 1fr; gap: 12px; }
+  .au-redesign-shell .au-redesign-process li { padding: 18px; }
+  .au-redesign-shell .au-redesign-occasions > div { grid-template-columns: 1fr 1fr; }
+  .au-redesign-shell .au-redesign-custom .cake-detail-purchase { grid-template-columns: 1fr; gap: 20px; }
+  .au-redesign-shell .au-redesign-custom .cake-detail-checkout { position: static; }
+  .au-redesign-shell .au-redesign-chocolate-info { padding-top: 0; }
+  .au-home-shell .rd-footer nav { width: 100%; }
+}
+.au-redesign-shell .au-chocolate-control {
+  margin: 16px 0 0;
+}
+.au-redesign-shell .au-chocolate-variants {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+.au-redesign-shell .au-chocolate-variants .cake-detail-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 2px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 8px 10px;
+  line-height: 1.3;
+}
+.au-redesign-shell .au-chocolate-variants .cake-detail-option span {
+  font-size: 11px;
+}
+.au-redesign-shell .au-chocolate-promo-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.au-redesign-shell .au-chocolate-promo-note strong {
+  color: var(--au-green);
+  font-weight: 700;
+}
+.au-redesign-shell .au-chocolate-quantity {
+  grid-template-columns: 44px 58px 44px;
+}

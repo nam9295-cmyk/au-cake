@@ -77,8 +77,6 @@ export function ReservationDrawer({
   const promoDiscountLabel = reservation.promotionKind === 'review-reward'
     ? '리뷰'
     : reservation.promotionKind === 'manual-coupon' ? '쿠폰' : '프로모션'
-  const lemonIcingSelectionChanged = isFreshLemonCupcakeProduct(productId)
-    && (productId !== reservation.productId || chocolateIcingCount !== (reservation.chocolateIcingCount || 0))
 
   const draftUpdate = buildAdminReservationUpdate(reservation, {
     productId,
@@ -86,7 +84,7 @@ export function ReservationDrawer({
     chocolateType,
     poundAddon,
     cupcakeFinish,
-    ...(lemonIcingSelectionChanged ? { chocolateIcingCount } : {}),
+    chocolateIcingCount,
     vanillaCreamCount,
     partyDecorationCount,
     quantity,
@@ -99,10 +97,6 @@ export function ReservationDrawer({
   })
   const draftReservation: Reservation = { ...reservation, ...draftUpdate }
   const selectedProduct = getProductById(draftUpdate.productId)
-  const lemonPackSize = getFreshLemonCupcakePackSize(draftUpdate.productId) || 0
-  const selectedChocolateIcingCount = draftUpdate.chocolateIcingCount || 0
-  const hasHistoricalIndividualLemonIcing = isFreshLemonCupcakeProduct(draftUpdate.productId)
-    && ![0, lemonPackSize / 2, lemonPackSize].includes(selectedChocolateIcingCount)
   const timeOptions = timeOptionsForDate(pickupDate, settings)
   const displayedTimeOptions = timeOptions.includes(pickupTime) ? timeOptions : [pickupTime, ...timeOptions].filter(Boolean)
 
@@ -239,17 +233,14 @@ export function ReservationDrawer({
             )}
             {isFreshLemonCupcakeProduct(draftUpdate.productId) && (
               <label>
-                마감 구성
-                <select value={selectedChocolateIcingCount} onChange={(event) => setChocolateIcingCount(Number(event.target.value))}>
-                  {hasHistoricalIndividualLemonIcing && (
-                    <option value={selectedChocolateIcingCount} disabled>
-                      기존 저장값 · 다크 커버춰 초콜릿 {selectedChocolateIcingCount}개
-                    </option>
-                  )}
-                  <option value={0}>전부 레몬 제스트</option>
-                  <option value={lemonPackSize / 2}>반반</option>
-                  <option value={lemonPackSize}>전부 다크 초콜릿</option>
-                </select>
+                다크 커버춰 초콜릿 개수
+                <input
+                  type="number"
+                  min="0"
+                  max={getFreshLemonCupcakePackSize(draftUpdate.productId) || 0}
+                  value={draftUpdate.chocolateIcingCount}
+                  onChange={(event) => setChocolateIcingCount(Number(event.target.value || 0))}
+                />
               </label>
             )}
             {isCupcakeProduct(draftUpdate.productId) && !isLegacyCupcake && (

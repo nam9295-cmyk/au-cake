@@ -28,6 +28,8 @@ import {
 } from './calendar-access.js'
 import { digestCakeRequestPayload, resolveReviewCouponHmacSecret } from './coupon-digest.js'
 import { SMORE_WRITES_ENABLED } from './smore-write-policy.js'
+import { CHOCOLATE_WRITES_ENABLED } from './chocolate-write-policy.js'
+import { isChocolateProductId } from './chocolate-products.js'
 import { cakeReservationResponse } from './cake-create-response.js'
 import { checkReservationReadiness } from './reservation-health.js'
 import { isCakeWireAction, handleCakeWireRequest, handleCakePhotoRecovery } from './custom-cake-routes.js'
@@ -312,6 +314,7 @@ export async function createCake(databases, input, {
   now = new Date(),
   runtimeConfig = config,
   smoreWritesEnabled = SMORE_WRITES_ENABLED,
+  chocolateWritesEnabled = CHOCOLATE_WRITES_ENABLED,
   legacyGate,
 } = {}) {
   const documentId = documentIdForInput(input)
@@ -349,11 +352,14 @@ export async function createCake(databases, input, {
     }),
     requestFingerprint,
   }
-  // The compatibility deployment keeps the complete S'more reader/replay path,
-  // but its immutable artifact policy blocks every new request containing S'more.
+  // Archive-specific write policies apply only to new orders. Stored orders and
+  // idempotent replays stay readable across both rollout phases.
   const storedOrder = parseStoredOrderLines(data)
   if (!smoreWritesEnabled && storedOrder?.lines.some(line => line.productId === 'smore-stick')) {
     throw new ReservationApiError('SMORE_WRITES_DISABLED', 503)
+  }
+  if (!chocolateWritesEnabled && storedOrder?.lines.some(line => isChocolateProductId(line.productId))) {
+    throw new ReservationApiError('CHOCOLATE_WRITES_DISABLED', 503)
   }
   // Storage capacity, not a product maximum: the original Appwrite quantity
   // attribute was created in the signed-32-bit range. Integer range PATCH does
@@ -681,7 +687,7 @@ export async function listCalendarEvents(databases, input, env = process.env, no
 
 export { checkReservationReadiness } from './reservation-health.js'
 
-export function createReservationHandler({ env = process.env, servicesForRequest, now = () => new Date(), smoreWritesEnabled = SMORE_WRITES_ENABLED } = {}) {
+export function createReservationHandler({ env = process.env, servicesForRequest, now = () => new Date(), smoreWritesEnabled = SMORE_WRITES_ENABLED, chocolateWritesEnabled = CHOCOLATE_WRITES_ENABLED } = {}) {
 return async ({ req, res, log, error }) => {
   let action = 'unknown'
   if (isCakeWireAction(req.bodyJson?.action) || req.headers?.['x-appwrite-trigger'] === 'schedule') {
@@ -705,11 +711,11 @@ return async ({ req, res, log, error }) => {
     const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req))
 
     let result
-    if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig)
+    if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig, { chocolateWritesEnabled })
     else if (action === 'create-cake') {
       const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: new Storage(clientForRequest(req)) }
       const legacyGate = createLegacyCakeGate({ env, services })
-      result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, legacyGate })
+      result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, chocolateWritesEnabled, legacyGate })
     }
     else if (action === 'create-class') result = await createClass(databases, body.data)
     else if (action === 'lookup-cake') result = await lookupCake(databases, body.data || {})

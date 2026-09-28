@@ -18,6 +18,7 @@ import {
   usesReservationChocolateType,
 } from './constants.js'
 import { formatStoredCakeSizeLabel } from './cake-serving.js'
+import { getChocolateProduct } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { marketConfig } from './market.js'
 import { formatChocolateExtra } from './chocolate-extras.js'
 import type { CakeOrderLineRequest, CakeOrderLineResult, Reservation } from './types.js'
@@ -94,6 +95,9 @@ function formatHistoricalVanillaSheet(value: ReservationOrderLine['vanillaCakeSh
 }
 
 export function formatOrderLineSummary(line: ReservationOrderLine) {
+  const chocolate = marketConfig.market === 'AU' ? getChocolateProduct(line.productId) : undefined
+  if (chocolate) return [chocolate.name, chocolate.saleUnit, `x${line.quantity}`,
+    ...(Number.isSafeInteger(line.totalPriceCents) ? [formatLinePrice(line.totalPriceCents as number)] : [])].join(' · ')
   const product = getProductById(line.productId)
   const details: string[] = [product.name]
   if (product.usesSizeOptions || isCheesecakeProduct(product.id)) details.push(formatStoredCakeSizeLabel(product.id, line.cakeSize))

@@ -319,15 +319,16 @@ function createDatabaseDouble({ couponDocument = coupon(), failAt, commitApplies
   return db
 }
 
-test('fixed S’more set policy rejects unpublished quantities before writes', async () => {
+test('persistence boundary rejects quantity beyond signed-32-bit storage without writes, not as product validation', async () => {
   const db = createDatabaseDouble()
   const request = { ...cakeInput, productId: 'smore-stick', quantity: 2147483648, promoCode: '' }
-  assert.throws(() => buildCakeReservation(request, { now }), assertApiCode('INVALID_QUANTITY'))
-  await assert.rejects(() => createCake(db, request, { now, runtimeConfig }), assertApiCode('INVALID_QUANTITY'))
+  // The product policy and integer-cents calculator accept this safe quantity.
+  assert.equal(buildCakeReservation(request, { now }).quantity, 2147483648)
+  await assert.rejects(() => createCake(db, request, { now, runtimeConfig }), assertApiCode('QUANTITY_STORAGE_OVERFLOW'))
   assert.equal(db.calls.some(([name]) => name === 'createDocument' || name === 'updateDocument' || name === 'createTransaction'), false)
 })
 
-test('mixed orders reject unpublished S’more quantities before reservation or coupon side effects', async () => {
+test('mixed-order storage ceiling is enforced for every line before reservation or coupon side effects', async () => {
   const order = (orderLines, requestId) => ({
     requestId,
     customerName: cakeInput.customerName,
@@ -352,16 +353,24 @@ test('mixed orders reject unpublished S’more quantities before reservation or 
   ]
   for (const request of oversizedOrders) {
     const db = createDatabaseDouble()
-    await assert.rejects(() => createCake(db, request, { now, runtimeConfig }), assertApiCode('INVALID_QUANTITY'))
+    await assert.rejects(() => createCake(db, request, { now, runtimeConfig }), assertApiCode('QUANTITY_STORAGE_OVERFLOW'))
     assert.equal(db.calls.some(([name]) => name === 'listDocuments' || name === 'createDocument' || name === 'updateDocument' || name === 'createTransaction' || name === 'updateTransaction'), false)
   }
+
+  const boundaryDb = createDatabaseDouble()
+  const boundary = await createCake(boundaryDb, order([
+    { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
+    { productId: 'smore-stick', quantity: 2147483647 },
+  ], '10000000-0000-4000-8000-000000000003'), { now, runtimeConfig })
+  assert.equal(boundary.orderItemCount, 2147483648)
+  assert.equal(boundaryDb.calls.filter(([name]) => name === 'createDocument').length, 1)
 
   assert.throws(() => buildCakeReservation(order([
     { productId: 'pave-cake', cakeSize: '6in', quantity: 6 },
   ], '10000000-0000-4000-8000-000000000004'), { now }), assertApiCode('INVALID_QUANTITY'))
 })
 
-for (const quantity of [10, 25, 50]) {
+for (const quantity of [6, 12, 50, 100, 2147483647]) {
   test(`createCake sends actual ${quantity} sticks to persistence and retains it on retry`, async () => {
     const db = createDatabaseDouble()
     const request = { ...cakeInput, productId: 'smore-stick', quantity, promoCode: '' }
@@ -379,7 +388,7 @@ for (const quantity of [10, 25, 50]) {
   })
 }
 
-for (const manual of [false, true]) for (const quantity of [10, 25, 50]) {
+for (const manual of [false, true]) for (const quantity of [1, 5, 6, 11, 12, 24]) {
   test(`smore-only ${quantity} rejects valid ${manual ? 'manual' : 'review'} coupon without consumption`, async () => {
     const db = createDatabaseDouble({ couponDocument: manual ? manualCoupon() : coupon() })
     await assert.rejects(() => createCake(db, {
@@ -398,14 +407,14 @@ for (const manual of [false, true]) {
     const { productId, cakeSize, chocolateType, poundAddon, quantity, ...customer } = cakeInput
     const request = {
       ...customer, promoCode: manual ? manualCode : rawCode,
-      orderLines: [{ productId: 'smore-stick', quantity: 25 }, { productId, cakeSize, chocolateType, poundAddon, quantity }],
+      orderLines: [{ productId: 'smore-stick', quantity: 12 }, { productId, cakeSize, chocolateType, poundAddon, quantity }],
     }
     const response = await createCake(db, request, { now, runtimeConfig })
-    assert.equal(db.documents.get(requestId).quantity, 25)
-    assert.equal(db.documents.get(requestId).orderItemCount, 26)
+    assert.equal(db.documents.get(requestId).quantity, 12)
+    assert.equal(db.documents.get(requestId).orderItemCount, 13)
     assert.equal(response.discountBasisCents, 7900)
-    assert.equal(response.discountCents, 395)
-    assert.equal(response.totalPriceCents, 15005)
+    assert.equal(response.discountCents, 1475)
+    assert.equal(response.totalPriceCents, 11825)
     assert.equal(response.promotionKind, manual ? 'manual-coupon' : 'review-reward')
     assert.equal(db.coupon.status, 'redeemed')
     const retry = await createCake(db, request, { now, runtimeConfig })
@@ -518,20 +527,20 @@ test('manual coupon validation accepts only an active matching 5 percent record 
 
 test('review coupon pricing rounds discount cents and persists only safe audit fields', () => {
   const five = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 3, promoCode: '' },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, promoCode: '' },
     { now, reservationNumber: 'VG-C-AU-5', reviewCoupon: { id: 'coupon-1', rewardPercent: 5, codeLast4: 'Q2MK' } },
   )
   const ten = buildCakeReservation(
-    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 3, promoCode: '' },
+    { ...cakeInput, productId: 'fresh-lemon-cupcakes-6', chocolateIcingCount: 1, promoCode: '' },
     { now, reservationNumber: 'VG-C-AU-10', reviewCoupon: { id: 'coupon-2', rewardPercent: 10, codeLast4: 'AB89' } },
   )
   assert.deepEqual(
     [five.subtotalCents, five.discountPercent, five.discountCents, five.totalPriceCents],
-    [3500, 5, 175, 3325],
+    [3650, 5, 183, 3467],
   )
   assert.deepEqual(
     [ten.subtotalCents, ten.discountPercent, ten.discountCents, ten.totalPriceCents],
-    [3500, 10, 350, 3150],
+    [3650, 10, 365, 3285],
   )
   assert.equal(five.appliedPromoCodeLast4, 'Q2MK')
   assert.equal(five.reviewCouponId, 'coupon-1')
@@ -541,7 +550,7 @@ test('review coupon pricing rounds discount cents and persists only safe audit f
 
 test('static Lemoni pricing and audit remain local without review lookup', async () => {
   for (const [productId, promoCode, expected] of [
-    ['fresh-lemon-cupcakes-12', 'Lemoni', 5850],
+    ['fresh-lemon-cupcakes-8', 'Lemoni', 4050],
   ]) {
     const db = createDatabaseDouble({ couponDocument: null })
     const result = await createCake(db, { ...cakeInput, requestId: randomUUID(), productId, promoCode }, { now, runtimeConfig })
@@ -1057,6 +1066,7 @@ test('reservation readiness returns only generic ready after complete private co
     status: 'ready',
     capabilities: {
       cakeOrderLines: 1,
+      chocolateOrderLines: 1,
       smoreStoredOrders: 1,
       smoreWrites: 1,
     },
@@ -1074,6 +1084,13 @@ test('reservation readiness returns only generic ready after complete private co
       assert.equal(args.total, true)
     }
   }
+})
+
+test('checkpoint readiness keeps Cake and S’more ready without advertising Chocolate ordering', async () => {
+  assert.deepEqual(await checkReservationReadiness(readinessDatabase(), runtimeConfig, { chocolateWritesEnabled: false }), {
+    status: 'ready',
+    capabilities: { cakeOrderLines: 1, smoreStoredOrders: 1, smoreWrites: 1 },
+  })
 })
 
 test('reservation readiness fails closed for every coupon privacy or digest drift', async () => {

@@ -1,5 +1,7 @@
 import { getCakeDetailBySlug } from './cake-detail.js'
 import { getHogirlRouteFromPath } from '../stories/hogirl/routes.js'
+import { getAuChocolatePreview } from './au-chocolate-preview.js'
+import { marketConfig } from './market.js'
 
 export { isHogirlPath } from '../stories/hogirl/routes.js'
 
@@ -9,6 +11,8 @@ export type Page =
   | 'cart'
   | 'cakes'
   | 'cake-detail'
+  | 'chocolates'
+  | 'chocolate-detail'
   | 'custom-cake'
   | 'custom-cake-complete'
   | 'review'
@@ -39,11 +43,18 @@ export function pathForCake(slug: string): string {
   return `/cakes/${slug}`
 }
 
+export function getChocolateSlugFromPath(path: string): string | null {
+  const slug = /^\/chocolates\/([a-z0-9-]+)$/.exec(path)?.[1]
+  return slug && getAuChocolatePreview(slug) ? slug : null
+}
+
 export function getPageFromPath(path: string): Page {
   if (getHogirlRouteFromPath(path)) return 'hogirl'
   if (path === '/') return 'home'
   if (path === '/cart') return 'cart'
   if (path === '/cakes') return 'cakes'
+  if (path === '/chocolates' && marketConfig.market === 'AU') return 'chocolates'
+  if (getChocolateSlugFromPath(path)) return 'chocolate-detail'
   if (path === '/cakes/custom-cake' || path === '/cakes/custom-cake/' || path === '/custom-cake') return 'custom-cake'
   if (path === '/custom-cake/complete') return 'custom-cake-complete'
   if (getCakeSlugFromPath(path)) return 'cake-detail'
@@ -72,6 +83,8 @@ export function pathForPage(page: Page): string {
     cart: '/cart',
     cakes: '/cakes',
     'cake-detail': '/cakes',
+    chocolates: '/chocolates',
+    'chocolate-detail': '/chocolates',
     'custom-cake': '/cakes/custom-cake',
     'custom-cake-complete': '/custom-cake/complete',
     review: '/review',

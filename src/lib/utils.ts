@@ -18,6 +18,7 @@ import {
 import { marketConfig } from './market.js'
 import { formatCupcakeFinishText } from './i18n.js'
 import { formatStoredCakeSizeLabel } from './cake-serving.js'
+import { getChocolateProduct } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { formatOrderLineSummary, getReservationItemCount, getReservationLineCount, getReservationOrderLines } from './order-lines.js'
 import { formatBrownieCreamOption, getBrownieCreamOption, isBrownieFreshCreamEligibleProduct } from './brownie-cream.js'
 import { getAuCakePickupTimeOptions, isAuCakePickupServiceTime } from './pickup-schedule.js'
@@ -327,7 +328,7 @@ export function buildSmsMessage(reservation: Reservation, settings: StoreSetting
   const labels = marketConfig.smsLabels
   const orderLines = getReservationOrderLines(reservation)
 
-  if (marketConfig.market === 'AU' && orderLines.length > 1) {
+  if (marketConfig.market === 'AU' && (orderLines.length > 1 || getChocolateProduct(reservation.productId))) {
     const itemLines = orderLines.map((line, index) => `${index + 1}. ${formatOrderLineSummary(line)}`).join('\n')
     return `${labels.title}
 
@@ -392,11 +393,11 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.customerName,
     reservation.customerPhone,
     reservation.customerEmail || '',
-    getProductById(reservation.productId).name,
-    (getProductById(reservation.productId).usesSizeOptions || isCheesecakeProduct(reservation.productId)) ? formatStoredCakeSizeLabel(reservation.productId, reservation.cakeSize) : '-',
-    getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
-    usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
-    getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',
+    (marketConfig.market === 'AU' && getChocolateProduct(reservation.productId)?.name) || getProductById(reservation.productId).name,
+    marketConfig.market === 'AU' && getChocolateProduct(reservation.productId) ? '-' : (getProductById(reservation.productId).usesSizeOptions || isCheesecakeProduct(reservation.productId)) ? formatStoredCakeSizeLabel(reservation.productId, reservation.cakeSize) : '-',
+    marketConfig.market === 'AU' && getChocolateProduct(reservation.productId) ? '-' : getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
+    marketConfig.market === 'AU' && getChocolateProduct(reservation.productId) ? '-' : usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
+    marketConfig.market === 'AU' && getChocolateProduct(reservation.productId) ? '-' : getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',
     isFreshLemonCupcakeProduct(reservation.productId)
       ? `Fresh lemon zest icing ${getLemonIcingCount(reservation.productId, reservation.chocolateIcingCount)} / Dark couverture chocolate ${normalizeChocolateIcingCount(reservation.productId, reservation.chocolateIcingCount)}`
       : isCupcakeProduct(reservation.productId)

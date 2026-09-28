@@ -1,4 +1,5 @@
 import type { ChocolateExtra, ProductId } from './types.js'
+import { CHOCOLATE_EXTRA_PRICES_CENTS } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 
 export type ChocolateExtraOption = {
   value: ChocolateExtra
@@ -20,7 +21,7 @@ const ELIGIBLE_CHOCOLATE_EXTRA_PRODUCT_IDS: readonly ProductId[] = [
 export const CHOCOLATE_EXTRA_OPTIONS: readonly ChocolateExtraOption[] = [
   {
     value: 'none',
-    price: 0,
+    price: CHOCOLATE_EXTRA_PRICES_CENTS.none / 100,
     label: 'None',
     labelKo: '추가 안 함',
     description: 'No additional chocolate item.',
@@ -28,7 +29,7 @@ export const CHOCOLATE_EXTRA_OPTIONS: readonly ChocolateExtraOption[] = [
   },
   {
     value: 'eiffel-6',
-    price: 10,
+    price: CHOCOLATE_EXTRA_PRICES_CENTS['eiffel-6'] / 100,
     label: 'Eiffel Tower Chocolates · 6 pieces',
     labelKo: '에펠탑 초콜릿 · 6개',
     description: 'Six Eiffel Tower chocolates to enjoy alongside your cake.',
@@ -36,7 +37,7 @@ export const CHOCOLATE_EXTRA_OPTIONS: readonly ChocolateExtraOption[] = [
   },
   {
     value: 'pave-100g',
-    price: 12,
+    price: CHOCOLATE_EXTRA_PRICES_CENTS['pave-100g'] / 100,
     label: 'Pavé Chocolate · 100g tub',
     labelKo: '파베 초콜릿 · 100g 통',
     description: 'Rich, smooth pavé chocolate to enjoy by the spoonful, spread over your cake, or share on the side.',
@@ -44,7 +45,7 @@ export const CHOCOLATE_EXTRA_OPTIONS: readonly ChocolateExtraOption[] = [
   },
   {
     value: 'combo',
-    price: 20,
+    price: CHOCOLATE_EXTRA_PRICES_CENTS.combo / 100,
     label: 'Chocolate Extra Set',
     labelKo: '초콜릿 추가 세트',
     description: '6 Eiffel Tower chocolates + 100g Pavé Chocolate. Save AUD 2.00.',

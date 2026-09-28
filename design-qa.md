@@ -1,78 +1,124 @@
-# Design QA · Signature Gâteau desktop three-column layout
+# AU Phase 1 design QA — 2026-09-22
 
-## Evidence
+## Visual truth and scope
 
-- Source visual truth: Penpot board `AU Cake · Desktop 3-column layout · 2026-08-30` (`b8f47740-b341-802f-8008-8f92673d4a95`) in file `dfb31d12-cc0a-8037-8008-8f880a08662a`.
-- Source screenshot: `/tmp/au-cake-signature-three-column-qa/au-cake-penpot-three-column.png`.
-- Desktop implementation screenshot: `/tmp/au-cake-signature-three-column-qa/au-cake-signature-intro-left-final.png`.
-- Selected-state screenshot: `/tmp/au-cake-signature-three-column-qa/au-cake-signature-intro-left-selected-final.png`.
-- Mobile screenshot: `/tmp/au-cake-signature-three-column-qa/au-cake-signature-intro-left-mobile-final.png`.
-- Source/implementation comparison: `/tmp/au-cake-signature-three-column-qa/au-cake-intro-left-comparison.png`.
-- Supplied option-photo comparison: `/tmp/au-cake-signature-three-column-qa/au-cake-option-assets-comparison.png`.
-- Option-photo desktop states: `/tmp/au-cake-signature-three-column-qa/au-cake-option-assets-basic.png` and `/tmp/au-cake-signature-three-column-qa/au-cake-option-assets-combo.png`.
-- Option-photo mobile state: `/tmp/au-cake-signature-three-column-qa/au-cake-option-assets-mobile.png`.
-- Route: `http://127.0.0.1:4173/cakes/signature-gateau-au-chocolat` through the existing SSH tunnel.
+Source: `/Users/nam9295/Desktop/john_2.0/code/au-cake-redesign-ui/design/au-site-redesign.pen`.
+Pencil was read/exported only, never edited or saved. Source exports and browser
+captures are in `/tmp/au-phase1-evidence.7l2v4J/` (temporary local evidence).
 
-## Viewport and normalization
+The approved scope preserves the existing Home checkpoint and real catalogue/
+order behaviour. Pencil supplies Category/Detail visual structure, not authority
+to invent prices, products, options or API capabilities. This is not a claim of
+pixel-identical content or deployment approval.
 
-- Penpot export: 1660 × 1250 px at density 1.
-- Desktop implementation: 1440 × 1000 CSS px at device pixel ratio 2; screenshot normalized to 1440 × 1000 px by the browser capture API.
-- Mobile implementation: 390 × 844 CSS px at device pixel ratio 2; screenshot normalized to 390 × 844 px by the browser capture API.
-- The comparison scales the Penpot board and implementation to the same 1000 px height and aligns their top edges. Existing site chrome is present only in the implementation and is treated as a protected product constraint.
+| Surface | Source export (pixels) | Implementation capture (pixels) |
+|---|---|---|
+| Home | `reference/OUT4W.png` — 1440×5464 | `au-home-desktop-final.png` — 1440×5094 |
+| Cakes | `reference/tdTeb.png` — 1440×1545 | `au-cakes-desktop-final.png` — 1440×1543 |
+| Chocolates | `reference/PaIjR.png` — 1440×1259 | `au-chocolates-desktop-final.png` — 1440×1313 |
+| Cake | `reference/w5Rrb.png` — 1440×2102 | `au-cake-desktop-final.png` — 1440×4122 |
+| Cupcake | `reference/zc4Cp.png` — 1440×1412 | `au-cupcake-desktop-final.png` — 1440×3468 |
+| Chocolate | `reference/XipLI.png` — 1440×1244 | `au-chocolate-desktop-final.png` — 1440×1677 |
+| Custom | `reference/yfHvZ.png` — 1440×1566 | `au-custom-desktop-final.png` — 1440×4694 |
+| Mobile Cakes | `reference/EWUnk.png` — 390×1359 | `au-cakes-mobile-final.png` — 390×1760 |
+| Mobile Cake | `reference/UYySr.png` — 390×1360 | `au-cake-mobile-final.png` — 390×4950 |
+| Mobile Cupcake | `reference/F7gL9a.png` — 390×1072 | `au-cupcake-mobile-final.png` — 390×4727 |
 
-## State and interactions
+Viewport: desktop 1440×1000 CSS px; mobile 390×844. deviceScaleFactor 1 and
+Pencil export scale 1. Equal-width content was compared, not scaled page heights.
+No browser chrome. The local-demo notice adds 32px desktop/48px mobile and is
+an environment difference. The pre-existing contact launcher remains.
 
-- Initial state: Basic finish, no Chocolate Extra, quantity 1.
-- Selected state: Vanilla cream and Eiffel Tower Chocolates · 6 pieces.
-- Re-tested Vanilla cream and Eiffel selection after moving the product introduction; both preview images, selected buttons, price, and checkout summary updated together.
-- Desktop layout metrics at 1440 px: hero tracks `518.492px 425.164px 321.461px`; vertical gallery rail `72px`; option preview `112 × 88px`; sticky checkout `top: 72px`; document width `1440px` with no horizontal overflow.
-- Mobile layout metrics at 390 px: desktop intro `display: none`; standard intro `display: block`; no horizontal overflow.
-- Supplied-photo pass: Basic, extra chocolate, vanilla cream, Eiffel 6, Pavé 100g, and Chocolate Extra Set each resolved to its dedicated WebP. Desktop previews measured `112 × 88px`; mobile previews measured `88 × 69px`.
-- Shared-extra pass: the Pave detail reused the Chocolate Extra Set image. Fresh Strawberry Vanilla retained no Chocolate Extras heading or option buttons, matching the product eligibility contract.
-- The local page displayed no application error surface during the tested flow. Direct console collection is not exposed by the connected browser API.
+## Comparison evidence and state
 
-## Fidelity review
+Full source/implementation pairs were opened together in the same comparison
+input. Focused `au-{cake,cupcake}-{desktop,mobile}-{top,options}-final.png`
+captures were checked against detail frames for readable type and controls.
+Lazy images were scrolled into view and decoded before capture. Final galleries
+reset horizontal thumbnail scroll, then return to the first photo/page top.
 
-- Fonts and typography: Existing Work Sans regular/bold is preserved. The title remains a two-line hierarchy at 1440 px.
-- Spacing and layout rhythm: Gallery, configurator, and checkout form three clear columns above 1200 px. The approved follow-up moves the eyebrow, title, description, and badges above the left gallery, so the centre column begins directly with `Choose a finish` and the previous empty space under the right-side introduction is removed. Vertical thumbnails remove the empty horizontal strip, and the checkout remains visible while the option column scrolls.
-- Colors and visual tokens: Existing forest, cream, mint, border, and muted tokens are reused; no new gradient, radius system, or shadow language was introduced.
-- Image quality and fidelity: The six supplied transparent WebPs are used without editing. Their subjects remain fully visible on the existing cream preview surface. The gallery content is unchanged, and the desktop finish/extra preview stays 112 × 88 px.
-- Copy and content: Existing product, option, price, and ordering copy is retained. The desktop checkout summary exposes the selected finish and Chocolate Extra without duplicating the product title.
-- Responsive behavior: The three-column selectors are scoped to `detail.id === 'signature-gateau'` and `@media (min-width: 1200px)`. Existing 980 px tablet and 760 px mobile rules remain intact. At 390 px, the desktop duplicate is hidden, the original introduction remains in the configurator flow, and the page has no horizontal overflow.
-- Accessibility: Existing fieldsets, legends, `aria-pressed`, live regions, alt text, quantity labels, and add-to-order status remain present in the browser accessibility snapshot.
+Default Cake: 6-inch, no extras, quantity 1. Default Cupcake: 12, Basic, no
+individual packaging, quantity 1. Default-state cart is empty. All tested
+visible images loaded successfully.
 
-## Findings
+## Findings and comparison history
 
-- No actionable desktop or mobile P0, P1, or P2 findings remain in the combined comparison and responsive captures.
-- No option-photo follow-up finding remains: the temporary finish crops and single Eiffel placeholder have been replaced by the six supplied assets.
+1. P2: inherited `main` width added a Category inset, with narrow rail and
+   over-tall cards. Set AU Category width 100%, rail 232px/48px gap, compact
+   card header/image rhythm and 480px feature photo. Re-captured and compared
+   `au-cakes-desktop-final.png` with `tdTeb.png`.
+2. P2: inherited definition styles right-aligned/bolded long ingredient text.
+   Scoped left alignment/regular weight to AU specifications. Final Cake and
+   Cupcake captures show readable left-aligned information.
+3. P2: three Chocolate products used four tracks, leaving an empty column.
+   Browser measured four 254px tracks. Set the AU chocolate category to three
+   columns; re-measured three 344px tracks and re-compared the final capture
+   with `PaIjR.png`. Mobile remains two 170px tracks with no page overflow.
+4. Home release polish: removed `COPY TBD`, reused the existing public H1,
+   made Best product links keyboard-operable, and added the collection hash
+   target. No Pencil composition edit was made.
 
-## Comparison history
+No actionable P0/P1/P2 issue remains within the constrained Phase 1 scope.
 
-1. The first full comparison found a P2 title-wrap mismatch: the implementation used three lines while the Penpot source used two.
-2. The first focused comparison found a P2 CTA-shape mismatch and redundant product title in the sticky checkout summary.
-3. Reduced the Signature desktop title to `clamp(36px, 2.8vw, 40px)`, removed the redundant desktop product title, and scoped the CTA to a square corner.
-4. Re-captured both initial and Vanilla/Eiffel states. The revised desktop comparison has no actionable P0/P1/P2 findings.
-5. Following review, moved the complete product introduction above the left gallery for Signature desktop only. The centre now starts with finish selection, while tablet/mobile retain the original reading order.
-6. Captured the updated 1440 px initial/selected states and a true 390 px mobile state. The responsive pass has no horizontal overflow or duplicate visible introduction.
-7. Replaced every Gâteau finish and paid Chocolate Extra preview with supplied transparent WebPs, then compared the six originals beside the 1440 px selected state.
-8. Confirmed all six mappings, Pave reuse, Strawberry exclusion, checkout pricing, 112 × 88 desktop previews, 88 × 69 mobile previews, and zero horizontal overflow.
+## Required fidelity surfaces
 
-## Automated verification
+- Fonts/typography: existing font families/fallbacks retained; editorial
+  hierarchy, weights and small control text checked in focused captures.
+  Real catalogue names wrap differently from mock labels. No new font dependency.
+- Spacing/layout: thin dividers, desktop rail, four-column Cakes/three-column
+  Chocolates, horizontal mobile category navigation/two columns. Details are
+  photo-first on mobile, with horizontal thumbnails and a desktop sticky
+  configurator. Actual options, reviews and Custom form make pages longer.
+- Colors/tokens: white, `#1F5A46`, `#352F31` and approved pink/berry variables
+  are AU-scoped. New components introduce no shadow, gradient or glass.
+  Pre-existing contact launcher and legacy routes retain their styles.
+- Images: existing product photos and approved Pencil placeholders retained.
+  No generated replacement marks, remote stock dependency or absolute local
+  image URL. Chocolate reference photography is labelled and deferred for replacement.
+- Copy/content: real catalogue/pricing override illustrative labels. Cakes has
+  seven orderable products. Only Almond's confirmed 80g/AUD 12 is shown for
+  chocolates; no fabricated purchase, 5+1, black-tub or Pavé/Eiffel price.
+  Custom promises original interpretation, not copying; no new upload API,
+  response-time or availability promise was added.
 
-- `npm run test:cake`: 275 AU tests and 3 KR boundary tests passed.
-- `npm run lint`: passed.
-- `npm run build`: passed; Vite emitted the pre-existing large-chunk advisory only.
-- `git diff --check`: passed before the final report update.
+## Intentional differences and follow-up
 
-## Implementation checklist
+- Home retains the approved `398093e` unified catalogue/filter composition and
+  original tiger/background styling, rather than replacing it with Pencil's
+  illustrative separate collections. Existing Home Coming Soon entries remain;
+  the new orderable Category excludes unavailable entries.
+- Existing sizes, pack counts, finish/packaging controls, notices, reviews and
+  complete Custom form take more space than the abbreviated mock. The optional
+  sticky-bottom CTA was not added; mobile purchase CTA is 52px high.
+- Chocolate entries are preview-only and noindex. The isolated demo cannot
+  submit Custom requests; live submission was intentionally not tested/changed.
+- P3: replace approved placeholder photography in the later asset phase.
+- Nonblocking test follow-up: full-App KR SSR coverage; current automated
+  baseline tests cover pages and browser checks cover the full shell.
 
-- [x] Scope the layout to Signature Gâteau and desktop ≥ 1200 px.
-- [x] Keep the gallery content unchanged and use vertical thumbnails.
-- [x] Keep the 112 × 88 finish preview.
-- [x] Render Chocolate Extras in a 2 × 2 desktop grid.
-- [x] Keep quantity, selected options, CTA, and notice in a sticky checkout.
-- [x] Preserve tablet/mobile rules and other cake detail layouts.
-- [x] Verify desktop interactions and compare source/implementation together.
-- [x] Capture the current implementation at a true 390 px browser viewport.
+## Browser and interaction results
+
+AU desktop: Home, Cakes, all seven real product routes, Custom, Chocolates and
+all three unavailable chocolate details. 390px: Cakes, Cake and Cupcake.
+No horizontal page overflow or broken visible images in these captures.
+Mobile MENU opens; Escape closes it and returns focus to MENU.
+
+- Cupcake: 6-pack Vanilla Fresh Cream AUD 35, packaging 6×AUD 0.50, quantity 2
+  = AUD 76. Cart/reservation retain pack, finish, quantity and 12-piece/AUD 6
+  packaging. Evidence: `au-cart-cupcake-mobile.png`,
+  `au-reservation-cupcake-mobile.png`. No reservation was submitted.
+- Cake: 8-inch AUD 109 ×2 plus existing per-order Pavé extra AUD 12 = AUD 230.
+  Options/total survive cart navigation (`au-cart-cake-desktop.png`).
+- Only this isolated browser's test cart lines were removed afterwards.
+- KR Home/Cakes: zero AU shells/templates/matching AU CSS rules; original
+  footer and announcement visible. KR's actual category link opens legacy
+  `/cakes/custom-cake`, also with no AU shell/template and visible footer/
+  announcement. Evidence: `kr-{home,cakes,custom}-desktop-final.png`.
+- AU-only `/cakes/pave-chocolate-cake` remains not-found in KR; that capture
+  is not counted as successful KR detail coverage.
+- Console/page-error monitoring during all seven AU details and remaining
+  chocolate previews reported zero errors; final console error query was empty.
+- Local AU/KR servers used blank external backend settings and blocked external
+  requests except fonts. No external order/form submission was performed.
 
 final result: passed

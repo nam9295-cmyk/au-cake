@@ -1,6 +1,7 @@
 import type { ProductId } from './types.js'
 
 export const INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE = 50
+export const INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS = 10_000
 
 export type IndividualPackagingLine = {
   productId: ProductId
@@ -20,14 +21,10 @@ export type IndividualPackagingPricing = {
 const INDIVIDUAL_PACKAGING_PIECES_BY_PRODUCT: Partial<Record<ProductId, number>> = {
   'cupcake-half-dozen': 6,
   'cupcake-dozen': 12,
-  'cupcake-twenty-four': 24,
-  'cupcake-forty-eight': 48,
   'fresh-lemon-cupcakes-6': 6,
   'fresh-lemon-cupcakes-8': 8,
   'fresh-lemon-cupcakes-12': 12,
   'fresh-lemon-cupcakes-16': 16,
-  'fresh-lemon-cupcakes-24': 24,
-  'fresh-lemon-cupcakes-48': 48,
 }
 
 export function isIndividualPackagingEligibleProduct(productId: ProductId) {
@@ -48,11 +45,14 @@ export function calculateIndividualPackagingBaseFeeCents(selectedPackagingPieces
 
 export function calculateIndividualPackagingFeeCents(
   selectedPackagingPieces: number,
-  _selectedPackagingProductSubtotalCents = 0,
+  selectedPackagingProductSubtotalCents = 0,
 ) {
-  void _selectedPackagingProductSubtotalCents
   const baseFeeCents = calculateIndividualPackagingBaseFeeCents(selectedPackagingPieces)
-  return baseFeeCents
+  if (!baseFeeCents) return 0
+  return Number.isSafeInteger(selectedPackagingProductSubtotalCents)
+    && selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
+    ? 0
+    : baseFeeCents
 }
 
 export function getIndividualPackagingPricing(lines: readonly IndividualPackagingLine[]): IndividualPackagingPricing {
