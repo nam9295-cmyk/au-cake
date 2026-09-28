@@ -1,7 +1,6 @@
 import { Query } from 'node-appwrite'
 import { ReservationApiError } from './business.js'
 import { SMORE_WRITES_ENABLED } from './smore-write-policy.js'
-import { CHOCOLATE_WRITES_ENABLED } from './chocolate-write-policy.js'
 
 const APPWRITE_INTEGER_MAX = 9_223_372_036_854_775_807n
 
@@ -15,7 +14,7 @@ function sameIntegerBound(current, expected) {
   }
 }
 
-export async function checkReservationReadiness(databases, runtimeConfig, { chocolateWritesEnabled = CHOCOLATE_WRITES_ENABLED } = {}) {
+export async function checkReservationReadiness(databases, runtimeConfig) {
   await databases.listDocuments({
     databaseId: runtimeConfig.cakeDatabaseId,
     collectionId: runtimeConfig.settingsId,
@@ -231,7 +230,6 @@ export async function checkReservationReadiness(databases, runtimeConfig, { choc
     status: 'ready',
     capabilities: {
       cakeOrderLines: 1,
-      ...(chocolateWritesEnabled ? { chocolateOrderLines: 1 } : {}),
       smoreStoredOrders: 1,
       smoreWrites: SMORE_WRITES_ENABLED ? 1 : 0,
     },

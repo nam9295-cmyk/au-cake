@@ -8,7 +8,7 @@ import { customCakeSchemaTargets } from '../appwrite-functions/reservation-api/s
 import { createCustomCakeRepository } from '../appwrite-functions/reservation-api/src/custom-cake-persistence.js'
 import { scanCustomCakeSnapshots } from '../appwrite-functions/reservation-api/src/custom-cake-list.js'
 const fixture = n => JSON.parse(readFileSync(new URL(`./fixtures/custom-cake-contract/${n}.json`, import.meta.url)))
-const custom = () => { const d = fixture('custom-v1').request; d.lines[0].photoRefs = []; return d }
+const custom = () => { const d = fixture('custom-v1').request; d.lines[0].photoRefs = []; d.lines[1].quantity = 10; return d }
 const admin = { 'x-appwrite-user-id': 'admin-1', 'x-appwrite-user-jwt': 'valid-admin-jwt' }
 const photoWire = 'custom-cake-photo.v1'
 const scopes = ['functions.read', 'databases.read', 'collections.read', 'documents.read', 'documents.write', 'buckets.read', 'files.read', 'files.write']
@@ -46,6 +46,17 @@ export async function harness({ smoreWritesEnabled = true } = {}) {
   const config = { enabled: true, databaseId: 'test-db', bucketId: targets.bucket.bucketId, ...Object.fromEntries(targets.collections.map(c => [c.kind, c.collectionId])) }
   return { call, handler, env, sdk, storage, files, services, repository: createCustomCakeRepository(sdk, config), clock: value => { time = new Date(value) } }
 }
+
+test('actual handler refuses incomplete custom S’more sets without saving an order', async () => {
+  for (const quantity of [1, 2, 9, 11, 25]) {
+    const h = await harness(), request = custom()
+    request.lines[1].quantity = quantity
+    const response = await h.call('create-custom-cake-request', request)
+    assert.equal(response.status, 400)
+    assert.equal(response.body.code, 'INVALID_REQUEST')
+    for (const kind of ['claims', 'snapshots', 'outbox']) assert.equal((await h.repository.list(kind)).length, 0)
+  }
+})
 
 test('actual handler rejects out-of-period promos without creating orders but permits ordinary orders', async () => {
   for (const [receivedAt, pickupDate] of [

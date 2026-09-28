@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
 const execFileAsync = promisify(execFile)
-const PHASES = new Set(['checkpoint', 'full'])
+const PHASES = new Set(['compatibility', 'full'])
 
 function assertPhase(phase) {
   if (!PHASES.has(phase)) throw new Error('Unknown Reservation API deployment phase')
@@ -21,11 +21,7 @@ export async function createReservationApiArchive({ repositoryRoot = process.cwd
     await cp(functionDir, stagingDir, { recursive: true })
     await writeFile(
       join(stagingDir, 'src/smore-write-policy.js'),
-      'export const SMORE_WRITES_ENABLED = true\n',
-    )
-    await writeFile(
-      join(stagingDir, 'src/chocolate-write-policy.js'),
-      `export const CHOCOLATE_WRITES_ENABLED = ${phase === 'full'}\n`,
+      `export const SMORE_WRITES_ENABLED = ${phase === 'full'}\n`,
     )
     await execFileAsync('tar', ['-czf', archivePath, '-C', stagingDir, 'package.json', 'package-lock.json', 'src'])
     return {
@@ -39,17 +35,10 @@ export async function createReservationApiArchive({ repositoryRoot = process.cwd
   }
 }
 
-async function confirmHealthyDeployment(waitForActivation, verifyHealth, deploymentId, phase) {
-  await waitForActivation(deploymentId)
-  await verifyHealth(phase)
-  await waitForActivation(deploymentId)
-}
-
-async function restore({ activateDeployment, waitForActivation, verifyHealth }, deploymentId, phase, originalError) {
+async function restore(activateDeployment, deploymentId, originalError) {
   if (!deploymentId) throw originalError
   try {
     await activateDeployment(deploymentId)
-    await confirmHealthyDeployment(waitForActivation, verifyHealth, deploymentId, phase)
   } catch (rollbackError) {
     throw new AggregateError([originalError, rollbackError], `Reservation API rollout failed and deployment ${deploymentId} could not be restored`)
   }
@@ -61,18 +50,16 @@ export async function runReservationApiRollout({
   createDeployment,
   waitForDeployment,
   activateDeployment,
-  waitForActivation,
   verifyHealth,
 }) {
-  const rollback = { activateDeployment, waitForActivation, verifyHealth }
-  let checkpoint
+  let compatibility
   try {
-    checkpoint = await createDeployment('checkpoint')
-    await waitForDeployment(checkpoint.$id)
-    await activateDeployment(checkpoint.$id)
-    await confirmHealthyDeployment(waitForActivation, verifyHealth, checkpoint.$id, 'checkpoint')
+    compatibility = await createDeployment('compatibility')
+    await waitForDeployment(compatibility.$id)
+    await activateDeployment(compatibility.$id)
+    await verifyHealth('compatibility')
   } catch (error) {
-    return restore(rollback, previousDeploymentId, 'previous', error)
+    return restore(activateDeployment, previousDeploymentId, error)
   }
 
   let full
@@ -80,13 +67,13 @@ export async function runReservationApiRollout({
     full = await createDeployment('full')
     await waitForDeployment(full.$id)
     await activateDeployment(full.$id)
-    await confirmHealthyDeployment(waitForActivation, verifyHealth, full.$id, 'full')
+    await verifyHealth('full')
   } catch (error) {
-    return restore(rollback, checkpoint.$id, 'checkpoint', error)
+    return restore(activateDeployment, compatibility.$id, error)
   }
 
   return {
-    checkpointDeploymentId: checkpoint.$id,
+    compatibilityDeploymentId: compatibility.$id,
     fullDeploymentId: full.$id,
   }
 }

@@ -84,16 +84,16 @@ test('only Cupcakes and Lemon Cake expose the bilingual individual packaging cho
   assert.match(detailSource, /isIndividualPackagingEligibleProduct\(product\.id\)/)
   assert.match(detailSource, /Individual packaging/)
   assert.match(detailSource, /개별 포장/)
-  assert.match(detailSource, /AUD 0\.50 per piece · FREE with AUD 100\.00\+ of individually packaged cupcakes or Lemon Cake/)
+  assert.match(detailSource, /AUD 0\.50 per piece/)
+  assert.doesNotMatch(detailSource, /FREE with AUD 100\.00/)
   assert.match(reserveSource, /isIndividualPackagingEligibleProduct\(selectedProduct\.id\)/)
   assert.match(reserveSource, /name="individualPackaging"/)
 })
 
-test('cake detail makes a free individual-packaging discount visible as a negative AUD amount before the final total', () => {
-  assert.match(detailSource, /individualPackagingDiscountCents/)
-  assert.match(detailSource, /Packaging discount/)
-  assert.match(detailSource, /포장 할인/)
-  assert.match(detailSource, /-\{formatCurrency\(individualPackagingDiscount/)
+test('cake detail does not advertise an individual-packaging discount', () => {
+  assert.doesNotMatch(detailSource, /Packaging discount/)
+  assert.doesNotMatch(detailSource, /포장 할인/)
+  assert.doesNotMatch(detailSource, /FREE/)
 })
 
 test('new cream-cake order forms hide retired flavour controls and call Buttercream colours point colours', () => {
@@ -271,7 +271,9 @@ test('current whole-cake previews keep one frame while size and Buttercream poin
 test('Lemon uses the shared compact editorial while retaining its current pack, finishing, and individual packaging controls', () => {
   assert.match(editorialDataSource, /'lemon-cake'/)
   assert.match(detailSource, /isFreshLemonCupcakeProduct\(product\.id\)/)
-  assert.match(detailSource, /Dark chocolate finish pieces/)
+  assert.match(detailSource, /All lemon zest/)
+  assert.match(detailSource, /Half & half/)
+  assert.match(detailSource, /All dark chocolate/)
   assert.match(detailSource, /Individual packaging/)
   assert.doesNotMatch(homeSource, /Lemon-shaped cakes filled with fresh lemon cream/)
   assert.doesNotMatch(homeSource, /레몬 모양 케이크에 상큼한 레몬 크림을 채우고/)
@@ -291,16 +293,20 @@ test('Lemon Cake and Chocolate Cupcakes use their matching individual packaging 
   assert.match(detailSource, /import lemonIndividualPackagingPreviewImg from '\.\/assets\/options\/individual-packaging\.webp'/)
   assert.match(detailSource, /import cupcakeIndividualPackagingPreviewImg from '\.\/assets\/options\/individual-packaging-cupcake\.webp'/)
   assert.match(detailSource, /isCupcakeProduct\(product\.id\)[\s\S]*?cupcakeIndividualPackagingPreview[\s\S]*?isFreshLemonCupcakeProduct\(product\.id\)[\s\S]*?lemonIndividualPackagingPreview/)
-  assert.match(detailSource, /image=\{selectedIndividualPackagingPreview\.image\}[\s\S]*?muted=\{!selection\.individualPackaging\}/)
+  assert.match(detailSource, /image=\{selectedIndividualPackagingPreview\.image\}[\s\S]*?selected=\{selection\.individualPackaging\}/)
 
   const previewIndex = detailSource.indexOf('image={selectedIndividualPackagingPreview.image}')
   const checkboxIndex = detailSource.indexOf('name="individualPackaging"')
   assert.ok(previewIndex >= 0)
   assert.ok(previewIndex < checkboxIndex)
-  const mutedPreviewStyle = cssSource.match(/\.cake-detail-option-preview\.is-muted img\s*\{([^}]*)\}/s)?.[1]
-  assert.ok(mutedPreviewStyle)
-  assert.match(mutedPreviewStyle, /filter:\s*grayscale\(1\)/)
-  assert.doesNotMatch(mutedPreviewStyle, /opacity:/)
+  assert.doesNotMatch(cssSource, /\.cake-detail-option-preview\.is-muted img/)
+})
+
+test('individual packaging preview is colour by default and gains the brand-pink selection outline', () => {
+  assert.match(detailSource, /selected=\{selection\.individualPackaging\}/)
+  assert.doesNotMatch(detailSource, /muted=\{!selection\.individualPackaging\}/)
+  assert.match(cssSource, /\.cake-detail-option-preview\.is-selected\s*\{[^}]*border-color:\s*var\(--pink, #e11d48\)/s)
+  assert.doesNotMatch(cssSource, /\.cake-detail-option-preview\.is-muted img\s*\{[^}]*grayscale/s)
 })
 
 test('Pave editorial reuses live catalogue cards and the existing add-to-order callbacks', () => {

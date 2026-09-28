@@ -117,7 +117,7 @@ test('wire types reject final-null, missing line identity, wrong tier and legacy
     ['C.CustomCakeQuote', { ...custom.created.quote, isFinalQuote: true }],
     ['C.CustomCakeQuote', { ...custom.zeroExtrasQuote, isFinalQuote: false, finalTotalCents: null }],
     ['C.CustomCakeLine', { ...custom.request.lines[0], tier: 'double', size: '6in' }],
-    ['W.SmorePricedLine', { ...v2.smoreCases[1], discountPercent: 10 }],
+    ['W.SmorePricedLine', { ...v2.smoreCases[1], discountPercent: 20 }],
     ['V.CakeOrderV2Request', { ...v2.request, pricing: v2.created.pricing }],
     ['C.CustomCakeCreateResponse', { ...custom.created, acceptance: { acceptedQuoteVersion: 1, acceptedAt: '2026-09-09T00:00:00.000Z' } }],
     ['C.CustomCakeCreateResponse', { ...custom.created, quote: { ...custom.created.quote, designExtraCents: 0 } }],

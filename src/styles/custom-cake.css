@@ -24,6 +24,16 @@
   justify-content: space-between;
   gap: 16px;
   padding: 8px 0;
+  flex-wrap: wrap;
+}
+
+.cake-detail-quantity.custom-cake-smore-quantity {
+  grid-template-columns: 44px minmax(120px, auto) 44px;
+}
+
+.custom-cake-smore-quantity output {
+  min-width: 120px;
+  font-size: 13px;
 }
 
 .custom-cake-smore-counter-row strong {

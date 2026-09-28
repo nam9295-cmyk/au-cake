@@ -160,17 +160,12 @@ export function isReadyCakeOrderLinesHealth(responseStatusCode, response) {
     response.result?.capabilities?.cakeOrderLines === 1
 }
 
-export function isReadyReservationRolloutHealth(responseStatusCode, response, phase, market = 'AU') {
-  const capabilities = response?.result?.capabilities
-  return ['previous', 'checkpoint', 'full'].includes(phase) &&
-    ['AU', 'KR'].includes(market) &&
+export function isReadyReservationRolloutHealth(responseStatusCode, response, phase) {
+  const expectedWrites = phase === 'compatibility' ? 0 : phase === 'full' ? 1 : null
+  return expectedWrites !== null &&
     isReadyCakeOrderLinesHealth(responseStatusCode, response) &&
-    capabilities.smoreStoredOrders === 1 &&
-    capabilities.smoreWrites === 1 &&
-    (market === 'KR' || phase === 'previous' ||
-      (phase === 'checkpoint'
-        ? !Object.hasOwn(capabilities, 'chocolateOrderLines')
-        : capabilities.chocolateOrderLines === 1))
+    response.result.capabilities.smoreStoredOrders === 1 &&
+    response.result.capabilities.smoreWrites === expectedWrites
 }
 
 export function buildHealthFailureDiagnostic(execution = {}, secrets = []) {

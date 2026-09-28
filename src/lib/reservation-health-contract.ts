@@ -34,14 +34,6 @@ export function parseReservationApiCapabilities(value: unknown): ReservationApiC
   const row = readExactPlainDataRecordSnapshot(value, ['status', 'capabilities'])
   if (!row || row.status !== 'ready') invalidResponse()
 
-  const chocolateCapabilities = readPlainDataRecordSnapshot(row.capabilities)
-  if (chocolateCapabilities && Object.hasOwn(chocolateCapabilities, 'chocolateOrderLines')) {
-    if (chocolateCapabilities.chocolateOrderLines !== 1) invalidResponse()
-    const { chocolateOrderLines: _chocolate, ...previous } = chocolateCapabilities
-    void _chocolate
-    return { ...parseReservationApiCapabilities({ status: 'ready', capabilities: previous }), chocolateOrderLines: 1 }
-  }
-
   const legacyCapabilities = readExactPlainDataRecordSnapshot(row.capabilities, ['cakeOrderLines'])
   if (legacyCapabilities?.cakeOrderLines === 1) return { cakeOrderLines: 1 }
 

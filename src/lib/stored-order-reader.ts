@@ -1,6 +1,5 @@
 // Browser compatibility projection. No Appwrite writes or new-order submission.
-import { isStoredCakeOrderProductId, getStoredChocolateProduct, isStoredProductCouponEligible } from './stored-order-policy'
-import { CHOCOLATE_OPTIONS_V1 } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
+import { isStoredCakeOrderProductId } from './stored-order-policy'
 import { DEFAULT_CHOCOLATE_TYPE, DEFAULT_POUND_ADDON, MAX_RESERVATION_QUANTITY, LEMON_PROMO_CODE, PROMO_CODE, PRODUCTS, fromCurrencyCents, getProductById, getCupcakeFinishSurcharge, getValidPromoCode, toCurrencyCents, getReservationPrice, normalizeChocolateIcingCount, normalizeCupcakeFinish, normalizeCupcakeFinishCounts, normalizeVanillaCakePointColor, normalizeStoredVanillaCakeFlavor, normalizeStoredVanillaCakeSheet, usesReservationChocolateType, normalizePoundAddon } from './stored-order-policy'
 import { isHistoricalWholeCakeSize, isHistoricalWholeCakeUnitPrice, normalizeStoredCakeSize } from './stored-order-policy'
 import type { ReservationPriceOptions } from './stored-order-policy'
@@ -72,7 +71,12 @@ function normalizedLineUnitPriceCents(
   productId: ProductId,
   line: ReservationPriceOptions & { cupcakeFinish?: unknown },
   legacyCupcakeCounts: boolean,
+  quantity: number,
 ) {
+  if (productId === 'smore-stick') {
+    const currentSetPriceCents: Partial<Record<number, number>> = { 10: 350, 25: 300, 50: 270 }
+    return currentSetPriceCents[quantity] ?? 450
+  }
   const currentPrice = Math.round(getReservationPrice(productId, line) * 100)
   return legacyCupcakeCounts && productId === 'cupcake-dozen'
     ? currentPrice + Math.round(getCupcakeFinishSurcharge(productId, line.vanillaCreamCount, line.partyDecorationCount) * 100)
@@ -85,6 +89,22 @@ const LEGACY_STORED_UNIT_PRICE_CENTS: Partial<Record<ProductId, Partial<Record<C
   'buttercream-cake': { '15cm': [7500], '19cm': [9800], '22cm': [13900] },
   'brownie-cheesecake': { '15cm': [5800] },
   'pave-brownie-cheesecake': { '15cm': [6800] },
+  'cupcake-half-dozen': { '15cm': [3100, 3600, 4100] },
+}
+
+function isLegacyLemonCupcakeUnitPrice(
+  productId: ProductId,
+  chocolateIcingCount: number,
+  unitPriceCents: number,
+) {
+  const legacyBasePriceCents: Partial<Record<ProductId, number>> = {
+    'fresh-lemon-cupcakes-6': 3600,
+    'fresh-lemon-cupcakes-8': 4500,
+    'fresh-lemon-cupcakes-12': 6500,
+    'fresh-lemon-cupcakes-16': 8500,
+  }
+  const basePriceCents = legacyBasePriceCents[productId]
+  return basePriceCents !== undefined && unitPriceCents === basePriceCents + chocolateIcingCount * 50
 }
 
 function isApprovedStoredUnitPriceCents(
@@ -94,11 +114,14 @@ function isApprovedStoredUnitPriceCents(
   storedUnitPriceCents: number,
   allowHistoricalUnitPrice: boolean,
   hasBrownieCreamOption: boolean,
+  chocolateIcingCount = 0,
 ) {
   return (isCurrentStoredCakeSize(productId, cakeSize) && storedUnitPriceCents === currentUnitPriceCents)
     || (allowHistoricalUnitPrice
       && !(productId === 'brownie-cheesecake' && hasBrownieCreamOption)
-      && (isHistoricalWholeCakeUnitPrice(productId, cakeSize, storedUnitPriceCents)
+      && ((productId === 'smore-stick' && storedUnitPriceCents === 450)
+        || isHistoricalWholeCakeUnitPrice(productId, cakeSize, storedUnitPriceCents)
+        || isLegacyLemonCupcakeUnitPrice(productId, chocolateIcingCount, storedUnitPriceCents)
         || (LEGACY_STORED_UNIT_PRICE_CENTS[productId]?.[cakeSize]?.includes(storedUnitPriceCents) ?? false)))
 }
 
@@ -112,11 +135,6 @@ function normalizePublicOrderLine(
   if (!line || typeof line !== 'object' || Array.isArray(line)
     || typeof line.productId !== 'string' || !isStoredCakeOrderProductId(line.productId) || !Object.hasOwn(PRODUCTS, line.productId)) throw new Error('INVALID_RESERVATION_RESPONSE')
   const product = getProductById(line.productId)
-  if (getStoredChocolateProduct(line.productId)) {
-    for (const [key, expected] of Object.entries(CHOCOLATE_OPTIONS_V1)) {
-      if (Object.hasOwn(line, key) && line[key as keyof typeof line] !== expected) throw new Error('INVALID_RESERVATION_RESPONSE')
-    }
-  }
   const poundAddon = normalizePoundAddon(product.id, line.poundAddon || DEFAULT_POUND_ADDON)
   const normalized = {
     productId: product.id,
@@ -171,7 +189,7 @@ function normalizePublicOrderLine(
     || (hasPackagingFields && packagingKeys.some((key) => !Number.isSafeInteger(priced[key]) || (priced[key] as number) < 0))) {
     throw new Error('INVALID_RESERVATION_RESPONSE')
   }
-  const unitPriceCents = normalizedLineUnitPriceCents(product.id, normalized, legacyCupcakeCounts)
+  const unitPriceCents = normalizedLineUnitPriceCents(product.id, normalized, legacyCupcakeCounts, line.quantity)
   const chocolateExtraCents = Object.hasOwn(priced, 'chocolateExtraCents')
     ? priced.chocolateExtraCents as number
     : 0
@@ -193,6 +211,7 @@ function normalizePublicOrderLine(
       approvedUnitPriceCents,
       allowHistoricalUnitPrice,
       Object.hasOwn(line, 'brownieCreamOption'),
+      normalized.chocolateIcingCount,
     )
     || priced.subtotalCents !== approvedUnitPriceCents * line.quantity + chocolateExtraCents
     || individualPackagingPieces !== expectedPackagingPieces
@@ -282,6 +301,7 @@ function validateOrderPricing(
   const expectedPackagingFeeCents = selectedPackagingProductSubtotalCents >= INDIVIDUAL_PACKAGING_FREE_FROM_PRODUCT_SUBTOTAL_CENTS
     ? 0
     : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
+  const currentPackagingFeeCents = individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
   const legacyPackagingFeeCents = individualPackagingPieces >= 100
     ? 0
     : individualPackagingPieces * INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE
@@ -292,7 +312,8 @@ function validateOrderPricing(
     || aggregates.totalPriceCents !== aggregates.subtotalCents - aggregates.discountCents + individualPackagingFeeCents
     || (aggregates.individualPackagingPieces || 0) !== individualPackagingPieces
     || (aggregates.individualPackagingFeeCents || 0) !== individualPackagingFeeCents
-    || (individualPackagingFeeCents !== expectedPackagingFeeCents
+    || (individualPackagingFeeCents !== currentPackagingFeeCents
+      && individualPackagingFeeCents !== expectedPackagingFeeCents
       && (!allowLegacyPackagingFee || individualPackagingFeeCents !== legacyPackagingFeeCents))
   ) invalid()
 }
@@ -366,7 +387,7 @@ export function toPublicReservation(reservation: PublicReservation): PublicReser
     }
     const eligibleIndexes = payload.discountPercent === 0
       ? []
-      : pricedLines.map((line, index) => isStoredProductCouponEligible(line.productId) && line.discountPercent === payload.discountPercent ? index : -1).filter((index) => index >= 0)
+      : pricedLines.map((line, index) => line.productId !== 'smore-stick' && line.discountPercent === payload.discountPercent ? index : -1).filter((index) => index >= 0)
     validateOrderPricing(pricedLines, {
       subtotalCents: payload.subtotalCents!,
       discountBasisCents: payload.discountBasisCents!,
@@ -572,7 +593,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
       || (document.reviewCouponId.startsWith('manual:')
         && (!MANUAL_REVIEW_COUPON_ID_PATTERN.test(document.reviewCouponId) || aggregateDiscountPercent !== 5))
     ) invalidStoredOrder()
-    eligibleIndexes = orderLines.map((line, index) => isStoredProductCouponEligible(line.productId) ? index : -1).filter((index) => index >= 0)
+    eligibleIndexes = orderLines.map((line, index) => line.productId !== 'smore-stick' ? index : -1).filter((index) => index >= 0)
   } else if (aggregateDiscountPercent === 10) {
     if (!hasPromoLast4 || typeof document.appliedPromoCodeLast4 !== 'string'
       || !SAFE_PROMO_LAST4_PATTERN.test(document.appliedPromoCodeLast4)) invalidStoredOrder()

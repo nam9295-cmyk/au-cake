@@ -17,7 +17,6 @@ import {
 } from '../lib/constants'
 import { cakeCopy, formatChocolateTypeText, formatCupcakeFinishText, formatPoundAddonText, formatVanillaCakePointColorText, getProductText, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
-import { getChocolateProduct } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { formatCurrency } from '../lib/utils'
 import { formatStoredCakeSizeLabel } from '../lib/cake-serving'
 import type { CakeOrderLineRequest, CakeOrderLineResult, PublicReservation, Reservation } from '../lib/types'
@@ -32,12 +31,6 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
   reservation: Pick<Reservation, 'productId' | 'quantity' | 'cakeSize' | 'cacaoPercent' | 'chocolateType' | 'poundAddon' | 'cupcakeFinish' | 'brownieCreamOption' | 'chocolateIcingCount' | 'vanillaCreamCount' | 'partyDecorationCount' | 'vanillaCakeSheet' | 'vanillaCakeFlavor' | 'vanillaCakePointColor' | 'individualPackaging' | 'individualPackagingPieces' | 'individualPackagingFeeCents'>
   language?: Language
 }) {
-  const chocolate = marketConfig.market === 'AU' ? getChocolateProduct(reservation.productId) : undefined
-  if (chocolate) return <>
-    <div><dt>{language === 'ko' ? '제품' : 'Product'}</dt><dd>{chocolate.name}</dd></div>
-    <div><dt>{language === 'ko' ? '구성' : 'Sale unit'}</dt><dd>{chocolate.saleUnit}</dd></div>
-    <div><dt>{language === 'ko' ? '수량' : 'Quantity'}</dt><dd>{reservation.quantity}</dd></div>
-  </>
   const product = getProductById(reservation.productId)
   const productText = getProductText(product.id, language)
   const copy = cakeCopy(language)

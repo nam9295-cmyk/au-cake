@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createReservationApiArchive } from '../scripts/reservation-api-deploy-rollout.mjs'
 
-for (const phase of ['checkpoint', 'full']) test(`${phase} extracted archive independently imports private persistence and roundtrips stored fixtures`, async () => {
+for (const phase of ['compatibility', 'full']) test(`${phase} extracted archive independently imports private persistence and roundtrips stored fixtures`, async () => {
   const archive = await createReservationApiArchive({ phase }), extracted = await mkdtemp(join(tmpdir(), 'custom-persistence-artifact-'))
   try {
     execFileSync('tar', ['-xzf', archive.path, '-C', extracted])

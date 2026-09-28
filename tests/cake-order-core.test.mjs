@@ -7,13 +7,24 @@ import { canonicalCakeRequestPayload, normalizeCakeOrderLines } from '../appwrit
 import { getValidPromoCode } from '../appwrite-functions/reservation-api/src/cake-order-pricing.js'
 
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/order-core-golden.json', import.meta.url)))
+const SUPERSEDED_PRICING_GOLDENS = new Set([
+  'smore-1',
+  'smore-5',
+  'smore-6',
+  'smore-11',
+  'smore-12',
+  'smore-50',
+  'static-coupon',
+  'review-5-mixed',
+  'review-10-mixed',
+])
 const capture = fn => {
   try { return { value: JSON.parse(JSON.stringify(fn())) } }
   catch (error) { return JSON.parse(JSON.stringify({ error: { name: error.name, message: error.message, code: error.code, status: error.status } })) }
 }
 
 test('pure Cake storage builder matches unchanged Stage 0 creation goldens', () => {
-  for (const fixture of baseline.cases.filter(entry => entry.input)) {
+  for (const fixture of baseline.cases.filter(entry => entry.input && !SUPERSEDED_PRICING_GOLDENS.has(entry.name))) {
     const options = { customerEmailMode: 'required', cakeCatalogMode: 'compat', ...fixture.options, now: new Date(fixture.options.now) }
     assert.deepEqual(capture(() => buildCakeOrderData(fixture.input, options)), fixture.expected.built, fixture.name)
   }

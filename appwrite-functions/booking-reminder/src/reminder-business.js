@@ -8,7 +8,6 @@ import {
 import { deliverEmail } from '../shared/email-delivery/email-delivery-sender.js'
 import { escapeHtml, plainTextCell } from '../shared/email-template-safety.js'
 import { parseStoredOrderLines } from '../shared/reservation-api/business.js'
-import { getChocolateProduct, CHOCOLATE_EXTRA_PRICES_CENTS } from '../shared/reservation-api/chocolate-products.js'
 import {
   addSydneyCalendarDays,
   formatSydneyDateKey,
@@ -43,9 +42,9 @@ const CAKE_SIZE_LABELS = Object.freeze({
   '10in': '10\"',
 })
 const CHOCOLATE_EXTRA_LABELS = Object.freeze({
-  'eiffel-6': { label: 'Eiffel Tower Chocolates · 6 pieces', priceCents: CHOCOLATE_EXTRA_PRICES_CENTS['eiffel-6'] },
-  'pave-100g': { label: 'Pavé Chocolate · 100g tub', priceCents: CHOCOLATE_EXTRA_PRICES_CENTS['pave-100g'] },
-  combo: { label: 'Chocolate Extra Set', priceCents: CHOCOLATE_EXTRA_PRICES_CENTS.combo },
+  'eiffel-6': { label: 'Eiffel Tower Chocolates · 6 pieces', priceCents: 1000 },
+  'pave-100g': { label: 'Pavé Chocolate · 100g tub', priceCents: 1200 },
+  combo: { label: 'Chocolate Extra Set', priceCents: 2000 },
 })
 const CLASS_TYPE_LABELS = Object.freeze({
   'school-holiday-private-cake-class': 'Basic Cake Class',
@@ -85,8 +84,6 @@ function optionalReplyTo(value) {
 }
 
 function compactCakeLineSummary(line) {
-  const chocolate = getChocolateProduct(line?.productId)
-  if (chocolate) return `${chocolate.name} · ${chocolate.saleUnit} · × ${line.quantity}`
   if (line?.productId === 'smore-stick') {
     const quantity = Number.isSafeInteger(line.quantity) && line.quantity >= 1 ? line.quantity : 1
     return [

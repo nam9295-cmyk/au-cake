@@ -4,9 +4,9 @@ import type { Cents, Contact, LineId, Pickup, RequestId, SmorePricedLine, SmoreR
 export type CakeProductIdV2 =
   | 'pave-cake' | 'buttercream-cake'
   | 'fresh-strawberry-vanilla-cream-cake' | 'fresh-strawberry-chocolate-cream-cake'
-  | 'pound-cake' | 'cupcake-half-dozen' | 'cupcake-dozen'
-  | 'fresh-lemon-cupcakes-6' | 'fresh-lemon-cupcakes-8'
-  | 'fresh-lemon-cupcakes-12' | 'fresh-lemon-cupcakes-16'
+  | 'pound-cake' | 'cupcake-half-dozen' | 'cupcake-dozen' | 'cupcake-twenty-four' | 'cupcake-forty-eight'
+  | 'fresh-lemon-cupcakes-6'
+  | 'fresh-lemon-cupcakes-12' | 'fresh-lemon-cupcakes-24' | 'fresh-lemon-cupcakes-48'
   | 'brownie-cheesecake' | 'pave-brownie-cheesecake'
 /** Complete option shape. Product-specific acceptance remains server-owned. */
 export type CakeOptionsV2 = {

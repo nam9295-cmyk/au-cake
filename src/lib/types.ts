@@ -21,11 +21,6 @@ export type VanillaCakeFlavor = 'plain' | 'triple-berry' | 'nutella-chocolate-ch
 export type VanillaCakePointColor = 'pink' | 'red' | 'green' | 'yellow' | 'blue' | 'purple' | 'orange' | 'white'
 
 export type ProductId =
-  | 'almond-chocoball-80g'
-  | 'almond-chocoball-6pack'
-  | 'almond-chocoball-black-tub-2x80g'
-  | 'pave-chocolate-100g'
-  | 'eiffel-tower-chocolate-6'
   | 'pave-cake'
   | 'vanilla-fresh-cream-cake'
   | 'buttercream-cake'
@@ -34,6 +29,8 @@ export type ProductId =
   | 'pound-cake'
   | 'cupcake-half-dozen'
   | 'cupcake-dozen'
+  | 'cupcake-twenty-four'
+  | 'cupcake-forty-eight'
   | 'brownie-cheesecake'
   | 'pave-brownie-cheesecake'
   | 'eiffel-tower-brownie-cheesecake'
@@ -45,6 +42,8 @@ export type ProductId =
   | 'fresh-lemon-cupcakes-8'
   | 'fresh-lemon-cupcakes-12'
   | 'fresh-lemon-cupcakes-16'
+  | 'fresh-lemon-cupcakes-24'
+  | 'fresh-lemon-cupcakes-48'
   | 'smore-stick'
 
 export type ReservationStatus = '예약신청' | '예약확정' | '픽업완료' | '취소'
@@ -180,7 +179,6 @@ export type CakeOrderReservation = Omit<Reservation, 'customerEmail'> & {
 }
 
 export type ReservationApiCapabilities = {
-  chocolateOrderLines?: 1
   cakeOrderLines: 1
 }
 

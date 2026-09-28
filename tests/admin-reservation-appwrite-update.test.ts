@@ -12,7 +12,7 @@ const baseInput = {
 }
 
 for (const [name, orderLines] of [
-  ['Smore six', [{ productId: 'smore-stick', quantity: 6 }]],
+  ['Smore ten', [{ productId: 'smore-stick', quantity: 10 }]],
   ['ordinary cake', [{ productId: 'pave-cake', cakeSize: '6in', quantity: 1 }]],
 ] as const) {
   test(`${name} status-only admin update omits unchanged prices from the actual Appwrite SDK payload`, async () => {
@@ -52,7 +52,7 @@ test('status, payment and memo-only Admin writes preserve every versioned pricin
     $id: 'reservation-partial-update-integrity',
     ...buildCakeReservation({ ...baseInput, orderLines: [
       { productId: 'cupcake-half-dozen', cupcakeFinish: 'basic', quantity: 1 },
-      { productId: 'smore-stick', quantity: 6 },
+      { productId: 'smore-stick', quantity: 10 },
     ] }, {
       now,
       reservationNumber: 'VG-PARTIAL-INTEGRITY',
@@ -145,7 +145,7 @@ test('partial mixed stored envelope cannot downgrade while genuine nullable lega
     $id: 'reservation-corrupted-mixed',
     ...buildCakeReservation({ ...baseInput, orderLines: [
       { productId: 'pave-cake', cakeSize: '6in', quantity: 1 },
-      { productId: 'smore-stick', quantity: 6 },
+      { productId: 'smore-stick', quantity: 10 },
     ] }, { now, reservationNumber: 'VG-CORRUPTED-MIXED' }),
   }
   const mixedReservation = toReservation(mixed as never)

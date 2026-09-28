@@ -9,9 +9,7 @@ import { isCakePointColorProduct } from './constants.js'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './individual-packaging.js'
 import { DEFAULT_CHOCOLATE_EXTRA, normalizeChocolateExtra } from './chocolate-extras.js'
 import { DEFAULT_BROWNIE_CREAM_OPTION, normalizeBrownieCreamOption } from './brownie-cream.js'
-import { isValidSmoreQuantity } from './smore-quantity.js'
-import { isChocolateProductId } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
-import { marketConfig } from './market.js'
+import { DEFAULT_SMORE_SET_QUANTITY, isValidSmoreQuantity } from './smore-quantity.js'
 import type {
   CakeSize,
   ChocolateType,
@@ -33,14 +31,14 @@ export type CartLine = {
 }
 
 export function normalizeCartQuantity(value: number, productId?: ProductId): number {
-  if (productId === 'smore-stick') return isValidSmoreQuantity(value) ? value : 0
+  if (productId === 'smore-stick') return isValidSmoreQuantity(value) ? value : DEFAULT_SMORE_SET_QUANTITY
   if (!Number.isFinite(value)) return 1
   const normalized = Math.max(1, Math.floor(value))
   return Math.min(MAX_RESERVATION_QUANTITY, normalized)
 }
 
 export function normalizeCartSelection(selection: CakeDetailSelection): CakeDetailSelection | null {
-  if (!getCakeCatalogEntryByProductId(selection.productId) && !(marketConfig.market === 'AU' && isChocolateProductId(selection.productId))) return null
+  if (!getCakeCatalogEntryByProductId(selection.productId)) return null
   const quantity = normalizeCartQuantity(selection.quantity, selection.productId)
   if (quantity < 1) return null
   const normalized = selectCakeDetailProduct(selection, selection.productId)
@@ -82,6 +80,15 @@ export function addCartLine(lines: readonly CartLine[], selection: CakeDetailSel
   const existing = lines.find((line) => line.lineKey === lineKey)
 
   if (!existing) return [...lines, { lineKey, selection: normalized }]
+
+  // A S'more quantity is itself one of the published set choices. Re-adding
+  // the product replaces that choice rather than combining two sets into an
+  // unpublished stick count.
+  if (normalized.productId === 'smore-stick') {
+    return lines.map((line) => line.lineKey === lineKey
+      ? { lineKey, selection: normalized }
+      : line)
+  }
 
   const mergedQuantity = normalizeCartQuantity(
     existing.selection.quantity + normalized.quantity,
@@ -245,7 +252,7 @@ function parseSelection(value: unknown): CakeDetailSelection | null {
   ) return null
 
   const currentProduct = getCakeCatalogEntryByProductId(productId as ProductId)
-  if (!currentProduct && !(marketConfig.market === 'AU' && isChocolateProductId(productId))) return null
+  if (!currentProduct) return null
 
   return normalizeCartSelection({
     productId: productId as ProductId,

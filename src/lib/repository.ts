@@ -1,6 +1,4 @@
 import { AppwriteException, ExecutionMethod, ID, OAuthProvider, Query, type Models } from 'appwrite'
-import { isChocolateProductId } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
-import { marketConfig } from './market'
 import { account, appwriteConfig, databases, functions, isAppwriteConfigured } from './appwrite'
 import { MARKET } from './market'
 import { normalizeAuDailyLimitText } from './legacy-settings'
@@ -105,23 +103,6 @@ async function executeReservationApi<T>(action: string, data?: unknown, parseRes
 }
 
 let cakeOrderLinesCapability: Promise<boolean> | null = null
-
-export const CHOCOLATE_ORDER_LINES_UNAVAILABLE_ERROR = 'CHOCOLATE_ORDER_LINES_UNAVAILABLE'
-export async function supportsChocolateOrderLines(): Promise<boolean> {
-  if (marketConfig.market !== 'AU' || !shouldUseReservationApi('all')) return false
-  try {
-    const capabilities = await executeReservationApi('health', undefined, parseReservationApiCapabilities)
-    return capabilities.chocolateOrderLines === 1
-  } catch {
-    return false
-  }
-}
-
-export async function requireChocolateOrderSupport(productIds: readonly string[]) {
-  if (productIds.some(isChocolateProductId) && !await supportsChocolateOrderLines()) {
-    throw new Error(CHOCOLATE_ORDER_LINES_UNAVAILABLE_ERROR)
-  }
-}
 
 export function supportsCakeOrderLines(): Promise<boolean> {
   if (!shouldUseReservationApi('all')) return Promise.resolve(false)
@@ -486,7 +467,6 @@ export async function getSettings(): Promise<StoreSettings> {
 }
 
 export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrderReservation> {
-  await requireChocolateOrderSupport(input.orderLines.map((line) => line.productId))
   if (!await supportsCakeOrderLines()) throw new Error(CAKE_ORDER_LINES_UNAVAILABLE_ERROR)
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)
@@ -498,7 +478,6 @@ export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrde
 }
 
 export async function createReservation(input: ReservationInput): Promise<Reservation> {
-  await requireChocolateOrderSupport([input.productId])
   const customerEmail = normalizeCustomerEmail(input.customerEmail)
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_UNAVAILABLE_ERROR)

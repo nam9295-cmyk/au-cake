@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { buildDryRunPlan, buildFunctionPayload, isSecretFunctionVariable, maskValue, resolveDeployConfig } from './booking-reminder-deploy-config.mjs'
-import { waitForActiveFunctionDeployment } from './function-deployment-activation.mjs'
 
 if (process.argv.slice(2).includes('--dry-run')) {
   console.log(JSON.stringify(buildDryRunPlan(process.env), null, 2))
@@ -21,7 +20,6 @@ try {
   await ensureVariables()
   const deployment = await deployFunction()
   await waitForDeployment(deployment.$id)
-  await waitForActiveFunctionDeployment({ functions, functionId: config.functionId, deploymentId: deployment.$id })
   console.log('Booking reminder function deployment complete')
 } catch (deploymentError) {
   if (deploymentError instanceof AppwriteException && deploymentError.type === 'general_unauthorized_scope') {

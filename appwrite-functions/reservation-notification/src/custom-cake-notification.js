@@ -25,7 +25,6 @@ function operatorOrderSummary(snapshot) {
       if (!priced) fail()
       return `Paid S’more ${line.lineId}: × ${line.quantity}; ${line.kind === 'cake-addon-smore' ? `add-on to ${line.parentCakeLineId}` : 'standalone'}; ${money(priced.totalCents)}`
     })
-    lines.push(`Gift S’more: × ${snapshot.quote.giftSmoreQuantity}`)
     return lines
   }
   return snapshot.pricing.lines.flatMap(line => {
@@ -75,7 +74,7 @@ export function buildCustomCakeEmailPayload({ id, event, from, replyTo = null, r
   const details = [title, `Reference: ${event.requestNumber}`, `Customer: ${s.customer.customerName}`, `Pickup: ${s.pickup.pickupDate} ${s.pickup.pickupTime} (Sydney)`]
   if (role === 'operator') details.push(`Contact phone: ${s.customer.customerPhone}`, `Contact email: ${recipientEmail}`, ...operatorOrderSummary(s))
   if (q) {
-    details.push(`Quote version: ${q.quoteVersion}`, `Base: ${money(q.baseCents)}`, `Cake discount: ${money(q.cakeDiscountCents)}`, `Design extra: ${q.designExtraCents === null ? 'Not agreed' : money(q.designExtraCents)}`, `Figurine extra: ${q.figurineExtraCents === null ? 'Not agreed' : money(q.figurineExtraCents)}`, `Paid S’more: ${q.paidSmoreQuantity} — ${money(q.paidSmoreTotalCents)}`, `Gift S’more: ${q.giftSmoreQuantity}`, `${q.isFinalQuote ? 'Final quote' : 'Known amount (extras not yet agreed)'}: ${money(q.knownTotalCents)}`)
+    details.push(`Quote version: ${q.quoteVersion}`, `Base: ${money(q.baseCents)}`, `Cake discount: ${money(q.cakeDiscountCents)}`, `Design extra: ${q.designExtraCents === null ? 'Not agreed' : money(q.designExtraCents)}`, `Figurine extra: ${q.figurineExtraCents === null ? 'Not agreed' : money(q.figurineExtraCents)}`, `Paid S’more: ${q.paidSmoreQuantity} — ${money(q.paidSmoreTotalCents)}`, `${q.isFinalQuote ? 'Final quote' : 'Known amount (extras not yet agreed)'}: ${money(q.knownTotalCents)}`)
   } else details.push(`Total: ${money(s.pricing.totalCents)}`)
   if (event.explanation) details.push(`Quote explanation: ${event.explanation}`)
   if (event.eventType !== 'custom-cake.confirmed') details.push('This request is not a confirmed booking. Receipt or a quote does not guarantee production or pickup, and does not authorize payment.')

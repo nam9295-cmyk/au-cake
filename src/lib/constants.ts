@@ -19,26 +19,38 @@ export const LEMON_PROMO_CODE = 'lemoni'
 export const PROMO_DISCOUNT_RATE = 0.1
 export const CHOCOLATE_PROMO_EXPIRES_ON = '2026-07-15'
 export const LEMONI_PROMO_EXPIRES_ON = '2026-07-16'
-export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 50
+export const LEMON_CHOCOLATE_ICING_SURCHARGE_CENTS = 0
 export const CUPCAKE_PACK_SIZE = 12
 export const CUPCAKE_VANILLA_CREAM_SURCHARGE_CENTS = 50
 export const CUPCAKE_PARTY_DECORATION_SURCHARGE_CENTS = 100
 
-const CUPCAKE_PRODUCT_IDS: ProductId[] = ['cupcake-half-dozen', 'cupcake-dozen']
-const CUPCAKE_PACK_SIZES: Partial<Record<ProductId, 6 | 12>> = {
+const CUPCAKE_PRODUCT_IDS: ProductId[] = ['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight']
+const CUPCAKE_PACK_SIZES: Partial<Record<ProductId, 6 | 12 | 24 | 48>> = {
   'cupcake-half-dozen': 6,
   'cupcake-dozen': 12,
+  'cupcake-twenty-four': 24,
+  'cupcake-forty-eight': 48,
 }
 const CUPCAKE_FINISH_PRICES: Partial<Record<ProductId, Record<CupcakeFinish, number>>> = {
   'cupcake-half-dozen': {
-    basic: 31,
-    'vanilla-fresh-cream': 36,
-    'chocolate-buttercream': 41,
+    basic: 30,
+    'vanilla-fresh-cream': 35,
+    'chocolate-buttercream': 40,
   },
   'cupcake-dozen': {
     basic: 55,
     'vanilla-fresh-cream': 64,
     'chocolate-buttercream': 73,
+  },
+  'cupcake-twenty-four': {
+    basic: 105,
+    'vanilla-fresh-cream': 123,
+    'chocolate-buttercream': 140,
+  },
+  'cupcake-forty-eight': {
+    basic: 195,
+    'vanilla-fresh-cream': 230,
+    'chocolate-buttercream': 265,
   },
 }
 
@@ -60,9 +72,9 @@ const BROWNIE_CHEESECAKE_PRODUCT_IDS: ProductId[] = [
 ]
 const LEMON_PROMO_PRODUCT_IDS: ProductId[] = [
   'fresh-lemon-cupcakes-6',
-  'fresh-lemon-cupcakes-8',
   'fresh-lemon-cupcakes-12',
-  'fresh-lemon-cupcakes-16',
+  'fresh-lemon-cupcakes-24',
+  'fresh-lemon-cupcakes-48',
 ]
 
 const PROMOTIONS = [
@@ -162,12 +174,12 @@ export const PRODUCT_GROUPS: ProductGroup[] = marketConfig.market === 'AU' ? [
   { id: 'buttercream', defaultProductId: 'buttercream-cake', productIds: ['buttercream-cake'] },
   { id: 'fresh-strawberry-vanilla-cream', defaultProductId: 'fresh-strawberry-vanilla-cream-cake', productIds: ['fresh-strawberry-vanilla-cream-cake'] },
   { id: 'fresh-strawberry-chocolate-cream', defaultProductId: 'fresh-strawberry-chocolate-cream-cake', productIds: ['fresh-strawberry-chocolate-cream-cake'] },
-  { id: 'cupcake', defaultProductId: 'cupcake-dozen', productIds: ['cupcake-half-dozen', 'cupcake-dozen'] },
+  { id: 'cupcake', defaultProductId: 'cupcake-dozen', productIds: ['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'] },
   { id: 'signature-gateau', defaultProductId: 'pound-cake', productIds: ['pound-cake'] },
   {
     id: 'fresh-lemon-cupcakes',
     defaultProductId: 'fresh-lemon-cupcakes-12',
-    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'],
+    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-24', 'fresh-lemon-cupcakes-48'],
   },
   {
     id: 'brownie-cheesecake',
@@ -288,7 +300,7 @@ export function isFreshLemonCupcakeProduct(productId: ProductId) {
 export function getFreshLemonCupcakePackSize(productId: ProductId) {
   if (!isFreshLemonCupcakeProduct(productId)) return null
   const packSize = Number(productId.split('-').at(-1))
-  return [4, 6, 8, 12, 16].includes(packSize) ? packSize : null
+  return [4, 6, 8, 12, 16, 24, 48].includes(packSize) ? packSize : null
 }
 
 export function normalizeChocolateIcingCount(productId: ProductId, value?: number | null) {
@@ -296,7 +308,8 @@ export function normalizeChocolateIcingCount(productId: ProductId, value?: numbe
   if (!packSize) return 0
   const count = Number(value || 0)
   if (!Number.isFinite(count)) return 0
-  return Math.min(packSize, Math.max(0, Math.floor(count)))
+  const normalized = Math.min(packSize, Math.max(0, Math.floor(count)))
+  return [0, packSize / 2, packSize].includes(normalized) ? normalized : 0
 }
 
 export function getLemonIcingCount(productId: ProductId, chocolateIcingCount?: number | null) {

@@ -1,20 +1,6 @@
 import { test } from 'node:test'
-import { execFileSync } from 'node:child_process'
 import * as assert from 'node:assert/strict'
-
-test('home and Phase 1 market rendering and CSS isolation regressions pass', () => {
-  const env = { ...process.env }
-  delete env.NODE_TEST_CONTEXT
-  execFileSync(process.execPath, ['--test', 'tests/home-market-boundary.test.mjs', 'tests/phase1-market-boundary.test.mjs'], { stdio: 'pipe', env })
-})
 import { marketConfig } from '../src/lib/market.js'
-import { addCartLine } from '../src/lib/cart.js'
-import { CHOCOLATE_OPTIONS_V1 } from '../appwrite-functions/reservation-api/src/chocolate-products.js'
-
-test('KR rejects standalone chocolate cart entries', () => {
-  assert.deepEqual(addCartLine([], { ...CHOCOLATE_OPTIONS_V1, productId: 'almond-chocoball-80g', quantity: 1 }), [])
-  assert.equal(marketConfig.products['almond-chocoball-80g'], undefined)
-})
 import { getProductFeatures } from '../src/lib/i18n.js'
 import { isSchoolPickupWindowClosed } from '../src/lib/utils.js'
 import {

@@ -25,6 +25,7 @@ import cupcake6VanillaPreviewImg from './assets/options/cupcake-6-vanilla.webp'
 import cupcake12BasicPreviewImg from './assets/options/cupcake-12-basic.webp'
 import cupcake12ChocolatePreviewImg from './assets/options/cupcake-12-chocolate.webp'
 import cupcake12VanillaPreviewImg from './assets/options/cupcake-12-vanilla.webp'
+import { SMORE_SET_QUANTITIES } from './lib/smore-quantity'
 import lemonIndividualPackagingPreviewImg from './assets/options/individual-packaging.webp'
 import cupcakeIndividualPackagingPreviewImg from './assets/options/individual-packaging-cupcake.webp'
 import lemonBasicFinishPreviewImg from './assets/options/lemon-finish-basic.webp'
@@ -54,7 +55,6 @@ import { calculateSmorePricing } from './lib/smore'
 import {
   createCakeDetailSelection,
   getCakeDetailBySlug,
-  getCakeDetailSelectionTotal,
   getCakeDetailSelectionEstimatedTotal,
   getCakePointColorPreviewBackground,
   getCakeSizePreviewKey,
@@ -68,7 +68,7 @@ import {
   type CakeSizePreviewKey,
   type CupcakePreviewKey,
 } from './lib/cake-detail'
-import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
+import { isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
 import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraOption, isChocolateExtraEligibleProduct } from './lib/chocolate-extras'
 import { BROWNIE_CREAM_OPTIONS, isBrownieFreshCreamEligibleProduct } from './lib/brownie-cream'
 import { getAuCakeCatalogCards, type CakeCatalogCard } from './lib/cake-catalog'
@@ -77,8 +77,6 @@ import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-e
 import { getProductText, type Language } from './lib/i18n'
 import { formatCurrency } from './lib/utils'
 import type { ChocolateExtra, PoundAddon, ProductId } from './lib/types'
-import { marketConfig } from './lib/market'
-import { AuProductStory } from './components/AuProductStory'
 
 const detailImages: Record<CakeDetailImageKey, string> = {
   'pound-side': '/products/chocolate-pound-cake-sydney.webp',
@@ -359,7 +357,7 @@ function OptionPhotoPreview({
   fit = 'cover',
   scale = 1,
   transformOrigin = 'center bottom',
-  muted = false,
+  selected = false,
 }: {
   image: OptionPreviewImage
   eyebrow: string
@@ -370,10 +368,10 @@ function OptionPhotoPreview({
   fit?: 'cover' | 'contain'
   scale?: number
   transformOrigin?: 'center center' | 'center bottom'
-  muted?: boolean
+  selected?: boolean
 }) {
   return (
-    <div className={`cake-detail-option-preview${muted ? ' is-muted' : ''}`} aria-live="polite">
+    <div className={`cake-detail-option-preview${selected ? ' is-selected' : ''}`} aria-live="polite">
       <div
         className={`cake-detail-option-preview-media${fit === 'contain' ? ' is-contained' : ''}`}
         style={background ? { background } : undefined}
@@ -567,20 +565,10 @@ export default function CakeDetailPage({
   const showsSignatureOrderOptions = detail.id === 'signature-gateau'
   const isSmoreStick = selection.productId === 'smore-stick'
   const smorePricing = isSmoreStick ? calculateSmorePricing(selection.quantity, language) : null
-  const productTotal = getCakeDetailSelectionTotal(selection)
-  const individualPackagingPricing = getIndividualPackagingPricing([{
-    productId: selection.productId,
-    quantity: selection.quantity,
-    individualPackaging: selection.individualPackaging,
-    productSubtotalCents: Math.round(productTotal * 100),
-  }])
-  const individualPackagingDiscount = individualPackagingPricing.individualPackagingDiscountCents / 100
   const total = getCakeDetailSelectionEstimatedTotal(selection)
   const galleryCount = detail.gallery.length
   const currentImageKey = detail.gallery[Math.min(activeImage, Math.max(0, galleryCount - 1))]
-  const isAuRedesign = marketConfig.market === 'AU'
-  const isPartyTemplate = isCupcakeProduct(product.id) || isFreshLemonCupcakeProduct(product.id) || isSmoreStick
-  const addLabel = isAuRedesign ? 'Add to Cart' : language === 'ko' ? '주문에 담기' : 'Add to order'
+  const addLabel = language === 'ko' ? '주문에 담기' : 'Add to order'
   const editorial = getCakeEditorialBySlug(slug, language)
   const compactOrderingNotice = editorial?.layout === 'compact' ? editorial.orderingNotice : null
   const relatedProducts = editorial
@@ -652,7 +640,7 @@ export default function CakeDetailPage({
   }
 
   return (
-    <main className={`cake-detail-page${isAuRedesign ? ' au-redesign-detail' : ''}`} data-au-template={isAuRedesign ? isPartyTemplate ? 'party' : 'cake' : undefined}>
+    <main className="cake-detail-page">
       <nav className="cake-detail-breadcrumb" aria-label={language === 'ko' ? '경로' : 'Breadcrumb'}>
         <button type="button" onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" />
@@ -665,7 +653,7 @@ export default function CakeDetailPage({
         aria-label={detail.name}
       >
         <div className="cake-detail-gallery">
-          {!isAuRedesign && renderProductIntro('cake-detail-intro is-desktop-gallery-intro')}
+          {renderProductIntro('cake-detail-intro is-desktop-gallery-intro')}
           <div className="cake-detail-main-image">
             {currentImageKey ? (
               <img
@@ -739,6 +727,26 @@ export default function CakeDetailPage({
           <div className="cake-detail-configurator">
           {renderProductIntro('cake-detail-intro is-standard-intro')}
 
+          {isSmoreStick && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '세트 선택' : 'Choose your set'}</legend>
+              <div className="cake-detail-options is-stacked">
+                {SMORE_SET_QUANTITIES.map((quantity) => {
+                  const pricing = calculateSmorePricing(quantity, language)
+                  return (
+                    <OptionButton active={selection.quantity === quantity} onClick={() => updateSelection({ quantity })} key={quantity}>
+                      <strong>{quantity} {language === 'ko' ? '개' : 'sticks'}</strong>
+                      <span>{pricing.formattedFinalTotal}</span>
+                    </OptionButton>
+                  )
+                })}
+              </div>
+              <p className="cake-detail-extra-help">{language === 'ko'
+                ? '모든 스모어스틱은 낱개 포장이 기본 포함됩니다. 추가 포장 비용은 없습니다.'
+                : 'Each S’more Stick comes individually wrapped. Packaging is included at no extra charge.'}</p>
+            </fieldset>
+          )}
+
           {isFreshLemonCupcakeProduct(product.id) && (
             <LemonFinishMixPreview
               lemonCount={lemonFinishCounts.lemon}
@@ -778,7 +786,7 @@ export default function CakeDetailPage({
                       key={productId}
                     >
                       <strong>{cupcakePackSize
-                        ? language === 'ko' ? `${cupcakePackSize === 6 ? '하프 더즌' : '더즌'} · ${cupcakePackSize}개` : `${cupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${cupcakePackSize} cupcakes`
+                        ? language === 'ko' ? `${cupcakePackSize}개` : `${cupcakePackSize} cupcakes`
                         : optionText.name}</strong>
                       <span>
                         {formatCurrency(optionPrice)}
@@ -922,18 +930,23 @@ export default function CakeDetailPage({
 
           {isFreshLemonCupcakeProduct(product.id) && (
             <fieldset className="cake-detail-fieldset cake-detail-mix-fieldset">
-              <legend>{language === 'ko' ? '다크 초콜릿 마감 개수' : 'Dark chocolate finish pieces'}</legend>
-              <input
-                type="range"
-                min="0"
-                max={packSize}
-                value={selection.chocolateIcingCount}
-                aria-label={language === 'ko' ? '다크 초콜릿 마감 개수' : 'Dark chocolate finish pieces'}
-                aria-valuetext={language === 'ko'
-                  ? `레몬 제스트 아이싱 ${lemonFinishCounts.lemon}개, 다크 초콜릿 ${lemonFinishCounts.chocolate}개`
-                  : `Lemon zest icing ${lemonFinishCounts.lemon}, Dark chocolate ${lemonFinishCounts.chocolate}`}
-                onChange={(event) => updateSelection({ chocolateIcingCount: Number(event.target.value) })}
-              />
+              <legend>{language === 'ko' ? '마감 구성 선택' : 'Choose finishing'}</legend>
+              <div className="cake-detail-options">
+                {[
+                  { count: 0, label: language === 'ko' ? '전부 레몬 제스트' : 'All lemon zest' },
+                  { count: packSize / 2, label: language === 'ko' ? '반반' : 'Half & half' },
+                  { count: packSize, label: language === 'ko' ? '전부 다크 초콜릿' : 'All dark chocolate' },
+                ].map((option) => (
+                  <OptionButton
+                    active={selection.chocolateIcingCount === option.count}
+                    onClick={() => updateSelection({ chocolateIcingCount: option.count })}
+                    key={option.count}
+                  >
+                    <strong>{option.label}</strong>
+                    <span>{language === 'ko' ? '추가금 없음' : 'No extra charge'}</span>
+                  </OptionButton>
+                ))}
+              </div>
             </fieldset>
           )}
 
@@ -993,7 +1006,7 @@ export default function CakeDetailPage({
                   eyebrow={language === 'ko' ? '포장 예시' : 'Packaging example'}
                   label={selectedIndividualPackagingPreview.label}
                   language={language}
-                  muted={!selection.individualPackaging}
+                  selected={selection.individualPackaging}
                 />
               )}
               <label className="choice-item">
@@ -1006,8 +1019,8 @@ export default function CakeDetailPage({
                 <span className="choice-copy">
                   <strong>{language === 'ko' ? '개별 포장 추가' : 'Add individual packaging'}</strong>
                   <span>{language === 'ko'
-                    ? '개당 AUD 0.50 · 개별 포장 선택 상품 AUD 100.00 이상 무료'
-                    : 'AUD 0.50 per piece · FREE with AUD 100.00+ of individually packaged cupcakes or Lemon Cake'}</span>
+                    ? '개당 AUD 0.50'
+                    : 'AUD 0.50 per piece'}</span>
                 </span>
               </label>
             </fieldset>
@@ -1038,67 +1051,30 @@ export default function CakeDetailPage({
             <p className="cake-detail-checkout-price" aria-live="polite">{formatCurrency(total)}</p>
           )}
 
-          <fieldset className="cake-detail-fieldset">
-            <legend>{isSmoreStick ? (language === 'ko' ? '수량 (스틱)' : 'Quantity (sticks)') : (language === 'ko' ? '수량' : 'Quantity')}</legend>
-            <div className="cake-detail-quantity">
-              <button
-                type="button"
-                aria-label={language === 'ko' ? '수량 줄이기' : 'Decrease quantity'}
-                disabled={selection.quantity <= 1}
-                onClick={() => updateSelection({ quantity: selection.quantity - 1 })}
-              >
-                <Minus aria-hidden="true" />
-              </button>
-              {isSmoreStick ? (
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={selection.quantity}
-                  onChange={(event) => {
-                    const raw = event.target.value.replace(/[^0-9]/g, '')
-                    const parsed = parseInt(raw, 10)
-                    if (Number.isFinite(parsed) && parsed >= 1) {
-                      updateSelection({ quantity: parsed })
-                    } else if (raw === '') {
-                      updateSelection({ quantity: 1 })
-                    }
-                  }}
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    textAlign: 'center',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    width: '100%',
-                    height: '100%',
-                    color: 'inherit',
-                  }}
-                  aria-label={language === 'ko' ? '수량 입력' : 'Quantity input'}
-                />
-              ) : (
-                <output aria-live="polite">{selection.quantity}</output>
-              )}
-              <button
-                type="button"
-                aria-label={language === 'ko' ? '수량 늘리기' : 'Increase quantity'}
-                disabled={!isSmoreStick && selection.quantity >= MAX_RESERVATION_QUANTITY}
-                onClick={() => updateSelection({ quantity: selection.quantity + 1 })}
-              >
-                <Plus aria-hidden="true" />
-              </button>
-            </div>
-            {isSmoreStick && (
-              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#666', lineHeight: 1.4 }}>
-                <p style={{ margin: '0 0 0.2rem 0' }}>
-                  {language === 'ko' ? '기준가: 개당 AUD 4.50' : 'Base: AUD 4.50 / stick'}
-                </p>
-                <p style={{ margin: 0 }}>
-                  {language === 'ko' ? '6~11개 10% 할인 · 12개 이상 20% 대량 할인' : '6–11 sticks: 10% off · 12+ sticks: 20% bulk discount'}
-                </p>
+          {!isSmoreStick && (
+            <fieldset className="cake-detail-fieldset">
+              <legend>{language === 'ko' ? '수량' : 'Quantity'}</legend>
+              <div className="cake-detail-quantity">
+                  <button
+                    type="button"
+                    aria-label={language === 'ko' ? '수량 줄이기' : 'Decrease quantity'}
+                    disabled={selection.quantity <= 1}
+                    onClick={() => updateSelection({ quantity: selection.quantity - 1 })}
+                  >
+                    <Minus aria-hidden="true" />
+                  </button>
+                  <output aria-live="polite">{selection.quantity}</output>
+                  <button
+                    type="button"
+                    aria-label={language === 'ko' ? '수량 늘리기' : 'Increase quantity'}
+                    disabled={selection.quantity >= MAX_RESERVATION_QUANTITY}
+                    onClick={() => updateSelection({ quantity: selection.quantity + 1 })}
+                  >
+                    <Plus aria-hidden="true" />
+                  </button>
               </div>
-            )}
-          </fieldset>
+            </fieldset>
+          )}
 
           <div className="cake-detail-order-summary">
             <div>
@@ -1118,18 +1094,12 @@ export default function CakeDetailPage({
                   <span>{language === 'ko' ? selectedChocolateExtra.labelKo : selectedChocolateExtra.label}</span>
                 </div>
               )}
-              {individualPackagingPricing.individualPackagingDiscountCents > 0 && (
-                <p className="cake-detail-packaging-discount">
-                  <span>{language === 'ko' ? '포장 할인' : 'Packaging discount'}</span>
-                  <strong>-{formatCurrency(individualPackagingDiscount)} · FREE</strong>
-                </p>
-              )}
             </div>
             <strong>{formatCurrency(total)}</strong>
           </div>
 
           <button type="button" className="primary-button cake-detail-request" onClick={addToOrder}>
-            {addLabel}{isAuRedesign ? ` — ${formatCurrency(total)}` : ''}
+            {addLabel}
           </button>
           {addedToOrder && (
             <div className="cake-detail-added">
@@ -1163,9 +1133,7 @@ export default function CakeDetailPage({
         </aside>
       </section>
 
-      {isAuRedesign ? (
-        <AuProductStory detail={detail} editorial={editorial} party={isPartyTemplate} language={language} onOpenCake={onOpenCake} />
-      ) : editorial ? (
+      {editorial ? (
         <CakeEditorialDetail
           editorial={editorial}
           language={language}

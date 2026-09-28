@@ -17,7 +17,7 @@ type SmoreLineMoney = {
 }
 export type SmorePricedLine = SmoreLineMoney & (
   | (Extract<SmoreRequestLine, { kind: 'standalone-smore' }> & { discountPercent: 0 })
-  | (Extract<SmoreRequestLine, { kind: 'cake-addon-smore' }> & { discountPercent: 30 })
+  | (Extract<SmoreRequestLine, { kind: 'cake-addon-smore' }> & { discountPercent: 10 | 30 })
 )
 export type ContractErrorCode =
   | 'INVALID_REQUEST' | 'INVALID_LINE_ID' | 'INVALID_LINE_REFERENCE'

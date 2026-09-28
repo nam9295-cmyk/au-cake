@@ -129,8 +129,8 @@ test('Cupcake and Signature detail selections remain independent and normalize h
   assert.equal(cupcakes.vanillaCreamCount, 0)
   assert.equal(cupcakes.partyDecorationCount, 0)
   assert.equal(cupcakes.cupcakeFinish, 'chocolate-buttercream')
-  assert.equal(getCakeDetailSelectionTotal(cupcakes), 123)
-  assert.equal(getCakeDetailSelectionEstimatedTotal(cupcakes), 123)
+  assert.equal(getCakeDetailSelectionTotal(cupcakes), 120)
+  assert.equal(getCakeDetailSelectionEstimatedTotal(cupcakes), 129)
   assert.equal(cupcakes.quantity, 3)
 
   const signature = createCakeDetailSelection('signature-gateau-au-chocolat')
@@ -140,7 +140,7 @@ test('Cupcake and Signature detail selections remain independent and normalize h
   assert.equal(getCakeDetailBySlug('chocolatiers-basque-cheesecake', 'en')?.isLegacy, true)
 })
 
-test('current Strawberry cakes create inch selections, S\'more supports bulk pricing, and retired cakes remain legacy', () => {
+test('current Strawberry cakes create inch selections, S\'more uses fixed set pricing, and retired cakes remain legacy', () => {
   const strawberryVanilla = createCakeDetailSelection('fresh-strawberry-vanilla-cream-cake')
   const strawberryChocolate = createCakeDetailSelection('fresh-strawberry-chocolate-cream-cake')
   const buttercream = createCakeDetailSelection('buttercream-cake')
@@ -160,29 +160,24 @@ test('current Strawberry cakes create inch selections, S\'more supports bulk pri
   assert.equal(bento, null)
   assert.equal(getCakeDetailBySlug('bento-cake', 'en')?.isComingSoon, true)
 
-  // S'more Stick has selection and calculates bulk discounts
+  // S'more Stick has one of the published set quantities.
   assert.ok(smore)
   assert.equal(smore.productId, 'smore-stick')
-  assert.equal(smore.quantity, 1)
-  assert.equal(getCakeDetailSelectionTotal(smore), 4.5)
+  assert.equal(smore.quantity, 10)
+  assert.equal(getCakeDetailSelectionTotal(smore), 35)
 
-  const smoreBulk = selectCakeDetailProduct({ ...smore, quantity: 12 }, 'smore-stick')
-  assert.equal(smoreBulk.quantity, 12)
-  // 12 * 4.50 = 54.00, 20% discount = 43.20
-  assert.equal(getCakeDetailSelectionTotal(smoreBulk), 43.2)
+  const smoreTwentyFive = selectCakeDetailProduct({ ...smore, quantity: 25 }, 'smore-stick')
+  assert.equal(smoreTwentyFive.quantity, 25)
+  assert.equal(getCakeDetailSelectionTotal(smoreTwentyFive), 75)
 
-  // S'more Stick has NO artificial upper limit (supports 50, 100, 300+)
+  // A 50-stick set is also selectable; invalid values fall back to the 10-stick set.
   const smore50 = selectCakeDetailProduct({ ...smore, quantity: 50 }, 'smore-stick')
   assert.equal(smore50.quantity, 50)
-  assert.equal(getCakeDetailSelectionTotal(smore50), 180)
+  assert.equal(getCakeDetailSelectionTotal(smore50), 135)
 
   const smore100 = selectCakeDetailProduct({ ...smore, quantity: 100 }, 'smore-stick')
-  assert.equal(smore100.quantity, 100)
-  assert.equal(getCakeDetailSelectionTotal(smore100), 360)
-
-  const smore300 = selectCakeDetailProduct({ ...smore, quantity: 300 }, 'smore-stick')
-  assert.equal(smore300.quantity, 300)
-  assert.equal(getCakeDetailSelectionTotal(smore300), 1080)
+  assert.equal(smore100.quantity, 10)
+  assert.equal(getCakeDetailSelectionTotal(smore100), 35)
 })
 
 test('Lemon Cake supports two or more identical packs with simple quantity multiplication', () => {
@@ -195,8 +190,8 @@ test('Lemon Cake supports two or more identical packs with simple quantity multi
     quantity: 2,
   }
 
-  assert.equal(getCakeDetailSelectionTotal(selection), 75)
-  assert.equal(getCakeDetailSelectionEstimatedTotal(selection), 81)
+  assert.equal(getCakeDetailSelectionTotal(selection), 70)
+  assert.equal(getCakeDetailSelectionEstimatedTotal(selection), 76)
 
   const reservation = buildCakeReservation({
     customerName: 'Lemon Quantity',
@@ -217,7 +212,7 @@ test('Lemon Cake supports two or more identical packs with simple quantity multi
   assert.equal(reservation.quantity, 2)
   assert.equal(reservation.individualPackagingPieces, 12)
   assert.equal(reservation.individualPackagingFeeCents, 600)
-  assert.equal(reservation.totalPriceCents, 8100)
+  assert.equal(reservation.totalPriceCents, 7600)
 })
 
 test('Chocolate Extra is an independent one-per-order-line side item for eligible cake selections', () => {

@@ -65,7 +65,7 @@ test('uppercase legacy ID does not claim the distinct lowercase new-wire ID', as
     assert.equal(first.status, 200)
     const before = structuredClone(h.sdk.docs.get(`reservations/${upper.requestId}`))
     const lower = fixture(name).request; lower.requestId = upper.requestId.toLowerCase()
-    if (name === 'custom-v1') lower.lines[0].photoRefs = []
+    if (name === 'custom-v1') { lower.lines[0].photoRefs = []; lower.lines[1].quantity = 10 }
     const second = await h.call(action, lower)
     assert.equal(second.status, 200, JSON.stringify(second.body))
     assert.ok(await h.repository.get('snapshots', lower.requestId))
@@ -119,6 +119,7 @@ test('required cutover stays required when provisioning is unavailable and inval
 test('simultaneous legacy/custom/v2 request ID cannot produce two committed receipts', async () => {
   const h = await setup(), custom = fixture('custom-v1').request, ordinary = fixture('cake-order-v2').request
   custom.lines[0].photoRefs = []
+  custom.lines[1].quantity = 10
   let release, checked = 0
   const checkedBoth = new Promise(resolve => { release = resolve }), get = h.sdk.getDocument, create = h.sdk.createDocument
   h.sdk.getDocument = async p => { try { return await get(p) } finally { if (p.collectionId === 'reservations' && ++checked === 3) release() } }

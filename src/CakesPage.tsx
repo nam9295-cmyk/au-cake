@@ -2,8 +2,6 @@ import type { MouseEvent } from 'react'
 import { getAuCakeCatalogGroups } from './lib/cake-catalog'
 import type { Language } from './lib/i18n'
 import { getPublicRoutePage } from './lib/public-content'
-import { marketConfig } from './lib/market'
-import { AuCategoryPage } from './pages/AuCategoryPage'
 
 export default function CakesPage({
   language,
@@ -12,7 +10,6 @@ export default function CakesPage({
   language: Language
   onOpenCake: (slug: string) => void
 }) {
-  if (marketConfig.market === 'AU') return <AuCategoryPage category="cakes" language={language} onOpenCake={onOpenCake} />
   const groups = getAuCakeCatalogGroups(language)
   const publicPage = getPublicRoutePage('/cakes')!
 

@@ -177,11 +177,11 @@ test('cake generator uses the final per-page schema contract and real product We
   const expectations = new Map([
     ['pave-chocolate-cake', { type: 'Product', price: 79, og: 'product', image: 'pave-chocolate-cake-sydney.webp' }],
     ['fresh-strawberry-vanilla-cream-cake', { type: 'Product', price: 65, og: 'product', image: 'fresh-strawberry-vanilla-cream-cake-sydney.webp' }],
-    ['chocolate-cupcakes', { type: 'Product', price: 31, og: 'product', image: 'chocolate-cupcakes-sydney.webp' }],
+    ['chocolate-cupcakes', { type: 'Product', price: 30, og: 'product', image: 'chocolate-cupcakes-sydney.webp' }],
     ['signature-gateau-au-chocolat', { type: 'Product', price: 45, og: 'product', image: 'signature-gateau-au-chocolat-sydney.webp' }],
-    ['lemon-cake', { type: 'Product', price: 36, og: 'product', image: 'lemon-cake-sydney.webp' }],
+    ['lemon-cake', { type: 'Product', price: 35, og: 'product', image: 'lemon-cake-sydney.webp' }],
     ['brownie-cheesecake', { type: 'Product', price: 85, og: 'product', image: 'brownie-cheesecake-sydney.webp' }],
-    ['smore-stick', { type: 'Product', price: 4.5, og: 'product', image: 'smore-stick-sydney.webp' }],
+    ['smore-stick', { type: 'Product', price: 35, og: 'product', image: 'smore-stick-sydney.webp' }],
   ])
 
   for (const [slug, expected] of expectations) {
@@ -336,7 +336,7 @@ test('llms text exposes only grounded public catalogue facts', async () => {
   assert.match(llms, /fresh lemon zest/)
   assert.match(llms, /lemon syrup and glaze/)
   assert.doesNotMatch(llms, /fresh lemon cream/i)
-  assert.match(llms, /From AUD 31\.00/)
+  assert.match(llms, /From AUD 30\.00/)
   assert.doesNotMatch(llms, /Triple berry or Nutella chocolate chip/)
   assert.match(llms, /Signature Gâteau au Chocolat/)
   assert.match(llms, /Brownie Cheesecake/)

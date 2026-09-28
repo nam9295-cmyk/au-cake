@@ -1,6 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { formatCakeSizeLabel, parseStoredOrderLines } from './business.js'
-import { getChocolateProduct } from './chocolate-products.js'
 
 const CALENDAR_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60
 
@@ -44,8 +43,6 @@ export function verifyCalendarToken(token, secret, now = new Date()) {
 }
 
 function cakeLineLabel(document) {
-  const chocolate = getChocolateProduct(document.productId)
-  if (chocolate) return `${chocolate.name} · ${chocolate.saleUnit} ×${document.quantity}`
   if (document.productId === 'smore-stick') {
     const quantity = Number.isSafeInteger(document.quantity) && document.quantity >= 1 ? document.quantity : 1
     return `S'more Stick ×${quantity}`
@@ -54,11 +51,11 @@ function cakeLineLabel(document) {
     'pave-cake': 'Pave cake',
     'vanilla-fresh-cream-cake': 'vanilla fresh cream cake',
     'buttercream-cake': 'Buttercream Cake',
-    'fresh-strawberry-vanilla-cream-cake': 'Fresh Strawberry Vanilla Cream Cake',
-    'fresh-strawberry-chocolate-cream-cake': 'Fresh Strawberry Chocolate Cream Cake',
     'pound-cake': 'Signature Gâteau au Chocolat',
     'cupcake-half-dozen': 'Chocolate Cupcakes',
     'cupcake-dozen': 'Cupcakes',
+    'cupcake-twenty-four': 'Cupcakes · 24 pieces',
+    'cupcake-forty-eight': 'Cupcakes · 48 pieces',
     'choco-basque-cheesecake': "Chocolatier's Basque Cheesecake",
     'pave-choco-basque-cheesecake': 'Pave chocolate on top',
     'eiffel-tower-basque-cheesecake': 'Cake finishing with Eiffel Tower',
@@ -70,6 +67,8 @@ function cakeLineLabel(document) {
     'fresh-lemon-cupcakes-8': 'Lemon Cake · 8 pieces',
     'fresh-lemon-cupcakes-12': 'Lemon Cake · 12 pieces',
     'fresh-lemon-cupcakes-16': 'Lemon Cake · 16 pieces',
+    'fresh-lemon-cupcakes-24': 'Lemon Cake · 24 pieces',
+    'fresh-lemon-cupcakes-48': 'Lemon Cake · 48 pieces',
   }
   const finishLabels = {
     'extra-chocolate': 'Extra chocolate',
@@ -78,7 +77,7 @@ function cakeLineLabel(document) {
   const chocolateLabels = { dark: 'Dark chocolate', milk: 'Milk chocolate' }
   const label = labels[document.productId] || 'Cake'
   const options = []
-  if (['pave-cake', 'vanilla-fresh-cream-cake', 'buttercream-cake', 'fresh-strawberry-vanilla-cream-cake', 'fresh-strawberry-chocolate-cream-cake'].includes(document.productId)) {
+  if (document.productId === 'pave-cake' || document.productId === 'vanilla-fresh-cream-cake' || document.productId === 'buttercream-cake') {
     options.push(formatCakeSizeLabel(document.cakeSize))
     if (document.productId === 'pave-cake' && chocolateLabels[document.chocolateType]) options.push(chocolateLabels[document.chocolateType])
   } else if (['choco-basque-cheesecake', 'pave-choco-basque-cheesecake', 'eiffel-tower-basque-cheesecake', 'brownie-cheesecake', 'pave-brownie-cheesecake', 'eiffel-tower-brownie-cheesecake'].includes(document.productId)) {

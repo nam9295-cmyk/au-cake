@@ -61,7 +61,7 @@ test('AU public product copy and price summaries use current Whole Cake copy and
   assert.equal(buttercreamLegacy.schema, 'webpage-only')
 
   assert.match(smore.description, /marshmallows toasted on a stick/)
-  assert.equal(smore.optionSummary, 'Bulk discounts from 6+ sticks')
+  assert.equal(smore.optionSummary, 'Choose a 10, 25 or 50-stick set')
 
   assert.equal(
     lemon.description,
@@ -87,11 +87,11 @@ test('AU cake pages own starting prices and final schema modes', () => {
   assert.deepEqual(productStartingPrices, {
     'pave-chocolate-cake': 79,
     'fresh-strawberry-vanilla-cream-cake': 65,
-    'chocolate-cupcakes': 31,
+    'chocolate-cupcakes': 30,
     'signature-gateau-au-chocolat': 45,
-    'lemon-cake': 36,
+    'lemon-cake': 35,
     'brownie-cheesecake': 85,
-    'smore-stick': 4.5,
+    'smore-stick': 35,
   })
   assert.equal(content.legacyCakePages['buttercream-cake'].schema, 'webpage-only')
   assert.equal(content.legacyCakePages['buttercream-cake'].startingPrice, null)

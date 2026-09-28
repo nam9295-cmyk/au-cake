@@ -8,7 +8,6 @@ import {
   maskValue,
   resolveDeployConfig,
 } from './reservation-notification-deploy-config.mjs'
-import { waitForActiveFunctionDeployment } from './function-deployment-activation.mjs'
 
 const sleep = (ms) => new Promise((resolveSleep) => setTimeout(resolveSleep, ms))
 
@@ -31,7 +30,6 @@ try {
   await ensureVariables()
   const deployment = await deployFunction()
   await waitForDeployment(deployment.$id)
-  await waitForActiveFunctionDeployment({ functions, functionId: config.functionId, deploymentId: deployment.$id, sleep })
   console.log('Reservation notification function deployment complete')
 } catch (deploymentError) {
   if (deploymentError instanceof AppwriteException && deploymentError.type === 'general_unauthorized_scope') {

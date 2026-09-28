@@ -6,6 +6,7 @@ import {
   MAX_RESERVATION_QUANTITY,
   LEMON_PROMO_CODE,
   PROMO_CODE,
+  getFreshLemonCupcakePackSize,
   getReservationPrice,
   getCupcakeFinishSurcharge,
   isFreshLemonCupcakeProduct,
@@ -112,6 +113,16 @@ function normalizeQuantity(quantity: number) {
   const value = Number(quantity || 1)
   if (!Number.isFinite(value)) return 1
   return Math.min(MAX_RESERVATION_QUANTITY, Math.max(1, Math.floor(value)))
+}
+
+function isHistoricalIndividualLemonIcingCount(productId: ProductId, value: unknown) {
+  const packSize = getFreshLemonCupcakePackSize(productId)
+  const count = Number(value)
+  return packSize !== null
+    && Number.isSafeInteger(count)
+    && count >= 0
+    && count <= packSize
+    && ![0, packSize / 2, packSize].includes(count)
 }
 
 type ReservationPromoKind = typeof PROMO_CODE | typeof LEMON_PROMO_CODE | 'legacy'
@@ -224,10 +235,16 @@ export function buildAdminReservationUpdate(
   const quantity = isFreshLemonCupcakeProduct(productId)
     ? 1
     : normalizeQuantity(edits.quantity ?? reservation.quantity)
-  const chocolateIcingCount = normalizeChocolateIcingCount(
-    productId,
-    edits.chocolateIcingCount ?? reservation.chocolateIcingCount ?? 0,
-  )
+  const preservesHistoricalIndividualLemonIcing = productId === reservation.productId
+    && isFreshLemonCupcakeProduct(productId)
+    && !Object.hasOwn(edits, 'chocolateIcingCount')
+    && isHistoricalIndividualLemonIcingCount(productId, reservation.chocolateIcingCount)
+  const chocolateIcingCount = preservesHistoricalIndividualLemonIcing
+    ? reservation.chocolateIcingCount
+    : normalizeChocolateIcingCount(
+      productId,
+      edits.chocolateIcingCount ?? reservation.chocolateIcingCount ?? 0,
+    )
   const isLegacyCupcake = productId === reservation.productId
     && productId === 'cupcake-dozen'
     && reservation.cupcakeFinish === undefined

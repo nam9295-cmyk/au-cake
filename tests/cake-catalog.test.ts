@@ -34,7 +34,7 @@ const expectedCatalog = [
     id: 'cupcake',
     slug: 'chocolate-cupcakes',
     defaultProductId: 'cupcake-dozen',
-    productIds: ['cupcake-half-dozen', 'cupcake-dozen'],
+    productIds: ['cupcake-half-dozen', 'cupcake-dozen', 'cupcake-twenty-four', 'cupcake-forty-eight'],
   },
   {
     id: 'bento-cake',
@@ -58,7 +58,7 @@ const expectedCatalog = [
     id: 'fresh-lemon-cupcakes',
     slug: 'lemon-cake',
     defaultProductId: 'fresh-lemon-cupcakes-12',
-    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-8', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-16'],
+    productIds: ['fresh-lemon-cupcakes-6', 'fresh-lemon-cupcakes-12', 'fresh-lemon-cupcakes-24', 'fresh-lemon-cupcakes-48'],
   },
   {
     id: 'smore-stick',
@@ -208,7 +208,7 @@ test('catalog cards expose the approved AU category display names while Korean n
   assert.equal(english.find((card) => card.id === 'bento-cake')?.priceLabel, 'COMING SOON')
   assert.equal(english.find((card) => card.id === 'bento-cake')?.isPhotoComingSoon, false)
   assert.equal(english.find((card) => card.id === 'smore-stick')?.isPhotoComingSoon, false)
-  assert.equal(english.find((card) => card.id === 'smore-stick')?.priceLabel, 'From AUD 4.50')
+  assert.equal(english.find((card) => card.id === 'smore-stick')?.priceLabel, 'From AUD 35.00')
   assert.equal(english.find((card) => card.id === 'fresh-strawberry-vanilla-cream')?.isPhotoComingSoon, false)
   assert.equal(
     english.find((card) => card.id === 'fresh-strawberry-vanilla-cream')?.imagePath,
@@ -223,12 +223,12 @@ test('catalog cards expose the approved AU category display names while Korean n
     [
       ['pave', 'AUD 79.00'],
       ['signature-gateau', 'AUD 45.00'],
-      ['cupcake', 'From AUD 31.00'],
+      ['cupcake', 'From AUD 30.00'],
       ['bento-cake', 'COMING SOON'],
       ['fresh-strawberry-vanilla-cream', 'From AUD 65.00'],
       ['brownie-cheesecake', 'From AUD 85.00'],
-      ['fresh-lemon-cupcakes', 'From AUD 36.00'],
-      ['smore-stick', 'From AUD 4.50'],
+      ['fresh-lemon-cupcakes', 'From AUD 35.00'],
+      ['smore-stick', 'From AUD 35.00'],
     ],
   )
   assert.equal(english.find((card) => card.id === 'pave')?.features[0], 'Signature Gâteau layers')
@@ -288,14 +288,20 @@ const serverPriceCases: Array<{
   { productId: 'cupcake-dozen', options: { cupcakeFinish: 'basic' } },
   { productId: 'cupcake-dozen', options: { cupcakeFinish: 'vanilla-fresh-cream' } },
   { productId: 'cupcake-dozen', options: { cupcakeFinish: 'chocolate-buttercream' } },
+  { productId: 'cupcake-twenty-four', options: { cupcakeFinish: 'basic' } },
+  { productId: 'cupcake-twenty-four', options: { cupcakeFinish: 'vanilla-fresh-cream' } },
+  { productId: 'cupcake-twenty-four', options: { cupcakeFinish: 'chocolate-buttercream' } },
+  { productId: 'cupcake-forty-eight', options: { cupcakeFinish: 'basic' } },
+  { productId: 'cupcake-forty-eight', options: { cupcakeFinish: 'vanilla-fresh-cream' } },
+  { productId: 'cupcake-forty-eight', options: { cupcakeFinish: 'chocolate-buttercream' } },
   { productId: 'brownie-cheesecake' },
   { productId: 'pave-brownie-cheesecake' },
   { productId: 'fresh-lemon-cupcakes-6' },
   { productId: 'fresh-lemon-cupcakes-6', options: { chocolateIcingCount: 3 } },
-  { productId: 'fresh-lemon-cupcakes-8' },
   { productId: 'fresh-lemon-cupcakes-12' },
-  { productId: 'fresh-lemon-cupcakes-12', options: { chocolateIcingCount: 8 } },
-  { productId: 'fresh-lemon-cupcakes-16' },
+  { productId: 'fresh-lemon-cupcakes-12', options: { chocolateIcingCount: 6 } },
+  { productId: 'fresh-lemon-cupcakes-24' },
+  { productId: 'fresh-lemon-cupcakes-48' },
 ]
 
 test('secondary catalogue exactly matches the deployed Reservation API final pricing', () => {

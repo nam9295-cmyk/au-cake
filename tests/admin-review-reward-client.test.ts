@@ -35,9 +35,7 @@ const active: AdminReview = {
 
 const message = 'Thank you for sharing your review with Very Good Chocolate.\nYour 10% cake reward code is FOXKIWI7Q2MK.\nIt can be used once on your next cake order until 17 September 2026.'
 
-test('reward DTO parser accepts only exact safe summary fields and never accepts coupon internals', (t) => {
-  // Evaluate the fixed active/expired fixtures at a fixed point in their lifetime.
-  t.mock.method(Date, 'now', () => Date.parse('2026-07-18T02:00:00.000Z'))
+test('reward DTO parser accepts only exact safe summary fields and never accepts coupon internals', () => {
   assert.deepEqual(parseAdminReviewResult(active), active)
   for (const invalid of [
     { ...active, rewardCodeLast4: 'bad!' },

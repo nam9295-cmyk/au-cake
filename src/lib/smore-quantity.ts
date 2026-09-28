@@ -1,8 +1,6 @@
-// This is the Appwrite Int32 persistence ceiling, not a customer-facing business maximum.
-export const SMORE_STORAGE_MAX_QUANTITY = 2_147_483_647
+export const SMORE_SET_QUANTITIES = [10, 25, 50] as const
+export const DEFAULT_SMORE_SET_QUANTITY = SMORE_SET_QUANTITIES[0]
 
 export function isValidSmoreQuantity(quantity: number): boolean {
-  return Number.isSafeInteger(quantity)
-    && quantity >= 1
-    && quantity <= SMORE_STORAGE_MAX_QUANTITY
+  return Number.isSafeInteger(quantity) && SMORE_SET_QUANTITIES.includes(quantity as typeof SMORE_SET_QUANTITIES[number])
 }

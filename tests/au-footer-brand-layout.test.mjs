@@ -10,11 +10,10 @@ const footerStart = chrome.indexOf('export function SiteFooter')
 const footerEnd = chrome.indexOf('export function VanillaFreshCreamCakeSilhouette')
 const footer = footerStart >= 0 && footerEnd > footerStart ? chrome.slice(footerStart, footerEnd) : ''
 
-test('non-redesign public routes retain the branded footer; only AU redesign routes use the editorial footer', () => {
+test('public routes mount a responsive branded footer with the supplied cutout assets', () => {
   assert.match(chrome, /import tigerImg from '\.\.\/assets\/tiger\.png'/)
   assert.match(chrome, /import heartLogoImg from '\.\.\/assets\/heart_logo\.png'/)
-  assert.match(app, /!isPrivatePage && \(isAuRedesignPage \? <AuRedesignFooter \/> : <SiteFooter navigate=\{navigate\} language=\{language\} \/>\)/)
-  assert.match(app, /const isAuRedesignPage = marketConfig\.market === 'AU'/)
+  assert.match(app, /!isPrivatePage && <SiteFooter navigate=\{navigate\} language=\{language\} \/>/)
   assert.match(footer, /<footer className="site-footer">/)
   assert.match(footer, /className="site-footer-tiger" src=\{tigerImg\}/)
   assert.match(footer, /className="site-footer-heart" src=\{heartLogoImg\}/)

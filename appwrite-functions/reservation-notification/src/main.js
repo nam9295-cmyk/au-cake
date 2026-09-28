@@ -15,7 +15,6 @@ import { createResendTransport as createSharedResendTransport, ResendTransportEr
 import { deliverEmail, deliverEmails } from '../shared/email-delivery/email-delivery-sender.js'
 import { retryEmail } from '../shared/email-delivery/email-delivery-retry.js'
 import { parseStoredOrderLines } from '../shared/reservation-api/business.js'
-import { getChocolateProduct, CHOCOLATE_EXTRA_PRICES_CENTS } from '../shared/reservation-api/chocolate-products.js'
 
 const APPWRITE_RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const BOOKING_OPERATOR_RECEIPT_TEMPLATE_VERSION = 'v1'
@@ -382,10 +381,10 @@ function getChocolateExtraText(reservation, config) {
         'pave-100g': '파베 초콜릿 · 100g 통',
         combo: '초콜릿 추가 세트',
       }
-  const prices = CHOCOLATE_EXTRA_PRICES_CENTS
+  const prices = { 'eiffel-6': 10, 'pave-100g': 12, combo: 20 }
   const chocolateExtra = reservation.chocolateExtra
   if (!Object.hasOwn(labels, chocolateExtra) || !Object.hasOwn(prices, chocolateExtra)) return null
-  return `${labels[chocolateExtra]} · ${formatCurrency(prices[chocolateExtra] / 100, config)}`
+  return `${labels[chocolateExtra]} · ${formatCurrency(prices[chocolateExtra], config)}`
 }
 
 function getIcingMixText(reservation, config) {
@@ -551,12 +550,6 @@ function readStoredCakeLines(reservation) {
 function cakeDetailRows(reservation, config, suffix = '') {
   const quantity = getQuantity(reservation)
   const label = (value) => `${value}${suffix}`
-  const chocolate = config.currency === 'AUD' ? getChocolateProduct(reservation.productId) : undefined
-  if (chocolate) return [
-    [label(config.labels.product), chocolate.name],
-    [label('Sale unit'), chocolate.saleUnit],
-    [label(config.labels.quantity), String(quantity)],
-  ]
   if (reservation.productId === 'smore-stick') {
     return [
       [label(config.labels.product), "S'more Stick"],

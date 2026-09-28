@@ -76,23 +76,6 @@ function replaceMethod(t, prototype, name, replacement) {
   t.after(() => { prototype[name] = original })
 }
 
-test('chocolate single and mixed writes fail closed on old backends and direct mode', async (t) => {
-  for (const mode of ['all', 'off']) {
-    const actions = []
-    replaceMethod(t, Functions.prototype, 'createExecution', async (request) => {
-      actions.push(JSON.parse(request.body).action)
-      return readyHealth()
-    })
-    const repository = await loadRepository(mode)
-    const input = cakeOrderInput()
-    const chocolate = { ...input.orderLines[0], productId: 'almond-chocoball-80g' }
-    await assert.rejects(repository.createReservation({ ...input, ...chocolate }), /CHOCOLATE_ORDER_LINES_UNAVAILABLE/)
-    await assert.rejects(repository.createCakeOrder({ ...input, orderLines: [chocolate, ...input.orderLines] }), /CHOCOLATE_ORDER_LINES_UNAVAILABLE/)
-    assert.equal(actions.includes('create-cake'), false)
-    assert.equal(await repository.supportsCakeOrderLines(), mode === 'all')
-  }
-})
-
 function cakeOrderInput() {
   return {
     customerName: 'Customer',
