@@ -181,6 +181,15 @@
   display: block;
 }
 
+:where(.au-home-shell) video.rd-hero-photo {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+:where(.au-home-shell) .rd-hero-photo-wrap[data-playback='playing'] video.rd-hero-photo {
+  opacity: 1;
+}
+
 :where(.au-home-shell) .rd-hero-video-toggle {
   position: absolute;
   right: 20px;
