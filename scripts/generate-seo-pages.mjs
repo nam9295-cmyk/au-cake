@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
+import { CHOCOLATE_PRODUCTS } from '../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { getHogirlSeoDefinitions } from './hogirl-seo.mjs'
 import { renderAuLlms } from './render-au-llms.mjs'
 
@@ -23,6 +24,13 @@ const organization = {
 
 const cakeEntries = Object.entries(auPublicPages.cakePages).map(([slug, page]) => ({ slug, ...page }))
 const legacyCakeEntries = Object.entries(auPublicPages.legacyCakePages).map(([slug, page]) => ({ slug, ...page }))
+const isAuMarket = String(process.env.VITE_MARKET || '').toUpperCase() === 'AU'
+const chocolateFamilies = [...new Set(Object.values(CHOCOLATE_PRODUCTS).map((product) => product.family))]
+const chocolateEntries = isAuMarket ? chocolateFamilies.map((slug) => {
+  const variants = Object.values(CHOCOLATE_PRODUCTS).filter((product) => product.family === slug)
+  return { slug, name: variants[0].name, variants }
+}) : []
+const chocolateDescription = 'Explore the verygood chocolate collection, choose your pack and request Melrose Park pick-up.'
 const cakeListItems = cakeEntries.map((cake, index) => ({
   '@type': 'ListItem',
   position: index + 1,
@@ -255,6 +263,36 @@ const pages = {
         <ul>${cakeEntries.map((cake) => `<li><a href="/cakes/${cake.slug}">${escapeHtml(cake.name)}</a> — ${escapeHtml(cake.priceSummary)}</li>`).join('')}</ul>
       </main>`,
   },
+  ...(isAuMarket ? {
+    '/chocolates': {
+      title: `Chocolates | ${brand}`,
+      description: chocolateDescription,
+      robots: 'noindex, nofollow',
+      omitImage: true,
+      fallbackHtml: `
+      <main class="seo-fallback">
+        <h1>CHOCOLATES</h1>
+        <p>${escapeHtml(chocolateDescription)}</p>
+        <ul>${chocolateEntries.map((entry) => `<li><a href="/chocolates/${entry.slug}">${escapeHtml(entry.name)}</a></li>`).join('')}</ul>
+      </main>`,
+    },
+    ...Object.fromEntries(chocolateEntries.map((entry) => {
+      const path = `/chocolates/${entry.slug}`
+      return [path, {
+        title: `${entry.name} | ${brand}`,
+        description: chocolateDescription,
+        robots: 'noindex, nofollow',
+        omitImage: true,
+        fallbackHtml: `
+      <main class="seo-fallback">
+        <p><a href="/chocolates">View all chocolates</a></p>
+        <h1>${escapeHtml(entry.name)}</h1>
+        <p>${escapeHtml(chocolateDescription)}</p>
+        <ul>${entry.variants.map((variant) => `<li>${escapeHtml(variant.saleUnit)} — AUD ${(variant.unitPriceCents / 100).toFixed(2)}</li>`).join('')}</ul>
+      </main>`,
+      }]
+    })),
+  } : {}),
   '/classes': {
     title: auPublicPages.classes.title,
     description: auPublicPages.classes.description,
