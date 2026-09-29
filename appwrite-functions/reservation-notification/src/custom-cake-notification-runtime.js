@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { Client, Databases, Functions, Storage } from 'node-appwrite'
+import { resolveNotificationAppwriteEndpoint } from './appwrite-endpoint.js'
 import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from '../shared/reservation-api/custom-cake-persistence.js'
 import { checkCustomCakeReadiness } from '../shared/reservation-api/custom-cake-readiness.js'
 import { createResendTransport } from '../shared/email-delivery/resend-transport.js'
@@ -15,7 +16,7 @@ function matchesAdministratorExecution(execute, configuredAdmins) {
   return actual.length === expected.length && actual.every((role, index) => role === expected[index])
 }
 function servicesForRequest(req, env) {
-  const client = new Client().setEndpoint(env.APPWRITE_FUNCTION_API_ENDPOINT).setProject(env.APPWRITE_FUNCTION_PROJECT_ID).setKey(req.headers['x-appwrite-key'])
+  const client = new Client().setEndpoint(resolveNotificationAppwriteEndpoint(env)).setProject(env.APPWRITE_FUNCTION_PROJECT_ID).setKey(req.headers['x-appwrite-key'])
   return { databases: new Databases(client), storage: new Storage(client), functions: new Functions(client) }
 }
 export async function createCustomCakeNotificationRuntime({ req, env, services, now = () => new Date(), createTransport = createResendTransport }) {

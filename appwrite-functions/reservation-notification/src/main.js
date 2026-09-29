@@ -1,4 +1,5 @@
 import { Client, Databases } from 'node-appwrite'
+import { resolveNotificationAppwriteEndpoint } from './appwrite-endpoint.js'
 import {
   buildEmailDeliveryEventKey,
   evaluateEmailDeliveryRetry,
@@ -1148,7 +1149,7 @@ function runtimeResourceId(env, key, fallback) {
 }
 
 export function createRuntimeEmailDeliveryRepository({ req, env = process.env, createDatabases } = {}) {
-  const endpoint = String(env.APPWRITE_FUNCTION_API_ENDPOINT || '').trim()
+  const endpoint = String(resolveNotificationAppwriteEndpoint(env) || '').trim()
   const projectId = String(env.APPWRITE_FUNCTION_PROJECT_ID || '').trim()
   const apiKey = req?.headers?.['x-appwrite-key']
   if (!endpoint || !projectId || typeof apiKey !== 'string' || !apiKey.trim()) {
@@ -1165,7 +1166,7 @@ export function createRuntimeEmailDeliveryRepository({ req, env = process.env, c
 }
 
 export function createRuntimeEmailDeliveryRetryClaimRepository({ req, env = process.env, createDatabases } = {}) {
-  const endpoint = String(env.APPWRITE_FUNCTION_API_ENDPOINT || '').trim()
+  const endpoint = String(resolveNotificationAppwriteEndpoint(env) || '').trim()
   const projectId = String(env.APPWRITE_FUNCTION_PROJECT_ID || '').trim()
   const apiKey = req?.headers?.['x-appwrite-key']
   if (!endpoint || !projectId || typeof apiKey !== 'string' || !apiKey.trim()) {
@@ -1193,7 +1194,7 @@ export function assertBookingConfirmationAdmin(headers = {}, env = process.env) 
 }
 
 export function createRuntimeReservationRepository({ req, env = process.env, createDatabases } = {}) {
-  const endpoint = String(env.APPWRITE_FUNCTION_API_ENDPOINT || '').trim()
+  const endpoint = String(resolveNotificationAppwriteEndpoint(env) || '').trim()
   const projectId = String(env.APPWRITE_FUNCTION_PROJECT_ID || '').trim()
   const apiKey = req?.headers?.['x-appwrite-key']
   if (!endpoint || !projectId || typeof apiKey !== 'string' || !apiKey.trim()) {

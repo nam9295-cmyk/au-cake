@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import './notification-internal-endpoint.test.mjs'
 import { existsSync, readFileSync } from 'node:fs'
 import { createReservationNotificationHandler } from '../appwrite-functions/reservation-notification/src/main.js'
 import { createCustomCakeRepository, customCakeDocumentId } from '../appwrite-functions/reservation-api/src/custom-cake-persistence.js'
