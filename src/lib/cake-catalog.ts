@@ -75,7 +75,6 @@ export type CakeCatalogGroupId =
   | 'signature-gateau'
   | 'gateau-sharing'
   | 'chocolatiers-cake'
-  | 'gather-celebrate'
 
 type LocalizedCatalogGroupCopy = {
   title: string
@@ -276,26 +275,11 @@ const AU_CAKE_CATALOG_GROUPS: readonly CakeCatalogGroupDefinition[] = [
         description: '여럿이 함께 나누기 좋은 갸또 디저트와 케이크.',
       },
     },
-    catalogIds: ['cupcake', 'bento-cake'],
-  },
-  {
-    id: 'gather-celebrate',
-    number: '03',
-    copy: {
-      en: {
-        title: 'GATHER & CELEBRATE',
-        description: 'Refreshing citrus cakes and crowd-pleasing sweets for parties and group orders.',
-      },
-      ko: {
-        title: '개더 & 셀레브레이트',
-        description: '파티와 단체 모임, 특별한 날에 함께하기 좋은 디저트.',
-      },
-    },
-    catalogIds: ['fresh-lemon-cupcakes', 'smore-stick'],
+    catalogIds: ['cupcake', 'bento-cake', 'fresh-lemon-cupcakes'],
   },
   {
     id: 'chocolatiers-cake',
-    number: '04',
+    number: '03',
     copy: {
       en: {
         title: 'CHOCOLATIER’S CAKE',

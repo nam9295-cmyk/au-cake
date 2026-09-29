@@ -1,7 +1,5 @@
 import { AuProductCard } from '../components/AuRedesignChrome'
-import { auEditorialImages, getAuOrderableCakeCards } from '../lib/au-catalog'
-import { getAuChocolatePreviews } from '../lib/au-chocolate-preview'
-import { auChocolateAssets } from '../lib/au-chocolate-assets'
+import { auEditorialImages, getAuChocolateCollectionCards, getAuOrderableCakeCards } from '../lib/au-catalog'
 import type { Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 
@@ -12,7 +10,7 @@ export function AuCategoryPage({ category, language, onOpenCake }: {
 }) {
   if (marketConfig.market !== 'AU') return null
   const cakes = getAuOrderableCakeCards(language)
-  const chocolates = getAuChocolatePreviews()
+  const chocolates = getAuChocolateCollectionCards(language)
   const isCake = category === 'cakes'
   return <main className="au-redesign-category" data-au-category={category}>
     <header className="au-redesign-category-heading">
@@ -40,8 +38,8 @@ export function AuCategoryPage({ category, language, onOpenCake }: {
           description={card.optionLabel} price={card.priceLabel}
           onOpen={onOpenCake ? () => onOpenCake(card.slug) : undefined} />)
           : chocolates.map((card) => <AuProductCard key={card.slug} slug={card.slug}
-            href={`/chocolates/${card.slug}`} name={card.name} image={auChocolateAssets[card.slug].src} imageAlt={auChocolateAssets[card.slug].alt}
-            description={card.packLabel} price={card.price} />)}
+            href={card.href} name={card.name} image={card.image} imageAlt={card.imageAlt}
+            description={card.description} price={card.price} />)}
       </div>
     </div>
     <figure className="au-redesign-wide-photo"><img src={isCake ? auEditorialImages.making : auEditorialImages.craft} alt="Chocolate and cake making in the atelier" loading="lazy" width={1440} height={480} /></figure>

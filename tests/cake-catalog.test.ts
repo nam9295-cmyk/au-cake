@@ -127,7 +127,7 @@ test('AU cake catalog owns eight unique public slugs and stable backend product 
   assert.equal(getCakeCatalogEntryByProductId('choco-basque-cheesecake'), null)
 })
 
-test('AU catalogue groups own the exact bilingual four-by-two presentation contract', () => {
+test('AU catalogue groups place Lemon in Sharing and remove Gather without changing products', () => {
   const english = getAuCakeCatalogGroups('en')
   const korean = getAuCakeCatalogGroups('ko')
 
@@ -152,18 +152,11 @@ test('AU catalogue groups own the exact bilingual four-by-two presentation contr
         number: '02',
         title: 'GÂTEAU SHARING',
         description: 'Chocolate gâteau creations crafted for gatherings and shared celebration.',
-        productIds: ['cupcake', 'bento-cake'],
-      },
-      {
-        id: 'gather-celebrate',
-        number: '03',
-        title: 'GATHER & CELEBRATE',
-        description: 'Refreshing citrus cakes and crowd-pleasing sweets for parties and group orders.',
-        productIds: ['fresh-lemon-cupcakes', 'smore-stick'],
+        productIds: ['cupcake', 'bento-cake', 'fresh-lemon-cupcakes'],
       },
       {
         id: 'chocolatiers-cake',
-        number: '04',
+        number: '03',
         title: 'CHOCOLATIER’S CAKE',
         description: 'Classic artisanal cakes crafted with fresh cream and rich chocolate balance.',
         productIds: ['fresh-strawberry-vanilla-cream', 'brownie-cheesecake'],
@@ -176,16 +169,18 @@ test('AU catalogue groups own the exact bilingual four-by-two presentation contr
     [
       { title: '시그니처 갸또', description: '진하고 밀도감 있는 시그니처 갸또 쇼콜라 시트로 완성한 케이크.' },
       { title: '갸또 셰어링', description: '여럿이 함께 나누기 좋은 갸또 디저트와 케이크.' },
-      { title: '개더 & 셀레브레이트', description: '파티와 단체 모임, 특별한 날에 함께하기 좋은 디저트.' },
       { title: '쇼콜라티에 케이크', description: '신선한 생크림과 진한 초콜릿의 조화로 완성한 케이크.' },
     ],
   )
 
-  assert.equal(english.length, 4)
-  assert.ok(english.every((group) => group.cards.length === 2))
+  assert.equal(english.length, 3)
+  assert.deepEqual(english.flatMap((group) => group.cards.map((card) => card.id)), [
+    'pave', 'signature-gateau', 'cupcake', 'bento-cake', 'fresh-lemon-cupcakes',
+    'fresh-strawberry-vanilla-cream', 'brownie-cheesecake',
+  ])
   const currentIds = english.flatMap((group) => group.cards.map((card) => card.id))
-  assert.equal(currentIds.length, 8)
-  assert.equal(new Set(currentIds).size, 8)
+  assert.equal(currentIds.length, 7)
+  assert.equal(new Set(currentIds).size, 7)
   assert.equal(currentIds.includes('vanilla-fresh-cream'), false)
   assert.equal(currentIds.includes('buttercream'), false)
   assert.equal(getAuCakeCatalog().flatMap((entry) => entry.productIds).includes('eiffel-tower-brownie-cheesecake'), false)

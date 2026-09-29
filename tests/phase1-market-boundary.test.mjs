@@ -70,11 +70,18 @@ async function renderPages(market, original) {
   }
 }
 
-test('AU category exposes the editorial grid with only seven purchasable catalogue entries', async () => {
-  const { cakes } = await render('AU')
+test('AU Cakes excludes S’more while Chocolates includes its existing cake-detail route', async () => {
+  const { cakes, chocolates, home } = await render('AU')
   assert.match(cakes, /au-redesign-category/)
-  assert.equal((cakes.match(/data-au-product=/g) || []).length, 7)
+  assert.equal((cakes.match(/data-au-product=/g) || []).length, 6)
   assert.doesNotMatch(cakes, /href="\/cakes\/bento-cake"/)
+  assert.doesNotMatch(cakes, /data-au-product="smore-stick"/)
+  assert.match(chocolates, /CHOCOLATES <span>\[4\]<\/span>/)
+  assert.equal((chocolates.match(/data-au-product=/g) || []).length, 4)
+  assert.match(chocolates, /data-au-product="smore-stick"[\s\S]*?href="\/cakes\/smore-stick"/)
+  assert.doesNotMatch(chocolates, /href="\/chocolates\/smore-stick"/)
+  assert.match(home, /data-au-product="smore-stick"[\s\S]*?href="\/cakes\/smore-stick"/)
+  assert.doesNotMatch(home, /GATHER &amp; CELEBRATE/)
   assert.match(cakes, /href="\/chocolates"/)
 })
 
@@ -129,7 +136,7 @@ test('chocolate preview routes exist only in AU and unknown products fail closed
 test('chocolate routes show approved sale units and real add-to-order controls', async () => {
   const { home, chocolates, chocolate, chocolateDetails, chocolateProducts } = await render('AU')
   assert.doesNotMatch(home, /80g · Preview|100g · Preview|6 pieces · Preview/)
-  assert.equal((chocolates.match(/data-au-product=/g) || []).length, 3)
+  assert.equal((chocolates.match(/data-au-product=/g) || []).length, 4)
   assert.doesNotMatch(chocolates, /coming soon|preview/i)
   assert.match(chocolate, /80g/)
   assert.match(chocolate, /AUD 12\.00/)
@@ -188,13 +195,16 @@ test('AU Home filters chocolates inline while standalone category navigation rem
   const { home, cakes, chocolates } = await render('AU')
   const homeRail = home.match(/<nav[^>]*aria-label="Collection categories"[^>]*>([\s\S]*?)<\/nav>/)[1]
   const homeHeader = home.match(/<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
-  assert.match(homeRail, /<button[^>]*aria-pressed="false"[^>]*><span>CHOCOLATES<\/span><span[^>]*>\[3\]<\/span><\/button>/)
+  assert.match(homeRail, /<button[^>]*aria-pressed="false"[^>]*><span>CHOCOLATES<\/span><span[^>]*>\[4\]<\/span><\/button>/)
+  assert.match(homeRail, /GÂTEAU SHARING<\/span><span[^>]*>\[3\]<\/span>/)
+  assert.doesNotMatch(homeRail, /GATHER/)
   assert.doesNotMatch(homeRail, /href="\/chocolates"/)
   assert.match(homeRail, /ALL PRODUCTS<\/span><span[^>]*>\[12\]<\/span>/)
   assert.match(homeHeader, /href="\/chocolates">CHOCOLATES<\/a>/)
   for (const category of [cakes, chocolates]) {
     const rail = category.match(/<nav[^>]*aria-label="Product categories"[^>]*>([\s\S]*?)<\/nav>/)[1]
-    assert.match(rail, /href="\/chocolates"[^>]*>CHOCOLATES \[3\]<\/a>/)
+    assert.match(rail, /href="\/cakes"[^>]*>CAKES \[6\]<\/a>/)
+    assert.match(rail, /href="\/chocolates"[^>]*>CHOCOLATES \[4\]<\/a>/)
   }
 })
 

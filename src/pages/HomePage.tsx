@@ -6,27 +6,21 @@ import glutenFreeStampImg from '../assets/glutenfree.webp'
 import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
 import PublicReviewsSection from '../PublicReviewsSection'
 import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
+import { getAuChocolateCollectionCards } from '../lib/au-catalog'
 import { appwriteConfig, functions } from '../lib/appwrite'
 import { type Page } from '../lib/app-routes'
-import { getAuCakeCatalogGroups, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogImageKey } from '../lib/cake-catalog'
+import { getAuCakeCatalogGroups, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogGroupId, type CakeCatalogImageKey } from '../lib/cake-catalog'
 import { cakeCopy, type Language } from '../lib/i18n'
 import { marketConfig } from '../lib/market'
 import { getAuPublicContent, getPublicCakePage } from '../lib/public-content'
-import { getAuChocolatePreviews } from '../lib/au-chocolate-preview'
-import { auChocolateAssets } from '../lib/au-chocolate-assets'
 
 const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().home : null
 
-const AU_CATALOG_GROUP_MARKERS = {
+const AU_CATALOG_GROUP_MARKERS: Record<CakeCatalogGroupId, string> = {
   'signature-gateau': '/category-marker-01.svg',
   'gateau-sharing': '/category-marker-02.svg',
-  'gather-celebrate': '/category-marker-03.svg',
-  'chocolatiers-cake': '/category-marker-04.svg',
-  'custom-creative': '/category-marker-05.svg',
-  'gateau-daily': '/category-marker-02.svg',
-  'fresh-cream-cakes': '/category-marker-03.svg',
-  'tea-time-refresh': '/category-marker-04.svg',
-} as const
+  'chocolatiers-cake': '/category-marker-03.svg',
+}
 
 const quickViewImages: Record<CakeCatalogImageKey, string> = {
   'pound-cake': '/products/details/chocolate-pound-cake-quick-view.webp',
@@ -57,7 +51,6 @@ type RedesignCategoryKey =
   | 'ALL'
   | 'SIGNATURE_GATEAU'
   | 'GATEAU_SHARING'
-  | 'GATHER_CELEBRATE'
   | 'CHOCOLATIERS_CAKE'
   | 'CUSTOM_CREATIVE'
   | 'CHOCOLATES'
@@ -70,28 +63,20 @@ interface RedesignProduct {
   photoAlt?: string
   price: string
   slug: string
+  href: string
   category: Exclude<RedesignCategoryKey, 'ALL'>
 }
 
-const CATEGORY_TABS: readonly {
-  key: RedesignCategoryKey
-  label: string
-  heading: string
-}[] = [
-  { key: 'ALL', label: 'ALL PRODUCTS', heading: 'All Creations' },
-  { key: 'SIGNATURE_GATEAU', label: 'SIGNATURE GÂTEAU', heading: 'Signature Gâteau' },
-  { key: 'GATEAU_SHARING', label: 'GÂTEAU SHARING', heading: 'Gâteau Sharing' },
-  { key: 'GATHER_CELEBRATE', label: 'GATHER & CELEBRATE', heading: 'Gather & Celebrate' },
-  { key: 'CHOCOLATIERS_CAKE', label: 'CHOCOLATIER’S CAKE', heading: 'Chocolatier’s Cake' },
-  { key: 'CUSTOM_CREATIVE', label: 'CUSTOM & CREATIVE', heading: 'Custom & Creative' },
-  { key: 'CHOCOLATES', label: 'CHOCOLATES', heading: 'Chocolates' },
-]
-
-const REDESIGN_CATEGORY_BY_GROUP: Record<string, Exclude<RedesignCategoryKey, 'ALL'>> = {
+const REDESIGN_CATEGORY_BY_GROUP: Record<CakeCatalogGroupId, Exclude<RedesignCategoryKey, 'ALL'>> = {
   'signature-gateau': 'SIGNATURE_GATEAU',
   'gateau-sharing': 'GATEAU_SHARING',
-  'gather-celebrate': 'GATHER_CELEBRATE',
   'chocolatiers-cake': 'CHOCOLATIERS_CAKE',
+}
+
+const REDESIGN_HEADING_BY_GROUP: Record<CakeCatalogGroupId, string> = {
+  'signature-gateau': 'Signature Gâteau',
+  'gateau-sharing': 'Gâteau Sharing',
+  'chocolatiers-cake': 'Chocolatier’s Cake',
 }
 
 export function HomePage(props: Parameters<typeof LegacyHomePage>[0]) {
@@ -151,16 +136,24 @@ function AuHomePage({
   const catalogCards = catalogGroups.flatMap((group) => group.cards)
   const redesignProducts: RedesignProduct[] = catalogGroups.flatMap((group) => group.cards.map((card) => ({
     id: card.id, name: card.name, sub: card.optionLabel, photo: card.imagePath,
-    price: card.priceLabel, slug: card.slug, category: REDESIGN_CATEGORY_BY_GROUP[group.id]!,
+    price: card.priceLabel, slug: card.slug, href: `/cakes/${card.slug}`, category: REDESIGN_CATEGORY_BY_GROUP[group.id],
   })))
   redesignProducts.push({ id: 'custom-cake', name: 'CUSTOM CAKES', sub: 'Bespoke celebration cakes',
-    photo: '/products/custom-cake.webp', price: 'BY QUOTE', slug: 'custom-cake', category: 'CUSTOM_CREATIVE' })
-  redesignProducts.push(...getAuChocolatePreviews().map((product): RedesignProduct => ({
-    id: product.slug, name: product.name, sub: product.packLabel,
-    photo: auChocolateAssets[product.slug].src, photoAlt: auChocolateAssets[product.slug].alt,
-    price: product.price, slug: product.slug, category: 'CHOCOLATES',
+    photo: '/products/custom-cake.webp', price: 'BY QUOTE', slug: 'custom-cake', href: '/cakes/custom-cake', category: 'CUSTOM_CREATIVE' })
+  redesignProducts.push(...getAuChocolateCollectionCards(language).map((product): RedesignProduct => ({
+    id: product.id, name: product.name, sub: product.description,
+    photo: product.image, photoAlt: product.imageAlt,
+    price: product.price, slug: product.slug, href: product.href, category: 'CHOCOLATES',
   })))
-  const categoryTabs = CATEGORY_TABS.map((tab) => ({
+  const tabDefinitions: { key: RedesignCategoryKey; label: string; heading: string }[] = [
+    { key: 'ALL', label: 'ALL PRODUCTS', heading: 'All Creations' },
+    ...catalogGroups.map((group) => ({
+      key: REDESIGN_CATEGORY_BY_GROUP[group.id], label: group.title, heading: REDESIGN_HEADING_BY_GROUP[group.id],
+    })),
+    { key: 'CUSTOM_CREATIVE', label: 'CUSTOM & CREATIVE', heading: 'Custom & Creative' },
+    { key: 'CHOCOLATES', label: 'CHOCOLATES', heading: 'Chocolates' },
+  ]
+  const categoryTabs = tabDefinitions.map((tab) => ({
     ...tab,
     count: tab.key === 'ALL' ? redesignProducts.length : redesignProducts.filter((product) => product.category === tab.key).length,
   }))
@@ -529,7 +522,7 @@ function AuHomePage({
                   key={prod.id}
                   data-au-product={prod.slug}
                 >
-                  <a href={`/${prod.category === 'CHOCOLATES' ? 'chocolates' : 'cakes'}/${prod.slug}`}>
+                  <a href={prod.href}>
                   <header className="rd-product-card-header">
                     <h3 className="rd-product-name">{prod.name}</h3>
                     <p className="rd-product-sub">{prod.sub}</p>
