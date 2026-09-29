@@ -8,13 +8,14 @@ import { createCustomCakeRateLimiter, resolveCustomCakeAdmin } from './custom-ca
 import { createCakeV2CouponLedger } from './custom-cake-coupons.js'
 import { normalizeAustralianMobile } from './business.js'
 import { legacyCakeWireMode } from './custom-cake-legacy-gate.js'
+import { resolveReservationAppwriteEndpoint } from './appwrite-endpoint.js'
 
 // Appwrite Databases transactions are authorized by documents.write. The
 // request uses only the platform dynamic key, so Function.scopes is authoritative.
 export const CUSTOM_CAKE_REQUIRED_SCOPES = Object.freeze(['functions.read', 'databases.read', 'collections.read', 'documents.read', 'documents.write', 'buckets.read', 'files.read', 'files.write'])
 
 export function cakeServicesForRequest(req, env) {
-  const endpoint = env.APPWRITE_FUNCTION_API_ENDPOINT, projectId = env.APPWRITE_FUNCTION_PROJECT_ID, key = req.headers?.['x-appwrite-key']
+  const endpoint = resolveReservationAppwriteEndpoint(env), projectId = env.APPWRITE_FUNCTION_PROJECT_ID, key = req.headers?.['x-appwrite-key']
   if (!endpoint || !projectId || !key) cakeWireFail('CAPABILITY_UNAVAILABLE')
   const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(key)
   return {

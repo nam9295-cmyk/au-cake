@@ -36,6 +36,7 @@ import { isCakeWireAction, handleCakeWireRequest, handleCakePhotoRecovery } from
 import { createLegacyCakeGate } from './custom-cake-legacy-gate.js'
 import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from './custom-cake-persistence.js'
 import { scanCustomCakeSnapshots } from './custom-cake-list.js'
+import { resolveReservationAppwriteEndpoint } from './appwrite-endpoint.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -65,9 +66,9 @@ export function resolveReservationConfig(env = process.env) {
 
 const config = reservationResourceConfig()
 
-function clientForRequest(req) {
-  const endpoint = process.env.APPWRITE_FUNCTION_API_ENDPOINT
-  const projectId = process.env.APPWRITE_FUNCTION_PROJECT_ID
+function clientForRequest(req, env) {
+  const endpoint = resolveReservationAppwriteEndpoint(env)
+  const projectId = env.APPWRITE_FUNCTION_PROJECT_ID
   const apiKey = req.headers['x-appwrite-key']
   if (!endpoint || !projectId || !apiKey) throw new ReservationApiError('FUNCTION_CONFIGURATION_ERROR', 500)
   return new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey)
@@ -708,12 +709,12 @@ return async ({ req, res, log, error }) => {
     const body = requestBody(req)
     action = body.action
     const runtimeConfig = resolveReservationConfig(env)
-    const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req))
+    const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req, env))
 
     let result
     if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig, { chocolateWritesEnabled })
     else if (action === 'create-cake') {
-      const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: new Storage(clientForRequest(req)) }
+      const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: new Storage(clientForRequest(req, env)) }
       const legacyGate = createLegacyCakeGate({ env, services })
       result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, chocolateWritesEnabled, legacyGate })
     }
