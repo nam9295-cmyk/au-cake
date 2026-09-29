@@ -151,7 +151,7 @@ test('AU catalogue groups place Lemon in Sharing and remove Gather without chang
         id: 'gateau-sharing',
         number: '02',
         title: 'GÂTEAU SHARING',
-        description: 'Chocolate gâteau creations crafted for gatherings and shared celebration.',
+        description: 'Cakes and gâteau creations made for sharing, gatherings and celebrations.',
         productIds: ['cupcake', 'bento-cake', 'fresh-lemon-cupcakes'],
       },
       {

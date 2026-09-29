@@ -268,7 +268,7 @@ const AU_CAKE_CATALOG_GROUPS: readonly CakeCatalogGroupDefinition[] = [
     copy: {
       en: {
         title: 'GÂTEAU SHARING',
-        description: 'Chocolate gâteau creations crafted for gatherings and shared celebration.',
+        description: 'Cakes and gâteau creations made for sharing, gatherings and celebrations.',
       },
       ko: {
         title: '갸또 셰어링',

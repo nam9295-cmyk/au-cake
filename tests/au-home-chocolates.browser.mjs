@@ -58,6 +58,12 @@ async (page) => {
     await main.locator('a[href="/chocolates/pave-chocolate"]').click()
     await page.waitForURL(`${origin}/chocolates/pave-chocolate`)
     check(await page.locator('[data-au-template="chocolate"]').count() === 1, 'Chocolate detail did not open')
+    await page.goto(`${origin}/cakes/smore-stick`)
+    await page.getByRole('button', { name: 'Back to chocolates' }).click()
+    await page.waitForURL(`${origin}/chocolates`)
+    await page.goto(`${origin}/cakes/pave-chocolate-cake`)
+    await page.getByRole('button', { name: 'Back to cakes' }).click()
+    await page.waitForURL(`${origin}/cakes`)
     results.push({ width, chocolateCards: 4, allCards: 12, inlineSwitching: true, keyboard: true, detailLink: true })
   }
   return { passed: results.length, results }

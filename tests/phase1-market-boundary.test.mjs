@@ -44,6 +44,7 @@ async function renderPages(market, original) {
             onOpenCake() {}, onBack() {}, onBrowseCakes() {}, onAddToOrder() {}, onViewOrder() {} };
           const html = (component, extra = {}) => renderToStaticMarkup(React.createElement(component, {...props, ...extra}));
           console.log(JSON.stringify({ cakes: html(CakesPage), cake: html(CakeDetailPage, {slug: 'pave-chocolate-cake'}),
+            smore: html(CakeDetailPage, {slug: 'smore-stick'}),
             cupcake: html(CakeDetailPage, {slug: 'chocolate-cupcakes'}), custom: html(CustomCakePage), home: html(HomePage),
             chocolates: html(AuCategoryPage, {category: 'chocolates'}),
             chocolate: html(AuChocolatePage, {slug: 'almond-chocoball'}),
@@ -96,6 +97,17 @@ test('AU detail selects cake and party templates while retaining real option con
   assert.match(cupcake, /name="individualPackaging"/)
   assert.match(cupcake, /AUD 0\.50 per piece/)
   assert.match(cupcake, /PARTY, CELEBRATION/)
+})
+
+test('AU S’more breadcrumb points back to Chocolates while other Cake and KR routes stay unchanged', async () => {
+  const au = await render('AU')
+  const kr = await render('KR')
+  assert.match(au.smore, /<nav class="cake-detail-breadcrumb"[^>]*><button[^>]*>.*?Back to chocolates<\/button><\/nav>/)
+  assert.doesNotMatch(au.smore, /Back to cakes/)
+  assert.match(au.cake, /<nav class="cake-detail-breadcrumb"[^>]*><button[^>]*>.*?Back to cakes<\/button><\/nav>/)
+  assert.match(kr.smore, /class="cake-detail-not-found"/)
+  assert.match(kr.cake, /class="cake-detail-not-found"/)
+  assert.doesNotMatch(kr.smore, /Back to chocolates/)
 })
 
 test('AU custom introduction explains original design without adding an unsupported upload or enabled submit', async () => {

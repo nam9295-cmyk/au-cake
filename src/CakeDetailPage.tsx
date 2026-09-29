@@ -656,7 +656,7 @@ export default function CakeDetailPage({
       <nav className="cake-detail-breadcrumb" aria-label={language === 'ko' ? '경로' : 'Breadcrumb'}>
         <button type="button" onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" />
-          {language === 'ko' ? '케이크로 돌아가기' : 'Back to cakes'}
+          {isAuRedesign && isSmoreStick ? 'Back to chocolates' : language === 'ko' ? '케이크로 돌아가기' : 'Back to cakes'}
         </button>
       </nav>
 

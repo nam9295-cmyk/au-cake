@@ -314,7 +314,7 @@ function App() {
             key={currentCakeSlug}
             slug={currentCakeSlug}
             language={language}
-            onBack={() => navigate('cakes')}
+            onBack={() => navigate(marketConfig.market === 'AU' && currentCakeSlug === 'smore-stick' ? 'chocolates' : 'cakes')}
             onBrowseCakes={() => navigate('cakes')}
             onOpenCake={navigateToCake}
             onAddToOrder={addCartLine}
