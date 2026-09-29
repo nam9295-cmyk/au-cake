@@ -73,6 +73,108 @@ function wire(handler) {
   account.createJWT = async () => { throw new Error('manual browser JWT creation must not run') }
   return calls
 }
+function flavourButton(page, flavour) {
+  return page.find(node => node.type?.name === 'OptionButton' && node.props.children?.props?.children === flavour)
+}
+function fillRequiredRequest(page) {
+  for (const [suffix, value] of [
+    ['-name', 'Original Customer'], ['-phone', '+61 412 345 678'],
+    ['-email', 'example@example.com'], ['-pickup-date', '2026-12-01'],
+  ]) {
+    page.find(node => node.type === 'input' && node.props.id?.endsWith(suffix)).props.onChange({ target: { value } })
+    page.render()
+  }
+  page.find(node => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } })
+  page.render()
+}
+test('AU flavour options start unselected, retain the specified order, and update one selection in the summary', () => {
+  const initial = renderToStaticMarkup(React.createElement(CustomCakePage, props))
+  const order = ['Choose your size', 'Choose your flavour', 'Triple Berry', 'Nutella', 'Oreo', 'Biscoff', 'Cake quantity']
+  for (let index = 1; index < order.length; index++) {
+    assert.ok(initial.indexOf(order[index - 1]) < initial.indexOf(order[index]), `${order[index]} should follow ${order[index - 1]}`)
+  }
+  assert.doesNotMatch(initial, /Flavour ·/)
+  const page = mount(CustomCakePage, props)
+  for (const flavour of order.slice(2, 6)) assert.equal(flavourButton(page, flavour).props.active, false)
+  for (const selected of order.slice(2, 6)) {
+    flavourButton(page, selected).props.onClick()
+    page.render()
+    for (const flavour of order.slice(2, 6)) assert.equal(flavourButton(page, flavour).props.active, flavour === selected)
+    page.find(node => node.type === 'span' && node.props.children === `Flavour · ${selected}`)
+  }
+  page.unmount()
+})
+
+test('AU refuses an unselected flavour before sending the Custom Cake wire request', async () => {
+  const calls = wire(action => action === 'get-cake-wire-capabilities' ? capabilities : fixture.created)
+  const page = mount(CustomCakePage, props)
+  await page.flush()
+  fillRequiredRequest(page)
+  await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
+  page.render()
+  page.find(node => node.props.children === 'Please choose your flavour.')
+  assert.equal(calls.filter(call => call.action === 'create-custom-cake-request').length, 0)
+  flavourButton(page, 'Biscoff').props.onClick(); page.render()
+  assert.throws(() => page.find(node => node.props?.role === 'alert'), /expected rendered control/)
+  page.unmount()
+})
+
+test('AU submits every flavour through the existing designNote field, including an empty customer note', async () => {
+  for (const flavour of ['Triple Berry', 'Nutella', 'Oreo', 'Biscoff']) {
+    const calls = wire(action => action === 'get-cake-wire-capabilities' ? capabilities : fixture.created)
+    const page = mount(CustomCakePage, props)
+    await page.flush()
+    fillRequiredRequest(page)
+    flavourButton(page, flavour).props.onClick(); page.render()
+    const customerNote = flavour === 'Biscoff' ? '' : 'Blue ribbon\nGold piping'
+    page.find(node => node.type === 'textarea' && node.props.id?.endsWith('-design-note')).props.onChange({ target: { value: customerNote } })
+    page.render()
+    await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
+    const sent = calls.find(call => call.action === 'create-custom-cake-request')?.data
+    assert.ok(sent)
+    assert.equal(sent.contractVersion, 'custom-cake.v1')
+    assert.equal(sent.lines[0].designNote, `[Flavour: ${flavour}]\n\n${customerNote}`)
+    assert.equal(Object.hasOwn(sent.lines[0], 'flavour'), false)
+    page.unmount()
+  }
+})
+
+test('AU reserves 25 prefix characters, accepts 975 customer characters, and rejects over-limit input without truncation', async () => {
+  const calls = wire(action => action === 'get-cake-wire-capabilities' ? capabilities : fixture.created)
+  const page = mount(CustomCakePage, props)
+  await page.flush()
+  fillRequiredRequest(page)
+  flavourButton(page, 'Triple Berry').props.onClick(); page.render()
+  const textarea = page.find(node => node.type === 'textarea' && node.props.id?.endsWith('-design-note'))
+  assert.equal(textarea.props.maxLength, 975)
+  page.find(node => node.type === 'span' && node.props.className === 'custom-cake-char-counter' && node.props.children.join('') === '0 / 975')
+  textarea.props.onChange({ target: { value: 'A'.repeat(976) } }); page.render()
+  await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} }); page.render()
+  assert.equal(calls.filter(call => call.action === 'create-custom-cake-request').length, 0)
+  page.find(node => node.props.children === 'Design notes must be 975 characters or fewer.')
+  page.find(node => node.type === 'textarea' && node.props.id?.endsWith('-design-note')).props.onChange({ target: { value: 'A'.repeat(975) } }); page.render()
+  await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
+  const sent = calls.find(call => call.action === 'create-custom-cake-request')?.data.lines[0].designNote
+  assert.equal(sent, `[Flavour: Triple Berry]\n\n${'A'.repeat(975)}`)
+  assert.equal(sent.length, 1000)
+  page.unmount()
+})
+
+test('existing customer lookup and admin order views show the persisted flavour note', async () => {
+  const lookup = structuredClone(fixture.lookup)
+  lookup.lines[0].designNote = '[Flavour: Oreo]\n\nBlue ribbon'
+  const customerHtml = renderToStaticMarkup(React.createElement(CustomCakeLookupResult, {
+    result: parseCustomCakeLookupResponse(lookup), language: 'en',
+  }))
+  assert.match(customerHtml, /\[Flavour: Oreo\]/)
+  assert.match(customerHtml, /Blue ribbon/)
+  wire(action => action === 'admin-list-custom-cake-requests' ? { requests: [lookup] } : lookup)
+  const admin = mount(AdminCustomCakesSection)
+  await admin.flush()
+  admin.find(node => node.type === 'tr' && node.props.onClick).props.onClick(); admin.render()
+  admin.find(node => node.type === 'p' && node.props.children === '[Flavour: Oreo]\n\nBlue ribbon')
+  admin.unmount()
+})
 test('actual request UI explains promo code and date rejection in both languages', async () => {
   for (const [language, message] of [
     ['en', 'Please check the promo code and promotion dates.'],
@@ -85,6 +187,7 @@ test('actual request UI explains promo code and date rejection in both languages
     let completed = false
     const page = mount(CustomCakePage, { ...props, language, onComplete() { completed = true } })
     await page.flush()
+    flavourButton(page, 'Triple Berry').props.onClick(); page.render()
     for (const [suffix, value] of [
       ['-name', 'Original Customer'], ['-phone', '+61 412 345 678'],
       ['-email', 'example@example.com'], ['-pickup-date', '2026-12-01'], ['-promo-code', 'VERYGOOD CUSTOM'],
@@ -214,6 +317,7 @@ test('actual submit handler freezes UUID line IDs, contact and options across ti
   })
   const page = mount(CustomCakePage, { ...props, onComplete(result) { completed = result } })
   await page.flush()
+  flavourButton(page, 'Triple Berry').props.onClick(); page.render()
   const change = (suffix, value) => { page.find(node => node.type === 'input' && node.props.id?.endsWith(suffix)).props.onChange({ target: { value } }); page.render() }
   change('-name', 'Original Customer'); change('-phone', '+61 412 345 678'); change('-email', 'EXAMPLE@EXAMPLE.COM'); change('-pickup-date', '2026-10-05')
   change('-promo-code', ' VeryGood Custom ')

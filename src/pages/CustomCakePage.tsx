@@ -20,6 +20,9 @@ import { AuCustomCakeIntro } from '../components/AuCustomCakeIntro'
 
 type SingleTierSize = '6in' | '8in' | '10in'
 type DoubleTierSize = '4in+6in' | '6in+8in' | '8in+10in'
+const CUSTOM_CAKE_FLAVOURS = ['Triple Berry', 'Nutella', 'Oreo', 'Biscoff'] as const
+type CustomCakeFlavour = (typeof CUSTOM_CAKE_FLAVOURS)[number]
+const AU_DESIGN_NOTE_LIMIT = 1000 - '[Flavour: Triple Berry]\n\n'.length
 
 function OptionButton({
   active,
@@ -72,6 +75,7 @@ export function CustomCakePage({
   const [tier, setTier] = useState<'single' | 'double'>('single')
   const [singleSize, setSingleSize] = useState<SingleTierSize>('6in')
   const [doubleSize, setDoubleSize] = useState<DoubleTierSize>('4in+6in')
+  const [flavour, setFlavour] = useState<CustomCakeFlavour | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [pickupDate, setPickupDate] = useState('')
   const [pickupTime, setPickupTime] = useState('12:00')
@@ -97,6 +101,7 @@ export function CustomCakePage({
   // Submission state
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const flavourRequiredMessage = language === 'ko' ? '케이크 맛을 선택해 주세요.' : 'Please choose your flavour.'
 
   const startNewIntent = () => {
     if (submitting) return
@@ -112,6 +117,19 @@ export function CustomCakePage({
     e.preventDefault()
     if (!intent || !ready || submitting) return
     setErrorMessage('')
+
+    if (isAuRedesign && !flavour) {
+      setErrorMessage(flavourRequiredMessage)
+      return
+    }
+
+    const submittedDesignNote = isAuRedesign
+      ? `[Flavour: ${flavour}]\n\n${designNote}`
+      : designNote.trim()
+    if (isAuRedesign && (designNote.length > AU_DESIGN_NOTE_LIMIT || submittedDesignNote.length > 1000)) {
+      setErrorMessage(language === 'ko' ? '디자인 설명은 975자 이내로 입력해 주세요.' : 'Design notes must be 975 characters or fewer.')
+      return
+    }
 
     if (!privacyConsent) {
       setErrorMessage(
@@ -178,7 +196,7 @@ export function CustomCakePage({
           ...(tier === 'single'
             ? { tier: 'single' as const, size: singleSize }
             : { tier: 'double' as const, size: doubleSize }),
-          designNote: designNote.trim(),
+          designNote: submittedDesignNote,
           figurineSource,
           photoRefs: [],
         },
@@ -353,6 +371,20 @@ export function CustomCakePage({
                 </div>
               </fieldset>
 
+              {isAuRedesign && <fieldset disabled={locked} className="cake-detail-fieldset">
+                <legend>{language === 'ko' ? '케이크 맛 선택' : 'Choose your flavour'}</legend>
+                <div className="cake-detail-options">
+                  {CUSTOM_CAKE_FLAVOURS.map((option) => (
+                    <OptionButton active={flavour === option} onClick={() => {
+                      setFlavour(option)
+                      setErrorMessage(current => current === flavourRequiredMessage ? '' : current)
+                    }} key={option}>
+                      <strong>{option}</strong>
+                    </OptionButton>
+                  ))}
+                </div>
+              </fieldset>}
+
               {/* Cake Quantity */}
               <fieldset disabled={locked} className="cake-detail-fieldset">
                 <legend>{language === 'ko' ? '케이크 수량' : 'Cake quantity'}</legend>
@@ -424,6 +456,9 @@ export function CustomCakePage({
                       {language === 'ko' ? '커스텀 케이크' : 'Custom Cake'} · {tier === 'single' ? `Single (${singleSize})` : `Double (${doubleSize})`} × {quantity}
                     </strong>
                     <div className="custom-cake-quote-lines">
+                      {isAuRedesign && flavour && <div className="quote-micro-line">
+                        <span>{`${language === 'ko' ? '맛' : 'Flavour'} · ${flavour}`}</span>
+                      </div>}
                       <div className="quote-micro-line is-tbd">
                         <span>{language === 'ko' ? '디자인 / 피규어 추가비' : 'Design & figurine extra'}</span>
                         <span>{formatExtraCents(null, language)}</span>
@@ -536,7 +571,7 @@ export function CustomCakePage({
                 <textarea
                   id={`${formId}-design-note`}
                   rows={4}
-                  maxLength={1000}
+                  maxLength={isAuRedesign ? AU_DESIGN_NOTE_LIMIT : 1000}
                   placeholder={
                     language === 'ko'
                       ? '원하시는 색상 톤, 디자인 스타일, 케이크 문구(레터링) 등을 자유롭게 작성해 주세요.'
@@ -545,7 +580,7 @@ export function CustomCakePage({
                   value={designNote}
                   onChange={(e) => setDesignNote(e.target.value)}
                 />
-                <span className="custom-cake-char-counter">{designNote.length} / 1000</span>
+                <span className="custom-cake-char-counter">{designNote.length} / {isAuRedesign ? AU_DESIGN_NOTE_LIMIT : 1000}</span>
               </div>
 
               <div className="custom-cake-field" style={{ marginTop: '18px' }}>

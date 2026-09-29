@@ -61,6 +61,17 @@ test('contact and notes normalize; canonical replay does not consult pickup cloc
   }
 })
 
+test('existing custom-cake.v1 normalization retains an empty-note flavour prefix and enforces the 1000-character wire limit', () => {
+  const request = copy(custom.request)
+  request.lines[0].designNote = '[Flavour: Biscoff]\n\n'
+  assert.equal(input.normalizeCustomCakeV1Request(request).lines[0].designNote, '[Flavour: Biscoff]')
+
+  request.lines[0].designNote = `[Flavour: Triple Berry]\n\n${'A'.repeat(975)}`
+  assert.equal(input.normalizeCustomCakeV1Request(request).lines[0].designNote.length, 1000)
+  request.lines[0].designNote += 'B'
+  reject(() => input.normalizeCustomCakeV1Request(request))
+})
+
 test('strict request, customer, pickup and selected line fields reject injected pricing or wrong scalars', () => {
   for (const row of canonical) {
     for (const mutate of [

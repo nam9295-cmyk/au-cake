@@ -111,17 +111,17 @@ test('received operator and customer identities retry independently without supp
 })
 test('received operator receipts include contact and immutable custom order selections without exposing photos', () => {
   const value = event()
-  value.snapshot.lines[0].designNote = '<Blue & gold>'
+  value.snapshot.lines[0].designNote = '[Flavour: Triple Berry]\n\n<Blue & gold>'
   const id = eventId(value)
   const operator = notification.buildCustomCakeEmailPayload({ id, event: value, ...mail, role: 'operator' })
   const customer = notification.buildCustomCakeEmailPayload({ id, event: value, ...mail, role: 'customer' })
   assert.match(operator.text, /Contact phone: 0412345678/)
   assert.match(operator.text, /Contact email: contract@example\.invalid/)
-  assert.match(operator.text, /Custom Cake cake_A: single 6in × 1; design: <Blue & gold>; figurine: shop/)
+  assert.match(operator.text, /Custom Cake cake_A: single 6in × 1; design: \[Flavour: Triple Berry\]\n\n<Blue & gold>; figurine: shop/)
   assert.match(operator.text, /Paid S’more smore_A: × 2; add-on to cake_A; AUD 6\.30/)
   assert.match(operator.text, /Gift S’more: × 0/)
   assert.match(operator.text, /Gift S’more: 0/)
-  assert.match(operator.html, /design: &lt;Blue &amp; gold&gt;/)
+  assert.match(operator.html, /design: \[Flavour: Triple Berry\]\n\n&lt;Blue &amp; gold&gt;/)
   assert.doesNotMatch(operator.text, /photo_A|photo_B|uploadToken/)
   assert.doesNotMatch(operator.html, /photo_A|photo_B|uploadToken/)
   assert.doesNotMatch(customer.text, /Contact phone:|Contact email:|Custom Cake cake_A:/)
