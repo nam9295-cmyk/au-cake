@@ -65,7 +65,7 @@ test('custom cake calendar events map lifecycle states and expose schedule data 
     const event = calendarAccess.sanitizeCustomCakeCalendarEvent(customLookup(status))
     assert.deepEqual(event, {
       id: 'custom-cake:CUSTOM-PRIVATE-1', kind: 'cake', date: '2026-07-25', time: '12:30',
-      label: 'Custom Cake · Double 4in+6in ×1', status: label, isCancelled: status === 'cancelled',
+      label: 'Custom Cake · Double 4in+6in ×1', customCake: { tier: 'double', size: '4in+6in', quantity: 1, flavour: null }, status: label, isCancelled: status === 'cancelled',
     })
     const json = JSON.stringify(event)
     for (const privateValue of ['Private Customer', '0412345678', 'private@example.com', 'Private design', 'Private request', 'private-photo']) assert.equal(json.includes(privateValue), false)

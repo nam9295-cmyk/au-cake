@@ -2,6 +2,15 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { formatCakeSizeLabel, parseStoredOrderLines } from './business.js'
 import { getChocolateProduct } from './chocolate-products.js'
 
+const customCakeStatuses = { requested: 'Requested', quoted: 'Quoted', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' }
+
+export function parseCustomCakeDesignNote(note) {
+  if (typeof note !== 'string' || note.length > 1000) throw new Error('INVALID_CUSTOM_CAKE_CALENDAR_SNAPSHOT')
+  const prefix = /^\[Flavour: ([^\]\r\n]{1,64})\](?:\r?\n|$)/.exec(note)
+  if (!prefix || prefix[1].trim() !== prefix[1]) return { flavour: null, designRequest: note }
+  return { flavour: prefix[1], designRequest: note.slice(prefix[0].length).replace(/^\r?\n/, '') }
+}
+
 const CALENDAR_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60
 
 function base64Url(value) {
@@ -150,7 +159,7 @@ export function sanitizeCakeCalendarEvent(document) {
 }
 
 export function sanitizeCustomCakeCalendarEvent(snapshot) {
-  const statuses = { requested: 'Requested', quoted: 'Quoted', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' }
+  const statuses = customCakeStatuses
   const cake = Array.isArray(snapshot?.lines) ? snapshot.lines.find(line => line?.kind === 'custom-cake') : null
   const sizes = cake?.tier === 'single' ? ['6in', '8in', '10in'] : cake?.tier === 'double' ? ['4in+6in', '6in+8in', '8in+10in'] : []
   if (snapshot?.contractVersion !== 'custom-cake.v1'
@@ -160,12 +169,14 @@ export function sanitizeCustomCakeCalendarEvent(snapshot) {
     || !Object.hasOwn(statuses, snapshot.status) || !cake || !sizes.includes(cake.size)
     || !Number.isSafeInteger(cake.quantity) || cake.quantity < 1 || cake.quantity > 5) throw new Error('INVALID_CUSTOM_CAKE_CALENDAR_SNAPSHOT')
   const tier = cake.tier === 'single' ? 'Single' : 'Double'
+  const { flavour } = parseCustomCakeDesignNote(cake.designNote || '')
   return {
     id: `custom-cake:${snapshot.requestNumber}`,
     kind: 'cake',
     date: snapshot.pickup.pickupDate,
     time: snapshot.pickup.pickupTime,
-    label: `Custom Cake · ${tier} ${cake.size} ×${cake.quantity}`,
+    label: `Custom Cake · ${tier} ${cake.size}${flavour ? ` · ${flavour}` : ''} ×${cake.quantity}`,
+    customCake: { tier: cake.tier, size: cake.size, quantity: cake.quantity, flavour },
     status: statuses[snapshot.status],
     isCancelled: snapshot.status === 'cancelled',
   }
@@ -219,4 +230,18 @@ export function sanitizeClassCalendarEvents(document) {
     status: document.status || 'Requested',
     isCancelled: document.status === 'Cancelled',
   }]
+}
+
+/** Explicit production projection. Never return or spread a stored request. */
+export function sanitizeCustomCakeProductionDetail(snapshot) {
+  const { request, lookupResponse: lookup } = snapshot || {}
+  if (request?.contractVersion !== 'custom-cake.v1' || !Array.isArray(request.lines)) throw new Error('INVALID_CUSTOM_CAKE_CALENDAR_SNAPSHOT')
+  const event = sanitizeCustomCakeCalendarEvent(lookup)
+  const lines = request.lines.filter(line => line.kind === 'custom-cake').map(line => {
+    sanitizeCustomCakeCalendarEvent({ ...lookup, lines: [line] })
+    if (!['none', 'customer', 'shop'].includes(line.figurineSource)) throw new Error('INVALID_CUSTOM_CAKE_CALENDAR_SNAPSHOT')
+    return { tier: line.tier, size: line.size, quantity: line.quantity, ...parseCustomCakeDesignNote(line.designNote), figurineSource: line.figurineSource }
+  })
+  if (!lines.length || (request.requestNote !== undefined && (typeof request.requestNote !== 'string' || request.requestNote.length > 1000))) throw new Error('INVALID_CUSTOM_CAKE_CALENDAR_SNAPSHOT')
+  return { id: event.id, pickupDate: event.date, pickupTime: event.time, status: event.status, lines, additionalRequest: request.requestNote ?? '' }
 }

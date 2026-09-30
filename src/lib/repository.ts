@@ -1,3 +1,4 @@
+import { parseCalendarProductionDetail } from './calendar-production'
 import { AppwriteException, ExecutionMethod, ID, OAuthProvider, Query, type Models } from 'appwrite'
 import { isChocolateProductId } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { marketConfig } from './market'
@@ -61,6 +62,7 @@ export type ReadOnlyCalendarEvent = {
   date: string
   time: string
   label: string
+  customCake?: { tier: 'single' | 'double'; size: string; quantity: number; flavour: string | null }
   coursePlan?: ClassReservation['coursePlan']
   durationMinutes?: number
   extensionMinutes?: ClassReservation['extensionMinutes']
@@ -149,6 +151,13 @@ export async function loginReadOnlyCalendar(pin: string) {
 export async function getReadOnlyCalendarEvents(token: string, month: string) {
   if (!isAppwriteConfigured) throw new Error('CALENDAR_UNAVAILABLE')
   return executeReservationApi<ReadOnlyCalendarResult>('calendar-events', { token, month })
+}
+
+export async function getCalendarProductionDetail(token: string, eventId: string) {
+  if (!isAppwriteConfigured) throw new Error('CALENDAR_UNAVAILABLE')
+  const result = await executeReservationApi('calendar-production-detail', { token, eventId }, parseCalendarProductionDetail)
+  if (result.id !== eventId) throw new Error('RESERVATION_API_INVALID_RESPONSE')
+  return result
 }
 
 async function listAllDocuments(databaseId: string, collectionId: string, queries: string[]) {

@@ -343,3 +343,49 @@
     font-size: 15px;
   }
 }
+/* Compact production summaries; long requests stay in the selected detail. */
+.calendar-cell-production {
+  display: grid;
+  gap: 2px;
+  padding: 4px 2px;
+  border: 1px solid currentColor;
+  font-size: 9px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.calendar-cell-production time { font-weight: 700; }
+.calendar-cell-flavour { font-weight: 600; }
+.calendar-production-open {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.calendar-production-open:focus-visible,
+.calendar-production-detail button:focus-visible { outline: 2px solid #075844; outline-offset: 3px; }
+.calendar-production-detail { padding: 16px 14px; border-top: 1px solid #ded8ca; }
+.calendar-production-detail header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.calendar-production-detail h2 { margin: 0; font-size: 18px; }
+.calendar-production-detail h3 { font-size: 15px; }
+.calendar-production-detail button { min-height: 44px; padding: 8px; border: 1px solid #1f2925; background: #fffdf8; color: inherit; font-size: 12px; }
+.calendar-production-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.calendar-production-fields dt,
+.calendar-production-notes dt { color: #626964; font-size: 12px; }
+.calendar-production-fields dd,
+.calendar-production-notes dd { margin: 4px 0 0; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.calendar-production-notes dd { white-space: pre-wrap; }
+.calendar-production-notes { margin: 20px 0 0; }
+.calendar-detail-feedback { padding: 14px; }
+@media (min-width: 600px) {
+  .calendar-cell-production { font-size: 11px; }
+  .calendar-production-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

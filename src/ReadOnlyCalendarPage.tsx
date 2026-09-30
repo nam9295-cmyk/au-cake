@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { CalendarProductionDetails } from './components/CalendarProductionDetails'
+import type { CalendarProductionDetail } from './lib/calendar-production'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { ChevronLeft, ChevronRight, LockKeyhole, LogOut, RefreshCw } from 'lucide-react'
 import { getCalendarGridDays, shiftCalendarMonth } from './lib/admin-calendar'
 import {
   getReadOnlyCalendarEvents,
+  getCalendarProductionDetail,
   loginReadOnlyCalendar,
   type ReadOnlyCalendarEvent,
 } from './lib/repository'
@@ -51,19 +54,50 @@ export default function ReadOnlyCalendarPage() {
   const [events, setEvents] = useState<ReadOnlyCalendarEvent[]>([])
   const [loading, setLoading] = useState(Boolean(token))
   const [error, setError] = useState('')
+  const [detail, setDetail] = useState<CalendarProductionDetail | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState('')
+  const detailSequence = useRef(0)
 
-  function handleLoadError(caught: unknown) {
+  const clearDetail = useCallback(() => {
+    detailSequence.current++
+    setDetail(null)
+    setDetailLoading(false)
+    setDetailError('')
+  }, [])
+  useEffect(() => () => { detailSequence.current++ }, [])
+
+  async function loadProductionDetail(eventId: string) {
+    const sequence = ++detailSequence.current
+    setDetail(null)
+    setDetailError('')
+    setDetailLoading(true)
+    try {
+      const result = await getCalendarProductionDetail(token, eventId)
+      if (sequence === detailSequence.current) setDetail(result)
+    } catch (caught) {
+      if (sequence !== detailSequence.current) return
+      const code = caught instanceof Error ? caught.message : ''
+      if (code === 'CALENDAR_UNAUTHORIZED') handleLoadError(caught)
+      else setDetailError('Could not load production details. Please try again.')
+    } finally { if (sequence === detailSequence.current) setDetailLoading(false) }
+  }
+
+  const handleLoadError = useCallback((caught: unknown) => {
     const code = caught instanceof Error ? caught.message : ''
     if (code === 'CALENDAR_UNAUTHORIZED') {
+      clearDetail()
       localStorage.removeItem(TOKEN_KEY)
       setToken('')
+      setEvents([])
       setError('Session expired. Please enter the PIN again.')
     } else {
       setError('Could not load the calendar. Please try again.')
     }
-  }
+  }, [clearDetail, setToken, setEvents, setError])
 
   async function refreshEvents(activeToken: string, activeMonth: string) {
+    clearDetail()
     setLoading(true)
     setError('')
     try {
@@ -90,7 +124,7 @@ export default function ReadOnlyCalendarPage() {
         if (!cancelled) setLoading(false)
       })
     return () => { cancelled = true }
-  }, [month, token])
+  }, [month, token, handleLoadError])
 
   async function submitPin(event: FormEvent) {
     event.preventDefault()
@@ -112,6 +146,7 @@ export default function ReadOnlyCalendarPage() {
   }
 
   function logout() {
+    clearDetail()
     localStorage.removeItem(TOKEN_KEY)
     setToken('')
     setEvents([])
@@ -166,9 +201,9 @@ export default function ReadOnlyCalendarPage() {
 
       <section className="readonly-calendar-panel" aria-label="Booking calendar">
         <div className="readonly-calendar-toolbar">
-          <button type="button" onClick={() => setMonth(shiftCalendarMonth(month, -1))} aria-label="Previous month"><ChevronLeft /></button>
+          <button type="button" onClick={() => { clearDetail(); setMonth(shiftCalendarMonth(month, -1)) }} aria-label="Previous month"><ChevronLeft /></button>
           <strong>{monthLabel(month)}</strong>
-          <button type="button" onClick={() => setMonth(shiftCalendarMonth(month, 1))} aria-label="Next month"><ChevronRight /></button>
+          <button type="button" onClick={() => { clearDetail(); setMonth(shiftCalendarMonth(month, 1)) }} aria-label="Next month"><ChevronRight /></button>
         </div>
         <div className="readonly-calendar-weekdays" aria-hidden="true">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}
@@ -185,11 +220,12 @@ export default function ReadOnlyCalendarPage() {
                   day.isToday ? 'is-today' : '',
                   selectedDate === day.date ? 'is-selected' : '',
                 ].filter(Boolean).join(' ')}
-                onClick={() => setSelectedDate(day.date)}
+                onClick={() => { clearDetail(); setSelectedDate(day.date) }}
                 aria-label={`${day.date}, ${dayEvents.length} bookings`}
               >
                 <span className="readonly-calendar-day-number">{day.dayNumber}</span>
                 <span className="readonly-calendar-cell-summary">
+                  {dayEvents.filter(event => event.id.startsWith('custom-cake:') && !event.isCancelled).slice(0, 2).map(event => <span className="calendar-cell-production" key={event.id} title={`${event.time} ${event.label}`}><time>{event.time}</time>{event.customCake ? <><span>Custom Cake</span><span>{event.customCake.tier === 'single' ? 'Single' : 'Double'} {event.customCake.size} ×{event.customCake.quantity}</span><span className="calendar-cell-flavour">{event.customCake.flavour || 'Not specified'}</span></> : event.label}</span>)}
                   {dayEvents.some((event) => event.kind === 'cake' && !event.isCancelled) && (
                     <i className="cake">Cake {dayEvents.filter((event) => event.kind === 'cake' && !event.isCancelled).length}</i>
                   )}
@@ -214,10 +250,16 @@ export default function ReadOnlyCalendarPage() {
           {selectedEvents.map((event) => (
             <article key={event.id} className={`${event.kind}${event.isCancelled ? ' is-cancelled' : ''}`}>
               <time>{event.time}</time>
-              <div><strong>{event.label}</strong><span>{eventDetail(event)}</span></div>
+              <div>
+                {event.id.startsWith('custom-cake:') ? <button className="calendar-production-open" type="button" aria-label={`View production details for ${event.label}`} onClick={() => void loadProductionDetail(event.id)}>{event.label}</button> : <strong>{event.label}</strong>}
+                <span>{eventDetail(event)}</span>
+              </div>
             </article>
           ))}
         </div>
+        {detailLoading && <p className="calendar-detail-feedback" role="status">Loading production details…</p>}
+        {detailError && <p className="calendar-detail-feedback readonly-calendar-error" role="alert">{detailError}</p>}
+        {detail && <CalendarProductionDetails detail={detail} onClose={clearDetail} />}
       </section>
       <footer className="readonly-calendar-footer">Schedule only · No customer contact details · No editing</footer>
     </main>

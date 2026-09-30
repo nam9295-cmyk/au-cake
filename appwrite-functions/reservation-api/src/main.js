@@ -22,6 +22,7 @@ import {
   createCalendarToken,
   sanitizeCakeCalendarEvent,
   sanitizeCustomCakeCalendarEvent,
+  sanitizeCustomCakeProductionDetail,
   sanitizeClassCalendarEvents,
   secureTextEqual,
   verifyCalendarToken,
@@ -221,6 +222,7 @@ const LOGGABLE_ACTIONS = new Set([
   'lookup-cake',
   'calendar-login',
   'calendar-events',
+  'calendar-production-detail',
 ])
 
 export function safeReservationLogAction(value) {
@@ -686,6 +688,22 @@ export async function listCalendarEvents(databases, input, env = process.env, no
   return { month, events }
 }
 
+/** Existing PIN token authorizes only this approved production projection. */
+export async function getCalendarProductionDetail(databases, input, env = process.env, now = new Date(), injectedCustomCakeRepository) {
+  const { secret } = calendarConfig(env)
+  if (!verifyCalendarToken(input?.token, secret, now)) throw new ReservationApiError('CALENDAR_UNAUTHORIZED', 401)
+  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length !== 2
+    || !Object.hasOwn(input, 'token') || typeof input.eventId !== 'string'
+    || !/^custom-cake:[A-Za-z0-9_-]{1,64}$/.test(input.eventId)) throw new ReservationApiError('INVALID_CALENDAR_EVENT')
+  if (env.CUSTOM_CAKE_PERSISTENCE_ENABLED !== 'true') throw new ReservationApiError('NOT_FOUND', 404)
+  const requestNumber = input.eventId.slice('custom-cake:'.length)
+  const repository = injectedCustomCakeRepository || createCustomCakeRepository(databases, resolveCustomCakePersistenceConfig(env))
+  const rows = await repository.list('snapshots', { lookupKey: requestNumber, limit: 2 })
+  if (rows.length !== 1 || rows[0].value.request?.contractVersion !== 'custom-cake.v1'
+    || rows[0].value.lookupResponse?.requestNumber !== requestNumber) throw new ReservationApiError('NOT_FOUND', 404)
+  return sanitizeCustomCakeProductionDetail(rows[0].value)
+}
+
 export { checkReservationReadiness } from './reservation-health.js'
 
 export function createReservationHandler({ env = process.env, servicesForRequest, now = () => new Date(), smoreWritesEnabled = SMORE_WRITES_ENABLED, chocolateWritesEnabled = CHOCOLATE_WRITES_ENABLED } = {}) {
@@ -721,10 +739,12 @@ return async ({ req, res, log, error }) => {
     else if (action === 'create-class') result = await createClass(databases, body.data)
     else if (action === 'lookup-cake') result = await lookupCake(databases, body.data || {})
     else if (action === 'calendar-login') result = calendarLogin(body.data || {})
+    else if (action === 'calendar-production-detail') result = await getCalendarProductionDetail(databases, body.data || {}, env, now())
     else if (action === 'calendar-events') result = await listCalendarEvents(databases, body.data || {}, env, now())
     else throw new ReservationApiError('UNKNOWN_ACTION', 404)
 
     log(`reservation-api completed: ${safeReservationLogAction(action)}`)
+    if (action.startsWith('calendar-')) return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
     return res.json({ ok: true, result }, 200)
   } catch (caught) {
     const { code, status } = reservationFailureResponse(caught, action)
@@ -732,6 +752,7 @@ return async ({ req, res, log, error }) => {
       ? `appwrite=${caught.type || 'unknown'} http=${caught.code || 'unknown'}`
       : `error=${caught?.name || 'unknown'}`
     error(`reservation-api failed: ${safeReservationLogAction(action)} ${code} ${diagnostic}`)
+    if (action.startsWith('calendar-')) return res.json({ ok: false, code }, status, { 'Cache-Control': 'no-store' })
     return res.json({ ok: false, code }, status)
   }
 }

@@ -8,6 +8,7 @@ import { CustomCakeCompletePage } from '../src/pages/CustomCakeCompletePage'
 import { CustomCakeLookupResult } from '../src/components/CustomCakeLookupResult'
 import { CustomCakePhoto } from '../src/components/CustomCakePhoto'
 import { AdminCustomCakesSection } from '../src/components/AdminCustomCakesSection'
+import ReadOnlyCalendarPage from '../src/ReadOnlyCalendarPage'
 import { AdminDashboardPage } from '../src/AdminDashboardPage'
 import { functions, account, databases } from '../src/lib/appwrite'
 import { parseCustomCakeCreateResponse, parseCustomCakeLookupResponse } from '../src/lib/custom-cake-client'
@@ -21,13 +22,21 @@ const capabilities = { contractVersion: 'cake-capabilities.v1', status: 'ready',
 // Invoke actual handlers with React's hook dispatcher while replacing only the
 // external Appwrite execution/JWT boundary. Child elements remain real elements.
 function mount(Component, properties = {}) {
-  const slots = [], effects = [], cleanups = []
+  const slots = [], setters = [], effects = [], cleanups = []
   let cursor = 0, tree
   const dispatcher = {
+    useCallback(callback, dependencies) {
+      const index = cursor++
+      const previous = slots[index]
+      if (!previous || dependencies.some((dependency, i) => dependency !== previous.dependencies[i])) slots[index] = { callback, dependencies }
+      return slots[index].callback
+    },
+    useMemo(compute) { return compute() },
     useState(initial) {
       const index = cursor++
       if (!(index in slots)) slots[index] = typeof initial === 'function' ? initial() : initial
-      return [slots[index], next => { slots[index] = typeof next === 'function' ? next(slots[index]) : next }]
+      setters[index] ||= next => { slots[index] = typeof next === 'function' ? next(slots[index]) : next }
+      return [slots[index], setters[index]]
     },
     useRef(initial) { return dispatcher.useState(() => ({ current: initial }))[0] },
     useId() { return dispatcher.useState(() => `test-${cursor}`)[0] },
@@ -489,4 +498,44 @@ test('admin submits integer basis points with reason and previews manual total',
   await form.props.onSubmit({ preventDefault() {} }); await admin.flush()
   assert.deepEqual(calls.find(call => call.action === 'admin-update-custom-cake-quote').data.manualDiscount, { type: 'percentage', value: 1250, reason: 'Special customer discount' })
   admin.unmount()
+})
+
+test('PIN calendar loads production detail only on selection and displays free inputs as plain text', async () => {
+  const previous = globalThis.localStorage
+  globalThis.localStorage = { getItem: () => 'pin-issued-token', removeItem() {}, setItem() {} }
+  try {
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+    const detail = { id: 'custom-cake:CUSTOM-EXAMPLE-1', pickupDate: date, pickupTime: '12:00', status: 'Requested', lines: [{ tier: 'single', size: '6in', quantity: 1, flavour: null, designRequest: '<script>alert(1)</script>\nBlue ribbon', figurineSource: 'customer' }], additionalRequest: '<b>Additional request</b>' }
+    const calls = wire(action => action === 'calendar-events' ? { month: date.slice(0, 7), events: [{ id: detail.id, kind: 'cake', date, time: detail.pickupTime, label: 'Custom Cake · Single 6in ×1', status: 'Requested', isCancelled: false }] } : detail)
+    const page = mount(ReadOnlyCalendarPage)
+    await page.flush()
+    assert.equal(calls.filter(c => c.action === 'calendar-production-detail').length, 0)
+    await page.find(node => node.type === 'button' && node.props['aria-label'] === 'View production details for Custom Cake · Single 6in ×1').props.onClick()
+    await page.flush()
+    assert.deepEqual(calls.find(c => c.action === 'calendar-production-detail').data, { token: 'pin-issued-token', eventId: detail.id })
+    const component = page.find(node => node.type?.name === 'CalendarProductionDetails')
+    const html = renderToStaticMarkup(component)
+    for (const text of ['Not specified', 'Design Request', 'Additional Request', 'Customer Provided', '&lt;script&gt;alert(1)&lt;/script&gt;', '&lt;b&gt;Additional request&lt;/b&gt;']) assert.ok(html.includes(text), text)
+    assert.doesNotMatch(html, /<script>|<b>/)
+    page.unmount()
+  } finally { if (previous === undefined) delete globalThis.localStorage; else globalThis.localStorage = previous }
+})
+
+test('a production detail response arriving after PIN logout is discarded', async () => {
+  const previous = globalThis.localStorage
+  globalThis.localStorage = { getItem: () => 'pin-issued-token', removeItem() {}, setItem() {} }
+  try {
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+    const result = { id: 'custom-cake:CUSTOM-EXAMPLE-1', pickupDate: date, pickupTime: '12:00', status: 'Requested', lines: [{ tier: 'single', size: '6in', quantity: 1, flavour: 'Oreo', designRequest: 'Private design', figurineSource: 'none' }], additionalRequest: 'Private request' }
+    let resolveDetail
+    const pending = new Promise(resolve => { resolveDetail = resolve })
+    wire(action => action === 'calendar-events' ? { month: date.slice(0, 7), events: [{ id: result.id, kind: 'cake', date, time: '12:00', label: 'Custom Cake', status: 'Requested', isCancelled: false }] } : pending)
+    const page = mount(ReadOnlyCalendarPage); await page.flush()
+    page.find(node => node.type === 'button' && node.props['aria-label'] === 'View production details for Custom Cake').props.onClick(); await page.flush()
+    page.find(node => node.type === 'button' && node.props['aria-label'] === 'Log out').props.onClick(); page.render()
+    resolveDetail(result); await page.flush()
+    page.find(node => node.type === 'input' && node.props.id === 'calendar-pin')
+    assert.throws(() => page.find(node => node.type?.name === 'CalendarProductionDetails'), /expected rendered control/)
+    page.unmount()
+  } finally { if (previous === undefined) delete globalThis.localStorage; else globalThis.localStorage = previous }
 })
