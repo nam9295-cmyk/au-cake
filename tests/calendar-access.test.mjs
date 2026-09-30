@@ -120,6 +120,35 @@ test('calendar Vanilla Fresh Cream Cake events use the safe name and selected cu
   assert.equal(event.label.includes('Vanilla cream'), false)
 })
 
+test('calendar shows strawberry vanilla cream cake name and size from a stored order line, without private fields', () => {
+  const line = {
+    productId: 'fresh-strawberry-vanilla-cream-cake', cakeSize: '8in', chocolateType: 'dark', poundAddon: 'none',
+    chocolateIcingCount: 0, vanillaCreamCount: 0, partyDecorationCount: 0,
+    vanillaCakeSheet: 'vanilla', vanillaCakeFlavor: 'triple-berry', vanillaCakePointColor: 'pink', quantity: 1,
+    unitPriceCents: 8900, subtotalCents: 8900, discountPercent: 0, discountCents: 0, totalPriceCents: 8900,
+  }
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'strawberry-id', pickupDate: '2026-09-26', pickupTime: '10:00', status: '예약신청',
+    ...line, totalPrice: 89, discountBasisCents: 0, orderLineCount: 1, orderItemCount: 1,
+    orderLinesJson: JSON.stringify({ version: 1, lines: [line] }),
+    customerName: 'Private Customer', customerPhone: '0412345678', requestNote: 'Private note',
+  })
+
+  assert.equal(event.label, 'Fresh Strawberry Vanilla Cream Cake · 8" ×1')
+  assert.equal(JSON.stringify(event).includes('Private'), false)
+  assert.equal(JSON.stringify(event).includes('0412345678'), false)
+})
+
+test('calendar shows historical strawberry chocolate cream cake name and size without a false finish', () => {
+  const event = sanitizeCakeCalendarEvent({
+    $id: 'strawberry-chocolate-id', pickupDate: '2026-09-26', pickupTime: '11:00',
+    productId: 'fresh-strawberry-chocolate-cream-cake', cakeSize: '10in', poundAddon: 'none',
+    quantity: 2, status: '예약신청', orderLinesJson: null,
+  })
+
+  assert.equal(event.label, 'Fresh Strawberry Chocolate Cream Cake · 10" ×2')
+})
+
 test('calendar Lemon Cake events show the selected pack and icing mix', () => {
   const event = sanitizeCakeCalendarEvent({
     $id: 'lemon-cupcakes-id',
