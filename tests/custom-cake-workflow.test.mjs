@@ -13,7 +13,7 @@ async function setup() {
   const m = await load(); assert.equal(typeof m.createCustomCakeWorkflow, 'function')
   const sdk = service(), repository = createCustomCakeRepository(sdk, config)
   let time = new Date('2026-09-13T00:00:00.000Z')
-  const workflow = m.createCustomCakeWorkflow({ repository, fingerprintKey: Buffer.alloc(32, 7), now: () => time, smoreWritesEnabled: true, assertLegacyAbsent: async () => {}, photos: { attach: async () => {} }, coupons: { resolve: async () => null } })
+  const workflow = m.createCustomCakeWorkflow({ repository, fingerprintKey: Buffer.alloc(32, 7), now: () => time, manualDiscountWritesEnabled: true, smoreWritesEnabled: true, assertLegacyAbsent: async () => {}, photos: { attach: async () => {} }, coupons: { resolve: async () => null } })
   return { sdk, repository, workflow, clock: value => { time = new Date(value) } }
 }
 
@@ -87,4 +87,41 @@ test('simultaneous wire domains compete on one request claim and uncertain commi
   const h2 = await setup(); h2.sdk.uncertain = true
   const saved = await h2.workflow.create(custom, {})
   assert.deepEqual(await h2.workflow.create(custom, {}), saved)
+})
+
+test('manual quote revisions preserve receipt prices and stale acceptance, retain omitted selection and explicitly clear', async () => {
+  const h = await setup(), c = await h.workflow.create(data(), {}), n = c.requestNumber
+  const edit = (v, manualDiscount, include = true) => h.workflow.mutate('quote', { ...base(n, v), designExtraCents: 2000, figurineExtraCents: 3000, explanation: '', ...(include ? { manualDiscount } : {}) }, admin)
+  const first = await edit(1, { type: 'percentage', value: 4000, reason: 'Special customer discount' })
+  assert.equal(first.quote.quoteVersion, 2)
+  assert.equal(first.quote.manualDiscount.basisCents, 21800)
+  assert.equal(first.quote.finalTotalCents, 13080)
+  await h.workflow.mutate('accept', { contractVersion: 'custom-cake.v1', requestNumber: n, quoteVersion: 2, customerConsent: true }, admin)
+  const second = await edit(2, { type: 'fixed', value: 7550, reason: 'Agreed adjustment' })
+  assert.equal(second.quote.finalTotalCents, 14250)
+  assert.equal(second.acceptance.acceptedQuoteVersion, 2)
+  await assert.rejects(h.workflow.mutate('confirm', base(n, 3), admin), { code: 'QUOTE_VERSION_CONFLICT' })
+  const retained = await edit(3, undefined, false)
+  assert.equal(retained.quote.manualDiscount.value, 7550)
+  const cleared = await edit(4, null)
+  assert.equal(cleared.quote.manualDiscount, undefined)
+  assert.equal(cleared.quote.finalTotalCents, 21530)
+  await h.workflow.mutate('accept', { contractVersion: 'custom-cake.v1', requestNumber: n, quoteVersion: 5, customerConsent: true }, admin)
+  await h.workflow.mutate('confirm', base(n, 5), admin)
+  await assert.rejects(edit(5, { type: 'fixed', value: 1000, reason: 'Later' }), { code: 'QUOTE_STATE_CONFLICT' })
+  const row = await h.workflow.find(n)
+  assert.deepEqual(row.value.creationResponse, c)
+  assert.equal(row.value.quoteHistory.length, 4)
+  assert.equal(row.value.lookupResponse.acceptanceHistory.length, 2)
+  assert.deepEqual(await h.workflow.create(data(), {}), c)
+})
+
+test('reader-first rollout disables manual writes by default while retaining historical reads and automatic edits', async () => {
+  const m = await load(), sdk = service(), repository = createCustomCakeRepository(sdk, config)
+  const workflow = m.createCustomCakeWorkflow({ repository, fingerprintKey: Buffer.alloc(32, 7), now: () => new Date('2026-09-13T00:00:00.000Z'), smoreWritesEnabled: true, assertLegacyAbsent: async () => {}, photos: { attach: async () => {} }, coupons: { resolve: async () => null } })
+  const c = await workflow.create(data(), {})
+  const edit = { ...base(c.requestNumber), designExtraCents: 0, figurineExtraCents: 0, explanation: '' }
+  await assert.rejects(workflow.mutate('quote', { ...edit, manualDiscount: { type: 'percentage', value: 4000, reason: 'Special' } }, admin), { code: 'CAPABILITY_UNAVAILABLE' })
+  assert.equal((await workflow.find(c.requestNumber)).value.lookupResponse.quote.quoteVersion, 1)
+  assert.equal((await workflow.mutate('quote', edit, admin)).quote.quoteVersion, 2)
 })

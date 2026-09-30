@@ -1,3 +1,4 @@
+import { validateManualDiscountSelection } from './custom-cake-discount.js'
 import { randomBytes, randomUUID } from 'node:crypto'
 import { normalizeCustomCakeV1Request, normalizeCakeOrderV2Request, fingerprintCustomCakeV1Request, fingerprintCakeOrderV2Request, validateNewCakeWirePickup } from './cake-order-input.js'
 import { buildCustomCakeV1Data, buildCakeOrderV2Data } from './cake-order-data.js'
@@ -20,7 +21,8 @@ const mutationKeys = {
 function validateMutation(action, input, actor) {
   if (!actor?.adminId) cakeWireFail('FORBIDDEN')
   if (!mutationKeys[action]) cakeWireFail('INVALID_REQUEST')
-  exactCakeObject(input, ['contractVersion', 'requestNumber', ...mutationKeys[action]])
+  exactCakeObject(input, ['contractVersion', 'requestNumber', ...mutationKeys[action], ...(action === 'quote' && Object.hasOwn(input || {}, 'manualDiscount') ? ['manualDiscount'] : [])])
+  if (action === 'quote' && Object.hasOwn(input, 'manualDiscount')) validateManualDiscountSelection(input.manualDiscount)
   if (input.contractVersion !== 'custom-cake.v1' || !numberValid(input.requestNumber) || !versionValid(action === 'accept' ? input.quoteVersion : input.expectedQuoteVersion)) cakeWireFail('INVALID_REQUEST')
   if (action === 'quote' && (!centsValid(input.designExtraCents) || !centsValid(input.figurineExtraCents) || typeof input.explanation !== 'string' || input.explanation.trim().length > 1000)) cakeWireFail('INVALID_REQUEST')
   if (action === 'accept' && input.customerConsent !== true) cakeWireFail('INVALID_REQUEST')
@@ -28,7 +30,7 @@ function validateMutation(action, input, actor) {
   if (action === 'cancel' && !['requested', 'quoted', 'confirmed'].includes(input.expectedStatus)) cakeWireFail('INVALID_REQUEST')
 }
 
-function transition(snapshot, action, input, actor, at) {
+function transition(snapshot, action, input, actor, at, manualDiscountWritesEnabled) {
   const current = snapshot.lookupResponse, q = current.quote
   const v = action === 'accept' ? input.quoteVersion : input.expectedQuoteVersion
   if (action === 'complete' || action === 'cancel') {
@@ -49,7 +51,9 @@ function transition(snapshot, action, input, actor, at) {
   if (!sources.includes(current.status)) cakeWireFail('QUOTE_STATE_CONFLICT')
   if (q.quoteVersion !== v) cakeWireFail('QUOTE_VERSION_CONFLICT')
   if (action === 'quote') {
-    current.quote = reviseCustomCakeV1Quote(snapshot.creationResponse.quote, { quoteVersion: v + 1, designExtraCents: input.designExtraCents, figurineExtraCents: input.figurineExtraCents })
+    const selection = Object.hasOwn(input, 'manualDiscount') ? input.manualDiscount : q.manualDiscount ? { type: q.manualDiscount.type, value: q.manualDiscount.value, reason: q.manualDiscount.reason } : null
+    if (selection?.value > 0 && !manualDiscountWritesEnabled) cakeWireFail('CAPABILITY_UNAVAILABLE')
+    current.quote = reviseCustomCakeV1Quote(snapshot.creationResponse.quote, { quoteVersion: v + 1, designExtraCents: input.designExtraCents, figurineExtraCents: input.figurineExtraCents, paidSmoreLines: snapshot.creationResponse.paidSmoreLines, manualDiscount: selection })
     current.status = 'quoted'
     snapshot.quoteHistory.push({ quote: structuredClone(current.quote), explanation: input.explanation.trim(), adminId: actor.adminId, at })
     return true
@@ -79,7 +83,7 @@ export async function persistCakeEvent(tx, snapshot, eventType, occurredAt, expl
 }
 
 /** Authenticated transport is resolved by the route; no body-supplied actor is accepted. */
-export function createCustomCakeWorkflow({ repository, fingerprintKey, photos, coupons, assertLegacyAbsent, assertNewReady, smoreWritesEnabled, now = () => new Date() }) {
+export function createCustomCakeWorkflow({ repository, fingerprintKey, photos, coupons, assertLegacyAbsent, assertNewReady, smoreWritesEnabled, manualDiscountWritesEnabled = false, now = () => new Date() }) {
   async function find(number, wire = 'custom-cake.v1') {
     const rows = await repository.list('snapshots', { lookupKey: number, limit: 2 })
     if (rows.length !== 1 || rows[0].value.request.contractVersion !== wire) cakeWireFail('NOT_FOUND')
@@ -127,12 +131,12 @@ export function createCustomCakeWorkflow({ repository, fingerprintKey, photos, c
     validateMutation(action, input, actor)
     const row = await find(input.requestNumber)
     const initial = structuredClone(row.value)
-    if (!transition(initial, action, input, actor, now().toISOString())) return row.value.lookupResponse
+    if (!transition(initial, action, input, actor, now().toISOString(), manualDiscountWritesEnabled)) return row.value.lookupResponse
     try { return await repository.atomic(`mutation/${row.id}/${action}/${randomUUID()}`, async tx => {
       const snapshot = await tx.get('snapshots', row.id)
       if (!snapshot || snapshot.lookupResponse.requestNumber !== input.requestNumber) cakeWireFail('NOT_FOUND')
       const at = now().toISOString()
-      if (!transition(snapshot, action, input, actor, at)) return tx.readOnly(snapshot.lookupResponse)
+      if (!transition(snapshot, action, input, actor, at, manualDiscountWritesEnabled)) return tx.readOnly(snapshot.lookupResponse)
       await tx.replace('snapshots', row.id, snapshot)
       if (action === 'quote' || action === 'confirm') await persistCakeEvent(tx, snapshot, `custom-cake.${action === 'quote' ? 'quoted' : 'confirmed'}`, at, action === 'quote' ? input.explanation.trim() : '')
       return snapshot.lookupResponse

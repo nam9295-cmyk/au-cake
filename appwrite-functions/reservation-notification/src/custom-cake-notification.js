@@ -1,3 +1,4 @@
+import { validateCustomCakeManualDiscountQuote } from '../shared/reservation-api/custom-cake-discount.js'
 import { randomUUID } from 'node:crypto'
 import { customCakeDocumentId } from '../shared/reservation-api/custom-cake-persistence.js'
 import { buildEmailDeliveryEventKey, buildPendingEmailDelivery, decideEmailDelivery, CUSTOM_CAKE_EMAIL_IDENTITY_POLICY, normalizeRecipientEmail, normalizeRecipientEmailSet, payloadHashForEmail, recipientHashForEmail, recipientHashForEmailSet, resendIdempotencyKeyForEvent, EMAIL_DELIVERY_PENDING_LEASE_MS } from '../shared/email-delivery/email-delivery.js'
@@ -54,7 +55,11 @@ function readEvent(id, event) {
     if (!q || !Number.isSafeInteger(event.quoteVersion) || event.quoteVersion < 1 || event.quoteVersion !== q.quoteVersion || q.currency !== 'AUD' || q.pricingPolicyVersion !== 'custom-cake.2026-09.v1' || !instant(q.promotionEligibilityAt)) fail()
     for (const field of ['baseCents', 'cakeDiscountCents', 'paidSmoreQuantity', 'paidSmoreTotalCents', 'giftSmoreQuantity', 'knownTotalCents']) if (!cents(q[field])) fail()
     for (const field of ['designExtraCents', 'figurineExtraCents']) if (q[field] !== null && !cents(q[field])) fail()
-    const total = q.baseCents - q.cakeDiscountCents + (q.designExtraCents ?? 0) + (q.figurineExtraCents ?? 0) + q.paidSmoreTotalCents
+    let total = q.baseCents - q.cakeDiscountCents + (q.designExtraCents ?? 0) + (q.figurineExtraCents ?? 0) + q.paidSmoreTotalCents
+    if (Object.hasOwn(q, 'manualDiscount')) {
+      try { validateCustomCakeManualDiscountQuote(q, snapshot.paidSmoreLines) } catch { fail() }
+      total = q.manualDiscount.basisCents - q.manualDiscount.discountCents
+    }
     const final = q.designExtraCents !== null && q.figurineExtraCents !== null
     if (!cents(total) || q.knownTotalCents !== total || q.isFinalQuote !== final || q.finalTotalCents !== (final ? total : null)) fail()
     if (event.eventType === 'custom-cake.received' && (q.quoteVersion !== 1 || q.designExtraCents !== null || q.figurineExtraCents !== null || snapshot.acceptance !== null)) fail()
@@ -75,7 +80,7 @@ export function buildCustomCakeEmailPayload({ id, event, from, replyTo = null, r
   const details = [title, `Reference: ${event.requestNumber}`, `Customer: ${s.customer.customerName}`, `Pickup: ${s.pickup.pickupDate} ${s.pickup.pickupTime} (Sydney)`]
   if (role === 'operator') details.push(`Contact phone: ${s.customer.customerPhone}`, `Contact email: ${recipientEmail}`, ...operatorOrderSummary(s))
   if (q) {
-    details.push(`Quote version: ${q.quoteVersion}`, `Base: ${money(q.baseCents)}`, `Cake discount: ${money(q.cakeDiscountCents)}`, `Design extra: ${q.designExtraCents === null ? 'Not agreed' : money(q.designExtraCents)}`, `Figurine extra: ${q.figurineExtraCents === null ? 'Not agreed' : money(q.figurineExtraCents)}`, `Paid S’more: ${q.paidSmoreQuantity} — ${money(q.paidSmoreTotalCents)}`, `Gift S’more: ${q.giftSmoreQuantity}`, `${q.isFinalQuote ? 'Final quote' : 'Known amount (extras not yet agreed)'}: ${money(q.knownTotalCents)}`)
+    details.push(`Quote version: ${q.quoteVersion}`, `Base: ${money(q.baseCents)}`, ...(q.manualDiscount ? [] : [`Cake discount: ${money(q.cakeDiscountCents)}`]), `Design extra: ${q.designExtraCents === null ? 'Not agreed' : money(q.designExtraCents)}`, `Figurine extra: ${q.figurineExtraCents === null ? 'Not agreed' : money(q.figurineExtraCents)}`, `Paid S’more: ${q.paidSmoreQuantity} — ${money(q.manualDiscount ? s.paidSmoreLines.reduce((total, line) => total + line.subtotalCents, 0) : q.paidSmoreTotalCents)}`, `Gift S’more: ${q.giftSmoreQuantity}`, ...(q.manualDiscount ? [`Subtotal before discount: ${money(q.manualDiscount.basisCents)}`, `Special discount${q.manualDiscount.type === 'percentage' ? ` (${q.manualDiscount.value / 100}%)` : ''}: −${money(q.manualDiscount.discountCents)}`, `Discount reason: ${q.manualDiscount.reason}`] : []), `${q.isFinalQuote ? 'Final quote' : 'Known amount (extras not yet agreed)'}: ${money(q.knownTotalCents)}`)
   } else details.push(`Total: ${money(s.pricing.totalCents)}`)
   if (event.explanation) details.push(`Quote explanation: ${event.explanation}`)
   if (event.eventType !== 'custom-cake.confirmed') details.push('This request is not a confirmed booking. Receipt or a quote does not guarantee production or pickup, and does not authorize payment.')

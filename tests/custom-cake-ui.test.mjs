@@ -461,3 +461,32 @@ test('completion without its in-memory receipt sends the customer to lookup inst
   assert.match(html, /request number and mobile phone/)
   assert.equal(page.find(node => node.type === 'button' && node.props.className === 'primary-button').props.children, 'Check Request Status')
 })
+
+test('manual discount customer breakdown shows pre-discount total, negative discount and escaped reason', () => {
+  const lookup = structuredClone(fixture.finalLookup)
+  lookup.quote.manualDiscount = { version: 1, type: 'percentage', value: 4000, basisCents: 20300, discountCents: 8120, replacedAutomaticDiscountCents: 270, reason: '<script>Special customer</script>' }
+  lookup.quote.knownTotalCents = 12180; lookup.quote.finalTotalCents = 12180
+  const html = renderToStaticMarkup(React.createElement(CustomCakeLookupResult, { result: lookup }))
+  assert.match(html, /Subtotal before discount/)
+  assert.match(html, /A\$203\.00/)
+  assert.match(html, /Special discount \(40%\)/)
+  assert.match(html, /−A\$81\.20/)
+  assert.match(html, /A\$121\.80/)
+  assert.match(html, /&lt;script&gt;Special customer&lt;\/script&gt;/)
+  assert.doesNotMatch(html, /<script>/)
+})
+
+test('admin submits integer basis points with reason and previews manual total', async () => {
+  const calls = wire(action => action === 'admin-list-custom-cake-requests' ? { requests: [fixture.lookup] } : fixture.lookup)
+  const admin = mount(AdminCustomCakesSection)
+  await admin.flush()
+  admin.find(node => node.type === 'tr' && node.props.onClick).props.onClick(); admin.render()
+  admin.find(node => node.type === 'select' && node.props['aria-label'] === 'Discount mode').props.onChange({ target: { value: 'percentage' } }); admin.render()
+  for (const [label, value] of [['Design extra AUD', '20'], ['Figurine extra AUD', '30'], ['Discount value', '12.5'], ['Discount reason', 'Special customer discount']]) {
+    admin.find(node => node.type === 'input' && node.props['aria-label'] === label).props.onChange({ target: { value } }); admin.render()
+  }
+  const form = admin.find(node => node.type === 'form' && node.props.className === 'admin-quote-form')
+  await form.props.onSubmit({ preventDefault() {} }); await admin.flush()
+  assert.deepEqual(calls.find(call => call.action === 'admin-update-custom-cake-quote').data.manualDiscount, { type: 'percentage', value: 1250, reason: 'Special customer discount' })
+  admin.unmount()
+})

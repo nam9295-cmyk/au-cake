@@ -24,8 +24,12 @@ export type CustomCakeCreateRequest = {
   privacyConsent: true
   lines: (CustomCakeLine | SmoreRequestLine)[]
 }
+export type ManualDiscountSelection = { type: 'percentage' | 'fixed'; value: number; reason: string }
+/** Percentage value is integer basis points; fixed value is integer AUD cents. */
+export type ManualDiscount = ManualDiscountSelection & { version: 1; basisCents: Cents; discountCents: Cents; replacedAutomaticDiscountCents: Cents }
 export type QuoteAmounts = {
   quoteVersion: number
+  manualDiscount?: ManualDiscount
   currency: 'AUD'
   pricingPolicyVersion: 'custom-cake.2026-09.v1'
   promotionEligibilityAt: UtcTimestamp
@@ -88,6 +92,8 @@ export type UpdateCustomCakeQuoteRequest = {
   designExtraCents: Cents | null
   figurineExtraCents: Cents | null
   explanation: string
+  /** Omitted preserves current selection; null explicitly restores automatic discounts. */
+  manualDiscount?: ManualDiscountSelection | null
 }
 export type AcceptCustomCakeQuoteRequest = {
   contractVersion: 'custom-cake.v1'

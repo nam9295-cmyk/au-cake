@@ -8,6 +8,7 @@ import { ARCHIVE_SHARED_SOURCE_PATHS } from './booking-reminder-deploy-config.mj
 const execFileAsync = promisify(execFile)
 const FUNCTION_ARCHIVE_ENTRIES = Object.freeze(['package.json', 'package-lock.json', 'src', 'shared'])
 const PARSER_SOURCE_PATHS = Object.freeze([
+  'appwrite-functions/reservation-api/src/custom-cake-discount.js',
   'appwrite-functions/reservation-api/src/business.js',
   'appwrite-functions/reservation-api/src/cake-order-data.js',
   'appwrite-functions/reservation-api/src/cake-order-pricing.js',

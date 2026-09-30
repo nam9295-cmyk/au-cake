@@ -1,3 +1,4 @@
+import { calculateCustomCakeManualDiscount } from './custom-cake-discount.js'
 // Current new-order integer-cents pricing, discounts and packaging. Does not interpret stored orders.
 import {
   INDIVIDUAL_PACKAGING_FEE_CENTS_PER_PIECE,
@@ -206,7 +207,7 @@ function priceWireSmoreLine(line) {
 
 // A trusted immutable quote is the only base for negotiated edits. No catalog,
 // pickup clock, promotion activation or line repricing participates in this step.
-export function reviseCustomCakeV1Quote(baseQuote, { quoteVersion, designExtraCents, figurineExtraCents }) {
+export function reviseCustomCakeV1Quote(baseQuote, { quoteVersion, designExtraCents, figurineExtraCents, paidSmoreLines = [], manualDiscount = null }) {
   if (!baseQuote || baseQuote.currency !== 'AUD' || baseQuote.pricingPolicyVersion !== 'custom-cake.2026-09.v1'
     || !Number.isSafeInteger(quoteVersion) || quoteVersion < 1) fail('INVALID_REQUEST')
   const promotionEligibilityAt = wireTimestamp(baseQuote.promotionEligibilityAt)
@@ -218,13 +219,15 @@ export function reviseCustomCakeV1Quote(baseQuote, { quoteVersion, designExtraCe
   if (baseCents === 0 || cakeDiscountCents > baseCents) fail('INVALID_REQUEST')
   if (designExtraCents !== null) wireAmount(designExtraCents)
   if (figurineExtraCents !== null) wireAmount(figurineExtraCents)
-  const knownTotalCents = wireSum([baseCents - cakeDiscountCents, designExtraCents ?? 0, figurineExtraCents ?? 0, paidSmoreTotalCents])
+  const adjustment = calculateCustomCakeManualDiscount(baseQuote, paidSmoreLines, designExtraCents, figurineExtraCents, manualDiscount)
+  const knownTotalCents = adjustment ? adjustment.basisCents - adjustment.discountCents : wireSum([baseCents - cakeDiscountCents, designExtraCents ?? 0, figurineExtraCents ?? 0, paidSmoreTotalCents])
   const isFinalQuote = designExtraCents !== null && figurineExtraCents !== null
   return {
     currency: 'AUD', pricingPolicyVersion: baseQuote.pricingPolicyVersion, promotionEligibilityAt,
     baseCents, cakeDiscountCents, paidSmoreQuantity, paidSmoreTotalCents, giftSmoreQuantity,
     knownTotalCents, isFinalQuote, designExtraCents, figurineExtraCents,
     finalTotalCents: isFinalQuote ? knownTotalCents : null, quoteVersion,
+    ...(adjustment ? { manualDiscount: adjustment } : {}),
   }
 }
 

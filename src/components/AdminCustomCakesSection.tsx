@@ -1,3 +1,5 @@
+import { calculateCustomCakeManualDiscount } from '../../appwrite-functions/reservation-api/src/custom-cake-discount.js'
+import { ManualDiscountSummary } from './ManualDiscountSummary'
 import { useEffect, useRef, useState } from 'react'
 import {
   Check,
@@ -10,7 +12,9 @@ import {
 } from 'lucide-react'
 import type { CustomCakeLookupResponse } from '../lib/custom-cake-contract.js'
 import {
-  formatCents,
+  formatQuoteCents,
+  formatDiscountValue,
+  parseDiscountValue,
   formatExtraCents,
   getStatusInfo,
 } from '../lib/custom-cake-ui.js'
@@ -31,6 +35,9 @@ export function AdminCustomCakesSection() {
   // Edit quote form fields
   const [designExtraInput, setDesignExtraInput] = useState('')
   const [figurineExtraInput, setFigurineExtraInput] = useState('')
+  const [discountMode, setDiscountMode] = useState<'automatic' | 'percentage' | 'fixed'>('automatic')
+  const [discountInput, setDiscountInput] = useState('')
+  const [discountReason, setDiscountReason] = useState('')
   const [explanation, setExplanation] = useState('')
   const [updatingQuote, setUpdatingQuote] = useState(false)
   const [actionError, setActionError] = useState('')
@@ -69,6 +76,9 @@ export function AdminCustomCakesSection() {
     setFigurineExtraInput(
       item.quote.figurineExtraCents !== null ? (item.quote.figurineExtraCents / 100).toString() : '',
     )
+    setDiscountMode(item.quote.manualDiscount?.type || 'automatic')
+    setDiscountInput(item.quote.manualDiscount ? formatDiscountValue(item.quote.manualDiscount.value) : '')
+    setDiscountReason(item.quote.manualDiscount?.reason || '')
     setExplanation('')
   }
 
@@ -98,19 +108,13 @@ export function AdminCustomCakesSection() {
   const handleUpdateQuote = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!selected) return
-    const cents = (input: string) => {
-      if (!input.trim()) return null
-      if (!/^\d+(\.\d{1,2})?$/.test(input.trim())) throw new Error('INVALID_CENTS')
-      const [whole, fraction = ''] = input.trim().split('.')
-      const value = Number(whole) * 100 + Number(fraction.padEnd(2, '0'))
-      if (!Number.isSafeInteger(value)) throw new Error('INVALID_CENTS')
-      return value
-    }
+    const cents = (input: string) => input.trim() ? parseDiscountValue(input) : null
+
     try {
       const data = { contractVersion: 'custom-cake.v1' as const, requestNumber: selected.requestNumber, expectedQuoteVersion: selected.quote.quoteVersion,
-        designExtraCents: cents(designExtraInput), figurineExtraCents: cents(figurineExtraInput), explanation: explanation.trim() }
+        designExtraCents: cents(designExtraInput), figurineExtraCents: cents(figurineExtraInput), explanation: explanation.trim(), manualDiscount: discountMode === 'automatic' ? null : { type: discountMode, value: parseDiscountValue(discountInput), reason: discountReason.trim() } }
       await mutate(repo => repo.updateCustomCakeQuote(data), '견적이 수정되었습니다.')
-    } catch { setActionError('추가비는 0 이상의 금액을 소수점 두 자리까지 입력해 주세요.') }
+    } catch { setActionError('금액과 할인율은 0 이상, 소수점 두 자리까지 입력해 주세요. 할인율은 최대 100%입니다.') }
   }
   const handleRecordAcceptance = () => {
     if (!selected) return
@@ -132,6 +136,16 @@ export function AdminCustomCakesSection() {
     if (!window.confirm('이 주문 접수를 취소하시겠습니까? 환불 또는 결제 취소는 처리되지 않습니다.')) return
     const data = { contractVersion: 'custom-cake.v1' as const, requestNumber: selected.requestNumber, expectedStatus: selected.status as 'requested' | 'quoted' | 'confirmed', expectedQuoteVersion: selected.quote.quoteVersion }
     return mutate(repo => repo.cancelCustomCakeRequest(data), '주문이 취소되었습니다.')
+  }
+  let preview: CustomCakeLookupResponse['quote'] | null = null
+  let previewError = ''
+  if (selected && discountMode !== 'automatic') {
+    try {
+      const design = designExtraInput.trim() ? parseDiscountValue(designExtraInput) : null
+      const figurine = figurineExtraInput.trim() ? parseDiscountValue(figurineExtraInput) : null
+      const discount = calculateCustomCakeManualDiscount(selected.quote, selected.paidSmoreLines, design, figurine, { type: discountMode, value: parseDiscountValue(discountInput), reason: discountReason.trim() })
+      if (discount) preview = { ...selected.quote, isFinalQuote: true, designExtraCents: design!, figurineExtraCents: figurine!, manualDiscount: discount, knownTotalCents: discount.basisCents - discount.discountCents, finalTotalCents: discount.basisCents - discount.discountCents }
+    } catch { previewError = '추가비, 할인 값과 사유를 입력해 주세요. 감액은 할인 전 합계를 초과할 수 없습니다.' }
   }
   const normalizedSearch = searchTerm.trim().toLowerCase()
   const filteredRequests = normalizedSearch
@@ -253,9 +267,9 @@ export function AdminCustomCakesSection() {
                     </td>
                     <td>
                       {isFinal && item.quote.finalTotalCents !== null ? (
-                        <strong className="final-price">{formatCents(item.quote.finalTotalCents)}</strong>
+                        <strong className="final-price">{formatQuoteCents(item.quote, item.quote.finalTotalCents)}</strong>
                       ) : (
-                        <span className="known-price">{formatCents(item.quote.knownTotalCents)} (잠정)</span>
+                        <span className="known-price">{formatQuoteCents(item.quote, item.quote.knownTotalCents)} (잠정)</span>
                       )}
                     </td>
                     <td>
@@ -389,12 +403,12 @@ export function AdminCustomCakesSection() {
                 <div className="quote-breakdown-grid">
                   <div className="qb-item">
                     <span>기본 가격</span>
-                    <strong>{formatCents(selected.quote.baseCents)}</strong>
+                    <strong>{formatQuoteCents(selected.quote, selected.quote.baseCents)}</strong>
                   </div>
-                  {selected.quote.cakeDiscountCents > 0 && (
+                  {!selected.quote.manualDiscount && selected.quote.cakeDiscountCents > 0 && (
                     <div className="qb-item discount">
                       <span>커스텀 케이크 프로모션 할인</span>
-                      <strong>-{formatCents(selected.quote.cakeDiscountCents)}</strong>
+                      <strong>-{formatQuoteCents(selected.quote, selected.quote.cakeDiscountCents)}</strong>
                     </div>
                   )}
                   <div className="qb-item">
@@ -408,23 +422,25 @@ export function AdminCustomCakesSection() {
                   <div className="qb-item">
                     <span>유료 스모어</span>
                     <strong>
-                      {selected.quote.paidSmoreQuantity}개 ({formatCents(selected.quote.paidSmoreTotalCents)})
+                      {selected.quote.paidSmoreQuantity}개 ({formatQuoteCents(selected.quote, selected.quote.manualDiscount ? selected.paidSmoreLines.reduce((total, line) => total + line.subtotalCents, 0) : selected.quote.paidSmoreTotalCents)})
                     </strong>
                   </div>
                   <div className="qb-item total">
                     <span>잠정 확인 총액</span>
-                    <strong>{formatCents(selected.quote.knownTotalCents)}</strong>
+                    <strong>{formatQuoteCents(selected.quote, selected.quote.knownTotalCents)}</strong>
                   </div>
                   <div className="qb-item final">
                     <span>최종 확정 총액</span>
                     <strong>
                       {selected.quote.isFinalQuote && selected.quote.finalTotalCents !== null
-                        ? formatCents(selected.quote.finalTotalCents)
+                        ? formatQuoteCents(selected.quote, selected.quote.finalTotalCents)
                         : '미확정 (To be confirmed)'}
                     </strong>
                   </div>
                 </div>
               </section>
+
+              <ManualDiscountSummary quote={selected.quote} />
 
               {/* Quote Mutation Form */}
               <section className="drawer-section edit-section">
@@ -443,6 +459,7 @@ export function AdminCustomCakesSection() {
                         step="0.01"
                         min="0"
                         placeholder="미정 시 비워둠, 없으면 0"
+                        aria-label="Design extra AUD"
                         value={designExtraInput}
                         onChange={(e) => setDesignExtraInput(e.target.value)}
                         disabled={selected.status === 'confirmed' || selected.status === 'completed'}
@@ -457,6 +474,7 @@ export function AdminCustomCakesSection() {
                         step="0.01"
                         min="0"
                         placeholder="미정 시 비워둠, 없으면 0"
+                        aria-label="Figurine extra AUD"
                         value={figurineExtraInput}
                         onChange={(e) => setFigurineExtraInput(e.target.value)}
                         disabled={selected.status === 'confirmed' || selected.status === 'completed'}
@@ -464,6 +482,28 @@ export function AdminCustomCakesSection() {
                       <small>비워두면 null(협의 중), 0이면 추가금 없음 확정</small>
                     </label>
                   </div>
+
+                  <fieldset disabled={updatingQuote || !['requested', 'quoted'].includes(selected.status)}>
+                    <legend>할인 / 감액 (Manual Discount)</legend>
+                    <label>할인 방식
+                      <select aria-label="Discount mode" value={discountMode} onChange={event => setDiscountMode(event.target.value as typeof discountMode)}>
+                        <option value="automatic">기존 자동 할인 (Automatic)</option>
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed AUD</option>
+                      </select>
+                    </label>
+                    {discountMode !== 'automatic' && <>
+                      <label>할인 값 {discountMode === 'percentage' ? '(%)' : '(AUD)'}
+                        <input aria-label="Discount value" type="text" inputMode="decimal" value={discountInput} onChange={event => setDiscountInput(event.target.value)} />
+                      </label>
+                      <label>감액 사유
+                        <input aria-label="Discount reason" type="text" maxLength={1000} value={discountReason} onChange={event => setDiscountReason(event.target.value)} />
+                      </label>
+                      <p>수동 할인은 기존 케이크와 S’more 할인을 대체합니다. 0 입력은 기존 자동 할인을 유지합니다.</p>
+                      {preview && <ManualDiscountSummary quote={preview} />}
+                      {previewError && <p role="status">{previewError}</p>}
+                    </>}
+                  </fieldset>
 
                   <label className="full-width-label">
                     추가비 산출 사유 및 설명

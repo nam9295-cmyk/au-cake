@@ -16,7 +16,7 @@ function safeCustomCakeLookup(value) {
   if (!exact(value, lookupKeys)
     || !exact(value.customer, ['customerName', 'customerPhone', 'customerEmail'])
     || !exact(value.pickup, ['pickupDate', 'pickupTime'])
-    || !exact(value.quote, quoteKeys)
+    || !exact(value.quote, [...quoteKeys, ...(Object.hasOwn(value.quote || {}, 'manualDiscount') ? ['manualDiscount'] : [])])
     || !Array.isArray(value.lines) || !value.lines.every(line => exact(line, line.kind === 'custom-cake' ? customLineKeys : smoreLineKeys))
     || !Array.isArray(value.paidSmoreLines) || !value.paidSmoreLines.every(line => exact(line, pricedSmoreKeys))
     || (value.acceptance !== null && !exact(value.acceptance, acceptanceKeys))

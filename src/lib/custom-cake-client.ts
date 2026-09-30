@@ -1,3 +1,4 @@
+import { validateCustomCakeManualDiscountQuote } from '../../appwrite-functions/reservation-api/src/custom-cake-discount.js'
 import type { CakeWireCapabilities } from './cake-wire-types.js'
 import type { CustomCakeAdminListResponse, CustomCakeCreateResponse, CustomCakeLookupResponse, CustomCakeMutationResponse, CustomCakeQuote, QuoteAcceptance, CustomCakeLine } from './custom-cake-contract.js'
 import type { CakeOrderV2CreateResponse, CakeOrderV2LookupResponse, CakeOrderV2Pricing, CakePricedLineV2 } from './cake-order-v2-contract.js'
@@ -48,9 +49,11 @@ const smorePriced = guard(v => checked<SmorePricedLine>(v, object({ ...smoreFiel
 const customLine = guard(v => checked<CustomCakeLine>(v, object({ kind: literal('custom-cake'), lineId: id, productId: literal('custom-cake'), parentCakeLineId: literal(null), quantity: cakeQuantity, tier: literal('single', 'double'), size: string(1, 16), designNote: string(0, 1000), figurineSource: literal('none', 'customer', 'shop'), photoRefs: array(id) }), line =>
   (line.tier === 'single' ? ['6in', '8in', '10in'] : ['4in+6in', '6in+8in', '8in+10in']).includes(line.size) && new Set(line.photoRefs).size === line.photoRefs.length))
 const acceptance = object({ acceptedQuoteVersion: positive, acceptedAt: timestamp })
+const manualDiscount = object({ version: literal(1), type: literal('percentage', 'fixed'), value: positive, reason: string(1, 1000), basisCents: integer, discountCents: integer, replacedAutomaticDiscountCents: integer })
 function parseQuote(value: unknown): CustomCakeQuote {
-  return checked<CustomCakeQuote>(value, object({ quoteVersion: positive, currency: literal('AUD'), pricingPolicyVersion: literal('custom-cake.2026-09.v1'), promotionEligibilityAt: timestamp, baseCents: integer, cakeDiscountCents: integer, designExtraCents: nullable(integer), figurineExtraCents: nullable(integer), paidSmoreQuantity: integer, paidSmoreTotalCents: integer, giftSmoreQuantity: integer, knownTotalCents: integer, isFinalQuote: bool, finalTotalCents: nullable(integer) }), q =>
-    q.cakeDiscountCents <= q.baseCents && q.knownTotalCents === sum([q.baseCents - q.cakeDiscountCents, q.designExtraCents ?? 0, q.figurineExtraCents ?? 0, q.paidSmoreTotalCents]) &&
+  const extension: Record<string, Check> = value && typeof value === 'object' && Object.hasOwn(value, 'manualDiscount') ? { manualDiscount } : {}
+  return checked<CustomCakeQuote>(value, object({ ...extension, quoteVersion: positive, currency: literal('AUD'), pricingPolicyVersion: literal('custom-cake.2026-09.v1'), promotionEligibilityAt: timestamp, baseCents: integer, cakeDiscountCents: integer, designExtraCents: nullable(integer), figurineExtraCents: nullable(integer), paidSmoreQuantity: integer, paidSmoreTotalCents: integer, giftSmoreQuantity: integer, knownTotalCents: integer, isFinalQuote: bool, finalTotalCents: nullable(integer) }), q =>
+    q.cakeDiscountCents <= q.baseCents && q.knownTotalCents === (q.manualDiscount ? q.manualDiscount.basisCents - q.manualDiscount.discountCents : sum([q.baseCents - q.cakeDiscountCents, q.designExtraCents ?? 0, q.figurineExtraCents ?? 0, q.paidSmoreTotalCents])) &&
     q.isFinalQuote === (q.designExtraCents !== null && q.figurineExtraCents !== null) && q.finalTotalCents === (q.isFinalQuote ? q.knownTotalCents : null))
 }
 type GraphLine = { lineId: string; kind: string; parentCakeLineId: string | null }
@@ -59,6 +62,7 @@ function graph(lines: GraphLine[], parentKind: string, requireCake: boolean): bo
   return lines.length > 0 && ids.size === lines.length && (!requireCake || lines.some(line => line.kind === parentKind)) && lines.every(line => line.kind !== 'cake-addon-smore' || (line.parentCakeLineId !== null && line.parentCakeLineId !== line.lineId && ids.get(line.parentCakeLineId)?.kind === parentKind))
 }
 function paid(q: CustomCakeQuote, lines: SmorePricedLine[]) {
+  try { validateCustomCakeManualDiscountQuote(q, lines) } catch { return false }
   const ids = new Set(lines.map(l => l.lineId))
   return ids.size === lines.length && lines.every(l => l.kind !== 'cake-addon-smore' || !ids.has(l.parentCakeLineId)) && q.paidSmoreQuantity === sum(lines.map(l => l.quantity)) && q.paidSmoreTotalCents === sum(lines.map(l => l.totalCents))
 }

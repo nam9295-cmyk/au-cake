@@ -1,3 +1,4 @@
+import { validateCustomCakeManualDiscountQuote } from './custom-cake-discount.js'
 // Private additive storage only. No pricing, catalogue, transport authorization,
 // Storage calls or runtime/environment activation is performed by this module.
 import { createHash } from 'node:crypto'
@@ -47,7 +48,8 @@ function validate(kind, value) {
     const { request, creationResponse, lookupResponse, quoteHistory, transitionAudit } = value
     if (!request || !creationResponse || !lookupResponse || !Array.isArray(quoteHistory) || !Array.isArray(transitionAudit) || !['custom-cake.v1', 'cake-order.v2'].includes(request.contractVersion) || request.contractVersion !== creationResponse.contractVersion || request.contractVersion !== lookupResponse.contractVersion || request.requestId !== creationResponse.requestId) fail('PERSISTENCE_INVALID_RECORD')
     if (request.contractVersion === 'custom-cake.v1') {
-      validateQuote(creationResponse.quote); validateQuote(lookupResponse.quote)
+      validateQuote(creationResponse.quote, creationResponse.paidSmoreLines); validateQuote(lookupResponse.quote, lookupResponse.paidSmoreLines)
+      for (const entry of quoteHistory) if (entry.quote?.manualDiscount) validateQuote(entry.quote, creationResponse.paidSmoreLines)
       if (creationResponse.status !== 'requested' || creationResponse.quote.quoteVersion !== 1 || creationResponse.quote.designExtraCents !== null || creationResponse.quote.figurineExtraCents !== null || creationResponse.acceptance !== null || creationResponse.requestNumber !== lookupResponse.requestNumber || !['requested', 'quoted', 'confirmed', 'completed', 'cancelled'].includes(lookupResponse.status) || !Array.isArray(lookupResponse.acceptanceHistory)) fail('PERSISTENCE_INVALID_RECORD')
       for (const acceptance of lookupResponse.acceptanceHistory) if (!Number.isSafeInteger(acceptance.acceptedQuoteVersion) || acceptance.acceptedQuoteVersion < 1 || acceptance.acceptedQuoteVersion > lookupResponse.quote.quoteVersion || !instant(acceptance.acceptedAt)) fail('PERSISTENCE_INVALID_RECORD')
       if (lookupResponse.acceptance !== null && !lookupResponse.acceptanceHistory.some(value => equal(value, lookupResponse.acceptance))) fail('PERSISTENCE_INVALID_RECORD')
@@ -72,11 +74,15 @@ function validate(kind, value) {
 function instant(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value }
 
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0)
-function validateQuote(q) {
+function validateQuote(q, paidSmoreLines) {
   if (!q || !Number.isSafeInteger(q.quoteVersion) || q.quoteVersion < 1 || q.currency !== 'AUD' || q.pricingPolicyVersion !== 'custom-cake.2026-09.v1' || !instant(q.promotionEligibilityAt)) fail('PERSISTENCE_INVALID_RECORD')
   for (const key of ['baseCents', 'cakeDiscountCents', 'paidSmoreQuantity', 'paidSmoreTotalCents', 'giftSmoreQuantity', 'knownTotalCents']) if (!nonnegative(q[key])) fail('PERSISTENCE_INVALID_RECORD')
   for (const key of ['designExtraCents', 'figurineExtraCents']) if (q[key] !== null && !nonnegative(q[key])) fail('PERSISTENCE_INVALID_RECORD')
-  const total = q.baseCents - q.cakeDiscountCents + (q.designExtraCents ?? 0) + (q.figurineExtraCents ?? 0) + q.paidSmoreTotalCents
+  let total = q.baseCents - q.cakeDiscountCents + (q.designExtraCents ?? 0) + (q.figurineExtraCents ?? 0) + q.paidSmoreTotalCents
+  if (Object.hasOwn(q, 'manualDiscount')) {
+    try { validateCustomCakeManualDiscountQuote(q, paidSmoreLines) } catch { fail('PERSISTENCE_INVALID_RECORD') }
+    total = q.manualDiscount.basisCents - q.manualDiscount.discountCents
+  }
   const final = q.designExtraCents !== null && q.figurineExtraCents !== null
   if (q.cakeDiscountCents > q.baseCents || !nonnegative(total) || q.knownTotalCents !== total || q.isFinalQuote !== final || q.finalTotalCents !== (final ? total : null)) fail('PERSISTENCE_INVALID_RECORD')
 }

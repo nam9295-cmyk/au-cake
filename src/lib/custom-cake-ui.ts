@@ -1,4 +1,4 @@
-import type { CustomCakeStatus } from './custom-cake-contract.js'
+import type { CustomCakeStatus, CustomCakeQuote } from './custom-cake-contract.js'
 import type { Cents } from './cake-wire-types.js'
 import type { Language } from './i18n.js'
 
@@ -79,4 +79,25 @@ export function getStatusInfo(status: CustomCakeStatus, language: Language = 'en
         className: 'status-badge',
       }
   }
+}
+
+/** Parse decimal UI text without floating point money or percentage arithmetic. */
+export function parseDiscountValue(input: string): number {
+  const text = input.trim()
+  if (!/^\d+(\.\d{1,2})?$/.test(text)) throw new Error('INVALID_CENTS')
+  const [whole, fraction = ''] = text.split('.')
+  const value = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0'))
+  if (value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error('INVALID_CENTS')
+  return Number(value)
+}
+export function formatQuoteCents(quote: CustomCakeQuote, cents: number | null | undefined): string {
+  return quote.manualDiscount && cents !== null && cents !== undefined ? `A$${formatDiscountValue(cents)}` : formatCents(cents)
+}
+export function formatDiscountValue(value: number): string {
+  const integer = BigInt(value)
+  return `${integer / 100n}.${String(integer % 100n).padStart(2, '0')}`
+}
+export function manualDiscountLabel(quote: CustomCakeQuote): string {
+  const m = quote.manualDiscount
+  return `Special discount${m?.type === 'percentage' ? ` (${m.value / 100}%)` : ''}`
 }

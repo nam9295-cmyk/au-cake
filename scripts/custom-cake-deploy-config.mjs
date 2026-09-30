@@ -23,6 +23,9 @@ export function customCakeDeployment(env, kind, legacyScopes) {
     runtimeVariables[key] = env[key]
   }
   if (kind === 'api') {
+    const manualWrites = env.CUSTOM_CAKE_MANUAL_DISCOUNT_WRITES_ENABLED ?? 'false'
+    if (!['true', 'false'].includes(manualWrites)) throw new Error('CUSTOM_CAKE_MANUAL_DISCOUNT_WRITES_ENABLED must be true or false.')
+    runtimeVariables.CUSTOM_CAKE_MANUAL_DISCOUNT_WRITES_ENABLED = manualWrites
     for (const key of ['CUSTOM_CAKE_PROMOTION_STARTS_AT', 'CUSTOM_CAKE_PHOTO_TOKEN_HMAC_SECRET', 'CAKE_WIRE_LEGACY_NEW_SUBMISSIONS', 'REVIEW_ADMIN_USER_IDS']) runtimeVariables[key] = required(key)
     const start = runtimeVariables.CUSTOM_CAKE_PROMOTION_STARTS_AT
     if (!Number.isFinite(Date.parse(start)) || new Date(start).toISOString() !== start) throw new Error('CUSTOM_CAKE_PROMOTION_STARTS_AT must be a canonical timestamp.')

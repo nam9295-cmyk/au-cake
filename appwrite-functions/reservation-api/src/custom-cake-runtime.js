@@ -67,7 +67,7 @@ export async function createCakeWireRuntime({ services, env, runtimeConfig, now 
     repository, storage: createCustomCakePhotoStorage(storage, { bucketId: config.bucketId, privateBucketVerified: true }), tokenDigestKey: tokenKey,
     resolveRequestAccess: access, allowSessionIssue: ({ requestId, context }) => limiter.allow('session', requestId, context.headers), now,
   }) : null
-  workflow = createCustomCakeWorkflow({ repository, fingerprintKey: runtimeConfig.reviewCouponHmacSecret, now, smoreWritesEnabled,
+  workflow = createCustomCakeWorkflow({ repository, fingerprintKey: runtimeConfig.reviewCouponHmacSecret, now, smoreWritesEnabled, manualDiscountWritesEnabled: env.CUSTOM_CAKE_MANUAL_DISCOUNT_WRITES_ENABLED === 'true',
     assertNewReady: () => { if (!newReady) cakeWireFail('CAPABILITY_UNAVAILABLE') },
     photos: photos || { attach: () => cakeWireFail('CAPABILITY_UNAVAILABLE') }, coupons: createCakeV2CouponLedger(databases, runtimeConfig),
     assertLegacyAbsent: async (documentId, transactionId) => {

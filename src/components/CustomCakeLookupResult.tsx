@@ -1,9 +1,10 @@
+import { ManualDiscountSummary } from './ManualDiscountSummary'
 import { CustomCakePhoto } from './CustomCakePhoto'
 import { normalizePhone } from '../lib/utils'
 import { CheckCircle2, Clock, Info, ShieldCheck } from 'lucide-react'
 import type { CustomCakeLookupResponse } from '../lib/custom-cake-contract.js'
 import type { Language } from '../lib/i18n.js'
-import { formatCents, formatExtraCents, getStatusInfo } from '../lib/custom-cake-ui.js'
+import { formatQuoteCents, formatExtraCents, getStatusInfo } from '../lib/custom-cake-ui.js'
 
 export function CustomCakeLookupResult({
   result,
@@ -142,13 +143,13 @@ export function CustomCakeLookupResult({
         <dl className="lookup-quote-table">
           <div className="quote-row">
             <dt>{language === 'ko' ? '커스텀 케이크 기본가' : 'Custom Cake Base Price'}</dt>
-            <dd>{formatCents(quote.baseCents)}</dd>
+            <dd>{formatQuoteCents(quote, quote.baseCents)}</dd>
           </div>
 
-          {quote.cakeDiscountCents > 0 && (
+          {!quote.manualDiscount && quote.cakeDiscountCents > 0 && (
             <div className="quote-row discount">
               <dt>{language === 'ko' ? '적용된 커스텀 케이크 할인' : 'Applied Custom Cake Promotion'}</dt>
-              <dd>-{formatCents(quote.cakeDiscountCents)}</dd>
+              <dd>-{formatQuoteCents(quote, quote.cakeDiscountCents)}</dd>
             </div>
           )}
 
@@ -171,7 +172,7 @@ export function CustomCakeLookupResult({
               <dt>
                 {language === 'ko' ? '유료 추가 스모어' : 'Paid Add-on S’more'} ({quote.paidSmoreQuantity}{language === 'ko' ? '개' : ' sticks'})
               </dt>
-              <dd>{formatCents(quote.paidSmoreTotalCents)}</dd>
+              <dd>{formatQuoteCents(quote, quote.manualDiscount ? result.paidSmoreLines.reduce((total, line) => total + line.subtotalCents, 0) : quote.paidSmoreTotalCents)}</dd>
             </div>
           )}
 
@@ -182,7 +183,7 @@ export function CustomCakeLookupResult({
               <strong>{language === 'ko' ? '확인된 소계 (Known Total)' : 'Known Total'}</strong>
             </dt>
             <dd>
-              <strong>{formatCents(quote.knownTotalCents)}</strong>
+              <strong>{formatQuoteCents(quote, quote.knownTotalCents)}</strong>
             </dd>
           </div>
 
@@ -192,13 +193,14 @@ export function CustomCakeLookupResult({
             </dt>
             <dd className={quote.isFinalQuote ? 'final-settled' : 'final-pending'}>
               {quote.isFinalQuote && quote.finalTotalCents !== null ? (
-                <strong>{formatCents(quote.finalTotalCents)}</strong>
+                <strong>{formatQuoteCents(quote, quote.finalTotalCents)}</strong>
               ) : (
                 <span>{language === 'ko' ? '협의 예정 (To be confirmed)' : 'To be confirmed'}</span>
               )}
             </dd>
           </div>
         </dl>
+        <ManualDiscountSummary quote={quote} />
       </section>
 
       {/* 3. Acceptance & Confirmation Status */}
