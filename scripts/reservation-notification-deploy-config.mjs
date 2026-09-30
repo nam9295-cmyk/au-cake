@@ -1,3 +1,4 @@
+import { resolveAppwriteControlConfig } from './appwrite-control-endpoint.mjs'
 import { EMAIL_DELIVERY_REQUIRED_FUNCTION_SCOPES } from '../appwrite-functions/shared/email-delivery.js'
 import { customCakeDeployment } from './custom-cake-deploy-config.mjs'
 
@@ -82,6 +83,8 @@ export function maskValue(value) {
 }
 
 export function resolveDeployConfig(env = {}) {
+  const publicEndpoint = endpoint(env)
+  const control = resolveAppwriteControlConfig(env, publicEndpoint)
   const custom = customCakeDeployment(env, 'notification', FUNCTION_SCOPES)
   const cakeDatabaseId = resourceId(env, 'APPWRITE_CAKE_DATABASE_ID')
   const classDatabaseId = resourceId(env, 'APPWRITE_KIDS_DATABASE_ID', cakeDatabaseId)
@@ -89,7 +92,8 @@ export function resolveDeployConfig(env = {}) {
   const classReservationsId = resourceId(env, 'APPWRITE_KIDS_RESERVATIONS_TABLE_ID', 'class_reservations')
   const admins = adminUserIds(env)
   return {
-    endpoint: endpoint(env),
+    endpoint: publicEndpoint,
+    ...control,
     projectId: resourceId(env, 'APPWRITE_PROJECT_ID'),
     apiKey: required(env, 'APPWRITE_API_KEY'),
     functionId: resourceId(env, 'APPWRITE_RESERVATION_NOTIFY_FUNCTION_ID', 'reservation-notification'),

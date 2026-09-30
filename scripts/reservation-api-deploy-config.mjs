@@ -1,3 +1,4 @@
+import { resolveAppwriteControlConfig } from './appwrite-control-endpoint.mjs'
 import { customCakeDeployment } from './custom-cake-deploy-config.mjs'
 const RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 
@@ -98,6 +99,8 @@ export function isSecretFunctionVariable(key) {
 }
 
 export function resolveDeployConfig(env = {}) {
+  const publicEndpoint = endpoint(env)
+  const control = resolveAppwriteControlConfig(env, publicEndpoint)
   const custom = customCakeDeployment(env, 'api', FUNCTION_SCOPES)
   const cakeDatabaseId = resourceId(env, 'APPWRITE_CAKE_DATABASE_ID')
   const kidsDatabaseId = resourceId(env, 'APPWRITE_KIDS_DATABASE_ID')
@@ -107,7 +110,8 @@ export function resolveDeployConfig(env = {}) {
   if (tokenSecret.length < 32) throw new Error('CALENDAR_TOKEN_SECRET must be at least 32 characters.')
 
   return {
-    endpoint: endpoint(env),
+    endpoint: publicEndpoint,
+    ...control,
     projectId: resourceId(env, 'APPWRITE_PROJECT_ID'),
     apiKey: required(env, 'APPWRITE_API_KEY'),
     functionId: resourceId(env, 'APPWRITE_RESERVATION_API_FUNCTION_ID', 'reservation-api'),

@@ -25,6 +25,21 @@ const validEnv = {
   BOOKING_REMINDER_MODE: 'send',
 }
 
+
+test('booking-reminder deploy can use a separate local control endpoint', async () => {
+  const config = resolveDeployConfig({
+    ...validEnv,
+    APPWRITE_CONTROL_ENDPOINT: 'https://127.0.0.1:8443/v1',
+    APPWRITE_CONTROL_SELF_SIGNED: 'true',
+  })
+  assert.equal(config.endpoint, validEnv.APPWRITE_ENDPOINT)
+  assert.equal(config.controlEndpoint, 'https://127.0.0.1:8443/v1')
+  assert.equal(config.controlSelfSigned, true)
+  const deploySource = await readFile(new URL('../scripts/deploy-booking-reminder.mjs', import.meta.url), 'utf8')
+  assert.match(deploySource, /setEndpoint\(config\.controlEndpoint\)/)
+  assert.match(deploySource, /setSelfSigned\(config\.controlSelfSigned\)/)
+})
+
 test('booking-reminder deployment is private, hourly, event-free, and only has database/document scopes', () => {
   assert.deepEqual(FUNCTION_SCOPES, [
     'databases.read', 'databases.write', 'documents.read', 'documents.write',

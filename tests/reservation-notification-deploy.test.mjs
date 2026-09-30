@@ -33,6 +33,20 @@ const validEnv = {
   REVIEW_ADMIN_USER_IDS: 'admin_1, admin_2,admin_1',
 }
 
+
+test('notification deploy can use a separate local control endpoint', () => {
+  const config = resolveDeployConfig({
+    ...validEnv,
+    APPWRITE_CONTROL_ENDPOINT: 'https://127.0.0.1:8443/v1',
+    APPWRITE_CONTROL_SELF_SIGNED: 'true',
+  })
+  assert.equal(config.endpoint, validEnv.APPWRITE_ENDPOINT)
+  assert.equal(config.controlEndpoint, 'https://127.0.0.1:8443/v1')
+  assert.equal(config.controlSelfSigned, true)
+  assert.match(deploySource, /setEndpoint\(config\.controlEndpoint\)/)
+  assert.match(deploySource, /setSelfSigned\(config\.controlSelfSigned\)/)
+})
+
 test('notification runtime imports the authoritative stored-order parser through its packaged wrapper', () => {
   assert.match(mainSource, /from '\.\.\/shared\/reservation-api\/business\.js'/)
   assert.match(wrapperSource, /reservation-api\/src\/business\.js/)

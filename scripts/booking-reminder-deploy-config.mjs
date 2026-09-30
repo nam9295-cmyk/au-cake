@@ -1,3 +1,4 @@
+import { resolveAppwriteControlConfig } from './appwrite-control-endpoint.mjs'
 import { EMAIL_DELIVERY_REQUIRED_FUNCTION_SCOPES } from '../appwrite-functions/shared/email-delivery.js'
 
 const RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
@@ -52,10 +53,13 @@ export function maskValue(value) {
 }
 
 export function resolveDeployConfig(env = {}) {
+  const publicEndpoint = endpoint(env)
+  const control = resolveAppwriteControlConfig(env, publicEndpoint)
   const cakeDatabaseId = resourceId(env, 'APPWRITE_CAKE_DATABASE_ID')
   const classDatabaseId = resourceId(env, 'APPWRITE_KIDS_DATABASE_ID', cakeDatabaseId)
   return {
-    endpoint: endpoint(env),
+    endpoint: publicEndpoint,
+    ...control,
     projectId: resourceId(env, 'APPWRITE_PROJECT_ID'),
     apiKey: required(env, 'APPWRITE_API_KEY'),
     functionId: resourceId(env, 'APPWRITE_BOOKING_REMINDER_FUNCTION_ID', 'booking-reminder'),

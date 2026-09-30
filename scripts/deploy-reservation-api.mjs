@@ -36,6 +36,8 @@ const sleep = (ms) => new Promise((resolveSleep) => setTimeout(resolveSleep, ms)
 const deployConfig = resolveDeployConfig(process.env)
 const {
   endpoint,
+  controlEndpoint,
+  controlSelfSigned,
   projectId,
   apiKey,
   functionId,
@@ -44,7 +46,7 @@ const {
 } = deployConfig
 const runtimeCandidates = buildRuntimeCandidates(requestedRuntime, Runtime)
 
-const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey)
+const client = new Client().setEndpoint(controlEndpoint).setProject(projectId).setKey(apiKey).setSelfSigned(controlSelfSigned)
 const functions = new Functions(client)
 
 try {

@@ -66,6 +66,30 @@ test('reservation health diagnostics include runtime evidence without leaking se
   assert.ok(output.length <= 1200)
 })
 
+
+test('reservation deploy can use a local control endpoint without changing the public endpoint', () => {
+  const config = resolveDeployConfig({
+    ...validEnv,
+    APPWRITE_CONTROL_ENDPOINT: 'https://127.0.0.1:8443/v1',
+    APPWRITE_CONTROL_SELF_SIGNED: 'true',
+  })
+  assert.equal(config.endpoint, validEnv.APPWRITE_ENDPOINT)
+  assert.equal(config.controlEndpoint, 'https://127.0.0.1:8443/v1')
+  assert.equal(config.controlSelfSigned, true)
+
+  const defaults = resolveDeployConfig(validEnv)
+  assert.equal(defaults.controlEndpoint, validEnv.APPWRITE_ENDPOINT)
+  assert.equal(defaults.controlSelfSigned, false)
+  assert.throws(() => resolveDeployConfig({ ...validEnv, APPWRITE_CONTROL_SELF_SIGNED: 'yes' }), /APPWRITE_CONTROL_SELF_SIGNED/)
+  assert.throws(() => resolveDeployConfig({ ...validEnv, APPWRITE_CONTROL_ENDPOINT: 'file:///tmp/appwrite' }), /APPWRITE_CONTROL_ENDPOINT/)
+  assert.throws(() => resolveDeployConfig({ ...validEnv, APPWRITE_CONTROL_ENDPOINT: 'https://appwrite.example.com/v1', APPWRITE_CONTROL_SELF_SIGNED: 'true' }), /loopback/)
+
+  const deploySource = readFileSync('scripts/deploy-reservation-api.mjs', 'utf8')
+  assert.match(deploySource, /setEndpoint\(controlEndpoint\)/)
+  assert.match(deploySource, /setSelfSigned\(controlSelfSigned\)/)
+  assert.match(deploySource, /BrowserClient\(\)\.setEndpoint\(endpoint\)/)
+})
+
 test('reservation deploy maps review and manual coupons with server-only variables', () => {
   const config = resolveDeployConfig({
     ...validEnv,

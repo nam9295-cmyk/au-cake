@@ -13,7 +13,7 @@ const config = resolveDeployConfig(process.env)
 const { AppwriteException, Client, Functions } = await import('node-appwrite')
 const { File } = await import('node-fetch-native-with-agent')
 const { createBookingReminderArchive } = await import('./booking-reminder-deploy-runtime.mjs')
-const client = new Client().setEndpoint(config.endpoint).setProject(config.projectId).setKey(config.apiKey)
+const client = new Client().setEndpoint(config.controlEndpoint).setProject(config.projectId).setKey(config.apiKey).setSelfSigned(config.controlSelfSigned)
 const functions = new Functions(client)
 
 try {
