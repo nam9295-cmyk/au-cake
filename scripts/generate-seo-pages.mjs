@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
 import { CHOCOLATE_PRODUCTS } from '../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { getHogirlSeoDefinitions } from './hogirl-seo.mjs'
+import { getPortfolioSeoDefinition } from './portfolio-seo.mjs'
 import { renderAuLlms } from './render-au-llms.mjs'
 
 const siteUrl = auPublicPages.site.url
@@ -442,13 +443,18 @@ function renderPage(template, path, config) {
 
 const template = await readFile(join(distDir, 'index.html'), 'utf8')
 const hogirlSeo = await getHogirlSeoDefinitions({ siteUrl, brand })
-const allPages = { ...pages, ...hogirlSeo.pages }
+const portfolioPages = isAuMarket ? { '/portfolio': await getPortfolioSeoDefinition(siteUrl) } : {}
+const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages }
 for (const [path, config] of Object.entries(allPages)) {
   const outputPath = path === '/' ? join(distDir, 'index.html')
     : config.output === 'directory' || Object.hasOwn(auPublicPages.standalonePages, path) ? join(distDir, path.slice(1), 'index.html')
       : join(distDir, `${path.slice(1)}.html`)
   await mkdir(dirname(outputPath), { recursive: true })
-  await writeFile(outputPath, renderPage(template, path, config))
+  const rendered = renderPage(template, path, config)
+  await writeFile(outputPath, rendered)
+  // Vite resolves /path through path.html and /path/ through path/index.html.
+  // Both use the same document and canonical URL, including without JavaScript.
+  if (config.extensionlessAlias) await writeFile(join(distDir, `${path.slice(1)}.html`), rendered)
 }
 
 const indexablePaths = [
@@ -460,6 +466,7 @@ const indexablePaths = [
     '/classes',
     '/reviews',
     ...hogirlSeo.indexablePaths,
+    ...Object.keys(portfolioPages),
   ]),
 ]
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

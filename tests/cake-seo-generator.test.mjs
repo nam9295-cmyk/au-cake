@@ -79,7 +79,7 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
   assert.match(catalogue, /<h1>Choose Your Cake<\/h1>/)
 
   const generatedSitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
-  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, 12)
+  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, process.env.VITE_MARKET?.toUpperCase() === 'AU' ? 13 : 12)
   for (const path of ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']) {
     assert.match(generatedSitemap, new RegExp(`<loc>${(path === '/' ? site : `${site}${path}`).replaceAll('.', '\\.')}</loc>`), path)
   }

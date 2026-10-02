@@ -21,6 +21,7 @@ const publicLazyPages = [
 ]
 
 const eagerModules = [
+  './pages/CompanyPortfolioPage',
   './CakeDetailPage',
   './CakesPage',
   './ReviewPage',

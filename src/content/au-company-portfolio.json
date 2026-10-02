@@ -1,0 +1,1168 @@
+{
+  "fileId": "d8169576-07b5-804c-8008-ada8c7756823",
+  "pageId": "fc2457dd-866d-8064-8008-adab7288e6a7",
+  "pageName": "02 · English portfolio",
+  "boards": [
+    {
+      "id": "fc2457dd-866d-8064-8008-adab7325d349",
+      "name": "01 · Daily chocolate · EN",
+      "texts": [
+        {
+          "name": "BRAND · verygood",
+          "text": "verygood"
+        },
+        {
+          "name": "BRAND · descriptor",
+          "text": "CHOCOLATE & CAKES"
+        },
+        {
+          "name": "LOCATION",
+          "text": "SYDNEY"
+        },
+        {
+          "name": "FOOTER · edition",
+          "text": "VERYGOOD / SYDNEY   ·   EN"
+        },
+        {
+          "name": "FOOTER · page",
+          "text": "01 / 07"
+        },
+        {
+          "name": "QUESTION",
+          "text": "LOOKING FOR AN EVERYDAY TREAT?"
+        },
+        {
+          "name": "TITLE",
+          "text": "EVERYDAY\nCHOCOLATE."
+        },
+        {
+          "name": "INTRO",
+          "text": "Gâteau pound · Basic cupcakes · Almond chocolates · Eiffel Tower chocolates."
+        },
+        {
+          "name": "BOTTOM LABEL",
+          "text": "FIND WHAT YOU NEED"
+        },
+        {
+          "name": "CHOICE 01",
+          "text": "01  Everyday treats\nDaily chocolate"
+        },
+        {
+          "name": "CHOICE 06",
+          "text": "06  Menu & business help\nConsulting"
+        },
+        {
+          "name": "CHOICE 05",
+          "text": "05  Desserts for your café\nCafé supply"
+        },
+        {
+          "name": "CHOICE 04",
+          "text": "04  Special occasions\nCustom cakes"
+        },
+        {
+          "name": "CHOICE 03",
+          "text": "03  Guest favours\nIndividual packs"
+        },
+        {
+          "name": "CHOICE 02",
+          "text": "02  Parties & sharing\nDesserts to share"
+        },
+        {
+          "name": "CONTACT LABEL",
+          "text": "Tell us which treats you would like and when you need them."
+        },
+        {
+          "name": "CONTACT LINK",
+          "text": "@verygood_syd  ↗"
+        }
+      ],
+      "images": [
+        {
+          "shapeId": "58cd3f4f-7809-80be-8008-ae8a672a30b9",
+          "name": "PHOTO · pound",
+          "width": 479.9999715366953,
+          "height": 390,
+          "x": 11.00000004273113,
+          "y": 580,
+          "fill": {
+            "name": "pound-1.png",
+            "width": 1328,
+            "height": 1760,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-ae97f6a34c16",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Sliced chocolate pound cake on a linen-covered table",
+            "variants": [
+              {
+                "src": "/portfolio/01-daily-chocolate-1-360.webp",
+                "width": 360,
+                "height": 293
+              },
+              {
+                "src": "/portfolio/01-daily-chocolate-1-640.webp",
+                "width": 640,
+                "height": 520
+              },
+              {
+                "src": "/portfolio/01-daily-chocolate-1-960.webp",
+                "width": 960,
+                "height": 781
+              },
+              {
+                "src": "/portfolio/01-daily-chocolate-1-1280.webp",
+                "width": 1280,
+                "height": 1041
+              }
+            ],
+            "sha256": "15408a28d35fdab90cca7f7825ff2a895da9f05a5678ddce7bf37364f045ab2a",
+            "crop": [
+              0,
+              340,
+              1328,
+              1420
+            ],
+            "width": 1328,
+            "height": 1080
+          }
+        },
+        {
+          "shapeId": "58cd3f4f-7809-80be-8008-ae9c0bfd9f1a",
+          "name": "cupcake",
+          "width": 417.0795603244928,
+          "height": 467.6475550390359,
+          "x": 346.5306858577732,
+          "y": 450.85326059068734,
+          "fill": {
+            "name": null,
+            "width": 1328,
+            "height": 1760,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-ae9c0b94b035",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Chocolate and vanilla cupcakes arranged on a tray",
+            "variants": [
+              {
+                "src": "/portfolio/01-daily-chocolate-2-360.webp",
+                "width": 360,
+                "height": 275
+              },
+              {
+                "src": "/portfolio/01-daily-chocolate-2-613.webp",
+                "width": 613,
+                "height": 469
+              }
+            ],
+            "sha256": "6311490a3ba83c7b7789c786d8a51c4f0abf32aea22a55b1bccecd9c1c1f6aca",
+            "crop": [
+              333,
+              571,
+              946,
+              1040
+            ],
+            "width": 613,
+            "height": 469
+          }
+        },
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b11b36695ed2",
+          "name": "ef-pave",
+          "width": 426.99999675859374,
+          "height": 187.4285667122141,
+          "x": 413.99998860626215,
+          "y": 792.7238324413414,
+          "fill": {
+            "name": null,
+            "width": 2048,
+            "height": 1152,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-b11b361b3437",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Eiffel Tower chocolates and a individually packed chocolate treat",
+            "variants": [
+              {
+                "src": "/portfolio/01-daily-chocolate-3-360.webp",
+                "width": 360,
+                "height": 213
+              },
+              {
+                "src": "/portfolio/01-daily-chocolate-3-640.webp",
+                "width": 640,
+                "height": 379
+              },
+              {
+                "src": "/portfolio/01-daily-chocolate-3-960.webp",
+                "width": 960,
+                "height": 568
+              },
+              {
+                "src": "/portfolio/01-daily-chocolate-3-1280.webp",
+                "width": 1280,
+                "height": 758
+              }
+            ],
+            "sha256": "4396d431fb9c467e1b96b47dcf1941c147e32895e00141378d19980c7c01f6b8",
+            "crop": [
+              436,
+              190,
+              1765,
+              977
+            ],
+            "width": 1329,
+            "height": 787
+          }
+        }
+      ],
+      "slug": "daily-chocolate"
+    },
+    {
+      "id": "fc2457dd-866d-8064-8008-adab73a798fd",
+      "name": "02 · Desserts to share · EN",
+      "texts": [
+        {
+          "name": "BRAND · verygood",
+          "text": "verygood"
+        },
+        {
+          "name": "BRAND · descriptor",
+          "text": "CHOCOLATE & CAKES"
+        },
+        {
+          "name": "LOCATION",
+          "text": "SYDNEY"
+        },
+        {
+          "name": "FOOTER · edition",
+          "text": "VERYGOOD / SYDNEY   ·   EN"
+        },
+        {
+          "name": "FOOTER · page",
+          "text": "02 / 07"
+        },
+        {
+          "name": "QUESTION",
+          "text": "HOSTING, VISITING OR CELEBRATING TOGETHER?"
+        },
+        {
+          "name": "TITLE",
+          "text": "DESSERTS\nTO SHARE."
+        },
+        {
+          "name": "INTRO",
+          "text": "For home parties, a gift for your host, or a treat for the team."
+        },
+        {
+          "name": "BOTTOM LABEL",
+          "text": "PICK A MIX FOR YOUR TABLE"
+        },
+        {
+          "name": "BOTTOM COPY",
+          "text": "Pavé · Cheesecake · S’mores sticks · Lemon cakes · Decorated cupcakes"
+        },
+        {
+          "name": "CONTACT LABEL",
+          "text": "Send your date, guest numbers and preferred mix."
+        },
+        {
+          "name": "CONTACT LINK",
+          "text": "@verygood_syd  ↗"
+        },
+        {
+          "name": "PHOTO LABEL",
+          "text": "PAVÉ CHOCOLATE CAKE"
+        }
+      ],
+      "images": [
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b0ef491c9b48",
+          "name": "pave-child",
+          "width": 948.0001240678381,
+          "height": 574.9784264211617,
+          "x": -211.00004760638387,
+          "y": 283.398075957358,
+          "fill": {
+            "name": null,
+            "width": 2048,
+            "height": 1152,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-b0ef48b062f8",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Pavé chocolate celebration cake with an Eiffel Tower decoration",
+            "variants": [
+              {
+                "src": "/portfolio/02-sharing-1-360.webp",
+                "width": 360,
+                "height": 362
+              },
+              {
+                "src": "/portfolio/02-sharing-1-640.webp",
+                "width": 640,
+                "height": 644
+              },
+              {
+                "src": "/portfolio/02-sharing-1-894.webp",
+                "width": 894,
+                "height": 900
+              }
+            ],
+            "sha256": "9fb192141be04253517265000dee9f96279dd60497afb66596520c243dee7e57",
+            "crop": [
+              533,
+              157,
+              1427,
+              1057
+            ],
+            "width": 894,
+            "height": 900
+          }
+        },
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b101c8c30ccb",
+          "name": "lemoncake-zoomout",
+          "width": 423.99995140423334,
+          "height": 543.5737859605629,
+          "x": 409.999937344772,
+          "y": 260.4426226786309,
+          "fill": {
+            "name": null,
+            "width": 1328,
+            "height": 1760,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-b101c85dee62",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Lemon cakes in yellow paper cases",
+            "variants": [
+              {
+                "src": "/portfolio/02-sharing-2-360.webp",
+                "width": 360,
+                "height": 295
+              },
+              {
+                "src": "/portfolio/02-sharing-2-640.webp",
+                "width": 640,
+                "height": 524
+              },
+              {
+                "src": "/portfolio/02-sharing-2-902.webp",
+                "width": 902,
+                "height": 739
+              }
+            ],
+            "sha256": "a7d2dadfbad9e7767f6b0c9ed3f117e0545d38e516aa8d40217c76ef314edf10",
+            "crop": [
+              213,
+              347,
+              1115,
+              1086
+            ],
+            "width": 902,
+            "height": 739
+          }
+        },
+        {
+          "shapeId": "58cd3f4f-7809-80be-8008-ae9e9c9c073e",
+          "name": "smore",
+          "width": 554.3613758611402,
+          "height": 357.7779553415723,
+          "x": 321.5091584662514,
+          "y": 488.99995626641095,
+          "fill": {
+            "name": null,
+            "width": 1872,
+            "height": 1248,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-ae9e9c14340f",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Individually wrapped chocolate s’mores sticks",
+            "variants": [
+              {
+                "src": "/portfolio/02-sharing-3-360.webp",
+                "width": 360,
+                "height": 263
+              },
+              {
+                "src": "/portfolio/02-sharing-3-640.webp",
+                "width": 640,
+                "height": 468
+              },
+              {
+                "src": "/portfolio/02-sharing-3-746.webp",
+                "width": 746,
+                "height": 545
+              }
+            ],
+            "sha256": "5f8d37431b1ab4d6fe1d1a1f341d2c99a049eee86fdd21c7a9dbd6960e5cc833",
+            "crop": [
+              523,
+              317,
+              1269,
+              862
+            ],
+            "width": 746,
+            "height": 545
+          }
+        }
+      ],
+      "slug": "sharing"
+    },
+    {
+      "id": "fc2457dd-866d-8064-8008-adab73fc6d80",
+      "name": "03 · Individually packed · EN",
+      "texts": [
+        {
+          "name": "BRAND · verygood",
+          "text": "verygood"
+        },
+        {
+          "name": "BRAND · descriptor",
+          "text": "CHOCOLATE & CAKES"
+        },
+        {
+          "name": "LOCATION",
+          "text": "SYDNEY"
+        },
+        {
+          "name": "FOOTER · edition",
+          "text": "VERYGOOD / SYDNEY   ·   EN"
+        },
+        {
+          "name": "FOOTER · page",
+          "text": "03 / 07"
+        },
+        {
+          "name": "QUESTION",
+          "text": "NEED GOODIE BAGS OR THANK-YOU GIFTS?"
+        },
+        {
+          "name": "TITLE",
+          "text": "INDIVIDUALLY\nPACKED TREATS."
+        },
+        {
+          "name": "INTRO",
+          "text": "A sweet thank-you for each guest, ready to hand out and take home."
+        },
+        {
+          "name": "PHOTO LABEL",
+          "text": "Design inspiration. Final details agreed when ordering."
+        },
+        {
+          "name": "BOTTOM LABEL",
+          "text": "ONE FOR EACH GUEST"
+        },
+        {
+          "name": "BOTTOM COPY",
+          "text": "Kids’ parties · Event favours · Team gifts"
+        },
+        {
+          "name": "CONTACT LABEL",
+          "text": "Tell us the product, quantity and date you need."
+        },
+        {
+          "name": "CONTACT LINK",
+          "text": "@verygood_syd  ↗"
+        }
+      ],
+      "images": [
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b11c65c4d4cb",
+          "name": "magnific_img1-img2-img3-img4-.-._fHShq3NCDY",
+          "width": 1136.0001467300779,
+          "height": 640.0000331279396,
+          "x": -191.00013475323476,
+          "y": 215.00000131236985,
+          "fill": {
+            "name": null,
+            "width": 2048,
+            "height": 1152,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-b11c656a5f46",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Individually packed chocolates and cupcakes with Verygood gift labels",
+            "variants": [
+              {
+                "src": "/portfolio/03-individual-packs-1-360.webp",
+                "width": 360,
+                "height": 236
+              },
+              {
+                "src": "/portfolio/03-individual-packs-1-640.webp",
+                "width": 640,
+                "height": 419
+              },
+              {
+                "src": "/portfolio/03-individual-packs-1-960.webp",
+                "width": 960,
+                "height": 628
+              },
+              {
+                "src": "/portfolio/03-individual-packs-1-1280.webp",
+                "width": 1280,
+                "height": 838
+              }
+            ],
+            "sha256": "c5528e66ba8f2fa6d6d9f1066dd55a4d79e77d012ff58ccea50743f93c06151b",
+            "crop": [
+              394,
+              187,
+              1737,
+              1066
+            ],
+            "width": 1343,
+            "height": 879
+          }
+        }
+      ],
+      "slug": "individual-packs"
+    },
+    {
+      "id": "fc2457dd-866d-8064-8008-adab74856239",
+      "name": "04 · Custom cakes · EN",
+      "texts": [
+        {
+          "name": "BRAND · verygood",
+          "text": "verygood"
+        },
+        {
+          "name": "BRAND · descriptor",
+          "text": "CHOCOLATE & CAKES"
+        },
+        {
+          "name": "LOCATION",
+          "text": "SYDNEY"
+        },
+        {
+          "name": "FOOTER · edition",
+          "text": "VERYGOOD / SYDNEY   ·   EN"
+        },
+        {
+          "name": "FOOTER · page",
+          "text": "04 / 07"
+        },
+        {
+          "name": "QUESTION",
+          "text": "NEED A CAKE FOR A SPECIAL OCCASION?"
+        },
+        {
+          "name": "TITLE",
+          "text": "A CAKE\nMADE FOR YOU."
+        },
+        {
+          "name": "INTRO",
+          "text": "Choose the colours, theme and details that make the occasion yours."
+        },
+        {
+          "name": "PHOTO LABEL",
+          "text": "CUSTOM CAKES · MADE FOR YOUR OCCASION"
+        },
+        {
+          "name": "PRODUCT LINE",
+          "text": "KIDS’ BIRTHDAYS · WEDDINGS · ADULT MILESTONES · SPECIAL EVENTS\nGRADUATIONS · CHRISTMAS"
+        },
+        {
+          "name": "CONTACT LABEL",
+          "text": "SHARE YOUR DATE, SERVINGS, DESIGN AND BUDGET."
+        },
+        {
+          "name": "CONTACT LINK",
+          "text": "@verygood_syd  ↗"
+        }
+      ],
+      "images": [
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b106300dd38f",
+          "name": "image",
+          "width": 776.9999258070884,
+          "height": 363.99998873564704,
+          "x": 19.000160130060976,
+          "y": 267.99999037965284,
+          "fill": {
+            "name": null,
+            "width": 2160,
+            "height": 1012,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-b1062faeab34",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "A collection of colourful custom birthday cakes",
+            "variants": [
+              {
+                "src": "/portfolio/04-custom-cakes-1-360.webp",
+                "width": 360,
+                "height": 128
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-1-640.webp",
+                "width": 640,
+                "height": 228
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-1-960.webp",
+                "width": 960,
+                "height": 342
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-1-1280.webp",
+                "width": 1280,
+                "height": 456
+              }
+            ],
+            "sha256": "c022ee38daa8dd820200904073274f763bb56ccdac4ae75045d5ac075f337781",
+            "crop": [
+              81,
+              156,
+              2085,
+              870
+            ],
+            "width": 2004,
+            "height": 714
+          }
+        },
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b1053c5f4192",
+          "name": "KakaoTalk_Photo_2026-09-22-21-07-01-11",
+          "width": 339.9998814565147,
+          "height": 452.99997632769055,
+          "x": 48.0000670450836,
+          "y": 516.9999669740778,
+          "fill": {
+            "name": null,
+            "width": 1081,
+            "height": 1440,
+            "mtype": "image/jpeg",
+            "id": "d8169576-07b5-804c-8008-b1053c269924",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Blue birthday cake with character decorations",
+            "variants": [
+              {
+                "src": "/portfolio/04-custom-cakes-2-360.webp",
+                "width": 360,
+                "height": 311
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-2-640.webp",
+                "width": 640,
+                "height": 554
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-2-960.webp",
+                "width": 960,
+                "height": 830
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-2-1081.webp",
+                "width": 1081,
+                "height": 935
+              }
+            ],
+            "sha256": "ddbb0500133b73e77cf0b3ed95f79f73cc27784993d58522c3db1ef19ed307b5",
+            "crop": [
+              0,
+              251,
+              1081,
+              1186
+            ],
+            "width": 1081,
+            "height": 935
+          }
+        },
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b105b2122077",
+          "name": "KakaoTalk_Photo_2026-09-22-21-07-01-10",
+          "width": 379.00009119247534,
+          "height": 504.99996875555246,
+          "x": 396.9997849748447,
+          "y": 471.00001339864383,
+          "fill": {
+            "name": null,
+            "width": 1081,
+            "height": 1440,
+            "mtype": "image/jpeg",
+            "id": "d8169576-07b5-804c-8008-b105b1d2595c",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Pink birthday cake with rainbow decorations",
+            "variants": [
+              {
+                "src": "/portfolio/04-custom-cakes-3-360.webp",
+                "width": 360,
+                "height": 290
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-3-640.webp",
+                "width": 640,
+                "height": 516
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-3-960.webp",
+                "width": 960,
+                "height": 774
+              },
+              {
+                "src": "/portfolio/04-custom-cakes-3-1041.webp",
+                "width": 1041,
+                "height": 839
+              }
+            ],
+            "sha256": "12bda3a2e75630b6f6a5be061df99daef709543cfa8662e219dfc9e3861deb76",
+            "crop": [
+              20,
+              356,
+              1061,
+              1195
+            ],
+            "width": 1041,
+            "height": 839
+          }
+        }
+      ],
+      "slug": "custom-cakes"
+    },
+    {
+      "id": "fc2457dd-866d-8064-8008-adab74f2ffd3",
+      "name": "05 · Wholesale · EN",
+      "texts": [
+        {
+          "name": "BRAND · verygood",
+          "text": "verygood"
+        },
+        {
+          "name": "BRAND · descriptor",
+          "text": "CHOCOLATE & CAKES"
+        },
+        {
+          "name": "LOCATION",
+          "text": "SYDNEY"
+        },
+        {
+          "name": "FOOTER · edition",
+          "text": "VERYGOOD / SYDNEY   ·   EN"
+        },
+        {
+          "name": "FOOTER · page",
+          "text": "05 / 07"
+        },
+        {
+          "name": "QUESTION",
+          "text": "LOOKING FOR DESSERTS TO SELL IN YOUR CAFÉ?"
+        },
+        {
+          "name": "TITLE",
+          "text": "WHOLESALE\nFOR YOUR CAFÉ."
+        },
+        {
+          "name": "INTRO",
+          "text": "Find chocolate and desserts that fit your menu and your customers."
+        },
+        {
+          "name": "PRODUCT LINE",
+          "text": "POUND CAKE · CUPCAKES · LEMON CAKES & MORE"
+        },
+        {
+          "name": "CONTACT LABEL",
+          "text": "Tell us about your store, products, quantities and timing."
+        },
+        {
+          "name": "CONTACT LINK",
+          "text": "@verygood_syd  ↗"
+        }
+      ],
+      "images": [
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b108cfe41692",
+          "name": "gateau-169",
+          "width": 1529.9998259544082,
+          "height": 860.9999184387673,
+          "x": -415.9999753517464,
+          "y": 48.999923503816035,
+          "fill": {
+            "name": null,
+            "width": 2048,
+            "height": 1152,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-b108cf7a986c",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Chocolate pound cake with a cut slice",
+            "variants": [
+              {
+                "src": "/portfolio/05-wholesale-1-360.webp",
+                "width": 360,
+                "height": 206
+              },
+              {
+                "src": "/portfolio/05-wholesale-1-640.webp",
+                "width": 640,
+                "height": 367
+              },
+              {
+                "src": "/portfolio/05-wholesale-1-952.webp",
+                "width": 952,
+                "height": 546
+              }
+            ],
+            "sha256": "f63b1941599b34e1f8aaf14bf72d44990f649bf1571a16638641698afc1d01e9",
+            "crop": [
+              603,
+              367,
+              1555,
+              913
+            ],
+            "width": 952,
+            "height": 546
+          }
+        },
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b10a3bba2675",
+          "name": "KakaoTalk_Photo_2026-09-25-14-44-46",
+          "width": 361.9999645938804,
+          "height": 642.9999798985561,
+          "x": 34.99999827166725,
+          "y": 507.0001305766916,
+          "fill": {
+            "name": null,
+            "width": 2268,
+            "height": 4032,
+            "mtype": "image/jpeg",
+            "id": "d8169576-07b5-804c-8008-b10a3afe5822",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Chocolate cupcakes ready for café service",
+            "variants": [
+              {
+                "src": "/portfolio/05-wholesale-2-360.webp",
+                "width": 360,
+                "height": 185
+              },
+              {
+                "src": "/portfolio/05-wholesale-2-640.webp",
+                "width": 640,
+                "height": 329
+              },
+              {
+                "src": "/portfolio/05-wholesale-2-960.webp",
+                "width": 960,
+                "height": 494
+              },
+              {
+                "src": "/portfolio/05-wholesale-2-1280.webp",
+                "width": 1280,
+                "height": 659
+              }
+            ],
+            "sha256": "53159e026de05959d3b7bf332b03220264b07dae378e8c1cdacdf3cd4a78cf4c",
+            "crop": [
+              0,
+              1443,
+              2130,
+              2539
+            ],
+            "width": 2130,
+            "height": 1096
+          }
+        },
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b10b88eab669",
+          "name": "lemon-01",
+          "width": 441.0000072785873,
+          "height": 781.9999118348615,
+          "x": 324.99998599033194,
+          "y": 285.0000093859967,
+          "fill": {
+            "name": null,
+            "width": 563,
+            "height": 1000,
+            "mtype": "image/jpeg",
+            "id": "d8169576-07b5-804c-8008-b10b88c95236",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Lemon cakes decorated with white icing and flowers",
+            "variants": [
+              {
+                "src": "/portfolio/05-wholesale-3-360.webp",
+                "width": 360,
+                "height": 177
+              },
+              {
+                "src": "/portfolio/05-wholesale-3-454.webp",
+                "width": 454,
+                "height": 223
+              }
+            ],
+            "sha256": "20b959938f1a5e4393d5fc3f172cb46a62fa1774787e856b35f6f24e863e91e1",
+            "crop": [
+              83,
+              578,
+              537,
+              801
+            ],
+            "width": 454,
+            "height": 223
+          }
+        }
+      ],
+      "slug": "wholesale"
+    },
+    {
+      "id": "fc2457dd-866d-8064-8008-adab755a258c",
+      "name": "06 · Consulting · EN",
+      "texts": [
+        {
+          "name": "BRAND · verygood",
+          "text": "verygood"
+        },
+        {
+          "name": "BRAND · descriptor",
+          "text": "CHOCOLATE & CAKES"
+        },
+        {
+          "name": "LOCATION",
+          "text": "SYDNEY"
+        },
+        {
+          "name": "FOOTER · edition",
+          "text": "VERYGOOD / SYDNEY   ·   EN"
+        },
+        {
+          "name": "FOOTER · page",
+          "text": "06 / 07"
+        },
+        {
+          "name": "QUESTION",
+          "text": "NEED HELP WITH YOUR MENU OR BUSINESS?"
+        },
+        {
+          "name": "TITLE",
+          "text": "MENU & EXPERIENCE\nCONSULTING."
+        },
+        {
+          "name": "INTRO",
+          "text": "Support with dessert menus, display, packaging and the customer experience."
+        },
+        {
+          "name": "BOTTOM LABEL",
+          "text": "WHAT WOULD YOU LIKE TO IMPROVE?"
+        },
+        {
+          "name": "BOTTOM COPY",
+          "text": "Tell us your current challenge and the change you want to make."
+        },
+        {
+          "name": "CONTACT LABEL",
+          "text": "Ask about consulting scope and availability."
+        },
+        {
+          "name": "CONTACT LINK",
+          "text": "@verygood_syd  ↗"
+        }
+      ],
+      "images": [
+        {
+          "shapeId": "051a7679-af35-80a2-8008-b110be5d1a29",
+          "name": "director",
+          "width": 1131.9999935233836,
+          "height": 637.0001047454632,
+          "x": -199.99992354519316,
+          "y": 310.9999198235298,
+          "fill": {
+            "name": null,
+            "width": 2048,
+            "height": 1152,
+            "mtype": "image/png",
+            "id": "d8169576-07b5-804c-8008-b110bdd0e17d",
+            "keepAspectRatio": true
+          },
+          "web": {
+            "alt": "Hands arranging a chocolate pound cake and cupcakes during a menu discussion",
+            "variants": [
+              {
+                "src": "/portfolio/06-consulting-1-360.webp",
+                "width": 360,
+                "height": 254
+              },
+              {
+                "src": "/portfolio/06-consulting-1-640.webp",
+                "width": 640,
+                "height": 451
+              },
+              {
+                "src": "/portfolio/06-consulting-1-960.webp",
+                "width": 960,
+                "height": 677
+              },
+              {
+                "src": "/portfolio/06-consulting-1-1269.webp",
+                "width": 1269,
+                "height": 895
+              }
+            ],
+            "sha256": "21e8871ab2571092230b4d78c5e47114acec94d2cc7eeae32cff8572a42fd360",
+            "crop": [
+              449,
+              7,
+              1718,
+              902
+            ],
+            "width": 1269,
+            "height": 895
+          }
+        }
+      ],
+      "slug": "consulting"
+    },
+    {
+      "id": "fc2457dd-866d-8064-8008-adab75da8df6",
+      "name": "07 · Order & enquire · EN",
+      "texts": [
+        {
+          "name": "BRAND · verygood",
+          "text": "verygood"
+        },
+        {
+          "name": "BRAND · descriptor",
+          "text": "CHOCOLATE & CAKES"
+        },
+        {
+          "name": "LOCATION",
+          "text": "SYDNEY"
+        },
+        {
+          "name": "FOOTER · edition",
+          "text": "VERYGOOD / SYDNEY   ·   EN"
+        },
+        {
+          "name": "SECTION",
+          "text": "ORDERS · CUSTOM CAKES · BUSINESS"
+        },
+        {
+          "name": "TITLE",
+          "text": "LET’S MAKE\nA PLAN."
+        },
+        {
+          "name": "INTRO",
+          "text": "Tell us what you need, when you need it and how many people it is for."
+        },
+        {
+          "name": "STEP NUMBER",
+          "text": "01"
+        },
+        {
+          "name": "STEP TITLE",
+          "text": "CHOOSE"
+        },
+        {
+          "name": "STEP COPY",
+          "text": "Pick the treat or service\nthat suits your occasion."
+        },
+        {
+          "name": "STEP NUMBER",
+          "text": "02"
+        },
+        {
+          "name": "STEP TITLE",
+          "text": "TELL US"
+        },
+        {
+          "name": "STEP COPY",
+          "text": "Share your date,\nquantity and ideas."
+        },
+        {
+          "name": "STEP NUMBER",
+          "text": "03"
+        },
+        {
+          "name": "STEP TITLE",
+          "text": "CONFIRM"
+        },
+        {
+          "name": "STEP COPY",
+          "text": "We confirm availability\nand details together."
+        },
+        {
+          "name": "COLLECTION LINK",
+          "text": "CAKES &\nPARTY TREATS  ↗"
+        },
+        {
+          "name": "COLLECTION COPY",
+          "text": "Browse the collection\nand enquire about an order."
+        },
+        {
+          "name": "CUSTOM LINK",
+          "text": "CUSTOM\nCAKES  ↗"
+        },
+        {
+          "name": "CUSTOM COPY",
+          "text": "Tell us your event\nand design ideas."
+        },
+        {
+          "name": "COLLECTION HOURS LABEL",
+          "text": "COLLECTION BY ARRANGEMENT"
+        },
+        {
+          "name": "COLLECTION HOURS",
+          "text": "CONFIRMED"
+        },
+        {
+          "name": "COLLECTION LOCATION",
+          "text": "Melrose Park, Sydney"
+        },
+        {
+          "name": "ONLINE LABEL",
+          "text": "ORDER ONLINE"
+        },
+        {
+          "name": "ONLINE HOURS",
+          "text": "24/7"
+        },
+        {
+          "name": "WEBSITE",
+          "text": "au.verygood-chocolate.com  ↗"
+        },
+        {
+          "name": "INSTAGRAM",
+          "text": "@verygood_syd"
+        },
+        {
+          "name": "ORDER CONFIRMATION",
+          "text": "Daily & sharing: collection · Custom cakes: custom link\nFavours, wholesale & consulting: DM @verygood_syd"
+        },
+        {
+          "name": "FOOTER · page",
+          "text": "07 / 07"
+        }
+      ],
+      "images": [],
+      "slug": "enquire"
+    }
+  ],
+  "sourceCheckedAt": "2026-10-02",
+  "links": {
+    "website": "https://au.verygood-chocolate.com",
+    "instagram": "https://www.instagram.com/verygood_syd/",
+    "collection": "/cakes",
+    "custom": "/cakes/custom-cake"
+  },
+  "seo": {
+    "title": "Company Portfolio | verygood chocolate",
+    "description": "Tell us what you need, when you need it and how many people it is for."
+  }
+}

@@ -21,6 +21,8 @@ import { ClassCompletePage } from './pages/ClassCompletePage'
 import { ClassReservePage } from './pages/ClassReservePage'
 import { ClassesPage } from './pages/ClassesPage'
 import { CompletePage } from './pages/CompletePage'
+// Keep the pre-rendered editorial page stable during the initial client render.
+import CompanyPortfolioPage from './pages/CompanyPortfolioPage'
 import { CustomCakePage } from './pages/CustomCakePage'
 import { CustomCakeCompletePage } from './pages/CustomCakeCompletePage'
 import { HomePage } from './pages/HomePage'
@@ -111,13 +113,14 @@ function App() {
 
   useEffect(() => {
     if (page === 'review' || page === 'hogirl') return
+    if (page === 'portfolio') { document.documentElement.lang = 'en-AU'; return }
     document.documentElement.lang = language === 'ko'
       ? 'ko'
       : getAuPublicContent().site.language
   }, [language, page])
 
   useEffect(() => {
-    if (!shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
+    if (page === 'portfolio' || !shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
     hasLoadedSettings.current = true
     getSettings().then(setSettings)
   }, [page])
@@ -238,7 +241,7 @@ function App() {
     page === 'admin-reviews'
   const isPrivatePage = isAdminPage || page === 'calendar'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
-  const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake'].includes(page)
+  const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio'].includes(page)
 
   if (page === 'review') return <ReviewPage onOrderCake={orderCakeFromReview} />
 
@@ -246,12 +249,16 @@ function App() {
     <>
       {page === 'home' && <HomeTigerBackground />}
       <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage ? ' au-redesign-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
-      {!isAppwriteConfigured && (
+      {!isAppwriteConfigured && page !== 'portfolio' && (
         <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}
       {!isPrivatePage && !isAuRedesignPage && <AnnouncementTicker language={language} />}
 
       {page === 'home' && <HomePage navigate={navigate} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
+      {page === 'portfolio' && <>
+        <AuRedesignHeader cartItemCount={cartItemCount} />
+        <CompanyPortfolioPage />
+      </>}
       {page === 'hogirl' && (
         <Suspense fallback={<HogirlRouteFallback />}>
           <HogirlApp pathname={pathname} />

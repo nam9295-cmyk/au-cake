@@ -1,3 +1,4 @@
+import portfolio from '../content/au-company-portfolio.json' with { type: 'json' }
 import { getCakeDetailBySlug } from './cake-detail.js'
 import { getAuCakeCatalog } from './cake-catalog.js'
 import { getAuChocolatePreview } from './au-chocolate-preview.js'
@@ -287,6 +288,15 @@ function removeMeta(selector: string) {
 
 
 export function getSeoConfig(pathname: string): SeoConfig {
+  if (marketConfig.market === 'AU' && (pathname === '/portfolio' || pathname === '/portfolio/')) {
+    const image = portfolio.boards[0].images[0].web.variants.at(-1)!
+    return {
+      title: portfolio.seo.title, description: portfolio.seo.description,
+      canonical: `${SITE_URL}/portfolio`,
+      image: `${SITE_URL}${image.src}`, imageType: 'image/webp', imageWidth: image.width, imageHeight: image.height,
+      structuredData: [{ '@type': 'AboutPage', '@id': `${SITE_URL}/portfolio#webpage`, name: portfolio.seo.title, url: `${SITE_URL}/portfolio`, inLanguage: 'en-AU', about: { '@id': `${SITE_URL}/#organization` } }, organization],
+    }
+  }
   const chocolateSlug = /^\/chocolates\/([a-z0-9-]+)$/.exec(pathname)?.[1]
   const chocolate = chocolateSlug ? getAuChocolatePreview(chocolateSlug) : null
   if (marketConfig.market === 'AU' && (pathname === '/chocolates' || chocolate)) {
