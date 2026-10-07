@@ -131,22 +131,23 @@ test('editorial-enabled cakes use the shared detail after the protected Hero whi
   assert.doesNotMatch(detailSource, /VanillaDetailPage|VanillaEditorialDetail|ButtercreamDetailPage|ButtercreamEditorialDetail|CupcakeDetailPage|CupcakeEditorialDetail|LemonDetailPage|LemonEditorialDetail|SignatureGateauDetailPage|SignatureGateauEditorialDetail|BrownieDetailPage|BrownieEditorialDetail/)
 })
 
-test('Brownie Cheesecake uses the shared compact editorial with two current finish choices and a visible Pave surcharge', () => {
+test('Brownie Cheesecake uses the shared compact editorial with one three-choice finish selector', () => {
   assert.match(editorialDataSource, /BROWNIE_CHEESECAKE_EDITORIAL/)
-  assert.match(detailSource, /detail\.id === 'brownie-cheesecake'[\s\S]*?'Choose a finish'/)
+  assert.match(detailSource, /detail\.id === 'brownie-cheesecake'[\s\S]*?is-brownie-finish-options/)
+  assert.match(detailSource, /Basic Finish[\s\S]*?Vanilla Cream[\s\S]*?Pavé Chocolate/)
   assert.match(reserveSource, /selectedProductGroup\.id === 'brownie-cheesecake'[\s\S]*?'Choose a finish'/)
-  assert.match(detailSource, /detail\.id === 'brownie-cheesecake'[\s\S]*?extraFromBase/)
 })
 
-test('Brownie Cheesecake exposes the Fresh cream AUD 20 option in both detail and reserve flows', () => {
-  assert.match(detailSource, /isBrownieFreshCreamEligibleProduct\(product\.id\)/)
-  assert.match(detailSource, /BROWNIE_CREAM_OPTIONS\.map/)
-  assert.match(detailSource, /brownieCreamOption: option\.value/)
+test('Brownie Cheesecake maps the unified Vanilla Cream choice onto the existing fresh-cream order field', () => {
+  assert.match(detailSource, /selectBrownieFinish/)
+  assert.match(detailSource, /value: 'vanilla-cream'/)
+  assert.match(detailSource, /brownieVanillaExtra/)
+  assert.match(cakeDetailDataSource, /finish === 'vanilla-cream' \? 'fresh-cream'/)
+  assert.match(cakeDetailDataSource, /finish === 'pave-chocolate'/)
   assert.match(reserveSource, /name="brownieCreamOption"/)
   assert.match(reserveSource, /brownieCreamOption: form\.brownieCreamOption/)
   assert.match(reserveSource, /brownieCreamOption: selection\.brownieCreamOption/)
-  assert.match(detailSource, /Fresh cream/)
-  assert.match(detailSource, /생크림/)
+  assert.doesNotMatch(detailSource, /<legend>\{language === 'ko' \? '생크림' : 'Fresh cream'\}<\/legend>/)
 })
 
 test('Signature Gâteau au Chocolat uses the shared compact editorial while retaining its current finish and chocolate controls', () => {
@@ -247,7 +248,7 @@ test('Cupcake pack and finish selections show the matching supplied photograph',
 
 test('Cupcake preview appears before Pack Size and Finish controls', () => {
   const previewIndex = detailSource.indexOf('{selectedCupcakePreview && selectedCupcakePackSize && (')
-  const packSizeIndex = detailSource.indexOf('{detail.productIds.length > 1 && (')
+  const packSizeIndex = detailSource.indexOf('detail.productIds.length > 1 && (')
   const finishIndex = detailSource.indexOf('{isCupcakeProduct(product.id) && (')
 
   assert.ok(previewIndex >= 0)

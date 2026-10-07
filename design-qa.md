@@ -1,124 +1,79 @@
-# AU Phase 1 design QA — 2026-09-22
+# AU Product Detail visual and functional QA — 2026-10-07
 
-## Visual truth and scope
+final result: passed
 
-Source: `/Users/nam9295/Desktop/john_2.0/code/au-cake-redesign-ui/design/au-site-redesign.pen`.
-Pencil was read/exported only, never edited or saved. Source exports and browser
-captures are in `/tmp/au-phase1-evidence.7l2v4J/` (temporary local evidence).
+This is a local review candidate, not production deployment approval. John's requested visual-polish review remains the next step.
 
-The approved scope preserves the existing Home checkpoint and real catalogue/
-order behaviour. Pencil supplies Category/Detail visual structure, not authority
-to invent prices, products, options or API capabilities. This is not a claim of
-pixel-identical content or deployment approval.
+## Source, state and normalization
 
-| Surface | Source export (pixels) | Implementation capture (pixels) |
-|---|---|---|
-| Home | `reference/OUT4W.png` — 1440×5464 | `au-home-desktop-final.png` — 1440×5094 |
-| Cakes | `reference/tdTeb.png` — 1440×1545 | `au-cakes-desktop-final.png` — 1440×1543 |
-| Chocolates | `reference/PaIjR.png` — 1440×1259 | `au-chocolates-desktop-final.png` — 1440×1313 |
-| Cake | `reference/w5Rrb.png` — 1440×2102 | `au-cake-desktop-final.png` — 1440×4122 |
-| Cupcake | `reference/zc4Cp.png` — 1440×1412 | `au-cupcake-desktop-final.png` — 1440×3468 |
-| Chocolate | `reference/XipLI.png` — 1440×1244 | `au-chocolate-desktop-final.png` — 1440×1677 |
-| Custom | `reference/yfHvZ.png` — 1440×1566 | `au-custom-desktop-final.png` — 1440×4694 |
-| Mobile Cakes | `reference/EWUnk.png` — 390×1359 | `au-cakes-mobile-final.png` — 390×1760 |
-| Mobile Cake | `reference/UYySr.png` — 390×1360 | `au-cake-mobile-final.png` — 390×4950 |
-| Mobile Cupcake | `reference/F7gL9a.png` — 390×1072 | `au-cupcake-mobile-final.png` — 390×4727 |
+Read-only source: `/Users/nam9295/Desktop/john_2.0/code/au-cake-frontend-polish/design/au-site-redesign.pen`.
+All 18 Desktop/Mobile frames were inspected through Pencil and exported to `/tmp/au-product-detail-pencil-source-20261007/`.
+Implementation: `http://127.0.0.1:5184`, AU local demo store, no real API/order submission.
+Viewports: 1440 × 1000, 834 × 1000, 390 × 1000 CSS pixels, Chromium, device scale 1. Source widths are 1440/390 physical pixels at export scale 1. Full-page heights vary with existing production copy/options.
 
-Viewport: desktop 1440×1000 CSS px; mobile 390×844. deviceScaleFactor 1 and
-Pencil export scale 1. Equal-width content was compared, not scaled page heights.
-No browser chrome. The local-demo notice adds 32px desktop/48px mobile and is
-an environment difference. The pre-existing contact launcher remains.
+The local demo banner and current production header/footer differ from the old Pencil chrome. Old Mobile photos, sample prices, unsupported claims and duplicate product placeholders are not visual acceptance targets: approved Desktop photos and current catalogue override those explicitly.
 
-## Comparison evidence and state
+## Comparison evidence
 
-Full source/implementation pairs were opened together in the same comparison
-input. Focused `au-{cake,cupcake}-{desktop,mobile}-{top,options}-final.png`
-captures were checked against detail frames for readable type and controls.
-Lazy images were scrolled into view and decoded before capture. Final galleries
-reset horizontal thumbnail scroll, then return to the first photo/page top.
+Full-view side-by-side evidence (Pencil Desktop / Web Desktop / Pencil Mobile / Web Mobile):
+- `/tmp/au-product-details-20261007/comparisons/group-1.png`: Pavé, Signature, Cupcakes.
+- `/tmp/au-product-details-20261007/comparisons/group-2.png`: Lemon, Bento, Strawberry Vanilla.
+- `/tmp/au-product-details-20261007/comparisons/group-3.png`: Brownie, Almond, S’more.
 
-Default Cake: 6-inch, no extras, quantity 1. Default Cupcake: 12, Basic, no
-individual packaging, quantity 1. Default-state cart is empty. All tested
-visible images loaded successfully.
+Every product also has full-page and first-viewport captures at 1440, 834 and 390 in the same screenshot root.
 
-## Findings and comparison history
+Focused source/web comparisons:
+- `comparisons/signature-hero-comparison.png`: photographs, typography, current finish/extra controls.
+- `comparisons/cupcake-inside-comparison.png`: actual rotated photo/crop.
+- `comparisons/smore-packaging-comparison.png`: correct foreground packaging image.
+- `comparisons/almond-mobile-purchase-comparison.png`: Desktop-updated photo, real three SKU buttons, quantity and mobile CTA.
 
-1. P2: inherited `main` width added a Category inset, with narrow rail and
-   over-tall cards. Set AU Category width 100%, rail 232px/48px gap, compact
-   card header/image rhythm and 480px feature photo. Re-captured and compared
-   `au-cakes-desktop-final.png` with `tdTeb.png`.
-2. P2: inherited definition styles right-aligned/bolded long ingredient text.
-   Scoped left alignment/regular weight to AU specifications. Final Cake and
-   Cupcake captures show readable left-aligned information.
-3. P2: three Chocolate products used four tracks, leaving an empty column.
-   Browser measured four 254px tracks. Set the AU chocolate category to three
-   columns; re-measured three 344px tracks and re-compared the final capture
-   with `PaIjR.png`. Mobile remains two 170px tracks with no page overflow.
-4. Home release polish: removed `COPY TBD`, reused the existing public H1,
-   made Best product links keyboard-operable, and added the collection hash
-   target. No Pencil composition edit was made.
+Focused source sections and rendered sections are shown together at equal widths: Desktop 1440 scaled to 720 per side; Mobile 390 remains 390 per side. Signature uses the fully loaded full-page crop to avoid the lazy-thumbnail timing artifact seen in the first isolated-element capture.
 
-No actionable P0/P1/P2 issue remains within the constrained Phase 1 scope.
+## Findings and iteration history
+
+- Fixed P1 image fidelity: initial Cupcake Inside omitted the Pencil affine rotation/crop. The generated raster now preserves it; source/web focused comparison and image-aspect regression pass.
+- Fixed P1 asset validity during optimization: an intermediate SVG/WebP embedding produced blank rasters. Replaced embedded intermediates with supported PNG/JPEG. Every generated photograph passes decode/dimension/content-entropy checks; no blank output is retained.
+- Fixed P1 image identity: S’more's packaging frame contains a visible S’more image over an old Lemon background. Mapping now uses the visible foreground `smore.png`; hidden background and duplicate support image are excluded.
+- Fixed P2 composition: Almond edition photos use square containers instead of the generic wide crop.
+- Fixed P2 mobile interaction: new purchasable pages lacked the master mobile order bar. Added a shared bar connected to existing totals/callbacks; all eight purchasable routes pass actual mobile cart handoff, including after-add controls without overflow. Bento stays non-purchasable.
+- Fixed P2 related grouping: replaced generic recommendations with actual Desktop product order and catalogue-derived cards. Brownie's stale self-recommendation uses Pavé instead.
+- Final full and focused comparisons were re-inspected after these changes. No remaining P0/P1/P2 issue identified within the approved current-commerce/updated-photo constraints.
 
 ## Required fidelity surfaces
 
-- Fonts/typography: existing font families/fallbacks retained; editorial
-  hierarchy, weights and small control text checked in focused captures.
-  Real catalogue names wrap differently from mock labels. No new font dependency.
-- Spacing/layout: thin dividers, desktop rail, four-column Cakes/three-column
-  Chocolates, horizontal mobile category navigation/two columns. Details are
-  photo-first on mobile, with horizontal thumbnails and a desktop sticky
-  configurator. Actual options, reviews and Custom form make pages longer.
-- Colors/tokens: white, `#1F5A46`, `#352F31` and approved pink/berry variables
-  are AU-scoped. New components introduce no shadow, gradient or glass.
-  Pre-existing contact launcher and legacy routes retain their styles.
-- Images: existing product photos and approved Pencil placeholders retained.
-  No generated replacement marks, remote stock dependency or absolute local
-  image URL. Chocolate reference photography is labelled and deferred for replacement.
-- Copy/content: real catalogue/pricing override illustrative labels. Cakes has
-  seven orderable products. Only Almond's confirmed 80g/AUD 12 is shown for
-  chocolates; no fabricated purchase, 5+1, black-tub or Pavé/Eiffel price.
-  Custom promises original interpretation, not copying; no new upload API,
-  response-time or availability promise was added.
+- **Fonts/type:** actual browser computed font families are Work Sans for headings and SUIT Variable for descriptive text. Heading hierarchy, small control text, wrapping and option prices are readable at all three widths. Current production option labels are preserved.
+- **Layout/spacing:** desktop split hero, inside/craft grids, alternating finish editions, packaging split and related grid share the Pavé visual system. Tablet stacks purchase areas. Mobile stacks content and retains supporting/related grids plus an accessible fixed CTA. No document horizontal overflow in 27 route/viewport cases.
+- **Colors/tokens:** existing AU green, white, warm neutral backgrounds, restrained pink accents, thin dividers and selected borders. No new shadows/gradients or motion dependency.
+- **Images:** correct product source/crop, responsive WebP, alpha preserved, explicit dimensions, hero priority and supporting lazy loading. All rendered images loaded without broken resources. Desktop/Mobile narrative image lists match.
+- **Copy:** verified catalogue/editorial facts take priority over old sample claims. No new origin, couverture brand, free accessories, insulated shipping or allergen guarantee. Packaging references are identified; unavailable Bento remains clear. New video slots show photographs without developer labels.
 
-## Intentional differences and follow-up
+## Interactions and regression evidence
 
-- Home retains the approved `398093e` unified catalogue/filter composition and
-  original tiger/background styling, rather than replacing it with Pencil's
-  illustrative separate collections. Existing Home Coming Soon entries remain;
-  the new orderable Category excludes unavailable entries.
-- Existing sizes, pack counts, finish/packaging controls, notices, reviews and
-  complete Custom form take more space than the abbreviated mock. The optional
-  sticky-bottom CTA was not added; mobile purchase CTA is 52px high.
-- Chocolate entries are preview-only and noindex. The isolated demo cannot
-  submit Custom requests; live submission was intentionally not tested/changed.
-- P3: replace approved placeholder photography in the later asset phase.
-- Nonblocking test follow-up: full-App KR SSR coverage; current automated
-  baseline tests cover pages and browser checks cover the full shell.
+- `tests/au-product-details.browser.mjs`: 27 cases (9 × 3 widths), zero overflow/broken images/page errors; related links, default prices, quantity/cart handoff, mobile CTA callback, reduced motion.
+- `tests/au-detail-options.browser.mjs`: Desktop/390 real option interactions: Signature A$45/52/55; Cupcake 6/12 packs and three finishes, A$100+ free packaging; Lemon four packs and chocolate-finish count; Strawberry sizes; Brownie unified Basic A$85 / Vanilla Cream A$105 / Pavé Chocolate A$95 finish selector; S’more 5/6/12 quantities, discounts and cart SKU.
+- `tests/au-chocolate-commerce.browser.mjs`: Desktop/390 Almond variants, exclusive selection, conditional six-pack note, 1–5 bounds, separate Single ×5 and 6-pack ×1 lines, Black Tub, standalone Pavé/Eiffel. Five-line subtotal A$199.
+- Existing Pavé browser suite: three sizes, extra row-once charge, quantity bounds, gallery/swipe, related links, eight-second muted loop, viewport pause, reduced motion, cart.
+- Market-boundary/image targeted suite: 17 passed, including KR byte-for-byte rendered-output comparison.
+- Full `npm test`: 1,664 passed, zero failures/cancellations on the completed run. Missing existing Review API dependency was installed from its unchanged lockfile only under `/tmp/au-detail-review-deps.F9rsfT` and resolved by a temporary Node import hook for tests. No repository package/lock/backend change.
+- Lint passed. AU and KR builds passed; existing bundle-size warnings remain. AU generated 35 static pages, KR 30. AU build was run last to restore the normal AU sitemap output.
+- `git diff --check` passed. Fresh read-only code review found no important functional/KR-isolation defect.
 
-## Browser and interaction results
+## Expected differences / follow-up polish
 
-AU desktop: Home, Cakes, all seven real product routes, Custom, Chocolates and
-all three unavailable chocolate details. 390px: Cakes, Cake and Cupcake.
-No horizontal page overflow or broken visible images in these captures.
-Mobile MENU opens; Escape closes it and returns focus to MENU.
+- Real purchase controls and verified copy produce different hero/practical-section heights from sample Pencil values. They keep current options, validation and order meaning.
+- New galleries use approved photographs of the same product from the Desktop story rather than stale cross-product thumbnail placeholders. Their exact thumbnail density can be polished after John's review.
+- Desktop photo content replaces outdated Mobile assets, including Strawberry/Brownie/Almond. Bento only has the available approved hero and related products.
+- New videos await John's files; poster sections are complete and do not advertise missing media. Pavé retains its supplied film.
+- Browser QA used Chromium, not physical Safari/iOS. No real production request, payment or delivery was exercised.
+- Minor title wrapping, caption lengths and vertical spacing remain suitable for John's final visual review. No deployment has been performed.
 
-- Cupcake: 6-pack Vanilla Fresh Cream AUD 35, packaging 6×AUD 0.50, quantity 2
-  = AUD 76. Cart/reservation retain pack, finish, quantity and 12-piece/AUD 6
-  packaging. Evidence: `au-cart-cupcake-mobile.png`,
-  `au-reservation-cupcake-mobile.png`. No reservation was submitted.
-- Cake: 8-inch AUD 109 ×2 plus existing per-order Pavé extra AUD 12 = AUD 230.
-  Options/total survive cart navigation (`au-cart-cake-desktop.png`).
-- Only this isolated browser's test cart lines were removed afterwards.
-- KR Home/Cakes: zero AU shells/templates/matching AU CSS rules; original
-  footer and announcement visible. KR's actual category link opens legacy
-  `/cakes/custom-cake`, also with no AU shell/template and visible footer/
-  announcement. Evidence: `kr-{home,cakes,custom}-desktop-final.png`.
-- AU-only `/cakes/pave-chocolate-cake` remains not-found in KR; that capture
-  is not counted as successful KR detail coverage.
-- Console/page-error monitoring during all seven AU details and remaining
-  chocolate previews reported zero errors; final console error query was empty.
-- Local AU/KR servers used blank external backend settings and blocked external
-  requests except fonts. No external order/form submission was performed.
+## Implementation checklist
 
-final result: passed
+- [x] Nine AU detail routes, shared presentation plus existing commerce.
+- [x] Read-only source mapping and optimized production copies.
+- [x] Desktop/Tablet/Mobile screenshots and source comparisons.
+- [x] Purchase, cart, availability, reduced-motion and AU/KR regression.
+- [x] Test/build/lint/diff validation.
+- [ ] John visual approval and final video handoff.
+- [ ] Deployment (explicitly outside this task).

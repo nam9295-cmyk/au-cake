@@ -1,0 +1,2187 @@
+{
+  "signature-gateau": {
+    "hero": {
+      "source": "pencil/au-site-redesign-assets/signature-gateau-au-chocolat-sydney.webp",
+      "sha256": "bb4ad3f59c0f6932a42b64dd48976afffb2e8459b2a0164e9faa14c5c04f6b86",
+      "originalBytes": 74792,
+      "width": 1080,
+      "height": 1012,
+      "src": "/products/details/signature-gateau/hero-1080.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/hero-480.webp",
+          "width": 480,
+          "bytes": 18900
+        },
+        {
+          "src": "/products/details/signature-gateau/hero-1080.webp",
+          "width": 1080,
+          "bytes": 74142
+        }
+      ]
+    },
+    "inside": {
+      "source": "drive/cake/pound-detail/pound-1.png",
+      "sha256": "15408a28d35fdab90cca7f7825ff2a895da9f05a5678ddce7bf37364f045ab2a",
+      "originalBytes": 3808476,
+      "pencilCrop": {
+        "width": 457.99999999999943,
+        "height": 787.9999999999995,
+        "rotation": 90,
+        "transform": [
+          1.716158,
+          0,
+          0,
+          1.321938,
+          -0.393013,
+          -0.321938
+        ]
+      },
+      "width": 1576,
+      "height": 916,
+      "src": "/products/details/signature-gateau/inside-1440.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/inside-480.webp",
+          "width": 480,
+          "bytes": 28964
+        },
+        {
+          "src": "/products/details/signature-gateau/inside-1440.webp",
+          "width": 1440,
+          "bytes": 150224
+        }
+      ]
+    },
+    "craft-01": {
+      "source": "drive/cake/pound-detail/in-the-box.png",
+      "sha256": "2089935b62ce9c6587019d32b6e2e016641186b19ea68cd1030bd93609408f6f",
+      "originalBytes": 4204950,
+      "pencilCrop": {
+        "width": 620,
+        "height": 420,
+        "transform": [
+          1.827844,
+          0,
+          0,
+          1.798831,
+          -0.326262,
+          -0.434242
+        ]
+      },
+      "width": 1240,
+      "height": 840,
+      "src": "/products/details/signature-gateau/craft-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/craft-01-480.webp",
+          "width": 480,
+          "bytes": 32212
+        },
+        {
+          "src": "/products/details/signature-gateau/craft-01-960.webp",
+          "width": 960,
+          "bytes": 108906
+        }
+      ]
+    },
+    "craft-02": {
+      "source": "drive/cake/pound-detail/chocolate-cross.webp",
+      "sha256": "3657a8844a7e54fea0db5bd6af5c4df9558d7d0323f13a06ab871f3a742b832d",
+      "originalBytes": 99296,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1.083871,
+          0,
+          0,
+          1,
+          -0.025003,
+          0
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/signature-gateau/craft-02-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/craft-02-480.webp",
+          "width": 480,
+          "bytes": 34688
+        },
+        {
+          "src": "/products/details/signature-gateau/craft-02-620.webp",
+          "width": 620,
+          "bytes": 46584
+        }
+      ]
+    },
+    "craft-03": {
+      "source": "drive/cake/pound-detail/vainlla-cross.webp",
+      "sha256": "3fffd202052c773af1c3271f7a2ce149965a9e0b5ebc0af87a7680088d06bf12",
+      "originalBytes": 153926,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1.083871,
+          0,
+          0,
+          1,
+          -0.083871,
+          0
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/signature-gateau/craft-03-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/craft-03-480.webp",
+          "width": 480,
+          "bytes": 39158
+        },
+        {
+          "src": "/products/details/signature-gateau/craft-03-620.webp",
+          "width": 620,
+          "bytes": 55128
+        }
+      ]
+    },
+    "video-poster": {
+      "source": "drive/cake/pound-detail/gateau-169.png",
+      "sha256": "f63b1941599b34e1f8aaf14bf72d44990f649bf1571a16638641698afc1d01e9",
+      "originalBytes": 4416262,
+      "width": 2048,
+      "height": 1152,
+      "src": "/products/details/signature-gateau/video-poster-1440.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/video-poster-480.webp",
+          "width": 480,
+          "bytes": 19184
+        },
+        {
+          "src": "/products/details/signature-gateau/video-poster-1440.webp",
+          "width": 1440,
+          "bytes": 123760
+        }
+      ]
+    },
+    "edition-01": {
+      "source": "drive/cake/pound-detail/pound-hole.png",
+      "sha256": "bab63caf8b72b3bdce74bf29c4aa58c4df8d3b9945a3404867b9336046424bc0",
+      "originalBytes": 4069045,
+      "pencilCrop": {
+        "width": 440.00000000000006,
+        "height": 375.99999999999807,
+        "transform": [
+          1,
+          0,
+          0,
+          1.550885,
+          0,
+          -0.275443
+        ]
+      },
+      "width": 880,
+      "height": 752,
+      "src": "/products/details/signature-gateau/edition-01-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/edition-01-480.webp",
+          "width": 480,
+          "bytes": 35430
+        },
+        {
+          "src": "/products/details/signature-gateau/edition-01-880.webp",
+          "width": 880,
+          "bytes": 98424
+        }
+      ]
+    },
+    "edition-02": {
+      "source": "drive/cake/pound-detail/chocolate-on-top.png",
+      "sha256": "8a0c68506e212053630729f12b67a348975156406e68f474869043fc460f2f54",
+      "originalBytes": 4587195,
+      "pencilCrop": {
+        "width": 440,
+        "height": 387.9999999999996,
+        "transform": [
+          1,
+          0,
+          0,
+          1.502919,
+          0,
+          -0.251459
+        ]
+      },
+      "width": 880,
+      "height": 776,
+      "src": "/products/details/signature-gateau/edition-02-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/edition-02-480.webp",
+          "width": 480,
+          "bytes": 42636
+        },
+        {
+          "src": "/products/details/signature-gateau/edition-02-880.webp",
+          "width": 880,
+          "bytes": 123420
+        }
+      ]
+    },
+    "edition-03": {
+      "source": "drive/cake/pound-detail/vanilla-on-top.png",
+      "sha256": "009689f19bfd758f8f7495c293e70fdea6cdee4184dfcd14b35467dc53cb9bee",
+      "originalBytes": 4194961,
+      "pencilCrop": {
+        "width": 440,
+        "height": 393.0000000000007,
+        "transform": [
+          1,
+          0,
+          0,
+          1.483798,
+          0,
+          -0.241899
+        ]
+      },
+      "width": 880,
+      "height": 786,
+      "src": "/products/details/signature-gateau/edition-03-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/edition-03-480.webp",
+          "width": 480,
+          "bytes": 28858
+        },
+        {
+          "src": "/products/details/signature-gateau/edition-03-880.webp",
+          "width": 880,
+          "bytes": 66916
+        }
+      ]
+    },
+    "occasion-01": {
+      "source": "drive/cake/pound-detail/gateau-3.webp",
+      "sha256": "caa1471b0cb2498e8f772f739c9da9447ea17e3d03dc16816eb9e677d96e6990",
+      "originalBytes": 163832,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/signature-gateau/occasion-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/occasion-01-480.webp",
+          "width": 480,
+          "bytes": 48986
+        },
+        {
+          "src": "/products/details/signature-gateau/occasion-01-960.webp",
+          "width": 960,
+          "bytes": 121784
+        }
+      ]
+    },
+    "occasion-02": {
+      "source": "drive/cake/pound-detail/drop-chocolate.webp",
+      "sha256": "3fb292b4e961c75a421f6b91338602efda68d3d40ebdf3f74a3ac35872a93c64",
+      "originalBytes": 93106,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/signature-gateau/occasion-02-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/occasion-02-480.webp",
+          "width": 480,
+          "bytes": 27790
+        },
+        {
+          "src": "/products/details/signature-gateau/occasion-02-960.webp",
+          "width": 960,
+          "bytes": 61224
+        }
+      ]
+    },
+    "occasion-03": {
+      "source": "drive/cake/pound-detail/eat-gateau.webp",
+      "sha256": "d6cd13fe96bf9668128bb5b142d4a04cb460c0578fff186da38d35b5503da4d0",
+      "originalBytes": 115228,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/signature-gateau/occasion-03-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/occasion-03-480.webp",
+          "width": 480,
+          "bytes": 27902
+        },
+        {
+          "src": "/products/details/signature-gateau/occasion-03-960.webp",
+          "width": 960,
+          "bytes": 69616
+        }
+      ]
+    },
+    "occasion-04": {
+      "source": "drive/cake/pound-detail/party.png",
+      "sha256": "83497fbd0a100785393cb8687534eb9bf5b7f83fe156eef6735517d9ce7ecb8e",
+      "originalBytes": 2121467,
+      "width": 1122,
+      "height": 1402,
+      "src": "/products/details/signature-gateau/occasion-04-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/occasion-04-480.webp",
+          "width": 480,
+          "bytes": 50132
+        },
+        {
+          "src": "/products/details/signature-gateau/occasion-04-960.webp",
+          "width": 960,
+          "bytes": 116922
+        }
+      ]
+    },
+    "packaging": {
+      "source": "drive/cake/KakaoTalk_Photo_2026-09-22-21-07-01-7.jpeg",
+      "sha256": "61fb77acc20e31b074d23c99753bf41600f2c6fb9da2d63819fbf095a7085f6d",
+      "originalBytes": 496373,
+      "pencilCrop": {
+        "width": 680,
+        "height": 444,
+        "transform": [
+          1,
+          0,
+          0,
+          2.0587,
+          0,
+          -0.666176
+        ]
+      },
+      "width": 1360,
+      "height": 888,
+      "src": "/products/details/signature-gateau/packaging-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/signature-gateau/packaging-480.webp",
+          "width": 480,
+          "bytes": 26550
+        },
+        {
+          "src": "/products/details/signature-gateau/packaging-960.webp",
+          "width": 960,
+          "bytes": 74380
+        }
+      ]
+    }
+  },
+  "cupcakes": {
+    "hero": {
+      "source": "pencil/au-site-redesign-assets/chocolate-cupcakes-sydney.webp",
+      "sha256": "5e1cda5c62c17a0ffb68b974bcdda66ce268de2761f8d43dcc0f58f38c9f2859",
+      "originalBytes": 83626,
+      "width": 1080,
+      "height": 1012,
+      "src": "/products/details/cupcakes/hero-1080.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/hero-480.webp",
+          "width": 480,
+          "bytes": 23426
+        },
+        {
+          "src": "/products/details/cupcakes/hero-1080.webp",
+          "width": 1080,
+          "bytes": 83740
+        }
+      ]
+    },
+    "inside": {
+      "source": "drive/cake/gateau-cupcake-detail/cupcake.png",
+      "sha256": "6311490a3ba83c7b7789c786d8a51c4f0abf32aea22a55b1bccecd9c1c1f6aca",
+      "originalBytes": 5275500,
+      "pencilCrop": {
+        "width": 786,
+        "height": 491,
+        "transform": [
+          1.041014,
+          0.87495,
+          -0.724364,
+          2.208575,
+          0.341675,
+          -1.041762
+        ]
+      },
+      "width": 1572,
+      "height": 982,
+      "src": "/products/details/cupcakes/inside-1440.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/inside-480.webp",
+          "width": 480,
+          "bytes": 45918
+        },
+        {
+          "src": "/products/details/cupcakes/inside-1440.webp",
+          "width": 1440,
+          "bytes": 270616
+        }
+      ]
+    },
+    "craft-01": {
+      "source": "drive/cake/gateau-cupcake-detail/vanilla.png",
+      "sha256": "7a0647a586f4f97bea9d75ec2a4d8a6ef7a7dca2a3e72abcdb687f7c6f6c6b5e",
+      "originalBytes": 2591451,
+      "pencilCrop": {
+        "width": 620,
+        "height": 420,
+        "transform": [
+          1.147605,
+          0,
+          0,
+          2.541125,
+          -0.092624,
+          -1.099677
+        ]
+      },
+      "width": 1240,
+      "height": 840,
+      "src": "/products/details/cupcakes/craft-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/craft-01-480.webp",
+          "width": 480,
+          "bytes": 15100
+        },
+        {
+          "src": "/products/details/cupcakes/craft-01-960.webp",
+          "width": 960,
+          "bytes": 37202
+        }
+      ]
+    },
+    "craft-02": {
+      "source": "drive/cake/gateau-cupcake-detail/choco.png",
+      "sha256": "ce6a51c50320bfa80b3f187e7e505fba7c45dc00c967520134f6631ddab44174",
+      "originalBytes": 2562918,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1.307495,
+          0,
+          0,
+          1.447584,
+          -0.153748,
+          -0.336916
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/cupcakes/craft-02-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/craft-02-480.webp",
+          "width": 480,
+          "bytes": 24490
+        },
+        {
+          "src": "/products/details/cupcakes/craft-02-620.webp",
+          "width": 620,
+          "bytes": 33466
+        }
+      ]
+    },
+    "craft-03": {
+      "source": "drive/cake/gateau-cupcake-detail/basic.png",
+      "sha256": "4385fd08ceed44432561bede11c757f8069c5e36e7afcc5e00eb3acebd4506a9",
+      "originalBytes": 2533397,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1.43007,
+          0,
+          0,
+          1.583292,
+          -0.215035,
+          -0.443843
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/cupcakes/craft-03-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/craft-03-480.webp",
+          "width": 480,
+          "bytes": 23794
+        },
+        {
+          "src": "/products/details/cupcakes/craft-03-620.webp",
+          "width": 620,
+          "bytes": 33772
+        }
+      ]
+    },
+    "edition-01": {
+      "source": "drive/cake/gateau-cupcake-detail/basic.png",
+      "sha256": "4385fd08ceed44432561bede11c757f8069c5e36e7afcc5e00eb3acebd4506a9",
+      "originalBytes": 2533397,
+      "pencilCrop": {
+        "width": 440,
+        "height": 376,
+        "transform": [
+          1.149364,
+          0,
+          0,
+          2.017501,
+          -0.074682,
+          -0.77121
+        ]
+      },
+      "width": 880,
+      "height": 752,
+      "src": "/products/details/cupcakes/edition-01-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/edition-01-480.webp",
+          "width": 480,
+          "bytes": 17686
+        },
+        {
+          "src": "/products/details/cupcakes/edition-01-880.webp",
+          "width": 880,
+          "bytes": 41666
+        }
+      ]
+    },
+    "edition-02": {
+      "source": "drive/cake/gateau-cupcake-detail/vanilla.png",
+      "sha256": "7a0647a586f4f97bea9d75ec2a4d8a6ef7a7dca2a3e72abcdb687f7c6f6c6b5e",
+      "originalBytes": 2591451,
+      "pencilCrop": {
+        "width": 440,
+        "height": 376,
+        "transform": [
+          1.177416,
+          0,
+          0,
+          2.06674,
+          -0.088708,
+          -0.768289
+        ]
+      },
+      "width": 880,
+      "height": 752,
+      "src": "/products/details/cupcakes/edition-02-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/edition-02-480.webp",
+          "width": 480,
+          "bytes": 17452
+        },
+        {
+          "src": "/products/details/cupcakes/edition-02-880.webp",
+          "width": 880,
+          "bytes": 37766
+        }
+      ]
+    },
+    "edition-03": {
+      "source": "drive/cake/gateau-cupcake-detail/choco.png",
+      "sha256": "ce6a51c50320bfa80b3f187e7e505fba7c45dc00c967520134f6631ddab44174",
+      "originalBytes": 2562918,
+      "pencilCrop": {
+        "width": 440,
+        "height": 376,
+        "transform": [
+          1.219419,
+          0,
+          0,
+          2.14047,
+          -0.10971,
+          -0.759684
+        ]
+      },
+      "width": 880,
+      "height": 752,
+      "src": "/products/details/cupcakes/edition-03-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/edition-03-480.webp",
+          "width": 480,
+          "bytes": 19462
+        },
+        {
+          "src": "/products/details/cupcakes/edition-03-880.webp",
+          "width": 880,
+          "bytes": 41064
+        }
+      ]
+    },
+    "occasion-01": {
+      "source": "drive/cake/gateau-cupcake-detail/party-01.webp",
+      "sha256": "1ea42407df36d5db41eb7950b90f57c55c56bf1a9e2000fcf272659780252479",
+      "originalBytes": 162748,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/cupcakes/occasion-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/occasion-01-480.webp",
+          "width": 480,
+          "bytes": 39496
+        },
+        {
+          "src": "/products/details/cupcakes/occasion-01-960.webp",
+          "width": 960,
+          "bytes": 97136
+        }
+      ]
+    },
+    "occasion-02": {
+      "source": "drive/cake/gateau-cupcake-detail/vanilla-party-02.webp",
+      "sha256": "f8e053c01f26e7b8f34cc86a799868cd0064f676cb26db156f1485bbcadc25c1",
+      "originalBytes": 85644,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/cupcakes/occasion-02-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/occasion-02-480.webp",
+          "width": 480,
+          "bytes": 23816
+        },
+        {
+          "src": "/products/details/cupcakes/occasion-02-960.webp",
+          "width": 960,
+          "bytes": 53804
+        }
+      ]
+    },
+    "occasion-03": {
+      "source": "drive/cake/gateau-cupcake-detail/choco-scene.webp",
+      "sha256": "009e23f66a4aca8c627944b74eb1b3b9a5b80cb0316b0b1c7876fd0a2cc0060f",
+      "originalBytes": 127690,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/cupcakes/occasion-03-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/occasion-03-480.webp",
+          "width": 480,
+          "bytes": 27422
+        },
+        {
+          "src": "/products/details/cupcakes/occasion-03-960.webp",
+          "width": 960,
+          "bytes": 71008
+        }
+      ]
+    },
+    "packaging": {
+      "source": "drive/cake/gateau-cupcake-detail/cakes-package.png",
+      "sha256": "590248972da32cc8d7da42948d68ad336638ee80fcba9ea522a4b63fcddb20f9",
+      "originalBytes": 3463763,
+      "pencilCrop": {
+        "width": 680,
+        "height": 444,
+        "transform": [
+          1.128938,
+          0,
+          0,
+          1.304612,
+          -0.064469,
+          -0.152306
+        ]
+      },
+      "width": 1360,
+      "height": 888,
+      "src": "/products/details/cupcakes/packaging-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/cupcakes/packaging-480.webp",
+          "width": 480,
+          "bytes": 22412
+        },
+        {
+          "src": "/products/details/cupcakes/packaging-960.webp",
+          "width": 960,
+          "bytes": 61194
+        }
+      ]
+    }
+  },
+  "lemon": {
+    "hero": {
+      "source": "pencil/au-site-redesign-assets/lemon-cake-sydney.webp",
+      "sha256": "1659c66b2f342cd84c7b7dad3d85b97552b04b3345e2cc185b746fff2441d389",
+      "originalBytes": 74442,
+      "width": 1080,
+      "height": 1012,
+      "src": "/products/details/lemon/hero-1080.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/hero-480.webp",
+          "width": 480,
+          "bytes": 23988
+        },
+        {
+          "src": "/products/details/lemon/hero-1080.webp",
+          "width": 1080,
+          "bytes": 72686
+        }
+      ]
+    },
+    "inside": {
+      "source": "drive/cake/lemon-detail/lemon-cake-03.png",
+      "sha256": "19deb35b450d5f1e5e090c39ed5777b67c88088525069ec1185b44e39212441a",
+      "originalBytes": 2397281,
+      "pencilCrop": {
+        "width": 786,
+        "height": 491,
+        "transform": [
+          1.320235,
+          0,
+          0,
+          2.80096,
+          -0.137319,
+          -0.871542
+        ]
+      },
+      "width": 1572,
+      "height": 982,
+      "src": "/products/details/lemon/inside-1440.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/inside-480.webp",
+          "width": 480,
+          "bytes": 11906
+        },
+        {
+          "src": "/products/details/lemon/inside-1440.webp",
+          "width": 1440,
+          "bytes": 53132
+        }
+      ]
+    },
+    "craft-01": {
+      "source": "drive/cake/lemon-detail/lemon-box.png",
+      "sha256": "36e9dd73515532460562727bc30cf4d8be4ad9a634af9fd7f4be6daac5f5d67c",
+      "originalBytes": 2288509,
+      "pencilCrop": {
+        "width": 620,
+        "height": 420.0000000000001,
+        "transform": [
+          1.202655,
+          0,
+          0,
+          1.19311,
+          -0.101328,
+          -0.065177
+        ]
+      },
+      "width": 1240,
+      "height": 840,
+      "src": "/products/details/lemon/craft-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/craft-01-480.webp",
+          "width": 480,
+          "bytes": 16390
+        },
+        {
+          "src": "/products/details/lemon/craft-01-960.webp",
+          "width": 960,
+          "bytes": 44610
+        }
+      ]
+    },
+    "craft-02": {
+      "source": "drive/cake/lemon-detail/lemon-cake-02.png",
+      "sha256": "589cd6c1c0de78465f27a2a13f359068ece93ade4f62f87e1144b1b64c2670d2",
+      "originalBytes": 4281412,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          2.58575,
+          0,
+          0,
+          2.529377,
+          -0.642635,
+          -0.881544
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/lemon/craft-02-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/craft-02-480.webp",
+          "width": 480,
+          "bytes": 26770
+        },
+        {
+          "src": "/products/details/lemon/craft-02-620.webp",
+          "width": 620,
+          "bytes": 37372
+        }
+      ]
+    },
+    "craft-03": {
+      "source": "drive/cake/lemon-detail/lemon-choco-02.png",
+      "sha256": "2d857321f3a161f1762073a5ab79d67b25579e7819aa6cff732e385baebc3d91",
+      "originalBytes": 4541651,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1.673019,
+          0,
+          0,
+          1.636545,
+          -0.2352,
+          -0.251793
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/lemon/craft-03-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/craft-03-480.webp",
+          "width": 480,
+          "bytes": 36182
+        },
+        {
+          "src": "/products/details/lemon/craft-03-620.webp",
+          "width": 620,
+          "bytes": 55314
+        }
+      ]
+    },
+    "edition-01": {
+      "source": "drive/cake/lemon-detail/lemon-cake-01.png",
+      "sha256": "c4aba8cdaf77abf26c42c77f78a4f4a31ee55f05990ac2785eda1b7a082a5c26",
+      "originalBytes": 2915919,
+      "width": 1360,
+      "height": 1712,
+      "src": "/products/details/lemon/edition-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/edition-01-480.webp",
+          "width": 480,
+          "bytes": 15474
+        },
+        {
+          "src": "/products/details/lemon/edition-01-960.webp",
+          "width": 960,
+          "bytes": 35514
+        }
+      ]
+    },
+    "edition-02": {
+      "source": "drive/cake/lemon-detail/lemon-choco-01.png",
+      "sha256": "b7f74a9a29585850454a8f1df43fabb3242e61b3200065aac055b7ee6c1faccc",
+      "originalBytes": 1910982,
+      "pencilCrop": {
+        "width": 440,
+        "height": 376,
+        "transform": [
+          1,
+          0,
+          0,
+          1.473091,
+          0,
+          -0.236546
+        ]
+      },
+      "width": 880,
+      "height": 752,
+      "src": "/products/details/lemon/edition-02-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/edition-02-480.webp",
+          "width": 480,
+          "bytes": 12250
+        },
+        {
+          "src": "/products/details/lemon/edition-02-880.webp",
+          "width": 880,
+          "bytes": 25150
+        }
+      ]
+    },
+    "occasion-01": {
+      "source": "drive/cake/lemon-detail/lemon-cake-04.png",
+      "sha256": "57a4e8754733e79547788d6ca11fc91fc62338ad164aab7a7e446c3e80de263b",
+      "originalBytes": 4090186,
+      "pencilCrop": {
+        "width": 626,
+        "height": 360,
+        "transform": [
+          1.164762,
+          0,
+          0,
+          1.350261,
+          -0.047393,
+          -0.262432
+        ]
+      },
+      "width": 1252,
+      "height": 720,
+      "src": "/products/details/lemon/occasion-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/occasion-01-480.webp",
+          "width": 480,
+          "bytes": 20674
+        },
+        {
+          "src": "/products/details/lemon/occasion-01-960.webp",
+          "width": 960,
+          "bytes": 52748
+        }
+      ]
+    },
+    "occasion-02": {
+      "source": "drive/cake/lemon-detail/lemon-party-01.webp",
+      "sha256": "57b87817579083ce6fb3084794f8c6b61963517a1fe916e2d7ad1ff1bb49b09c",
+      "originalBytes": 145112,
+      "pencilCrop": {
+        "width": 305,
+        "height": 360,
+        "transform": [
+          1.156373,
+          0,
+          0,
+          1.224631,
+          -0.156373,
+          -0.224631
+        ]
+      },
+      "width": 610,
+      "height": 720,
+      "src": "/products/details/lemon/occasion-02-610.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/occasion-02-480.webp",
+          "width": 480,
+          "bytes": 35424
+        },
+        {
+          "src": "/products/details/lemon/occasion-02-610.webp",
+          "width": 610,
+          "bytes": 47546
+        }
+      ]
+    },
+    "occasion-03": {
+      "source": "drive/cake/lemon-detail/lemon-party-02.webp",
+      "sha256": "0b08fd8401c2ecca49a4db28cc108d284d30d44ab2f8511b6262ca23f0312f30",
+      "originalBytes": 130870,
+      "pencilCrop": {
+        "width": 305,
+        "height": 360,
+        "transform": [
+          1.47541,
+          0,
+          0,
+          1,
+          -0.329005,
+          0
+        ]
+      },
+      "width": 610,
+      "height": 720,
+      "src": "/products/details/lemon/occasion-03-610.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/occasion-03-480.webp",
+          "width": 480,
+          "bytes": 33330
+        },
+        {
+          "src": "/products/details/lemon/occasion-03-610.webp",
+          "width": 610,
+          "bytes": 43740
+        }
+      ]
+    },
+    "packaging": {
+      "source": "drive/cake/lemon-detail/magnific__img1-img2-__89889.png",
+      "sha256": "9d250ffe1d471e800aa252bc6cb13c4c94ae555615b73f4b3f6a1be61ea0e482",
+      "originalBytes": 4022888,
+      "width": 1872,
+      "height": 1248,
+      "src": "/products/details/lemon/packaging-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/lemon/packaging-480.webp",
+          "width": 480,
+          "bytes": 21164
+        },
+        {
+          "src": "/products/details/lemon/packaging-960.webp",
+          "width": 960,
+          "bytes": 57958
+        }
+      ]
+    }
+  },
+  "bento": {
+    "hero": {
+      "source": "pencil/au-site-redesign-assets/bento-cake-sydney.webp",
+      "sha256": "512e93b3413e01ddf8ed71fd9eae74028b373aa758abd43c3f550ebff4c5b2d9",
+      "originalBytes": 126484,
+      "width": 1080,
+      "height": 1012,
+      "src": "/products/details/bento/hero-1080.webp",
+      "variants": [
+        {
+          "src": "/products/details/bento/hero-480.webp",
+          "width": 480,
+          "bytes": 37988
+        },
+        {
+          "src": "/products/details/bento/hero-1080.webp",
+          "width": 1080,
+          "bytes": 126322
+        }
+      ]
+    }
+  },
+  "strawberry-vanilla": {
+    "hero": {
+      "source": "pencil/au-site-redesign-assets/fresh-strawberry-vanilla-cream-cake-sydney.webp",
+      "sha256": "044dbe8873a129f44c375f0c9adad29d6899da757890a73e82924de34f4e3a1c",
+      "originalBytes": 65196,
+      "width": 1080,
+      "height": 1012,
+      "src": "/products/details/strawberry-vanilla/hero-1080.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/hero-480.webp",
+          "width": 480,
+          "bytes": 20876
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/hero-1080.webp",
+          "width": 1080,
+          "bytes": 65068
+        }
+      ]
+    },
+    "inside": {
+      "source": "drive/cake/vanilla-cake/cross-section-v3.jpg",
+      "sha256": "ba1483eb75b694c42eb6fdf454faa3d5185f8a28ae744eaa5e5f24a914e57e38",
+      "originalBytes": 839182,
+      "pencilCrop": {
+        "width": 786,
+        "height": 491,
+        "transform": [
+          1.017574,
+          0,
+          0,
+          2.036184,
+          -0.017574,
+          -0.569715
+        ]
+      },
+      "width": 1572,
+      "height": 982,
+      "src": "/products/details/strawberry-vanilla/inside-1440.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/inside-480.webp",
+          "width": 480,
+          "bytes": 22496
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/inside-1440.webp",
+          "width": 1440,
+          "bytes": 80678
+        }
+      ]
+    },
+    "craft-01": {
+      "source": "drive/cake/vanilla-cake/hero-02.png",
+      "sha256": "28224aff5194be622757e21aa6004f2b288d443d3c32377b6097f6669d89022c",
+      "originalBytes": 3563890,
+      "pencilCrop": {
+        "width": 620,
+        "height": 420,
+        "transform": [
+          1,
+          0,
+          0,
+          1.858263,
+          0,
+          -0.39609
+        ]
+      },
+      "width": 1240,
+      "height": 840,
+      "src": "/products/details/strawberry-vanilla/craft-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/craft-01-480.webp",
+          "width": 480,
+          "bytes": 29768
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/craft-01-960.webp",
+          "width": 960,
+          "bytes": 89748
+        }
+      ]
+    },
+    "craft-02": {
+      "source": "drive/cake/vanilla-cake/Strawberries_closeup.jpg",
+      "sha256": "6e9074c7be3db86500e2c5f769b694f5edc4412ce82c16019d417a88c3959bbc",
+      "originalBytes": 218045,
+      "width": 896,
+      "height": 1200,
+      "src": "/products/details/strawberry-vanilla/craft-02-896.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/craft-02-480.webp",
+          "width": 480,
+          "bytes": 61718
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/craft-02-896.webp",
+          "width": 896,
+          "bytes": 151370
+        }
+      ]
+    },
+    "craft-03": {
+      "source": "drive/cake/vanilla-cake/package.png",
+      "sha256": "f2447584c31f3c402ccda877e69369588605d25f3d543894281b41e09967bdfc",
+      "originalBytes": 1334780,
+      "pencilCrop": {
+        "width": 312.5,
+        "height": 420,
+        "transform": [
+          1.134482,
+          0,
+          0,
+          1.125478,
+          -0.055055,
+          0
+        ]
+      },
+      "width": 625,
+      "height": 840,
+      "src": "/products/details/strawberry-vanilla/craft-03-625.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/craft-03-480.webp",
+          "width": 480,
+          "bytes": 20502
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/craft-03-625.webp",
+          "width": 625,
+          "bytes": 30262
+        }
+      ]
+    },
+    "occasion-01": {
+      "source": "drive/cake/vanilla-cake/45degree.png",
+      "sha256": "350180088032a542b7866a6e6a7cc1e581ba04bcb7dfa5a587a338a939f6474d",
+      "originalBytes": 2031508,
+      "pencilCrop": {
+        "width": 305,
+        "height": 360,
+        "transform": [
+          1.16761,
+          0,
+          0,
+          1.24526,
+          -0.10628,
+          -0.146599
+        ]
+      },
+      "width": 610,
+      "height": 720,
+      "src": "/products/details/strawberry-vanilla/occasion-01-610.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/occasion-01-480.webp",
+          "width": 480,
+          "bytes": 31978
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/occasion-01-610.webp",
+          "width": 610,
+          "bytes": 46632
+        }
+      ]
+    },
+    "occasion-02": {
+      "source": "drive/cake/vanilla-cake/vanilla-party-01.webp",
+      "sha256": "6065334c232d8e7a931a451ce297a133bdbb985c59e86ca6faaa5b730557bfe2",
+      "originalBytes": 106212,
+      "width": 1129,
+      "height": 1393,
+      "src": "/products/details/strawberry-vanilla/occasion-02-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/occasion-02-480.webp",
+          "width": 480,
+          "bytes": 31236
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/occasion-02-960.webp",
+          "width": 960,
+          "bytes": 76128
+        }
+      ]
+    },
+    "occasion-03": {
+      "source": "drive/cake/vanilla-cake/vanilla-party-02.webp",
+      "sha256": "f680cc52d6c9bdac5146ad3914a5e2a94e3d530d4205861cddec6db404ef7842",
+      "originalBytes": 85614,
+      "width": 1132,
+      "height": 1389,
+      "src": "/products/details/strawberry-vanilla/occasion-03-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/occasion-03-480.webp",
+          "width": 480,
+          "bytes": 23938
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/occasion-03-960.webp",
+          "width": 960,
+          "bytes": 59550
+        }
+      ]
+    },
+    "occasion-04": {
+      "source": "drive/cake/vanilla-cake/vanilla-party-03.webp",
+      "sha256": "df2fea95b1d89717a5d3d44e8e1d124a76896857b381fc8cf770d8177f035a7f",
+      "originalBytes": 68424,
+      "pencilCrop": {
+        "width": 305,
+        "height": 360,
+        "transform": [
+          1.058335,
+          0,
+          0,
+          1.106312,
+          0,
+          -0.083646
+        ]
+      },
+      "width": 610,
+      "height": 720,
+      "src": "/products/details/strawberry-vanilla/occasion-04-610.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/occasion-04-480.webp",
+          "width": 480,
+          "bytes": 21164
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/occasion-04-610.webp",
+          "width": 610,
+          "bytes": 28846
+        }
+      ]
+    },
+    "packaging": {
+      "source": "drive/cake/vanilla-cake/boxes.png",
+      "sha256": "0fdfa205dee4087c6e42862cd66ee43b5920fdf98338adc95b71203a21fc0174",
+      "originalBytes": 3937621,
+      "pencilCrop": {
+        "width": 680,
+        "height": 444,
+        "transform": [
+          1.258582,
+          0,
+          0,
+          1.084251,
+          -0.129291,
+          -0.084251
+        ]
+      },
+      "width": 1360,
+      "height": 888,
+      "src": "/products/details/strawberry-vanilla/packaging-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/strawberry-vanilla/packaging-480.webp",
+          "width": 480,
+          "bytes": 28122
+        },
+        {
+          "src": "/products/details/strawberry-vanilla/packaging-960.webp",
+          "width": 960,
+          "bytes": 74038
+        }
+      ]
+    }
+  },
+  "brownie-cheesecake": {
+    "hero": {
+      "source": "drive/cake/cheesecake/main-hero.webp",
+      "sha256": "5d1c1837d8094c6f4050aab0ee93b6e5fe6979cc00f728ddb56ab9fe4167346c",
+      "originalBytes": 88860,
+      "width": 1080,
+      "height": 1012,
+      "src": "/products/details/brownie-cheesecake/hero-1080.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/hero-480.webp",
+          "width": 480,
+          "bytes": 21564
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/hero-1080.webp",
+          "width": 1080,
+          "bytes": 80044
+        }
+      ]
+    },
+    "inside": {
+      "source": "drive/cake/cheesecake/cheese-detail-04.png",
+      "sha256": "c30d6b5d725eacc3c572edd4e4c2ae592b9fbcd87d2e2ffd36a04638e6ad35eb",
+      "originalBytes": 5095826,
+      "pencilCrop": {
+        "width": 786,
+        "height": 491,
+        "transform": [
+          1.09371,
+          0,
+          0,
+          2.334436,
+          -0.09371,
+          -0.942296
+        ]
+      },
+      "width": 1572,
+      "height": 982,
+      "src": "/products/details/brownie-cheesecake/inside-1440.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/inside-480.webp",
+          "width": 480,
+          "bytes": 36162
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/inside-1440.webp",
+          "width": 1440,
+          "bytes": 175470
+        }
+      ]
+    },
+    "craft-01": {
+      "source": "drive/cake/cheesecake/cheese-detail-02.png",
+      "sha256": "f4fdbba1aff7cf9882f676f893997fa31a9bec7315ec38f93e4e8265dac37142",
+      "originalBytes": 4058063,
+      "pencilCrop": {
+        "width": 620,
+        "height": 420,
+        "transform": [
+          1,
+          0,
+          0,
+          2.214286,
+          0,
+          -0.457853
+        ]
+      },
+      "width": 1240,
+      "height": 840,
+      "src": "/products/details/brownie-cheesecake/craft-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/craft-01-480.webp",
+          "width": 480,
+          "bytes": 21250
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/craft-01-960.webp",
+          "width": 960,
+          "bytes": 53052
+        }
+      ]
+    },
+    "craft-02": {
+      "source": "drive/cake/cheesecake/cheese-deatail-01.png",
+      "sha256": "331f2fc6f4e1c1e9495d4fefc42129200486d23cafe5546c36b826a0cb665ca2",
+      "originalBytes": 2621548,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1,
+          0,
+          0,
+          1.107143,
+          0,
+          -0.053571
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/brownie-cheesecake/craft-02-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/craft-02-480.webp",
+          "width": 480,
+          "bytes": 31706
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/craft-02-620.webp",
+          "width": 620,
+          "bytes": 46732
+        }
+      ]
+    },
+    "craft-03": {
+      "source": "drive/cake/cheesecake/cheese-detail-03.png",
+      "sha256": "3e2d26a89694b8af74538262dfce5f395d8525bf49bc57fcd94bcbf485d9614d",
+      "originalBytes": 4178600,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1.078437,
+          0,
+          0,
+          1.078437,
+          -0.059948,
+          -0.078437
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/brownie-cheesecake/craft-03-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/craft-03-480.webp",
+          "width": 480,
+          "bytes": 30606
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/craft-03-620.webp",
+          "width": 620,
+          "bytes": 41812
+        }
+      ]
+    },
+    "edition-01": {
+      "source": "drive/cake/cheesecake/hero.png",
+      "sha256": "f3b226c3105e47fb162be61e15eda60ff53fb665f434a2cfcb46f1eb2ceb03a6",
+      "originalBytes": 3258184,
+      "width": 1360,
+      "height": 1712,
+      "src": "/products/details/brownie-cheesecake/edition-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/edition-01-480.webp",
+          "width": 480,
+          "bytes": 27700
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/edition-01-960.webp",
+          "width": 960,
+          "bytes": 90540
+        }
+      ]
+    },
+    "edition-02": {
+      "source": "drive/cake/cheesecake/on-vanilla-hero.png",
+      "sha256": "9fe94137daf33a3378b05f65bb54ee1909361f71dc2cd3dfa75af5ad67297f25",
+      "originalBytes": 2695894,
+      "pencilCrop": {
+        "width": 440,
+        "height": 376,
+        "transform": [
+          1,
+          0,
+          0,
+          1.473091,
+          0,
+          -0.280228
+        ]
+      },
+      "width": 880,
+      "height": 752,
+      "src": "/products/details/brownie-cheesecake/edition-02-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/edition-02-480.webp",
+          "width": 480,
+          "bytes": 26446
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/edition-02-880.webp",
+          "width": 880,
+          "bytes": 66876
+        }
+      ]
+    },
+    "edition-03": {
+      "source": "drive/cake/cheesecake/on-chocolate-hero.png",
+      "sha256": "a6cad3b257219ae2b7050c571bb32acb27164daca3893593f808a870ab7c3f58",
+      "originalBytes": 2576930,
+      "pencilCrop": {
+        "width": 440,
+        "height": 376,
+        "transform": [
+          1,
+          0,
+          0,
+          1.473091,
+          0,
+          -0.310306
+        ]
+      },
+      "width": 880,
+      "height": 752,
+      "src": "/products/details/brownie-cheesecake/edition-03-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/edition-03-480.webp",
+          "width": 480,
+          "bytes": 26518
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/edition-03-880.webp",
+          "width": 880,
+          "bytes": 76204
+        }
+      ]
+    },
+    "occasion-01": {
+      "source": "drive/cake/cheesecake/cheese-party-04.png",
+      "sha256": "816ce5941e55439d3a5d89489515cd3828d93c51edea396d40b00cc4de354844",
+      "originalBytes": 2848302,
+      "width": 1152,
+      "height": 1536,
+      "src": "/products/details/brownie-cheesecake/occasion-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/occasion-01-480.webp",
+          "width": 480,
+          "bytes": 49966
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/occasion-01-960.webp",
+          "width": 960,
+          "bytes": 130364
+        }
+      ]
+    },
+    "occasion-02": {
+      "source": "drive/cake/cheesecake/cheese-party-02.png",
+      "sha256": "dbbcf2ccc1ce9128a72e1e9e91e90f5b3eccdaa8cad2b7fa2bc76cac0fe4c485",
+      "originalBytes": 1353341,
+      "width": 768,
+      "height": 1024,
+      "src": "/products/details/brownie-cheesecake/occasion-02-768.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/occasion-02-480.webp",
+          "width": 480,
+          "bytes": 34022
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/occasion-02-768.webp",
+          "width": 768,
+          "bytes": 72284
+        }
+      ]
+    },
+    "occasion-03": {
+      "source": "drive/cake/cheesecake/cheese-party-03.png",
+      "sha256": "e0c70e2d2164119f387ad1a06b484275ffc12dd3ab627359a8268be34ddeb0f9",
+      "originalBytes": 2729114,
+      "width": 1360,
+      "height": 1712,
+      "src": "/products/details/brownie-cheesecake/occasion-03-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/occasion-03-480.webp",
+          "width": 480,
+          "bytes": 27200
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/occasion-03-960.webp",
+          "width": 960,
+          "bytes": 63656
+        }
+      ]
+    },
+    "occasion-04": {
+      "source": "drive/cake/cheesecake/cheese-party-01.jpg",
+      "sha256": "4c8d9059bb14bf0b3d4f43cdad0e77cba9e47cd324371dbf2ac739eadd0f3b52",
+      "originalBytes": 922311,
+      "pencilCrop": {
+        "width": 305,
+        "height": 360,
+        "transform": [
+          1,
+          0,
+          0,
+          1.059028,
+          0,
+          -0.059028
+        ]
+      },
+      "width": 610,
+      "height": 720,
+      "src": "/products/details/brownie-cheesecake/occasion-04-610.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/occasion-04-480.webp",
+          "width": 480,
+          "bytes": 19110
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/occasion-04-610.webp",
+          "width": 610,
+          "bytes": 25206
+        }
+      ]
+    },
+    "packaging": {
+      "source": "drive/cake/KakaoTalk_Photo_2026-09-22-21-07-01-7.jpeg",
+      "sha256": "61fb77acc20e31b074d23c99753bf41600f2c6fb9da2d63819fbf095a7085f6d",
+      "originalBytes": 496373,
+      "pencilCrop": {
+        "width": 680,
+        "height": 444,
+        "transform": [
+          1,
+          0,
+          0,
+          2.0587,
+          0,
+          -0.666176
+        ]
+      },
+      "width": 1360,
+      "height": 888,
+      "src": "/products/details/brownie-cheesecake/packaging-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/brownie-cheesecake/packaging-480.webp",
+          "width": 480,
+          "bytes": 26550
+        },
+        {
+          "src": "/products/details/brownie-cheesecake/packaging-960.webp",
+          "width": 960,
+          "bytes": 74380
+        }
+      ]
+    }
+  },
+  "almond": {
+    "hero": {
+      "source": "drive/chocolate/almond/hero.jpg",
+      "sha256": "b6546080789630a0d46b7db181accc765879765b4c0c2e1f428f8b2debd4c136",
+      "originalBytes": 417203,
+      "pencilCrop": {
+        "width": 647,
+        "height": 560,
+        "transform": [
+          1.026037,
+          0,
+          0,
+          1.383318,
+          0,
+          -0.231808
+        ]
+      },
+      "width": 1294,
+      "height": 1120,
+      "src": "/products/details/almond/hero-1294.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/hero-480.webp",
+          "width": 480,
+          "bytes": 12394
+        },
+        {
+          "src": "/products/details/almond/hero-1294.webp",
+          "width": 1294,
+          "bytes": 56424
+        }
+      ]
+    },
+    "inside": {
+      "source": "drive/chocolate/almond/cross-closeup.png",
+      "sha256": "2c2f4b6105882e195cfca1896896eb01c9de0b5b80a9a2eb5b1a5f42aa898338",
+      "originalBytes": 6947682,
+      "pencilCrop": {
+        "width": 786,
+        "height": 491,
+        "transform": [
+          1.071429,
+          0,
+          0,
+          1.280652,
+          -0.071429,
+          -0.17073
+        ]
+      },
+      "width": 1572,
+      "height": 982,
+      "src": "/products/details/almond/inside-1440.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/inside-480.webp",
+          "width": 480,
+          "bytes": 15314
+        },
+        {
+          "src": "/products/details/almond/inside-1440.webp",
+          "width": 1440,
+          "bytes": 67728
+        }
+      ]
+    },
+    "craft-01": {
+      "source": "drive/chocolate/almond/cross-section-almond-01.jpg",
+      "sha256": "b537226382add806dd4dfb9983dc41caf26f7eea10009b32c305acdb02fb8abd",
+      "originalBytes": 1191977,
+      "pencilCrop": {
+        "width": 620,
+        "height": 420,
+        "transform": [
+          1,
+          0,
+          0,
+          1.180952,
+          0,
+          -0.048066
+        ]
+      },
+      "width": 1240,
+      "height": 840,
+      "src": "/products/details/almond/craft-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/craft-01-480.webp",
+          "width": 480,
+          "bytes": 20654
+        },
+        {
+          "src": "/products/details/almond/craft-01-960.webp",
+          "width": 960,
+          "bytes": 53252
+        }
+      ]
+    },
+    "craft-02": {
+      "source": "drive/chocolate/almond/hand-on-almonds.png",
+      "sha256": "7bbfafd0242b2b1523d73c176f7846842ea124bdc03c0c79623a20416c933d1f",
+      "originalBytes": 5461322,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1.229825,
+          0,
+          0,
+          1.210304,
+          -0.229825,
+          0
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/almond/craft-02-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/craft-02-480.webp",
+          "width": 480,
+          "bytes": 36110
+        },
+        {
+          "src": "/products/details/almond/craft-02-620.webp",
+          "width": 620,
+          "bytes": 53414
+        }
+      ]
+    },
+    "craft-03": {
+      "source": "drive/chocolate/almond/closeup.png",
+      "sha256": "1dbffe5aec94af07337d990ba92470b6e0faff42c73ac7cb9c262f1d51a4842c",
+      "originalBytes": 7660350,
+      "pencilCrop": {
+        "width": 310,
+        "height": 420,
+        "transform": [
+          1.814516,
+          0,
+          0,
+          1,
+          -0.663337,
+          0
+        ]
+      },
+      "width": 620,
+      "height": 840,
+      "src": "/products/details/almond/craft-03-620.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/craft-03-480.webp",
+          "width": 480,
+          "bytes": 31322
+        },
+        {
+          "src": "/products/details/almond/craft-03-620.webp",
+          "width": 620,
+          "bytes": 45468
+        }
+      ]
+    },
+    "edition-01": {
+      "source": "drive/chocolate/almond/hero-background.jpg",
+      "sha256": "043b3bad59217b2290518ce644dae5abba1f8b6d0a987e46651a8413a7ebd76b",
+      "originalBytes": 505179,
+      "pencilCrop": {
+        "width": 440,
+        "height": 444,
+        "transform": [
+          1.038758,
+          0,
+          0,
+          1.286749,
+          -0.015587,
+          -0.197011
+        ]
+      },
+      "width": 880,
+      "height": 888,
+      "src": "/products/details/almond/edition-01-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/edition-01-480.webp",
+          "width": 480,
+          "bytes": 15072
+        },
+        {
+          "src": "/products/details/almond/edition-01-880.webp",
+          "width": 880,
+          "bytes": 34006
+        }
+      ]
+    },
+    "edition-02": {
+      "source": "drive/chocolate/almond/black-canister-background.jpg",
+      "sha256": "b9d46b8dd358cd1b9eeef47335bf2e12ad6ccdff9af69abf27a7ba149da5791d",
+      "originalBytes": 658560,
+      "pencilCrop": {
+        "width": 440,
+        "height": 461.9999999999998,
+        "transform": [
+          1,
+          0,
+          0,
+          1.190476,
+          0,
+          -0.126206
+        ]
+      },
+      "width": 880,
+      "height": 924,
+      "src": "/products/details/almond/edition-02-880.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/edition-02-480.webp",
+          "width": 480,
+          "bytes": 20542
+        },
+        {
+          "src": "/products/details/almond/edition-02-880.webp",
+          "width": 880,
+          "bytes": 47066
+        }
+      ]
+    },
+    "occasion-01": {
+      "source": "drive/chocolate/almond/cross-section-almond-01.jpg",
+      "sha256": "b537226382add806dd4dfb9983dc41caf26f7eea10009b32c305acdb02fb8abd",
+      "originalBytes": 1191977,
+      "pencilCrop": {
+        "width": 305,
+        "height": 360,
+        "transform": [
+          1.47541,
+          0,
+          0,
+          1,
+          -0.237705,
+          0
+        ]
+      },
+      "width": 610,
+      "height": 720,
+      "src": "/products/details/almond/occasion-01-610.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/occasion-01-480.webp",
+          "width": 480,
+          "bytes": 28244
+        },
+        {
+          "src": "/products/details/almond/occasion-01-610.webp",
+          "width": 610,
+          "bytes": 39964
+        }
+      ]
+    },
+    "occasion-02": {
+      "source": "drive/chocolate/almond/verit-almond-closeup.webp",
+      "sha256": "463fc4ddb0c8c0889796241357220d3a3a9891fec4c813ca87f37da65b4bd7ea",
+      "originalBytes": 38940,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/almond/occasion-02-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/occasion-02-480.webp",
+          "width": 480,
+          "bytes": 12068
+        },
+        {
+          "src": "/products/details/almond/occasion-02-960.webp",
+          "width": 960,
+          "bytes": 27636
+        }
+      ]
+    },
+    "occasion-03": {
+      "source": "drive/chocolate/almond/bite-almond.webp",
+      "sha256": "ef5178946a6710319e95446c023549f1310acc1577e3833d0d5ec493349f36a2",
+      "originalBytes": 378380,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/almond/occasion-03-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/occasion-03-480.webp",
+          "width": 480,
+          "bytes": 22852
+        },
+        {
+          "src": "/products/details/almond/occasion-03-960.webp",
+          "width": 960,
+          "bytes": 67038
+        }
+      ]
+    },
+    "occasion-04": {
+      "source": "drive/chocolate/almond/hand-on-almonds.png",
+      "sha256": "7bbfafd0242b2b1523d73c176f7846842ea124bdc03c0c79623a20416c933d1f",
+      "originalBytes": 5461322,
+      "pencilCrop": {
+        "width": 305,
+        "height": 360,
+        "transform": [
+          1,
+          0,
+          0,
+          1.059028,
+          0,
+          -0.059028
+        ]
+      },
+      "width": 610,
+      "height": 720,
+      "src": "/products/details/almond/occasion-04-610.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/occasion-04-480.webp",
+          "width": 480,
+          "bytes": 34032
+        },
+        {
+          "src": "/products/details/almond/occasion-04-610.webp",
+          "width": 610,
+          "bytes": 48676
+        }
+      ]
+    },
+    "packaging": {
+      "source": "drive/chocolate/almond/black-canister.png",
+      "sha256": "e1d0a9825e6982eae1beedf52830107c1a59651d87b1f3b3465013b46a9b4ec2",
+      "originalBytes": 4360885,
+      "pencilCrop": {
+        "width": 680,
+        "height": 444,
+        "transform": [
+          1,
+          0,
+          0,
+          2.029741,
+          0,
+          -0.331661
+        ]
+      },
+      "width": 1360,
+      "height": 888,
+      "src": "/products/details/almond/packaging-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/almond/packaging-480.webp",
+          "width": 480,
+          "bytes": 24818
+        },
+        {
+          "src": "/products/details/almond/packaging-960.webp",
+          "width": 960,
+          "bytes": 75128
+        }
+      ]
+    }
+  },
+  "smore": {
+    "hero": {
+      "source": "pencil/au-site-redesign-assets/smore-stick-sydney.webp",
+      "sha256": "a04ca10a4cf2139708bbb591defd2d79f09f8aa42be2d2f7d684c5049ea445bb",
+      "originalBytes": 77238,
+      "width": 1080,
+      "height": 1012,
+      "src": "/products/details/smore/hero-1080.webp",
+      "variants": [
+        {
+          "src": "/products/details/smore/hero-480.webp",
+          "width": 480,
+          "bytes": 26726
+        },
+        {
+          "src": "/products/details/smore/hero-1080.webp",
+          "width": 1080,
+          "bytes": 77786
+        }
+      ]
+    },
+    "inside": {
+      "source": "drive/chocolate/s'more/detail.png",
+      "sha256": "cc87834771eb2046748e181ba372cc179492555d00119e4b055748578e6277fd",
+      "originalBytes": 2991433,
+      "width": 2048,
+      "height": 1152,
+      "src": "/products/details/smore/inside-1440.webp",
+      "variants": [
+        {
+          "src": "/products/details/smore/inside-480.webp",
+          "width": 480,
+          "bytes": 15158
+        },
+        {
+          "src": "/products/details/smore/inside-1440.webp",
+          "width": 1440,
+          "bytes": 70110
+        }
+      ]
+    },
+    "craft-01": {
+      "source": "drive/chocolate/s'more/bite-smore.jpg",
+      "sha256": "df31c192189028cb32416a458573ce8422acaffd072c67ef6884731656730a93",
+      "originalBytes": 662756,
+      "pencilCrop": {
+        "width": 620,
+        "height": 420,
+        "transform": [
+          1,
+          0,
+          0,
+          1.845238,
+          0,
+          -0.308342
+        ]
+      },
+      "width": 1240,
+      "height": 840,
+      "src": "/products/details/smore/craft-01-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/smore/craft-01-480.webp",
+          "width": 480,
+          "bytes": 17066
+        },
+        {
+          "src": "/products/details/smore/craft-01-960.webp",
+          "width": 960,
+          "bytes": 38166
+        }
+      ]
+    },
+    "craft-02": {
+      "source": "drive/chocolate/s'more/chocolate-cover.jpg",
+      "sha256": "2a4e5a9291c9d6e85c56203fba5747b3b67c543a9c6cfaba300b2b65d15fdb7f",
+      "originalBytes": 785579,
+      "width": 1080,
+      "height": 1350,
+      "src": "/products/details/smore/craft-02-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/smore/craft-02-480.webp",
+          "width": 480,
+          "bytes": 12904
+        },
+        {
+          "src": "/products/details/smore/craft-02-960.webp",
+          "width": 960,
+          "bytes": 28628
+        }
+      ]
+    },
+    "craft-03": {
+      "source": "drive/chocolate/s'more/hero.png",
+      "sha256": "f52717ae7c7d98db7bb6ff04d6b426a123bc41a04b4e813a090460f873b94167",
+      "originalBytes": 2705619,
+      "width": 1536,
+      "height": 2048,
+      "src": "/products/details/smore/craft-03-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/smore/craft-03-480.webp",
+          "width": 480,
+          "bytes": 18342
+        },
+        {
+          "src": "/products/details/smore/craft-03-960.webp",
+          "width": 960,
+          "bytes": 54762
+        }
+      ]
+    },
+    "packaging": {
+      "source": "pencil/au-site-redesign-assets/smore.png",
+      "sha256": "5f8d37431b1ab4d6fe1d1a1f341d2c99a049eee86fdd21c7a9dbd6960e5cc833",
+      "originalBytes": 5099033,
+      "width": 1872,
+      "height": 1248,
+      "src": "/products/details/smore/packaging-960.webp",
+      "variants": [
+        {
+          "src": "/products/details/smore/packaging-480.webp",
+          "width": 480,
+          "bytes": 37404
+        },
+        {
+          "src": "/products/details/smore/packaging-960.webp",
+          "width": 960,
+          "bytes": 142220
+        }
+      ]
+    }
+  }
+}

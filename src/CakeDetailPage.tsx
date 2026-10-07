@@ -62,7 +62,9 @@ import {
   getCakeSizePreviewTransformOrigin,
   getCupcakePreviewKey,
   getLemonFinishPreviewCounts,
+  selectBrownieFinish,
   selectCakeDetailProduct,
+  type BrownieFinish,
   type CakeDetailImageKey,
   type CakeDetailSelection,
   type CakeSizePreviewKey,
@@ -70,7 +72,7 @@ import {
 } from './lib/cake-detail'
 import { getIndividualPackagingPricing, isIndividualPackagingEligibleProduct } from './lib/individual-packaging'
 import { CHOCOLATE_EXTRA_OPTIONS, getChocolateExtraOption, isChocolateExtraEligibleProduct } from './lib/chocolate-extras'
-import { BROWNIE_CREAM_OPTIONS, isBrownieFreshCreamEligibleProduct } from './lib/brownie-cream'
+import { BROWNIE_CREAM_OPTIONS } from './lib/brownie-cream'
 import { getAuCakeCatalogCards, type CakeCatalogCard } from './lib/cake-catalog'
 import { formatCurrentCakeSizeLabel, getCakeServingGuideCopy, getCurrentWholeCakeSizeOptions, isCurrentWholeCakeProduct } from './lib/cake-serving'
 import { getCakeEditorialBySlug, type CakeEditorialImageKey } from './lib/cake-editorial'
@@ -79,6 +81,12 @@ import { formatCurrency } from './lib/utils'
 import type { ChocolateExtra, PoundAddon, ProductId } from './lib/types'
 import { marketConfig } from './lib/market'
 import { AuProductStory } from './components/AuProductStory'
+import { AuPaveGallery } from './components/AuPaveGallery'
+import { AuPaveProductStory } from './components/AuPaveProductStory'
+import { AuDetailGallery } from './components/AuDetailGallery'
+import { AuDetailStory, DetailRelated } from './components/AuDetailStory'
+import { AuDetailPurchaseBar } from './components/AuDetailPurchaseBar'
+import { getAuDetailPresentation } from './lib/au-detail-presentation'
 
 const detailImages: Record<CakeDetailImageKey, string> = {
   'pound-side': '/products/chocolate-pound-cake-sydney.webp',
@@ -464,6 +472,7 @@ export default function CakeDetailPage({
   const [selection, setSelection] = useState<CakeDetailSelection | null>(() => createCakeDetailSelection(slug))
   const [activeImage, setActiveImage] = useState(0)
   const [addedToOrder, setAddedToOrder] = useState(false)
+  const presentation = marketConfig.market === 'AU' ? getAuDetailPresentation(slug) : null
 
   if (!detail) {
     return (
@@ -478,6 +487,19 @@ export default function CakeDetailPage({
   }
 
   if (detail.isComingSoon) {
+    if (presentation) return <main className="au-product-detail au-detail-coming-soon" data-au-product-detail={slug}>
+      <section className="au-pave-hero">
+        <AuDetailGallery presentation={presentation} />
+        <div className="au-pave-purchase">
+          <nav className="au-pave-breadcrumb" aria-label="Breadcrumb"><a href="/">HOME</a><span>/</span><a href="/cakes">CAKES</a><span>/</span><span>{detail.name}</span></nav>
+          <p className="au-pave-eyebrow">COMING SOON · SYDNEY ATELIER</p>
+          <header><h1>{detail.name}</h1><p>{detail.description}</p></header>
+          <p>Bento Cake is not available to order yet. Explore our available cakes below.</p>
+          <button type="button" className="au-pave-order-button" onClick={onBrowseCakes}>EXPLORE AVAILABLE CAKES</button>
+        </div>
+      </section>
+      <div className="au-pave-story"><DetailRelated presentation={presentation} language={language} onOpenCake={onOpenCake} /></div>
+    </main>
     return (
       <main className="cake-detail-not-found">
         <div style={{ maxWidth: 360, margin: '0 auto 1.5rem', borderRadius: 8, overflow: 'hidden' }}>
@@ -595,6 +617,16 @@ export default function CakeDetailPage({
   const selectedUnitPrice = product.usesSizeOptions
     ? product.sizePrices[selection.cakeSize] || product.price
     : product.price
+  const brownieBasePrice = detail.id === 'brownie-cheesecake' ? getProductById('brownie-cheesecake').price : 0
+  const browniePavePrice = detail.id === 'brownie-cheesecake' ? getProductById('pave-brownie-cheesecake').price : 0
+  const brownieVanillaExtra = detail.id === 'brownie-cheesecake'
+    ? BROWNIE_CREAM_OPTIONS.find((option) => option.value === 'fresh-cream')?.extraPrice || 0
+    : 0
+  const selectedBrownieFinish: BrownieFinish = selection.productId === 'pave-brownie-cheesecake'
+    ? 'pave-chocolate'
+    : selection.brownieCreamOption === 'fresh-cream'
+      ? 'vanilla-cream'
+      : 'basic'
 
   function updateSelection(patch: Partial<CakeDetailSelection>) {
     setAddedToOrder(false)
@@ -606,6 +638,11 @@ export default function CakeDetailPage({
   function chooseProduct(productId: ProductId) {
     setAddedToOrder(false)
     setSelection((current) => current ? selectCakeDetailProduct(current, productId) : current)
+  }
+
+  function chooseBrownieFinish(finish: BrownieFinish) {
+    setAddedToOrder(false)
+    setSelection((current) => current ? selectBrownieFinish(current, finish) : current)
   }
 
   function addToOrder() {
@@ -640,7 +677,7 @@ export default function CakeDetailPage({
     return (
       <div className={className}>
         <p className="cake-detail-eyebrow">{language === 'ko' ? 'Sydney · 주문 제작' : 'Sydney · Made to order'}</p>
-        <h1>{productIntroDetail.name}</h1>
+        <h1>{presentation?.title || productIntroDetail.name}</h1>
         <p className="cake-detail-price cake-detail-price-primary" aria-live="polite">{formatCurrency(total)}</p>
         <p className="cake-detail-description">{productIntroDetail.description}</p>
 
@@ -651,8 +688,52 @@ export default function CakeDetailPage({
     )
   }
 
+  if (isAuRedesign && product.id === 'pave-cake') {
+    return <main className="au-pave-detail" data-au-template="pave" data-au-product-detail={slug}>
+      <section className="au-pave-hero" aria-label={detail.name}>
+        <AuPaveGallery />
+        <div className="au-pave-purchase" id="pave-purchase">
+          <nav className="au-pave-breadcrumb" aria-label="Breadcrumb"><a href="/">HOME</a><span>/</span><button type="button" aria-label="Back to cakes" onClick={onBack}>CAKES</button><span>/</span><span>PAVÉ CHOCOLATE CAKE</span></nav>
+          <header><h1>Pavé Chocolate Gâteau</h1><p>Chocolate gâteau layers and smooth pavé ganache, made with 57.9% dark couverture chocolate.</p></header>
+          <p className="au-pave-unit-price" aria-live="polite"><strong>{formatCurrency(selectedUnitPrice)}</strong><span>{formatCurrentCakeSizeLabel(product.id, selection.cakeSize)}</span></p>
+          <fieldset className="au-pave-fieldset"><legend>1. CHOOSE YOUR SIZE</legend>
+            <div className="au-pave-size-options">{sizeOptions.map((option) => <OptionButton key={option.value} active={selection.cakeSize === option.value} onClick={() => updateSelection({ cakeSize: option.value })}>
+              <strong>{option.value.replace('in', '″')}</strong><span>{option.label.split('|')[1]?.trim()}</span><span className="au-pave-option-price">{formatCurrency(product.sizePrices[option.value] ?? option.price ?? product.price)}</span>
+            </OptionButton>)}</div>
+            <details className="au-pave-serving"><summary>{getCakeServingGuideCopy(language).title}</summary><p>{getCakeServingGuideCopy(language).body}</p></details>
+          </fieldset>
+          <div className="au-pave-recipe"><strong>2. CHOCOLATE RECIPE</strong><p>57.9% dark couverture chocolate<span>Our Pavé recipe</span></p></div>
+          <fieldset className="au-pave-fieldset"><legend>3. PAIR WITH ARTISAN CHOCOLATES (OPTIONAL)</legend>
+            <div className="au-pave-extra-options">{(['pave-100g', 'eiffel-6', 'combo'] as const).map((value) => {
+              const option = getChocolateExtraOption(value)
+              const preview = chocolateExtraPreviewImages[value]!
+              return <OptionButton key={value} active={selection.chocolateExtra === value} onClick={() => updateSelection({ chocolateExtra: selection.chocolateExtra === value ? 'none' : value })}>
+                <img src={preview.src} alt={preview.alt} width={144} height={70} loading="lazy" />
+                <strong>{option.label}</strong><span className="au-pave-option-price">+{formatCurrency(option.price)}</span>
+              </OptionButton>
+            })}</div>
+            <button className="au-pave-clear-extra" type="button" disabled={selection.chocolateExtra === 'none'} onClick={() => updateSelection({ chocolateExtra: 'none' })}>No chocolate extra</button>
+          </fieldset>
+          <div className="au-pave-order-row">
+            <div className="au-pave-quantity" role="group" aria-label="Cake quantity">
+              <button type="button" aria-label="Decrease quantity" disabled={selection.quantity <= 1} onClick={() => updateSelection({ quantity: selection.quantity - 1 })}><Minus size={16} /></button>
+              <output aria-live="polite">{selection.quantity}</output>
+              <button type="button" aria-label="Increase quantity" disabled={selection.quantity >= MAX_RESERVATION_QUANTITY} onClick={() => updateSelection({ quantity: selection.quantity + 1 })}><Plus size={16} /></button>
+            </div>
+            <button className="au-pave-order-button" type="button" onClick={addToOrder}>ADD TO ORDER — {formatCurrency(total)}</button>
+          </div>
+          <div className="au-pave-selection" aria-live="polite"><span>{selection.quantity} × {formatCurrentCakeSizeLabel(product.id, selection.cakeSize)}</span><span>{selectedChocolateExtra.label}</span><strong>Total {formatCurrency(total)}</strong></div>
+          {addedToOrder && <div className="au-pave-added"><p role="status">Added to your order.</p><button type="button" onClick={onViewOrder}>View order</button></div>}
+          <div className="au-pave-pickup"><strong>{compactOrderingNotice?.title || 'Melrose Park, Sydney pick-up'}</strong><p>{compactOrderingNotice?.body || 'No payment is taken now. Our team confirms availability before sending payment details.'}</p></div>
+        </div>
+      </section>
+      <AuPaveProductStory detail={detail} editorial={editorial} language={language} onOpenCake={onOpenCake} />
+      <div className="au-pave-sticky-order"><div aria-live="polite"><strong>{formatCurrency(total)}</strong><span>{selection.quantity} × {selection.cakeSize.replace('in', '″')}</span></div><button type="button" className="au-pave-order-button" onClick={addToOrder}>ADD TO ORDER</button>{addedToOrder && <button type="button" className="au-pave-view-order" onClick={onViewOrder}>View order</button>}</div>
+    </main>
+  }
+
   return (
-    <main className={`cake-detail-page${isAuRedesign ? ' au-redesign-detail' : ''}`} data-au-template={isAuRedesign ? isPartyTemplate ? 'party' : 'cake' : undefined}>
+    <main className={`cake-detail-page${presentation ? ' au-product-detail' : isAuRedesign ? ' au-redesign-detail' : ''}`} data-au-product-detail={presentation ? slug : undefined} data-au-template={isAuRedesign ? isPartyTemplate ? 'party' : 'cake' : undefined}>
       <nav className="cake-detail-breadcrumb" aria-label={language === 'ko' ? '경로' : 'Breadcrumb'}>
         <button type="button" onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" />
@@ -664,7 +745,7 @@ export default function CakeDetailPage({
         className={`cake-detail-hero is-desktop-three-column${showsSignatureOrderOptions ? ' has-compact-option-summary' : ''}`}
         aria-label={detail.name}
       >
-        <div className="cake-detail-gallery">
+        {presentation ? <AuDetailGallery key={slug} presentation={presentation} /> : <div className="cake-detail-gallery">
           {!isAuRedesign && renderProductIntro('cake-detail-intro is-desktop-gallery-intro')}
           <div className="cake-detail-main-image">
             {currentImageKey ? (
@@ -733,7 +814,7 @@ export default function CakeDetailPage({
           <p className="cake-detail-image-count" aria-live="polite">
             {galleryCount > 0 ? `${activeImage + 1} / ${galleryCount}` : language === 'ko' ? '사진 준비 중' : 'Photo coming soon'}
           </p>
-        </div>
+        </div>}
 
         <aside className="cake-detail-purchase">
           <div className="cake-detail-configurator">
@@ -758,7 +839,43 @@ export default function CakeDetailPage({
             />
           )}
 
-          {detail.productIds.length > 1 && (
+          {detail.id === 'brownie-cheesecake' ? (
+            <fieldset className="cake-detail-fieldset is-brownie-finish">
+              <legend>{language === 'ko' ? '마감 선택' : 'Choose a finish'}</legend>
+              <div className="cake-detail-options is-brownie-finish-options">
+                {([
+                  {
+                    value: 'basic' as const,
+                    label: language === 'ko' ? '기본 마감' : 'Basic Finish',
+                    note: language === 'ko' ? '카라멜라이즈드 탑' : 'Caramelized Top',
+                    price: brownieBasePrice,
+                  },
+                  {
+                    value: 'vanilla-cream' as const,
+                    label: language === 'ko' ? '바닐라 크림' : 'Vanilla Cream',
+                    note: `+${formatCurrency(brownieVanillaExtra)}`,
+                    price: brownieBasePrice + brownieVanillaExtra,
+                  },
+                  {
+                    value: 'pave-chocolate' as const,
+                    label: language === 'ko' ? '파베 초콜릿' : 'Pavé Chocolate',
+                    note: `+${formatCurrency(browniePavePrice - brownieBasePrice)}`,
+                    price: browniePavePrice,
+                  },
+                ]).map((finish) => (
+                  <OptionButton
+                    active={selectedBrownieFinish === finish.value}
+                    onClick={() => chooseBrownieFinish(finish.value)}
+                    key={finish.value}
+                  >
+                    <strong>{finish.label}</strong>
+                    <span className="cake-detail-option-note">{finish.note}</span>
+                    <span className="cake-detail-option-total">{formatCurrency(finish.price)}</span>
+                  </OptionButton>
+                ))}
+              </div>
+            </fieldset>
+          ) : detail.productIds.length > 1 && (
             <fieldset className="cake-detail-fieldset">
               <legend>{productChoiceLabel}</legend>
               <div className="cake-detail-options is-stacked">
@@ -768,9 +885,6 @@ export default function CakeDetailPage({
                   const optionPrice = cupcakePackSize
                     ? getCupcakeFinishPrice(productId, 'basic') || 0
                     : getProductById(productId).price
-                  const extraFromBase = detail.id === 'brownie-cheesecake'
-                    ? optionPrice - getProductById(detail.productIds[0]!).price
-                    : 0
                   return (
                     <OptionButton
                       active={selection.productId === productId}
@@ -780,33 +894,10 @@ export default function CakeDetailPage({
                       <strong>{cupcakePackSize
                         ? language === 'ko' ? `${cupcakePackSize === 6 ? '하프 더즌' : '더즌'} · ${cupcakePackSize}개` : `${cupcakePackSize === 6 ? 'Half Dozen' : 'Dozen'} · ${cupcakePackSize} cupcakes`
                         : optionText.name}</strong>
-                      <span>
-                        {formatCurrency(optionPrice)}
-                        {extraFromBase > 0 && (
-                          <span className="cake-detail-option-surcharge">(+{formatCurrency(extraFromBase)})</span>
-                        )}
-                      </span>
+                      <span>{formatCurrency(optionPrice)}</span>
                     </OptionButton>
                   )
                 })}
-              </div>
-            </fieldset>
-          )}
-
-          {isBrownieFreshCreamEligibleProduct(product.id) && (
-            <fieldset className="cake-detail-fieldset">
-              <legend>{language === 'ko' ? '생크림' : 'Fresh cream'}</legend>
-              <div className="cake-detail-options">
-                {BROWNIE_CREAM_OPTIONS.map((option) => (
-                  <OptionButton
-                    active={selection.brownieCreamOption === option.value}
-                    onClick={() => updateSelection({ brownieCreamOption: option.value })}
-                    key={option.value}
-                  >
-                    <strong>{language === 'ko' ? option.labelKo : option.label}</strong>
-                    <span>{option.extraPrice > 0 ? `+${formatCurrency(option.extraPrice)}` : language === 'ko' ? '선택 안 함' : 'No extra'}</span>
-                  </OptionButton>
-                ))}
               </div>
             </fieldset>
           )}
@@ -990,7 +1081,9 @@ export default function CakeDetailPage({
               {selectedIndividualPackagingPreview && (
                 <OptionPhotoPreview
                   image={selectedIndividualPackagingPreview.image}
-                  eyebrow={language === 'ko' ? '포장 예시' : 'Packaging example'}
+                  eyebrow={isAuRedesign && selection.individualPackaging
+                    ? language === 'ko' ? '개별 포장 선택됨' : 'Individual packaging selected'
+                    : language === 'ko' ? '포장 예시' : 'Packaging example'}
                   label={selectedIndividualPackagingPreview.label}
                   language={language}
                   muted={!selection.individualPackaging}
@@ -1163,7 +1256,8 @@ export default function CakeDetailPage({
         </aside>
       </section>
 
-      {isAuRedesign ? (
+      {presentation && <AuDetailPurchaseBar total={formatCurrency(total)} quantity={selection.quantity} added={addedToOrder} onAdd={addToOrder} onViewOrder={onViewOrder} />}
+      {presentation ? <AuDetailStory presentation={presentation} detail={detail} editorial={editorial} language={language} onOpenCake={onOpenCake} /> : isAuRedesign ? (
         <AuProductStory detail={detail} editorial={editorial} party={isPartyTemplate} language={language} onOpenCake={onOpenCake} />
       ) : editorial ? (
         <CakeEditorialDetail

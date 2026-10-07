@@ -452,6 +452,26 @@ export function selectCakeDetailProduct(
   }
 }
 
+export type BrownieFinish = 'basic' | 'vanilla-cream' | 'pave-chocolate'
+
+export function selectBrownieFinish(
+  selection: CakeDetailSelection,
+  finish: BrownieFinish,
+): CakeDetailSelection {
+  if (finish === 'pave-chocolate') {
+    return selectCakeDetailProduct(
+      { ...selection, brownieCreamOption: DEFAULT_BROWNIE_CREAM_OPTION },
+      'pave-brownie-cheesecake',
+    )
+  }
+
+  const base = selectCakeDetailProduct(selection, 'brownie-cheesecake')
+  return {
+    ...base,
+    brownieCreamOption: finish === 'vanilla-cream' ? 'fresh-cream' : DEFAULT_BROWNIE_CREAM_OPTION,
+  }
+}
+
 export function getCakeDetailSelectionTotal(selection: CakeDetailSelection) {
   const chocolate = marketConfig.market === 'AU' && getChocolateProduct(selection.productId)
   if (chocolate) return chocolate.unitPriceCents * normalizeQuantity(selection.quantity) / 100

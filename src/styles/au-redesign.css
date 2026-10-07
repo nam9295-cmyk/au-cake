@@ -692,7 +692,7 @@
 }
 
 :where(.au-home-shell) .rd-product-sub {
-  font-family: var(--rd-font-display);
+  font-family: var(--rd-font-body);
   font-size: 12px;
   font-weight: 400;
   color: var(--rd-text);

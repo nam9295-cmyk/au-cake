@@ -53,7 +53,7 @@ async (page) => {
     await quantity(5, 'Single')
     check(await page.getByText('Total · AUD 60.00', { exact: true }).count() === 1, 'Single ×5 must total AUD60')
     await assertLayout(width, 'almond-single')
-    await page.getByRole('button', { name: 'Add to order' }).click()
+    await page.locator('.au-redesign-chocolate-info').getByRole('button', { name: 'Add to order' }).click()
 
     await variants.nth(1).click()
     check(await variants.nth(1).getAttribute('aria-pressed') === 'true', '6 Pack must be selected')
@@ -61,19 +61,19 @@ async (page) => {
     check(await page.locator('.au-redesign-price').innerText() === 'AUD 60.00', '6 Pack price must be AUD60')
     check((await page.locator('.au-chocolate-promo-note').innerText()).includes('BUY 5, GET 1 FREE — 6 PACK / AUD 60'), 'Missing six-pack promo')
     check((await page.locator('.au-chocolate-promo-note').innerText()).includes('Coupons do not apply to this six pack.'), 'Missing six-pack coupon notice')
-    check((await page.locator('figcaption').first().innerText()).includes('Reference photo'), 'Six-pack photo must be labelled as a reference')
+    check(await page.getByText(/^Reference photo:/).count() === 1, 'Six-pack photo must be labelled as a reference')
     for (let index = 1; index < 5; index++) await page.getByRole('button', { name: 'Decrease quantity' }).click()
     check((await page.locator('.au-chocolate-quantity output').innerText()) === '1', 'Six-pack quantity must be 1')
     check(await page.getByText('Total · AUD 60.00', { exact: true }).count() === 1, '6 Pack ×1 must total AUD60')
     await assertLayout(width, 'almond-six-pack')
-    await page.getByRole('button', { name: 'Add to order' }).click()
+    await page.locator('.au-redesign-chocolate-info').getByRole('button', { name: 'Add to order' }).click()
 
     await variants.nth(2).click()
     check(await variants.nth(2).getAttribute('aria-pressed') === 'true', 'Black Tub must be selected')
     check(await page.locator('.au-chocolate-promo-note').count() === 0, 'Black Tub must not show six-pack promo note')
     check(await page.locator('.au-redesign-price').innerText() === 'AUD 25.00', 'Black Tub price must be AUD25')
-    check((await page.locator('figcaption').first().innerText()).includes('Reference photo'), 'Black Tub photo must be labelled as a reference')
-    await page.getByRole('button', { name: 'Add to order' }).click()
+    check(await page.getByText(/^Reference photo:/).count() === 1, 'Black Tub photo must be labelled as a reference')
+    await page.locator('.au-redesign-chocolate-info').getByRole('button', { name: 'Add to order' }).click()
     await assertLayout(width, 'almond')
 
     for (const [slug, count, total] of [['pave-chocolate', 2, '24.00'], ['eiffel-tower-chocolate', 3, '30.00']]) {
@@ -81,11 +81,11 @@ async (page) => {
       check(await page.locator('.au-chocolate-variants').count() === 0, `${slug}: unexpected pack selector`)
       await quantity(count, slug)
       check(await page.getByText(`Total · AUD ${total}`, { exact: true }).count() === 1, `${slug}: total did not update`)
-      await page.getByRole('button', { name: 'Add to order' }).click()
+      await page.locator('.au-redesign-chocolate-info').getByRole('button', { name: 'Add to order' }).click()
       await assertLayout(width, slug)
     }
 
-    await page.getByRole('button', { name: 'View order' }).click()
+    await page.locator('.au-redesign-chocolate-info').getByRole('button', { name: 'View order' }).click()
     check(await page.locator('.cart-line').count() === 5, 'The five sale units must remain separate in the cart')
     const data = await page.evaluate(() => JSON.parse(localStorage.getItem('verygood-au-cake-cart-v1')))
     check(data.lines.length === expected.length, 'Cart must store five product lines')

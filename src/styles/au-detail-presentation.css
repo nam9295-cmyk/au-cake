@@ -1,0 +1,92 @@
+/* Reuse the approved Pavé editorial visual system. Only AU roots receive it. */
+.au-redesign-shell .au-product-detail { padding: 0; }
+.au-product-detail .cake-detail-breadcrumb { margin: 0; padding: 24px 80px 0; }
+.au-product-detail .cake-detail-hero.is-desktop-three-column { display: grid; grid-template-columns: minmax(0,720fr) minmax(0,504fr); align-items: start; gap: 56px; padding: 24px 80px 48px; margin: 0; border-bottom: 1px solid var(--au-line); }
+.au-product-detail .cake-detail-purchase { position: sticky; top: 88px; display: block; min-width: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.au-product-detail :is(.cake-detail-configurator,.cake-detail-checkout,.cake-detail-checkout-card) { display: grid; gap: 18px; min-width: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.au-product-detail .cake-detail-checkout { margin-top: 20px; }
+.au-product-detail .cake-detail-intro { display: grid; gap: 10px; padding: 0; margin: 0; }
+.au-product-detail .cake-detail-intro h1 { font-size: 34px; text-transform: none; line-height: 1.15; letter-spacing: -.035em; margin: 0; }
+.au-product-detail .cake-detail-eyebrow { font-size: 10px; letter-spacing: .05em; color: var(--au-green); }
+.au-product-detail .cake-detail-description { font-size: 14px; line-height: 1.6; max-width: none; }
+.au-product-detail .cake-detail-price-primary { font-size: 26px; font-weight: 700; color: var(--au-green); }
+.au-product-detail .cake-detail-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.au-product-detail .cake-detail-badges span { padding: 5px 7px; border: 1px solid var(--au-line); border-radius: 0; background: transparent; font-size: 10px; }
+.au-product-detail .cake-detail-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.au-product-detail .cake-detail-fieldset legend { margin-bottom: 10px; padding: 0; font-size: 11px; font-weight: 700; color: var(--au-text); }
+.au-product-detail :is(.cake-detail-options,.cake-detail-options.is-stacked) { display: grid; grid-template-columns: repeat(auto-fit,minmax(110px,1fr)); gap: 8px; }
+.au-product-detail .is-brownie-finish-options { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.au-product-detail .is-brownie-finish-options .cake-detail-option { min-height: 94px; }
+.au-product-detail .is-brownie-finish-options .cake-detail-option-note { font-weight: 400; color: var(--au-text-muted); }
+.au-product-detail .is-brownie-finish-options .cake-detail-option-total { margin-top: auto; color: inherit; }
+.au-product-detail .cake-detail-option { min-height: 70px; padding: 10px; }
+.au-product-detail .cake-detail-option span { font-weight: 700; font-size: 12px; }
+.au-product-detail .cake-detail-option-preview { margin: 0 0 12px; padding: 10px; border: 1px solid var(--au-line); border-radius: 0; background: #faf8f6; }
+.au-redesign-shell .cake-detail-option-preview .cake-detail-option-preview-media img { width: 100%; height: 100%; max-height: 100%; object-fit: contain; transform: none; }
+.au-redesign-shell .cake-detail-option-preview.is-muted img { filter: none; }
+.au-product-detail .cake-detail-fieldset:has(input[name="individualPackaging"]:checked) .cake-detail-option-preview { border: 2px solid var(--au-green); padding: 9px; background: #f3f8f5; }
+.au-product-detail .cake-detail-extra-help { font-size: 12px; line-height: 1.6; }
+.au-product-detail :is(.cake-detail-quantity,.au-chocolate-quantity) { display: grid; grid-template-columns: 44px minmax(44px,1fr) 44px; width: 144px; border: 1px solid var(--au-line); border-radius: 0; background: #fff; }
+.au-product-detail :is(.cake-detail-quantity,.au-chocolate-quantity) button { min-height: 44px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--au-green); }
+.au-product-detail :is(.cake-detail-quantity,.au-chocolate-quantity) :is(output,input) { min-width: 0; align-self: center; text-align: center; }
+.au-product-detail .cake-detail-quantity svg { width: 18px; height: 18px; }
+.au-product-detail .cake-detail-order-summary { display: flex; justify-content: space-between; gap: 12px; margin: 0; padding: 14px 0; border-top: 1px solid var(--au-line); border-bottom: 1px solid var(--au-line); border-radius: 0; background: transparent; font-size: 12px; }
+.au-product-detail :is(.cake-detail-request,.primary-button) { min-height: 48px; padding: 12px; border: 1px solid var(--au-green); border-radius: 0; background: var(--au-green); color: #fff; font-family: 'SUIT Variable',sans-serif; font-size: 12px; box-shadow: none; }
+.au-product-detail .cake-detail-checkout-price { font-size: 24px; color: var(--au-green); }
+.au-product-detail .cake-detail-ordering-notice { padding: 14px; margin: 0; border: 1px solid var(--au-line); border-radius: 0; background: #faf8f6; font-size: 12px; line-height: 1.6; }
+.au-product-detail .cake-detail-ordering-notice-label { display: block; margin-bottom: 6px; font-size: 10px; color: var(--au-green); }
+.au-product-detail :is(.cake-detail-serving-guide,.choice-copy,.cake-detail-confirmation-note) { font-size: 12px; line-height: 1.6; }
+.au-product-detail .choice-item { padding: 12px; gap: 12px; border: 1px solid var(--au-line); border-radius: 0; }
+.au-product-detail .choice-copy { display: grid; gap: 4px; }
+.au-product-detail .au-pave-thumbnails { grid-template-columns: repeat(5,minmax(0,1fr)); }
+.au-product-detail .au-pave-occasion-grid { grid-template-columns: repeat(var(--occasion-count,4),minmax(0,1fr)); }
+.au-product-detail .au-detail-editions > div { display: grid; gap: 48px; margin-top: 32px; }
+.au-product-detail .au-detail-editions article { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.au-product-detail .au-detail-editions article:nth-child(even) .au-detail-edition-photo { order: 2; }
+.au-product-detail .au-detail-edition-photo { aspect-ratio: 1.45; overflow: hidden; }
+.au-product-detail[data-au-product-detail='almond-chocoball'] .au-detail-edition-photo { aspect-ratio: 1; }
+.au-product-detail .au-detail-editions h3 { font-size: 26px; margin: 12px 0; }
+.au-product-detail .au-detail-editions article > div > p:last-child { font-size: 14px; line-height: 1.7; }
+.au-product-detail [data-detail-reveal] { transition: opacity 380ms ease,transform 380ms ease; }
+.au-product-detail .au-redesign-chocolate-info { display: grid; gap: 18px; min-width: 0; position: sticky; top: 88px; }
+.au-product-detail .au-redesign-chocolate-info > p { margin: 0; font-size: 14px; line-height: 1.6; }
+.au-product-detail .au-redesign-chocolate-info .au-redesign-price { font-size: 26px; color: var(--au-green); font-weight: 700; }
+.au-product-detail .au-chocolate-variants { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.au-product-detail .au-chocolate-variants .cake-detail-option { height: 70px; min-height: 70px; gap: 3px; padding: 8px; justify-content: center; }
+.au-product-detail .au-chocolate-variants .cake-detail-option strong { font-size: 12px; line-height: 1.2; }
+.au-product-detail .au-chocolate-variants .cake-detail-option span { font-size: 11px; }
+.au-product-detail .au-redesign-chocolate-info .au-detail-photo-reference { font-size: 11px; color: var(--au-text-muted); }
+.au-product-detail .au-chocolate-promo-note { padding: 12px; border-left: 2px solid var(--au-accent); background: #faf8f6; }
+.au-product-detail .secondary-button { border: 1px solid var(--au-green); border-radius: 0; background: #fff; color: var(--au-green); min-height: 44px; }
+.au-detail-coming-soon .au-pave-gallery-main { aspect-ratio: 660 / 540; }
+@media (min-width:768px) and (max-width:1099px) {
+  .au-product-detail .cake-detail-breadcrumb { padding: 24px 32px 0; }
+  .au-product-detail .cake-detail-hero.is-desktop-three-column { grid-template-columns: 1fr; padding: 24px 32px 40px; gap: 32px; }
+  .au-product-detail :is(.cake-detail-purchase,.au-redesign-chocolate-info) { position: static; }
+  .au-product-detail .au-pave-occasion-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .au-product-detail .au-detail-editions article { gap: 24px; }
+}
+@media (max-width:767px) {
+  .au-redesign-shell .au-detail-coming-soon { padding-bottom: 0; }
+  .au-product-detail .cake-detail-breadcrumb { padding: 16px 20px; }
+  .au-product-detail .cake-detail-hero.is-desktop-three-column { display: block; padding: 0; }
+  .au-product-detail .cake-detail-purchase { position: static; padding: 16px 20px 32px; }
+  .au-product-detail .cake-detail-intro h1 { font-size: 25px; }
+  .au-product-detail .cake-detail-description { font-size: 12px; }
+  .au-product-detail .cake-detail-price-primary { font-size: 22px; }
+  .au-product-detail :is(.cake-detail-options,.cake-detail-options.is-stacked) { grid-template-columns: repeat(auto-fit,minmax(100px,1fr)); gap: 6px; }
+  .au-product-detail .cake-detail-option strong { font-size: 11px; }
+  .au-product-detail .cake-detail-option span { font-size: 11px; }
+  .au-product-detail .au-pave-occasion-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .au-product-detail .au-detail-editions > div { gap: 28px; margin-top: 20px; }
+  .au-product-detail .au-detail-editions article { grid-template-columns: 1fr; gap: 16px; }
+  .au-product-detail .au-detail-editions article:nth-child(even) .au-detail-edition-photo { order: 0; }
+  .au-product-detail .au-detail-edition-photo { aspect-ratio: 350 / 240; }
+  .au-product-detail .au-detail-editions h3 { font-size: 21px; margin: 8px 0; }
+  .au-product-detail .au-detail-editions article > div > p:last-child { font-size: 12px; }
+  .au-product-detail .au-redesign-chocolate-info { position: static; padding: 16px 20px 32px; }
+  .au-product-detail .au-chocolate-variants { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .au-product-detail [data-detail-reveal] { transition: none; transform: none; opacity: 1; }
+}

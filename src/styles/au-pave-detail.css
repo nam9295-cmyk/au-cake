@@ -1,0 +1,198 @@
+/* AU Pavé presentation only. Purchase state and pricing remain in CakeDetailPage. */
+.au-redesign-shell :is(.au-pave-detail, .au-product-detail) { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0; color: var(--au-text); font-family: 'SUIT Variable', var(--font-display); background: #fff; }
+:is(.au-pave-detail, .au-product-detail) :is(h1,h2,h3,p,figure) { margin: 0; }
+:is(.au-pave-detail, .au-product-detail) :is(h1,h2,h3) { text-transform: none; }
+:is(.au-pave-detail, .au-product-detail) :is(button,a,summary) { -webkit-tap-highlight-color: transparent; }
+:is(.au-pave-detail, .au-product-detail) button { cursor: pointer; font: inherit; }
+:is(.au-pave-detail, .au-product-detail) button:disabled { cursor: default; opacity: .45; }
+:is(.au-pave-detail, .au-product-detail) :is(img,video) { display: block; width: 100%; height: 100%; object-fit: cover; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-hero { display: grid; grid-template-columns: minmax(0,720fr) minmax(0,504fr); align-items: start; gap: 56px; padding: 48px 80px; border-bottom: 1px solid var(--au-line); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-gallery { min-width: 0; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-image-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-gallery-main { position: relative; aspect-ratio: 720 / 560; overflow: hidden; border: 1px solid var(--au-line); touch-action: pan-y; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-photo-labels { position: absolute; inset: 18px 18px auto; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-photo-labels span { background: #fff; padding: 4px 7px; border: 1px solid var(--au-pink); font-size: 9px; font-weight: 700; letter-spacing: .04em; color: var(--au-berry); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-photo-labels span + span { color: var(--au-green); border-color: var(--au-line); }
+:is(.au-pave-detail, .au-product-detail) :is(.au-pave-prev,.au-pave-next) { position: absolute; top: calc(50% - 22px); display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--au-line); border-radius: 0; background: #fff; color: var(--au-green); opacity: 0; transition: opacity 160ms; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-prev { left: 10px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-next { right: 10px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-gallery-main:is(:hover,:focus-within) button { opacity: 1; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails button { padding: 0; border: 1px solid var(--au-line); border-radius: 0; aspect-ratio: 108 / 84; background: #fff; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails button[aria-pressed="true"] { border: 2px solid var(--au-green); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-purchase { position: sticky; top: 88px; display: grid; gap: 20px; min-width: 0; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 10px; line-height: 1.6; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-breadcrumb :is(a,button) { border: 0; background: transparent; padding: 0; color: inherit; text-decoration: none; }
+:is(.au-pave-detail, .au-product-detail) h1 { font-size: 34px; font-weight: 700; line-height: 1.15; letter-spacing: -.035em; margin-bottom: 10px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-purchase header p { font-size: 14px; line-height: 1.55; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-unit-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-unit-price strong { font-size: 26px; color: var(--au-green); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-unit-price span { font-size: 11px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-fieldset legend { padding: 0; margin-bottom: 10px; font-size: 11px; font-weight: 700; letter-spacing: .035em; }
+:is(.au-pave-detail, .au-product-detail) :is(.au-pave-size-options,.au-pave-extra-options) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+:is(.au-pave-detail, .au-product-detail) .cake-detail-option { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 5px; min-width: 0; min-height: 78px; padding: 10px; border: 1px solid var(--au-line); background: #fff; border-radius: 0; color: var(--au-text); box-shadow: none; transition: border-color 160ms,background-color 160ms; text-align: left; }
+:is(.au-pave-detail, .au-product-detail) .cake-detail-option.is-selected { border-color: var(--au-green); background: #f4f8f5; color: var(--au-green); }
+:is(.au-pave-detail, .au-product-detail) .cake-detail-option strong { font-family: var(--font-display); font-size: 13px; line-height: 1.3; }
+:is(.au-pave-detail, .au-product-detail) .cake-detail-option span { font-size: 11px; line-height: 1.3; }
+:is(.au-pave-detail, .au-product-detail) .cake-detail-option .au-pave-option-price { font-size: 12px; font-weight: 700; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-serving { margin-top: 10px; font-size: 11px; line-height: 1.5; }
+:is(.au-pave-detail, .au-product-detail) summary { cursor: pointer; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-serving p { padding-top: 8px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-recipe { font-size: 11px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-recipe > strong { letter-spacing: .035em; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-recipe p { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 12px; background: #faf8f6; border: 1px solid var(--au-line); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-recipe span { font-size: 10px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-extra-options .cake-detail-option { padding: 8px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-extra-options img { height: 60px; object-fit: contain; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-extra-options strong { font-size: 11px; flex: 1; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-clear-extra { border: 0; border-bottom: 1px solid currentColor; padding: 5px 0; margin-top: 4px; background: none; color: var(--au-green); font-size: 11px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-order-row { display: grid; grid-template-columns: 112px minmax(0,1fr); gap: 12px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-quantity { display: grid; grid-template-columns: 1fr 28px 1fr; align-items: center; text-align: center; border: 1px solid var(--au-line); font-size: 13px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-quantity button { display: grid; place-items: center; min-height: 46px; padding: 0; border: 0; background: #fff; color: var(--au-green); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-order-button { min-height: 48px; padding: 12px; background: var(--au-green); border: 1px solid var(--au-green); border-radius: 0; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-order-button:hover { background: #174734; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-selection { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 10px; line-height: 1.5; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-pickup { background: #faf8f6; border: 1px solid var(--au-line); padding: 14px; font-size: 11px; line-height: 1.55; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-pickup strong { text-transform: uppercase; color: var(--au-green); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-pickup p { margin-top: 5px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-added { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--au-green); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-added button { padding: 8px; background: #fff; border: 1px solid var(--au-green); color: inherit; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-story > section { padding: 60px 80px; border-bottom: 1px solid var(--au-line); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-hook { text-align: center; }
+:is(.au-pave-detail, .au-product-detail) :is(.au-pave-eyebrow,.au-pave-heading > p) { font-size: 11px; font-weight: 700; letter-spacing: .13em; color: var(--au-green); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-hook h2 { font-size: 42px; font-weight: 700; line-height: 1.15; letter-spacing: -.035em; margin: 16px 0; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-hook > p:last-child { font-size: 15px; line-height: 1.6; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-heading h2 { margin-top: 6px; font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -.025em; }
+:is(.au-pave-detail, .au-product-detail) :is(.au-pave-inside,.au-pave-packaging) { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); column-gap: 64px; row-gap: 28px; align-content: start; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-inside-photo { grid-row: 1 / 3; aspect-ratio: 786 / 491; overflow: hidden; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-inside .au-pave-heading { align-self: end; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-inside h2 { font-size: 32px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-layers { align-self: start; display: grid; gap: 20px; border-top: 1px solid var(--au-line); padding-top: 20px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-layers h3 { font-size: 12px; line-height: 1.45; color: var(--au-green); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-layers p { font-size: 13px; line-height: 1.6; margin-top: 5px; }
+:is(.au-pave-detail, .au-product-detail) :is(.au-pave-texture,.au-pave-practical) { background: #faf8f6; }
+:is(.au-pave-detail, .au-product-detail) :is(.au-pave-texture-grid,.au-pave-occasion-grid,.au-pave-related-grid) { display: grid; gap: 20px; margin-top: 28px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-texture-grid { grid-template-columns: 2fr 1fr 1fr; }
+:is(.au-pave-detail, .au-product-detail) :is(.au-pave-texture-grid,.au-pave-occasion-grid) figure { min-width: 0; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-texture-grid figure > div { height: 420px; overflow: hidden; }
+:is(.au-pave-detail, .au-product-detail) figcaption { margin-top: 8px; font-size: 12px; line-height: 1.4; font-weight: 600; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-story > .au-pave-video { padding: 48px 0; background: #1e1a1b; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-video-media { height: 507px; overflow: hidden; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-video-media img { object-position: center 48%; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-occasion-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-occasion-grid figure > div { height: 360px; overflow: hidden; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-packaging { grid-template-columns: minmax(0,680fr) minmax(0,536fr); padding-top: 64px; padding-bottom: 64px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-packaging-photo { grid-row: 1 / 3; aspect-ratio: 680 / 444; overflow: hidden; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-packaging-photo img { object-position: center 63%; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-packaging .au-pave-heading { align-self: end; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-packaging h2 { font-size: 34px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-packaging-copy { align-self: start; font-size: 14px; line-height: 1.7; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-packaging-copy p + p { margin-top: 12px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-specs { margin-top: 32px; border-top: 1px solid var(--au-line); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-specs details { display: grid; grid-template-columns: minmax(160px,1fr) 3fr; border-bottom: 1px solid var(--au-line); padding: 20px 0; font-size: 13px; line-height: 1.7; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-specs summary { font-weight: 700; color: var(--au-green); padding-right: 20px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-specs p + p { margin-top: 5px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-allergy { padding: 10px 12px; border-left: 2px solid var(--au-accent); background: #fff; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-related-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-related-grid a { display: grid; grid-template-rows: auto 1fr auto; color: inherit; text-decoration: none; border: 1px solid var(--au-line); }
+:is(.au-pave-detail, .au-product-detail) .au-pave-related-grid a > div { aspect-ratio: 410 / 320; overflow: hidden; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-related-grid h3 { font-size: 15px; line-height: 1.4; margin: 16px 16px 4px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-related-grid p { margin: 0 16px 16px; color: var(--au-green); font-size: 14px; font-weight: 700; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-related-grid a:last-child img { object-fit: contain; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-related-grid a:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-sticky-order { display: none; }
+:is(.au-pave-detail, .au-product-detail) [data-pave-reveal] { transition: opacity 380ms ease, transform 380ms ease; }
+:is(.au-pave-detail, .au-product-detail) .au-pave-awaiting { opacity: 0; transform: translateY(10px); }
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-texture-grid,.au-pave-occasion-grid,.au-pave-related-grid) img { transition: transform 350ms ease; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-texture-grid figure,.au-pave-occasion-grid figure,.au-pave-related-grid a):hover img { transform: scale(1.015); }
+}
+@media (min-width:768px) and (max-width:1099px) {
+  :is(.au-pave-detail, .au-product-detail) .au-pave-hero { grid-template-columns: 1fr; padding: 32px; gap: 32px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-gallery-main { aspect-ratio: 720 / 500; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-purchase { position: static; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-story > section { padding: 44px 32px; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-inside,.au-pave-packaging) { gap: 24px; grid-template-columns: 1fr 1fr; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-inside-photo { aspect-ratio: 3/4; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-texture-grid { grid-template-columns: 1fr 1fr; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-texture-grid figure:first-child { grid-column: 1 / -1; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-texture-grid figure > div { height: 300px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-occasion-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-story > .au-pave-video { padding: 40px 0; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-video-media { height: 360px; }
+}
+@media (max-width:767px) {
+  /* Keep the existing site chat launcher clear of this page's purchase bar. */
+  body:has(:is(.au-pave-detail, .au-product-detail)) #vg-chat-launcher { bottom: calc(88px + env(safe-area-inset-bottom)); }
+  .au-redesign-shell :is(.au-pave-detail, .au-product-detail) { padding-bottom: 80px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-hero { display: block; padding: 0; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-gallery-main { aspect-ratio: 390 / 320; border: 0; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-photo-labels { inset: 14px 14px auto; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-photo-labels span { font-size: 8px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails { display: flex; justify-content: center; gap: 0; margin: 0; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails button { width: 32px; height: 32px; aspect-ratio: auto; border: 0; position: relative; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails button[aria-pressed="true"] { border: 0; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails button::after { content: ''; display: block; width: 5px; height: 5px; margin: auto; background: var(--au-line); border-radius: 50%; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails button[aria-pressed="true"]::after { background: var(--au-green); width: 16px; border-radius: 0; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-thumbnails img { display: none; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-prev,.au-pave-next) { opacity: .8; width: 32px; height: 44px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-purchase { position: static; gap: 16px; padding: 16px 20px 24px; }
+  :is(.au-pave-detail, .au-product-detail) h1 { font-size: 25px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-purchase header p { font-size: 12px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-unit-price strong { font-size: 22px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-unit-price span { font-size: 10px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-breadcrumb { font-size: 9px; gap: 5px; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-size-options,.au-pave-extra-options) { gap: 6px; }
+  :is(.au-pave-detail, .au-product-detail) .cake-detail-option { padding: 8px; }
+  :is(.au-pave-detail, .au-product-detail) .cake-detail-option span { font-size: 10px; }
+  :is(.au-pave-detail, .au-product-detail) .cake-detail-option .au-pave-option-price { font-size: 11px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-extra-options .cake-detail-option { padding: 6px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-extra-options img { height: 44px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-extra-options strong { font-size: 10px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-fieldset legend { font-size: 10px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-order-row { grid-template-columns: 100px minmax(0,1fr); gap: 8px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-order-button { padding: 10px 8px; font-size: 10px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-story > section { padding: 32px 20px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-story > .au-pave-hook { padding: 36px 24px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-hook h2 { font-size: 28px; margin: 10px 0; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-hook > p:last-child { font-size: 12px; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-eyebrow,.au-pave-heading > p) { font-size: 10px; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-heading h2,.au-pave-inside h2,.au-pave-packaging h2) { font-size: 23px; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-inside,.au-pave-packaging) { grid-template-columns: 1fr; gap: 18px; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-inside,.au-pave-packaging) .au-pave-heading { grid-row: 1; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-inside-photo,.au-pave-packaging-photo) { grid-row: 2; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-inside-photo { aspect-ratio: 350 / 260; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-layers { gap: 12px; border: 0; padding: 0; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-layers article + article { border-top: 1px solid var(--au-line); padding-top: 12px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-layers h3 { font-size: 11px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-layers p { font-size: 12px; }
+  :is(.au-pave-detail, .au-product-detail) :is(.au-pave-texture-grid,.au-pave-occasion-grid,.au-pave-related-grid) { margin-top: 16px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-texture-grid { grid-template-columns: 1fr; gap: 16px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-texture-grid figure > div { height: auto; aspect-ratio: 350 / 220; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-texture-grid figure:last-child > div { aspect-ratio: 350 / 200; }
+  :is(.au-pave-detail, .au-product-detail) figcaption { font-size: 10px; margin-top: 6px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-story > .au-pave-video { padding: 32px 20px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-video-media { height: auto; aspect-ratio: 350 / 200; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-occasion-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px 10px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-occasion-grid figure > div { height: auto; aspect-ratio: 170 / 180; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-packaging-photo { aspect-ratio: 350 / 240; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-packaging-copy { font-size: 12px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-specs { margin-top: 16px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-specs details { display: block; padding: 16px 0; font-size: 12px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-specs summary { min-height: 28px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-specs details > div { margin-top: 8px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-related-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px 10px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-related-grid a > div { aspect-ratio: 170 / 160; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-related-grid h3 { font-size: 12px; margin: 10px 10px 4px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-related-grid p { font-size: 12px; margin: 0 10px 10px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-sticky-order { position: fixed; inset: auto 0 0; z-index: 110; display: flex; align-items: center; gap: 12px; padding: 10px 20px calc(10px + env(safe-area-inset-bottom)); min-height: 64px; background: #fff; border-top: 1px solid var(--au-line); }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-sticky-order > div { display: grid; gap: 3px; margin-right: auto; color: var(--au-green); font-size: 14px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-sticky-order span { font-size: 10px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-sticky-order .au-pave-order-button { min-width: 140px; min-height: 44px; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-view-order { border: 0; background: none; font-size: 11px; color: var(--au-green); }
+}
+@media (prefers-reduced-motion:reduce) {
+  :is(.au-pave-detail, .au-product-detail) *, :is(.au-pave-detail, .au-product-detail) *::after { animation: none !important; transition: none !important; transform: none !important; }
+  :is(.au-pave-detail, .au-product-detail) .au-pave-awaiting { opacity: 1; }
+}

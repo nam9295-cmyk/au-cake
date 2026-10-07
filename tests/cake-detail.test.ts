@@ -8,6 +8,7 @@ import {
   selectCakeDetailProduct,
 } from '../src/lib/cake-detail.js'
 import type { CakeDetailSelection } from '../src/lib/cake-detail.js'
+import * as cakeDetailModule from '../src/lib/cake-detail.js'
 import { getAuCakeCatalogCards } from '../src/lib/cake-catalog.js'
 import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 
@@ -103,6 +104,28 @@ test('Brownie Cheesecake offers Basic at AUD 85, Pave at AUD 95, or Fresh cream 
   )
   assert.equal(attemptedCombination.brownieCreamOption, 'none')
   assert.equal(getCakeDetailSelectionTotal(attemptedCombination), 95)
+})
+
+test('Brownie unified finish mapping keeps the existing product and cream fields authoritative', () => {
+  const selectBrownieFinish = (cakeDetailModule as unknown as Record<string, unknown>).selectBrownieFinish
+  assert.equal(typeof selectBrownieFinish, 'function')
+  const applyFinish = selectBrownieFinish as (selection: CakeDetailSelection, finish: string) => CakeDetailSelection
+  const initial = createCakeDetailSelection('brownie-cheesecake') as CakeDetailSelection
+
+  const vanilla = applyFinish(initial, 'vanilla-cream')
+  assert.equal(vanilla.productId, 'brownie-cheesecake')
+  assert.equal(vanilla.brownieCreamOption, 'fresh-cream')
+  assert.equal(getCakeDetailSelectionTotal(vanilla), 105)
+
+  const pave = applyFinish(vanilla, 'pave-chocolate')
+  assert.equal(pave.productId, 'pave-brownie-cheesecake')
+  assert.equal(pave.brownieCreamOption, 'none')
+  assert.equal(getCakeDetailSelectionTotal(pave), 95)
+
+  const basic = applyFinish(pave, 'basic')
+  assert.equal(basic.productId, 'brownie-cheesecake')
+  assert.equal(basic.brownieCreamOption, 'none')
+  assert.equal(getCakeDetailSelectionTotal(basic), 85)
 })
 
 test('Cupcake and Signature detail selections remain independent and normalize hidden options', () => {
