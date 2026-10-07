@@ -118,9 +118,12 @@ test('all nine AU details use shared editorial presentation while retaining thei
 
 test('Brownie purchase uses one unified three-choice finish selector with current prices', async () => {
   const brownie = (await render('AU')).productDetails['brownie-cheesecake']
-  assert.equal((brownie.match(/<legend>Choose a finish<\/legend>/g) || []).length, 1)
+  const finish = brownie.match(/<fieldset class="cake-detail-fieldset is-brownie-finish">([\s\S]*?)<\/fieldset>/)?.[1]
+  assert.ok(finish)
+  assert.equal((finish.match(/<button\b/g) || []).length, 3)
+  assert.match(finish, /<legend>1\. SELECT FINISH OPTION<\/legend>/)
   assert.doesNotMatch(brownie, /<legend>Fresh cream<\/legend>/)
-  assert.match(brownie, /Basic Finish[\s\S]*?AUD 85\.00[\s\S]*?Vanilla Cream[\s\S]*?\+AUD 20\.00[\s\S]*?AUD 105\.00[\s\S]*?Pavé Chocolate[\s\S]*?\+AUD 10\.00[\s\S]*?AUD 95\.00/)
+  assert.match(finish, /Basic Finish[\s\S]*?Caramelized Top[\s\S]*?\$85\.00 AUD[\s\S]*?Vanilla Cream[\s\S]*?\+AUD 20\.00[\s\S]*?\$105\.00 AUD[\s\S]*?Pavé Chocolate[\s\S]*?\+AUD 10\.00[\s\S]*?\$95\.00 AUD/)
 })
 
 test('AU detail selects cake and party templates while retaining real option controls', async () => {

@@ -46,12 +46,22 @@ async (page) => {
       await field(purchase, /^Choose your size$/).getByRole('button').nth(index).click()
       await total(purchase, price)
     }
-    purchase = await open('brownie-cheesecake')
-    const brownieFinish = field(purchase, /^Choose a finish$/)
-    check(await brownieFinish.getByRole('button').count() === 3, `${width}: Brownie finish should have three choices`)
-    for (const [index, price] of [85,105,95].entries()) {
+    for (const [index, price, productId, brownieCreamOption] of [
+      [0, 85, 'brownie-cheesecake', 'none'],
+      [1, 105, 'brownie-cheesecake', 'fresh-cream'],
+      [2, 95, 'pave-brownie-cheesecake', 'none'],
+    ]) {
+      purchase = await open('brownie-cheesecake')
+      const brownieFinish = field(purchase, /^1\. SELECT FINISH OPTION$/)
+      check(await brownieFinish.getByRole('button').count() === 3, `${width}: Brownie finish should have three choices`)
       await brownieFinish.getByRole('button').nth(index).click()
+      check(await brownieFinish.getByRole('button', { pressed: true }).count() === 1, `${width}: only one Brownie finish selected`)
       await total(purchase, price)
+      const addBrownie = purchase.getByRole('button', { name: /^Add to (order|cart)/i })
+      check((await addBrownie.innerText()).includes(price.toFixed(2)), `${width}: Brownie Add to Cart amount ${price}`)
+      await addBrownie.click()
+      const brownieCart = await page.evaluate(() => JSON.parse(localStorage.getItem('verygood-au-cake-cart-v1')))
+      check(brownieCart.lines.length === 1 && brownieCart.lines[0].productId === productId && brownieCart.lines[0].brownieCreamOption === brownieCreamOption && brownieCart.lines[0].quantity === 1, `${width}: Brownie cart fields ${JSON.stringify(brownieCart)}`)
     }
     purchase = await open('smore-stick')
     for (const [quantity, price] of [[5,22.5],[6,24.3],[12,43.2]]) {

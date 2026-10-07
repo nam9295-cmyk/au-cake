@@ -841,7 +841,7 @@ export default function CakeDetailPage({
 
           {detail.id === 'brownie-cheesecake' ? (
             <fieldset className="cake-detail-fieldset is-brownie-finish">
-              <legend>{language === 'ko' ? '마감 선택' : 'Choose a finish'}</legend>
+              <legend>{language === 'ko' ? '마감 선택' : isAuRedesign ? '1. SELECT FINISH OPTION' : 'Choose a finish'}</legend>
               <div className="cake-detail-options is-brownie-finish-options">
                 {([
                   {
@@ -870,7 +870,7 @@ export default function CakeDetailPage({
                   >
                     <strong>{finish.label}</strong>
                     <span className="cake-detail-option-note">{finish.note}</span>
-                    <span className="cake-detail-option-total">{formatCurrency(finish.price)}</span>
+                    <span className="cake-detail-option-total">{isAuRedesign ? `$${finish.price.toFixed(2)} AUD` : formatCurrency(finish.price)}</span>
                   </OptionButton>
                 ))}
               </div>
