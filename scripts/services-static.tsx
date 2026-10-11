@@ -9,7 +9,7 @@ import {
 export function renderServicePage(path: string) {
   return renderToString(
     <div className="app-shell au-redesign-shell">
-      <AuRedesignHeader cartItemCount={0} services />
+      <AuRedesignHeader cartItemCount={0} />
       {path === '/customer-stories/korea' ? (
         <KoreaCustomerStoriesPage />
       ) : (

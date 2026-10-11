@@ -17,10 +17,16 @@ async (page) => {
       await page.evaluate(() => scrollTo(0, 0))
       await page.mouse.move(0, 0)
       await main.screenshot({ path: `/tmp/au-services-qa/custom-${label}-${width}.png`, animations: 'disabled' })
-      snapshots.push(await main.evaluate(root => ({
-        html: root.innerHTML.replace(/_r_[a-z0-9]+_/g, '_REACT_ID_'),
-        metrics: [...root.querySelectorAll('h1,h2,fieldset,button,input,textarea,img')].map(el => { const b=el.getBoundingClientRect(),s=getComputedStyle(el);return {tag:el.tagName,text:el.textContent,width:b.width,height:b.height,font:s.fontFamily,fontSize:s.fontSize,color:s.color,display:s.display} }),
-      })))
+      snapshots.push(await main.evaluate(root => {
+        // Header navigation was explicitly approved separately; compare the
+        // protected Custom Cake content and controls against the baseline.
+        const copy = root.cloneNode(true)
+        copy.querySelector('.au-redesign-header')?.remove()
+        return {
+          html: copy.innerHTML.replace(/_r_[a-z0-9]+_/g, '_REACT_ID_'),
+          metrics: [...root.querySelectorAll('h1,h2,fieldset,button,input,textarea,img')].filter(el => !el.closest('.au-redesign-header')).map(el => { const b=el.getBoundingClientRect(),s=getComputedStyle(el);return {tag:el.tagName,text:el.textContent,width:b.width,height:b.height,font:s.fontFamily,fontSize:s.fontSize,color:s.color,display:s.display} }),
+        }
+      }))
     }
     if (JSON.stringify(snapshots[0]) !== JSON.stringify(snapshots[1])) throw Error(`Custom Cake DOM or layout changed at ${width}`)
     results.push({ width, customDomAndLayoutIdentical: true, flavourSelection: 'Nutella' })

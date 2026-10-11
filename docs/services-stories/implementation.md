@@ -40,7 +40,7 @@ Enquiry CTAs use the existing configured Instagram profile `verygood_syd`. No un
 
 ## Protected behavior
 
-Custom Cake source, CSS, aliases, completion routes, pricing, upload, quotation, notifications and API are untouched. The existing shared AU header defaults to its former navigation; new service/stories pages opt in to the business link. Existing Product Detail headers therefore retain their previous behavior. New CSS selectors are limited to `.au-business`, `.au-stories`, `.au-story-*` and descendants; they cannot match Custom Cake or KR markup. No Appwrite, backend, pricing, order, coupon or product data changes.
+Custom Cake source, CSS, aliases, completion routes, pricing, upload, quotation, notifications and API are untouched. In the approved navigation follow-up, the shared AU header now consistently links Events & Business to `/business/events` and Kids Classes to `/classes`, including on Custom Cake and Product Detail. This is a header navigation update only. Service/stories CSS selectors are limited to `.au-business`, `.au-stories`, `.au-story-*` and descendants; they cannot match Custom Cake or KR markup. No Appwrite, backend, pricing, order, coupon or product data changes.
 
 No main merge, push or deployment is part of this implementation.
 

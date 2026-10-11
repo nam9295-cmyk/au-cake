@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HomeCustomerStories } from '../components/CustomerStories'
+import serviceAssets from '../content/au-service-assets.json'
 import { HomePage as LegacyHomePage } from './LegacyHomePage'
 import { AuHeroVideo } from '../components/AuHeroVideo'
 import heroCake2Img from '../assets/hero-cake-2.webp'
@@ -16,6 +17,7 @@ import { marketConfig } from '../lib/market'
 import { getAuPublicContent, getPublicCakePage } from '../lib/public-content'
 
 const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().home : null
+const storyPhoto = serviceAssets['events-hero']
 
 const AU_CATALOG_GROUP_MARKERS: Record<CakeCatalogGroupId, string> = {
   'signature-gateau': '/category-marker-01.svg',
@@ -232,6 +234,7 @@ function AuHomePage({
             <a href="/chocolates">CHOCOLATES</a>
             <button type="button" onClick={() => navigate('custom-cake')}>CUSTOM CAKES</button>
             <button type="button" onClick={() => navigate('business')}>EVENTS & BUSINESS</button>
+            <button type="button" onClick={() => navigate('classes')}>KIDS CLASSES</button>
             <button type="button" onClick={() => navigate('reviews')}>ABOUT</button>
           </nav>
 
@@ -315,6 +318,15 @@ function AuHomePage({
                   }}
                 >
                   EVENTS & BUSINESS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    navigate('classes')
+                  }}
+                >
+                  KIDS CLASSES
                 </button>
                 <button
                   type="button"
@@ -595,7 +607,17 @@ function AuHomePage({
             ================================================================= */}
         <section className="rd-story-section" aria-label="Brand Story">
           <div className="rd-story-photo-frame">
-            <img className="rd-story-photo" src="/redesign/cupcake-hero.webp" alt="Verygood Atelier" loading="lazy" />
+            <img
+              className="rd-story-photo"
+              src={storyPhoto.variants[1].src}
+              srcSet={storyPhoto.variants.map(photo => `${photo.src} ${photo.width}w`).join(', ')}
+              sizes="(max-width: 768px) calc(100vw - 40px), (max-width: 1200px) 45vw, 520px"
+              width={storyPhoto.width}
+              height={storyPhoto.height}
+              alt="Cakes and cupcakes arranged on an outdoor celebration table"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div className="rd-story-stack">
             <span className="rd-story-tag">ARTISAN CHOCOLATIER • SYDNEY</span>

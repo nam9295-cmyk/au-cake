@@ -1,12 +1,13 @@
 import { useRef, type MouseEvent, type ReactNode } from 'react'
 
-export function AuRedesignHeader({ cartItemCount, services = false }: { cartItemCount: number; services?: boolean }) {
+export function AuRedesignHeader({ cartItemCount }: { cartItemCount: number }) {
   const menu = useRef<HTMLDetailsElement>(null)
   const links = <>
     <a href="/cakes">SHOP</a>
     <a href="/chocolates">CHOCOLATES</a>
     <a href="/cakes/custom-cake">CUSTOM CAKES</a>
-    <a href={services ? '/business/events' : '/classes'}>EVENTS & BUSINESS</a>
+    <a href="/business/events">EVENTS & BUSINESS</a>
+    <a href="/classes">KIDS CLASSES</a>
     <a href="/reviews">ABOUT</a>
   </>
   return (

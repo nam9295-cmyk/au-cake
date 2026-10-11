@@ -286,8 +286,8 @@ function App() {
         <AuRedesignHeader cartItemCount={cartItemCount} />
         {page === 'chocolates' ? <AuCategoryPage category="chocolates" language={language} /> : <AuChocolatePage key={pathname} slug={getChocolateSlugFromPath(pathname) || ''} onAddToOrder={addCartLine} onViewOrder={() => navigate('cart')} />}
       </>}
-      {page === 'customer-stories' && marketConfig.market === 'AU' && <><AuRedesignHeader cartItemCount={cartItemCount} services /><Suspense fallback={<EditorialRouteFallback />}><KoreaCustomerStoriesPage /></Suspense></>}
-      {page === 'business' && marketConfig.market === 'AU' && <><AuRedesignHeader cartItemCount={cartItemCount} services /><Suspense fallback={<EditorialRouteFallback />}><AuBusinessServicePage slug={pathname.replace(/\/$/, '').split('/').at(-1) || ''} /></Suspense></>}
+      {page === 'customer-stories' && marketConfig.market === 'AU' && <><AuRedesignHeader cartItemCount={cartItemCount} /><Suspense fallback={<EditorialRouteFallback />}><KoreaCustomerStoriesPage /></Suspense></>}
+      {page === 'business' && marketConfig.market === 'AU' && <><AuRedesignHeader cartItemCount={cartItemCount} /><Suspense fallback={<EditorialRouteFallback />}><AuBusinessServicePage slug={pathname.replace(/\/$/, '').split('/').at(-1) || ''} /></Suspense></>}
       {page === 'custom-cake' && (
         <CustomCakePage
           navigate={navigate}

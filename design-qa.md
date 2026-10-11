@@ -56,3 +56,13 @@ P3: the mock's abbreviated source labels, pill shapes and sample navigation are 
 Implementation checklist: all ten target frames implemented; Desktop assets applied to Mobile; original text/photos preserved; AU isolation and protected pages verified; no automatic deployment.
 
 final result: passed
+
+## Approved navigation and Home photo follow-up
+
+John approved replacing the lower Home story photo with `cakes-party-hero.jpg` and unifying AU header navigation, including the shared header on Custom Cake. The uploaded source SHA-256 matches the recorded Events hero source exactly, so existing 640/1280/1920 WebP variants are reused through the asset manifest. No source photograph was edited.
+
+Events & Business now consistently opens `/business/events`; the separate Kids Classes item opens the existing `/classes`. Home Desktop and Mobile use their established SPA navigation; shared AU headers use ordinary anchors. Custom Cake's page source, options and submit behavior remain unchanged; its header navigation is the approved exception to the initial screenshot baseline above.
+
+Focused evidence: `/tmp/au-services-qa/home-story-new-{1440,390}.png` and `nav-{home,cakes,custom}-{1440,1024,834,769,390,360}.png`. A 769px screenshot exposed a clipped Cart that a scroll-width-only check missed. The Home tablet navigation gap and font size were reduced; regression checks now also assert each header item's bounds fit the viewport. This change is scoped to `.au-home-shell` header selectors.
+
+The navigation browser regression is `tests/au-service-navigation.browser.mjs`. Related AU/KR routing, Cake and Custom Cake frontend tests, lint, both market builds and static route tests were run for the follow-up. The preview remains local; no push, merge or deployment.
