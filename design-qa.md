@@ -66,3 +66,11 @@ Events & Business now consistently opens `/business/events`; the separate Kids C
 Focused evidence: `/tmp/au-services-qa/home-story-new-{1440,390}.png` and `nav-{home,cakes,custom}-{1440,1024,834,769,390,360}.png`. A 769px screenshot exposed a clipped Cart that a scroll-width-only check missed. The Home tablet navigation gap and font size were reduced; regression checks now also assert each header item's bounds fit the viewport. This change is scoped to `.au-home-shell` header selectors.
 
 The navigation browser regression is `tests/au-service-navigation.browser.mjs`. Related AU/KR routing, Cake and Custom Cake frontend tests, lint, both market builds and static route tests were run for the follow-up. The preview remains local; no push, merge or deployment.
+
+## Language control follow-up
+
+Restored the omitted AU language control without changing the approved navigation destinations or Home story photograph. Desktop uses an understated `EN / 한국어` group before Cart, with an underline indicating the current language. Tablet/mobile uses a compact other-language switch; mobile remains outside MENU and provides a 44px touch target. Shared App state and existing storage preserve the preference on navigation/reload.
+
+Screenshots inspected: `language-home-{en,ko}-{1440,390,360}.png`, `language-cakes-{en,ko}-{1440,390,360}.png`, and `language-{events,cafe-supply,consulting,korea}-ko-{1440,390,360}.png` in `/tmp/au-services-qa/`. Eight-width header checks (including the 767/768/769px breakpoint edges) show no clipping, overlap or page overflow in either language. Korean service layouts retain the same photos and enquiry constraints. Review originals/translations remain unchanged; Korean originals become the primary displayed text in Korean mode.
+
+Custom Cake content/controls remain baseline-identical, excluding the approved shared header. KR content and measured typography/layout match the main baseline in both languages on four routes at 1440/390. The first KR comparison discrepancy was differing consent-banner browser storage, not a product change; normalized consent state removes it. Existing English service/stories interaction QA also passes. Full test, lint, AU/KR builds, new rendered-language/data tests and static direct-access tests pass. No publication performed.

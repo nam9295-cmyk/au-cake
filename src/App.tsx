@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
 import CakesPage from './CakesPage'
 import { AuRedesignFooter, AuRedesignHeader } from './components/AuRedesignChrome'
+import { AuLanguageProvider } from './components/AuLanguage'
 import { AuCategoryPage } from './pages/AuCategoryPage'
 import { AuChocolatePage } from './pages/AuChocolatePage'
 import CartPage from './CartPage'
@@ -119,7 +120,7 @@ function App() {
 
   useEffect(() => {
     if (page === 'review' || page === 'hogirl') return
-    if (page === 'portfolio' || page === 'business' || page === 'customer-stories') { document.documentElement.lang = 'en-AU'; return }
+    if (page === 'portfolio') { document.documentElement.lang = 'en-AU'; return }
     document.documentElement.lang = language === 'ko'
       ? 'ko'
       : getAuPublicContent().site.language
@@ -252,7 +253,7 @@ function App() {
   if (page === 'review') return <ReviewPage onOrderCake={orderCakeFromReview} />
 
   return (
-    <>
+    <AuLanguageProvider language={language} setLanguage={setLanguage}>
       {page === 'home' && <HomeTigerBackground />}
       <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage ? ' au-redesign-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && page !== 'portfolio' && page !== 'customer-stories' && page !== 'business' && (
@@ -402,7 +403,7 @@ function App() {
       {!isPrivatePage && (isAuRedesignPage ? <AuRedesignFooter /> : <SiteFooter navigate={navigate} language={language} />)}
       {!isPrivatePage && <AnalyticsConsentBanner language={language} />}
     </div>
-    </>
+    </AuLanguageProvider>
   )
 }
 

@@ -23,8 +23,8 @@ export type CustomerStory = {
 }
 export const storySource = (story: CustomerStory) =>
   `${story.platform === 'baemin' ? 'Baemin' : 'Coupang Eats'} · Korea`
-export const storyDate = (date: string) =>
-  new Intl.DateTimeFormat('en-AU', {
+export const storyDate = (date: string, language: 'en' | 'ko' = 'en') =>
+  new Intl.DateTimeFormat(language === 'ko' ? 'ko-KR' : 'en-AU', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

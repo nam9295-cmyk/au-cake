@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { HomeCustomerStories } from '../components/CustomerStories'
 import serviceAssets from '../content/au-service-assets.json'
+import { AuLanguageToggle } from '../components/AuLanguage'
 import { HomePage as LegacyHomePage } from './LegacyHomePage'
 import { AuHeroVideo } from '../components/AuHeroVideo'
 import heroCake2Img from '../assets/hero-cake-2.webp'
@@ -100,6 +101,7 @@ function AuHomePage({
   cartItemCount: number
 }) {
   const copy = cakeCopy(language)
+  const t = (english: string, korean: string) => language === 'ko' ? korean : english
   const [activeCategory, setActiveCategory] = useState<RedesignCategoryKey>('ALL')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeHeroCake, setActiveHeroCake] = useState(() => marketConfig.market === 'AU' ? 0 : 1)
@@ -141,20 +143,20 @@ function AuHomePage({
     id: card.id, name: card.name, sub: card.optionLabel, photo: card.imagePath,
     price: card.priceLabel, slug: card.slug, href: `/cakes/${card.slug}`, category: REDESIGN_CATEGORY_BY_GROUP[group.id],
   })))
-  redesignProducts.push({ id: 'custom-cake', name: 'CUSTOM CAKES', sub: 'Bespoke celebration cakes',
-    photo: '/products/custom-cake.webp', price: 'BY QUOTE', slug: 'custom-cake', href: '/cakes/custom-cake', category: 'CUSTOM_CREATIVE' })
+  redesignProducts.push({ id: 'custom-cake', name: t('CUSTOM CAKES', '커스텀 케이크'), sub: t('Bespoke celebration cakes', '특별한 날을 위한 맞춤 케이크'),
+    photo: '/products/custom-cake.webp', price: t('BY QUOTE', '견적 문의'), slug: 'custom-cake', href: '/cakes/custom-cake', category: 'CUSTOM_CREATIVE' })
   redesignProducts.push(...getAuChocolateCollectionCards(language).map((product): RedesignProduct => ({
     id: product.id, name: product.name, sub: product.description,
     photo: product.image, photoAlt: product.imageAlt,
     price: product.price, slug: product.slug, href: product.href, category: 'CHOCOLATES',
   })))
   const tabDefinitions: { key: RedesignCategoryKey; label: string; heading: string }[] = [
-    { key: 'ALL', label: 'ALL PRODUCTS', heading: 'All Creations' },
+    { key: 'ALL', label: t('ALL PRODUCTS', '전체 상품'), heading: t('All Creations', '전체 상품') },
     ...catalogGroups.map((group) => ({
       key: REDESIGN_CATEGORY_BY_GROUP[group.id], label: group.title, heading: REDESIGN_HEADING_BY_GROUP[group.id],
     })),
-    { key: 'CUSTOM_CREATIVE', label: 'CUSTOM & CREATIVE', heading: 'Custom & Creative' },
-    { key: 'CHOCOLATES', label: 'CHOCOLATES', heading: 'Chocolates' },
+    { key: 'CUSTOM_CREATIVE', label: t('CUSTOM & CREATIVE', '커스텀 & 크리에이티브'), heading: t('Custom & Creative', '커스텀 & 크리에이티브') },
+    { key: 'CHOCOLATES', label: t('CHOCOLATES', '초콜릿'), heading: t('Chocolates', '초콜릿') },
   ]
   const categoryTabs = tabDefinitions.map((tab) => ({
     ...tab,
@@ -239,7 +241,7 @@ function AuHomePage({
           </nav>
 
           <div className="rd-header-actions">
-            <span className="rd-header-currency">AUD</span>
+            <AuLanguageToggle />
             <button
               type="button"
               className="rd-header-cart"
@@ -251,13 +253,14 @@ function AuHomePage({
           </div>
 
           <div className="rd-mobile-actions">
+            <AuLanguageToggle />
             <button
               type="button"
               className="rd-mobile-menu-btn"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open menu"
             >
-              MENU
+              {t('MENU', '메뉴')}
             </button>
             <button
               type="button"
@@ -349,7 +352,7 @@ function AuHomePage({
           <div className="rd-hero-wordmark-mobile">VERYGOOD</div>
           <AuHeroVideo />
           <div className="rd-hero-bottom-row">
-            <h1 className="rd-hero-copy">{publicHomeContent?.h1}</h1>
+            <h1 className="rd-hero-copy">{t(publicHomeContent?.h1 || '', '시드니에서 주문 제작하는 초콜릿 케이크')}</h1>
             <a
               className="rd-hero-cta"
               href="/cakes"
@@ -358,7 +361,7 @@ function AuHomePage({
                 navigate('cakes')
               }}
             >
-              SHOP →
+              {t('SHOP →', '상품 보기 →')}
             </a>
           </div>
         </section>
@@ -376,23 +379,21 @@ function AuHomePage({
               <span className="rd-intro-mobile-tag">VERYGOOD CHOCOLATIER</span>
             </div>
             <h2 className="rd-intro-statement rd-desktop-only">
-              Born from a pure dedication to artisan couverture chocolate and honest, handcrafted cakes in Sydney.
+              {t('Born from a pure dedication to artisan couverture chocolate and honest, handcrafted cakes in Sydney.', '커버춰 초콜릿을 향한 정성과 정직한 수작업으로, 시드니에서 케이크를 만듭니다.')}
             </h2>
             <h2 className="rd-intro-title-mobile rd-mobile-only">
-              Made-to-Order Chocolate Cakes in Sydney
+              {t('Made-to-Order Chocolate Cakes in Sydney', '시드니에서 주문 제작하는 초콜릿 케이크')}
             </h2>
             <p className="rd-intro-desc-mobile rd-mobile-only">
-              쇼콜라티에용 커버춰 초콜릿으로 만드는 수제 케이크와 디저트를 시드니 Melrose Park 픽업 예약으로 만나보세요.
+              {t('Handcrafted cakes and desserts made with chocolatier-grade couverture chocolate, for pre-arranged pickup in Melrose Park, Sydney.', '쇼콜라티에용 커버춰 초콜릿으로 만드는 수제 케이크와 디저트를 시드니 Melrose Park 픽업 예약으로 만나보세요.')}
             </p>
           </div>
           <div className="rd-intro-story rd-desktop-only">
             <p>
-              We craft made-to-order cakes using chocolatier-grade couverture chocolate,
-              freshly prepared in our Melrose Park atelier for your special celebrations.
+              {t('We craft made-to-order cakes using chocolatier-grade couverture chocolate, freshly prepared in our Melrose Park atelier for your special celebrations.', '특별한 축하의 순간을 위해 Melrose Park 아틀리에에서 쇼콜라티에용 커버춰 초콜릿으로 케이크를 주문 제작합니다.')}
             </p>
             <p>
-              Our approach is simple: honest craftsmanship without shortcuts. Every piece is freshly prepared
-              for confirmed pickup, bringing thoughtful sweetness to the table.
+              {t('Our approach is simple: honest craftsmanship without shortcuts. Every piece is freshly prepared for confirmed pickup, bringing thoughtful sweetness to the table.', '시간과 정성을 들여 정직하게 만듭니다. 확정된 픽업 일정에 맞춰 준비한 디저트로 함께하는 자리에 달콤함을 더합니다.')}
             </p>
           </div>
         </section>
@@ -428,7 +429,7 @@ function AuHomePage({
                 className="rd-best-action-row"
                 href="/cakes/signature-gateau-au-chocolat"
               >
-                <span className="rd-best-action-label">CHOOSE OPTIONS</span>
+                <span className="rd-best-action-label">{t('CHOOSE OPTIONS', '옵션 선택')}</span>
                 <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'signature-gateau')?.priceLabel}</span>
               </a>
             </div>
@@ -455,7 +456,7 @@ function AuHomePage({
                 className="rd-best-action-row"
                 href="/cakes/pave-chocolate-cake"
               >
-                <span className="rd-best-action-label">CHOOSE OPTIONS</span>
+                <span className="rd-best-action-label">{t('CHOOSE OPTIONS', '옵션 선택')}</span>
                 <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'pave')?.priceLabel}</span>
               </a>
             </div>
@@ -482,7 +483,7 @@ function AuHomePage({
                 className="rd-best-action-row"
                 href="/cakes/brownie-cheesecake"
               >
-                <span className="rd-best-action-label">CHOOSE OPTIONS</span>
+                <span className="rd-best-action-label">{t('CHOOSE OPTIONS', '옵션 선택')}</span>
                 <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'brownie-cheesecake')?.priceLabel}</span>
               </a>
             </div>
@@ -563,40 +564,40 @@ function AuHomePage({
             09. BESPOKE & BUSINESS Section
             ================================================================= */}
         <section className="rd-bespoke-section" aria-label="Bespoke & Business">
-          <h2 className="rd-bespoke-heading">BESPOKE & BUSINESS</h2>
+          <h2 className="rd-bespoke-heading">{t('BESPOKE & BUSINESS', '맞춤 제작 & 비즈니스')}</h2>
           <div className="rd-bespoke-divider" />
           <div className="rd-bespoke-grid">
             <a className="rd-bespoke-item" href="/cakes/custom-cake">
               <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">CUSTOM CAKES</h3>
-                <p className="rd-bespoke-desc">Custom-designed cakes & atelier orders</p>
-                <span className="rd-bespoke-action">INQUIRE →</span>
+                <h3 className="rd-bespoke-title">{t('CUSTOM CAKES', '커스텀 케이크')}</h3>
+                <p className="rd-bespoke-desc">{t('Custom-designed cakes & atelier orders', '맞춤 디자인 케이크와 아틀리에 주문')}</p>
+                <span className="rd-bespoke-action">{t('INQUIRE →', '문의하기 →')}</span>
               </div>
               <span className="rd-bespoke-arrow">→</span>
             </a>
 
             <a className="rd-bespoke-item" href="/business/events">
               <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">EVENTS & BUSINESS</h3>
-                <p className="rd-bespoke-desc">Corporate catering, private events & parties</p>
-                <span className="rd-bespoke-action">EXPLORE EVENTS →</span>
+                <h3 className="rd-bespoke-title">{t('EVENTS & BUSINESS', '기업 행사 & 이벤트')}</h3>
+                <p className="rd-bespoke-desc">{t('Corporate catering, private events & parties', '기업 행사, 개인 모임과 파티를 위한 디저트')}</p>
+                <span className="rd-bespoke-action">{t('EXPLORE EVENTS →', '행사 서비스 보기 →')}</span>
               </div>
               <span className="rd-bespoke-arrow">→</span>
             </a>
 
             <a className="rd-bespoke-item" href="/business/cafe-supply" data-au-coming-soon="service">
               <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">CAFÉ SUPPLY</h3>
-                <p className="rd-bespoke-desc">Wholesale cakes & artisan dessert supply</p>
-                <span className="rd-bespoke-action">Coming Soon</span>
+                <h3 className="rd-bespoke-title">{t('CAFÉ SUPPLY', '카페 공급')}</h3>
+                <p className="rd-bespoke-desc">{t('Wholesale cakes & artisan dessert supply', '도매 케이크와 수제 디저트 공급')}</p>
+                <span className="rd-bespoke-action">{t('Coming Soon', '준비 중')}</span>
               </div>
             </a>
 
             <a className="rd-bespoke-item" href="/business/consulting" data-au-coming-soon="service">
               <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">MENU & EXPERIENCE DIRECTION</h3>
-                <p className="rd-bespoke-desc">Menu curation & culinary experience direction</p>
-                <span className="rd-bespoke-action">Coming Soon</span>
+                <h3 className="rd-bespoke-title">{t('MENU & EXPERIENCE DIRECTION', '메뉴 & 고객 경험')}</h3>
+                <p className="rd-bespoke-desc">{t('Menu curation & culinary experience direction', '메뉴 구성과 고객 경험 방향 상담')}</p>
+                <span className="rd-bespoke-action">{t('Coming Soon', '준비 중')}</span>
               </div>
             </a>
           </div>
@@ -623,7 +624,7 @@ function AuHomePage({
             <span className="rd-story-tag">ARTISAN CHOCOLATIER • SYDNEY</span>
             <h2 className="rd-story-heading">VERYGOOD ATELIER</h2>
             <p className="rd-story-body">
-              Handcrafted cakes and chocolate creations, made to order in our Sydney atelier. Thoughtful ingredients, chocolatier-grade couverture and something special to share.
+              {t('Handcrafted cakes and chocolate creations, made to order in our Sydney atelier. Thoughtful ingredients, chocolatier-grade couverture and something special to share.', '시드니 아틀리에에서 주문 제작하는 수제 케이크와 초콜릿. 세심하게 고른 재료와 쇼콜라티에용 커버춰로 함께 나눌 특별한 디저트를 만듭니다.')}
             </p>
           </div>
         </section>
@@ -633,7 +634,7 @@ function AuHomePage({
             ================================================================= */}
         <footer className="rd-footer">
           <span className="rd-footer-brand">VERYGOOD / AU-CAKE</span>
-          <nav aria-label="Footer navigation"><a href="/lookup">ORDER LOOKUP</a><a href="/reviews">REVIEWS</a><a href="/chocolates">CHOCOLATES</a></nav>
+          <nav aria-label="Footer navigation"><a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a><a href="/reviews">{t('REVIEWS', '후기')}</a><a href="/chocolates">{t('CHOCOLATES', '초콜릿')}</a></nav>
           <span className="rd-footer-copyright">© 2026 VERYGOOD. Sydney, Australia. All rights reserved.</span>
         </footer>
       </div>

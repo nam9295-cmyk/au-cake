@@ -1,6 +1,8 @@
 import content from '../content/au-business-services.json'
 import assets from '../content/au-service-assets.json'
 import publicContent from '../content/au-public-pages.json'
+import koreanCopy from '../content/au-service-copy.ko.json'
+import { useAuLanguage } from '../lib/au-language'
 
 type Card = { title: string; body: string; image?: string; href?: string }
 type Section = {
@@ -44,31 +46,33 @@ function ServicePhoto({
   )
 }
 export default function AuBusinessServicePage({ slug }: { slug: string }) {
+  const { language, t } = useAuLanguage()
+  const copy = (text: string) => language === 'ko' ? (koreanCopy as Record<string, string>)[text] || text : text
   const page = content.pages.find((p) => p.slug === slug)
   if (!page) return null
   return (
     <main className={`au-business au-business-${page.slug}`}>
       <section className="au-business-hero">
-        <p className="au-business-eyebrow">{page.eyebrow}</p>
-        <h1>{page.headline}</h1>
-        <p className="au-business-intro">{page.intro}</p>
+        <p className="au-business-eyebrow">{copy(page.eyebrow)}</p>
+        <h1>{copy(page.headline)}</h1>
+        <p className="au-business-intro">{copy(page.intro)}</p>
         <div className="au-business-actions">
           <a className="au-business-button" href="#enquire">
-            {page.primary}
+            {copy(page.primary)}
           </a>
           <a
             className="au-business-button au-business-outline"
             href={`#${page.target}`}
           >
-            {page.secondary}
+            {copy(page.secondary)}
           </a>
         </div>
         <div className="au-business-tags">
           {page.tags.map((tag) => (
-            <span key={tag}>{tag}</span>
+            <span key={tag}>{copy(tag)}</span>
           ))}
         </div>
-        <p className="au-business-status">{page.status}</p>
+        <p className="au-business-status">{copy(page.status)}</p>
         <div className="au-business-hero-photo">
           <ServicePhoto id={page.hero} hero />
         </div>
@@ -84,10 +88,10 @@ export default function AuBusinessServicePage({ slug }: { slug: string }) {
             section.image && <ServicePhoto id={section.image} wide />}
           <header>
             {section.kicker && (
-              <p className="au-business-eyebrow">{section.kicker}</p>
+              <p className="au-business-eyebrow">{copy(section.kicker)}</p>
             )}
-            <h2>{section.title}</h2>
-            {section.body && <p>{section.body}</p>}
+            <h2>{copy(section.title)}</h2>
+            {section.body && <p>{copy(section.body)}</p>}
           </header>
           {section.image && section.id !== 'share' && (
             <ServicePhoto
@@ -112,12 +116,12 @@ export default function AuBusinessServicePage({ slug }: { slug: string }) {
                     )}
                     <h3>
                       {card.href ? (
-                        <a href={card.href}>{card.title}</a>
+                        <a href={card.href}>{copy(card.title)}</a>
                       ) : (
-                        card.title
+                        copy(card.title)
                       )}
                     </h3>
-                    <p>{card.body}</p>
+                    <p>{copy(card.body)}</p>
                   </div>
                 </article>
               ))}
@@ -126,14 +130,14 @@ export default function AuBusinessServicePage({ slug }: { slug: string }) {
         </section>
       ))}
       <section id="enquire" className="au-business-enquire">
-        <p className="au-business-eyebrow">{page.cta.eyebrow}</p>
-        <h2>{page.cta.title}</h2>
-        <p>{page.cta.body}</p>
+        <p className="au-business-eyebrow">{copy(page.cta.eyebrow)}</p>
+        <h2>{copy(page.cta.title)}</h2>
+        <p>{copy(page.cta.body)}</p>
         <a className="au-business-button" href={contact}>
-          {page.cta.button}
+          {copy(page.cta.button)}
         </a>
         <p className="au-business-contact-note">
-          Enquiries via @verygood_syd · Melrose Park, Sydney
+          {t('Enquiries via @verygood_syd · Melrose Park, Sydney', '문의 @verygood_syd · Melrose Park, Sydney')}
         </p>
       </section>
       <nav className="au-business-related" aria-label="Business services">
@@ -143,11 +147,11 @@ export default function AuBusinessServicePage({ slug }: { slug: string }) {
             href={`/business/${p.slug}`}
             aria-current={p.slug === slug ? 'page' : undefined}
           >
-            {p.title}
+            {copy(p.title)}
           </a>
         ))}
-        <a href="/classes">Classes</a>
-        <a href="/portfolio">Our portfolio</a>
+        <a href="/classes">{t('Classes', '클래스')}</a>
+        <a href="/portfolio">{t('Our portfolio', '포트폴리오')}</a>
       </nav>
     </main>
   )
