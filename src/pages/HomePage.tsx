@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { HomeCustomerStories } from '../components/CustomerStories'
 import { HomePage as LegacyHomePage } from './LegacyHomePage'
 import { AuHeroVideo } from '../components/AuHeroVideo'
 import heroCake2Img from '../assets/hero-cake-2.webp'
@@ -479,6 +480,7 @@ function AuHomePage({
         {/* =================================================================
             05. Full-Bleed Feature Photo 1
             ================================================================= */}
+        <HomeCustomerStories />
         <section className="rd-fullbleed-photo" aria-label="Craft feature photograph">
           <img src="/redesign/3906.jpg" alt="Artisan cake preparation" loading="lazy" />
         </section>
