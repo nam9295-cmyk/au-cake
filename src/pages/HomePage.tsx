@@ -231,7 +231,7 @@ function AuHomePage({
             <button type="button" onClick={() => navigate('cakes')}>SHOP</button>
             <a href="/chocolates">CHOCOLATES</a>
             <button type="button" onClick={() => navigate('custom-cake')}>CUSTOM CAKES</button>
-            <button type="button" onClick={() => navigate('classes')}>EVENTS & BUSINESS</button>
+            <button type="button" onClick={() => navigate('business')}>EVENTS & BUSINESS</button>
             <button type="button" onClick={() => navigate('reviews')}>ABOUT</button>
           </nav>
 
@@ -311,7 +311,7 @@ function AuHomePage({
                   type="button"
                   onClick={() => {
                     setMobileMenuOpen(false)
-                    navigate('classes')
+                    navigate('business')
                   }}
                 >
                   EVENTS & BUSINESS
@@ -563,30 +563,30 @@ function AuHomePage({
               <span className="rd-bespoke-arrow">→</span>
             </a>
 
-            <a className="rd-bespoke-item" href="/classes">
+            <a className="rd-bespoke-item" href="/business/events">
               <div className="rd-bespoke-item-content">
                 <h3 className="rd-bespoke-title">EVENTS & BUSINESS</h3>
                 <p className="rd-bespoke-desc">Corporate catering, private events & parties</p>
-                <span className="rd-bespoke-action">EXPLORE CLASSES & EVENTS →</span>
+                <span className="rd-bespoke-action">EXPLORE EVENTS →</span>
               </div>
               <span className="rd-bespoke-arrow">→</span>
             </a>
 
-            <article className="rd-bespoke-item" data-au-coming-soon="service">
+            <a className="rd-bespoke-item" href="/business/cafe-supply" data-au-coming-soon="service">
               <div className="rd-bespoke-item-content">
                 <h3 className="rd-bespoke-title">CAFÉ SUPPLY</h3>
                 <p className="rd-bespoke-desc">Wholesale cakes & artisan dessert supply</p>
                 <span className="rd-bespoke-action">Coming Soon</span>
               </div>
-            </article>
+            </a>
 
-            <article className="rd-bespoke-item" data-au-coming-soon="service">
+            <a className="rd-bespoke-item" href="/business/consulting" data-au-coming-soon="service">
               <div className="rd-bespoke-item-content">
                 <h3 className="rd-bespoke-title">MENU & EXPERIENCE DIRECTION</h3>
                 <p className="rd-bespoke-desc">Menu curation & culinary experience direction</p>
                 <span className="rd-bespoke-action">Coming Soon</span>
               </div>
-            </article>
+            </a>
           </div>
         </section>
 

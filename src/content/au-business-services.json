@@ -1,0 +1,490 @@
+{
+  "assets": {
+    "events-hero": {
+      "source": "cakes-party-hero.jpg",
+      "alt": "Cakes, cupcakes and chocolates arranged for a gathering",
+      "wide": true
+    },
+    "corporate": {
+      "source": "vip-table.png",
+      "alt": "A table set with desserts for an event",
+      "wide": false
+    },
+    "office": {
+      "source": "office-teatime.png",
+      "alt": "Cake and tea shared around an office table",
+      "wide": false
+    },
+    "wedding": {
+      "source": "wedding-vainiila.png",
+      "alt": "A celebration cake at a wedding table",
+      "wide": false
+    },
+    "birthday": {
+      "source": "birthday-pave.png",
+      "alt": "Pavé cake for a birthday gathering",
+      "wide": false
+    },
+    "school": {
+      "source": "school-cupcake.png",
+      "alt": "Cupcakes arranged for a school celebration",
+      "wide": false
+    },
+    "gifting": {
+      "source": "box-cheese-cupcaks.png",
+      "alt": "Cheesecake and cupcakes presented together",
+      "wide": false
+    },
+    "sharing": {
+      "source": "pave-8pc.png",
+      "alt": "Pavé chocolate cake cut into sharing portions",
+      "wide": false
+    },
+    "custom": {
+      "source": "au-site-redesign-assets/custom-cake.webp",
+      "alt": "Colourful custom celebration cakes",
+      "wide": false
+    },
+    "cupcakes": {
+      "source": "party-01.webp",
+      "alt": "Cupcakes arranged on a table",
+      "wide": false
+    },
+    "smore": {
+      "source": "au-site-redesign-assets/smore.png",
+      "alt": "Chocolate-coated S’more sticks",
+      "wide": false
+    },
+    "packed-cupcakes": {
+      "source": "cakes-package.png",
+      "alt": "Cupcakes in individual clear packs with Verygood cards",
+      "wide": true
+    },
+    "almond": {
+      "source": "hand-on-almonds.png",
+      "alt": "Almond chocolates held in a hand",
+      "wide": false
+    },
+    "occasion": {
+      "source": "cheese-party-01.jpg",
+      "alt": "A slice of cheesecake enjoyed at a gathering",
+      "wide": true
+    },
+    "smore-gifts": {
+      "source": "smore.png",
+      "alt": "S’more sticks arranged in individual portions",
+      "wide": false
+    },
+    "whole-cheesecake": {
+      "source": "hero.png",
+      "alt": "Whole cheesecake with a caramelised top",
+      "wide": false
+    },
+    "pave-slice": {
+      "source": "au-site-redesign-assets/pave-cross-section.png",
+      "alt": "A cut slice showing the Pavé cake layers",
+      "wide": false
+    },
+    "almond-tub": {
+      "source": "black-canister-background.jpg",
+      "alt": "Almond chocolate pouches displayed in a black canister",
+      "wide": false
+    },
+    "loaf-box": {
+      "source": "in-the-box.png",
+      "alt": "Chocolate gâteau loaf inside a kraft box",
+      "wide": true
+    },
+    "worktable": {
+      "source": "au-site-redesign-assets/consulting-worktable.png",
+      "alt": "Hands arranging cake and cupcakes at a work table",
+      "wide": true
+    },
+    "cake-box": {
+      "source": "package.png",
+      "alt": "Strawberry cream cake visible inside a clear carry box",
+      "wide": false
+    }
+  },
+  "pages": [
+    {
+      "slug": "events",
+      "title": "Corporate & Events",
+      "eyebrow": "VERYGOOD ATELIER · BUSINESS & CELEBRATIONS",
+      "headline": "DESSERTS FOR PEOPLE TO SHARE.",
+      "intro": "Cakes, cupcakes and chocolate gifts for office milestones, weddings, birthdays and gatherings. Explore the collection and tell us what you have in mind.",
+      "hero": "events-hero",
+      "status": "Event enquiries",
+      "primary": "PLAN YOUR EVENT",
+      "secondary": "VIEW EVENT RANGE",
+      "target": "event-range",
+      "tags": [
+        "Cakes & chocolates",
+        "Sharing & gifting",
+        "Packaging options",
+        "Pre-arranged pickup"
+      ],
+      "sections": [
+        {
+          "id": "occasions",
+          "kicker": "OCCASIONS & CELEBRATIONS",
+          "title": "WHAT ARE YOU PLANNING?",
+          "body": "A starting point for your celebration. Tell us about the occasion so we can discuss availability and suitable options.",
+          "layout": "cards",
+          "cards": [
+            {
+              "title": "Corporate Events & Galas",
+              "body": "Dessert ideas for a brand gathering, client table or company celebration.",
+              "image": "corporate"
+            },
+            {
+              "title": "Office Milestones & Teatimes",
+              "body": "Cakes and individual treats to share with the team.",
+              "image": "office"
+            },
+            {
+              "title": "Weddings & Receptions",
+              "body": "Explore cakes and guest-gifting ideas for your celebration.",
+              "image": "wedding"
+            },
+            {
+              "title": "Milestone Birthdays",
+              "body": "Bring a favourite cake to the centre of the birthday table.",
+              "image": "birthday"
+            },
+            {
+              "title": "School & Community Events",
+              "body": "Cupcakes and sharing treats for a group gathering. Please discuss any dietary requirements before ordering.",
+              "image": "school"
+            },
+            {
+              "title": "Corporate Gifting",
+              "body": "Cake and chocolate ideas for a thoughtful thank-you.",
+              "image": "gifting"
+            }
+          ]
+        },
+        {
+          "id": "event-range",
+          "kicker": "ATELIER EVENT MENU",
+          "title": "WHAT WE CAN PREPARE",
+          "body": "Explore existing products and discuss the quantity and format for your occasion.",
+          "layout": "range",
+          "cards": [
+            {
+              "title": "Whole Sharing Cakes",
+              "body": "Pavé Chocolate Cake, Brownie Cheesecake, Lemon Cake and Strawberry Vanilla Cream Cake.",
+              "image": "sharing",
+              "href": "/cakes"
+            },
+            {
+              "title": "Custom Cakes",
+              "body": "Explore our existing custom cake request process for your celebration.",
+              "image": "custom",
+              "href": "/cakes/custom-cake"
+            },
+            {
+              "title": "Gâteau Cupcakes",
+              "body": "Current cupcake finishes and packaging options are available on the product page.",
+              "image": "cupcakes",
+              "href": "/cakes/chocolate-cupcakes"
+            },
+            {
+              "title": "S’more Sticks",
+              "body": "Individual chocolate-coated treats for a sharing table.",
+              "image": "smore",
+              "href": "/cakes/smore-stick"
+            },
+            {
+              "title": "Individually Packed",
+              "body": "Clear cupcake packs with Verygood presentation cards, as pictured.",
+              "image": "packed-cupcakes"
+            },
+            {
+              "title": "Chocolate Creations",
+              "body": "Almond Chocoball, Pavé Chocolate and Eiffel Tower Chocolate.",
+              "image": "almond",
+              "href": "/chocolates"
+            }
+          ]
+        },
+        {
+          "id": "share",
+          "layout": "editorial",
+          "image": "occasion",
+          "kicker": "A MOMENT TO SHARE",
+          "title": "DESSERTS DESIGNED AROUND CONVERSATION.",
+          "body": "A slice, a plate and a moment together. Choose from our current cakes and chocolates to find something for your table."
+        },
+        {
+          "id": "packaging",
+          "kicker": "FAVORS & GIFTS",
+          "title": "INDIVIDUAL PACKAGING & GIFTING",
+          "body": "The photographs show current product presentation. Confirm packaging availability for your enquiry.",
+          "layout": "cards",
+          "cards": [
+            {
+              "title": "Individually Packed Cupcakes",
+              "body": "Clear packs keep each cupcake visible alongside a Verygood card.",
+              "image": "packed-cupcakes"
+            },
+            {
+              "title": "Cakes & Cupcakes Together",
+              "body": "A selection of cake and cupcakes arranged for sharing.",
+              "image": "gifting"
+            },
+            {
+              "title": "S’more Stick Portions",
+              "body": "Chocolate-coated sticks presented as individual treats.",
+              "image": "smore-gifts"
+            }
+          ]
+        },
+        {
+          "id": "how-it-works",
+          "kicker": "EVENT PLANNING",
+          "title": "HOW IT WORKS",
+          "body": "Start with a conversation about your occasion.",
+          "layout": "steps",
+          "cards": [
+            {
+              "title": "Tell Us The Occasion",
+              "body": "Share your date, approximate guest count, product preferences and any dietary requirements."
+            },
+            {
+              "title": "Discuss The Options",
+              "body": "Ask about available products, quantities and packaging for your plans."
+            },
+            {
+              "title": "Confirm Before Ordering",
+              "body": "Availability, collection arrangements and any event-specific requests need confirmation before an order is final."
+            }
+          ]
+        }
+      ],
+      "cta": {
+        "eyebrow": "CORPORATE & PRIVATE GATHERINGS",
+        "title": "PLANNING AN EVENT?",
+        "body": "Send us your event date, estimated guest count and the products you’re interested in. An enquiry is not a confirmed booking.",
+        "button": "MESSAGE ON INSTAGRAM"
+      }
+    },
+    {
+      "slug": "cafe-supply",
+      "title": "Café Supply / Wholesale",
+      "eyebrow": "VERYGOOD ATELIER · CAFÉ SUPPLY & WHOLESALE",
+      "headline": "WHOLESALE DESSERTS FOR YOUR CAFÉ.",
+      "intro": "Explore Verygood cakes and chocolate creations as inspiration for your café display. Our wholesale service is coming soon; enquiries are welcome.",
+      "hero": "packed-cupcakes",
+      "status": "Coming Soon · Enquiries",
+      "primary": "ENQUIRE ABOUT CAFÉ SUPPLY",
+      "secondary": "VIEW THE COLLECTION",
+      "target": "supply-range",
+      "tags": [
+        "Cakes & gâteaux",
+        "Portion presentation",
+        "Packaged chocolates",
+        "Enquiries welcome"
+      ],
+      "sections": [
+        {
+          "id": "display",
+          "kicker": "VISUAL MERCHANDISING",
+          "title": "MADE FOR THE DISPLAY",
+          "body": "Whole cakes, cut slices and packaged chocolates offer different ways to present your dessert selection.",
+          "layout": "cards",
+          "cards": [
+            {
+              "title": "Centerpiece Whole Cakes",
+              "body": "The caramelised top and round shape give this cheesecake a clear place in a cake display.",
+              "image": "whole-cheesecake"
+            },
+            {
+              "title": "Layers Worth Showing",
+              "body": "A cut Pavé slice reveals the chocolate gâteau and smooth ganache.",
+              "image": "pave-slice"
+            },
+            {
+              "title": "Countertop Presentation",
+              "body": "Almond chocolate pouches and their black canister create a compact presentation.",
+              "image": "almond-tub"
+            }
+          ]
+        },
+        {
+          "id": "supply-range",
+          "kicker": "PRODUCT IDEAS FOR PARTNERS",
+          "title": "EXPLORE THE COLLECTION",
+          "body": "These are current retail products to discuss when enquiring. Wholesale availability and terms are not yet confirmed.",
+          "layout": "list",
+          "cards": [
+            {
+              "title": "Brownie Cheesecake",
+              "body": "Caramelised cheesecake with a brownie base. See the product page for current options.",
+              "href": "/cakes/brownie-cheesecake"
+            },
+            {
+              "title": "Signature Gâteau au Chocolat",
+              "body": "A chocolate gâteau loaf for a sharing table.",
+              "href": "/cakes/signature-gateau-au-chocolat"
+            },
+            {
+              "title": "Lemon Cake",
+              "body": "Explore the current lemon cake collection and available formats.",
+              "href": "/cakes/lemon-cake"
+            },
+            {
+              "title": "Chocolate & S’more",
+              "body": "Packaged chocolates and S’more sticks from the current collection.",
+              "href": "/chocolates"
+            }
+          ]
+        },
+        {
+          "id": "guidance",
+          "kicker": "DISPLAY & SERVING",
+          "title": "CONSIDER THE WHOLE EXPERIENCE",
+          "body": "Topics to discuss for your venue and selected products.",
+          "layout": "steps",
+          "cards": [
+            {
+              "title": "Product Care",
+              "body": "Confirm storage and serving guidance for each product before planning your display."
+            },
+            {
+              "title": "Portion Presentation",
+              "body": "Discuss which product formats suit your service and how you plan to serve them."
+            },
+            {
+              "title": "Counter Placement",
+              "body": "Consider how whole cakes, slices and packaged chocolates sit alongside your menu."
+            }
+          ]
+        },
+        {
+          "id": "packaging",
+          "layout": "editorial",
+          "kicker": "PACKAGING & COLLECTION",
+          "title": "THOUGHTFUL PRODUCT PRESENTATION.",
+          "image": "loaf-box",
+          "body": "A chocolate gâteau loaf sits inside its kraft box. Wholesale packaging and collection arrangements will be confirmed separately."
+        },
+        {
+          "id": "philosophy",
+          "layout": "quote",
+          "title": "A DESSERT COLLECTION WITH YOUR CAFÉ IN MIND.",
+          "body": "Tell us about your venue, the products you’re interested in and how you would like to serve them."
+        }
+      ],
+      "cta": {
+        "eyebrow": "COMING SOON · EXPRESSIONS OF INTEREST",
+        "title": "WHOLESALE ENQUIRIES",
+        "body": "Wholesale ordering is not yet available. Contact us to discuss your interest; prices, minimum quantities and supply arrangements require confirmation.",
+        "button": "DISCUSS CAFÉ SUPPLY"
+      }
+    },
+    {
+      "slug": "consulting",
+      "title": "Menu & Experience Consulting",
+      "eyebrow": "VERYGOOD ATELIER · MENU & EXPERIENCE",
+      "headline": "YOUR MENU IS PART OF THE EXPERIENCE.",
+      "intro": "Explore how menu, display, packaging and customer experience can work together. Contact Verygood to discuss your ideas and the scope of a possible collaboration.",
+      "hero": "worktable",
+      "status": "Introduction · Enquiries",
+      "primary": "MAKE AN ENQUIRY",
+      "secondary": "EXPLORE THE FOUR AREAS",
+      "target": "focus-areas",
+      "tags": [
+        "Menu",
+        "Display",
+        "Packaging",
+        "Customer experience"
+      ],
+      "sections": [
+        {
+          "id": "focus-areas",
+          "kicker": "AREAS FOR DISCUSSION",
+          "title": "FOUR CORE FOCUS AREAS",
+          "body": "A framework for a conversation about your hospitality business.",
+          "layout": "focus",
+          "cards": [
+            {
+              "title": "MENU",
+              "body": "Consider how your product selection, descriptions and presentation fit together."
+            },
+            {
+              "title": "DISPLAY",
+              "body": "Look at how products are arranged and how customers explore the counter."
+            },
+            {
+              "title": "PACKAGING",
+              "body": "Consider the visual presentation of products from display to takeaway."
+            },
+            {
+              "title": "CUSTOMER EXPERIENCE",
+              "body": "Think through the steps of discovering, choosing, ordering and enjoying a product."
+            }
+          ]
+        },
+        {
+          "id": "philosophy",
+          "layout": "quote",
+          "kicker": "A CONSIDERED APPROACH",
+          "title": "A CLEAR MENU. A COHERENT EXPERIENCE.",
+          "body": "Start with the details customers see and use, and discuss where a more consistent approach could help."
+        },
+        {
+          "id": "packaging",
+          "kicker": "BRAND TOUCHPOINTS",
+          "title": "PACKAGING & UNBOXING DIRECTION",
+          "body": "Examples from Verygood’s product presentation.",
+          "layout": "cards",
+          "cards": [
+            {
+              "title": "Whole-Cake Presentation",
+              "body": "A clear carry box keeps the finished cake visible at handoff.",
+              "image": "cake-box"
+            },
+            {
+              "title": "Almond Chocolate Canister",
+              "body": "Black tub and labelled pouches create a recognisable shelf silhouette.",
+              "image": "almond-tub"
+            },
+            {
+              "title": "Individually Packed Cupcakes",
+              "body": "Portioned cupcakes and Verygood cards make the takeaway format clear.",
+              "image": "packed-cupcakes"
+            }
+          ]
+        },
+        {
+          "id": "how-we-work",
+          "kicker": "START A CONVERSATION",
+          "title": "HOW WE WORK",
+          "body": "Any engagement, deliverables and timing will be discussed and confirmed separately.",
+          "layout": "steps",
+          "cards": [
+            {
+              "title": "Share Your Context",
+              "body": "Tell us about your business, your current menu and what you would like to explore."
+            },
+            {
+              "title": "Discuss The Priorities",
+              "body": "Identify the areas you want to focus on: menu, display, packaging or customer experience."
+            },
+            {
+              "title": "Agree The Scope",
+              "body": "Confirm whether there is a suitable collaboration and agree the details before proceeding."
+            }
+          ]
+        }
+      ],
+      "cta": {
+        "eyebrow": "MENU & EXPERIENCE · ENQUIRIES",
+        "title": "LET’S LOOK AT YOUR BRAND TOGETHER.",
+        "body": "Share what you are planning and what you would like to discuss. This page is an introduction; it does not book or confirm a consulting engagement.",
+        "button": "MESSAGE VERYGOOD"
+      }
+    }
+  ]
+}
