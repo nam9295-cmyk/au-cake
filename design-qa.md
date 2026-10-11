@@ -74,3 +74,28 @@ Restored the omitted AU language control without changing the approved navigatio
 Screenshots inspected: `language-home-{en,ko}-{1440,390,360}.png`, `language-cakes-{en,ko}-{1440,390,360}.png`, and `language-{events,cafe-supply,consulting,korea}-ko-{1440,390,360}.png` in `/tmp/au-services-qa/`. Eight-width header checks (including the 767/768/769px breakpoint edges) show no clipping, overlap or page overflow in either language. Korean service layouts retain the same photos and enquiry constraints. Review originals/translations remain unchanged; Korean originals become the primary displayed text in Korean mode.
 
 Custom Cake content/controls remain baseline-identical, excluding the approved shared header. KR content and measured typography/layout match the main baseline in both languages on four routes at 1440/390. The first KR comparison discrepancy was differing consent-banner browser storage, not a product change; normalized consent state removes it. Existing English service/stories interaction QA also passes. Full test, lint, AU/KR builds, new rendered-language/data tests and static direct-access tests pass. No publication performed.
+
+## Mobile readability correction (2026-10-11)
+
+Review baseline: `8e245c442bf6820800847168e21d3541e378735a`. The reported 7–9px metadata was still present and was corrected, not merely re-tested. Changes are confined to the existing Customer Stories mobile media query (`max-width: 600px`); desktop styles, original reviews/translations/photos, Custom Cake and backend sources are unchanged.
+
+| Mobile selector / content | Before | After |
+| --- | --- | --- |
+| Compact product and platform badges | 7px | 11px |
+| Compact rating number | 8px | 12px |
+| Compact rating star | 9×9px | 12×12px |
+| Compact translation / original-language note | 9px | 12px |
+| Compact review excerpt | 13px / 1.45 line-height | 14px / 1.5 line-height |
+| Compact nickname/date | 9px, horizontal | 11px, stacked |
+| Compact full-review action / swipe hint | 9px | 12px |
+| Home provenance footer | 10px | 13px |
+| Archive main selection disclosure / product-filter explanation | 11px | 14px |
+| Archive statistics explanation | 10px | 12px |
+
+Badges wrap instead of truncating; rating rows can wrap, compact body gap is 10px (previously 8px), and excerpts retain four visible lines with the full unmodified text in the dialog. Card width, 140px photograph height and mandatory scroll snap are unchanged. At both 360/390px, the initial window is cards 1+2 and a horizontal wheel/swipe advances to cards 2+3. Page overflow and clipped badge/metadata assertions pass in English and Korean.
+
+TDD: `tests/customer-stories-readability.browser.mjs` first failed against the baseline with 248 font-minimum assertions and no other assertion failures. After the CSS correction it passes for both widths/languages. Run through `playwright-cli --session <local-session> run-code --filename tests/customer-stories-readability.browser.mjs` on the AU preview; start from `/?qaPhase=before` to preserve baseline screenshots. Screenshots are stored outside the repository in `/tmp/au-services-qa/readability-{before,after}-{home,swiped,archive}-{en,ko}-{360,390}.png`; focused after archive filters/cards are also captured. English/Korean cards, the third-card swipe window and archive disclosures were visually inspected.
+
+Fresh full `npm test`, lint, AU/KR builds, both markets' extensionless static-route tests, story-data/route/language tests and diff check pass. The full AU-oriented test command conditionally skips its KR Chocolate-dist case; the separate KR build and KR services/stories static-route test were run. Existing build chunk-size/dynamic-import warnings remain. The service/stories browser suite passes at 1440/834/390/360 with zero page errors, and Custom Cake body DOM/geometry remains identical to the exported production-main baseline at 1440/390, excluding the previously approved shared header. No live order or backend mutation was performed.
+
+Deployment remains gated on final neutral service-copy and Instagram enquiry approval; see `docs/services-stories/deployment-readiness.md`. No push, merge, Pages configuration change or deployment was performed.
