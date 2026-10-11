@@ -51,7 +51,8 @@
         "evidence": "초콜릿"
       }
     ],
-    "title": "Pavé Chocolate Cake"
+    "title": "Pavé Chocolate Cake",
+    "mobileExcerpt": "The pavé chocolate cake is so delicious, haha."
   },
   {
     "id": "R0037",
@@ -92,7 +93,8 @@
         "evidence": "초콜릿"
       }
     ],
-    "title": "Signature Gâteau au Chocolat"
+    "title": "Signature Gâteau au Chocolat",
+    "mobileExcerpt": "it's so soft, not too sweet, and delicious."
   },
   {
     "id": "CE0035",
@@ -123,6 +125,7 @@
         "evidence": "치케"
       }
     ],
-    "title": "Brownie Basque Cheesecake"
+    "title": "Brownie Basque Cheesecake",
+    "mobileExcerpt": "the brownie Basque cheesecake is dense and not too sweet."
   }
 ]
