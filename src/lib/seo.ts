@@ -1,5 +1,4 @@
 import portfolio from '../content/au-company-portfolio.json' with { type: 'json' }
-import serviceRoutes from '../content/au-service-routes.json' with { type: 'json' }
 import { getCakeDetailBySlug } from './cake-detail.js'
 import { getAuCakeCatalog } from './cake-catalog.js'
 import { getAuChocolatePreview } from './au-chocolate-preview.js'
@@ -289,8 +288,6 @@ function removeMeta(selector: string) {
 
 
 export function getSeoConfig(pathname: string): SeoConfig {
-  const service = marketConfig.market === 'AU' && serviceRoutes.find(route => route.path === pathname.replace(/\/$/, ''))
-  if (service) return { title: service.title, description: service.description, canonical: `${SITE_URL}${service.path}`, structuredData: [{ '@type': 'WebPage', name: service.title, url: `${SITE_URL}${service.path}`, inLanguage: 'en-AU' }] }
   if (marketConfig.market === 'AU' && (pathname === '/portfolio' || pathname === '/portfolio/')) {
     const image = portfolio.boards[0].images[0].web.variants.at(-1)!
     return {

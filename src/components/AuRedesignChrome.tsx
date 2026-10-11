@@ -1,16 +1,12 @@
 import { useRef, type MouseEvent, type ReactNode } from 'react'
-import { AuLanguageToggle } from './AuLanguage'
-import { useAuLanguage } from '../lib/au-language'
 
 export function AuRedesignHeader({ cartItemCount }: { cartItemCount: number }) {
-  const { t } = useAuLanguage()
   const menu = useRef<HTMLDetailsElement>(null)
   const links = <>
     <a href="/cakes">SHOP</a>
     <a href="/chocolates">CHOCOLATES</a>
     <a href="/cakes/custom-cake">CUSTOM CAKES</a>
-    <a href="/business/events">EVENTS & BUSINESS</a>
-    <a href="/classes">KIDS CLASSES</a>
+    <a href="/classes">EVENTS & BUSINESS</a>
     <a href="/reviews">ABOUT</a>
   </>
   return (
@@ -18,14 +14,14 @@ export function AuRedesignHeader({ cartItemCount }: { cartItemCount: number }) {
       <a className="au-redesign-wordmark" href="/">verygood</a>
       <nav className="au-redesign-desktop-nav" aria-label="Main navigation">{links}</nav>
       <div className="au-redesign-header-actions">
-        <AuLanguageToggle />
+        <span className="au-redesign-currency">AUD</span>
         <details className="au-redesign-mobile-menu" ref={menu} onKeyDown={(event) => {
           if (event.key === 'Escape' && menu.current) {
             menu.current.open = false
             menu.current.querySelector('summary')?.focus()
           }
         }}>
-          <summary>{t('MENU', '메뉴')}</summary>
+          <summary>MENU</summary>
           <nav aria-label="Mobile navigation">{links}<a href="/lookup">ORDER LOOKUP</a></nav>
         </details>
         <a href="/cart" aria-label={`Cart with ${cartItemCount} items`}>CART [{cartItemCount}]</a>
@@ -35,10 +31,9 @@ export function AuRedesignHeader({ cartItemCount }: { cartItemCount: number }) {
 }
 
 export function AuRedesignFooter() {
-  const { t } = useAuLanguage()
   return <footer className="au-redesign-footer">
     <a className="au-redesign-wordmark" href="/">VERYGOOD / AU-CAKE</a>
-    <nav aria-label="Footer navigation"><a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a><a href="/reviews">{t('REVIEWS', '후기')}</a><a href="/classes">{t('CLASSES', '클래스')}</a></nav>
+    <nav aria-label="Footer navigation"><a href="/lookup">ORDER LOOKUP</a><a href="/reviews">REVIEWS</a><a href="/classes">CLASSES</a></nav>
     <small>© 2026 VERYGOOD. Sydney, Australia.</small>
   </footer>
 }

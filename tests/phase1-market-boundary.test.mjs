@@ -187,14 +187,13 @@ test('AU custom introduction explains original design without adding an unsuppor
   assert.doesNotMatch(custom, /type="file"/)
 })
 
-test('Coming Soon Home services link to informational pages, not fake orders', async () => {
+test('unavailable Home services cannot navigate to a fake inquiry or order', async () => {
   const { home } = await render('AU')
-  const services = [...home.matchAll(/<a[^>]*href="(\/business\/[^\"]+)"[^>]*data-au-coming-soon="service"[^>]*>([\s\S]*?)<\/a>/g)]
+  const services = [...home.matchAll(/<article[^>]*data-au-coming-soon="service"[^>]*>([\s\S]*?)<\/article>/g)]
   assert.equal(services.length, 2)
-  assert.deepEqual(services.map(match => match[1]), ['/business/cafe-supply', '/business/consulting'])
-  for (const [, , service] of services) {
+  for (const [, service] of services) {
     assert.match(service, /Coming Soon/)
-    assert.doesNotMatch(service, /<form|Add to order|Checkout/i)
+    assert.doesNotMatch(service, /<a|<button|INQUIRE/)
   }
 })
 

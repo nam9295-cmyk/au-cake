@@ -981,20 +981,20 @@
   }
 }
 
-/* Keep all six Home navigation links separate from the logo and cart on tablets. */
+/* Keep the five Home navigation links separate from the logo and cart on tablets. */
 @media (min-width: 769px) and (max-width: 1100px) {
   :where(.au-home-shell) .rd-header {
     padding: 0 24px;
-    gap: 12px;
+    gap: 20px;
   }
 
   :where(.au-home-shell) .rd-header-nav {
-    gap: 12px;
+    gap: 16px;
   }
 
   :where(.au-home-shell) .rd-header-nav a,
   :where(.au-home-shell) .rd-header-nav button {
-    font-size: 11px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
