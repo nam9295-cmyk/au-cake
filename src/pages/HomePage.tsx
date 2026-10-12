@@ -483,11 +483,11 @@ function AuHomePage({
                   srcSet="/home/consulting-gift-box-480.webp 480w, /home/consulting-gift-box-960.webp 960w"
                   sizes="(max-width: 767px) 100vw, 33vw"
                   alt={t(
-                    'Chocolate gâteau loaf and ribbon-tied gift box',
-                    '초콜릿 갸또와 리본으로 묶은 선물 상자',
+                    'Strawberry cream cake with a candle beside white flowers',
+                    '흰 꽃 옆에 초를 꽂은 딸기 크림 케이크',
                   )}
-                  width={1536}
-                  height={1024}
+                  width={2048}
+                  height={1152}
                   loading="lazy"
                   decoding="async"
                 />

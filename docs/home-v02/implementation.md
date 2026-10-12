@@ -45,13 +45,16 @@ Home headings use Work Sans; body/captions use SUIT Variable.
 | Custom Cake entry | `/products/custom-cake.webp` |
 | Events | `au-service-assets.json` → `events-hero` |
 | Café | `au-service-assets.json` → `sharing` (Pavé eight-piece photograph) |
-| Consulting | Pencil asset `au-site-redesign-assets/packaging-gift-box.jpg` → `/home/consulting-gift-box-{480,960}.webp` |
+| Consulting | John-selected Drive asset `image/wedding-vainiila.png` → existing `/home/consulting-gift-box-{480,960}.webp` URLs |
 | Our Story | `au-service-assets.json` → `worktable` |
 
-Only the consulting photograph needed new production copies. Original 1536×1024 JPEG:
-454,924 bytes; optimized 480×320 WebP: 18,396 bytes; 960×640 WebP: 65,240 bytes,
-quality 83. Responsive srcset/sizes; lazy decoding. Original is unchanged.
-Original SHA-256: `0bdd1bb3e034e7b9b19a04367f7e194182f0f5691d159564c28e0582c3597185`.
+John subsequently replaced the Consulting card photograph with `wedding-vainiila.png`.
+Original 2048×1152 PNG: 3,908,907 bytes; optimized 480×270 WebP: 20,728 bytes;
+960×540 WebP: 60,130 bytes, quality 83. Existing asset URLs are retained; responsive
+srcset/sizes and lazy decoding remain. Image content is unchanged, including its visible
+AI mark. The original Drive file is unchanged. Alt text and intrinsic dimensions match
+the new strawberry cream cake photograph.
+Original SHA-256: `04d8078a5a83e15278133e016a765be90df8c7f0241d0880ff0c78d7fbafb234`.
 
 ## Protected behaviour
 
