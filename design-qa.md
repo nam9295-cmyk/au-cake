@@ -1,4 +1,20 @@
-# HOME v0.2 design QA
+# Latest: Portfolio v0.3 design QA
+
+final result: passed
+
+Source: read-only `Downloads/au-pf-001-v0.3-delivery` screen mockup and manifest.
+Implementation record: `docs/portfolio-v03/implementation.md`.
+Evidence: `/tmp/au-portfolio-v03/compare-1440.png` and `compare-390.png`;
+full browser screenshots `portfolio-{1440,834,390,360}.png`.
+
+Desktop/mobile source comparisons were visually inspected: matching photo order,
+six-section hierarchy, green/pink accents, editorial grid and responsive stacking.
+Existing SUIT body typography and 44px controls are intentional site/accessibility
+adaptations. No important visual issues remain. Browser assertions verify no
+overflow, broken images, obstructed actions or page errors at all four widths.
+Local tests/builds pass; John reviews locally before any separately approved deployment.
+
+## Previous HOME v0.2 design QA
 
 final result: passed (local implementation; production deployment not performed)
 

@@ -1,0 +1,68 @@
+{
+  "source": "AU-PF-001 / v0.3",
+  "hero": {
+    "kicker": "CHOCOLATE · CAKES · SWEET MOMENTS",
+    "title": "FIND YOUR SWEET MOMENT.",
+    "body": "Chocolate, cakes and treats for everyday moments, thoughtful gifts and celebrations.",
+    "caption": "Gâteau pound · Chocolate & cakes",
+    "choices": [
+      { "href": "#sharing", "label": "For a party" },
+      { "href": "#individual-packs", "label": "Thank-you gifts" },
+      { "href": "#custom-cakes", "label": "Custom cakes" },
+      { "href": "#business", "label": "For your business" }
+    ]
+  },
+  "features": [
+    {
+      "slug": "sharing",
+      "kicker": "PARTIES & SHARING",
+      "title": "SOMETHING SWEET TO SHARE.",
+      "body": "A cake for the table, little treats for your guests. Find a mix for your next get-together.",
+      "note": "Send your date, guest numbers and preferred mix.",
+      "action": "Browse party treats",
+      "target": "collection",
+      "instagramFallback": true
+    },
+    {
+      "slug": "individual-packs",
+      "kicker": "GUEST FAVOURS",
+      "title": "A LITTLE THANK-YOU FOR EVERY GUEST.",
+      "body": "Individually packed treats for parties, event favours and team gifts.",
+      "note": "Tell us the product, quantity and date. Packaging details are agreed when ordering.",
+      "action": "Ask about guest favours",
+      "target": "instagram",
+      "instagramFallback": false
+    },
+    {
+      "slug": "custom-cakes",
+      "kicker": "CUSTOM CAKES",
+      "title": "MADE FOR YOUR SPECIAL MOMENT.",
+      "body": "Choose the colours, theme and details that make the occasion yours.",
+      "note": "Tell us your date, servings, design ideas and budget.",
+      "action": "Explore custom cakes",
+      "target": "custom",
+      "instagramFallback": true
+    }
+  ],
+  "business": {
+    "kicker": "CAFÉ SUPPLY · CONSULTING",
+    "title": "FOR CAFÉS & BUSINESSES.",
+    "services": [
+      { "slug": "wholesale", "title": "Desserts for your café", "body": "Find chocolate and desserts that fit your menu and your customers.", "action": "Enquire about café supply" },
+      { "slug": "consulting", "title": "Menu & experience consulting", "body": "Support with dessert menus, display, packaging and the customer experience.", "action": "Talk about your menu" }
+    ]
+  },
+  "guide": {
+    "kicker": "ORDERS · CUSTOM CAKES · BUSINESS",
+    "title": "FOUND SOMETHING YOU LIKE?",
+    "body": "Choose your treats. Share your date and quantity. We confirm availability and details together.",
+    "steps": [
+      { "title": "CHOOSE", "body": "Your treat or service" },
+      { "title": "TELL US", "body": "Your date & quantity" },
+      { "title": "CONFIRM", "body": "Availability & details" }
+    ],
+    "location": "Melrose Park, Sydney · Collection by arrangement",
+    "enquiries": "Favours, café supply & consulting: DM @verygood_syd"
+  },
+  "actions": { "cakes": "Shop cakes & treats", "chocolates": "Explore chocolates", "custom": "Explore custom cakes" }
+}

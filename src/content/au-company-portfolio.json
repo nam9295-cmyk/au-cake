@@ -1159,10 +1159,11 @@
     "website": "https://au.verygood-chocolate.com",
     "instagram": "https://www.instagram.com/verygood_syd/",
     "collection": "/cakes",
+    "chocolates": "/chocolates",
     "custom": "/cakes/custom-cake"
   },
   "seo": {
     "title": "Company Portfolio | verygood chocolate",
-    "description": "Tell us what you need, when you need it and how many people it is for."
+    "description": "Chocolate, cakes and treats for everyday moments, thoughtful gifts and celebrations."
   }
 }
