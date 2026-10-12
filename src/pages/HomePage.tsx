@@ -1,690 +1,563 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowUpRight } from 'lucide-react'
 import { HomeCustomerStories } from '../components/CustomerStories'
-import serviceAssets from '../content/au-service-assets.json'
-import { AuLanguageToggle } from '../components/AuLanguage'
-import { HomePage as LegacyHomePage } from './LegacyHomePage'
+import { AuRedesignHeader } from '../components/AuRedesignChrome'
 import { AuHeroVideo } from '../components/AuHeroVideo'
-import heroCake2Img from '../assets/hero-cake-2.webp'
-import glutenFreeStampImg from '../assets/glutenfree.webp'
-import { ProductQuickViewDialog } from '../ProductQuickViewDialog'
-import PublicReviewsSection from '../PublicReviewsSection'
-import { PickupLocationCard, SiteHeader, VanillaFreshCreamCakeSilhouette } from '../components/SiteChrome'
-import { getAuChocolateCollectionCards } from '../lib/au-catalog'
-import { appwriteConfig, functions } from '../lib/appwrite'
-import { type Page } from '../lib/app-routes'
-import { getAuCakeCatalogGroups, getAuHomeHeroCards, type CakeCatalogCard, type CakeCatalogGroupId, type CakeCatalogImageKey } from '../lib/cake-catalog'
-import { cakeCopy, type Language } from '../lib/i18n'
+import { HomePage as LegacyHomePage } from './LegacyHomePage'
+import serviceAssets from '../content/au-service-assets.json'
+import homeCopy from '../content/au-home-v02.json'
+import {
+  getAuHomeBest,
+  getAuHomeCollections,
+  type HomeCollectionId,
+  type HomeProduct,
+} from '../lib/au-home'
 import { marketConfig } from '../lib/market'
-import { getAuPublicContent, getPublicCakePage } from '../lib/public-content'
-
-const publicHomeContent = marketConfig.market === 'AU' ? getAuPublicContent().home : null
-const storyPhoto = serviceAssets['events-hero']
-
-const AU_CATALOG_GROUP_MARKERS: Record<CakeCatalogGroupId, string> = {
-  'signature-gateau': '/category-marker-01.svg',
-  'gateau-sharing': '/category-marker-02.svg',
-  'chocolatiers-cake': '/category-marker-03.svg',
-}
-
-const quickViewImages: Record<CakeCatalogImageKey, string> = {
-  'pound-cake': '/products/details/chocolate-pound-cake-quick-view.webp',
-  'pave-cake': '/products/details/pave-chocolate-cake-quick-view.webp',
-  'basque-cheesecake': '/products/details/chocolatiers-basque-cheesecake-quick-view.webp',
-  'lemon-cake': '/products/details/lemon-cake-quick-view.webp',
-  'vanilla-fresh-cream-cake': '/products/details/vanillacake-quickview.webp',
-  'buttercream-cake': '/products/details/buttercream-cake-quick-view.webp',
-  'fresh-strawberry-vanilla-cream-cake': '/products/details/fresh-strawberry-vanilla-cream-cake-detail-01.webp',
-  'fresh-strawberry-chocolate-cream-cake': '/products/details/fresh-strawberry-chocolate-cream-cake-detail-01.webp',
-  'chocolate-cupcakes': '/products/details/chocolate-cupcakes2-sydney.webp',
-  'signature-gateau-au-chocolat': '/products/details/chocolate-pound-cake-quick-view.webp',
-  'brownie-cheesecake': '/products/details/brownie-cheese-quick-view.webp',
-  'bento-cake': '/products/bento-cake-sydney.webp',
-  'smore-stick': '/products/smore-stick-sydney.webp',
-}
-
-const heroVisuals: Partial<Record<CakeCatalogImageKey, { image?: string; tagKey: string; className: string }>> = {
-  'pave-cake': { image: heroCake2Img, tagKey: 'first', className: 'hero-cake-two' },
-  'buttercream-cake': { tagKey: 'buttercream', className: 'hero-cake-six' },
-  'chocolate-cupcakes': { tagKey: 'cupcakes', className: 'hero-cake-seven' },
-  'signature-gateau-au-chocolat': { image: '/products/signature-gateau-au-chocolat-sydney.webp', tagKey: 'pound', className: 'hero-cake-three' },
-  'lemon-cake': { image: getPublicCakePage('lemon-cake')?.imagePath, tagKey: 'lemon', className: 'hero-cake-four' },
-  'brownie-cheesecake': { image: '/products/brownie-cheesecake-sydney.webp', tagKey: 'brownie', className: 'hero-cake-one' },
-}
-
-type RedesignCategoryKey =
-  | 'ALL'
-  | 'SIGNATURE_GATEAU'
-  | 'GATEAU_SHARING'
-  | 'CHOCOLATIERS_CAKE'
-  | 'CUSTOM_CREATIVE'
-  | 'CHOCOLATES'
-
-interface RedesignProduct {
-  id: string
-  name: string
-  sub: string
-  photo: string
-  photoAlt?: string
-  price: string
-  slug: string
-  href: string
-  category: Exclude<RedesignCategoryKey, 'ALL'>
-}
-
-const REDESIGN_CATEGORY_BY_GROUP: Record<CakeCatalogGroupId, Exclude<RedesignCategoryKey, 'ALL'>> = {
-  'signature-gateau': 'SIGNATURE_GATEAU',
-  'gateau-sharing': 'GATEAU_SHARING',
-  'chocolatiers-cake': 'CHOCOLATIERS_CAKE',
-}
-
-const REDESIGN_HEADING_BY_GROUP: Record<CakeCatalogGroupId, string> = {
-  'signature-gateau': 'Signature Gâteau',
-  'gateau-sharing': 'Gâteau Sharing',
-  'chocolatiers-cake': 'Chocolatier’s Cake',
-}
 
 export function HomePage(props: Parameters<typeof LegacyHomePage>[0]) {
-  return marketConfig.market === 'AU' ? <AuHomePage {...props} /> : <LegacyHomePage {...props} />
+  return marketConfig.market === 'AU' ? (
+    <AuHomePage {...props} />
+  ) : (
+    <LegacyHomePage {...props} />
+  )
+}
+
+function ServicePhoto({ asset }: { asset: keyof typeof serviceAssets }) {
+  const image = serviceAssets[asset]
+  return (
+    <img
+      src={image.variants[0].src}
+      srcSet={image.variants.map((v) => `${v.src} ${v.width}w`).join(', ')}
+      sizes="(max-width: 767px) 100vw, 40vw"
+      alt={image.alt}
+      width={image.width}
+      height={image.height}
+      loading="lazy"
+      decoding="async"
+    />
+  )
+}
+
+function CollectionCard({ product }: { product: HomeProduct }) {
+  const body = (
+    <>
+      <div className="au-v02-product-heading">
+        <h3>{product.name}</h3>
+        <p>{product.description}</p>
+      </div>
+      <img
+        src={product.image}
+        alt={product.imageAlt}
+        width={1080}
+        height={1012}
+        loading="lazy"
+        decoding="async"
+      />
+      <div className="au-v02-product-price">
+        <strong>
+          {product.comingSoon ? product.description : product.price}
+        </strong>
+        {product.href && <ArrowUpRight size={16} aria-hidden="true" />}
+      </div>
+    </>
+  )
+  return (
+    <article className="au-v02-product" data-home-product={product.id}>
+      {product.href ? (
+        <a href={product.href}>{body}</a>
+      ) : (
+        <div className="au-v02-coming-soon">{body}</div>
+      )}
+    </article>
+  )
+}
+
+function visibleBestIndex(track: HTMLDivElement) {
+  const maximum = track.scrollWidth - track.clientWidth
+  if (maximum <= 2) return 0
+  if (track.scrollLeft >= maximum - 2) return 2
+  const first = track.children[0] as HTMLElement
+  const second = track.children[1] as HTMLElement
+  return Math.min(
+    2,
+    Math.round(track.scrollLeft / (second.offsetLeft - first.offsetLeft)),
+  )
 }
 
 function AuHomePage({
-  navigate,
-  navigateToCake,
   language,
-  setLanguage,
   cartItemCount,
-}: {
-  navigate: (page: Page) => void
-  navigateToCake: (slug: string) => void
-  language: Language
-  setLanguage: (language: Language) => void
-  cartItemCount: number
-}) {
-  const copy = cakeCopy(language)
-  const t = (english: string, korean: string) => language === 'ko' ? korean : english
-  const [activeCategory, setActiveCategory] = useState<RedesignCategoryKey>('ALL')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeHeroCake, setActiveHeroCake] = useState(() => marketConfig.market === 'AU' ? 0 : 1)
-  void activeHeroCake
-  const [quickViewCardId, setQuickViewCardId] = useState<string | null>(null)
-  const [quickViewOpener, setQuickViewOpener] = useState<HTMLButtonElement | null>(null)
-
-  // Preserved for test contracts & fallback compatibility
-  const legacyHeroCakes = [
-    { image: '/products/brownie-cheesecake-sydney.webp', label: 'Brownie Cheesecake', tagKey: 'brownie', className: 'hero-cake-one' },
-    { image: heroCake2Img, label: 'Pave Chocolate Cake', tagKey: 'first', className: 'hero-cake-two' },
-    { image: '/products/signature-gateau-au-chocolat-sydney.webp', label: 'Signature Gâteau au Chocolat', tagKey: 'pound', className: 'hero-cake-three' },
-    { image: getPublicCakePage('lemon-cake')?.imagePath, label: 'Lemon Cake', tagKey: 'lemon', className: 'hero-cake-four' },
-    { image: getPublicCakePage('buttercream-cake')?.imagePath, label: 'Buttercream Cake', tagKey: 'buttercream', className: 'hero-cake-six' },
-    { image: getPublicCakePage('chocolate-cupcakes')?.imagePath, label: 'Chocolate Cupcakes', tagKey: 'cupcakes', className: 'hero-cake-seven' },
-  ]
-  const heroCakes = marketConfig.market === 'AU'
-    ? getAuHomeHeroCards(language)
-      .filter((card) => !card.isPhotoComingSoon)
-      .filter((card) => card.id !== 'bento-cake' && card.id !== 'smore-stick')
-      .map((card) => ({
-        image: heroVisuals[card.imageKey]?.image || card.imagePath,
-        label: card.name,
-        tagKey: heroVisuals[card.imageKey]?.tagKey || 'first',
-        className: heroVisuals[card.imageKey]?.className || 'hero-cake-two',
-      }))
-    : legacyHeroCakes
-
+}: Parameters<typeof LegacyHomePage>[0]) {
+  const t = (en: string, ko: string) => (language === 'ko' ? ko : en)
+  const collections = getAuHomeCollections(language)
+  const [activeCategory, setActiveCategory] =
+    useState<HomeCollectionId>('whole')
+  const active = collections.find((category) => category.id === activeCategory)!
+  const best = getAuHomeBest(language)
+  const bestTrack = useRef<HTMLDivElement>(null)
+  const [bestIndex, setBestIndex] = useState(0)
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setActiveHeroCake((current) => (current + 1) % heroCakes.length)
-    }, 3000)
-    return () => window.clearInterval(intervalId)
-  }, [heroCakes.length])
-
-  const catalogGroups = marketConfig.market === 'AU' ? getAuCakeCatalogGroups(language) : []
-  const catalogCards = catalogGroups.flatMap((group) => group.cards)
-  const redesignProducts: RedesignProduct[] = catalogGroups.flatMap((group) => group.cards.map((card) => ({
-    id: card.id, name: card.name, sub: card.optionLabel, photo: card.imagePath,
-    price: card.priceLabel, slug: card.slug, href: `/cakes/${card.slug}`, category: REDESIGN_CATEGORY_BY_GROUP[group.id],
-  })))
-  redesignProducts.push({ id: 'custom-cake', name: t('CUSTOM CAKES', '커스텀 케이크'), sub: t('Bespoke celebration cakes', '특별한 날을 위한 맞춤 케이크'),
-    photo: '/products/custom-cake.webp', price: t('BY QUOTE', '견적 문의'), slug: 'custom-cake', href: '/cakes/custom-cake', category: 'CUSTOM_CREATIVE' })
-  redesignProducts.push(...getAuChocolateCollectionCards(language).map((product): RedesignProduct => ({
-    id: product.id, name: product.name, sub: product.description,
-    photo: product.image, photoAlt: product.imageAlt,
-    price: product.price, slug: product.slug, href: product.href, category: 'CHOCOLATES',
-  })))
-  const tabDefinitions: { key: RedesignCategoryKey; label: string; heading: string }[] = [
-    { key: 'ALL', label: t('ALL PRODUCTS', '전체 상품'), heading: t('All Creations', '전체 상품') },
-    ...catalogGroups.map((group) => ({
-      key: REDESIGN_CATEGORY_BY_GROUP[group.id], label: group.title, heading: REDESIGN_HEADING_BY_GROUP[group.id],
-    })),
-    { key: 'CUSTOM_CREATIVE', label: t('CUSTOM & CREATIVE', '커스텀 & 크리에이티브'), heading: t('Custom & Creative', '커스텀 & 크리에이티브') },
-    { key: 'CHOCOLATES', label: t('CHOCOLATES', '초콜릿'), heading: t('Chocolates', '초콜릿') },
+    let frame = 0
+    const revealHash = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const id = window.location.hash.slice(1)
+        if (['story', 'au-collection', 'business'].includes(id))
+          document.getElementById(id)?.scrollIntoView({ block: 'start' })
+      })
+    }
+    revealHash()
+    window.addEventListener('hashchange', revealHash)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('hashchange', revealHash)
+    }
+  }, [])
+  const scrollBest = (index: number) => {
+    const track = bestTrack.current
+    if (track)
+      track.scrollTo({
+        left:
+          (track.children[index] as HTMLElement).offsetLeft -
+          (track.children[0] as HTMLElement).offsetLeft,
+        behavior: 'instant',
+      })
+  }
+  const services = [
+    {
+      slug: 'events',
+      title: t('Corporate & Events', '기업 행사 & 이벤트'),
+      status: t('Event enquiries', '행사 문의'),
+      text: t(
+        'Cakes, cupcakes and chocolate gifts for office milestones, weddings, birthdays and gatherings.',
+        '사무실 행사, 웨딩, 생일과 모임을 위한 케이크, 컵케이크와 초콜릿 선물.',
+      ),
+      asset: 'events-hero' as const,
+      action: t('EVENT ENQUIRIES', '행사 문의'),
+    },
+    {
+      slug: 'cafe-supply',
+      title: t('Café Supply / Wholesale', '카페 공급 / 도매'),
+      status: t('Coming Soon · Enquiries', '준비 중 · 문의'),
+      text: t(
+        'Explore our cakes and chocolate creations for your café. Supply arrangements are discussed by enquiry.',
+        '카페를 위한 케이크와 초콜릿을 소개합니다. 공급 관련 내용은 문의를 통해 안내합니다.',
+      ),
+      asset: 'sharing' as const,
+      action: t('WHOLESALE ENQUIRIES', '카페 공급 문의'),
+    },
+    {
+      slug: 'consulting',
+      title: t('Menu & Experience Consulting', '메뉴 & 경험 컨설팅'),
+      status: t('Introduction · Enquiries', '서비스 소개 · 문의'),
+      text: t(
+        'Start a conversation about menu, display, packaging and customer experience for your venue.',
+        '메뉴, 디스플레이, 포장과 고객 경험에 관해 이야기 나눠보세요.',
+      ),
+      action: t('CONSULTING ENQUIRIES', '컨설팅 문의'),
+    },
   ]
-  const categoryTabs = tabDefinitions.map((tab) => ({
-    ...tab,
-    count: tab.key === 'ALL' ? redesignProducts.length : redesignProducts.filter((product) => product.category === tab.key).length,
-  }))
-  const quickViewCard = catalogCards.find((card) => card.id === quickViewCardId) || null
-  const closeQuickView = () => setQuickViewCardId(null)
-
-  const renderCatalogCard = (card: CakeCatalogCard) => (
-    <article className={'product-card cake-catalog-card cake-catalog-card-' + card.id} key={card.id}>
-      <button
-        className="product-card-quick-view"
-        type="button"
-        aria-haspopup="dialog"
-        aria-label={language === 'ko' ? `${card.name} 빠른 미리보기` : `Quick view ${card.name}`}
-        onClick={(event) => {
-          setQuickViewOpener(event.currentTarget)
-          setQuickViewCardId(card.id)
-        }}
-      >
-        <span className="product-image-wrap">
-          {card.isPhotoComingSoon ? (
-            <VanillaFreshCreamCakeSilhouette productName={card.name} />
-          ) : (
-            <img src={card.imagePath} alt={card.name} width={1080} height={1012} loading="lazy" decoding="async" />
-          )}
-          {card.id === 'cheesecake' && <img className="gluten-free-stamp" src={glutenFreeStampImg} alt="" />}
-        </span>
-      </button>
-      <a
-        className="product-card-detail-link"
-        href={`/cakes/${card.slug}`}
-        onClick={(event) => {
-          event.preventDefault()
-          navigateToCake(card.slug)
-        }}
-      >
-        <span className="product-card-kicker">CAKES</span>
-        <strong className="product-card-title">{card.name}</strong>
-      </a>
-      <span className="product-card-price">
-        <span className="product-card-price-prefix">From AUD</span>{' '}
-        <span className="product-card-price-number">{card.priceLabel}</span>
-      </span>
-    </article>
-  )
-
-  const activeProducts =
-    activeCategory === 'ALL'
-      ? redesignProducts
-      : redesignProducts.filter((prod) => prod.category === activeCategory)
-
-  const activeTab =
-    categoryTabs.find((tab) => tab.key === activeCategory) || categoryTabs[0]
-  const collectionHeading = `${activeTab.heading} [${activeTab.count}]`
-
   return (
-    <>
-      <div className="home-redesign-wrap">
-        {/* =================================================================
-            01. Redesign Header (Desktop & Mobile)
-            ================================================================= */}
-        <header className="rd-header">
-          <a
-            className="rd-header-logo"
-            href="/"
-            onClick={(e) => {
-              e.preventDefault()
-              navigate('home')
-            }}
-          >
-            verygood
-          </a>
-
-          <nav className="rd-header-nav" aria-label="Main navigation">
-            <button type="button" onClick={() => navigate('cakes')}>SHOP</button>
-            <a href="/chocolates">CHOCOLATES</a>
-            <button type="button" onClick={() => navigate('custom-cake')}>CUSTOM CAKES</button>
-            <button type="button" onClick={() => navigate('business')}>EVENTS & BUSINESS</button>
-            <button type="button" onClick={() => navigate('classes')}>KIDS CLASSES</button>
-            <button type="button" onClick={() => navigate('reviews')}>ABOUT</button>
-          </nav>
-
-          <div className="rd-header-actions">
-            <AuLanguageToggle />
-            <button
-              type="button"
-              className="rd-header-cart"
-              onClick={() => navigate('cart')}
-              aria-label={`Cart with ${cartItemCount} items`}
-            >
-              CART [{cartItemCount}]
-            </button>
-          </div>
-
-          <div className="rd-mobile-actions">
-            <AuLanguageToggle />
-            <button
-              type="button"
-              className="rd-mobile-menu-btn"
-              onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              {t('MENU', '메뉴')}
-            </button>
-            <button
-              type="button"
-              className="rd-header-cart"
-              onClick={() => navigate('cart')}
-              aria-label={`Cart with ${cartItemCount} items`}
-            >
-              CART [{cartItemCount}]
-            </button>
-          </div>
-        </header>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <>
-            <div
-              className="rd-mobile-drawer-backdrop"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-hidden="true"
-            />
-            <div className="rd-mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
-              <div className="rd-mobile-drawer-header">
-                <span className="rd-header-logo">verygood</span>
-                <button
-                  type="button"
-                  className="rd-mobile-drawer-close"
-                  onClick={() => setMobileMenuOpen(false)}
-                  aria-label="Close menu"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="rd-mobile-drawer-links">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    navigate('cakes')
-                  }}
-                >
-                  SHOP
-                </button>
-                <a href="/chocolates">CHOCOLATES</a>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    navigate('custom-cake')
-                  }}
-                >
-                  CUSTOM CAKES
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    navigate('business')
-                  }}
-                >
-                  EVENTS & BUSINESS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    navigate('classes')
-                  }}
-                >
-                  KIDS CLASSES
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    navigate('reviews')
-                  }}
-                >
-                  ABOUT
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* =================================================================
-            02. Hero / Brand Moment
-            ================================================================= */}
-        <section className="rd-hero" aria-label="Hero">
-          <div className="rd-hero-wordmark-mobile">VERYGOOD</div>
-          <AuHeroVideo />
-          <div className="rd-hero-bottom-row">
-            <h1 className="rd-hero-copy">{t(publicHomeContent?.h1 || '', '시드니에서 주문 제작하는 초콜릿 케이크')}</h1>
+    <div className="home-redesign-wrap au-home-v02">
+      <AuRedesignHeader cartItemCount={cartItemCount} home />
+      <section className="rd-hero" aria-labelledby="au-home-title">
+        <AuHeroVideo />
+        <div className="au-v02-hero-copy">
+          <p className="au-v02-eyebrow">VERYGOOD · SYDNEY</p>
+          <h1 id="au-home-title" className="rd-hero-copy">
+            {t(homeCopy.headline, '초콜릿, 케이크, 그리고 축하의 순간.')}
+          </h1>
+          <p className="au-v02-hero-description">
+            {t(
+              homeCopy.description,
+              '시드니에서 주문 제작하는 케이크와 초콜릿. 메뉴, 커스텀 케이크와 비즈니스 서비스를 만나보세요.',
+            )}
+          </p>
+          <div className="au-v02-hero-actions">
+            <a className="au-v02-button" href="/#au-collection">
+              {t('EXPLORE THE MENU', '메뉴 둘러보기')}
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </a>
             <a
-              className="rd-hero-cta"
-              href="/cakes"
-              onClick={(e) => {
-                e.preventDefault()
-                navigate('cakes')
-              }}
+              className="au-v02-button au-v02-button-outline"
+              href="/#business"
             >
-              {t('SHOP →', '상품 보기 →')}
+              {t('BUSINESS ENQUIRIES', '비즈니스 문의')}
+              <ArrowUpRight size={15} aria-hidden="true" />
             </a>
-          </div>
-        </section>
-
-        {/* =================================================================
-            03. Hero Intro Section (ACME-Style Brand Statement)
-            ================================================================= */}
-        <section className="rd-hero-intro" aria-label="Brand introduction">
-          <div className="rd-intro-wordmark">
-            {'VERY\nGOOD'}
-          </div>
-          <div className="rd-intro-center">
-            <div className="rd-intro-mobile-bar">
-              <img className="rd-intro-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
-              <span className="rd-intro-mobile-tag">VERYGOOD CHOCOLATIER</span>
-            </div>
-            <h2 className="rd-intro-statement rd-desktop-only">
-              {t('Born from a pure dedication to artisan couverture chocolate and honest, handcrafted cakes in Sydney.', '커버춰 초콜릿을 향한 정성과 정직한 수작업으로, 시드니에서 케이크를 만듭니다.')}
-            </h2>
-            <h2 className="rd-intro-title-mobile rd-mobile-only">
-              {t('Made-to-Order Chocolate Cakes in Sydney', '시드니에서 주문 제작하는 초콜릿 케이크')}
-            </h2>
-            <p className="rd-intro-desc-mobile rd-mobile-only">
-              {t('Handcrafted cakes and desserts made with chocolatier-grade couverture chocolate, for pre-arranged pickup in Melrose Park, Sydney.', '쇼콜라티에용 커버춰 초콜릿으로 만드는 수제 케이크와 디저트를 시드니 Melrose Park 픽업 예약으로 만나보세요.')}
-            </p>
-          </div>
-          <div className="rd-intro-story rd-desktop-only">
-            <p>
-              {t('We craft made-to-order cakes using chocolatier-grade couverture chocolate, freshly prepared in our Melrose Park atelier for your special celebrations.', '특별한 축하의 순간을 위해 Melrose Park 아틀리에에서 쇼콜라티에용 커버춰 초콜릿으로 케이크를 주문 제작합니다.')}
-            </p>
-            <p>
-              {t('Our approach is simple: honest craftsmanship without shortcuts. Every piece is freshly prepared for confirmed pickup, bringing thoughtful sweetness to the table.', '시간과 정성을 들여 정직하게 만듭니다. 확정된 픽업 일정에 맞춰 준비한 디저트로 함께하는 자리에 달콤함을 더합니다.')}
-            </p>
-          </div>
-        </section>
-
-        {/* =================================================================
-            04. HOGIRL'S BEST [3] Section
-            ================================================================= */}
-        <section className="rd-best-section" aria-label="HOGIRL Best Selection">
-          <div className="rd-best-header">
-            <span className="rd-best-header-brand">VERYGOOD</span>
-            <span className="rd-best-header-title">BEST [3]</span>
-          </div>
-          <div className="rd-best-grid">
-            {/* Col #1 */}
-            <div className="rd-best-col">
-              <h3 className="rd-best-title">Chocolatier’s GÂTEAU AU CHOCOLAT</h3>
-              <a
-                className="rd-best-photo-frame"
-                href="/cakes/signature-gateau-au-chocolat"
-              >
-                <img
-                  className="rd-best-photo"
-                  src="/redesign/signature-gateau-au-chocolat-sydney.webp"
-                  alt="Chocolatier’s GÂTEAU AU CHOCOLAT"
-                  loading="lazy"
-                />
-                <div className="rd-hogirl-sticker">
-                  <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
-                  <span className="rd-hogirl-label">#1</span>
-                </div>
-              </a>
-              <a
-                className="rd-best-action-row"
-                href="/cakes/signature-gateau-au-chocolat"
-              >
-                <span className="rd-best-action-label">{t('CHOOSE OPTIONS', '옵션 선택')}</span>
-                <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'signature-gateau')?.priceLabel}</span>
-              </a>
-            </div>
-
-            {/* Col #2 */}
-            <div className="rd-best-col">
-              <h3 className="rd-best-title">PAVÉ CHOCOLATE GÂTEAU</h3>
-              <a
-                className="rd-best-photo-frame"
-                href="/cakes/pave-chocolate-cake"
-              >
-                <img
-                  className="rd-best-photo"
-                  src="/redesign/pave-chocolate-cake-sydney.webp"
-                  alt="PAVÉ CHOCOLATE GÂTEAU"
-                  loading="lazy"
-                />
-                <div className="rd-hogirl-sticker">
-                  <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
-                  <span className="rd-hogirl-label">#2</span>
-                </div>
-              </a>
-              <a
-                className="rd-best-action-row"
-                href="/cakes/pave-chocolate-cake"
-              >
-                <span className="rd-best-action-label">{t('CHOOSE OPTIONS', '옵션 선택')}</span>
-                <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'pave')?.priceLabel}</span>
-              </a>
-            </div>
-
-            {/* Col #3 */}
-            <div className="rd-best-col">
-              <h3 className="rd-best-title">Chocolatier’s BROWNIE CHEESECAKE</h3>
-              <a
-                className="rd-best-photo-frame"
-                href="/cakes/brownie-cheesecake"
-              >
-                <img
-                  className="rd-best-photo"
-                  src="/redesign/brownie-cheesecake-sydney.webp"
-                  alt="Chocolatier’s BROWNIE CHEESECAKE"
-                  loading="lazy"
-                />
-                <div className="rd-hogirl-sticker">
-                  <img className="rd-hogirl-tiger" src="/redesign/tiger.png" alt="" aria-hidden="true" />
-                  <span className="rd-hogirl-label">#3</span>
-                </div>
-              </a>
-              <a
-                className="rd-best-action-row"
-                href="/cakes/brownie-cheesecake"
-              >
-                <span className="rd-best-action-label">{t('CHOOSE OPTIONS', '옵션 선택')}</span>
-                <span className="rd-best-price-label">{catalogCards.find((card) => card.id === 'brownie-cheesecake')?.priceLabel}</span>
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* =================================================================
-            05. Full-Bleed Feature Photo 1
-            ================================================================= */}
-        <HomeCustomerStories />
-        <section className="rd-fullbleed-photo" aria-label="Craft feature photograph">
-          <img src="/redesign/3906.jpg" alt="Artisan cake preparation" loading="lazy" />
-        </section>
-
-        {/* =================================================================
-            06. Unified Catalogue Collection
-            ================================================================= */}
-        <section id="au-collection" className="rd-collection-section" aria-label="Product Collections">
-          <aside className="rd-collection-sidebar">
-            <div className="rd-collection-sidebar-brand">VERYGOOD</div>
-            <nav className="rd-collection-nav" aria-label="Collection categories">
-              {categoryTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={`rd-collection-tab${activeCategory === tab.key ? ' is-active' : ''}`}
-                  aria-pressed={activeCategory === tab.key}
-                  onClick={() => setActiveCategory(tab.key)}
-                >
-                  <span>{tab.label}</span>
-                  <span className="rd-collection-tab-count">[{tab.count}]</span>
-                </button>
-              ))}
-            </nav>
-          </aside>
-
-          <div className="rd-collection-main">
-            <h2 className="rd-collection-heading">{collectionHeading}</h2>
-            <div
-              className={`rd-collection-grid ${
-                activeCategory === 'ALL'
-                  ? 'is-all'
-                  : activeProducts.length === 1
-                  ? 'is-single'
-                  : 'is-duo'
-              }`}
-            >
-              {activeProducts.map((prod) => (
-                <article
-                  className="rd-product-card"
-                  key={prod.id}
-                  data-au-product={prod.slug}
-                >
-                  <a href={prod.href}>
-                  <header className="rd-product-card-header">
-                    <h3 className="rd-product-name">{prod.name}</h3>
-                    <p className="rd-product-sub">{prod.sub}</p>
-                  </header>
-                  <div className="rd-product-photo-wrap">
-                    <img className="rd-product-photo" src={prod.photo} alt={prod.photoAlt || prod.name} loading="lazy" />
-                  </div>
-                  <div className="rd-product-price-row">{prod.price}</div>
-                  </a>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* =================================================================
-            08. Full-Bleed Feature Photo 2
-            ================================================================= */}
-        <section className="rd-fullbleed-photo" aria-label="Bespoke artisan baking">
-          <img src="/redesign/39538.jpg" alt="Dessert craftsmanship" loading="lazy" />
-        </section>
-
-        {/* =================================================================
-            09. BESPOKE & BUSINESS Section
-            ================================================================= */}
-        <section className="rd-bespoke-section" aria-label="Bespoke & Business">
-          <h2 className="rd-bespoke-heading">{t('BESPOKE & BUSINESS', '맞춤 제작 & 비즈니스')}</h2>
-          <div className="rd-bespoke-divider" />
-          <div className="rd-bespoke-grid">
-            <a className="rd-bespoke-item" href="/cakes/custom-cake">
-              <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">{t('CUSTOM CAKES', '커스텀 케이크')}</h3>
-                <p className="rd-bespoke-desc">{t('Custom-designed cakes & atelier orders', '맞춤 디자인 케이크와 아틀리에 주문')}</p>
-                <span className="rd-bespoke-action">{t('INQUIRE →', '문의하기 →')}</span>
-              </div>
-              <span className="rd-bespoke-arrow">→</span>
-            </a>
-
-            <a className="rd-bespoke-item" href="/business/events">
-              <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">{t('EVENTS & BUSINESS', '기업 행사 & 이벤트')}</h3>
-                <p className="rd-bespoke-desc">{t('Corporate catering, private events & parties', '기업 행사, 개인 모임과 파티를 위한 디저트')}</p>
-                <span className="rd-bespoke-action">{t('EXPLORE EVENTS →', '행사 서비스 보기 →')}</span>
-              </div>
-              <span className="rd-bespoke-arrow">→</span>
-            </a>
-
-            <a className="rd-bespoke-item" href="/business/cafe-supply" data-au-coming-soon="service">
-              <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">{t('CAFÉ SUPPLY', '카페 공급')}</h3>
-                <p className="rd-bespoke-desc">{t('Wholesale cakes & artisan dessert supply', '도매 케이크와 수제 디저트 공급')}</p>
-                <span className="rd-bespoke-action">{t('Coming Soon', '준비 중')}</span>
-              </div>
-            </a>
-
-            <a className="rd-bespoke-item" href="/business/consulting" data-au-coming-soon="service">
-              <div className="rd-bespoke-item-content">
-                <h3 className="rd-bespoke-title">{t('MENU & EXPERIENCE DIRECTION', '메뉴 & 고객 경험')}</h3>
-                <p className="rd-bespoke-desc">{t('Menu curation & culinary experience direction', '메뉴 구성과 고객 경험 방향 상담')}</p>
-                <span className="rd-bespoke-action">{t('Coming Soon', '준비 중')}</span>
-              </div>
-            </a>
-          </div>
-        </section>
-
-        {/* =================================================================
-            10. Brand Story Section (Atelier)
-            ================================================================= */}
-        <section className="rd-story-section" aria-label="Brand Story">
-          <div className="rd-story-photo-frame">
-            <img
-              className="rd-story-photo"
-              src={storyPhoto.variants[1].src}
-              srcSet={storyPhoto.variants.map(photo => `${photo.src} ${photo.width}w`).join(', ')}
-              sizes="(max-width: 768px) calc(100vw - 40px), (max-width: 1200px) 45vw, 520px"
-              width={storyPhoto.width}
-              height={storyPhoto.height}
-              alt="Cakes and cupcakes arranged on an outdoor celebration table"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <div className="rd-story-stack">
-            <span className="rd-story-tag">ARTISAN CHOCOLATIER • SYDNEY</span>
-            <h2 className="rd-story-heading">VERYGOOD ATELIER</h2>
-            <p className="rd-story-body">
-              {t('Handcrafted cakes and chocolate creations, made to order in our Sydney atelier. Thoughtful ingredients, chocolatier-grade couverture and something special to share.', '시드니 아틀리에에서 주문 제작하는 수제 케이크와 초콜릿. 세심하게 고른 재료와 쇼콜라티에용 커버춰로 함께 나눌 특별한 디저트를 만듭니다.')}
-            </p>
-          </div>
-        </section>
-
-        {/* =================================================================
-            11. Redesign Footer (Desktop & Mobile)
-            ================================================================= */}
-        <footer className="rd-footer">
-          <span className="rd-footer-brand">VERYGOOD / AU-CAKE</span>
-          <nav aria-label="Footer navigation"><a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a><a href="/reviews">{t('REVIEWS', '후기')}</a><a href="/chocolates">{t('CHOCOLATES', '초콜릿')}</a></nav>
-          <span className="rd-footer-copyright">© 2026 VERYGOOD. Sydney, Australia. All rights reserved.</span>
-        </footer>
-      </div>
-
-      {/* =================================================================
-          Static AST & Unit-test anchors (kept hidden from sight)
-          Ensures existing contracts and testing pipelines stay 100% green
-          ================================================================= */}
-      <div style={{ display: 'none' }} aria-hidden="true">
-        {publicHomeContent && <span className="hero-pickup-copy">{publicHomeContent.pickup}</span>}
-        {marketConfig.market !== 'AU' && (
-          <h2>{copy.productSectionTitle}</h2>
-        )}
-        <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
-        <PickupLocationCard language={language} />
-        <PublicReviewsSection
-          language={language}
-          executor={functions}
-          functionId={appwriteConfig.reviewApiFunctionId}
-          functionEndpoint={appwriteConfig.publicEndpoint}
-          onViewAll={() => navigate('reviews')}
-          demoEnabled={false}
-          development={false}
-        />
-        <div className="cake-catalog-groups">
-          {catalogGroups.map((group) => (
-            <div key={group.id}>
-              <img className="cake-catalog-group-marker" src={AU_CATALOG_GROUP_MARKERS[group.id]} alt="" />
-              <div>{group.cards.map(renderCatalogCard)}</div>
-            </div>
-          ))}
-          <div className="cake-catalog-group-products cake-catalog-group-products-custom">
-            <span className="product-card-price-number">$159</span>
           </div>
         </div>
-      </div>
-
-      {quickViewCard && (
-        <ProductQuickViewDialog
-          card={quickViewCard}
-          imageUrl={quickViewImages[quickViewCard.imageKey]}
-          language={language}
-          opener={quickViewOpener}
-          onClose={closeQuickView}
-          onChooseOptions={() => {
-            closeQuickView()
-            navigateToCake(quickViewCard.slug)
+      </section>
+      <section
+        id="best"
+        className="au-v02-best"
+        aria-labelledby="au-best-title"
+      >
+        <div className="au-v02-section-heading">
+          <p className="au-v02-eyebrow">
+            {t('SIGNATURE FAVOURITES · BEST [3]', '시그니처 베스트 · BEST [3]')}
+          </p>
+          <h2 id="au-best-title">
+            {t('OUR MOST REQUESTED CREATIONS', '가장 사랑받는 케이크')}
+          </h2>
+          <p>
+            {t(
+              'Three iconic atelier cakes that define the Verygood chocolate craft.',
+              '베리굿의 초콜릿 작업을 대표하는 세 가지 케이크.',
+            )}
+          </p>
+        </div>
+        <div
+          className="au-v02-best-track"
+          ref={bestTrack}
+          role="region"
+          aria-label={t('Best cakes', '베스트 케이크')}
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (
+              event.target !== event.currentTarget ||
+              !['ArrowLeft', 'ArrowRight'].includes(event.key)
+            )
+              return
+            event.preventDefault()
+            scrollBest(
+              Math.max(
+                0,
+                Math.min(
+                  2,
+                  visibleBestIndex(event.currentTarget) +
+                    (event.key === 'ArrowRight' ? 1 : -1),
+                ),
+              ),
+            )
           }}
+          onScroll={(event) => {
+            setBestIndex(visibleBestIndex(event.currentTarget))
+          }}
+        >
+          {best.map((product, index) => (
+            <article className="au-v02-best-card" key={product.id}>
+              <a
+                className="au-v02-best-image"
+                href={product.href!}
+                tabIndex={-1}
+                aria-hidden="true"
+              >
+                <img
+                  src={product.image}
+                  alt=""
+                  width={1080}
+                  height={1012}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
+              <div className="au-v02-best-body">
+                <span className="au-v02-best-rank">
+                  BEST {String(index + 1).padStart(2, '0')}
+                </span>
+                <h3>{product.name}</h3>
+                <p>{product.description}</p>
+                <a className="au-v02-best-action" href={product.href!} aria-label={t(`Choose options for ${product.name}, ${product.price}`, `${product.name} 옵션 선택, ${product.price}`)}>
+                  <strong>{product.price}</strong>
+                  <span>
+                    {t('CHOOSE OPTIONS', '옵션 선택')}
+                    <ArrowUpRight size={14} aria-hidden="true" />
+                  </span>
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div
+          className="au-v02-best-indicators"
+          aria-label={t('Best cake position', '베스트 카드 위치')}
+        >
+          {best.map((product, index) => (
+            <button
+              key={product.id}
+              type="button"
+              aria-label={t(`Show ${product.name}`, `${product.name} 보기`)}
+              aria-pressed={bestIndex === index}
+              onClick={() => scrollBest(index)}
+            >
+              <span />
+            </button>
+          ))}
+        </div>
+      </section>
+      <HomeCustomerStories />
+      <section
+        className="au-v02-craft"
+        aria-label={t(
+          'Chocolate cake craftsmanship',
+          '초콜릿 케이크 제작 과정',
+        )}
+      >
+        <img
+          src="/redesign/3906.jpg"
+          alt={t(
+            'Chocolate cake layers being assembled by hand',
+            '손으로 초콜릿 케이크를 만드는 과정',
+          )}
+          width={1920}
+          height={1080}
+          loading="lazy"
+          decoding="async"
         />
-      )}
-    </>
+      </section>
+      <section
+        id="au-collection"
+        className="rd-collection-section au-v02-collection"
+        aria-label={t('The AU collection', 'AU 컬렉션')}
+      >
+        <aside className="au-v02-collection-sidebar">
+          <p className="au-v02-collection-brand">VERYGOOD</p>
+          <div
+            className="au-v02-tabs"
+            role="tablist"
+            aria-label={t('Collection categories', '상품 카테고리')}
+          >
+            {collections.map((category, index) => (
+              <button
+                key={category.id}
+                id={`home-tab-${category.id}`}
+                type="button"
+                role="tab"
+                aria-selected={activeCategory === category.id}
+                aria-controls="home-collection-panel"
+                tabIndex={activeCategory === category.id ? 0 : -1}
+                onClick={() => setActiveCategory(category.id)}
+                onKeyDown={(event) => {
+                  if (
+                    ![
+                      'ArrowRight',
+                      'ArrowDown',
+                      'ArrowLeft',
+                      'ArrowUp',
+                      'Home',
+                      'End',
+                    ].includes(event.key)
+                  )
+                    return
+                  event.preventDefault()
+                  const next =
+                    event.key === 'Home'
+                      ? 0
+                      : event.key === 'End'
+                        ? 2
+                        : (index +
+                            (['ArrowRight', 'ArrowDown'].includes(event.key)
+                              ? 1
+                              : 2)) %
+                          3
+                  setActiveCategory(collections[next].id)
+                  document
+                    .getElementById(`home-tab-${collections[next].id}`)
+                    ?.focus()
+                }}
+              >
+                {category.label}
+                <span>[{category.products.length}]</span>
+              </button>
+            ))}
+          </div>
+          <div className="au-v02-atelier-note">
+            <p className="au-v02-eyebrow">MELROSE PARK ATELIER</p>
+            <p>
+              {t(
+                'Made to order with thoughtful ingredients and chocolatier-grade couverture.',
+                '쇼콜라티에급 커버춰와 정성껏 고른 재료로 주문 제작합니다.',
+              )}
+            </p>
+          </div>
+        </aside>
+        <div
+          id="home-collection-panel"
+          className="au-v02-collection-main"
+          role="tabpanel"
+          aria-labelledby={`home-tab-${activeCategory}`}
+        >
+          <div className="au-v02-collection-heading">
+            <h2>
+              {t(
+                activeCategory === 'whole'
+                  ? 'Whole Cakes collection'
+                  : activeCategory === 'sharing'
+                    ? 'Sharing & Celebration'
+                    : 'Chocolate collection',
+                active.label,
+              )}
+            </h2>
+            <span>
+              {active.products.length} {t('ATELIER CREATIONS', '개의 상품')}
+            </span>
+          </div>
+          <div className="au-v02-product-grid">
+            {active.products.map((product) => (
+              <CollectionCard key={product.id} product={product} />
+            ))}
+          </div>
+          <div className="au-v02-collection-links">
+            <a href="/cakes">
+              {t('ALL CAKES', '케이크 전체 보기')}
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+            <a href="/chocolates">
+              {t('ALL CHOCOLATES', '초콜릿 전체 보기')}
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </section>
+      <section
+        id="custom-cakes"
+        className="au-v02-custom"
+        aria-labelledby="au-custom-title"
+      >
+        <div className="au-v02-custom-banner">
+          <img
+            src="/products/custom-cake.webp"
+            alt={t(
+              'Colourful custom celebration cakes',
+              '다채로운 커스텀 케이크',
+            )}
+            width={1080}
+            height={1012}
+            loading="lazy"
+            decoding="async"
+          />
+          <div>
+            <p className="au-v02-eyebrow">
+              {t('BESPOKE CELEBRATION PIECES', '특별한 날을 위한 맞춤 제작')}
+            </p>
+            <h2 id="au-custom-title">
+              {t(
+                'A CAKE MADE FOR YOUR OCCASION.',
+                '당신의 특별한 날을 위한 케이크.',
+              )}
+            </h2>
+            <p>
+              {t(
+                'Share your date, servings, design ideas and budget. Explore our custom cake portfolio and discuss a cake made for your occasion.',
+                '날짜, 인원, 디자인 아이디어와 예산을 알려주세요. 특별한 날을 위한 케이크를 문의하세요.',
+              )}
+            </p>
+            <a className="au-v02-button" href="/cakes/custom-cake">
+              {t('EXPLORE CUSTOM CAKES', '커스텀 케이크 둘러보기')}
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </section>
+      <section
+        id="business"
+        className="au-v02-business"
+        aria-labelledby="au-business-title"
+      >
+        <div className="au-v02-section-heading">
+          <p className="au-v02-eyebrow">
+            {t('COMMERCIAL & PARTNERSHIPS', '비즈니스 & 파트너십')}
+          </p>
+          <h2 id="au-business-title">
+            {t(
+              'FOR EVENTS, CAFÉS & BUSINESSES.',
+              '이벤트, 카페와 비즈니스를 위해.',
+            )}
+          </h2>
+          <p>
+            {t(
+              'Explore our event, café supply and consulting services.',
+              '행사, 카페 공급 및 컨설팅 서비스를 소개합니다.',
+            )}
+          </p>
+        </div>
+        <div className="au-v02-business-grid">
+          {services.map((service) => (
+            <article key={service.slug}>
+              {service.asset ? (
+                <ServicePhoto asset={service.asset} />
+              ) : (
+                <img
+                  src="/home/consulting-gift-box-480.webp"
+                  srcSet="/home/consulting-gift-box-480.webp 480w, /home/consulting-gift-box-960.webp 960w"
+                  sizes="(max-width: 767px) 100vw, 33vw"
+                  alt={t(
+                    'Chocolate gâteau loaf and ribbon-tied gift box',
+                    '초콜릿 갸또와 리본으로 묶은 선물 상자',
+                  )}
+                  width={1536}
+                  height={1024}
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              <div>
+                <span className="au-v02-service-status">{service.status}</span>
+                <h3>{service.title}</h3>
+                <p>{service.text}</p>
+                <a href={`/business/${service.slug}`}>
+                  {service.action}
+                  <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section
+        id="story"
+        className="au-v02-story"
+        aria-labelledby="au-story-title"
+      >
+        <div>
+          <p className="au-v02-eyebrow">VERYGOOD ATELIER · SYDNEY</p>
+          <h2 id="au-story-title">{t('OUR STORY.', '우리의 이야기.')}</h2>
+          <p>
+            {t(
+              'Handcrafted cakes and chocolate creations, made to order in our Sydney atelier. Chocolatier-grade couverture chocolate and thoughtful ingredients, with pre-arranged pickup in Melrose Park.',
+              '시드니 아틀리에에서 케이크와 초콜릿을 정성껏 주문 제작합니다. 쇼콜라티에급 커버춰와 엄선한 재료를 사용하며, 멜로즈 파크에서 사전 약속 후 픽업합니다.',
+            )}
+          </p>
+          <a className="au-v02-button au-v02-button-outline" href="/portfolio">
+            {t('EXPLORE ATELIER PORTFOLIO', '아틀리에 포트폴리오 보기')}
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </a>
+        </div>
+        <ServicePhoto asset="worktable" />
+      </section>
+      <footer className="rd-footer au-v02-footer">
+        <div className="au-v02-footer-links">
+          <div>
+            <a href="/classes">
+              {t('KIDS CLASSES', '키즈 클래스')}{' '}
+              <span>{t('TEMPORARILY PAUSED', '일시 휴강')}</span>
+            </a>
+            <p>
+              {t(
+                'Taking a short break. Back next school holidays; dates to be confirmed.',
+                '잠시 쉬어갑니다. 다음 방학 재개 예정이며 날짜는 추후 안내합니다.',
+              )}
+            </p>
+          </div>
+          <nav aria-label="Footer navigation">
+            <a href="/classes">{t('VIEW ARCHIVE', '클래스 보기')}</a>
+            <a href="/reviews">{t('REVIEWS', '후기')}</a>
+            <a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a>
+          </nav>
+        </div>
+        <div className="au-v02-footer-bottom">
+          <a href="/">VERYGOOD CHOCOLATE ATELIER · SYDNEY</a>
+          <a
+            href="https://www.instagram.com/verygood_syd/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            INSTAGRAM @verygood_syd
+          </a>
+          <small>© 2026 VERYGOOD</small>
+        </div>
+      </footer>
+    </div>
   )
 }

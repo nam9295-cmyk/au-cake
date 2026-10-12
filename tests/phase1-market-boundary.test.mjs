@@ -39,11 +39,13 @@ async function renderPages(market, original) {
           import { getSeoConfig } from './src/lib/seo';
           import { getAuChocolatePreviews } from './src/lib/au-chocolate-preview';
           import { auChocolateAssets } from './src/lib/au-chocolate-assets';
+          import { getAuHomeCollections } from './src/lib/au-home';
           const props = { language: '${market === 'KR' ? 'ko' : 'en'}', navigate() {},
             navigateToCake() {}, setLanguage() {}, cartItemCount: 2, onComplete() {},
             onOpenCake() {}, onBack() {}, onBrowseCakes() {}, onAddToOrder() {}, onViewOrder() {} };
           const html = (component, extra = {}) => renderToStaticMarkup(React.createElement(component, {...props, ...extra}));
           console.log(JSON.stringify({
+            homeCollections: '${market}' === 'AU' ? getAuHomeCollections('en') : [],
             productDetails: Object.fromEntries(['pave-chocolate-cake', 'signature-gateau-au-chocolat', 'chocolate-cupcakes', 'lemon-cake', 'bento-cake', 'fresh-strawberry-vanilla-cream-cake', 'brownie-cheesecake', 'smore-stick'].map(slug => [slug, html(CakeDetailPage, {slug})])),
             cakes: html(CakesPage), cake: html(CakeDetailPage, {slug: 'pave-chocolate-cake'}),
             smore: html(CakeDetailPage, {slug: 'smore-stick'}),
@@ -83,7 +85,9 @@ test('AU Cakes excludes S’more while Chocolates includes its existing cake-det
   assert.equal((chocolates.match(/data-au-product=/g) || []).length, 4)
   assert.match(chocolates, /data-au-product="smore-stick"[\s\S]*?href="\/cakes\/smore-stick"/)
   assert.doesNotMatch(chocolates, /href="\/chocolates\/smore-stick"/)
-  assert.match(home, /data-au-product="smore-stick"[\s\S]*?href="\/cakes\/smore-stick"/)
+  const homeChocolates = (await render('AU')).homeCollections.find(group => group.id === 'chocolates')
+  assert.equal(homeChocolates.products.find(product => product.id === 'smore-stick').href, '/cakes/smore-stick')
+  assert.doesNotMatch(home, /data-home-product="smore-stick"/)
   assert.doesNotMatch(home, /GATHER &amp; CELEBRATE/)
   assert.match(cakes, /href="\/chocolates"/)
 })
@@ -187,15 +191,13 @@ test('AU custom introduction explains original design without adding an unsuppor
   assert.doesNotMatch(custom, /type="file"/)
 })
 
-test('Coming Soon Home services link to informational pages, not fake orders', async () => {
+test('Home services link to informational pages with the approved enquiry status, not fake orders', async () => {
   const { home } = await render('AU')
-  const services = [...home.matchAll(/<a[^>]*href="(\/business\/[^\"]+)"[^>]*data-au-coming-soon="service"[^>]*>([\s\S]*?)<\/a>/g)]
-  assert.equal(services.length, 2)
-  assert.deepEqual(services.map(match => match[1]), ['/business/cafe-supply', '/business/consulting'])
-  for (const [, , service] of services) {
-    assert.match(service, /Coming Soon/)
-    assert.doesNotMatch(service, /<form|Add to order|Checkout/i)
-  }
+  const services = home.match(/class="au-v02-business-grid"([\s\S]*?)<\/section>/)[1]
+  assert.deepEqual([...services.matchAll(/href="(\/business\/[^\"]+)"/g)].map(match => match[1]), ['/business/events', '/business/cafe-supply', '/business/consulting'])
+  assert.match(services, /Coming Soon · Enquiries/)
+  assert.match(services, /Introduction · Enquiries/)
+  assert.doesNotMatch(services, /<form|Add to order|Checkout/i)
 })
 
 test('AU Home has a public heading, a reachable collection anchor and keyboard-operable best products', async () => {
@@ -203,7 +205,7 @@ test('AU Home has a public heading, a reachable collection anchor and keyboard-o
   assert.equal((home.match(/<h1\b/g) || []).length, 1)
   assert.doesNotMatch(home, /COPY TBD/)
   assert.match(home, /id="au-collection"/)
-  for (const className of ['rd-best-photo-frame', 'rd-best-action-row']) {
+  for (const className of ['au-v02-best-image', 'au-v02-best-action']) {
     const links = [...home.matchAll(new RegExp(`<a[^>]*class="${className}"[^>]*href="(/cakes/[^\"]+)"`, 'g'))]
     assert.equal(links.length, 3)
   }
@@ -275,14 +277,15 @@ test('AU chocolate detail renders button variants and a bounded quantity stepper
 
 test('AU Home filters chocolates inline while standalone category navigation remains available', async () => {
   const { home, cakes, chocolates } = await render('AU')
-  const homeRail = home.match(/<nav[^>]*aria-label="Collection categories"[^>]*>([\s\S]*?)<\/nav>/)[1]
+  const homeRail = home.match(/<div[^>]*role="tablist"[^>]*>([\s\S]*?)<\/div>/)[1]
   const homeHeader = home.match(/<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
-  assert.match(homeRail, /<button[^>]*aria-pressed="false"[^>]*><span>CHOCOLATES<\/span><span[^>]*>\[4\]<\/span><\/button>/)
-  assert.match(homeRail, /GÂTEAU SHARING<\/span><span[^>]*>\[3\]<\/span>/)
+  assert.match(homeRail, /<button[^>]*aria-selected="false"[^>]*>CHOCOLATES<span>\[4\]<\/span><\/button>/)
+  assert.match(homeRail, /SHARING \/ CELEBRATION<span>\[3\]<\/span>/)
   assert.doesNotMatch(homeRail, /GATHER/)
   assert.doesNotMatch(homeRail, /href="\/chocolates"/)
-  assert.match(homeRail, /ALL PRODUCTS<\/span><span[^>]*>\[12\]<\/span>/)
-  assert.match(homeHeader, /href="\/chocolates">CHOCOLATES<\/a>/)
+  assert.match(homeRail, /aria-selected="true"[^>]*>WHOLE CAKES<span>\[4\]<\/span>/)
+  assert.doesNotMatch(homeRail, /ALL PRODUCTS/)
+  assert.match(homeHeader, /href="\/#au-collection">MENU<\/a>/)
   for (const category of [cakes, chocolates]) {
     const rail = category.match(/<nav[^>]*aria-label="Product categories"[^>]*>([\s\S]*?)<\/nav>/)[1]
     assert.match(rail, /href="\/cakes"[^>]*>CAKES \[6\]<\/a>/)
@@ -290,8 +293,8 @@ test('AU Home filters chocolates inline while standalone category navigation rem
   }
 })
 
-test('chocolate Home, list, detail and related cards share each product photography mapping', async () => {
-  const { home, chocolates, chocolateDetails, chocolateProducts } = await render('AU')
+test('chocolate Home mapping, list, detail and related cards share each product photography mapping', async () => {
+  const { homeCollections, chocolates, chocolateDetails, chocolateProducts } = await render('AU')
   for (const [index, product] of chocolateProducts.entries()) {
     assert.equal(product.photography.src, `/products/chocolates/${product.slug}.webp`)
     const photo = readFileSync(`public${product.photography.src}`)
@@ -302,13 +305,14 @@ test('chocolate Home, list, detail and related cards share each product photogra
     assert.doesNotMatch(`${product.photography.alt} ${product.photography.caption}`, /coming soon|reference photo|may differ/i)
     assert.doesNotMatch(product.photography.src, /\/Users\/|https?:|pave-chocolate-cake|hero-cake/)
     const card = chocolates.match(new RegExp(`<article[^>]*data-au-product="${product.slug}"[^>]*>([\\s\\S]*?)<\\/article>`))[1]
-    const homeCard = home.match(new RegExp(`<article[^>]*data-au-product="${product.slug}"[^>]*>([\\s\\S]*?)<\\/article>`))?.[1]
-    assert.ok(homeCard, `${product.slug}: missing Home collection card`)
-    assert.ok(homeCard.includes(`href="/chocolates/${product.slug}"`))
-    assert.ok(homeCard.includes(product.packLabel))
-    assert.ok(homeCard.includes(product.price))
-    assert.doesNotMatch(homeCard, /Preview/)
-    for (const markup of [homeCard, card, ...(index === 0 ? [] : [chocolateDetails[index]])]) {
+    const homeCard = homeCollections.find(group => group.id === 'chocolates').products.find(card => card.id === product.slug)
+    assert.ok(homeCard, `${product.slug}: missing Home collection mapping`)
+    assert.equal(homeCard.href, `/chocolates/${product.slug}`)
+    assert.equal(homeCard.description, product.packLabel)
+    assert.equal(homeCard.price, product.price)
+    assert.equal(homeCard.image, product.photography.src)
+    assert.equal(homeCard.imageAlt, product.photography.alt)
+    for (const markup of [card, ...(index === 0 ? [] : [chocolateDetails[index]])]) {
       assert.ok(markup.includes(`src="${product.photography.src}"`))
       assert.ok(markup.includes(`alt="${product.photography.alt}"`))
     }

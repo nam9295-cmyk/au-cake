@@ -10,7 +10,7 @@ const appSource = await readSource('../src/App.tsx')
 const cssSource = await readExpandedCss(new URL('../src/index.css', import.meta.url))
 const adminLoginSource = await readSource('../src/AdminLoginPage.tsx')
 const customerPageSources = await Promise.all([
-  '../src/pages/HomePage.tsx',
+  '../src/pages/LegacyHomePage.tsx',
   '../src/pages/ClassesPage.tsx',
   '../src/pages/ReservePage.tsx',
   '../src/pages/CompletePage.tsx',

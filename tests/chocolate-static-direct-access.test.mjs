@@ -65,9 +65,11 @@ async function renderAuHome() {
           import React from 'react';
           import { renderToStaticMarkup } from 'react-dom/server';
           import { HomePage } from './src/pages/HomePage';
+          import { getAuHomeCollections } from './src/lib/au-home';
           console.log(renderToStaticMarkup(React.createElement(HomePage, {
             navigate() {}, navigateToCake() {}, language: 'en', setLanguage() {}, cartItemCount: 0
           })));
+          console.log(JSON.stringify(getAuHomeCollections('en').find(category => category.id === 'chocolates').products.map(product => product.href)));
         `
         if (/\.(png|jpg|webp|svg)$/.test(id)) return 'export default "test-image"'
       },
@@ -100,9 +102,11 @@ test('AU production dist serves each Chocolate route by its extensionless URL', 
 
 test('AU Home CHOCOLATES link points to a generated direct-load route', { skip: process.env.VITE_MARKET === 'KR' }, async () => {
   const home = await renderAuHome()
-  const hrefs = [...home.matchAll(/<a href="([^"]+)"[^>]*>CHOCOLATES<\/a>/g)].map((match) => match[1])
+  const hrefs = [...home.matchAll(/<a href="([^"]+)"[^>]*>ALL CHOCOLATES/g)].map((match) => match[1])
   assert.ok(hrefs.length > 0, 'Home must expose a CHOCOLATES link')
-  const homeDetails = [...new Set([...home.matchAll(/href="(\/chocolates\/[^"]+)"/g)].map((match) => match[1]))].sort()
+  // Whole Cakes is the default SSR panel. Validate Chocolate tab destinations
+  // from the same Home catalogue mapping (interaction is covered in browser QA).
+  const homeDetails = JSON.parse(home.trim().split('\n').at(-1)).filter(path => path.startsWith('/chocolates/')).sort()
   const generatedDetails = (await readdir(join(dist, 'chocolates')))
     .filter((file) => file.endsWith('.html'))
     .map((file) => `/chocolates/${file.slice(0, -5)}`).sort()

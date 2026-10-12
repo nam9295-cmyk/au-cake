@@ -7,6 +7,8 @@ import { type Page } from '../lib/app-routes'
 import { getAnalyticsConsent, initializeAnalytics, setAnalyticsConsent, trackEvent, trackPageView } from '../lib/analytics'
 import { cakeCopy, type Language } from '../lib/i18n'
 import { isSpringClassCampaignActive } from '../lib/class-campaign'
+import { marketConfig } from '../lib/market'
+import { AuRedesignHeader } from './AuRedesignChrome'
 
 const PICKUP_LOCATION_NAME = 'Pulse - Melrose Park'
 const PICKUP_LOCATION_ADDRESS = '1 Bundil Blvd, Melrose Park NSW 2114'
@@ -131,7 +133,13 @@ export function HomeTigerBackground() {
   return <div className="home-tiger-background" aria-hidden="true" />
 }
 
-export function SiteHeader({
+export function SiteHeader(props: Parameters<typeof LegacySiteHeader>[0]) {
+  // Admin login has no language prop; preserve its existing private chrome.
+  if (marketConfig.market === 'AU' && props.language !== undefined) return <AuRedesignHeader cartItemCount={props.cartItemCount || 0} />
+  return <LegacySiteHeader {...props} />
+}
+
+function LegacySiteHeader({
   navigate,
   language,
   setLanguage,

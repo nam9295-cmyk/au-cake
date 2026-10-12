@@ -73,8 +73,9 @@ test('home and classes hand off to one indexable reviews route with generated SE
   const sitemap = read('public/sitemap.xml')
   const publicPageSources = app + home + classes
   assert.match(app, /page === 'reviews'.*<ReviewsArchive/s)
-  assert.equal((publicPageSources.match(/onViewAll=\{\(\) => navigate\('reviews'\)\}/g) || []).length, 2)
-  assert.equal((publicPageSources.match(/functionEndpoint=\{appwriteConfig\.publicEndpoint\}/g) || []).length, 3)
+  assert.equal((publicPageSources.match(/onViewAll=\{\(\) => navigate\('reviews'\)\}/g) || []).length, 1)
+  assert.equal((publicPageSources.match(/functionEndpoint=\{appwriteConfig\.publicEndpoint\}/g) || []).length, 2)
+  assert.match(home, /href="\/reviews"/)
   assert.match(routes, /if \(path === '\/reviews'\) return 'reviews'/)
   assert.match(generatedSeo, /'\/reviews': \{[\s\S]*robots: 'index, follow'/)
   assert.match(sitemap, /<loc>https:\/\/au\.verygood-chocolate\.com\/reviews<\/loc>/)

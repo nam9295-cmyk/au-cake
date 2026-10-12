@@ -49,10 +49,10 @@ async function renderHome(market, original = false) {
 
 test('AU renders the editorial home, product tabs and redesign navigation', async () => {
   const html = await renderHome('AU')
-  assert.match(html, /class="home-redesign-wrap"/)
-  assert.match(html, /class="rd-header"/)
-  assert.match(html, /ALL PRODUCTS/)
-  assert.match(html, /class="rd-footer"/)
+  assert.match(html, /class="home-redesign-wrap au-home-v02"/)
+  assert.match(html, /class="au-v02-header rd-header"/)
+  assert.match(html, /WHOLE CAKES/)
+  assert.match(html, /class="rd-footer au-v02-footer"/)
 })
 
 test('AU Hero provides responsive first-frame artwork before video playback is available', async () => {

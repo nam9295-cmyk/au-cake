@@ -31,14 +31,12 @@ test('App delegates the public shell and home page to explicit modules', () => {
   assert.match(homeSource, /export function HomePage\b/)
 })
 
-test('HomePage owns its catalogue and hero asset dependencies', () => {
-  assert.match(homeSource, /from '\.\.\/lib\/cake-catalog'/)
-  assert.match(homeSource, /from '\.\.\/assets\/hero-cake-2\.webp'/)
-  assert.doesNotMatch(homeSource, /from '\.\.\/assets\/basquecheesecake\.webp'/)
-  assert.match(homeSource, /<SiteHeader/)
-  assert.match(homeSource, /<PickupLocationCard/)
-  assert.match(homeSource, /image:\s*'\/products\/brownie-cheesecake-sydney\.webp', label: 'Brownie Cheesecake'/)
-  assert.doesNotMatch(homeSource, /label:\s*'Vanilla Fresh Cream Cake'/)
+test('AU Home delegates catalogue display and preserves the existing Hero and KR Home', () => {
+  assert.match(homeSource, /from '\.\.\/lib\/au-home'/)
+  assert.match(homeSource, /<AuHeroVideo/)
+  assert.match(homeSource, /<AuRedesignHeader[^>]*cartItemCount=\{cartItemCount\}/)
+  assert.match(homeSource, /marketConfig.market === 'AU' \?\s*\(\s*<AuHomePage/)
+  assert.match(homeSource, /:\s*\(\s*<LegacyHomePage/)
 })
 
 test('fixed public overlays do not overlap or widen the document', () => {

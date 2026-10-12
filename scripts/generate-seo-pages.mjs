@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
+import homeV02 from '../src/content/au-home-v02.json' with { type: 'json' }
 import { CHOCOLATE_PRODUCTS } from '../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { getHogirlSeoDefinitions } from './hogirl-seo.mjs'
 import { getPortfolioSeoDefinition } from './portfolio-seo.mjs'
@@ -209,8 +210,8 @@ const privatePages = {
 
 const homeFallback = `
       <main class="seo-fallback">
-        <h1>${escapeHtml(auPublicPages.home.h1)}</h1>
-        <p>${escapeHtml(auPublicPages.home.hero)}</p>
+        <h1>${escapeHtml(isAuMarket ? homeV02.headline : auPublicPages.home.h1)}</h1>
+        <p>${escapeHtml(isAuMarket ? homeV02.description : auPublicPages.home.hero)}</p>
         <p><strong>${escapeHtml(auPublicPages.home.pickup)}</strong></p>
         <section>
           <h2>Chocolate cakes available to request</h2>
@@ -225,7 +226,7 @@ const homeFallback = `
 const pages = {
   '/': {
     title: auPublicPages.home.title,
-    description: auPublicPages.home.description,
+    description: isAuMarket ? homeV02.description : auPublicPages.home.description,
     robots: 'index, follow',
     structuredData: [
       organization,

@@ -67,8 +67,13 @@ test('SEO generator writes shared homepage content, cake pages, and AU sitemap',
     home,
     new RegExp('<title>' + escapeRegExp(auPublicPages.home.title) + '</title>'),
   )
-  assert.match(home, /<h1>Made-to-Order Chocolate Cakes in Sydney<\/h1>/)
-  assert.match(home, /Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney/)
+  if (process.env.VITE_MARKET?.toUpperCase() === 'AU') {
+    assert.match(home, /<h1>CHOCOLATE, CAKES &amp; CELEBRATIONS\.<\/h1>/)
+    assert.match(home, /Made-to-order cakes and chocolate creations in Sydney\. Explore our menu, custom cakes and business enquiries\./)
+  } else {
+    assert.match(home, /<h1>Made-to-Order Chocolate Cakes in Sydney<\/h1>/)
+    assert.match(home, /Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney/)
+  }
   assert.match(home, /Signature Gâteau au Chocolat/)
   assert.match(home, /Brownie Cheesecake/)
   assert.match(home, /Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)

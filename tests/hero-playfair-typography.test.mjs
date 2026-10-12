@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const css = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
-const home = readFileSync(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
+const home = readFileSync(new URL('../src/pages/LegacyHomePage.tsx', import.meta.url), 'utf8')
 
 function rule(selector) {
   const match = css.match(new RegExp(`${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([\\s\\S]*?)\\n\\}`, 'm'))

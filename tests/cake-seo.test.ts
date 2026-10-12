@@ -63,7 +63,7 @@ test('home and seven sale cake detail routes use AU self canonicals', () => {
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
   assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
-  assert.equal(config.description, "Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney: Pavé chocolate gâteau, signature gâteau loaf, cupcakes, vanilla fresh cream cake, brownie basque cheesecake, lemon cake and s'more sticks.")
+  assert.equal(config.description, 'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.')
   assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList', 'FAQPage'])
   const organization = config.structuredData?.find((entry) => entry['@type'] === 'Organization')
   const faq = config.structuredData?.find((entry) => entry['@type'] === 'FAQPage')
@@ -119,7 +119,7 @@ test('runtime route metadata comes from the typed public-content adapter', () =>
     const page = getPublicRoutePage(path)
     assert.ok(page)
     assert.equal(getSeoConfig(path).title, page.title)
-    assert.equal(getSeoConfig(path).description, page.description)
+    assert.equal(getSeoConfig(path).description, path === '/' ? 'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.' : page.description)
   }
 })
 

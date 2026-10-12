@@ -1,0 +1,300 @@
+/* Emitted only by AU public chrome. KR and private headers keep SiteChrome. */
+.au-v02-header.au-v02-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: 76px;
+  min-height: 76px;
+  padding: 0 48px;
+  border-bottom: 1px solid #e8e4e5;
+  background: #fff;
+  color: #352f31;
+  font-family: 'SUIT Variable', sans-serif;
+  box-sizing: border-box;
+}
+.au-v02-header.au-v02-header a {
+  color: inherit;
+  text-decoration: none;
+}
+.au-v02-header.au-v02-header .au-v02-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1f5a46;
+  font:
+    700 20px 'Work Sans',
+    sans-serif;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.au-v02-header .au-v02-wordmark span {
+  font:
+    700 11px 'SUIT Variable',
+    sans-serif;
+  letter-spacing: 0.4px;
+  color: #7a7274;
+}
+.au-v02-header .au-v02-primary {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.au-v02-header .au-v02-primary a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+.au-v02-header .au-v02-primary a:hover {
+  color: #1f5a46;
+}
+.au-v02-header .au-v02-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.au-v02-header .au-v02-studio {
+  font-size: 10px;
+  color: #7a7274;
+  white-space: nowrap;
+}
+.au-v02-header.au-v02-header .au-v02-bag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 3px;
+  background: #1f5a46;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.au-v02-header .au-language-control {
+  display: flex;
+}
+.au-v02-header .au-language-options {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid #e8e4e5;
+  border-radius: 3px;
+}
+.au-v02-header .au-language-options button {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  min-height: 44px;
+  padding: 0 5px;
+  color: #7a7274;
+  cursor: pointer;
+}
+.au-v02-header .au-language-options button[aria-pressed='true'] {
+  color: #1f5a46;
+  font-weight: 700;
+}
+.au-v02-header .au-language-compact {
+  display: none;
+}
+.au-v02-header .au-v02-menu-button {
+  display: none;
+}
+.au-v02-header :is(a, button):focus-visible {
+  outline: 2px solid #1f5a46;
+  outline-offset: 3px;
+}
+.au-v02-header .au-v02-menu {
+  padding: 0;
+  border: 0;
+  max-width: none;
+  max-height: 100dvh;
+  width: min(100%, 430px);
+  height: 100dvh;
+  margin: 0 0 0 auto;
+  color: #352f31;
+  background: white;
+  overflow-y: auto;
+}
+.au-v02-header .au-v02-menu::backdrop {
+  background: rgb(21 58 46 / 35%);
+}
+.au-v02-header .au-v02-menu-panel {
+  padding: 0 16px 24px;
+}
+.au-v02-header .au-v02-menu-top {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #e8e4e5;
+}
+.au-v02-header .au-v02-menu-top .au-v02-wordmark {
+  margin-right: auto;
+}
+.au-v02-header .au-v02-menu-top button,
+.au-v02-header .au-v02-menu-button {
+  border: 1px solid #e8e4e5;
+  border-radius: 4px;
+  color: #1f5a46;
+  background: white;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.au-v02-header .au-v02-menu-location {
+  margin: 16px 0;
+  padding: 14px;
+  border-radius: 4px;
+  background: #faf7f5;
+  color: #1f5a46;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+}
+.au-v02-header .au-v02-menu-links {
+  display: grid;
+  gap: 10px;
+}
+.au-v02-header .au-v02-menu-links a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #f0ebe8;
+  border-radius: 6px;
+}
+.au-v02-header .au-v02-menu-links strong {
+  display: block;
+  font:
+    700 17px 'Work Sans',
+    sans-serif;
+}
+.au-v02-header .au-v02-menu-links small {
+  display: block;
+  margin-top: 5px;
+  color: #6a6264;
+  font-size: 13px;
+}
+.au-v02-header .au-v02-menu-links .au-v02-custom-link {
+  border-color: #c2dacf;
+  background: #f4f8f5;
+}
+.au-v02-header .au-v02-menu-secondary {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #e8e4e5;
+  border-radius: 6px;
+  background: #faf7f5;
+}
+.au-v02-header .au-v02-menu-secondary > a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  font-weight: 700;
+}
+.au-v02-header .au-v02-menu-secondary small {
+  font-size: 11px;
+  color: #1f5a46;
+}
+.au-v02-header .au-v02-menu-secondary p {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6a6264;
+}
+.au-v02-header .au-v02-menu-secondary nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border-top: 1px solid #e8e4e5;
+}
+.au-v02-header .au-v02-menu-secondary nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
+}
+.au-v02-header .au-v02-menu-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 12px;
+}
+@media (max-width: 1240px) {
+  .au-v02-header .au-v02-studio {
+    display: none;
+  }
+}
+@media (max-width: 1099px) {
+  .au-v02-header.au-v02-header {
+    height: 60px;
+    min-height: 60px;
+    padding: 0 16px;
+    gap: 10px;
+  }
+  .au-v02-header .au-v02-primary {
+    display: none;
+  }
+  .au-v02-header .au-v02-menu-button {
+    display: inline-flex;
+  }
+  .au-v02-header .au-v02-actions {
+    gap: 8px;
+  }
+  .au-v02-header .au-v02-wordmark {
+    font-size: 18px;
+    gap: 6px;
+  }
+  .au-v02-header .au-v02-wordmark span {
+    font-size: 10px;
+  }
+  .au-v02-header .au-language-options {
+    display: none;
+  }
+  .au-v02-header .au-language-compact {
+    display: block;
+    border: 0;
+    background: none;
+    padding: 0 4px;
+    min-height: 44px;
+    font: inherit;
+    font-size: 12px;
+    color: #1f5a46;
+    cursor: pointer;
+  }
+  .au-v02-header .au-v02-bag {
+    padding: 0 10px;
+  }
+  .au-v02-header .au-v02-menu-bottom .au-language-options {
+    display: flex;
+  }
+  .au-v02-header .au-v02-menu-bottom .au-language-compact {
+    display: none;
+  }
+}
+@media (max-width: 374px) {
+  .au-v02-header .au-v02-actions {
+    gap: 4px;
+  }
+  .au-v02-header .au-v02-wordmark span {
+    display: none;
+  }
+}

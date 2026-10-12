@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 import { readFile, stat } from 'node:fs/promises'
 import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
-const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
+// Legacy catalogue/quick-view contracts now belong to the preserved KR Home.
+// AU HOME v0.2 has independent runtime/browser coverage in home-v02 tests.
+const homeSource = await readFile(new URL('../src/pages/LegacyHomePage.tsx', import.meta.url), 'utf8')
 const cakesSource = await readFile(new URL('../src/CakesPage.tsx', import.meta.url), 'utf8')
 
 test('Home and cakes page render the same four groups from the shared AU cake catalogue', () => {

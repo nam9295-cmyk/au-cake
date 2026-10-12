@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 
 const chrome = readFileSync(new URL('../src/components/SiteChrome.tsx', import.meta.url), 'utf8')
-const home = readFileSync(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
+const home = readFileSync(new URL('../src/pages/LegacyHomePage.tsx', import.meta.url), 'utf8')
 const reserve = readFileSync(new URL('../src/pages/ReservePage.tsx', import.meta.url), 'utf8')
 const css = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
 const catalog = readFileSync(new URL('../src/lib/cake-catalog.ts', import.meta.url), 'utf8')

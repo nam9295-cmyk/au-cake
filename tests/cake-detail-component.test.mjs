@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises'
 import { readExpandedCss } from './helpers/read-expanded-css.mjs'
 
 const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
-const homeSource = await readFile(new URL('../src/pages/HomePage.tsx', import.meta.url), 'utf8')
+// The KR/legacy Home preserves the quick-view implementation; AU v0.2 uses catalogue links.
+const homeSource = await readFile(new URL('../src/pages/LegacyHomePage.tsx', import.meta.url), 'utf8')
 const detailSource = await readFile(new URL('../src/CakeDetailPage.tsx', import.meta.url), 'utf8')
 const editorialSource = await readFile(new URL('../src/CakeEditorialDetail.tsx', import.meta.url), 'utf8').catch(() => '')
 const editorialDataSource = await readFile(new URL('../src/lib/cake-editorial.ts', import.meta.url), 'utf8')

@@ -1,4 +1,5 @@
 import portfolio from '../content/au-company-portfolio.json' with { type: 'json' }
+import homeV02 from '../content/au-home-v02.json' with { type: 'json' }
 import serviceRoutes from '../content/au-service-routes.json' with { type: 'json' }
 import { getCakeDetailBySlug } from './cake-detail.js'
 import { getAuCakeCatalog } from './cake-catalog.js'
@@ -99,7 +100,7 @@ const publicSeo: Record<string, SeoConfig> = {
   }])),
   '/': {
     title: getPublicRoutePage('/')!.title,
-    description: getPublicRoutePage('/')!.description,
+    description: marketConfig.market === 'AU' ? homeV02.description : getPublicRoutePage('/')!.description,
     canonical: SITE_URL,
     structuredData: [
       organization,

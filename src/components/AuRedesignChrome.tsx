@@ -1,37 +1,9 @@
-import { useRef, type MouseEvent, type ReactNode } from 'react'
-import { AuLanguageToggle } from './AuLanguage'
+import { type MouseEvent, type ReactNode } from 'react'
+import { AuNavigation } from './AuNavigation'
 import { useAuLanguage } from '../lib/au-language'
 
-export function AuRedesignHeader({ cartItemCount }: { cartItemCount: number }) {
-  const { t } = useAuLanguage()
-  const menu = useRef<HTMLDetailsElement>(null)
-  const links = <>
-    <a href="/cakes">SHOP</a>
-    <a href="/chocolates">CHOCOLATES</a>
-    <a href="/cakes/custom-cake">CUSTOM CAKES</a>
-    <a href="/business/events">EVENTS & BUSINESS</a>
-    <a href="/classes">KIDS CLASSES</a>
-    <a href="/reviews">ABOUT</a>
-  </>
-  return (
-    <header className="au-redesign-header">
-      <a className="au-redesign-wordmark" href="/">verygood</a>
-      <nav className="au-redesign-desktop-nav" aria-label="Main navigation">{links}</nav>
-      <div className="au-redesign-header-actions">
-        <AuLanguageToggle />
-        <details className="au-redesign-mobile-menu" ref={menu} onKeyDown={(event) => {
-          if (event.key === 'Escape' && menu.current) {
-            menu.current.open = false
-            menu.current.querySelector('summary')?.focus()
-          }
-        }}>
-          <summary>{t('MENU', '메뉴')}</summary>
-          <nav aria-label="Mobile navigation">{links}<a href="/lookup">ORDER LOOKUP</a></nav>
-        </details>
-        <a href="/cart" aria-label={`Cart with ${cartItemCount} items`}>CART [{cartItemCount}]</a>
-      </div>
-    </header>
-  )
+export function AuRedesignHeader({ cartItemCount, home = false }: { cartItemCount: number; home?: boolean }) {
+  return <AuNavigation cartItemCount={cartItemCount} home={home} />
 }
 
 export function AuRedesignFooter() {
