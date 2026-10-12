@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
 import CakesPage from './CakesPage'
 import { AuRedesignFooter, AuRedesignHeader } from './components/AuRedesignChrome'
+import { AuLanguageProvider } from './components/AuLanguage'
 import { AuCategoryPage } from './pages/AuCategoryPage'
 import { AuChocolatePage } from './pages/AuChocolatePage'
 import CartPage from './CartPage'
@@ -67,6 +68,8 @@ const AdminClassesPage = lazy(() => import('./AdminClassesPage').then(({ AdminCl
 const AdminReviewsPage = lazy(() => import('./AdminReviewsPage'))
 const ReadOnlyCalendarPage = lazy(() => import('./ReadOnlyCalendarPage'))
 const HogirlApp = lazy(() => import('./stories/hogirl/HogirlApp'))
+const KoreaCustomerStoriesPage = lazy(() => import('./pages/KoreaCustomerStoriesPage'))
+const AuBusinessServicePage = lazy(() => import('./pages/AuBusinessServicePage'))
 
 function PrivateRouteFallback() {
   return <div role="status" aria-live="polite">Loading…</div>
@@ -74,6 +77,10 @@ function PrivateRouteFallback() {
 
 function HogirlRouteFallback() {
   return <div role="status" aria-live="polite">Loading story…</div>
+}
+
+function EditorialRouteFallback() {
+  return <div role="status" aria-live="polite">Loading page…</div>
 }
 
 function App() {
@@ -120,7 +127,7 @@ function App() {
   }, [language, page])
 
   useEffect(() => {
-    if (page === 'portfolio' || !shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
+    if (page === 'portfolio' || page === 'customer-stories' || page === 'business' || !shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
     hasLoadedSettings.current = true
     getSettings().then(setSettings)
   }, [page])
@@ -241,15 +248,15 @@ function App() {
     page === 'admin-reviews'
   const isPrivatePage = isAdminPage || page === 'calendar'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
-  const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio'].includes(page)
+  const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio', 'customer-stories', 'business'].includes(page)
 
   if (page === 'review') return <ReviewPage onOrderCake={orderCakeFromReview} />
 
   return (
-    <>
+    <AuLanguageProvider language={language} setLanguage={setLanguage}>
       {page === 'home' && <HomeTigerBackground />}
       <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage ? ' au-redesign-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
-      {!isAppwriteConfigured && page !== 'portfolio' && (
+      {!isAppwriteConfigured && page !== 'portfolio' && page !== 'customer-stories' && page !== 'business' && (
         <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}
       {!isPrivatePage && !isAuRedesignPage && <AnnouncementTicker language={language} />}
@@ -280,6 +287,8 @@ function App() {
         <AuRedesignHeader cartItemCount={cartItemCount} />
         {page === 'chocolates' ? <AuCategoryPage category="chocolates" language={language} /> : <AuChocolatePage key={pathname} slug={getChocolateSlugFromPath(pathname) || ''} onAddToOrder={addCartLine} onViewOrder={() => navigate('cart')} />}
       </>}
+      {page === 'customer-stories' && marketConfig.market === 'AU' && <><AuRedesignHeader cartItemCount={cartItemCount} /><Suspense fallback={<EditorialRouteFallback />}><KoreaCustomerStoriesPage /></Suspense></>}
+      {page === 'business' && marketConfig.market === 'AU' && <><AuRedesignHeader cartItemCount={cartItemCount} /><Suspense fallback={<EditorialRouteFallback />}><AuBusinessServicePage slug={pathname.replace(/\/$/, '').split('/').at(-1) || ''} /></Suspense></>}
       {page === 'custom-cake' && (
         <CustomCakePage
           navigate={navigate}
@@ -394,7 +403,7 @@ function App() {
       {!isPrivatePage && (isAuRedesignPage ? <AuRedesignFooter /> : <SiteFooter navigate={navigate} language={language} />)}
       {!isPrivatePage && <AnalyticsConsentBanner language={language} />}
     </div>
-    </>
+    </AuLanguageProvider>
   )
 }
 

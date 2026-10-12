@@ -18,6 +18,8 @@ const defaultPrivatePages = [
 
 const publicLazyPages = [
   ['HogirlApp', './stories/hogirl/HogirlApp'],
+  ['KoreaCustomerStoriesPage', './pages/KoreaCustomerStoriesPage'],
+  ['AuBusinessServicePage', './pages/AuBusinessServicePage'],
 ]
 
 const eagerModules = [
@@ -78,7 +80,7 @@ test('private route modules remain lazy and HOGIRL adds one isolated public lazy
     )
   }
 
-  assert.equal((appSource.match(/\blazy\(\(\) =>\s*import\(/g) || []).length, 7)
+  assert.equal((appSource.match(/\blazy\(\(\) =>\s*import\(/g) || []).length, namedPrivatePages.length + defaultPrivatePages.length + publicLazyPages.length)
 })
 
 test('review, public, and booking route modules stay eager', () => {
@@ -104,7 +106,8 @@ test('private routes retain their neutral fallback while HOGIRL receives its own
   assert.doesNotMatch(fallback, /<(?:nav|header|footer|button|a)\b/)
   assert.doesNotMatch(fallback, /navigate|settings|language|reservation|customer|admin/i)
 
-  assert.equal((appSource.match(/<Suspense\b/g) || []).length, 2)
+  assert.equal((appSource.match(/<Suspense\b/g) || []).length, 4)
+  assert.equal((appSource.match(/fallback=\{<EditorialRouteFallback \/>\}/g) || []).length, 2)
   assert.equal((appSource.match(/fallback=\{<PrivateRouteFallback \/>\}/g) || []).length, 1)
 
   const privateBoundary = appSource.match(/\{isPrivatePage && \(\s*<Suspense fallback=\{<PrivateRouteFallback \/>\}>([\s\S]*?)<\/Suspense>\s*\)\}/)?.[1] || ''

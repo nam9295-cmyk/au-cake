@@ -2,12 +2,15 @@ import { getCakeDetailBySlug } from './cake-detail.js'
 import { getHogirlRouteFromPath } from '../stories/hogirl/routes.js'
 import { getAuChocolatePreview } from './au-chocolate-preview.js'
 import { marketConfig } from './market.js'
+import serviceRoutes from '../content/au-service-routes.json' with { type: 'json' }
 
 export { isHogirlPath } from '../stories/hogirl/routes.js'
 
 export type Page =
   | 'home'
   | 'portfolio'
+  | 'customer-stories'
+  | 'business'
   | 'not-found'
   | 'cart'
   | 'cakes'
@@ -52,6 +55,8 @@ export function getChocolateSlugFromPath(path: string): string | null {
 export function getPageFromPath(path: string): Page {
   if (getHogirlRouteFromPath(path)) return 'hogirl'
   if (path === '/') return 'home'
+  if (marketConfig.market === 'AU' && serviceRoutes.some(route => route.path.startsWith('/business/') && route.path === path.replace(/\/$/, ''))) return 'business'
+  if (marketConfig.market === 'AU' && /^\/customer-stories\/korea\/?$/.test(path)) return 'customer-stories'
   if ((path === '/portfolio' || path === '/portfolio/') && marketConfig.market === 'AU') return 'portfolio'
   if (path === '/cart') return 'cart'
   if (path === '/cakes') return 'cakes'
@@ -82,6 +87,8 @@ export function pathForPage(page: Page): string {
   const paths: Record<Page, string> = {
     home: '/',
     portfolio: '/portfolio',
+    'customer-stories': '/customer-stories/korea',
+    business: '/business/events',
     'not-found': '/404',
     cart: '/cart',
     cakes: '/cakes',

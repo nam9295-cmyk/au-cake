@@ -1,0 +1,2306 @@
+{
+  "counts": {
+    "reviews": 293,
+    "photoReviews": 215,
+    "photos": 255,
+    "baemin": 114,
+    "coupang": 179
+  },
+  "photos": [
+    {
+      "reviewId": "R0004",
+      "platform": "baemin",
+      "photoId": "R0004-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0004-p01.jpg",
+      "sourceSha256": "afcbcaac55fd789a937cb8b8be2f92d376f19dd45ca0b368528f915f21f57f2f",
+      "sourceBytes": 326657,
+      "optimizedBytes": 150030
+    },
+    {
+      "reviewId": "R0005",
+      "platform": "baemin",
+      "photoId": "R0005-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0005-p01.jpg",
+      "sourceSha256": "0c9a3788b41ca7970790b4e58d00a6849f9cfb0c8b2f6383d6da5d526cf9be63",
+      "sourceBytes": 113818,
+      "optimizedBytes": 86094
+    },
+    {
+      "reviewId": "R0006",
+      "platform": "baemin",
+      "photoId": "R0006-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0006-p01.jpg",
+      "sourceSha256": "00eb1b2a49643eea70beb1982a1884b63c1274242b18736ed60b231b11ed3d1c",
+      "sourceBytes": 152156,
+      "optimizedBytes": 125482
+    },
+    {
+      "reviewId": "R0007",
+      "platform": "baemin",
+      "photoId": "R0007-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0007-p01.jpg",
+      "sourceSha256": "7d3abc8df9e66263bae37a6f9e4614f62b23418f6b425175af0c7400ef68ee63",
+      "sourceBytes": 151767,
+      "optimizedBytes": 48140
+    },
+    {
+      "reviewId": "R0010",
+      "platform": "baemin",
+      "photoId": "R0010-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0010-p01.jpg",
+      "sourceSha256": "e5bbfbf5014334e72ee24c1d77f624e5fde1b0205eea236431cdce6ef16dfbbf",
+      "sourceBytes": 220808,
+      "optimizedBytes": 82138
+    },
+    {
+      "reviewId": "R0011",
+      "platform": "baemin",
+      "photoId": "R0011-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0011-p01.jpg",
+      "sourceSha256": "c4fcdb223782e6f828e4e206e613c196fef232e3281c365f2415b7121b3bcf02",
+      "sourceBytes": 500340,
+      "optimizedBytes": 277104
+    },
+    {
+      "reviewId": "R0013",
+      "platform": "baemin",
+      "photoId": "R0013-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0013-p01.jpg",
+      "sourceSha256": "21d3254ece138d86ed8d68b1b6e5846bf5a2e750553d1c5c499eff70d970e655",
+      "sourceBytes": 196903,
+      "optimizedBytes": 151802
+    },
+    {
+      "reviewId": "R0013",
+      "platform": "baemin",
+      "photoId": "R0013-p02",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0013-p02.jpg",
+      "sourceSha256": "dbf9968de664beef40523df32544a5002b3ced7fa7c8f467c01c464f0e7e5793",
+      "sourceBytes": 128127,
+      "optimizedBytes": 73572
+    },
+    {
+      "reviewId": "R0016",
+      "platform": "baemin",
+      "photoId": "R0016-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0016-p01.jpg",
+      "sourceSha256": "8b1bc480a9db8cb3b7db0ea69239554571dbe287ce4499db87bb6153a25a3b7b",
+      "sourceBytes": 302661,
+      "optimizedBytes": 129336
+    },
+    {
+      "reviewId": "R0017",
+      "platform": "baemin",
+      "photoId": "R0017-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0017-p01.jpg",
+      "sourceSha256": "75dc9a05091b85fd39886ff516d21fbccc82f389c3d50a6fb392a10de5513b7a",
+      "sourceBytes": 238069,
+      "optimizedBytes": 105766
+    },
+    {
+      "reviewId": "R0020",
+      "platform": "baemin",
+      "photoId": "R0020-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0020-p01.jpg",
+      "sourceSha256": "1d5507986faaa30c5bb539465ffe13275b999eda5ff07f4d2e54d69501ff098c",
+      "sourceBytes": 252625,
+      "optimizedBytes": 115258
+    },
+    {
+      "reviewId": "R0021",
+      "platform": "baemin",
+      "photoId": "R0021-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0021-p01.jpg",
+      "sourceSha256": "865c4e598c48a07b74699de847e23a4eaedfbdd78570eb0fc27aa5cf0331f1d0",
+      "sourceBytes": 263991,
+      "optimizedBytes": 96262
+    },
+    {
+      "reviewId": "R0022",
+      "platform": "baemin",
+      "photoId": "R0022-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0022-p01.jpg",
+      "sourceSha256": "ab068620720fef99c02db1bd4c3745845909e7823c765e21be2ba4649681692a",
+      "sourceBytes": 279519,
+      "optimizedBytes": 124624
+    },
+    {
+      "reviewId": "R0023",
+      "platform": "baemin",
+      "photoId": "R0023-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0023-p01.jpg",
+      "sourceSha256": "9d365298b3ad338147270509095a31ffa61cb95dceb941569594deaa27ddb5be",
+      "sourceBytes": 212003,
+      "optimizedBytes": 101594
+    },
+    {
+      "reviewId": "R0024",
+      "platform": "baemin",
+      "photoId": "R0024-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0024-p01.jpg",
+      "sourceSha256": "f54508248a7598e5c6c128aa02cd036cae3e55b5b1edc89b5ab3acc65017fc92",
+      "sourceBytes": 192521,
+      "optimizedBytes": 75802
+    },
+    {
+      "reviewId": "R0025",
+      "platform": "baemin",
+      "photoId": "R0025-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0025-p01.jpg",
+      "sourceSha256": "6d1d59f416a2d0dee9b2323d4bb711f6234db63946b5e9dfaaa0f54c06bfd8ac",
+      "sourceBytes": 265850,
+      "optimizedBytes": 133894
+    },
+    {
+      "reviewId": "R0026",
+      "platform": "baemin",
+      "photoId": "R0026-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0026-p01.jpg",
+      "sourceSha256": "85b9d7c4ce43ccfa5c91d6c1e585a4ecb5dced4a46989de8e07f9268081aa1b2",
+      "sourceBytes": 362574,
+      "optimizedBytes": 185708
+    },
+    {
+      "reviewId": "R0027",
+      "platform": "baemin",
+      "photoId": "R0027-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0027-p01.jpg",
+      "sourceSha256": "838fcfed8f0819d426bbaad7b649a4d560afa5eaed9c7ed392163dd5162176b8",
+      "sourceBytes": 398832,
+      "optimizedBytes": 183896
+    },
+    {
+      "reviewId": "R0028",
+      "platform": "baemin",
+      "photoId": "R0028-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0028-p01.jpg",
+      "sourceSha256": "5efd939044119cd9869f23dd543389ba94c9a72120272c1d0168b3c7c97fe55d",
+      "sourceBytes": 127169,
+      "optimizedBytes": 86478
+    },
+    {
+      "reviewId": "R0032",
+      "platform": "baemin",
+      "photoId": "R0032-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0032-p01.jpg",
+      "sourceSha256": "e9484ea6be1f57d07e3f44b533357e7394dd78fa910d771d36ee8ef7bb2c0a3d",
+      "sourceBytes": 130071,
+      "optimizedBytes": 107332
+    },
+    {
+      "reviewId": "R0033",
+      "platform": "baemin",
+      "photoId": "R0033-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0033-p01.jpg",
+      "sourceSha256": "8b99f61d4b411761b9719cf4dc01b6b60b0f474ece9fb80f1080e48adf8d7610",
+      "sourceBytes": 179996,
+      "optimizedBytes": 55832
+    },
+    {
+      "reviewId": "R0034",
+      "platform": "baemin",
+      "photoId": "R0034-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0034-p01.jpg",
+      "sourceSha256": "e0867312eee2a0fa62e9110ef5d5af89baa604e21ca42c4fb39525733c211959",
+      "sourceBytes": 210428,
+      "optimizedBytes": 200222
+    },
+    {
+      "reviewId": "R0035",
+      "platform": "baemin",
+      "photoId": "R0035-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0035-p01.jpg",
+      "sourceSha256": "b8be499675fa77db4407a0e4d2ed8be9226718959c2f0a9ef3e1fccd1c1f1b51",
+      "sourceBytes": 269193,
+      "optimizedBytes": 244902
+    },
+    {
+      "reviewId": "R0035",
+      "platform": "baemin",
+      "photoId": "R0035-p02",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0035-p02.jpg",
+      "sourceSha256": "70589fe344c6aa2dc94c2525e598a610c7e7bbdcd2dd4f26c45cf47a9e2ad68c",
+      "sourceBytes": 343118,
+      "optimizedBytes": 349898
+    },
+    {
+      "reviewId": "R0035",
+      "platform": "baemin",
+      "photoId": "R0035-p03",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0035-p03.jpg",
+      "sourceSha256": "418a1354f66ec4448fd33e7303c571a9789f871ea21126643d67dbdda8fa421f",
+      "sourceBytes": 173433,
+      "optimizedBytes": 136434
+    },
+    {
+      "reviewId": "R0036",
+      "platform": "baemin",
+      "photoId": "R0036-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0036-p01.jpg",
+      "sourceSha256": "a3a56d745c0a80c68d081fed31c0cbca41bb2b13b5f17bfbad655cf25d601dd4",
+      "sourceBytes": 191659,
+      "optimizedBytes": 154230
+    },
+    {
+      "reviewId": "R0037",
+      "platform": "baemin",
+      "photoId": "R0037-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0037-p01.jpg",
+      "sourceSha256": "3b514df04937583e6387a8f922060fd81bf1ddc3294261dab908770c980e8c79",
+      "sourceBytes": 495721,
+      "optimizedBytes": 282228
+    },
+    {
+      "reviewId": "R0038",
+      "platform": "baemin",
+      "photoId": "R0038-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0038-p01.jpg",
+      "sourceSha256": "715ff363e28768fe348f20c88bb486d4b0a8d127a6d981b91a7ee7d562561383",
+      "sourceBytes": 116527,
+      "optimizedBytes": 101236
+    },
+    {
+      "reviewId": "R0040",
+      "platform": "baemin",
+      "photoId": "R0040-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0040-p01.jpg",
+      "sourceSha256": "92941c246c3b4d997e918c3dfca8c18dcbdf43c5a1e385bc56b9a262784a310b",
+      "sourceBytes": 138565,
+      "optimizedBytes": 105438
+    },
+    {
+      "reviewId": "R0041",
+      "platform": "baemin",
+      "photoId": "R0041-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0041-p01.jpg",
+      "sourceSha256": "f9e6d9f5890131b96fba9356a86816cf307fc26a01dfe41b49d853f74c65ff6c",
+      "sourceBytes": 344830,
+      "optimizedBytes": 189234
+    },
+    {
+      "reviewId": "R0045",
+      "platform": "baemin",
+      "photoId": "R0045-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0045-p01.jpg",
+      "sourceSha256": "755c9a65ef19fbc87960149292d5ebd7b12a268f16a38c505053d448442ef1f6",
+      "sourceBytes": 374076,
+      "optimizedBytes": 183968
+    },
+    {
+      "reviewId": "R0048",
+      "platform": "baemin",
+      "photoId": "R0048-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0048-p01.jpg",
+      "sourceSha256": "e8c9e01955b25724eb07e7b76439b492c03d4a12026c4c16df3ee5b6f225eb13",
+      "sourceBytes": 206043,
+      "optimizedBytes": 185986
+    },
+    {
+      "reviewId": "R0048",
+      "platform": "baemin",
+      "photoId": "R0048-p02",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0048-p02.jpg",
+      "sourceSha256": "dbd97bb0d4459cd61757fec18d5c2ab9e2756e23cfe76f265aea4ef1c2432c61",
+      "sourceBytes": 144736,
+      "optimizedBytes": 113060
+    },
+    {
+      "reviewId": "R0048",
+      "platform": "baemin",
+      "photoId": "R0048-p03",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0048-p03.jpg",
+      "sourceSha256": "2015836f875fe62beb9ab5d8e6e90d026b21673f8393ac37207a64af2e24a564",
+      "sourceBytes": 134562,
+      "optimizedBytes": 98628
+    },
+    {
+      "reviewId": "R0048",
+      "platform": "baemin",
+      "photoId": "R0048-p04",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0048-p04.jpg",
+      "sourceSha256": "54c55507cb3306441c6df82468c4bd238514d2076cad8822d80cf9e6a3b33b20",
+      "sourceBytes": 116550,
+      "optimizedBytes": 83582
+    },
+    {
+      "reviewId": "R0049",
+      "platform": "baemin",
+      "photoId": "R0049-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0049-p01.jpg",
+      "sourceSha256": "099526be9a34b25f415118343fdbf2a9be62f077aa3b240707b9af04a7e6b8d3",
+      "sourceBytes": 208916,
+      "optimizedBytes": 215272
+    },
+    {
+      "reviewId": "R0050",
+      "platform": "baemin",
+      "photoId": "R0050-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0050-p01.jpg",
+      "sourceSha256": "e4039dfa9a57aecb4feaa83b2a1fcd7a207c7399133400d5e71865155eb17ab5",
+      "sourceBytes": 219042,
+      "optimizedBytes": 97570
+    },
+    {
+      "reviewId": "R0051",
+      "platform": "baemin",
+      "photoId": "R0051-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0051-p01.jpg",
+      "sourceSha256": "0872eea754540d54a1944b31c18a1ace0c552336c3cf10fa9179d489d2324be5",
+      "sourceBytes": 276857,
+      "optimizedBytes": 283156
+    },
+    {
+      "reviewId": "R0052",
+      "platform": "baemin",
+      "photoId": "R0052-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0052-p01.jpg",
+      "sourceSha256": "8a6cfd15339fcc2ac00fdedf821cc3a25ebdb91f9dbae7eca87966e33428cda2",
+      "sourceBytes": 374290,
+      "optimizedBytes": 190920
+    },
+    {
+      "reviewId": "R0054",
+      "platform": "baemin",
+      "photoId": "R0054-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0054-p01.jpg",
+      "sourceSha256": "d6de6402dbd910ab9a2070c2aca2b56fc3199ad0fbd89c6693d39fcd533a6ef8",
+      "sourceBytes": 260829,
+      "optimizedBytes": 115368
+    },
+    {
+      "reviewId": "R0055",
+      "platform": "baemin",
+      "photoId": "R0055-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0055-p01.jpg",
+      "sourceSha256": "8e7ed16984bf949598aed4854524bc3f6f5eda67bbd77173fda52219ea766b9b",
+      "sourceBytes": 148928,
+      "optimizedBytes": 109900
+    },
+    {
+      "reviewId": "R0056",
+      "platform": "baemin",
+      "photoId": "R0056-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0056-p01.jpg",
+      "sourceSha256": "7e195a5bd7d5ee158135dd8db2155aff3e492955d77467f96e822d72aba54ca4",
+      "sourceBytes": 260321,
+      "optimizedBytes": 117580
+    },
+    {
+      "reviewId": "R0057",
+      "platform": "baemin",
+      "photoId": "R0057-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0057-p01.jpg",
+      "sourceSha256": "eba85b982222315945553424af88c19602c5b3a9b3eb0cdda583f51b87e950d7",
+      "sourceBytes": 280610,
+      "optimizedBytes": 120410
+    },
+    {
+      "reviewId": "R0059",
+      "platform": "baemin",
+      "photoId": "R0059-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0059-p01.jpg",
+      "sourceSha256": "00031cb11660897c26281435b2c389ac0a3a4f2f65bcba11a983a2573082d315",
+      "sourceBytes": 155610,
+      "optimizedBytes": 136920
+    },
+    {
+      "reviewId": "R0060",
+      "platform": "baemin",
+      "photoId": "R0060-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0060-p01.jpg",
+      "sourceSha256": "adea0ce4201861b65f2e41d8952465913de47879a3dfdad33d7b4702be100672",
+      "sourceBytes": 283063,
+      "optimizedBytes": 130662
+    },
+    {
+      "reviewId": "R0062",
+      "platform": "baemin",
+      "photoId": "R0062-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0062-p01.jpg",
+      "sourceSha256": "29856fca4b7fe1516da3a59e7fd0541a96a953ead70eefff2071333d3470eca4",
+      "sourceBytes": 206594,
+      "optimizedBytes": 187826
+    },
+    {
+      "reviewId": "R0065",
+      "platform": "baemin",
+      "photoId": "R0065-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0065-p01.jpg",
+      "sourceSha256": "0f7d27986c22b253e09a9517fc550dfd2678f0d9fce55a1ec81d3313353292b0",
+      "sourceBytes": 141882,
+      "optimizedBytes": 113754
+    },
+    {
+      "reviewId": "R0068",
+      "platform": "baemin",
+      "photoId": "R0068-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0068-p01.jpg",
+      "sourceSha256": "741ebe18ebafff0d369ff555d94e634e6dd7bcb66f51ba680780f2be77afd6f8",
+      "sourceBytes": 136680,
+      "optimizedBytes": 106732
+    },
+    {
+      "reviewId": "R0069",
+      "platform": "baemin",
+      "photoId": "R0069-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0069-p01.jpg",
+      "sourceSha256": "34704450a902d7c7a28f4d9e018ece1330450177d12cc510c23a6bb643ee0f90",
+      "sourceBytes": 181980,
+      "optimizedBytes": 153812
+    },
+    {
+      "reviewId": "R0070",
+      "platform": "baemin",
+      "photoId": "R0070-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0070-p01.jpg",
+      "sourceSha256": "22f01cf5dea5a7dcf3ab172c4385ea68e0009994342b6e3896661a73f5b43cb1",
+      "sourceBytes": 151341,
+      "optimizedBytes": 122230
+    },
+    {
+      "reviewId": "R0071",
+      "platform": "baemin",
+      "photoId": "R0071-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0071-p01.jpg",
+      "sourceSha256": "265ad56ba3aa9b572f9e7619d034d85e5bfa456c4e24c4b11183d6d982c2153d",
+      "sourceBytes": 426111,
+      "optimizedBytes": 234254
+    },
+    {
+      "reviewId": "R0072",
+      "platform": "baemin",
+      "photoId": "R0072-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0072-p01.jpg",
+      "sourceSha256": "432256ca04582a4b689ee62fcc8188b45d5b8c6fdf15505ebd5f6901a6c0e1f0",
+      "sourceBytes": 188988,
+      "optimizedBytes": 191178
+    },
+    {
+      "reviewId": "R0073",
+      "platform": "baemin",
+      "photoId": "R0073-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0073-p01.jpg",
+      "sourceSha256": "23740597908b7673bafe7e75c1e14642aa6a22370b7ac8b69cc9909ede0ec94b",
+      "sourceBytes": 219176,
+      "optimizedBytes": 85120
+    },
+    {
+      "reviewId": "R0074",
+      "platform": "baemin",
+      "photoId": "R0074-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0074-p01.jpg",
+      "sourceSha256": "997187e7d8542a40a9d8168cf18c1ae2bfa4f0f066923ba4a8a04a814d1b356f",
+      "sourceBytes": 327767,
+      "optimizedBytes": 157056
+    },
+    {
+      "reviewId": "R0075",
+      "platform": "baemin",
+      "photoId": "R0075-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0075-p01.jpg",
+      "sourceSha256": "a1aaee1c6e433ca5000b0bbe6867279f0978f774573988cf800e708829e0c66a",
+      "sourceBytes": 325777,
+      "optimizedBytes": 163490
+    },
+    {
+      "reviewId": "R0076",
+      "platform": "baemin",
+      "photoId": "R0076-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0076-p01.jpg",
+      "sourceSha256": "48d1db79ad27a0adeb78890748614fc3296934239b1c1c69952cb6f21709f206",
+      "sourceBytes": 255316,
+      "optimizedBytes": 94094
+    },
+    {
+      "reviewId": "R0077",
+      "platform": "baemin",
+      "photoId": "R0077-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0077-p01.jpg",
+      "sourceSha256": "e5ecd84650159744bb42ea89e29a4107ece005aa9c464aea17a04869ac3593ae",
+      "sourceBytes": 134552,
+      "optimizedBytes": 100284
+    },
+    {
+      "reviewId": "R0078",
+      "platform": "baemin",
+      "photoId": "R0078-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0078-p01.jpg",
+      "sourceSha256": "b9f6d544e1b8444ee7c23fc49c1c90f243d933f6585b6d8611e660ef9f559490",
+      "sourceBytes": 210734,
+      "optimizedBytes": 202710
+    },
+    {
+      "reviewId": "R0078",
+      "platform": "baemin",
+      "photoId": "R0078-p02",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0078-p02.jpg",
+      "sourceSha256": "a6e017112d91fe515825ee9dc44099bdf15d238ce4c46bf55a1a0298cae864e3",
+      "sourceBytes": 194399,
+      "optimizedBytes": 174122
+    },
+    {
+      "reviewId": "R0080",
+      "platform": "baemin",
+      "photoId": "R0080-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0080-p01.jpg",
+      "sourceSha256": "0987ad337d0db6cab9c961dd7f117d258358fbc97fd4dcaf414e7d4fb6b991c9",
+      "sourceBytes": 107844,
+      "optimizedBytes": 64446
+    },
+    {
+      "reviewId": "R0081",
+      "platform": "baemin",
+      "photoId": "R0081-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0081-p01.jpg",
+      "sourceSha256": "862ca5de6ea21f2f6faf89cdb916e7646cba038a69571921521c4623295e363d",
+      "sourceBytes": 146983,
+      "optimizedBytes": 110954
+    },
+    {
+      "reviewId": "R0084",
+      "platform": "baemin",
+      "photoId": "R0084-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0084-p01.jpg",
+      "sourceSha256": "f4500f26afe8c1763ec531b640a1f80c8be98ced2249916520e76fd26875d872",
+      "sourceBytes": 362366,
+      "optimizedBytes": 179790
+    },
+    {
+      "reviewId": "R0085",
+      "platform": "baemin",
+      "photoId": "R0085-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0085-p01.jpg",
+      "sourceSha256": "869d0cc8ccd25660f1b20bf5b3d8ac79c2d7068f5ff97ad3e745b1266aec3e6c",
+      "sourceBytes": 252987,
+      "optimizedBytes": 110018
+    },
+    {
+      "reviewId": "R0086",
+      "platform": "baemin",
+      "photoId": "R0086-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0086-p01.jpg",
+      "sourceSha256": "984d4e0ae56899c4a486c5d5362c731f24731812e744340168404148addc3255",
+      "sourceBytes": 292026,
+      "optimizedBytes": 125704
+    },
+    {
+      "reviewId": "R0089",
+      "platform": "baemin",
+      "photoId": "R0089-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0089-p01.jpg",
+      "sourceSha256": "44581185cb773cebb1fb225a762da31630b0cdf7842cd51ef6de395a4cb29cbc",
+      "sourceBytes": 196132,
+      "optimizedBytes": 171630
+    },
+    {
+      "reviewId": "R0091",
+      "platform": "baemin",
+      "photoId": "R0091-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0091-p01.jpg",
+      "sourceSha256": "cb1f9ea332bf30c986c9ff8e9df4865c81e45efb595a545cd9e1e4301c4aef09",
+      "sourceBytes": 429891,
+      "optimizedBytes": 202826
+    },
+    {
+      "reviewId": "R0092",
+      "platform": "baemin",
+      "photoId": "R0092-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0092-p01.jpg",
+      "sourceSha256": "baf9fc80147a76b5b2f72312cb481e290c42a8b1f96350002be003b8930eeac0",
+      "sourceBytes": 172978,
+      "optimizedBytes": 147352
+    },
+    {
+      "reviewId": "R0092",
+      "platform": "baemin",
+      "photoId": "R0092-p02",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0092-p02.jpg",
+      "sourceSha256": "6f2c23e8058f9412ad202f1fa7d043e6b3c9c3710233d6c15cf4ae78f1bc7f80",
+      "sourceBytes": 222745,
+      "optimizedBytes": 213740
+    },
+    {
+      "reviewId": "R0094",
+      "platform": "baemin",
+      "photoId": "R0094-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0094-p01.jpg",
+      "sourceSha256": "b730cbc4e311d846ba85b36e2319366fd613dd6d921d9852c5693e24aa6d4276",
+      "sourceBytes": 360851,
+      "optimizedBytes": 174194
+    },
+    {
+      "reviewId": "R0095",
+      "platform": "baemin",
+      "photoId": "R0095-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0095-p01.jpg",
+      "sourceSha256": "ab2fcaa65d2be61878d8d58e551abdba90e4791a092ecc567568a993d44efe19",
+      "sourceBytes": 327489,
+      "optimizedBytes": 146818
+    },
+    {
+      "reviewId": "R0096",
+      "platform": "baemin",
+      "photoId": "R0096-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0096-p01.jpg",
+      "sourceSha256": "5335a7ed1e1789ce25f6e600f625ca7b305d36ccb59977ed7f6b1d2bb209fad7",
+      "sourceBytes": 300613,
+      "optimizedBytes": 151180
+    },
+    {
+      "reviewId": "R0097",
+      "platform": "baemin",
+      "photoId": "R0097-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0097-p01.jpg",
+      "sourceSha256": "f2e1d5e85db1c93779afcab3250281d41ed6f8d9063426e1e76e9b0ea7a465b7",
+      "sourceBytes": 85048,
+      "optimizedBytes": 39490
+    },
+    {
+      "reviewId": "R0098",
+      "platform": "baemin",
+      "photoId": "R0098-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0098-p01.jpg",
+      "sourceSha256": "b7575416c26bfc453070078fceb8773d9e07bd39f806ee5c239820ae11fa8153",
+      "sourceBytes": 280744,
+      "optimizedBytes": 144274
+    },
+    {
+      "reviewId": "R0099",
+      "platform": "baemin",
+      "photoId": "R0099-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0099-p01.jpg",
+      "sourceSha256": "6916f0ad5ea54b99ae5beb9349eb80156746ee8db952c1e5bd1b1e3cb34bcac4",
+      "sourceBytes": 288456,
+      "optimizedBytes": 146062
+    },
+    {
+      "reviewId": "R0104",
+      "platform": "baemin",
+      "photoId": "R0104-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0104-p01.jpg",
+      "sourceSha256": "1fca1ff605e0454780d2f3198ef87e1bd6e300a7ce573c6b9036c4b89509fa19",
+      "sourceBytes": 272991,
+      "optimizedBytes": 115250
+    },
+    {
+      "reviewId": "R0106",
+      "platform": "baemin",
+      "photoId": "R0106-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0106-p01.jpg",
+      "sourceSha256": "6770ae924fc68a01c1afec181421190e64c5aae5691f84df65a06192a319d78b",
+      "sourceBytes": 131334,
+      "optimizedBytes": 93898
+    },
+    {
+      "reviewId": "R0109",
+      "platform": "baemin",
+      "photoId": "R0109-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0109-p01.jpg",
+      "sourceSha256": "dfde6dd448f833b84c1bd82a22992572d84f206c73e8c1e218fa21ee9acfc0af",
+      "sourceBytes": 113805,
+      "optimizedBytes": 87772
+    },
+    {
+      "reviewId": "R0109",
+      "platform": "baemin",
+      "photoId": "R0109-p02",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0109-p02.jpg",
+      "sourceSha256": "af633d6eebdc9b77eea53730e6758b63c62c492fa128656d2f0853993ec7204e",
+      "sourceBytes": 133278,
+      "optimizedBytes": 103966
+    },
+    {
+      "reviewId": "R0111",
+      "platform": "baemin",
+      "photoId": "R0111-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0111-p01.jpg",
+      "sourceSha256": "1f3498815f1634e9053da42fa95079c71567d3a5cce35db59013fcb64e1a959d",
+      "sourceBytes": 216162,
+      "optimizedBytes": 75108
+    },
+    {
+      "reviewId": "R0113",
+      "platform": "baemin",
+      "photoId": "R0113-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0113-p01.jpg",
+      "sourceSha256": "f43a3398f9434aaff47aa089f9500def42ef2fb5fa8d603b9bb8070ddcc4a867",
+      "sourceBytes": 340551,
+      "optimizedBytes": 169138
+    },
+    {
+      "reviewId": "R0115",
+      "platform": "baemin",
+      "photoId": "R0115-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0115-p01.jpg",
+      "sourceSha256": "5ecaa60a89f2f9e5af90f493cfad8c50aa30c1a8c405b4f1009d79e0c1b4168e",
+      "sourceBytes": 385918,
+      "optimizedBytes": 202910
+    },
+    {
+      "reviewId": "R0118",
+      "platform": "baemin",
+      "photoId": "R0118-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0118-p01.jpg",
+      "sourceSha256": "ee2d4e4002fcef808ed7c77d463e8a87062ccd3fb4b6d3f59adf9ff516c3b788",
+      "sourceBytes": 174307,
+      "optimizedBytes": 150442
+    },
+    {
+      "reviewId": "R0118",
+      "platform": "baemin",
+      "photoId": "R0118-p02",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0118-p02.jpg",
+      "sourceSha256": "b4e4cd4586191fb4a5866f387791195061a2afdae5988c3f2080421de1a67c58",
+      "sourceBytes": 173802,
+      "optimizedBytes": 140336
+    },
+    {
+      "reviewId": "R0120",
+      "platform": "baemin",
+      "photoId": "R0120-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0120-p01.jpg",
+      "sourceSha256": "2b71ec02d4b493f46977bfc4ac5ac524558257bf600607f4fbec7e30515f7ee7",
+      "sourceBytes": 251744,
+      "optimizedBytes": 110380
+    },
+    {
+      "reviewId": "R0121",
+      "platform": "baemin",
+      "photoId": "R0121-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0121-p01.jpg",
+      "sourceSha256": "97e921c7ceb062a6fe2e2252a1608d1323763ab5c172ffade60a2a7bddadb9e3",
+      "sourceBytes": 161470,
+      "optimizedBytes": 56026
+    },
+    {
+      "reviewId": "R0121",
+      "platform": "baemin",
+      "photoId": "R0121-p02",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0121-p02.jpg",
+      "sourceSha256": "b101be313d1e8472863c82f2e2eb6767cbd01f9d55188ec8d4ba47a4f7a2f842",
+      "sourceBytes": 273806,
+      "optimizedBytes": 146558
+    },
+    {
+      "reviewId": "R0122",
+      "platform": "baemin",
+      "photoId": "R0122-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0122-p01.jpg",
+      "sourceSha256": "147613c84e0675ca4d8fe593a8b318a2687fe070ce385a9c3ff9eab054fda95d",
+      "sourceBytes": 193716,
+      "optimizedBytes": 171580
+    },
+    {
+      "reviewId": "R0123",
+      "platform": "baemin",
+      "photoId": "R0123-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0123-p01.jpg",
+      "sourceSha256": "a102a8cf3dad4d3fbe52c258f87ce8cbf591f1a126ddbf35383e0579b7a788b6",
+      "sourceBytes": 89788,
+      "optimizedBytes": 56940
+    },
+    {
+      "reviewId": "R0126",
+      "platform": "baemin",
+      "photoId": "R0126-p01",
+      "source": "baemin-korean-reviews-with-photos_2026-07-07_2026-10-07/photos/R0126-p01.jpg",
+      "sourceSha256": "fe034927812af29a6f9513f079ae698c38c746958b22024566aa80e995f763cf",
+      "sourceBytes": 308219,
+      "optimizedBytes": 152046
+    },
+    {
+      "reviewId": "CE0001",
+      "platform": "coupang",
+      "photoId": "CE0001-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0001-p01.jpg",
+      "sourceSha256": "e18c85c16de00539db6401fb678e3b9783ac82df47fc3df0334f76e6bebd3ab3",
+      "sourceBytes": 211991,
+      "optimizedBytes": 134588
+    },
+    {
+      "reviewId": "CE0002",
+      "platform": "coupang",
+      "photoId": "CE0002-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0002-p01.jpg",
+      "sourceSha256": "14a75896467e17f4da5200358084040763d3296589e1e9fc0234b3a9df6fa36b",
+      "sourceBytes": 177348,
+      "optimizedBytes": 115044
+    },
+    {
+      "reviewId": "CE0003",
+      "platform": "coupang",
+      "photoId": "CE0003-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0003-p01.jpg",
+      "sourceSha256": "37feb1c5deeb5186ba6ccbe8570861f7b971565424089c0a6104dba0146c82f0",
+      "sourceBytes": 143439,
+      "optimizedBytes": 88252
+    },
+    {
+      "reviewId": "CE0004",
+      "platform": "coupang",
+      "photoId": "CE0004-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0004-p01.jpg",
+      "sourceSha256": "75e7bf87c1b29cb577597bb3548c4bafa6f48a2fa8f0f01c86ccedf1de1d6ee8",
+      "sourceBytes": 139940,
+      "optimizedBytes": 81856
+    },
+    {
+      "reviewId": "CE0005",
+      "platform": "coupang",
+      "photoId": "CE0005-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0005-p01.jpg",
+      "sourceSha256": "5994f4fee808cc001846fe230b048670f181b98e50d078424b511b0ed16b0bee",
+      "sourceBytes": 140060,
+      "optimizedBytes": 78584
+    },
+    {
+      "reviewId": "CE0006",
+      "platform": "coupang",
+      "photoId": "CE0006-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0006-p01.jpg",
+      "sourceSha256": "225b5842469733270059ab65be0fe5074dd126f568247b0ac76b52ddd54eebe4",
+      "sourceBytes": 279690,
+      "optimizedBytes": 227752
+    },
+    {
+      "reviewId": "CE0007",
+      "platform": "coupang",
+      "photoId": "CE0007-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0007-p01.jpg",
+      "sourceSha256": "cf5b94a4ea9e5b870fe02817259cd8025fe7b7a9ace439e512908df89f905d4a",
+      "sourceBytes": 129167,
+      "optimizedBytes": 73358
+    },
+    {
+      "reviewId": "CE0007",
+      "platform": "coupang",
+      "photoId": "CE0007-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0007-p02.jpg",
+      "sourceSha256": "6592ad2e697f736ad11fdfe3f57d43d5db9beba098cab6829a8e63bd95cbe837",
+      "sourceBytes": 166926,
+      "optimizedBytes": 105844
+    },
+    {
+      "reviewId": "CE0008",
+      "platform": "coupang",
+      "photoId": "CE0008-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0008-p01.jpg",
+      "sourceSha256": "2fe9ab1eec2c7534f851a5ffdc4a6f9ea8618a742d53643c117f8c15e682811b",
+      "sourceBytes": 212081,
+      "optimizedBytes": 152366
+    },
+    {
+      "reviewId": "CE0010",
+      "platform": "coupang",
+      "photoId": "CE0010-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0010-p01.jpg",
+      "sourceSha256": "fd4a958a96fd667be215748c719d697f9d6bfd56820536c07c7066ad060b22c8",
+      "sourceBytes": 205888,
+      "optimizedBytes": 115860
+    },
+    {
+      "reviewId": "CE0011",
+      "platform": "coupang",
+      "photoId": "CE0011-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0011-p01.jpg",
+      "sourceSha256": "036b46422a43dfc7e2ea32664e5551845acbfd2a1e2c41ebca6f789b92d2cb8f",
+      "sourceBytes": 84119,
+      "optimizedBytes": 38588
+    },
+    {
+      "reviewId": "CE0013",
+      "platform": "coupang",
+      "photoId": "CE0013-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0013-p01.jpg",
+      "sourceSha256": "d64c855787d0bb666c6c50535fdd577908edc9edd32aff99cf77c2a5a7a5456d",
+      "sourceBytes": 119802,
+      "optimizedBytes": 70076
+    },
+    {
+      "reviewId": "CE0014",
+      "platform": "coupang",
+      "photoId": "CE0014-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0014-p01.jpg",
+      "sourceSha256": "a8b17ba2d97688a5cf330bbc30c9a1c1f02474fc00965d9ee522b994d770ad68",
+      "sourceBytes": 156046,
+      "optimizedBytes": 88368
+    },
+    {
+      "reviewId": "CE0015",
+      "platform": "coupang",
+      "photoId": "CE0015-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0015-p01.jpg",
+      "sourceSha256": "1c989e952db398aaad8280133490368c45bf1447e8d7994b2b85fede67575887",
+      "sourceBytes": 194795,
+      "optimizedBytes": 145278
+    },
+    {
+      "reviewId": "CE0018",
+      "platform": "coupang",
+      "photoId": "CE0018-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0018-p01.jpg",
+      "sourceSha256": "b17e18b10a254a454d102c485b33be5dc298a09cff48a21d3211eab3acb95bd5",
+      "sourceBytes": 147531,
+      "optimizedBytes": 79266
+    },
+    {
+      "reviewId": "CE0020",
+      "platform": "coupang",
+      "photoId": "CE0020-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0020-p01.jpg",
+      "sourceSha256": "a2886c360e1d974f3b090b6ebeccc4cfe0b6e24c0e3c9984217b8776ff2e4077",
+      "sourceBytes": 141326,
+      "optimizedBytes": 77924
+    },
+    {
+      "reviewId": "CE0021",
+      "platform": "coupang",
+      "photoId": "CE0021-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0021-p01.jpg",
+      "sourceSha256": "c30550e0d9f8d44df0efc51894a0c849ab605e489357622db51224e253c9fc81",
+      "sourceBytes": 328485,
+      "optimizedBytes": 180842
+    },
+    {
+      "reviewId": "CE0023",
+      "platform": "coupang",
+      "photoId": "CE0023-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0023-p01.jpg",
+      "sourceSha256": "9cff0237f0d545dd086b31348c8862c3c6426c8df906b04ace527bd2713273a3",
+      "sourceBytes": 149144,
+      "optimizedBytes": 96174
+    },
+    {
+      "reviewId": "CE0024",
+      "platform": "coupang",
+      "photoId": "CE0024-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0024-p01.jpg",
+      "sourceSha256": "209b39137dac897de00036c173d008814369113331ca778b2a4dfef7df149bc5",
+      "sourceBytes": 242411,
+      "optimizedBytes": 144502
+    },
+    {
+      "reviewId": "CE0026",
+      "platform": "coupang",
+      "photoId": "CE0026-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0026-p01.jpg",
+      "sourceSha256": "ff342f771c1e684ef04e5fb6d80b3cf7b03bd72716f2329b512d87816e0006e2",
+      "sourceBytes": 112776,
+      "optimizedBytes": 74314
+    },
+    {
+      "reviewId": "CE0027",
+      "platform": "coupang",
+      "photoId": "CE0027-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0027-p01.jpg",
+      "sourceSha256": "889a2ddaf03c97aebfacc8f96fdd75e706e76ada6402661de186a7fc231ae25a",
+      "sourceBytes": 96087,
+      "optimizedBytes": 44562
+    },
+    {
+      "reviewId": "CE0028",
+      "platform": "coupang",
+      "photoId": "CE0028-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0028-p01.jpg",
+      "sourceSha256": "153d060493a3e8016b481f274e0034887aeb6ce03b0b7245eb36cdd96ea3bdb4",
+      "sourceBytes": 162919,
+      "optimizedBytes": 95034
+    },
+    {
+      "reviewId": "CE0029",
+      "platform": "coupang",
+      "photoId": "CE0029-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0029-p01.jpg",
+      "sourceSha256": "95e2bb97c6f19efb5da12a03e71820c77be9ddd4bb15114c6a7f01866597731a",
+      "sourceBytes": 95592,
+      "optimizedBytes": 46838
+    },
+    {
+      "reviewId": "CE0031",
+      "platform": "coupang",
+      "photoId": "CE0031-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0031-p01.jpg",
+      "sourceSha256": "89c3654f101a1d7b5d0c759ecefec63c15e027d9b54e8dfadfc88dc965755cdf",
+      "sourceBytes": 235739,
+      "optimizedBytes": 168176
+    },
+    {
+      "reviewId": "CE0033",
+      "platform": "coupang",
+      "photoId": "CE0033-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0033-p01.jpg",
+      "sourceSha256": "f42b3f4ee3589bd01cf7f7a71bed7e39732bcca3350c70130580ed340fe2f3ac",
+      "sourceBytes": 298670,
+      "optimizedBytes": 253386
+    },
+    {
+      "reviewId": "CE0034",
+      "platform": "coupang",
+      "photoId": "CE0034-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0034-p01.jpg",
+      "sourceSha256": "8580f7d4001caf6fd53ca991a51aaeecce4cd62a31e9c51d2a4758cbbedce178",
+      "sourceBytes": 152751,
+      "optimizedBytes": 91266
+    },
+    {
+      "reviewId": "CE0035",
+      "platform": "coupang",
+      "photoId": "CE0035-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0035-p01.jpg",
+      "sourceSha256": "dc3b138918a8e6683fd37e9679143fd8a965bc38fe779f7f41168bc45f30922f",
+      "sourceBytes": 224487,
+      "optimizedBytes": 79550
+    },
+    {
+      "reviewId": "CE0037",
+      "platform": "coupang",
+      "photoId": "CE0037-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0037-p01.jpg",
+      "sourceSha256": "ac6b8abb427982f0230ca6d44dd103e06ec0225f92f86c65aad9f1ff64182e9e",
+      "sourceBytes": 176222,
+      "optimizedBytes": 121204
+    },
+    {
+      "reviewId": "CE0037",
+      "platform": "coupang",
+      "photoId": "CE0037-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0037-p02.jpg",
+      "sourceSha256": "ebfaa9f8dd79cb6b97b210aeda2b4e542e75adc70f13ecb11d0c70c10c42e0ac",
+      "sourceBytes": 176318,
+      "optimizedBytes": 117604
+    },
+    {
+      "reviewId": "CE0039",
+      "platform": "coupang",
+      "photoId": "CE0039-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0039-p01.jpg",
+      "sourceSha256": "ae999371ef7d18e3a95aa1a3b0e8d6a74df205f94e4a67972ed905a036d0c098",
+      "sourceBytes": 181629,
+      "optimizedBytes": 128606
+    },
+    {
+      "reviewId": "CE0041",
+      "platform": "coupang",
+      "photoId": "CE0041-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0041-p01.jpg",
+      "sourceSha256": "368c8719d71a224c5c49dd387fcca459f616dc0f202efbdb3d74c47325b014e8",
+      "sourceBytes": 342950,
+      "optimizedBytes": 274886
+    },
+    {
+      "reviewId": "CE0041",
+      "platform": "coupang",
+      "photoId": "CE0041-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0041-p02.jpg",
+      "sourceSha256": "30a548db7ae517c43bbaccaf6b55bb2ed1c4a2a93479b6d765adf4c0774b7b25",
+      "sourceBytes": 259487,
+      "optimizedBytes": 175664
+    },
+    {
+      "reviewId": "CE0041",
+      "platform": "coupang",
+      "photoId": "CE0041-p03",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0041-p03.jpg",
+      "sourceSha256": "efb6418965e75cca1a9a5390355b653204a5645231c447204378cc1a5abda1a4",
+      "sourceBytes": 317050,
+      "optimizedBytes": 247634
+    },
+    {
+      "reviewId": "CE0042",
+      "platform": "coupang",
+      "photoId": "CE0042-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0042-p01.jpg",
+      "sourceSha256": "cebbd8cf4590ef865023b8bcd9f8c809653408206a011e39ab9bc4ef8cd6ee4b",
+      "sourceBytes": 223584,
+      "optimizedBytes": 158082
+    },
+    {
+      "reviewId": "CE0044",
+      "platform": "coupang",
+      "photoId": "CE0044-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0044-p01.jpg",
+      "sourceSha256": "12ccfd995fcb5a12b9120be38a3f557e35271780a2b098e17358ea7ca096e508",
+      "sourceBytes": 208318,
+      "optimizedBytes": 140630
+    },
+    {
+      "reviewId": "CE0044",
+      "platform": "coupang",
+      "photoId": "CE0044-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0044-p02.jpg",
+      "sourceSha256": "3da79f23a148b03a0066a9f74a661afcbb46f536fadfcc426f95919e28c33491",
+      "sourceBytes": 234046,
+      "optimizedBytes": 170832
+    },
+    {
+      "reviewId": "CE0046",
+      "platform": "coupang",
+      "photoId": "CE0046-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0046-p01.jpg",
+      "sourceSha256": "8d11dc1862cc80dadd4c2f55c9afc7ef082b7683bdb66b7f32541ed30656cb35",
+      "sourceBytes": 130234,
+      "optimizedBytes": 71916
+    },
+    {
+      "reviewId": "CE0048",
+      "platform": "coupang",
+      "photoId": "CE0048-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0048-p01.jpg",
+      "sourceSha256": "f7ffae8eaa938055232aeb91a5c496adfb4fea69f600971c5c319538fc0e5b3a",
+      "sourceBytes": 170485,
+      "optimizedBytes": 113208
+    },
+    {
+      "reviewId": "CE0049",
+      "platform": "coupang",
+      "photoId": "CE0049-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0049-p01.jpg",
+      "sourceSha256": "92de3a11f1a49e0bb97e2797771dc734458e844137a6def822929b732f691cfd",
+      "sourceBytes": 160086,
+      "optimizedBytes": 100398
+    },
+    {
+      "reviewId": "CE0051",
+      "platform": "coupang",
+      "photoId": "CE0051-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0051-p01.jpg",
+      "sourceSha256": "0b1dc2bbd98a140f4dbdf0191ffa38fb26d1ea73afcee6db481311437cec5942",
+      "sourceBytes": 187431,
+      "optimizedBytes": 113620
+    },
+    {
+      "reviewId": "CE0052",
+      "platform": "coupang",
+      "photoId": "CE0052-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0052-p01.jpg",
+      "sourceSha256": "e5aac6c9876b3dd8815117fcfb0aa1744420a9651e383062a71288f9195d62ce",
+      "sourceBytes": 214488,
+      "optimizedBytes": 153726
+    },
+    {
+      "reviewId": "CE0054",
+      "platform": "coupang",
+      "photoId": "CE0054-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0054-p01.jpg",
+      "sourceSha256": "22ed05481ba9fd697bcd87773f524ea2b920941cc76b67131c19e0f3c18103de",
+      "sourceBytes": 210803,
+      "optimizedBytes": 120096
+    },
+    {
+      "reviewId": "CE0054",
+      "platform": "coupang",
+      "photoId": "CE0054-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0054-p02.jpg",
+      "sourceSha256": "0e2d2ea6ec5954cdf25ffb5d5ea37ec0f8f0b2719c34f8e54e483be872335162",
+      "sourceBytes": 178003,
+      "optimizedBytes": 80204
+    },
+    {
+      "reviewId": "CE0055",
+      "platform": "coupang",
+      "photoId": "CE0055-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0055-p01.jpg",
+      "sourceSha256": "732d6df1aeda3d6f683382359f77f8db1097ae7d8bf06a83e0418008afdea207",
+      "sourceBytes": 157584,
+      "optimizedBytes": 106752
+    },
+    {
+      "reviewId": "CE0055",
+      "platform": "coupang",
+      "photoId": "CE0055-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0055-p02.jpg",
+      "sourceSha256": "2285422a269ef3f84db7a161504afc2cfb1c89fb20fbb8b87f7bc657735945ac",
+      "sourceBytes": 148558,
+      "optimizedBytes": 103144
+    },
+    {
+      "reviewId": "CE0056",
+      "platform": "coupang",
+      "photoId": "CE0056-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0056-p01.jpg",
+      "sourceSha256": "8fb42a04eb87ce5eec822b9b915fc09cdf2ee0ff265b239211aaa9447c4d58df",
+      "sourceBytes": 206256,
+      "optimizedBytes": 104968
+    },
+    {
+      "reviewId": "CE0057",
+      "platform": "coupang",
+      "photoId": "CE0057-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0057-p01.jpg",
+      "sourceSha256": "4eda5e5045b17da2e9212d74660f5e98db0372dca05e9bfbe718861808ea59bc",
+      "sourceBytes": 148711,
+      "optimizedBytes": 103814
+    },
+    {
+      "reviewId": "CE0057",
+      "platform": "coupang",
+      "photoId": "CE0057-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0057-p02.jpg",
+      "sourceSha256": "7028721cbbaadef3af743d4bb52d7742e7e8f2be2b7e1c1d505a3b36c4335d02",
+      "sourceBytes": 187336,
+      "optimizedBytes": 152592
+    },
+    {
+      "reviewId": "CE0059",
+      "platform": "coupang",
+      "photoId": "CE0059-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0059-p01.jpg",
+      "sourceSha256": "15496bb17480dcdac11c16d70fb639defdf757ad9407572578d721c973376e56",
+      "sourceBytes": 291014,
+      "optimizedBytes": 197398
+    },
+    {
+      "reviewId": "CE0060",
+      "platform": "coupang",
+      "photoId": "CE0060-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0060-p01.jpg",
+      "sourceSha256": "98c05f0c71ee6a545079a3b262ef895f1741cd0dc8db716d5d154c2ae39be2ba",
+      "sourceBytes": 218150,
+      "optimizedBytes": 156894
+    },
+    {
+      "reviewId": "CE0061",
+      "platform": "coupang",
+      "photoId": "CE0061-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0061-p01.jpg",
+      "sourceSha256": "2675dea1aff42cb4f72a403aab049138d8b09687fdd715810d4135c992ebc842",
+      "sourceBytes": 167526,
+      "optimizedBytes": 105776
+    },
+    {
+      "reviewId": "CE0064",
+      "platform": "coupang",
+      "photoId": "CE0064-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0064-p01.jpg",
+      "sourceSha256": "caacb9649d73c8485e53bd8730f60f31e07941337200c872a00a45eb02f6d2fc",
+      "sourceBytes": 171535,
+      "optimizedBytes": 112200
+    },
+    {
+      "reviewId": "CE0065",
+      "platform": "coupang",
+      "photoId": "CE0065-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0065-p01.jpg",
+      "sourceSha256": "9c4ae414c3ceddc63e751ac74a4854ee8520e341bdf7fb4cf045310827a545cd",
+      "sourceBytes": 124158,
+      "optimizedBytes": 52330
+    },
+    {
+      "reviewId": "CE0066",
+      "platform": "coupang",
+      "photoId": "CE0066-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0066-p01.jpg",
+      "sourceSha256": "150e9b373c337b8dfbea51b5eabc6bee6a45446bdbdab842f7df1d1eb8a1731e",
+      "sourceBytes": 115604,
+      "optimizedBytes": 65692
+    },
+    {
+      "reviewId": "CE0066",
+      "platform": "coupang",
+      "photoId": "CE0066-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0066-p02.jpg",
+      "sourceSha256": "1c7f25cd69be5df21493b0081a2778962096023bd1ac101862ce64d6644df941",
+      "sourceBytes": 163168,
+      "optimizedBytes": 115988
+    },
+    {
+      "reviewId": "CE0067",
+      "platform": "coupang",
+      "photoId": "CE0067-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0067-p01.jpg",
+      "sourceSha256": "62605848adf79d7e22d81fcab56a2c71134868e018714d07637db9c2e514a135",
+      "sourceBytes": 190488,
+      "optimizedBytes": 131382
+    },
+    {
+      "reviewId": "CE0068",
+      "platform": "coupang",
+      "photoId": "CE0068-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0068-p01.jpg",
+      "sourceSha256": "bda5749df4cdffab1f3fd9583dbd6678df112ed43e108b504a15b69812fcc77e",
+      "sourceBytes": 204049,
+      "optimizedBytes": 133556
+    },
+    {
+      "reviewId": "CE0071",
+      "platform": "coupang",
+      "photoId": "CE0071-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0071-p01.jpg",
+      "sourceSha256": "ff8104eebbda003daa5b1755b7cf1044b1d878e564bac33915417aeb79022f8d",
+      "sourceBytes": 279917,
+      "optimizedBytes": 180492
+    },
+    {
+      "reviewId": "CE0072",
+      "platform": "coupang",
+      "photoId": "CE0072-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0072-p01.jpg",
+      "sourceSha256": "b4248236b81891cc3c39dd2faa012a3048507c310d7526d5887677f692f2da17",
+      "sourceBytes": 128199,
+      "optimizedBytes": 74852
+    },
+    {
+      "reviewId": "CE0073",
+      "platform": "coupang",
+      "photoId": "CE0073-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0073-p01.jpg",
+      "sourceSha256": "946a1e5bb8bde9514c64c1bb9c2f3504c1f86bf33a9570fedd5100593db2afa4",
+      "sourceBytes": 178488,
+      "optimizedBytes": 113516
+    },
+    {
+      "reviewId": "CE0074",
+      "platform": "coupang",
+      "photoId": "CE0074-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0074-p01.jpg",
+      "sourceSha256": "ca6845a4b7ebcbd2208da92932255794abfd0186fea1664990b95e2d3305a6ee",
+      "sourceBytes": 129534,
+      "optimizedBytes": 63398
+    },
+    {
+      "reviewId": "CE0075",
+      "platform": "coupang",
+      "photoId": "CE0075-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0075-p01.jpg",
+      "sourceSha256": "22ae0dc2e33d7e47c0448e3f9d8b3b839fbaa6ab190a8327d1f41ce372ab774a",
+      "sourceBytes": 117071,
+      "optimizedBytes": 65522
+    },
+    {
+      "reviewId": "CE0076",
+      "platform": "coupang",
+      "photoId": "CE0076-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0076-p01.jpg",
+      "sourceSha256": "8707f6d9483c9855bf1202d3fe913dca48fe82a72ff7dbfafe54532312afa579",
+      "sourceBytes": 163699,
+      "optimizedBytes": 104848
+    },
+    {
+      "reviewId": "CE0077",
+      "platform": "coupang",
+      "photoId": "CE0077-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0077-p01.jpg",
+      "sourceSha256": "a858c35dd49349676956e0829d4da9152dfcde42d19e0c7cf8dfec67b1840f0b",
+      "sourceBytes": 164603,
+      "optimizedBytes": 108710
+    },
+    {
+      "reviewId": "CE0079",
+      "platform": "coupang",
+      "photoId": "CE0079-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0079-p01.jpg",
+      "sourceSha256": "1e0930277dcab0ae9969ebfac7a00e29529ba136abcefd95c9f52a7aeea02ceb",
+      "sourceBytes": 176415,
+      "optimizedBytes": 112000
+    },
+    {
+      "reviewId": "CE0080",
+      "platform": "coupang",
+      "photoId": "CE0080-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0080-p01.jpg",
+      "sourceSha256": "9b91def9db1eab36299856d24988a2dbeacceef59d2bb002489b512dc83d762c",
+      "sourceBytes": 151639,
+      "optimizedBytes": 85688
+    },
+    {
+      "reviewId": "CE0081",
+      "platform": "coupang",
+      "photoId": "CE0081-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0081-p01.jpg",
+      "sourceSha256": "75f519403202334d684b7eec85226bd5f7fb10c2f15e2df30cd6f12e60673fd1",
+      "sourceBytes": 104148,
+      "optimizedBytes": 58920
+    },
+    {
+      "reviewId": "CE0083",
+      "platform": "coupang",
+      "photoId": "CE0083-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0083-p01.jpg",
+      "sourceSha256": "88929118b82a3528660439f08eaed9164613009beff75e33f0a30df16eb4dc8f",
+      "sourceBytes": 150298,
+      "optimizedBytes": 89958
+    },
+    {
+      "reviewId": "CE0084",
+      "platform": "coupang",
+      "photoId": "CE0084-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0084-p01.jpg",
+      "sourceSha256": "feb3808f5b5cea2608e3be6ca56316d7f62ad80df34ff2e4fd08c508e1da4437",
+      "sourceBytes": 274830,
+      "optimizedBytes": 224970
+    },
+    {
+      "reviewId": "CE0084",
+      "platform": "coupang",
+      "photoId": "CE0084-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0084-p02.jpg",
+      "sourceSha256": "df63f8033a45a4cd19d1ce0ce2f0f4d84391ab49c0e3e61ef21d61eec2b0fa3b",
+      "sourceBytes": 155094,
+      "optimizedBytes": 99852
+    },
+    {
+      "reviewId": "CE0085",
+      "platform": "coupang",
+      "photoId": "CE0085-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0085-p01.jpg",
+      "sourceSha256": "6538acf597717fde9002925273437f38c1776f2aceb41d46cab798fd77192e7e",
+      "sourceBytes": 143647,
+      "optimizedBytes": 85290
+    },
+    {
+      "reviewId": "CE0086",
+      "platform": "coupang",
+      "photoId": "CE0086-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0086-p01.jpg",
+      "sourceSha256": "850a57f691bac3c22c0c293f6b8aeec68db066ba8c916ce94d40580aae0bf4fc",
+      "sourceBytes": 197560,
+      "optimizedBytes": 130000
+    },
+    {
+      "reviewId": "CE0088",
+      "platform": "coupang",
+      "photoId": "CE0088-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0088-p01.jpg",
+      "sourceSha256": "8015aab893cf82b7c1b721e28d53cb27d1b048a65fa9dd6af62f4ac89a1d6e66",
+      "sourceBytes": 132780,
+      "optimizedBytes": 84510
+    },
+    {
+      "reviewId": "CE0088",
+      "platform": "coupang",
+      "photoId": "CE0088-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0088-p02.jpg",
+      "sourceSha256": "d3841d3001a590f7aec1c3e39f52b1263511c038ba15358de56ba453638fa4cc",
+      "sourceBytes": 78042,
+      "optimizedBytes": 34572
+    },
+    {
+      "reviewId": "CE0088",
+      "platform": "coupang",
+      "photoId": "CE0088-p03",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0088-p03.jpg",
+      "sourceSha256": "26949e5d4403729aab357f19b175e2047ea9ce08869b8bc44118c437d7c287b6",
+      "sourceBytes": 123683,
+      "optimizedBytes": 77286
+    },
+    {
+      "reviewId": "CE0088",
+      "platform": "coupang",
+      "photoId": "CE0088-p04",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0088-p04.jpg",
+      "sourceSha256": "3b67f7c30e14e684b39fe730dc20457a2d20d97d90e1173966d792bed62b4f5c",
+      "sourceBytes": 125308,
+      "optimizedBytes": 76810
+    },
+    {
+      "reviewId": "CE0089",
+      "platform": "coupang",
+      "photoId": "CE0089-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0089-p01.jpg",
+      "sourceSha256": "2155a1538a5441c0286b097c2325710f0f0761ca99745cd5b90e18c0871e86b3",
+      "sourceBytes": 197365,
+      "optimizedBytes": 145128
+    },
+    {
+      "reviewId": "CE0090",
+      "platform": "coupang",
+      "photoId": "CE0090-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0090-p01.jpg",
+      "sourceSha256": "1bfac0195b4f0a45095406a0f9288b7e1bd58ab36721fb3e0b9b502a89125e92",
+      "sourceBytes": 254090,
+      "optimizedBytes": 197314
+    },
+    {
+      "reviewId": "CE0093",
+      "platform": "coupang",
+      "photoId": "CE0093-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0093-p01.jpg",
+      "sourceSha256": "bbf88d56abd190fc121ee069bfd01ccdebcbf3486c4da23585ab7b1b68e7f324",
+      "sourceBytes": 187257,
+      "optimizedBytes": 127334
+    },
+    {
+      "reviewId": "CE0095",
+      "platform": "coupang",
+      "photoId": "CE0095-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0095-p01.jpg",
+      "sourceSha256": "3c2b97d10f20bf5de4502ebc9a102d02872fff69245b196025eadaa39162b6c7",
+      "sourceBytes": 169472,
+      "optimizedBytes": 126816
+    },
+    {
+      "reviewId": "CE0096",
+      "platform": "coupang",
+      "photoId": "CE0096-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0096-p01.jpg",
+      "sourceSha256": "218ee2ebe89359bd62ac391975892fdfbcca73524e4f2b24bd763d0404cb6553",
+      "sourceBytes": 181376,
+      "optimizedBytes": 113674
+    },
+    {
+      "reviewId": "CE0097",
+      "platform": "coupang",
+      "photoId": "CE0097-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0097-p01.jpg",
+      "sourceSha256": "0ebf345e6f56b2e0e42747c7d492a5b9ba8d2148b969af217bbcc2acbc1781fb",
+      "sourceBytes": 186585,
+      "optimizedBytes": 134996
+    },
+    {
+      "reviewId": "CE0098",
+      "platform": "coupang",
+      "photoId": "CE0098-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0098-p01.jpg",
+      "sourceSha256": "0ba1f2716a95b46086d9e706e2da90c7175dd74569a1e5c71045bb3a591a8ca4",
+      "sourceBytes": 386530,
+      "optimizedBytes": 123544
+    },
+    {
+      "reviewId": "CE0099",
+      "platform": "coupang",
+      "photoId": "CE0099-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0099-p01.jpg",
+      "sourceSha256": "3ec5e5d9a99e2170ba1ee28080fe95a9cc8fc2cfbdf8196fce9ad626d0ee8528",
+      "sourceBytes": 190029,
+      "optimizedBytes": 117612
+    },
+    {
+      "reviewId": "CE0099",
+      "platform": "coupang",
+      "photoId": "CE0099-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0099-p02.jpg",
+      "sourceSha256": "024ce9274adce2cae64d9d1704e6618c27e3dc63822bfe945d22ae79d3274392",
+      "sourceBytes": 205119,
+      "optimizedBytes": 139412
+    },
+    {
+      "reviewId": "CE0100",
+      "platform": "coupang",
+      "photoId": "CE0100-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0100-p01.jpg",
+      "sourceSha256": "b2d5bfa6045f53244fb052037eee58761bf3fd9bf97bfadccc26d44c42a99d12",
+      "sourceBytes": 151862,
+      "optimizedBytes": 89156
+    },
+    {
+      "reviewId": "CE0101",
+      "platform": "coupang",
+      "photoId": "CE0101-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0101-p01.jpg",
+      "sourceSha256": "9fc3f4a7f37326b01c7876571b0a32cb2faf8369d0949f81fc252f53f8c7ab53",
+      "sourceBytes": 208794,
+      "optimizedBytes": 120940
+    },
+    {
+      "reviewId": "CE0102",
+      "platform": "coupang",
+      "photoId": "CE0102-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0102-p01.jpg",
+      "sourceSha256": "80b28c8fa721d5f502f3a02ce63f0c5b634fb625b3e04ff58aab57219d456b99",
+      "sourceBytes": 169376,
+      "optimizedBytes": 98554
+    },
+    {
+      "reviewId": "CE0103",
+      "platform": "coupang",
+      "photoId": "CE0103-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0103-p01.jpg",
+      "sourceSha256": "fc074ff3b13376cfffcaaef0ca54b9c6c27094d51647d25b74dae476a1fc0472",
+      "sourceBytes": 236295,
+      "optimizedBytes": 145286
+    },
+    {
+      "reviewId": "CE0104",
+      "platform": "coupang",
+      "photoId": "CE0104-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0104-p01.jpg",
+      "sourceSha256": "7e842dbc438a08633e395ec38c381e56cd839acc1a52e960f8f4c2b2f1303b52",
+      "sourceBytes": 234405,
+      "optimizedBytes": 194386
+    },
+    {
+      "reviewId": "CE0105",
+      "platform": "coupang",
+      "photoId": "CE0105-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0105-p01.jpg",
+      "sourceSha256": "8335c0b4fbaacb0b882e3a2b1bf9488b369c54558556367d375e732a52380b7d",
+      "sourceBytes": 226744,
+      "optimizedBytes": 147730
+    },
+    {
+      "reviewId": "CE0107",
+      "platform": "coupang",
+      "photoId": "CE0107-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0107-p01.jpg",
+      "sourceSha256": "8d25ecac8c565b902dfadfd8ea19cda390390003c5ba4ff472624405da3710f7",
+      "sourceBytes": 125541,
+      "optimizedBytes": 70422
+    },
+    {
+      "reviewId": "CE0107",
+      "platform": "coupang",
+      "photoId": "CE0107-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0107-p02.jpg",
+      "sourceSha256": "c227435bca22c131bda1b18d64415f9fd061b72fe98dc7e8ab31c34d32fb6ca6",
+      "sourceBytes": 120678,
+      "optimizedBytes": 64814
+    },
+    {
+      "reviewId": "CE0108",
+      "platform": "coupang",
+      "photoId": "CE0108-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0108-p01.jpg",
+      "sourceSha256": "c1d88d34b13fe79a6e1e2bb7aa89e6355b96167ce7da1eeb00e0218305c62d4f",
+      "sourceBytes": 138336,
+      "optimizedBytes": 100660
+    },
+    {
+      "reviewId": "CE0108",
+      "platform": "coupang",
+      "photoId": "CE0108-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0108-p02.jpg",
+      "sourceSha256": "68f664ed705d6b09d73293c75a5d33a3cb45e2ffe42421283cb1a73259500d0c",
+      "sourceBytes": 110414,
+      "optimizedBytes": 74476
+    },
+    {
+      "reviewId": "CE0109",
+      "platform": "coupang",
+      "photoId": "CE0109-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0109-p01.jpg",
+      "sourceSha256": "09e2c350a7652fc84505bf9390ab026cd1b0ee4bf1f2bc3fc17e2e276916cfb6",
+      "sourceBytes": 310349,
+      "optimizedBytes": 263126
+    },
+    {
+      "reviewId": "CE0110",
+      "platform": "coupang",
+      "photoId": "CE0110-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0110-p01.jpg",
+      "sourceSha256": "afe9ed68eeab25438c5a100d4bf205c4d419b4ef7358a10268ebbbe9062354e2",
+      "sourceBytes": 130455,
+      "optimizedBytes": 59138
+    },
+    {
+      "reviewId": "CE0110",
+      "platform": "coupang",
+      "photoId": "CE0110-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0110-p02.jpg",
+      "sourceSha256": "6449cff09c881defbc1a4b29252b158669d89db4a3032e2f1a3eaee9048960fe",
+      "sourceBytes": 140172,
+      "optimizedBytes": 73564
+    },
+    {
+      "reviewId": "CE0111",
+      "platform": "coupang",
+      "photoId": "CE0111-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0111-p01.jpg",
+      "sourceSha256": "87ac7e9578e263d1abbf92cc2bc68267332f687b01ab8e3f8c0d8961a09a4756",
+      "sourceBytes": 122133,
+      "optimizedBytes": 70304
+    },
+    {
+      "reviewId": "CE0112",
+      "platform": "coupang",
+      "photoId": "CE0112-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0112-p01.jpg",
+      "sourceSha256": "57948f073027babed71b47336c35ff3d78bc13dbca460710317c8276e3049524",
+      "sourceBytes": 158503,
+      "optimizedBytes": 90536
+    },
+    {
+      "reviewId": "CE0113",
+      "platform": "coupang",
+      "photoId": "CE0113-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0113-p01.jpg",
+      "sourceSha256": "95a22031400982f01a7e9eeb7d891eaaf9f7216af968da00dbdda8ceca03b6e8",
+      "sourceBytes": 147613,
+      "optimizedBytes": 88518
+    },
+    {
+      "reviewId": "CE0114",
+      "platform": "coupang",
+      "photoId": "CE0114-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0114-p01.jpg",
+      "sourceSha256": "b86aed9ad38dbf7290fe1e12e2d901f83130e3b08ae9013635c7f75b9cae4cb6",
+      "sourceBytes": 246064,
+      "optimizedBytes": 190384
+    },
+    {
+      "reviewId": "CE0115",
+      "platform": "coupang",
+      "photoId": "CE0115-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0115-p01.jpg",
+      "sourceSha256": "cd8b7d057637f36044681937e5cecac5359bdb4f7bedd5601418fea22a68b537",
+      "sourceBytes": 172113,
+      "optimizedBytes": 116962
+    },
+    {
+      "reviewId": "CE0116",
+      "platform": "coupang",
+      "photoId": "CE0116-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0116-p01.jpg",
+      "sourceSha256": "3637679b81746b69b15eb1343ce1a4e064a2960802df614bb798685088bdd241",
+      "sourceBytes": 120751,
+      "optimizedBytes": 67168
+    },
+    {
+      "reviewId": "CE0117",
+      "platform": "coupang",
+      "photoId": "CE0117-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0117-p01.jpg",
+      "sourceSha256": "5f8b3af5bfb404d4aaa08ec960b4d4d64f1d9ba3209ee2baa956dfa7f31b8468",
+      "sourceBytes": 177323,
+      "optimizedBytes": 109318
+    },
+    {
+      "reviewId": "CE0117",
+      "platform": "coupang",
+      "photoId": "CE0117-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0117-p02.jpg",
+      "sourceSha256": "8ace947921a4b27989b84cdbf5d6e61f25fb723accd9335870e82cb7b8bd57ba",
+      "sourceBytes": 224690,
+      "optimizedBytes": 157632
+    },
+    {
+      "reviewId": "CE0117",
+      "platform": "coupang",
+      "photoId": "CE0117-p03",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0117-p03.jpg",
+      "sourceSha256": "c73841ac92515afca7ce56a8106feb4a4161d8d3f2565c602faaa2c27e44be57",
+      "sourceBytes": 262886,
+      "optimizedBytes": 199116
+    },
+    {
+      "reviewId": "CE0118",
+      "platform": "coupang",
+      "photoId": "CE0118-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0118-p01.jpg",
+      "sourceSha256": "2dcdbf15e0ac918a9d60b4bf2e69933bbb4e095bb99973a50261be10403e9b5e",
+      "sourceBytes": 184045,
+      "optimizedBytes": 129636
+    },
+    {
+      "reviewId": "CE0119",
+      "platform": "coupang",
+      "photoId": "CE0119-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0119-p01.jpg",
+      "sourceSha256": "bf7e6308798753f189b855ec73338cad635c9899b60eb0f0345f6e12de4c846c",
+      "sourceBytes": 283583,
+      "optimizedBytes": 236064
+    },
+    {
+      "reviewId": "CE0120",
+      "platform": "coupang",
+      "photoId": "CE0120-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0120-p01.jpg",
+      "sourceSha256": "024d36d5faf8f03f1286cb807f1cf8300c518fa5ac4085ef1d942b4cc98e3d20",
+      "sourceBytes": 159614,
+      "optimizedBytes": 107182
+    },
+    {
+      "reviewId": "CE0120",
+      "platform": "coupang",
+      "photoId": "CE0120-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0120-p02.jpg",
+      "sourceSha256": "adcc2ffa05bc1bca9a2d5f270815808af6bc1fca35d72747913b5a34cc7ac0b7",
+      "sourceBytes": 185201,
+      "optimizedBytes": 138490
+    },
+    {
+      "reviewId": "CE0121",
+      "platform": "coupang",
+      "photoId": "CE0121-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0121-p01.jpg",
+      "sourceSha256": "3f011505a5b924ea9f55dfb637dc519eddb009be1da3a7e43d5f75622bf4ccfc",
+      "sourceBytes": 186833,
+      "optimizedBytes": 128302
+    },
+    {
+      "reviewId": "CE0122",
+      "platform": "coupang",
+      "photoId": "CE0122-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0122-p01.jpg",
+      "sourceSha256": "4230b1b1d26bb239af8ea3e8fa1b8404b162a4fccdd70eb7cf445dbe1288c242",
+      "sourceBytes": 143078,
+      "optimizedBytes": 82606
+    },
+    {
+      "reviewId": "CE0123",
+      "platform": "coupang",
+      "photoId": "CE0123-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0123-p01.jpg",
+      "sourceSha256": "1f884f9e95f2fae9fe3558d4327ed292d1dd909e59175068dd007bd50686348f",
+      "sourceBytes": 192252,
+      "optimizedBytes": 124592
+    },
+    {
+      "reviewId": "CE0124",
+      "platform": "coupang",
+      "photoId": "CE0124-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0124-p01.jpg",
+      "sourceSha256": "d1bf355ce24b17df69243375ce2072588b954410be7672902f2b5f724f8b5512",
+      "sourceBytes": 255026,
+      "optimizedBytes": 168322
+    },
+    {
+      "reviewId": "CE0124",
+      "platform": "coupang",
+      "photoId": "CE0124-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0124-p02.jpg",
+      "sourceSha256": "fc72e80612436c67f670b166528b784bfcd0e9d2b2ec6bd85a573ea9d48fcb2d",
+      "sourceBytes": 220423,
+      "optimizedBytes": 132068
+    },
+    {
+      "reviewId": "CE0126",
+      "platform": "coupang",
+      "photoId": "CE0126-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0126-p01.jpg",
+      "sourceSha256": "154662d169bfb9abd5fea69fbe667bf85241cbac1a385788248f2cbc9c00146a",
+      "sourceBytes": 156794,
+      "optimizedBytes": 97332
+    },
+    {
+      "reviewId": "CE0127",
+      "platform": "coupang",
+      "photoId": "CE0127-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0127-p01.jpg",
+      "sourceSha256": "9f6dca4cdad4a590aaa5e9b4c328b69f06b675d98ee7ba6ba0c0bb088467ebf7",
+      "sourceBytes": 128650,
+      "optimizedBytes": 83618
+    },
+    {
+      "reviewId": "CE0128",
+      "platform": "coupang",
+      "photoId": "CE0128-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0128-p01.jpg",
+      "sourceSha256": "7cdbd82739d92e8ac22582b8b5c8ab03ff5f9e40408907ed927c6f0dac0ea894",
+      "sourceBytes": 197845,
+      "optimizedBytes": 141076
+    },
+    {
+      "reviewId": "CE0129",
+      "platform": "coupang",
+      "photoId": "CE0129-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0129-p01.jpg",
+      "sourceSha256": "989c61216eba5e0280a494997327a35684ab19ee2d610f65cf2519a2779d80a7",
+      "sourceBytes": 179042,
+      "optimizedBytes": 142730
+    },
+    {
+      "reviewId": "CE0131",
+      "platform": "coupang",
+      "photoId": "CE0131-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0131-p01.jpg",
+      "sourceSha256": "e6734be315cb7bb66cf8df434ae3662fc9a20a5968162f3adfc1c2cbbaf5c967",
+      "sourceBytes": 162767,
+      "optimizedBytes": 92084
+    },
+    {
+      "reviewId": "CE0133",
+      "platform": "coupang",
+      "photoId": "CE0133-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0133-p01.jpg",
+      "sourceSha256": "8c23ca35327c9fe0c8e7fd334b39dd67fa03f33810a6e61aae5f57f6eff2685d",
+      "sourceBytes": 238286,
+      "optimizedBytes": 179268
+    },
+    {
+      "reviewId": "CE0134",
+      "platform": "coupang",
+      "photoId": "CE0134-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0134-p01.jpg",
+      "sourceSha256": "51f21588d8a91634ee0252a95a797936cc22723aae48d4e9b6f6f0988c0d8ad5",
+      "sourceBytes": 136551,
+      "optimizedBytes": 86764
+    },
+    {
+      "reviewId": "CE0134",
+      "platform": "coupang",
+      "photoId": "CE0134-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0134-p02.jpg",
+      "sourceSha256": "5eb0bfb857d2ede53e2c43a844caafdf09af8d89f893c2101260664d49c17474",
+      "sourceBytes": 171372,
+      "optimizedBytes": 118642
+    },
+    {
+      "reviewId": "CE0135",
+      "platform": "coupang",
+      "photoId": "CE0135-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0135-p01.jpg",
+      "sourceSha256": "ac18cf339dacc632bdcfbe7e7b574144cdc53301b066ead2e326d1d42cf5e822",
+      "sourceBytes": 123672,
+      "optimizedBytes": 68336
+    },
+    {
+      "reviewId": "CE0137",
+      "platform": "coupang",
+      "photoId": "CE0137-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0137-p01.jpg",
+      "sourceSha256": "7a8d1693fae52e9509e3f789286b21f2fc2c4a05d4435becad44b91e3778d4b6",
+      "sourceBytes": 143810,
+      "optimizedBytes": 87792
+    },
+    {
+      "reviewId": "CE0138",
+      "platform": "coupang",
+      "photoId": "CE0138-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0138-p01.jpg",
+      "sourceSha256": "f6d94e3c0abadd9da6348521fd8a44b90df7dc03e408f625d0450eea4c8efe34",
+      "sourceBytes": 186210,
+      "optimizedBytes": 135712
+    },
+    {
+      "reviewId": "CE0139",
+      "platform": "coupang",
+      "photoId": "CE0139-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0139-p01.jpg",
+      "sourceSha256": "474d8a78de1e7af347a196b7710100f3cd2d510239b93b2fe79e784813e38a54",
+      "sourceBytes": 163027,
+      "optimizedBytes": 116866
+    },
+    {
+      "reviewId": "CE0140",
+      "platform": "coupang",
+      "photoId": "CE0140-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0140-p01.jpg",
+      "sourceSha256": "5a9d0ae704863bf195eb24ac4e27be7ca3e7682bf5e346a61f26237a75c295b9",
+      "sourceBytes": 146959,
+      "optimizedBytes": 84784
+    },
+    {
+      "reviewId": "CE0141",
+      "platform": "coupang",
+      "photoId": "CE0141-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0141-p01.jpg",
+      "sourceSha256": "342e983444c8467661a9523356a5b4da8622653c340b0248084b465f9c133120",
+      "sourceBytes": 197664,
+      "optimizedBytes": 134008
+    },
+    {
+      "reviewId": "CE0143",
+      "platform": "coupang",
+      "photoId": "CE0143-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0143-p01.jpg",
+      "sourceSha256": "398085e0821d021a8e93512ba7603040a46a7fa4abf72e0a4c3ca31c8bfb8886",
+      "sourceBytes": 260784,
+      "optimizedBytes": 214364
+    },
+    {
+      "reviewId": "CE0144",
+      "platform": "coupang",
+      "photoId": "CE0144-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0144-p01.jpg",
+      "sourceSha256": "aeb439c5993ed9eb4a3f7227eeb70715bdd2fac20b2994e954ba9bc37a377ccb",
+      "sourceBytes": 195888,
+      "optimizedBytes": 130370
+    },
+    {
+      "reviewId": "CE0145",
+      "platform": "coupang",
+      "photoId": "CE0145-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0145-p01.jpg",
+      "sourceSha256": "0708135132dde2fecccf8265e1c3638de69e3a09a4e47f65953c51d95698a1e7",
+      "sourceBytes": 198358,
+      "optimizedBytes": 140702
+    },
+    {
+      "reviewId": "CE0146",
+      "platform": "coupang",
+      "photoId": "CE0146-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0146-p01.jpg",
+      "sourceSha256": "88753742bf9cb93cde3340059fe3ffd62f81a30c7a848d9b0d8b20b2d86d3053",
+      "sourceBytes": 162649,
+      "optimizedBytes": 108606
+    },
+    {
+      "reviewId": "CE0146",
+      "platform": "coupang",
+      "photoId": "CE0146-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0146-p02.jpg",
+      "sourceSha256": "8aa893215c8adf4ced0e9b70042773535b5bd3678340a52cffda74f9e13768b2",
+      "sourceBytes": 141661,
+      "optimizedBytes": 91002
+    },
+    {
+      "reviewId": "CE0147",
+      "platform": "coupang",
+      "photoId": "CE0147-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0147-p01.jpg",
+      "sourceSha256": "1434811a53cc5b70d6f2a51331c87293a5632324734df10445e1469ec600baf6",
+      "sourceBytes": 194474,
+      "optimizedBytes": 55134
+    },
+    {
+      "reviewId": "CE0148",
+      "platform": "coupang",
+      "photoId": "CE0148-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0148-p01.jpg",
+      "sourceSha256": "ad4836d1817c35ef56351e90069969699206db31fa25b652e00f5f71782d49fe",
+      "sourceBytes": 224854,
+      "optimizedBytes": 132810
+    },
+    {
+      "reviewId": "CE0149",
+      "platform": "coupang",
+      "photoId": "CE0149-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0149-p01.jpg",
+      "sourceSha256": "5225e8f5010516cc807a4a19b5915b6c36b0abd8cef739f0beab6e7c9325b53e",
+      "sourceBytes": 337488,
+      "optimizedBytes": 74824
+    },
+    {
+      "reviewId": "CE0151",
+      "platform": "coupang",
+      "photoId": "CE0151-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0151-p01.jpg",
+      "sourceSha256": "d757d6a28c57b70a203e15c998eb51314802dda16cb51f190f08c1e23e96ee8b",
+      "sourceBytes": 148528,
+      "optimizedBytes": 79350
+    },
+    {
+      "reviewId": "CE0154",
+      "platform": "coupang",
+      "photoId": "CE0154-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0154-p01.jpg",
+      "sourceSha256": "f33a08f74ecc4939520a058485927d8b5a6c29df0068fbc5a4ba72b904053e3e",
+      "sourceBytes": 207697,
+      "optimizedBytes": 140064
+    },
+    {
+      "reviewId": "CE0155",
+      "platform": "coupang",
+      "photoId": "CE0155-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0155-p01.jpg",
+      "sourceSha256": "01a875792abf8a66bc895f8ec63ab7bade8e085c73d3756120345ed3e4566056",
+      "sourceBytes": 194066,
+      "optimizedBytes": 142614
+    },
+    {
+      "reviewId": "CE0156",
+      "platform": "coupang",
+      "photoId": "CE0156-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0156-p01.jpg",
+      "sourceSha256": "17b6c8580a150385af9d0db5cb9d8cbbac6a10e63169348aaa8326f5f898c4fb",
+      "sourceBytes": 177996,
+      "optimizedBytes": 106212
+    },
+    {
+      "reviewId": "CE0157",
+      "platform": "coupang",
+      "photoId": "CE0157-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0157-p01.jpg",
+      "sourceSha256": "b5b77f782b00b1ddac422198bd0d6ab91db3dbcfeb75b075e6067adf01ebda2d",
+      "sourceBytes": 141544,
+      "optimizedBytes": 93194
+    },
+    {
+      "reviewId": "CE0158",
+      "platform": "coupang",
+      "photoId": "CE0158-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0158-p01.jpg",
+      "sourceSha256": "a4eba5b053224eb601e2a269c686087b2fc8735b9806c8c66cf48a20ea173ba8",
+      "sourceBytes": 156094,
+      "optimizedBytes": 98572
+    },
+    {
+      "reviewId": "CE0158",
+      "platform": "coupang",
+      "photoId": "CE0158-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0158-p02.jpg",
+      "sourceSha256": "c7d06ce488f2431da182440011133ead38a9a22afa4271ed89bc0a8a3f113665",
+      "sourceBytes": 282396,
+      "optimizedBytes": 227326
+    },
+    {
+      "reviewId": "CE0159",
+      "platform": "coupang",
+      "photoId": "CE0159-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0159-p01.jpg",
+      "sourceSha256": "56e809b4d78100cb88de9125c32eece14568117715915f85085f8698427a14c1",
+      "sourceBytes": 116274,
+      "optimizedBytes": 65090
+    },
+    {
+      "reviewId": "CE0161",
+      "platform": "coupang",
+      "photoId": "CE0161-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0161-p01.jpg",
+      "sourceSha256": "5a4865651fa402df25de3d5ae16a3ed6b3521d985c43785acdc046e0d6a7dbb3",
+      "sourceBytes": 96288,
+      "optimizedBytes": 58834
+    },
+    {
+      "reviewId": "CE0162",
+      "platform": "coupang",
+      "photoId": "CE0162-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0162-p01.jpg",
+      "sourceSha256": "d579090bcce8a134cfdda9648a7e357e0653beefb430bc2573474f55a72e52e4",
+      "sourceBytes": 145661,
+      "optimizedBytes": 85582
+    },
+    {
+      "reviewId": "CE0164",
+      "platform": "coupang",
+      "photoId": "CE0164-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0164-p01.jpg",
+      "sourceSha256": "6bb97fb0d242308242336e9f4cddf1058fdfb1c39965ce298df8f35342f91686",
+      "sourceBytes": 128438,
+      "optimizedBytes": 68900
+    },
+    {
+      "reviewId": "CE0164",
+      "platform": "coupang",
+      "photoId": "CE0164-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0164-p02.jpg",
+      "sourceSha256": "972a26cb0aa70272548464b68c1161c1dab43472445503968a489b4bfad57108",
+      "sourceBytes": 96502,
+      "optimizedBytes": 39534
+    },
+    {
+      "reviewId": "CE0164",
+      "platform": "coupang",
+      "photoId": "CE0164-p03",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0164-p03.jpg",
+      "sourceSha256": "a225ec5c9ab11fae81abd6aafde460c889693cf7126504b7c2d08ae9519c2b55",
+      "sourceBytes": 172910,
+      "optimizedBytes": 110036
+    },
+    {
+      "reviewId": "CE0166",
+      "platform": "coupang",
+      "photoId": "CE0166-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0166-p01.jpg",
+      "sourceSha256": "e222c77fbdbfd061aaca47d4e95410fd33e15e68a8aca1e9491c4ff8d0e242e2",
+      "sourceBytes": 200834,
+      "optimizedBytes": 150184
+    },
+    {
+      "reviewId": "CE0169",
+      "platform": "coupang",
+      "photoId": "CE0169-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0169-p01.jpg",
+      "sourceSha256": "d8fc70285fac68e2fa148c5324a181b16db1020f867c4c97dea9eaacfa04cec4",
+      "sourceBytes": 114575,
+      "optimizedBytes": 60438
+    },
+    {
+      "reviewId": "CE0170",
+      "platform": "coupang",
+      "photoId": "CE0170-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0170-p01.jpg",
+      "sourceSha256": "b203db2e712f3a33fcf3104178c126477dc17b3d553fc4060b7c4f778baedeed",
+      "sourceBytes": 253623,
+      "optimizedBytes": 199568
+    },
+    {
+      "reviewId": "CE0171",
+      "platform": "coupang",
+      "photoId": "CE0171-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0171-p01.jpg",
+      "sourceSha256": "a4dde927bffc7c2d65c0231f95cad095f81c0423b108cf10cded33290a2a2112",
+      "sourceBytes": 122988,
+      "optimizedBytes": 73034
+    },
+    {
+      "reviewId": "CE0172",
+      "platform": "coupang",
+      "photoId": "CE0172-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0172-p01.jpg",
+      "sourceSha256": "14299223cc60121287a448c3cbb4e46f6c7f82dbe9d640e2e0b97a8d913b1386",
+      "sourceBytes": 261001,
+      "optimizedBytes": 200484
+    },
+    {
+      "reviewId": "CE0173",
+      "platform": "coupang",
+      "photoId": "CE0173-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0173-p01.jpg",
+      "sourceSha256": "25750b24be00eabc10012b68572263bb941b99348c303a2b667b4c0ee92c1a13",
+      "sourceBytes": 201552,
+      "optimizedBytes": 148592
+    },
+    {
+      "reviewId": "CE0174",
+      "platform": "coupang",
+      "photoId": "CE0174-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0174-p01.jpg",
+      "sourceSha256": "0722813577da292352a19e64efb29bfc317dac2458013a79f9867ec96b6416f9",
+      "sourceBytes": 182962,
+      "optimizedBytes": 126072
+    },
+    {
+      "reviewId": "CE0174",
+      "platform": "coupang",
+      "photoId": "CE0174-p02",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0174-p02.jpg",
+      "sourceSha256": "d45e85443a590b78536f323f598704dd68f866d4f2bb04f2ef5a8ccdf63f5650",
+      "sourceBytes": 142694,
+      "optimizedBytes": 80764
+    },
+    {
+      "reviewId": "CE0174",
+      "platform": "coupang",
+      "photoId": "CE0174-p03",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0174-p03.jpg",
+      "sourceSha256": "6dc2b4930f4976029b179b5f4d7477fe544928c365128e6113b883ecf5fa21c7",
+      "sourceBytes": 171162,
+      "optimizedBytes": 117366
+    },
+    {
+      "reviewId": "CE0174",
+      "platform": "coupang",
+      "photoId": "CE0174-p04",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0174-p04.jpg",
+      "sourceSha256": "802c685cf0da40783ad763dd6b79d4489cfa720aaad94aabfff0f53cbdfe1bd0",
+      "sourceBytes": 152004,
+      "optimizedBytes": 101148
+    },
+    {
+      "reviewId": "CE0175",
+      "platform": "coupang",
+      "photoId": "CE0175-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0175-p01.jpg",
+      "sourceSha256": "6a3225c2ba889c2d66c5b1074963eca17fd0514901def40ab22e0a48fbd1b7e0",
+      "sourceBytes": 116511,
+      "optimizedBytes": 67870
+    },
+    {
+      "reviewId": "CE0177",
+      "platform": "coupang",
+      "photoId": "CE0177-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0177-p01.jpg",
+      "sourceSha256": "a2e05034f9919730208bccebf36065ef1cb96684cb1ea3c02606315ca9c894da",
+      "sourceBytes": 276473,
+      "optimizedBytes": 220480
+    },
+    {
+      "reviewId": "CE0178",
+      "platform": "coupang",
+      "photoId": "CE0178-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0178-p01.jpg",
+      "sourceSha256": "c82a9cae15d3016e99cac71ce2ee6672e535be088794a7ee07efcf44f9244045",
+      "sourceBytes": 67208,
+      "optimizedBytes": 25530
+    },
+    {
+      "reviewId": "CE0179",
+      "platform": "coupang",
+      "photoId": "CE0179-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0179-p01.jpg",
+      "sourceSha256": "6a617d7e1bd6852084ca89ee6601473d6c7291dfb2894956a0e684ac38c1a67e",
+      "sourceBytes": 185444,
+      "optimizedBytes": 122108
+    },
+    {
+      "reviewId": "CE0180",
+      "platform": "coupang",
+      "photoId": "CE0180-p01",
+      "source": "coupang-reviews_2026-07-07_2026-10-07/photos/CE0180-p01.jpg",
+      "sourceSha256": "1ecce4483c573309fc451792a3889e4298058dbb75408e719c783151af92a548",
+      "sourceBytes": 147702,
+      "optimizedBytes": 87342
+    }
+  ]
+}

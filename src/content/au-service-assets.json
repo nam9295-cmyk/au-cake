@@ -1,0 +1,431 @@
+{
+  "events-hero": {
+    "alt": "Cakes, cupcakes and chocolates arranged for a gathering",
+    "width": 1920,
+    "height": 1080,
+    "variants": [
+      {
+        "src": "/business/events-hero-640.webp",
+        "width": 640,
+        "height": 360,
+        "bytes": 43908
+      },
+      {
+        "src": "/business/events-hero-1280.webp",
+        "width": 1280,
+        "height": 720,
+        "bytes": 101190
+      },
+      {
+        "src": "/business/events-hero-1920.webp",
+        "width": 1920,
+        "height": 1080,
+        "bytes": 159822
+      }
+    ]
+  },
+  "corporate": {
+    "alt": "A table set with desserts for an event",
+    "width": 2048,
+    "height": 1152,
+    "variants": [
+      {
+        "src": "/business/corporate-480.webp",
+        "width": 480,
+        "height": 270,
+        "bytes": 33666
+      },
+      {
+        "src": "/business/corporate-960.webp",
+        "width": 960,
+        "height": 540,
+        "bytes": 88570
+      }
+    ]
+  },
+  "office": {
+    "alt": "Cake and tea shared around an office table",
+    "width": 2048,
+    "height": 1152,
+    "variants": [
+      {
+        "src": "/business/office-480.webp",
+        "width": 480,
+        "height": 270,
+        "bytes": 31260
+      },
+      {
+        "src": "/business/office-960.webp",
+        "width": 960,
+        "height": 540,
+        "bytes": 83940
+      }
+    ]
+  },
+  "wedding": {
+    "alt": "A celebration cake at a wedding table",
+    "width": 2048,
+    "height": 1152,
+    "variants": [
+      {
+        "src": "/business/wedding-480.webp",
+        "width": 480,
+        "height": 270,
+        "bytes": 20728
+      },
+      {
+        "src": "/business/wedding-960.webp",
+        "width": 960,
+        "height": 540,
+        "bytes": 60130
+      }
+    ]
+  },
+  "birthday": {
+    "alt": "Pavé cake for a birthday gathering",
+    "width": 2048,
+    "height": 1152,
+    "variants": [
+      {
+        "src": "/business/birthday-480.webp",
+        "width": 480,
+        "height": 270,
+        "bytes": 29946
+      },
+      {
+        "src": "/business/birthday-960.webp",
+        "width": 960,
+        "height": 540,
+        "bytes": 84318
+      }
+    ]
+  },
+  "school": {
+    "alt": "Cupcakes arranged for a school celebration",
+    "width": 2048,
+    "height": 1152,
+    "variants": [
+      {
+        "src": "/business/school-480.webp",
+        "width": 480,
+        "height": 270,
+        "bytes": 40256
+      },
+      {
+        "src": "/business/school-960.webp",
+        "width": 960,
+        "height": 540,
+        "bytes": 106534
+      }
+    ]
+  },
+  "gifting": {
+    "alt": "Cheesecake and cupcakes presented together",
+    "width": 2048,
+    "height": 1152,
+    "variants": [
+      {
+        "src": "/business/gifting-480.webp",
+        "width": 480,
+        "height": 270,
+        "bytes": 26206
+      },
+      {
+        "src": "/business/gifting-960.webp",
+        "width": 960,
+        "height": 540,
+        "bytes": 76338
+      }
+    ]
+  },
+  "sharing": {
+    "alt": "Pavé chocolate cake cut into sharing portions",
+    "width": 1536,
+    "height": 2048,
+    "variants": [
+      {
+        "src": "/business/sharing-480.webp",
+        "width": 480,
+        "height": 640,
+        "bytes": 74440
+      },
+      {
+        "src": "/business/sharing-960.webp",
+        "width": 960,
+        "height": 1280,
+        "bytes": 272142
+      }
+    ]
+  },
+  "custom": {
+    "alt": "Colourful custom celebration cakes",
+    "width": 2160,
+    "height": 1012,
+    "variants": [
+      {
+        "src": "/business/custom-480.webp",
+        "width": 480,
+        "height": 225,
+        "bytes": 21046
+      },
+      {
+        "src": "/business/custom-960.webp",
+        "width": 960,
+        "height": 450,
+        "bytes": 51572
+      }
+    ]
+  },
+  "cupcakes": {
+    "alt": "Cupcakes arranged on a table",
+    "width": 1080,
+    "height": 1350,
+    "variants": [
+      {
+        "src": "/business/cupcakes-480.webp",
+        "width": 480,
+        "height": 600,
+        "bytes": 41844
+      },
+      {
+        "src": "/business/cupcakes-960.webp",
+        "width": 960,
+        "height": 1200,
+        "bytes": 102846
+      }
+    ]
+  },
+  "smore": {
+    "alt": "Chocolate-coated S’more sticks",
+    "width": 1872,
+    "height": 1248,
+    "variants": [
+      {
+        "src": "/business/smore-480.webp",
+        "width": 480,
+        "height": 320,
+        "bytes": 39830
+      },
+      {
+        "src": "/business/smore-960.webp",
+        "width": 960,
+        "height": 640,
+        "bytes": 153084
+      }
+    ]
+  },
+  "packed-cupcakes": {
+    "alt": "Cupcakes in individual clear packs with Verygood cards",
+    "width": 1760,
+    "height": 1328,
+    "variants": [
+      {
+        "src": "/business/packed-cupcakes-640.webp",
+        "width": 640,
+        "height": 483,
+        "bytes": 35576
+      },
+      {
+        "src": "/business/packed-cupcakes-1280.webp",
+        "width": 1280,
+        "height": 966,
+        "bytes": 103140
+      },
+      {
+        "src": "/business/packed-cupcakes-1920.webp",
+        "width": 1760,
+        "height": 1328,
+        "bytes": 172362
+      }
+    ]
+  },
+  "almond": {
+    "alt": "Almond chocolates held in a hand",
+    "width": 1536,
+    "height": 2048,
+    "variants": [
+      {
+        "src": "/business/almond-480.webp",
+        "width": 480,
+        "height": 640,
+        "bytes": 41836
+      },
+      {
+        "src": "/business/almond-960.webp",
+        "width": 960,
+        "height": 1280,
+        "bytes": 119830
+      }
+    ]
+  },
+  "occasion": {
+    "alt": "A slice of cheesecake enjoyed at a gathering",
+    "width": 1080,
+    "height": 1350,
+    "variants": [
+      {
+        "src": "/business/occasion-640.webp",
+        "width": 640,
+        "height": 800,
+        "bytes": 31554
+      },
+      {
+        "src": "/business/occasion-1280.webp",
+        "width": 1080,
+        "height": 1350,
+        "bytes": 58214
+      },
+      {
+        "src": "/business/occasion-1920.webp",
+        "width": 1080,
+        "height": 1350,
+        "bytes": 58214
+      }
+    ]
+  },
+  "smore-gifts": {
+    "alt": "S’more sticks arranged in individual portions",
+    "width": 1872,
+    "height": 1248,
+    "variants": [
+      {
+        "src": "/business/smore-gifts-480.webp",
+        "width": 480,
+        "height": 320,
+        "bytes": 39830
+      },
+      {
+        "src": "/business/smore-gifts-960.webp",
+        "width": 960,
+        "height": 640,
+        "bytes": 153084
+      }
+    ]
+  },
+  "whole-cheesecake": {
+    "alt": "Whole cheesecake with a caramelised top",
+    "width": 1360,
+    "height": 1712,
+    "variants": [
+      {
+        "src": "/business/whole-cheesecake-480.webp",
+        "width": 480,
+        "height": 604,
+        "bytes": 30176
+      },
+      {
+        "src": "/business/whole-cheesecake-960.webp",
+        "width": 960,
+        "height": 1208,
+        "bytes": 98626
+      }
+    ]
+  },
+  "pave-slice": {
+    "alt": "A cut slice showing the Pavé cake layers",
+    "width": 1328,
+    "height": 1760,
+    "variants": [
+      {
+        "src": "/business/pave-slice-480.webp",
+        "width": 480,
+        "height": 636,
+        "bytes": 33108
+      },
+      {
+        "src": "/business/pave-slice-960.webp",
+        "width": 960,
+        "height": 1272,
+        "bytes": 112870
+      }
+    ]
+  },
+  "almond-tub": {
+    "alt": "Almond chocolate pouches displayed in a black canister",
+    "width": 1080,
+    "height": 1350,
+    "variants": [
+      {
+        "src": "/business/almond-tub-480.webp",
+        "width": 480,
+        "height": 600,
+        "bytes": 24904
+      },
+      {
+        "src": "/business/almond-tub-960.webp",
+        "width": 960,
+        "height": 1200,
+        "bytes": 62588
+      }
+    ]
+  },
+  "loaf-box": {
+    "alt": "Chocolate gâteau loaf inside a kraft box",
+    "width": 1872,
+    "height": 1248,
+    "variants": [
+      {
+        "src": "/business/loaf-box-640.webp",
+        "width": 640,
+        "height": 427,
+        "bytes": 36916
+      },
+      {
+        "src": "/business/loaf-box-1280.webp",
+        "width": 1280,
+        "height": 853,
+        "bytes": 125032
+      },
+      {
+        "src": "/business/loaf-box-1920.webp",
+        "width": 1872,
+        "height": 1248,
+        "bytes": 261880
+      }
+    ]
+  },
+  "worktable": {
+    "alt": "Hands arranging cake and cupcakes at a work table",
+    "width": 2048,
+    "height": 1152,
+    "variants": [
+      {
+        "src": "/business/worktable-640.webp",
+        "width": 640,
+        "height": 360,
+        "bytes": 27774
+      },
+      {
+        "src": "/business/worktable-1280.webp",
+        "width": 1280,
+        "height": 720,
+        "bytes": 76878
+      },
+      {
+        "src": "/business/worktable-1920.webp",
+        "width": 1920,
+        "height": 1080,
+        "bytes": 151998
+      }
+    ]
+  },
+  "cake-box": {
+    "alt": "Strawberry cream cake visible inside a clear carry box",
+    "width": 1152,
+    "height": 1536,
+    "variants": [
+      {
+        "src": "/business/cake-box-480.webp",
+        "width": 480,
+        "height": 640,
+        "bytes": 19254
+      },
+      {
+        "src": "/business/cake-box-960.webp",
+        "width": 960,
+        "height": 1280,
+        "bytes": 54002
+      }
+    ]
+  }
+}

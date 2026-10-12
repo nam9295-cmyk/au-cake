@@ -1,79 +1,101 @@
-# AU Product Detail visual and functional QA — 2026-10-07
+# Services and Customer Stories design QA
 
-final result: passed
+Source: read-only `/Users/nam9295/Desktop/john_2.0/code/au-cake-frontend-polish/design/au-site-redesign.pen`. Exported references: `/tmp/au-services-pencil-reference/`. Implementation: `http://127.0.0.1:5184`, screenshots `/tmp/au-services-qa/`.
 
-This is a local review candidate, not production deployment approval. John's requested visual-polish review remains the next step.
+## Evidence and normalization
 
-## Source, state and normalization
+| Target | Desktop reference pixels | Mobile reference pixels | Comparison basename |
+| --- | --- | --- | --- |
+| Events | B5nkf 1440×5699 | oc8pJ 390×6085 | events |
+| Café | WBMIw 1440×4154 | w76iZ 390×3703 | cafe-supply |
+| Consulting | dpaRC 1440×3495 | LxFe9 390×3334 | consulting |
+| Home stories | P9pFE 1440×970 | TS3Iv 390×692 | home-stories |
+| Archive | VXzjm 1440×3909 | TKsm9 390×4080 | archive |
 
-Read-only source: `/Users/nam9295/Desktop/john_2.0/code/au-cake-frontend-polish/design/au-site-redesign.pen`.
-All 18 Desktop/Mobile frames were inspected through Pencil and exported to `/tmp/au-product-detail-pencil-source-20261007/`.
-Implementation: `http://127.0.0.1:5184`, AU local demo store, no real API/order submission.
-Viewports: 1440 × 1000, 834 × 1000, 390 × 1000 CSS pixels, Chromium, device scale 1. Source widths are 1440/390 physical pixels at export scale 1. Full-page heights vary with existing production copy/options.
+Browser CSS widths: 1440, 834, 390, 360; viewport height 1000, device scale 1. Full screenshots use the actual rendered page height rather than stretching to the mock height. Side-by-side `compare-{basename}-{1440,390}.png` places source left, implementation right: both desktop columns uniformly reduced to 480px; mobile columns retain 390px. Focused browser hero captures are `{basename}-{width}-hero.png`; home section and review modal have dedicated captures. Native brand header/footer and contact launcher are retained from production rather than replaced with the Pencil's sample chrome.
 
-The local demo banner and current production header/footer differ from the old Pencil chrome. Old Mobile photos, sample prices, unsupported claims and duplicate product placeholders are not visual acceptance targets: approved Desktop photos and current catalogue override those explicitly.
+State: light theme, consent dismissed, reduced motion; services default state, archive actual newest-first 12 records. Mobile Pencil photos are obsolete by user instruction; final Desktop photo selection/order is intentionally used at every width. The archive mock's curated order, nine desktop/six mobile examples and inline expanded review are not the runtime default: the requested real latest-first dataset, twelve initial records and accessible modal take precedence.
 
-## Comparison evidence
+## Comparison history and fixes
 
-Full-view side-by-side evidence (Pencil Desktop / Web Desktop / Pencil Mobile / Web Mobile):
-- `/tmp/au-product-details-20261007/comparisons/group-1.png`: Pavé, Signature, Cupcakes.
-- `/tmp/au-product-details-20261007/comparisons/group-2.png`: Lemon, Bento, Strawberry Vanilla.
-- `/tmp/au-product-details-20261007/comparisons/group-3.png`: Brownie, Almond, S’more.
+- P1: inherited global `main` width/padding narrowed the new pages. Scoped new-page wrappers now occupy full width. Existing pages were not changed.
+- P2: body font referenced `SUIT`, not the repository's `SUIT Variable`. Corrected new styles; headings remain Work Sans.
+- P2: mobile home excerpts and photos made the cards too tall. Added exact-substring mobile excerpts and reduced photo height from 190 to 140px. Full text remains available in the dialog.
+- P2: Events portrait crop cut off the face. Adjusted the editorial photo's object position to 12%, preserving original bytes and showing the cake and face.
+- P2: mobile service headline scale and action widths diverged. Set headline 28px, section heading 24px and full-width stacked actions.
+- P2: process cards were open white rows rather than the mock's compact tinted cards. Restored tinted bordered cards and compact mobile padding/number spacing.
+- P1 interaction: keyboard traversal could leave the native review dialog. Added an explicit Tab/Shift-Tab containment guard, Escape and opener restoration tests.
 
-Every product also has full-page and first-viewport captures at 1440, 834 and 390 in the same screenshot root.
-
-Focused source/web comparisons:
-- `comparisons/signature-hero-comparison.png`: photographs, typography, current finish/extra controls.
-- `comparisons/cupcake-inside-comparison.png`: actual rotated photo/crop.
-- `comparisons/smore-packaging-comparison.png`: correct foreground packaging image.
-- `comparisons/almond-mobile-purchase-comparison.png`: Desktop-updated photo, real three SKU buttons, quantity and mobile CTA.
-
-Focused source sections and rendered sections are shown together at equal widths: Desktop 1440 scaled to 720 per side; Mobile 390 remains 390 per side. Signature uses the fully loaded full-page crop to avoid the lazy-thumbnail timing artifact seen in the first isolated-element capture.
-
-## Findings and iteration history
-
-- Fixed P1 image fidelity: initial Cupcake Inside omitted the Pencil affine rotation/crop. The generated raster now preserves it; source/web focused comparison and image-aspect regression pass.
-- Fixed P1 asset validity during optimization: an intermediate SVG/WebP embedding produced blank rasters. Replaced embedded intermediates with supported PNG/JPEG. Every generated photograph passes decode/dimension/content-entropy checks; no blank output is retained.
-- Fixed P1 image identity: S’more's packaging frame contains a visible S’more image over an old Lemon background. Mapping now uses the visible foreground `smore.png`; hidden background and duplicate support image are excluded.
-- Fixed P2 composition: Almond edition photos use square containers instead of the generic wide crop.
-- Fixed P2 mobile interaction: new purchasable pages lacked the master mobile order bar. Added a shared bar connected to existing totals/callbacks; all eight purchasable routes pass actual mobile cart handoff, including after-add controls without overflow. Bento stays non-purchasable.
-- Fixed P2 related grouping: replaced generic recommendations with actual Desktop product order and catalogue-derived cards. Brownie's stale self-recommendation uses Pavé instead.
-- Final full and focused comparisons were re-inspected after these changes. No remaining P0/P1/P2 issue identified within the approved current-commerce/updated-photo constraints.
+Re-captured all four browser widths after fixes. Final side-by-side comparisons and focused regions were inspected, not inferred from code alone.
 
 ## Required fidelity surfaces
 
-- **Fonts/type:** actual browser computed font families are Work Sans for headings and SUIT Variable for descriptive text. Heading hierarchy, small control text, wrapping and option prices are readable at all three widths. Current production option labels are preserved.
-- **Layout/spacing:** desktop split hero, inside/craft grids, alternating finish editions, packaging split and related grid share the Pavé visual system. Tablet stacks purchase areas. Mobile stacks content and retains supporting/related grids plus an accessible fixed CTA. No document horizontal overflow in 27 route/viewport cases.
-- **Colors/tokens:** existing AU green, white, warm neutral backgrounds, restrained pink accents, thin dividers and selected borders. No new shadows/gradients or motion dependency.
-- **Images:** correct product source/crop, responsive WebP, alpha preserved, explicit dimensions, hero priority and supporting lazy loading. All rendered images loaded without broken resources. Desktop/Mobile narrative image lists match.
-- **Copy:** verified catalogue/editorial facts take priority over old sample claims. No new origin, couverture brand, free accessories, insulated shipping or allergen guarantee. Packaging references are identified; unavailable Bento remains clear. New video slots show photographs without developer labels.
+- **Typography:** Work Sans headings, SUIT Variable body; mobile wrapping remains readable at 360/390. Exact original review text is preserved; short home excerpts are never presented as full reviews.
+- **Layout:** editorial centered heroes, three-column desktop cards, mobile stacks, events supporting 2-column grid; home two-card scroll-snap window. No horizontal page overflow at any tested width. Longer neutral copy and additional provenance disclosures intentionally alter page height.
+- **Colors:** existing green `#1F5A46`, dark text, soft neutral cards, thin dividers and restrained pink/berry accents. No gradients or shadows added.
+- **Images:** final Desktop asset subjects and order verified at all widths; responsive WebP copies, no source mutation, no generated customer imagery. Archive photo ownership is checked programmatically. Full photos remain uncropped in the modal; card crops are presentation only.
+- **Content:** unsupported operating claims replaced with neutral enquiries/photo descriptions; exceptions and original claims documented in `docs/services-stories/CONTENT_APPROVAL_REQUIRED.md`. No false Australian/verified-order attribution. John approved preserving five customer quotations mentioning Daegu while site labels remain Korea.
 
-## Interactions and regression evidence
+## Functional and regression evidence
 
-- `tests/au-product-details.browser.mjs`: 27 cases (9 × 3 widths), zero overflow/broken images/page errors; related links, default prices, quantity/cart handoff, mobile CTA callback, reduced motion.
-- `tests/au-detail-options.browser.mjs`: Desktop/390 real option interactions: Signature A$45/52/55; Cupcake 6/12 packs and three finishes, A$100+ free packaging; Lemon four packs and chocolate-finish count; Strawberry sizes; Brownie unified Basic A$85 / Vanilla Cream A$105 / Pavé Chocolate A$95 finish selector; S’more 5/6/12 quantities, discounts and cart SKU.
-- `tests/au-chocolate-commerce.browser.mjs`: Desktop/390 Almond variants, exclusive selection, conditional six-pack note, 1–5 bounds, separate Single ×5 and 6-pack ×1 lines, Black Tub, standalone Pavé/Eiffel. Five-line subtotal A$199.
-- Existing Pavé browser suite: three sizes, extra row-once charge, quantity bounds, gallery/swipe, related links, eight-second muted loop, viewport pause, reduced motion, cart.
-- Market-boundary/image targeted suite: 17 passed, including KR byte-for-byte rendered-output comparison.
-- Full `npm test`: 1,664 passed, zero failures/cancellations on the completed run. Missing existing Review API dependency was installed from its unchanged lockfile only under `/tmp/au-detail-review-deps.F9rsfT` and resolved by a temporary Node import hook for tests. No repository package/lock/backend change.
-- Lint passed. AU and KR builds passed; existing bundle-size warnings remain. AU generated 35 static pages, KR 30. AU build was run last to restore the normal AU sitemap output.
-- `git diff --check` passed. Fresh read-only code review found no important functional/KR-isolation defect.
+- Four widths: all service images decode, ordered image lists match, links/enquiry targets work; home carousel, full-review dialog, photo navigation and Escape; archive search, combined filters, empty results and Load More.
+- Browser page errors: zero in the service/stories suite.
+- Existing `/reviews` renders its page, but its live API request returns 401 in this credential-free local preview. Existing review unit/integration tests pass; production review retrieval is not claimed to have been verified. The console's other repeated messages are development React DevTools notices.
+- Production build: Home makes zero archive JSON requests; archive makes exactly one; only six customer-image requests including Home during the initial mobile test, not 255 eager requests.
+- Static HTTP server without SPA fallback: four new extensionless routes return 200 in AU, 404 in KR. Existing representative paths retain 200.
+- Custom Cake baseline/current: normalized DOM, measured geometry/styles and selected flavour identical at 1440/390. Final screenshot comparison: zero different pixels at both widths. No live request submitted.
+- KR baseline/current: Home, Cakes, Pavé detail, Custom Cake text and measured layout/styles identical at 1440/390.
+- Full npm test and lint pass; AU/KR builds pass. Existing bundle-size warnings remain. Backend/Custom Cake/Product Detail/package sources unchanged.
 
-## Expected differences / follow-up polish
+## Remaining review before publication
 
-- Real purchase controls and verified copy produce different hero/practical-section heights from sample Pencil values. They keep current options, validation and order meaning.
-- New galleries use approved photographs of the same product from the Desktop story rather than stale cross-product thumbnail placeholders. Their exact thumbnail density can be polished after John's review.
-- Desktop photo content replaces outdated Mobile assets, including Strawberry/Brownie/Almond. Bento only has the available approved hero and related products.
-- New videos await John's files; poster sections are complete and do not advertise missing media. Pavé retains its supplied film.
-- Browser QA used Chromium, not physical Safari/iOS. No real production request, payment or delivery was exercised.
-- Minor title wrapping, caption lengths and vertical spacing remain suitable for John's final visual review. No deployment has been performed.
+John should approve service copy and the existing Instagram enquiry destination, and inspect the local pages. Full production submission/email/quote operations were deliberately not exercised; local regression tests cover those existing contracts. No deployment was performed.
 
-## Implementation checklist
+P3: the mock's abbreviated source labels, pill shapes and sample navigation are not copied exactly where they conflict with real catalogue names, existing AU chrome or truthful disclosures. These are intentional product constraints, not new functionality.
 
-- [x] Nine AU detail routes, shared presentation plus existing commerce.
-- [x] Read-only source mapping and optimized production copies.
-- [x] Desktop/Tablet/Mobile screenshots and source comparisons.
-- [x] Purchase, cart, availability, reduced-motion and AU/KR regression.
-- [x] Test/build/lint/diff validation.
-- [ ] John visual approval and final video handoff.
-- [ ] Deployment (explicitly outside this task).
+Implementation checklist: all ten target frames implemented; Desktop assets applied to Mobile; original text/photos preserved; AU isolation and protected pages verified; no automatic deployment.
+
+final result: passed
+
+## Approved navigation and Home photo follow-up
+
+John approved replacing the lower Home story photo with `cakes-party-hero.jpg` and unifying AU header navigation, including the shared header on Custom Cake. The uploaded source SHA-256 matches the recorded Events hero source exactly, so existing 640/1280/1920 WebP variants are reused through the asset manifest. No source photograph was edited.
+
+Events & Business now consistently opens `/business/events`; the separate Kids Classes item opens the existing `/classes`. Home Desktop and Mobile use their established SPA navigation; shared AU headers use ordinary anchors. Custom Cake's page source, options and submit behavior remain unchanged; its header navigation is the approved exception to the initial screenshot baseline above.
+
+Focused evidence: `/tmp/au-services-qa/home-story-new-{1440,390}.png` and `nav-{home,cakes,custom}-{1440,1024,834,769,390,360}.png`. A 769px screenshot exposed a clipped Cart that a scroll-width-only check missed. The Home tablet navigation gap and font size were reduced; regression checks now also assert each header item's bounds fit the viewport. This change is scoped to `.au-home-shell` header selectors.
+
+The navigation browser regression is `tests/au-service-navigation.browser.mjs`. Related AU/KR routing, Cake and Custom Cake frontend tests, lint, both market builds and static route tests were run for the follow-up. The preview remains local; no push, merge or deployment.
+
+## Language control follow-up
+
+Restored the omitted AU language control without changing the approved navigation destinations or Home story photograph. Desktop uses an understated `EN / 한국어` group before Cart, with an underline indicating the current language. Tablet/mobile uses a compact other-language switch; mobile remains outside MENU and provides a 44px touch target. Shared App state and existing storage preserve the preference on navigation/reload.
+
+Screenshots inspected: `language-home-{en,ko}-{1440,390,360}.png`, `language-cakes-{en,ko}-{1440,390,360}.png`, and `language-{events,cafe-supply,consulting,korea}-ko-{1440,390,360}.png` in `/tmp/au-services-qa/`. Eight-width header checks (including the 767/768/769px breakpoint edges) show no clipping, overlap or page overflow in either language. Korean service layouts retain the same photos and enquiry constraints. Review originals/translations remain unchanged; Korean originals become the primary displayed text in Korean mode.
+
+Custom Cake content/controls remain baseline-identical, excluding the approved shared header. KR content and measured typography/layout match the main baseline in both languages on four routes at 1440/390. The first KR comparison discrepancy was differing consent-banner browser storage, not a product change; normalized consent state removes it. Existing English service/stories interaction QA also passes. Full test, lint, AU/KR builds, new rendered-language/data tests and static direct-access tests pass. No publication performed.
+
+## Mobile readability correction (2026-10-11)
+
+Review baseline: `8e245c442bf6820800847168e21d3541e378735a`. The reported 7–9px metadata was still present and was corrected, not merely re-tested. Changes are confined to the existing Customer Stories mobile media query (`max-width: 600px`); desktop styles, original reviews/translations/photos, Custom Cake and backend sources are unchanged.
+
+| Mobile selector / content | Before | After |
+| --- | --- | --- |
+| Compact product and platform badges | 7px | 11px |
+| Compact rating number | 8px | 12px |
+| Compact rating star | 9×9px | 12×12px |
+| Compact translation / original-language note | 9px | 12px |
+| Compact review excerpt | 13px / 1.45 line-height | 14px / 1.5 line-height |
+| Compact nickname/date | 9px, horizontal | 11px, stacked |
+| Compact full-review action / swipe hint | 9px | 12px |
+| Home provenance footer | 10px | 13px |
+| Archive main selection disclosure / product-filter explanation | 11px | 14px |
+| Archive statistics explanation | 10px | 12px |
+
+Badges wrap instead of truncating; rating rows can wrap, compact body gap is 10px (previously 8px), and excerpts retain four visible lines with the full unmodified text in the dialog. Card width, 140px photograph height and mandatory scroll snap are unchanged. At both 360/390px, the initial window is cards 1+2 and a horizontal wheel/swipe advances to cards 2+3. Page overflow and clipped badge/metadata assertions pass in English and Korean.
+
+TDD: `tests/customer-stories-readability.browser.mjs` first failed against the baseline with 248 font-minimum assertions and no other assertion failures. After the CSS correction it passes for both widths/languages. Run through `playwright-cli --session <local-session> run-code --filename tests/customer-stories-readability.browser.mjs` on the AU preview; start from `/?qaPhase=before` to preserve baseline screenshots. Screenshots are stored outside the repository in `/tmp/au-services-qa/readability-{before,after}-{home,swiped,archive}-{en,ko}-{360,390}.png`; focused after archive filters/cards are also captured. English/Korean cards, the third-card swipe window and archive disclosures were visually inspected.
+
+Fresh full `npm test`, lint, AU/KR builds, both markets' extensionless static-route tests, story-data/route/language tests and diff check pass. The full AU-oriented test command conditionally skips its KR Chocolate-dist case; the separate KR build and KR services/stories static-route test were run. Existing build chunk-size/dynamic-import warnings remain. The service/stories browser suite passes at 1440/834/390/360 with zero page errors, and Custom Cake body DOM/geometry remains identical to the exported production-main baseline at 1440/390, excluding the previously approved shared header. No live order or backend mutation was performed.
+
+Deployment remains gated on final neutral service-copy and Instagram enquiry approval; see `docs/services-stories/deployment-readiness.md`. No push, merge, Pages configuration change or deployment was performed.
