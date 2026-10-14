@@ -1,0 +1,44 @@
+{
+  "document_version": "v0.7 + final pickup2026-10-14",
+  "checked_at_date": "2026-10-14",
+  "decision_D02": "RESOLVED",
+  "pickup_policy_version": "au-renewal-pickup.2026-10-14.v2",
+  "timezone": "Australia/Sydney",
+  "approved_days": {
+    "Wednesday": "09:00–16:00",
+    "Friday": "09:00–16:00",
+    "Saturday": "09:00–12:00",
+    "Sunday": "09:00–12:00"
+  },
+  "interval_minutes": 15,
+  "closing_slot_included": true,
+  "new_product_elapsed_lead_hours": 24,
+  "runtime_flags_changed": false,
+  "renewal_tests_passed": 35,
+  "kr_boundary_tests_passed": 6,
+  "verification": [
+    "npm run test:renewal passed",
+    "npm test passed",
+    "npm run lint passed",
+    "AU production build completed",
+    "KR production build completed",
+    "KR static AU-page exclusion passed",
+    "git diff --check passed",
+    "390px browser QA and local screenshots"
+  ],
+  "remaining_decisions": [
+    "Cookie price",
+    "Provisional brownie price approvals",
+    "Final photos/allergens/storage",
+    "Exact manual opening time/readiness",
+    "Physical-device QA",
+    "Live target schema/permissions/deployment compatibility"
+  ],
+  "deferred_minor": "Long-open checkout time eligibility refreshes on render rather than a timer; server always validates current receipt time.",
+  "private_originals_published": false,
+  "production_changed": false,
+  "real_orders_payments_notifications_sent": false,
+  "core_commit": "b64fcee65d16a7c7ef09c8c3c6e9d81cb85b7f1c",
+  "frontend_commit": "eee4b4adc6a6595251fc96f1ad731713509d1199",
+  "notes": "Application tests are distinct from document arithmetic cases. Browser capability responses and time were local fixtures. Private originals, prior ZIPs and R&D are excluded through an explicit document allowlist."
+}

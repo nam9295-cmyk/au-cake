@@ -34,3 +34,24 @@ docs/AU_CAKE_CODEBASE_DECK.html
 *.njsproj
 *.sln
 *.sw?
+
+# Private manufacturing references; never publish recipe originals.
+docs/renewal-20261013/KakaoTalk_Photo_2026-10-14-14-00-24.jpeg
+docs/renewal-20261013/KakaoTalk_Photo_2026-10-14-14-00-35.jpeg
+.playwright-cli/
+output/playwright/
+
+# Only reviewed renewal development documents may enter public Git.
+docs/renewal-20261013/*
+!docs/renewal-20261013/README.md
+!docs/renewal-20261013/public-decisions-20261014.md
+!docs/renewal-20261013/au-renewal-final-v0.7.md
+!docs/renewal-20261013/backend-plan-v0.7.md
+!docs/renewal-20261013/frontend-plan-v0.7.md
+!docs/renewal-20261013/qa-contract-v0.7.md
+!docs/renewal-20261013/qa-price-fixtures-v0.7.json
+!docs/renewal-20261013/codex-start-v0.7.md
+!docs/renewal-20261013/changes-v0.7.md
+!docs/renewal-20261013/implementation-progress.md
+!docs/renewal-20261013/DOCUMENT-VALIDATION.json
+!docs/renewal-20261013/PUBLIC-SHA256SUMS.txt
