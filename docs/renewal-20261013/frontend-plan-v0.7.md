@@ -20,9 +20,12 @@
 
 > **For agentic workers:** 먼저 `au-renewal-final-v0.7.md`를 읽는다. 설치되어 있다면 `superpowers:executing-plans` 또는 사용자가 선택한 Codex 실행 절차를 따른다. 아래 체크박스는 미실행 작업이며 운영 배포 승인이 아니다.
 
-**Goal:** 마지막 손그림의 5/4/3개 카드와 모찌 한 메뉴를 모바일 주문 화면으로 연결한다.  
-**Architecture:** 표시 카드·상품·판매 옵션을 분리하고, 백엔드의 공통 가격/포장/구성 계약을 소비한다. 브라우니 두 형태는 각각의 카드에서 올바른 선택값으로 진입한다.  
-**Tech Stack:** 현재 au-cake의 React/TypeScript/Vite와 기존 CSS·장바구니·브라우저 테스트.  
+**Goal:** 마지막 손그림의 5/4/3개 카드와 모찌 한 메뉴를 모바일 주문 화면으로 연결한다.
+
+**Architecture:** 표시 카드·상품·판매 옵션을 분리하고, 백엔드의 공통 가격/포장/구성 계약을 소비한다. 브라우니 두 형태는 각각의 카드에서 올바른 선택값으로 진입한다.
+
+**Tech Stack:** 현재 au-cake의 React/TypeScript/Vite와 기존 CSS·장바구니·브라우저 테스트.
+
 **Spec:** `au-renewal-final-v0.7.md`; 검수 ID는 `qa-contract-v0.7.md`.
 
 ## Global Constraints
@@ -56,7 +59,8 @@
 
 ## FE0 — 현재 구현·입력 계약 대조
 
-**Read:** 메인 명세 §0/2/12, 최신 8장, 현재 브랜치/변경점, BE0 결과.  
+**Read:** 메인 명세 §0/2/12, 최신 8장, 현재 브랜치/변경점, BE0 결과.
+
 **Produces:** `docs/renewal-v0.7/frontend-preflight.md`에 실제 파일·지원 상태·동작 재현·결정 항목.
 
 - [ ] 기존 3그룹/7카드/모찌 여러 카드가 남은 위치를 기록한다.
@@ -66,8 +70,10 @@
 
 ## FE1 — 5/4/3 카드와 분류 이동
 
-**Modify:** 공통 메뉴/목록/Home/route 데이터.  
-**Test 제안:** `tests/au-v07-navigation.test.mjs`, 현재 브라우저 러너의 카드 이동 테스트.  
+**Modify:** 공통 메뉴/목록/Home/route 데이터.
+
+**Test 제안:** `tests/au-v07-navigation.test.mjs`, 현재 브라우저 러너의 카드 이동 테스트.
+
 **Interface:** `{cardId, productRef, presetVariant, categoryId}` 목록. 가격/SKU는 참조할 뿐 중복 정의하지 않는다.
 
 - [ ] RED: Q-NAV01–06으로 정확한 순서/개수와 Cupcakes·스모어 이동을 테스트한다.
@@ -78,9 +84,12 @@
 
 ## FE2 — 파베8인치 가격, 브라우니 홀 사이즈/로프와 옵션
 
-**Modify:** 현재 파베 가격 표시 소비부, brownie 상세·form/size 입력·URL·카드·asset 선택.  
-**Test 제안:** `tests/au-v07-brownie-variants.test.ts` (기존 TS 러너 사용).  
-**Consumes:** BE1의 파베7500/10700/15900c, brownie whole6/8/10과미설정가격상태, loaf5800c, vanilla1000c.  
+**Modify:** 현재 파베 가격 표시 소비부, brownie 상세·form/size 입력·URL·카드·asset 선택.
+
+**Test 제안:** `tests/au-v07-brownie-variants.test.ts` (기존 TS 러너 사용).
+
+**Consumes:** BE1의 파베7500/10700/15900c, brownie whole6/8/10과미설정가격상태, loaf5800c, vanilla1000c.
+
 **Produces:** form·size·토핑이 복원 가능한 cart input/요약. 가격미정은0과구분한다.
 
 - [ ] RED: 파베8in을선택하면107.00,6in75.00/10in159.00은유지. 카드/상세/cart/고정하단/SEO의값일치.
@@ -93,9 +102,12 @@
 
 ## FE3 — 모찌 한 상세의 3가지 주문 방식
 
-**Modify:** 현재 모찌 상세/구성 선택/cart/가격 표시. 없을 때만 `src/components/au/MochiOrderBuilder.tsx` 제안.  
-**Test 제안:** `tests/au-v07-mochi-builder.test.ts`.  
-**Consumes:** BE3의 modes·단가·구성·가격/포장 준비 상태.  
+**Modify:** 현재 모찌 상세/구성 선택/cart/가격 표시. 없을 때만 `src/components/au/MochiOrderBuilder.tsx` 제안.
+
+**Test 제안:** `tests/au-v07-mochi-builder.test.ts`.
+
+**Consumes:** BE3의 modes·단가·구성·가격/포장 준비 상태.
+
 **Produces:** 모드와 구성·포장 선택이 명시적인 입력. 목록에는 추가 카드 없음.
 
 - [ ] RED: 시그니처 고정35, 자유4구 일반 조합 가격, 원하는수량5개47을 검증한다.
@@ -108,8 +120,10 @@
 
 ## FE4 — Celebrate 두 컵케이크·스모어, 포장·추가구매
 
-**Modify:** cupcake 옵션/박스 수, packaging UI, Celebrate cards, attached addons, smore 상세.  
-**Test 제안:** `tests/au-v07-celebrate-options.test.ts`.  
+**Modify:** cupcake 옵션/박스 수, packaging UI, Celebrate cards, attached addons, smore 상세.
+
+**Test 제안:** `tests/au-v07-celebrate-options.test.ts`.
+
 **Consumes:** BE1/2/4의 명시적 상품·팩·포장자격·추가구매 계약.
 
 - [ ] RED: 갸또6구·12구 독립 박스 수와 finish, 총3박스24개·117 계산.
@@ -122,7 +136,8 @@
 
 ## FE5 — 쿠키·픽업·서비스·SEO·통합
 
-**Consumes:** 쿠키3+3/미정 가격 상태, BE5/6의 접수 지원, D02 승인된 주간 정책.  
+**Consumes:** 쿠키3+3/미정 가격 상태, BE5/6의 접수 지원, D02 승인된 주간 정책.
+
 **Test:** Q-COOKIE/Q-PICK/Q-UI/Q-HIST 및 현재 전체 관련 suite.
 
 - [ ] 쿠키1카드·고정6개·10/19 안내. 가격null을0이나레몬가격으로 표시하지 않는다.

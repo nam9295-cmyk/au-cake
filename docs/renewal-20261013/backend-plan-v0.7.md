@@ -20,9 +20,12 @@
 
 > **For agentic workers:** `au-renewal-final-v0.7.md`를 먼저 읽는다. 설치된 경우 `superpowers:executing-plans` 또는 선택한 Codex 실행법을 따른다. 로컬 검증과 운영 배포를 구분한다.
 
-**Goal:** 가격·포장·수량·정책을 서버가 검증하고, 5/4/3 분류 이동에도 기존 주문을 보존한다.  
-**Architecture:** 표시 membership과 판매 offer를 분리한다. 신규 정책과 frozen 역사 정의를 분리하고 순수 계산→검증→저장→모든 reader/운영출력을 연결한다.  
-**Tech Stack:** 현재 Node ESM Appwrite Functions, TypeScript 소비자, 기존 테스트/패키징.  
+**Goal:** 가격·포장·수량·정책을 서버가 검증하고, 5/4/3 분류 이동에도 기존 주문을 보존한다.
+
+**Architecture:** 표시 membership과 판매 offer를 분리한다. 신규 정책과 frozen 역사 정의를 분리하고 순수 계산→검증→저장→모든 reader/운영출력을 연결한다.
+
+**Tech Stack:** 현재 Node ESM Appwrite Functions, TypeScript 소비자, 기존 테스트/패키징.
+
 **Spec:** `au-renewal-final-v0.7.md`; 기대값은 `qa-contract-v0.7.md`와 JSON fixture.
 
 ## Global Constraints
@@ -56,9 +59,12 @@
 
 ## BE1 — 표시분류·판매레지스트리, 파베 가격·브라우니 사이즈
 
-**Modify 후보:** active catalog, 신규판매 registry, 공통form/offer types, brownie options.  
-**Create 필요시:** `appwrite-functions/reservation-api/src/au-sales-offers.js` (같은 역할 존재 시 확장).  
-**Test 제안:** `tests/au-v07-sales-offers.test.mjs`.  
+**Modify 후보:** active catalog, 신규판매 registry, 공통form/offer types, brownie options.
+
+**Create 필요시:** `appwrite-functions/reservation-api/src/au-sales-offers.js` (같은 역할 존재 시 확장).
+
+**Test 제안:** `tests/au-v07-sales-offers.test.mjs`.
+
 **Interface 제안:** `resolveActiveOffer(market, offerId)` → 단가·판매단위·실물구성·허용옵션·상태. 실제export명은BE0에서고정.
 
 - [ ] RED: Q-NAV/Q-BROW/Q-SMORE/Q-BUNDLE의 active offer와가격을검증한다.
@@ -72,8 +78,10 @@
 
 ## BE2 — cupcake 박스 수와 포장 정책 확장
 
-**Modify:** 현재pack quantity/pricing, 개별 포장 모듈, 실제TS/서버양쪽소비자.  
-**Test 제안:** `tests/au-v07-cupcake-packaging.test.mjs`.  
+**Modify:** 현재pack quantity/pricing, 개별 포장 모듈, 실제TS/서버양쪽소비자.
+
+**Test 제안:** `tests/au-v07-cupcake-packaging.test.mjs`.
+
 **Interface:** `priceIndividualPackaging(lines)`(제안) → 적격실물개수·적격소계·기본포장료·면제액·최종포장료.
 
 - [ ] RED: 갸또6/12구박스수·finish117/102예시, pack×quantity의단일곱셈.
@@ -84,8 +92,10 @@
 
 ## BE3 — 모찌3모드·포장·D01
 
-**Modify/새로필요시:** 현재모찌registry와 `mochi-box-policy.js`.  
-**Test 제안:** `tests/au-v07-mochi-contract.test.mjs`.  
+**Modify/새로필요시:** 현재모찌registry와 `mochi-box-policy.js`.
+
+**Test 제안:** `tests/au-v07-mochi-contract.test.mjs`.
+
 **Interfaces:**
 - `signature`: 고정상자당[1,1,1,1], 3500c, boxCount.
 - `custom-four`: 상자당정수맵합4, 단가 합산, boxCount, D01같은 구성경계.
@@ -103,8 +113,10 @@
 
 ## BE4 — 추가구매5%, 일반5+1·스모어·쿠키
 
-**Modify:** 기존attached extras/parent validation·offer pricing·cookie상품/개시정책.  
-**Test 제안:** `tests/au-v07-promotions-and-cookie.test.mjs`.  
+**Modify:** 기존attached extras/parent validation·offer pricing·cookie상품/개시정책.
+
+**Test 제안:** `tests/au-v07-promotions-and-cookie.test.mjs`.
+
 **Interface:** 부모는같은cart의검증된실제상품이며카테고리URL이아니다. 반환값은base/discount/net와physicalUnits.
 
 - [ ] RED: 연결 추가단품5%의 신규 부모는 파베홀·갸또로프·브라우니홀·브라우니로프만 허용한다. 갸또컵케이크의 종전 자격 유지 문장은 폐기한다. 과거 적용 주문은 그대로 읽는다.
@@ -116,7 +128,8 @@
 
 ## BE5 — 저장·조회·관리자·알림·생산 호환
 
-**Modify:** 실제request/response codec, order engine, stored-order reader/policy, 관리자/조회/PIN/CSV/Notification/Reminder 및Function패키징.  
+**Modify:** 실제request/response codec, order engine, stored-order reader/policy, 관리자/조회/PIN/CSV/Notification/Reminder 및Function패키징.
+
 **Test 제안:** `tests/au-v07-roundtrip.test.mjs`, `tests/au-v07-history.test.mjs`.
 
 - [ ] RED: 신규모찌모드/수량/개당50c포장, 두brownie형태·홀size+10, 갸또박스수,smore팩·에펠팩/조각,추가구매부모가round-trip후같다. 홀size가다르면같은행으로합치지않는다.
@@ -128,7 +141,8 @@
 
 ## BE6 — 픽업변경판독·예약개시·운영보호
 
-**Modify:** 현재pickup schedule/policy·preorderconfig·공통안내.  
+**Modify:** 현재pickup schedule/policy·preorderconfig·공통안내.
+
 **Test:** `tests/au-v07-pickup-and-preorder.test.mjs` + 기존pickup/class/customsuite.
 
 - [ ] 수·금09:00–16:00, 토·일09:00–12:00 (Australia/Sydney). 월·화·목 일반 픽업 불가. 종료 시각을 마지막15분 슬롯으로 포함한다. 접수일+24시간과 승인 시간창을 검증한다.

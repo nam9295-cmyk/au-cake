@@ -18,10 +18,14 @@
 
 신규 주문은 `au-renewal.2026-10.v1`, 저장 version 2. 과거 v1 계약/가격/사이즈는 변경하지 않는다. 운영 플래그는 기본 false이며 실제로 활성화하지 않았다. 기존 Custom Cake·KR·클래스 준비시간은 전역 변경하지 않는다.
 
-**문서 ID:** AU-RENEWAL-001 v0.7  
-**작성일:** 2026-10-14  
-**대상:** `nam9295-cmyk/au-cake` / `https://au.verygood-chocolate.com`  
-**작업 위치:** 기존 Mac `<current checkout>`의 현재 작업점  
+**문서 ID:** AU-RENEWAL-001 v0.7
+
+**작성일:** 2026-10-14
+
+**대상:** `nam9295-cmyk/au-cake` / `https://au.verygood-chocolate.com`
+
+**작업 위치:** 기존 Mac `<current checkout>`의 현재 작업점
+
 **상태:** v0.6의 분류·구매 정책과 최신 네 가지 정정을 통합한 Codex 로컬 구현·검증용 명세. 실제 코드·주문·DB·배포·기기 QA 완료 기록이 아니다.
 
 > **최종 공개 카드 수: Cake & Bake 5개 / Chocolate 4개 / Celebrate 3개.**
