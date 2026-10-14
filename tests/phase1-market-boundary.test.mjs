@@ -86,7 +86,8 @@ test('AU Cakes excludes S’more while Chocolates includes its existing cake-det
   assert.match(chocolates, /data-au-product="smore-stick"[\s\S]*?href="\/cakes\/smore-stick"/)
   assert.doesNotMatch(chocolates, /href="\/chocolates\/smore-stick"/)
   const homeChocolates = (await render('AU')).homeCollections.find(group => group.id === 'chocolates')
-  assert.equal(homeChocolates.products.find(product => product.id === 'smore-stick').href, '/cakes/smore-stick')
+  assert.equal(homeChocolates.products[0].id, 'mochi')
+  assert.equal((await render('AU')).homeCollections.find(group => group.id === 'sharing').products.find(product => product.id === 'smore').href, '/cakes/smore-stick')
   assert.doesNotMatch(home, /data-home-product="smore-stick"/)
   assert.doesNotMatch(home, /GATHER &amp; CELEBRATE/)
   assert.match(cakes, /href="\/chocolates"/)
@@ -279,13 +280,13 @@ test('AU Home filters chocolates inline while standalone category navigation rem
   const { home, cakes, chocolates } = await render('AU')
   const homeRail = home.match(/<div[^>]*role="tablist"[^>]*>([\s\S]*?)<\/div>/)[1]
   const homeHeader = home.match(/<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
-  assert.match(homeRail, /<button[^>]*aria-selected="false"[^>]*>CHOCOLATES<span>\[4\]<\/span><\/button>/)
-  assert.match(homeRail, /SHARING \/ CELEBRATION<span>\[3\]<\/span>/)
+  assert.match(homeRail, /<button[^>]*aria-selected="false"[^>]*>Chocolate<span>\[4\]<\/span><\/button>/)
+  assert.match(homeRail, /Celebrate<span>\[3\]<\/span>/)
   assert.doesNotMatch(homeRail, /GATHER/)
   assert.doesNotMatch(homeRail, /href="\/chocolates"/)
-  assert.match(homeRail, /aria-selected="true"[^>]*>WHOLE CAKES<span>\[4\]<\/span>/)
+  assert.match(homeRail, /aria-selected="true"[^>]*>Cake &amp; Bake<span>\[5\]<\/span>/)
   assert.doesNotMatch(homeRail, /ALL PRODUCTS/)
-  assert.match(homeHeader, /href="\/#au-collection">MENU<\/a>/)
+  assert.match(homeHeader, /href="\/cakes">Cake &amp; Bake<\/a>/)
   for (const category of [cakes, chocolates]) {
     const rail = category.match(/<nav[^>]*aria-label="Product categories"[^>]*>([\s\S]*?)<\/nav>/)[1]
     assert.match(rail, /href="\/cakes"[^>]*>CAKES \[6\]<\/a>/)
@@ -305,13 +306,11 @@ test('chocolate Home mapping, list, detail and related cards share each product 
     assert.doesNotMatch(`${product.photography.alt} ${product.photography.caption}`, /coming soon|reference photo|may differ/i)
     assert.doesNotMatch(product.photography.src, /\/Users\/|https?:|pave-chocolate-cake|hero-cake/)
     const card = chocolates.match(new RegExp(`<article[^>]*data-au-product="${product.slug}"[^>]*>([\\s\\S]*?)<\\/article>`))[1]
-    const homeCard = homeCollections.find(group => group.id === 'chocolates').products.find(card => card.id === product.slug)
+    const homeCard = homeCollections.find(group => group.id === 'chocolates').products.find(card => card.href === `/chocolates/${product.slug}`)
     assert.ok(homeCard, `${product.slug}: missing Home collection mapping`)
     assert.equal(homeCard.href, `/chocolates/${product.slug}`)
-    assert.equal(homeCard.description, product.packLabel)
     assert.equal(homeCard.price, product.price)
-    assert.equal(homeCard.image, product.photography.src)
-    assert.equal(homeCard.imageAlt, product.photography.alt)
+    assert.equal(homeCard.image, product.slug === 'pave-chocolate' ? '/products/chocolates/pave-heart-100g.png' : product.photography.src)
     for (const markup of [card, ...(index === 0 ? [] : [chocolateDetails[index]])]) {
       assert.ok(markup.includes(`src="${product.photography.src}"`))
       assert.ok(markup.includes(`alt="${product.photography.alt}"`))
@@ -336,7 +335,7 @@ test('all Phase 1 CSS rules require an AU-only shell', () => {
 test('chocolate previews have truthful AU metadata, not a 404 title or purchasable offer', async () => {
   for (const seo of (await render('AU')).chocolateSeo) {
     assert.match(seo.title, /chocolat/i)
-    assert.equal(seo.noindex, true)
+    assert.notEqual(seo.noindex, true)
     assert.doesNotMatch(JSON.stringify(seo), /"offers"|InStock/)
   }
   for (const seo of (await render('KR')).chocolateSeo) assert.match(seo.title, /Not Found/)

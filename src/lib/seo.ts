@@ -1,3 +1,4 @@
+import { renewalSeoPages } from '../../appwrite-functions/reservation-api/src/au-renewal-seo.js'
 import portfolio from '../content/au-company-portfolio.json' with { type: 'json' }
 import homeV02 from '../content/au-home-v02.json' with { type: 'json' }
 import serviceRoutes from '../content/au-service-routes.json' with { type: 'json' }
@@ -290,6 +291,10 @@ function removeMeta(selector: string) {
 
 
 export function getSeoConfig(pathname: string): SeoConfig {
+  const renewed = marketConfig.market === 'AU' && renewalSeoPages(SITE_URL, publicContent)[pathname.replace(/\/$/, '') || '/']
+  if (renewed) return renewed
+  if (marketConfig.market === 'AU' && /^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(pathname)) return {title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', noindex: true}
+
   const service = marketConfig.market === 'AU' && serviceRoutes.find(route => route.path === pathname.replace(/\/$/, ''))
   if (service) return { title: service.title, description: service.description, canonical: `${SITE_URL}${service.path}`, structuredData: [{ '@type': 'WebPage', name: service.title, url: `${SITE_URL}${service.path}`, inLanguage: 'en-AU' }] }
   if (marketConfig.market === 'AU' && (pathname === '/portfolio' || pathname === '/portfolio/')) {

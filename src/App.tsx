@@ -1,3 +1,5 @@
+import { AuRenewalShop } from './pages/AuRenewalShop'
+import { renewalCardForPath } from '../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
 import CakesPage from './CakesPage'
@@ -249,6 +251,10 @@ function App() {
   const isPrivatePage = isAdminPage || page === 'calendar'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
   const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio', 'customer-stories', 'business'].includes(page)
+
+  const renewalPath = pathname.replace(/\/+$/, '') || '/'
+  const renewalRoute = marketConfig.market === 'AU' && (['/cakes','/chocolates','/celebrate','/custom-cakes','/business','/cart','/reserve'].includes(renewalPath) || !!renewalCardForPath(renewalPath, window.location.search) || page === 'cake-detail' || page === 'chocolate-detail')
+  if (renewalRoute) return <AuLanguageProvider language={language} setLanguage={setLanguage}><div className="app-shell au-redesign-shell"><AuRedesignHeader cartItemCount={cartItemCount}/><AuRenewalShop path={renewalPath}/><AuRedesignFooter/><AnalyticsConsentBanner language={language}/></div></AuLanguageProvider>
 
   if (page === 'review') return <ReviewPage onOrderCake={orderCakeFromReview} />
 

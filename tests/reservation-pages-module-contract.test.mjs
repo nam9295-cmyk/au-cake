@@ -35,8 +35,8 @@ test('ReservePage privately owns its current-time hook', () => {
 })
 
 test('Cake reservation availability is self-contained and does not wait for Class or legacy-opening reads', () => {
-  assert.match(reserveSource, /Cake pick-up · Every day 08:00–20:00/)
-  assert.match(reserveSource, /케이크 픽업 · 매일 08:00–20:00/)
+  assert.match(reserveSource, /renewalPickupCopy\(language\)\.hours/)
+  assert.match(reserveSource, /marketConfig\.market === 'AU' \? renewalPickupCopy/)
   assert.doesNotMatch(reserveSource, /(?:listClassBookedSlots|listCakePickupOpenings|filterCakePickupTimesForClass|isCakePickupBlockedByClass|isCakePickupDateUnavailable)/)
   assert.doesNotMatch(reserveSource, /(?:pickupAvailabilityLoading|pickupAvailabilityError|pickupAvailabilityRefetchKey)/)
 })

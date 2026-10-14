@@ -1,67 +1,48 @@
-import { getAuCakeCatalogCards, type CakeCatalogId } from './cake-catalog'
-import { getAuChocolateCollectionCards } from './au-catalog'
-import type { Language } from './i18n'
-
-// Presentation-only membership. Catalogue groups, ProductIds and pricing stay unchanged.
-const whole: CakeCatalogId[] = [
-  'pave',
-  'signature-gateau',
-  'fresh-strawberry-vanilla-cream',
-  'brownie-cheesecake',
-]
-const sharing: CakeCatalogId[] = [
-  'cupcake',
-  'fresh-lemon-cupcakes',
-  'bento-cake',
-]
-export type HomeCollectionId = 'whole' | 'sharing' | 'chocolates'
+import { RENEWAL_CARDS } from "../../appwrite-functions/reservation-api/src/au-renewal-catalog.js";
+import { RENEWAL_OFFERS } from "../../appwrite-functions/reservation-api/src/au-renewal.js";
+import type { Language } from "./i18n";
+export type HomeCollectionId = "whole" | "sharing" | "chocolates";
 export interface HomeProduct {
-  id: string
-  name: string
-  description: string
-  image: string
-  imageAlt: string
-  price: string
-  href: string | null
-  comingSoon?: boolean
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  imageAlt: string;
+  price: string;
+  href: string | null;
+  comingSoon?: boolean;
 }
 export function getAuHomeCollections(language: Language) {
-  const cakes = getAuCakeCatalogCards(language)
-  const select = (ids: CakeCatalogId[]): HomeProduct[] =>
-    ids.map((id) => {
-      const cake = cakes.find((card) => card.id === id)!
-      return {
-        id: cake.id,
-        name: cake.name,
-        description: cake.optionLabel,
-        image: cake.imagePath,
-        imageAlt: cake.name,
-        price: cake.priceLabel,
-        href: cake.isComingSoonOnly ? null : `/cakes/${cake.slug}`,
-        comingSoon: cake.isComingSoonOnly,
-      }
-    })
-  return [
-    {
-      id: 'whole' as const,
-      label: language === 'ko' ? '홀 케이크' : 'WHOLE CAKES',
-      products: select(whole),
-    },
-    {
-      id: 'sharing' as const,
-      label: language === 'ko' ? '함께 나누는 케이크' : 'SHARING / CELEBRATION',
-      products: select(sharing),
-    },
-    {
-      id: 'chocolates' as const,
-      label: language === 'ko' ? '초콜릿' : 'CHOCOLATES',
-      products: getAuChocolateCollectionCards(language),
-    },
-  ]
+  return (["cakes", "chocolates", "celebrate"] as const).map((category) => ({
+    id: (
+      {
+        cakes: "whole",
+        chocolates: "chocolates",
+        celebrate: "sharing",
+      } as const
+    )[category],
+    label: {
+      cakes: "Cake & Bake",
+      chocolates: "Chocolate",
+      celebrate: "Celebrate",
+    }[category],
+    products: RENEWAL_CARDS[category].map((card) => ({
+      id: card.id,
+      name: language === "ko" ? card.ko : card.en,
+      description: "",
+      image: card.image,
+      imageAlt: language === "ko" ? card.ko : card.en,
+      href: card.href,
+      price:
+        card.id === "mochi"
+          ? "Signature 4 · AUD 35.00"
+          : RENEWAL_OFFERS[card.offers[0]].price === null ||
+              RENEWAL_OFFERS[card.offers[0]].provisional
+            ? ""
+            : `AUD ${(RENEWAL_OFFERS[card.offers[0]].price! / 100).toFixed(2)}`,
+    })),
+  }));
 }
 export function getAuHomeBest(language: Language) {
-  const products = getAuHomeCollections(language)[0].products
-  return ['signature-gateau', 'pave', 'brownie-cheesecake'].map((id) =>
-    products.find((product) => product.id === id)!,
-  )
+  return getAuHomeCollections(language)[0].products.slice(0, 3);
 }

@@ -328,7 +328,7 @@ export function buildSmsMessage(reservation: Reservation, settings: StoreSetting
   const labels = marketConfig.smsLabels
   const orderLines = getReservationOrderLines(reservation)
 
-  if (marketConfig.market === 'AU' && (orderLines.length > 1 || getChocolateProduct(reservation.productId))) {
+  if (marketConfig.market === 'AU' && (orderLines.length > 1 || orderLines.some(line=>'policyVersion' in line) || getChocolateProduct(reservation.productId))) {
     const itemLines = orderLines.map((line, index) => `${index + 1}. ${formatOrderLineSummary(line)}`).join('\n')
     return `${labels.title}
 

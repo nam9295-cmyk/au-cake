@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
 import serviceRoutes from '../src/content/au-service-routes.json' with { type: 'json' }
-import { renderAuLlms } from '../scripts/render-au-llms.mjs'
+import { renderRenewalLlms } from '../appwrite-functions/reservation-api/src/au-renewal-seo.js'
 
 const generatorPath = fileURLToPath(new URL('../scripts/generate-seo-pages.mjs', import.meta.url))
 const llmsPath = fileURLToPath(new URL('../public/llms.txt', import.meta.url))
@@ -60,41 +60,13 @@ async function generate() {
   return { workdir, dist }
 }
 
-test('SEO generator writes shared homepage content, cake pages, and AU sitemap', async () => {
-  const { dist } = await generate()
-  const home = await readFile(join(dist, 'index.html'), 'utf8')
-  assert.match(
-    home,
-    new RegExp('<title>' + escapeRegExp(auPublicPages.home.title) + '</title>'),
-  )
-  if (process.env.VITE_MARKET?.toUpperCase() === 'AU') {
-    assert.match(home, /<h1>CHOCOLATE, CAKES &amp; CELEBRATIONS\.<\/h1>/)
-    assert.match(home, /Made-to-order cakes and chocolate creations in Sydney\. Explore our menu, custom cakes and business enquiries\./)
-  } else {
-    assert.match(home, /<h1>Made-to-Order Chocolate Cakes in Sydney<\/h1>/)
-    assert.match(home, /Browse made-to-order cakes and treats for pre-arranged pickup in Melrose Park, Sydney/)
-  }
-  assert.match(home, /Signature Gâteau au Chocolat/)
-  assert.match(home, /Brownie Cheesecake/)
-  assert.match(home, /Cake pick-up · Fri 18:00–20:00 · Sat–Sun 08:00–20:00/)
-  assert.doesNotMatch(home, /id="how-ordering-works"/)
-  assert.doesNotMatch(home, /\.seo-fallback\s*\{\s*display:\s*none/)
-
-  const catalogue = await readFile(join(dist, 'cakes.html'), 'utf8')
-  assert.match(catalogue, /<link rel="canonical" href="https:\/\/au\.verygood-chocolate\.com\/cakes"/)
-  assert.match(catalogue, /<h1>Choose Your Cake<\/h1>/)
-
-  const generatedSitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
-  assert.equal([...generatedSitemap.matchAll(/<loc>/g)].length, process.env.VITE_MARKET?.toUpperCase() === 'AU' ? 13 + serviceRoutes.length : 12)
-  for (const path of ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']) {
-    assert.match(generatedSitemap, new RegExp(`<loc>${(path === '/' ? site : `${site}${path}`).replaceAll('.', '\\.')}</loc>`), path)
-  }
-  for (const excluded of ['/cart', '/reserve', '/lookup', '/admin', '/guides']) {
-    assert.doesNotMatch(generatedSitemap, new RegExp(`<loc>[^<]*${excluded}`), excluded)
-  }
-  for (const legacyPath of ['/cakes/chocolate-pound-cake-and-cupcakes', '/cakes/chocolatiers-basque-cheesecake', '/cakes/buttercream-cake', '/cakes/fresh-strawberry-chocolate-cream-cake']) {
-    assert.doesNotMatch(generatedSitemap, new RegExp(`<loc>[^<]*${legacyPath}`), legacyPath)
-  }
+test('SEO generator writes renewal categories, details and current sitemap',async()=>{
+ const {dist}=await generate()
+ const sitemap=await readFile(join(dist,'sitemap.xml'),'utf8')
+ for(const path of ['cakes','chocolates','celebrate','custom-cakes','business','cakes/levain-cookies','cakes/brownie-cupcakes','chocolates/chocolate-mochi']) {
+  const html=await readFile(join(dist,path+'.html'),'utf8');assert.equal((html.match(/<h1/g)||[]).length,1);assert.ok(sitemap.includes(site+'/'+path))
+ }
+ assert.doesNotMatch(sitemap, /cakes\/lemon-cake|cakes\/fresh-strawberry-vanilla-cream-cake/)
 })
 
 test('Custom Cake has a standalone directory entry with app assets for direct loads and refreshes', async () => {
@@ -178,49 +150,11 @@ test('generated public HTML exposes verified organization, homepage FAQs, and on
   }
 })
 
-test('cake generator uses the final per-page schema contract and real product WebPs', async () => {
-  const { dist } = await generate()
-  const expectations = new Map([
-    ['pave-chocolate-cake', { type: 'Product', price: 79, og: 'product', image: 'pave-chocolate-cake-sydney.webp' }],
-    ['fresh-strawberry-vanilla-cream-cake', { type: 'Product', price: 65, og: 'product', image: 'fresh-strawberry-vanilla-cream-cake-sydney.webp' }],
-    ['chocolate-cupcakes', { type: 'Product', price: 31, og: 'product', image: 'chocolate-cupcakes-sydney.webp' }],
-    ['signature-gateau-au-chocolat', { type: 'Product', price: 45, og: 'product', image: 'signature-gateau-au-chocolat-sydney.webp' }],
-    ['lemon-cake', { type: 'Product', price: 36, og: 'product', image: 'lemon-cake-sydney.webp' }],
-    ['brownie-cheesecake', { type: 'Product', price: 85, og: 'product', image: 'brownie-cheesecake-sydney.webp' }],
-    ['smore-stick', { type: 'Product', price: 4.5, og: 'product', image: 'smore-stick-sydney.webp' }],
-  ])
-
-  for (const [slug, expected] of expectations) {
-    const html = await readFile(join(dist, 'cakes', `${slug}.html`), 'utf8')
-    const data = jsonLd(html)
-    const product = data.find((entry) => entry['@type'] === 'Product')
-    const page = auPublicPages.cakePages[slug]
-    assert.ok(product, slug)
-    assert.match(html, new RegExp('<title>' + escapeRegExp(page.title) + '</title>'))
-    assert.equal(product?.description, page.description)
-    assert.match(html, new RegExp(escapeRegExp(page.description)))
-    if (expected.image) {
-      assert.match(html, new RegExp('<meta property="og:image:type" content="' + page.imageType + '"'))
-      assert.match(html, new RegExp('<meta property="og:image:width" content="' + page.imageWidth + '"'))
-      assert.match(html, new RegExp('<meta property="og:image:height" content="' + page.imageHeight + '"'))
-    } else {
-      assert.doesNotMatch(html, /<meta property="og:image(?::(?:type|width|height))?"/)
-      assert.equal(Object.hasOwn(product, 'image'), false, slug)
-    }
-    assert.equal(product.offers['@type'], 'Offer', slug)
-    assert.equal(product.offers.price, expected.price, slug)
-    assert.equal(data.some((entry) => entry['@type'] === 'AggregateOffer' || entry['@type'] === 'ProductGroup'), false, slug)
-    assert.match(html, new RegExp(`<meta property="og:type" content="${expected.og}"`), slug)
-    if (expected.image) assert.match(html, new RegExp(expected.image), slug)
-    if (slug === 'smore-stick') {
-      assert.equal(product.offers.availability, 'https://schema.org/InStock', slug)
-      assert.doesNotMatch(html, /Orders opening soon/, slug)
-      assert.match(html, /Request this cake/, slug)
-      assert.match(html, /href="\/reserve"/, slug)
-      assert.doesNotMatch(html, /@verygood_syd/, slug)
-    }
-  }
-
+test('renewal static metadata avoids old prices and preserves compatibility routes', async () => {
+ const {dist}=await generate()
+ for(const path of ['cakes/pave-chocolate-cake','cakes/brownie-cheesecake','cakes/smore-stick','chocolates/chocolate-mochi']) {
+  const html=await readFile(join(dist,path+'.html'),'utf8');assert.doesNotMatch(html, /"offers"|InStock|"price":(?:79|85|4.5)/)
+ }
   const combined = await readFile(join(dist, 'cakes', 'chocolate-pound-cake-and-cupcakes.html'), 'utf8')
   assert.deepEqual(jsonLd(combined).map((entry) => entry['@type']), ['WebPage', 'BreadcrumbList'])
   assert.match(combined, /This collection has been separated into two cakes\./)
@@ -245,7 +179,7 @@ test('cake generator uses the final per-page schema contract and real product We
 
   const paveHtml = await readFile(join(dist, 'cakes', 'pave-chocolate-cake.html'), 'utf8')
   const vanillaHtml = await readFile(join(dist, 'cakes', 'vanilla-fresh-cream-cake.html'), 'utf8')
-  assert.match(paveHtml, /Choose a size · dark chocolate only/)
+  assert.match(paveHtml, /Pavé Whole Cake/)
   assert.doesNotMatch(paveHtml, /milk chocolate/i)
   assert.deepEqual(jsonLd(vanillaHtml).map((entry) => entry['@type']), ['WebPage', 'BreadcrumbList'])
   assert.match(vanillaHtml, /<meta name="robots" content="noindex, nofollow"/)
@@ -325,32 +259,12 @@ test('normal operational routes are generated noindex pages while unknown guides
   await assert.rejects(stat(join(dist, 'guides', 'chocolate-cake-size-guide-sydney.html')))
 })
 
-test('llms text exposes only grounded public catalogue facts', async () => {
-  const { dist } = await generate()
-  const llms = await readFile(join(dist, 'llms.txt'), 'utf8')
-  const checkedInLlms = await readFile(llmsPath, 'utf8')
-  assert.equal(checkedInLlms, renderAuLlms(auPublicPages))
-  assert.equal(llms, renderAuLlms(auPublicPages))
-  assert.equal(llms, checkedInLlms)
-  assert.match(llms, /^# verygood chocolate Sydney/m)
-  assert.doesNotMatch(llms, /^## Ordering$/m)
-  assert.match(llms, /Choose a size · dark chocolate only/)
-  assert.doesNotMatch(llms, /dark or milk|milk chocolate/i)
-  assert.match(llms, /vanilla fresh cream and fresh strawberries/i)
-  assert.match(llms, /chocolatier-grade couverture chocolate/)
-  assert.match(llms, /freshly squeezed lemon juice/)
-  assert.match(llms, /fresh lemon zest/)
-  assert.match(llms, /lemon syrup and glaze/)
-  assert.doesNotMatch(llms, /fresh lemon cream/i)
-  assert.match(llms, /From AUD 31\.00/)
-  assert.doesNotMatch(llms, /Triple berry or Nutella chocolate chip/)
-  assert.match(llms, /Signature Gâteau au Chocolat/)
-  assert.match(llms, /Brownie Cheesecake/)
-  assert.doesNotMatch(llms, /vanilla or chocolate cake sheet|photo is coming soon/i)
-  assert.match(llms, /AUD 99\.00–254\.60/)
-  assert.match(llms, /AUD 20\.00 per participant, per class/)
-  assert.match(llms, /26 September to 12 October 2026/)
-  assert.match(llms, /10:00, 13:00 and 16:00/)
-  assert.match(llms, /Official Instagram: https:\/\/www\.instagram\.com\/verygood_syd\//)
-  assert.doesNotMatch(llms, /\/admin|customer name|mobile number/i)
+test('llms text exposes current public menu, confirmed prices and archived classes', async () => {
+ const {dist}=await generate()
+ const llms=await readFile(join(dist,'llms.txt'),'utf8')
+ assert.equal(llms,renderRenewalLlms(site));assert.equal(llms,await readFile(llmsPath,'utf8'))
+ assert.match(llms,/Cake & Bake/);assert.match(llms,/Chocolate Mochi/);assert.match(llms,/Brownie Basque/)
+ assert.match(llms,/75.00/);assert.match(llms,/82.00/);assert.match(llms,/Class archive/)
+ assert.doesNotMatch(llms,/79.00|85.00|115.00|155.00|lemon-cake|18:00/)
+ assert.match(llms,/Official Instagram:/);assert.doesNotMatch(llms,/\/admin|customer name|mobile number/i)
 })

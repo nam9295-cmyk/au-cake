@@ -85,7 +85,7 @@ function shouldUseReservationApi(scope: 'lookup' | 'all') {
   return appwriteConfig.reservationApiMode === 'lookup' || appwriteConfig.reservationApiMode === 'all'
 }
 
-async function executeReservationApi<T>(action: string, data?: unknown, parseResult?: (value: unknown) => T): Promise<T> {
+export async function executeReservationApi<T>(action: string, data?: unknown, parseResult?: (value: unknown) => T): Promise<T> {
   const execution = await functions.createExecution({
     functionId: appwriteConfig.reservationApiFunctionId,
     body: JSON.stringify({ action, data }),

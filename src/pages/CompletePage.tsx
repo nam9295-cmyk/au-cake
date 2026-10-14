@@ -1,3 +1,4 @@
+import { AuPickupNotice } from '../components/AuPickupNotice'
 import { Check } from 'lucide-react'
 import { BankAccountBox } from '../components/BankAccountBox'
 import { OrderDetailRows } from '../components/ProductDetailRows'
@@ -42,6 +43,7 @@ export function CompletePage({
             <p className="notice-line" role="status">DEMO · This order was not saved or sent.</p>
           )}
           <p>{copy.reservationCompleteText}</p>
+          {reservation && 'contractVersion' in reservation && <AuPickupNotice language={language} />}
 
           {reservation ? (
             <dl className="detail-list">

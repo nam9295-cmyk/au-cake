@@ -1,38 +1,10 @@
+import { RENEWAL_NAV } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 import { AuLanguageToggle } from './AuLanguage'
 import { useAuLanguage } from '../lib/au-language'
 
-const primary = [
-  {
-    href: '/#story',
-    en: 'OUR STORY',
-    ko: '브랜드 이야기',
-    description: 'Meet the Verygood atelier',
-    koreanDescription: '베리굿 아틀리에를 소개합니다',
-  },
-  {
-    href: '/#au-collection',
-    en: 'MENU',
-    ko: '메뉴',
-    description: 'Cakes, chocolates & sharing treats',
-    koreanDescription: '케이크, 초콜릿, 함께 나누는 디저트',
-  },
-  {
-    href: '/cakes/custom-cake',
-    en: 'CUSTOM CAKES',
-    ko: '커스텀 케이크',
-    description: 'A cake made for your occasion',
-    koreanDescription: '특별한 날을 위한 케이크',
-  },
-  {
-    href: '/#business',
-    en: 'BUSINESS',
-    ko: '비즈니스',
-    description: 'Events, café supply & consulting',
-    koreanDescription: '이벤트, 카페 공급 및 컨설팅',
-  },
-] as const
+const primary = RENEWAL_NAV.map(link => ({ ...link, description: link.en, koreanDescription: link.ko }))
 
 export function AuNavigation({
   cartItemCount,
@@ -185,7 +157,7 @@ export function AuNavigation({
                 '잠시 쉬어갑니다. 다음 방학에 재개할 예정이며 날짜는 추후 안내합니다.',
               )}
             </p>
-            <nav aria-label="More navigation">
+            <nav aria-label="More navigation"><a href="/#story">{t('Our Story', '브랜드 이야기')}</a>
               <a href="/reviews" onClick={() => setOpen(false)}>
                 {t('Reviews', '후기')}
               </a>

@@ -1,3 +1,4 @@
+import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { PickupDatePicker } from '../components/WeekendDatePicker'
@@ -1229,9 +1230,7 @@ export function ReservePage({
                   minDate={minPickupDate}
                   value={pickupDate}
                   locale={language === 'ko' ? 'ko-KR' : 'en-AU'}
-                  availabilityNote={language === 'ko'
-                    ? '케이크 픽업 · 매일 08:00–20:00'
-                    : 'Cake pick-up · Every day 08:00–20:00'}
+                  availabilityNote={marketConfig.market === 'AU' ? renewalPickupCopy(language).hours : language === 'ko' ? '케이크 픽업 · 매일 08:00–20:00' : 'Cake pick-up · Every day 08:00–20:00'}
                   onChange={(nextDate) => setForm({
                     ...form,
                     pickupDate: nextDate,

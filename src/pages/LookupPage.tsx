@@ -1,3 +1,4 @@
+import { AuPickupNotice } from '../components/AuPickupNotice'
 import { useRef, useState } from 'react'
 import { OrderDetailRows } from '../components/ProductDetailRows'
 import { SiteHeader } from '../components/SiteChrome'
@@ -167,6 +168,7 @@ export function LookupPage({
                 </dd>
               </div>
             </dl>
+            {'contractVersion' in reservation && <AuPickupNotice language={language} />}
           </section>
         )}
       </main>

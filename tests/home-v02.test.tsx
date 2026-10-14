@@ -52,13 +52,13 @@ test('home renders video before the single new headline, Best, stories, collecti
 
 test('Whole Cakes defaults to four catalogue products; Custom and Coming Soon are not falsely orderable', () => {
   const html = home()
-  assert.match(html, /role="tab"[^>]*aria-selected="true"[^>]*>WHOLE CAKES/)
-  assert.equal((html.match(/data-home-product=/g) || []).length, 4)
+  assert.match(html, /role="tab"[^>]*aria-selected="true"[^>]*>Cake &amp; Bake/)
+  assert.equal((html.match(/data-home-product=/g) || []).length, 5)
   for (const slug of [
     'pave-chocolate-cake',
     'signature-gateau-au-chocolat',
-    'fresh-strawberry-vanilla-cream-cake',
-    'brownie-cheesecake',
+    'levain-cookies',
+    'brownie-cheesecake\\?form=whole',
   ]) {
     assert.match(html, new RegExp(`href="/cakes/${slug}"`))
   }
@@ -73,7 +73,7 @@ test('shared AU header has the same four primary destinations and paused classes
   )![1]
   assert.deepEqual(
     [...nav.matchAll(/href="([^"]+)"/g)].map((x) => x[1]),
-    ['/#story', '/#au-collection', '/cakes/custom-cake', '/#business'],
+    ['/cakes','/chocolates','/celebrate','/custom-cakes','/business'],
   )
   assert.doesNotMatch(nav, /\/classes/)
   assert.match(html, /Temporarily Paused/)
@@ -95,53 +95,10 @@ test('AU home SEO description agrees with the visible hero without altering exis
   )
 })
 
-test('Home-only membership preserves catalogue price, route, Coming Soon and Best order', () => {
-  const collections = getAuHomeCollections('en')
-  assert.deepEqual(
-    collections.map((category) =>
-      category.products.map((product) => product.id),
-    ),
-    [
-      [
-        'pave',
-        'signature-gateau',
-        'fresh-strawberry-vanilla-cream',
-        'brownie-cheesecake',
-      ],
-      ['cupcake', 'fresh-lemon-cupcakes', 'bento-cake'],
-      [
-        'almond-chocoball',
-        'pave-chocolate',
-        'eiffel-tower-chocolate',
-        'smore-stick',
-      ],
-    ],
-  )
-  const products = collections.flatMap((category) => category.products)
-  assert.equal(new Set(products.map((product) => product.id)).size, 11)
-  assert.equal(
-    products.find((product) => product.id === 'bento-cake')?.href,
-    null,
-  )
-  assert.equal(
-    products.find((product) => product.id === 'smore-stick')?.href,
-    '/cakes/smore-stick',
-  )
-  assert.deepEqual(
-    getAuHomeBest('en').map((product) => product.id),
-    ['signature-gateau', 'pave', 'brownie-cheesecake'],
-  )
-  for (const [id, amount] of [
-    ['pave', '79'],
-    ['signature-gateau', '45'],
-    ['fresh-strawberry-vanilla-cream', '65'],
-    ['brownie-cheesecake', '85'],
-    ['almond-chocoball', '12'],
-    ['smore-stick', '4.50'],
-  ]) {
-    assert.ok(
-      products.find((product) => product.id === id)?.price.includes(amount),
-      id,
-    )
-  }
+test('Home membership agrees with the five/four/three renewal catalogue',()=>{
+ const groups=getAuHomeCollections('en');assert.deepEqual(groups.map(g=>g.products.length),[5,4,3])
+ assert.equal(groups[1].products[0].id,'mochi')
+ assert.deepEqual(getAuHomeBest('en').map(p=>p.id),['pave','gateau-loaf','brownie-whole'])
+ const products=groups.flatMap(g=>g.products)
+ for(const [id,amount]of [['pave','75'],['brownie-whole','82'],['brownie-loaf','58'],['smore','25']])assert.ok(products.find(p=>p.id===id)?.price.includes(amount))
 })

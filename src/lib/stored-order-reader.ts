@@ -1,3 +1,4 @@
+import { isRenewalDocument, renewalReservationProjection, parseRenewalProjection } from '../../appwrite-functions/reservation-api/src/au-renewal-reader.js'
 // Browser compatibility projection. No Appwrite writes or new-order submission.
 import { isStoredCakeOrderProductId, getStoredChocolateProduct, isStoredProductCouponEligible } from './stored-order-policy'
 import { CHOCOLATE_OPTIONS_V1 } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
@@ -298,6 +299,7 @@ function validateOrderPricing(
 }
 
 export function toPublicReservation(reservation: PublicReservation): PublicReservation {
+  if ('contractVersion' in reservation) return parseRenewalProjection(reservation) as unknown as PublicReservation
   const payload = reservation as PublicReservationPayload
   const product = getProductById(reservation.productId)
   const poundAddon = normalizePoundAddon(product.id, reservation.poundAddon || DEFAULT_POUND_ADDON)
@@ -628,6 +630,7 @@ function parseAdminStoredOrder(document: AppwriteReservationDocument, firstProje
 }
 
 export function normalizeLocalStoredReservation(reservation: Reservation): Reservation {
+  if ('contractVersion' in reservation) return parseRenewalProjection(reservation) as unknown as Reservation
   return {
     ...reservation,
     customerEmail: typeof reservation.customerEmail === 'string' ? reservation.customerEmail.trim().toLowerCase() : '',
@@ -673,6 +676,7 @@ export function normalizeLocalStoredReservation(reservation: Reservation): Reser
 }
 
 export function toReservation(document: AppwriteReservationDocument): Reservation {
+  if (isRenewalDocument(document)) return renewalReservationProjection(document, { privateFields: true }) as unknown as Reservation
   const reservation: Reservation = {
     id: document.$id,
     reservationNumber: document.reservationNumber,

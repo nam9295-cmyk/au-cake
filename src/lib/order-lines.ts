@@ -1,3 +1,4 @@
+import { renewalLineSummary, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import {
   CUPCAKE_PACK_SIZE,
   formatChocolateTypeLabel,
@@ -95,6 +96,7 @@ function formatHistoricalVanillaSheet(value: ReservationOrderLine['vanillaCakeSh
 }
 
 export function formatOrderLineSummary(line: ReservationOrderLine) {
+  if ('policyVersion' in line && line.policyVersion === 'au-renewal.2026-10.v1') return renewalLineSummary(line as unknown as RenewalLine)
   const chocolate = marketConfig.market === 'AU' ? getChocolateProduct(line.productId) : undefined
   if (chocolate) return [chocolate.name, chocolate.saleUnit, `x${line.quantity}`,
     ...(Number.isSafeInteger(line.totalPriceCents) ? [formatLinePrice(line.totalPriceCents as number)] : [])].join(' · ')

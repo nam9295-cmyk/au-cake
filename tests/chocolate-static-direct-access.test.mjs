@@ -11,9 +11,10 @@ import { rolldown } from 'rolldown'
 const repoRoot = fileURLToPath(new URL('..', import.meta.url))
 const dist = join(repoRoot, 'dist')
 const chocolateRoutes = [
-  ['/chocolates', 'CHOCOLATES'],
-  ['/chocolates/almond-chocoball', 'Almond Chocoball'],
-  ['/chocolates/pave-chocolate', 'Pavé Chocolate'],
+  ['/chocolates', 'Chocolate'],
+  ['/chocolates/chocolate-mochi','Chocolate Mochi'],
+  ['/chocolates/almond-chocoball', 'Almond Chocolate'],
+  ['/chocolates/pave-chocolate', 'Pavé Chocolate · Heart Tin 100g'],
   ['/chocolates/eiffel-tower-chocolate', 'Eiffel Tower Chocolate'],
 ]
 const existingRoutes = ['/', '/cakes', '/cakes/pave-chocolate-cake', '/cakes/custom-cake']
@@ -95,7 +96,7 @@ test('AU production dist serves each Chocolate route by its extensionless URL', 
       assert.doesNotMatch(html, /<h1>Page not found<\/h1>/i, pathname)
       assert.ok(html.includes(`<h1>${heading}</h1>`), `${pathname} must have its own fallback heading`)
       assert.ok(html.includes(`<link rel="canonical" href="https://au.verygood-chocolate.com${pathname}"`), `${pathname} needs its own canonical URL`)
-      assert.match(html, /<meta name="robots" content="noindex, nofollow"/, pathname)
+      assert.doesNotMatch(html, /<meta name="robots" content="noindex, nofollow"/, pathname)
     }
   })
 })
@@ -108,7 +109,7 @@ test('AU Home CHOCOLATES link points to a generated direct-load route', { skip: 
   // from the same Home catalogue mapping (interaction is covered in browser QA).
   const homeDetails = JSON.parse(home.trim().split('\n').at(-1)).filter(path => path.startsWith('/chocolates/')).sort()
   const generatedDetails = (await readdir(join(dist, 'chocolates')))
-    .filter((file) => file.endsWith('.html'))
+    .filter((file) => file.endsWith('.html') && file !== 'index.html')
     .map((file) => `/chocolates/${file.slice(0, -5)}`).sort()
   assert.deepEqual(homeDetails, chocolateRoutes.slice(1).map(([path]) => path).sort())
   assert.deepEqual(generatedDetails, homeDetails, 'static details must match the frontend catalogue links')

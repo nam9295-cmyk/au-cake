@@ -26,8 +26,8 @@
 .au-redesign-shell .au-redesign-mobile-menu { display: none; }
 .au-redesign-shell .au-redesign-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px; padding: 36px 48px; border-top: 1px solid var(--au-line); }
 .au-redesign-shell .au-redesign-footer .au-redesign-wordmark { font-size: 11px; }
-.au-redesign-shell .au-redesign-footer nav { display: flex; gap: 24px; }
-.au-redesign-shell .au-redesign-footer nav a { font-size: 10px; color: var(--au-green); }
+.au-redesign-shell .au-redesign-footer nav { display: flex; flex-wrap: wrap; gap: 12px 24px; min-width: 0; }
+.au-redesign-shell .au-redesign-footer nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 10px; color: var(--au-green); }
 .au-redesign-shell .au-redesign-footer small { font-size: 10px; }
 .au-redesign-shell .au-redesign-category { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0; }
 .au-redesign-shell .au-redesign-category-heading { padding: 48px 48px 32px; border-bottom: 1px solid var(--au-line); }

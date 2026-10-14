@@ -1,3 +1,4 @@
+import { renewalSeoPages, renderRenewalLlms } from '../appwrite-functions/reservation-api/src/au-renewal-seo.js'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
@@ -447,7 +448,11 @@ const template = await readFile(join(distDir, 'index.html'), 'utf8')
 const hogirlSeo = await getHogirlSeoDefinitions({ siteUrl, brand })
 const portfolioPages = isAuMarket ? { '/portfolio': await getPortfolioSeoDefinition(siteUrl) } : {}
 const servicePages = isAuMarket ? await getServiceSeoDefinitions(siteUrl) : {}
-const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages, ...servicePages }
+const renewedPages = isAuMarket ? renewalSeoPages(siteUrl, auPublicPages) : {}
+const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages, ...servicePages, ...renewedPages }
+if (isAuMarket) for (const path of Object.keys(allPages)) {
+ if (/^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(path)) allPages[path] = { title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', noindex: true, fallbackHtml: '<main><h1>Explore our current menu</h1><a href="/cakes">Cake &amp; Bake</a></main>' }
+}
 for (const [path, config] of Object.entries(allPages)) {
   const outputPath = path === '/' ? join(distDir, 'index.html')
     : config.output === 'directory' || Object.hasOwn(auPublicPages.standalonePages, path) ? join(distDir, path.slice(1), 'index.html')
@@ -464,7 +469,7 @@ const indexablePaths = [
   ...new Set([
     '/',
     '/cakes',
-    ...cakeEntries.map((cake) => `/cakes/${cake.slug}`),
+    ...(isAuMarket ? Object.keys(renewedPages) : cakeEntries.map((cake) => `/cakes/${cake.slug}`)),
     ...Object.keys(auPublicPages.standalonePages),
     '/classes',
     '/reviews',
@@ -485,7 +490,7 @@ try {
   if (error?.code !== 'ENOENT') throw error
 }
 
-const llms = renderAuLlms(auPublicPages, hogirlSeo.llmsEntries)
+const llms = isAuMarket ? renderRenewalLlms(siteUrl, hogirlSeo.llmsEntries) : renderAuLlms(auPublicPages, hogirlSeo.llmsEntries)
 await writeFile(join(distDir, 'llms.txt'), llms)
 try {
   await writeFile(join(process.cwd(), 'public', 'llms.txt'), llms)

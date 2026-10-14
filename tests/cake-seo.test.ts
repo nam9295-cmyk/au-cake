@@ -1,3 +1,4 @@
+import { RENEWAL_CARDS } from '../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { getAuPublicContent, getPublicRoutePage } from '../src/lib/public-content.js'
@@ -32,32 +33,12 @@ function structuredTypes(path: string) {
   return getSeoConfig(path).structuredData?.map((entry) => entry['@type']) || []
 }
 
-function productOffer(path: string) {
-  const product = getSeoConfig(path).structuredData?.find((entry) => entry['@type'] === 'Product')
-  assert.ok(product, `${path} should expose Product JSON-LD`)
-  const offer = product.offers as Record<string, unknown>
-  assert.equal(offer['@type'], 'Offer', `${path} should expose one Offer`)
-  return offer
-}
 
-test('home and seven sale cake detail routes use AU self canonicals', () => {
-  const paths = [
-    '/',
-    '/cakes',
-    '/cakes/pave-chocolate-cake',
-    '/cakes/signature-gateau-au-chocolat',
-    '/cakes/chocolate-cupcakes',
-    '/cakes/fresh-strawberry-vanilla-cream-cake',
-    '/cakes/brownie-cheesecake',
-    '/cakes/lemon-cake',
-    '/cakes/smore-stick',
-  ]
-
-  for (const path of paths) {
-    const config = getSeoConfig(path)
-    assert.equal(config.noindex, undefined, path)
-    assert.equal(config.canonical, `${SITE_URL}${path === '/' ? '' : path}`)
-  }
+test('renewal menu and current detail routes use AU self canonicals', () => {
+ for(const path of ['/', '/cakes','/chocolates','/celebrate',...Object.values(RENEWAL_CARDS).flat().map(c=>c.href.split('?')[0])]) {
+  const config=getSeoConfig(path);assert.notEqual(config.noindex,true);assert.equal(config.canonical,`${SITE_URL}${path==='/'?'':path}`)
+ }
+ for(const path of ['/cakes/lemon-cake','/cakes/fresh-strawberry-vanilla-cream-cake'])assert.equal(getSeoConfig(path).noindex,true)
 })
 
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
@@ -115,7 +96,7 @@ test('all noindex runtime SEO uses the canonical lowercase brand', () => {
 })
 
 test('runtime route metadata comes from the typed public-content adapter', () => {
-  for (const path of ['/', '/cakes', '/classes', '/reviews'] as const) {
+  for (const path of ['/', '/classes', '/reviews'] as const) {
     const page = getPublicRoutePage(path)
     assert.ok(page)
     assert.equal(getSeoConfig(path).title, page.title)
@@ -132,52 +113,15 @@ test('Course AggregateOffer uses the canonical base range and excludes extension
   assert.equal(offers.highPrice, publicContent.classes.baseHighPrice)
 })
 
-test('product runtime metadata carries descriptive copy and complete image attributes', () => {
-  for (const [slug, page] of Object.entries(publicContent.cakePages)) {
-    const config = getSeoConfig('/cakes/' + slug)
-    assert.equal(config.title, page.title)
-    assert.equal(config.description, page.description)
-    assert.equal(config.imageType, page.imagePath ? page.imageType : undefined)
-    assert.equal(config.imageWidth, page.imagePath ? page.imageWidth : undefined)
-    assert.equal(config.imageHeight, page.imagePath ? page.imageHeight : undefined)
-    const entity = config.structuredData?.[0]
-    assert.equal(entity?.description, page.description)
-    assert.equal(entity?.image, page.imagePath ? `${SITE_URL}${page.imagePath}` : undefined)
-  }
+test('renewal metadata preserves supplied product images and does not invent missing photos',()=>{
+ for(const card of Object.values(RENEWAL_CARDS).flat()) {
+  const config=getSeoConfig(card.href.split('?')[0]);assert.ok(config.description);assert.ok(config.title)
+  if(card.image)assert.ok(config.image?.startsWith(SITE_URL))
+ }
 })
 
-test('seven sale cakes use one Offer at the visible starting price', () => {
-  const expectations = new Map([
-    ['/cakes/pave-chocolate-cake', { name: 'Pave Chocolate Cake', price: 79 }],
-    ['/cakes/fresh-strawberry-vanilla-cream-cake', { name: 'Fresh Strawberry Vanilla Cream Cake', price: 65 }],
-    ['/cakes/chocolate-cupcakes', { name: 'Chocolate Cupcakes', price: 31 }],
-    ['/cakes/signature-gateau-au-chocolat', { name: 'Signature Gâteau au Chocolat', price: 45 }],
-    ['/cakes/lemon-cake', { name: 'Lemon Cake', price: 36 }],
-    ['/cakes/brownie-cheesecake', { name: 'Brownie Cheesecake', price: 85 }],
-    ['/cakes/smore-stick', { name: "S'more Stick", price: 4.5 }],
-  ])
-
-  for (const [path, expected] of expectations) {
-    const config = getSeoConfig(path)
-    const types = structuredTypes(path)
-    assert.deepEqual(types, ['Product', 'BreadcrumbList'], path)
-    const product = config.structuredData?.find((entry) => entry['@type'] === 'Product')
-    assert.equal(product?.name, expected.name, path)
-    const offer = productOffer(path)
-    assert.equal(offer.price, expected.price, path)
-    assert.equal(offer.priceCurrency, 'AUD', path)
-    assert.equal(offer.url, `${SITE_URL}${path}`, path)
-    if (path === '/cakes/smore-stick') {
-      assert.equal(offer.availability, 'https://schema.org/InStock', path)
-    } else {
-      assert.equal(Object.hasOwn(offer, 'availability'), false, path)
-    }
-    assert.equal(types.includes('AggregateOffer'), false, path)
-    assert.equal(types.includes('ProductGroup'), false, path)
-    assert.equal(Object.hasOwn(offer, 'lowPrice'), false, path)
-    assert.equal(Object.hasOwn(offer, 'highPrice'), false, path)
-    assert.equal(Object.hasOwn(offer, 'shippingDetails'), false, path)
-  }
+test('renewal metadata does not publish a purchasable offer while launch and provisional prices await approval',()=>{
+ for(const card of Object.values(RENEWAL_CARDS).flat())assert.doesNotMatch(JSON.stringify(getSeoConfig(card.href.split('?')[0])), /"offers"|InStock|115.00|155.00/)
 })
 
 test('legacy grouped and Basque pages are noindex WebPage compatibility views', () => {
@@ -195,22 +139,10 @@ test('legacy grouped and Basque pages are noindex WebPage compatibility views', 
   }
 })
 
-test('cake catalogue exposes eight canonical detail pages in product order', () => {
-  const config = getSeoConfig('/cakes')
-  const itemList = config.structuredData?.find((entry) => entry['@type'] === 'ItemList')
-  assert.ok(itemList)
-  const items = itemList.itemListElement as Array<Record<string, unknown>>
-  assert.equal(items.length, 8)
-  assert.deepEqual(items.map((item) => item.url), [
-    `${SITE_URL}/cakes/pave-chocolate-cake`,
-    `${SITE_URL}/cakes/signature-gateau-au-chocolat`,
-    `${SITE_URL}/cakes/chocolate-cupcakes`,
-    `${SITE_URL}/cakes/bento-cake`,
-    `${SITE_URL}/cakes/fresh-strawberry-vanilla-cream-cake`,
-    `${SITE_URL}/cakes/brownie-cheesecake`,
-    `${SITE_URL}/cakes/lemon-cake`,
-    `${SITE_URL}/cakes/smore-stick`,
-  ])
+test('renewal catalogue exposes five cards including separate whole and loaf links',()=>{
+ const page=getSeoConfig('/cakes').structuredData?.[0]
+ const items=(page?.mainEntity as {itemListElement:Array<{url:string}>}).itemListElement
+ assert.deepEqual(items.map(i=>i.url),RENEWAL_CARDS.cakes.map(c=>SITE_URL+c.href))
 })
 
 test('legacy Vanilla page remains a noindex compatibility view without Product Offer JSON-LD', () => {
@@ -225,22 +157,16 @@ test('legacy Vanilla page remains a noindex compatibility view without Product O
 
 test('Brownie Product publishes the supplied Brownie image with its actual dimensions', () => {
   const config = getSeoConfig('/cakes/brownie-cheesecake')
-  const product = config.structuredData?.find((entry) => entry['@type'] === 'Product')
-  assert.ok(product)
   const image = `${SITE_URL}/products/brownie-cheesecake-sydney.webp`
   assert.equal(config.image, image)
   assert.equal(config.imageWidth, 1080)
   assert.equal(config.imageHeight, 1012)
-  assert.equal(product.image, image)
 })
 
 test('Signature Product publishes its descriptive canonical product image', () => {
   const config = getSeoConfig('/cakes/signature-gateau-au-chocolat')
-  const product = config.structuredData?.find((entry) => entry['@type'] === 'Product')
-  assert.ok(product)
   const image = `${SITE_URL}/products/signature-gateau-au-chocolat-sydney.webp`
   assert.equal(config.image, image)
-  assert.equal(product.image, image)
 })
 
 test('all noindex operational routes remain directly loadable metadata pages', () => {

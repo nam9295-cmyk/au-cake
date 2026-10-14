@@ -1,0 +1,196 @@
+.renewal-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 20px 100px;
+  background: #fff;
+  color: #203d33;
+  min-height: 55vh;
+}
+.renewal-page h1 {
+  font-size: clamp(1.7rem, 5vw, 2.8rem);
+  line-height: 1.15;
+  margin: 20px 0 28px;
+  overflow-wrap: anywhere;
+}
+.renewal-page h2 {
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+.renewal-page a {
+  color: inherit;
+}
+.renewal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 16px;
+}
+.renewal-grid a {
+  text-decoration: none;
+}
+.renewal-grid img,
+.renewal-photo-pending {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  background: #fff;
+}
+.renewal-photo-pending {
+  border-bottom: 1px solid #dce5df;
+}
+.renewal-grid p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.renewal-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+}
+.renewal-hero {
+  width: 100%;
+  max-height: 580px;
+  object-fit: contain;
+}
+.renewal-options,
+.renewal-checkout {
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  min-width: 0;
+}
+.renewal-options label,
+.renewal-checkout label {
+  display: grid;
+  gap: 8px;
+}
+.renewal-page select,
+.renewal-page input,
+.renewal-page textarea {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 12px;
+  border: 1px solid #aebcb4;
+  border-radius: 0;
+  background: #fff;
+  color: #203d33;
+  min-height: 44px;
+}
+.renewal-page fieldset {
+  min-width: 0;
+  border: 1px solid #dce5df;
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+.renewal-page button {
+  font: inherit;
+  min-height: 44px;
+  background: #205b49;
+  color: #fff;
+  border: 1px solid #205b49;
+  padding: 12px 18px;
+  cursor: pointer;
+  border-radius: 0;
+}
+.renewal-page button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.renewal-page :focus-visible {
+  outline: 3px solid #205b49;
+  outline-offset: 3px;
+}
+.renewal-page .renewal-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.renewal-check input {
+  width: 24px;
+  min-height: 24px;
+  flex-shrink: 0;
+}
+.renewal-number input {
+  max-width: 140px;
+}
+.renewal-flavours {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.renewal-total {
+  border-top: 1px solid #dce5df;
+  padding-top: 16px;
+}
+.renewal-total strong {
+  font-size: 1.5rem;
+}
+.renewal-inline {
+  display: flex;
+  gap: 24px;
+}
+.renewal-bag {
+  list-style: none;
+  padding: 0;
+}
+.renewal-bag li {
+  border-bottom: 1px solid #dce5df;
+  padding: 20px 0;
+  display: grid;
+  gap: 12px;
+}
+.renewal-bag p {
+  overflow-wrap: anywhere;
+}
+.renewal-checkout {
+  max-width: 560px;
+}
+.renewal-service-links {
+  display: grid;
+  gap: 24px;
+}
+.renewal-page [role="alert"] {
+  color: #8d2929;
+}
+.renewal-page {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+@media (max-width: 700px) {
+  .renewal-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .renewal-page {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .renewal-grid h2 {
+    font-size: 1rem;
+  }
+  .renewal-page fieldset {
+    padding: 14px;
+  }
+  .renewal-flavours {
+    grid-template-columns: 1fr;
+  }
+  .renewal-hero {
+    max-height: 340px;
+  }
+}
+@media (max-width: 365px) {
+  .renewal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.renewal-page .renewal-checkout-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 20px;
+}
+
+.au-redesign-shell .au-footer-pickup { flex-basis: 100%; line-height: 1.6; }
+.au-redesign-shell .au-pickup-notice { line-height: 1.65; overflow-wrap: anywhere; }

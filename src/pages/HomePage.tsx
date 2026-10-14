@@ -1,3 +1,5 @@
+import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
+import { RENEWAL_NAV } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { HomeCustomerStories } from '../components/CustomerStories'
@@ -45,7 +47,7 @@ function CollectionCard({ product }: { product: HomeProduct }) {
         <h3>{product.name}</h3>
         <p>{product.description}</p>
       </div>
-      <img
+      {product.image && <img
         src={product.image}
         alt={product.imageAlt}
         width={1080}
@@ -53,7 +55,7 @@ function CollectionCard({ product }: { product: HomeProduct }) {
         loading="lazy"
         decoding="async"
       />
-      <div className="au-v02-product-price">
+      }<div className="au-v02-product-price">
         <strong>
           {product.comingSoon ? product.description : product.price}
         </strong>
@@ -382,10 +384,10 @@ function AuHomePage({
             <h2>
               {t(
                 activeCategory === 'whole'
-                  ? 'Whole Cakes collection'
+                  ? 'Cake & Bake'
                   : activeCategory === 'sharing'
-                    ? 'Sharing & Celebration'
-                    : 'Chocolate collection',
+                    ? 'Celebrate'
+                    : 'Chocolate',
                 active.label,
               )}
             </h2>
@@ -403,6 +405,7 @@ function AuHomePage({
               {t('ALL CAKES', '케이크 전체 보기')}
               <ArrowUpRight size={14} aria-hidden="true" />
             </a>
+            <a href="/celebrate">{t('CELEBRATE','Celebrate 전체 보기')}</a>
             <a href="/chocolates">
               {t('ALL CHOCOLATES', '초콜릿 전체 보기')}
               <ArrowUpRight size={14} aria-hidden="true" />
@@ -527,6 +530,7 @@ function AuHomePage({
         <ServicePhoto asset="worktable" />
       </section>
       <footer className="rd-footer au-v02-footer">
+        <p>{t(renewalPickupCopy('en').hours,renewalPickupCopy('ko').hours)}</p>
         <div className="au-v02-footer-links">
           <div>
             <a href="/classes">
@@ -541,6 +545,7 @@ function AuHomePage({
             </p>
           </div>
           <nav aria-label="Footer navigation">
+            {RENEWAL_NAV.map(item=><a key={item.href} href={item.href}>{item.en}</a>)}
             <a href="/classes">{t('VIEW ARCHIVE', '클래스 보기')}</a>
             <a href="/reviews">{t('REVIEWS', '후기')}</a>
             <a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a>

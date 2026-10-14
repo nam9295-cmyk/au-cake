@@ -42,3 +42,11 @@ test('AU school-run cake closures do not alter the KR market schedule', () => {
   assert.equal(isSchoolPickupWindowClosed('2026-08-03', '15:00'), false)
   assert.equal(isSchoolPickupWindowClosed('2026-08-04', '17:30'), false)
 })
+
+import { cakeCopy } from '../src/lib/i18n.js'
+test('AU renewal pickup finalization leaves the existing KR announcements and lead-time help unchanged',()=>{
+ assert.equal(cakeCopy('ko').announcement,'케이크 픽업 · 매일 08:00–20:00')
+ assert.equal(cakeCopy('en').announcement,'Cake pick-up · Every day 08:00–20:00')
+ assert.deepEqual(cakeCopy('ko').pickupHours,['케이크 픽업 · 매일 08:00–20:00'])
+ assert.equal(cakeCopy('ko').pickupLeadTimeHelp,'케이크 픽업은 매일 08:00–20:00에 가능합니다. 전날 오후 8시 이후 주문 시 다음 날 낮 12시부터 선택할 수 있어요.')
+})

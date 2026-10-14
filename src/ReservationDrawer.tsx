@@ -1,3 +1,5 @@
+import { AuPickupNotice } from './components/AuPickupNotice'
+import { renewalServiceSlots } from '../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
 import { useState } from 'react'
 import { Clipboard } from 'lucide-react'
 import { OrderDetailRows } from './components/ProductDetailRows'
@@ -78,7 +80,7 @@ export function ReservationDrawer({
     ? '리뷰'
     : reservation.promotionKind === 'manual-coupon' ? '쿠폰' : '프로모션'
 
-  const draftUpdate = buildAdminReservationUpdate(reservation, {
+  const draftUpdate = buildAdminReservationUpdate(reservation, isVersionedOrder ? {pickupDate,pickupTime,status,paymentStatus,adminMemo:memo} : {
     productId,
     cakeSize,
     chocolateType,
@@ -97,7 +99,8 @@ export function ReservationDrawer({
   })
   const draftReservation: Reservation = { ...reservation, ...draftUpdate }
   const selectedProduct = getProductById(draftUpdate.productId)
-  const timeOptions = timeOptionsForDate(pickupDate, settings)
+  const isRenewalOrder = 'contractVersion' in reservation && reservation.contractVersion === 'au-renewal.2026-10.v1'
+  const timeOptions = isRenewalOrder ? renewalServiceSlots(pickupDate) : timeOptionsForDate(pickupDate, settings)
   const displayedTimeOptions = timeOptions.includes(pickupTime) ? timeOptions : [pickupTime, ...timeOptions].filter(Boolean)
 
   async function saveAll() {
@@ -272,12 +275,13 @@ export function ReservationDrawer({
             </fieldset>
             <label>
               픽업 날짜
+              {isRenewalOrder && <AuPickupNotice language="ko" driver />}
               <input type="date" value={pickupDate} onChange={(event) => setPickupDate(event.target.value)} />
             </label>
             <label>
               픽업 시간
               <select value={pickupTime} onChange={(event) => setPickupTime(event.target.value)}>
-                {displayedTimeOptions.map((time) => <option value={time} key={time}>{time}</option>)}
+                {displayedTimeOptions.map((time) => <option value={time} key={time}>{time}{isRenewalOrder && !timeOptions.includes(time) ? ' (기존 승인 시각)' : ''}</option>)}
               </select>
             </label>
             <label>
