@@ -9,6 +9,8 @@ import { ARCHIVE_SHARED_SOURCE_PATHS } from './reservation-notification-deploy-c
 const execFileAsync = promisify(execFile)
 
 const PARSER_SOURCE_PATHS = Object.freeze([
+  'appwrite-functions/reservation-api/src/au-renewal.js',
+  'appwrite-functions/reservation-api/src/au-renewal-reader.js',
   'appwrite-functions/reservation-api/src/custom-cake-discount.js',
   'appwrite-functions/reservation-api/src/custom-cake-persistence.js',
   'appwrite-functions/reservation-api/src/custom-cake-readiness.js',

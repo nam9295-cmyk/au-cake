@@ -1,3 +1,6 @@
+import { RENEWAL_PICKUP_POLICY_VERSION } from './au-renewal-pickup-policy.js'
+import { RENEWAL_CONTRACT } from './au-renewal.js'
+import { canonicalRenewalRequest, buildRenewalOrderData } from './au-renewal-storage.js'
 import { AppwriteException, Client, Databases, ID, Query, Storage } from 'node-appwrite'
 import {
   ReservationApiError,
@@ -118,7 +121,7 @@ async function getIdempotentDocument(databases, databaseId, collectionId, docume
 
 function cakeRequestFingerprint(input, runtimeConfig) {
   return digestCakeRequestPayload(
-    canonicalCakeRequestPayload(input, {
+    input?.contractVersion === RENEWAL_CONTRACT ? canonicalRenewalRequest(input) : canonicalCakeRequestPayload(input, {
       customerEmailMode: runtimeConfig.cakeCustomerEmailMode,
       cakeCatalogMode: runtimeConfig.cakeCatalogMode,
     }),
@@ -319,6 +322,7 @@ export async function createCake(databases, input, {
   smoreWritesEnabled = SMORE_WRITES_ENABLED,
   chocolateWritesEnabled = CHOCOLATE_WRITES_ENABLED,
   legacyGate,
+  renewalPolicy = {},
 } = {}) {
   const documentId = documentIdForInput(input)
   const customerPhone = normalizeAustralianMobile(input?.customerPhone)
@@ -340,6 +344,11 @@ export async function createCake(databases, input, {
     if (!Object.hasOwn(existing, 'requestFingerprint') && legacyGate?.mode === 'required') throw new ReservationApiError('CAKE_ORDER_UPGRADE_REQUIRED', 409)
     return cakeReservationResponse(existing)
   }
+  if (input?.contractVersion !== undefined && input.contractVersion !== RENEWAL_CONTRACT) throw new ReservationApiError('UNSUPPORTED_CONTRACT', 409)
+  const renewal = input?.contractVersion === RENEWAL_CONTRACT
+  if (!renewal && renewalPolicy.enabled === true) throw new ReservationApiError('RENEWAL_CONTRACT_REQUIRED', 409)
+  if (renewal && renewalPolicy.enabled !== true) throw new ReservationApiError('RENEWAL_WRITES_DISABLED', 503)
+  const buildOrder = renewal ? (value, options) => buildRenewalOrderData(value, { ...options, renewalPolicy }) : buildCakeReservation
   if (legacyGate) await legacyGate.beforeNew(documentId)
   requestFingerprint = cakeRequestFingerprint(input, runtimeConfig)
   const sharedIdentity = legacyGate?.identity(documentId, customerPhone, requestFingerprint)
@@ -347,7 +356,7 @@ export async function createCake(databases, input, {
   const normalizedReviewCode = reviewCouponInput(input?.promoCode)
   const safeInput = normalizedReviewCode ? { ...input, promoCode: '' } : input
   let data = {
-    ...buildCakeReservation(safeInput, {
+    ...buildOrder(safeInput, {
       now,
       reservationNumber: 'pending',
       customerEmailMode: runtimeConfig.cakeCustomerEmailMode,
@@ -429,7 +438,7 @@ export async function createCake(databases, input, {
       : reviewCoupon
     expectedReviewCouponId = pricingCoupon.id
     data = {
-      ...buildCakeReservation(safeInput, {
+      ...buildOrder(safeInput, {
         now,
         reservationNumber: data.reservationNumber,
         reviewCoupon: pricingCoupon,
@@ -730,11 +739,12 @@ return async ({ req, res, log, error }) => {
     const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req, env))
 
     let result
-    if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig, { chocolateWritesEnabled })
+    if (action === 'renewal-health') result = { contractVersion: RENEWAL_CONTRACT, enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true', preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true', pickupPolicyVersion: RENEWAL_PICKUP_POLICY_VERSION, weekendApproved: true }
+    else if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig, { chocolateWritesEnabled })
     else if (action === 'create-cake') {
       const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: new Storage(clientForRequest(req, env)) }
       const legacyGate = createLegacyCakeGate({ env, services })
-      result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, chocolateWritesEnabled, legacyGate })
+      result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, chocolateWritesEnabled, legacyGate, renewalPolicy: { enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true', preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true' } })
     }
     else if (action === 'create-class') result = await createClass(databases, body.data)
     else if (action === 'lookup-cake') result = await lookupCake(databases, body.data || {})

@@ -1,8 +1,10 @@
+import { isRenewalDocument, readRenewalDocument } from './au-renewal-reader.js'
 import { ReservationApiError } from './reservation-error.js'
 import { isStoredProductCouponEligible } from './stored-order-policy.js'
 import { STORED_ORDER_MAX_BYTES, hasExactOwnKeys, REQUIRED_STORED_ORDER_DOCUMENT_KEYS, PRE_CUPCAKE_FINISH_STORED_ORDER_LINE_KEYS, LEGACY_STORED_ORDER_LINE_KEYS, PRE_PACKAGING_STORED_ORDER_LINE_KEYS, STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, CHOCOLATE_EXTRA_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_PRE_PACKAGING_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_STORED_ORDER_LINE_KEYS, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS, validCakeQuantity, normalizedCakeLine, ORDER_LINE_IDENTITY_KEYS, canonicalOrderLineKey, isApprovedStoredUnitPrice, chocolateExtraPriceCents, smoreBulkPercent, INDIVIDUAL_PACKAGING_PRODUCT_PIECES, SAFE_LAST4_PATTERN, MANUAL_REVIEW_COUPON_ID_PATTERN, PROMOTIONS, getValidPromoCode, safeOrderAmount, smoreBulkDiscount, allocateDiscounts, calculateIndividualPackagingFeeCents, calculateLegacyIndividualPackagingFeeCents } from './stored-order-policy.js'
 
 export function parseStoredOrderLines(document) {
+  if (isRenewalDocument(document)) return readRenewalDocument(document)
   if (!document || !Object.hasOwn(document, 'orderLinesJson') || document.orderLinesJson == null) return null
   try {
     if (typeof document.orderLinesJson !== 'string') throw new Error('invalid serialization')

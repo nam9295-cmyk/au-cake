@@ -1,3 +1,4 @@
+import { renewalLineSummary } from '../shared/reservation-api/au-renewal.js'
 import {
   buildEmailDeliveryEventKey,
   normalizeRecipientEmail,
@@ -85,6 +86,7 @@ function optionalReplyTo(value) {
 }
 
 function compactCakeLineSummary(line) {
+  if (line?.policyVersion === 'au-renewal.2026-10.v1') return renewalLineSummary(line)
   const chocolate = getChocolateProduct(line?.productId)
   if (chocolate) return `${chocolate.name} · ${chocolate.saleUnit} · × ${line.quantity}`
   if (line?.productId === 'smore-stick') {

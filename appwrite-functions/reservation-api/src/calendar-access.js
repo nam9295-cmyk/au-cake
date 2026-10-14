@@ -1,3 +1,4 @@
+import { renewalLineSummary } from './au-renewal.js'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { formatCakeSizeLabel, parseStoredOrderLines } from './business.js'
 import { getChocolateProduct } from './chocolate-products.js'
@@ -53,6 +54,7 @@ export function verifyCalendarToken(token, secret, now = new Date()) {
 }
 
 function cakeLineLabel(document) {
+  if (document?.policyVersion === 'au-renewal.2026-10.v1') return renewalLineSummary(document)
   const chocolate = getChocolateProduct(document.productId)
   if (chocolate) return `${chocolate.name} · ${chocolate.saleUnit} ×${document.quantity}`
   if (document.productId === 'smore-stick') {

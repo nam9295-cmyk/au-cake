@@ -1,3 +1,4 @@
+import { isRenewalDocument, renewalReservationProjection } from './au-renewal-reader.js'
 function sanitizedOrderLine(line, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS) {
   return {
     productId: line.productId,
@@ -23,6 +24,7 @@ function sanitizedOrderLine(line, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS) {
 }
 
 export function projectPublicCakeReservation(document, parseStoredOrderLines, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS) {
+  if (isRenewalDocument(document)) return renewalReservationProjection(document)
   const stored = parseStoredOrderLines(document)
   const legacyLine = {
     productId: document.productId || 'pave-cake',
