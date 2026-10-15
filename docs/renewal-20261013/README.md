@@ -1,6 +1,6 @@
 # VERYGOOD AU renewal — 개발 문서
 
-최신 사용자 지시 → public-decisions-20261014.md → au-renewal-final-v0.7.md → FE/BE/QA → implementation-progress.md 순서로 읽는다.
+최신 사용자 지시 → verygood-au-mochi-six-flavour-plan-20261015.md → public-decisions-20261014.md → au-renewal-final-v0.7.md → FE/BE/QA → implementation-progress.md 순서로 읽는다.
 
 D09는 해결: 브라우니 홀6/8/10인치 AUD82/117/168 사용자 확정 (2026-10-15). 신규 가격 계약v2와 과거 가격 계약v1을 구분해 저장 가격을 보존한다. 컵케이크 잠정가는 계속 운영 승인 대기다.
 
@@ -11,3 +11,5 @@ D02는 해결: 수·금09–16, 토·일09–12 (Sydney), 월·화·목 일반 �
 qa-price-fixtures-v0.7.json의 renewal_contract_cases는 순수 가격 테스트에서 실행한다. 문서 산술 사례 개수를 앱 테스트 통과 수로 보고하지 않는다. 기존 가격/사이즈/시간은 저장 스냅샷으로 보존한다.
 
 실행 결과·변경 파일·미확인 운영 항목·향후 배포/롤백 순서는 implementation-progress.md를 참조한다. PUBLIC-SHA256SUMS.txt는 공개 개발 문서의 체크섬이며 로컬 원본 ZIP의 매니페스트를 대체하지 않는다.
+
+2026-10-15 모찌: 미배포 v2 안에서6종으로 교체 완료. 고정35달러 시그니처는 제거; 4구 단가합산/무료박스와 단품 선택포장50c만 제공한다. 구형 모찌 카트는 재선택하며 실제 운영 케이크·초콜릿 역사 reader는 그대로다.

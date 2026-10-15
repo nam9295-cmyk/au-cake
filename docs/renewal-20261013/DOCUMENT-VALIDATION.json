@@ -1,5 +1,5 @@
 {
-  "document_version": "v0.7 + final pickup2026-10-14 + confirmed brownie prices2026-10-15",
+  "document_version": "v0.7 + final pickup2026-10-14 + confirmed brownie prices2026-10-15 + six-flavour mochi2026-10-15",
   "checked_at_date": "2026-10-15",
   "decision_D02": "RESOLVED",
   "pickup_policy_version": "au-renewal-pickup.2026-10-14.v2",
@@ -14,7 +14,7 @@
   "closing_slot_included": true,
   "new_product_elapsed_lead_hours": 24,
   "runtime_flags_changed": false,
-  "renewal_tests_passed": 37,
+  "renewal_tests_passed": 42,
   "kr_boundary_tests_passed": 6,
   "verification": [
     "npm run test:renewal passed",
@@ -71,6 +71,23 @@
       168
     ],
     "mobile_10in_with_cream_verified": 178,
+    "production_changed": false
+  },
+  "mochi_update_2026_10_15": {
+    "contract": "au-renewal.2026-10.v2",
+    "storage_version": 2,
+    "signature_35_removed": true,
+    "historical_reader_files_changed": false,
+    "production_non_deployment": "user-confirmed; public GET checked; DB count not independently queried",
+    "old_cart": "archived separately; explicit reselection; other products retained",
+    "mobile_widths_px": [
+      360,
+      375,
+      390,
+      430
+    ],
+    "mixed_mochi_total_cents": 13450,
+    "review": "one important edit/delete bug fixed and browser RED/GREEN verified",
     "production_changed": false
   }
 }
