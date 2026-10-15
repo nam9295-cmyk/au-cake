@@ -128,3 +128,21 @@ One read-only independent final review found an important edit/delete state bug;
 No live Appwrite reads with privileged access were possible; DB absence is user-confirmed rather than independently counted. No push/deploy/DB mutation/transport. Public documents contain sales contracts and synthetic examples only; recipe/R&D originals remain ignored and are not staged. Launch remains manually gated; English flavour display names, final photos/allergens/storage, cookie price and provisional cupcake approvals still require operational confirmation.
 
 Local implementation commit: `a83c210` (six-flavour v2 core, cart, UI, tests and executable price fixtures). The following documentation commit records synchronized decisions and validation. No remote push.
+
+## 2026-10-15 — all AU detail UI unified
+
+Started from clean `f1d4384` on the existing branch. User explicitly specified the design and authorized local implementation/commits, so no redundant design approval or new worktree was needed. Brainstorming/uncodixfy/playwright/verification guidelines applied; one final read-only reviewer used. Shared interface plan: existing RenewalSelection → shared OptionButton/QuantityStepper → existing priceRenewalOrder/cart; new controls only produce existing values. No server, persistence, pickup, admin or Custom Cake contract edits. Existing CakeDetailPage only imports the extracted, behavior-identical OptionButton.
+
+Implementation: reusable existing Pavé option class and gallery, photo placeholders, immediate totals/mobile fixed action; all12 products and both languages. Latest user addition specifically requires empty photo areas: product/finish/pack/mochi flavour slots are provided without substituting other product assets. Current extra prices are derived through server pricing; independent quantities remain attached to parent lines. Existing approved cake prices and mochi v2 rules unchanged.
+
+Tests first failed for old select/number UI and missing servings/extra-card structure, then passed. Added four SSR UI tests to test:renewal; current renewal suite46 =33 Node+6 bundled+3 pickup UI+4 detail UI. Full `npm test`, `npm run lint`, `npx tsc -b`, KR and AU production builds passed. Existing chunk-size/dynamic-import warnings remain. `git diff --check` passed.
+
+Browser evidence and per-screen table are in qa-contract-v0.7.md. Twelve pages ×two languages at390px, no overflow and44px minimum button height. All product families were clicked and saved to the local bag; checked persisted size/finish/chocolate type/parent references/six-flavour counts. No reservation submission. Photo/title/card/sticky-bar screenshots compared with the live Pavé read-only reference.
+
+Final review: two findings labelled minor were treated as required fixes because they affect the explicit photo-slot requirement and selection feedback accuracy. Pack photo slots test failed0 versus3 before the fix, then passed. Restoring converted mochi boxes to singles left stale Added status: reproduced in browser before the fix, then confirmed cleared after the fix; whole suite/builds rerun green. No deferred findings. Reviewer deferred visual/a11y, live operation and command evidence: browser visual/layout covered here, physical-device/screen-reader audit remains unperformed, production is intentionally outside scope, test/build completion verified from local exit codes.
+
+No push/merge/deployment/Appwrite writes/real orders/messages. Cookie price and provisional brownie cupcake production approval remain pending. Missing actual photos are explicit placeholders awaiting user assets. Backend/historical readers, KR business logic and Custom Cake remain unchanged.
+
+Final visual fix: a portrait option asset expanded its photo area beyond4:3; browser assertion reproduced the mismatch, the image/placeholder is now positioned inside a fixed aspect-ratio frame, and the assertion passed. Repeated all24 screens, targeted46 renewal tests, lint and both builds after this CSS correction.
+
+Local UI implementation commit: `5c2e86b`; subsequent documentation commit records the screen-by-screen QA and public document checksums. Branch remains `codex/au-renewal-20261014`, no remote push.

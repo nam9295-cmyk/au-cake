@@ -14,7 +14,7 @@
   "closing_slot_included": true,
   "new_product_elapsed_lead_hours": 24,
   "runtime_flags_changed": false,
-  "renewal_tests_passed": 42,
+  "renewal_tests_passed": 46,
   "kr_boundary_tests_passed": 6,
   "verification": [
     "npm run test:renewal passed",
@@ -89,5 +89,20 @@
     "mixed_mochi_total_cents": 13450,
     "review": "one important edit/delete bug fixed and browser RED/GREEN verified",
     "production_changed": false
+  },
+  "detail_ui_2026_10_15": {
+    "public_products": 12,
+    "languages": [
+      "en",
+      "ko"
+    ],
+    "mobile_width_px": 390,
+    "photo_placeholders": true,
+    "price_and_order_contract_changed": false,
+    "renewal_tests_passed": 46,
+    "full_tests_lint_au_kr_builds": "passed",
+    "production_changed": false,
+    "browser_reservation_submitted": false,
+    "physical_device_screenreader_audit": "not performed"
   }
 }
