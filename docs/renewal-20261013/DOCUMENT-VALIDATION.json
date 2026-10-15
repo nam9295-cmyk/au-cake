@@ -1,6 +1,6 @@
 {
-  "document_version": "v0.7 + final pickup2026-10-14",
-  "checked_at_date": "2026-10-14",
+  "document_version": "v0.7 + final pickup2026-10-14 + confirmed brownie prices2026-10-15",
+  "checked_at_date": "2026-10-15",
   "decision_D02": "RESOLVED",
   "pickup_policy_version": "au-renewal-pickup.2026-10-14.v2",
   "timezone": "Australia/Sydney",
@@ -14,7 +14,7 @@
   "closing_slot_included": true,
   "new_product_elapsed_lead_hours": 24,
   "runtime_flags_changed": false,
-  "renewal_tests_passed": 35,
+  "renewal_tests_passed": 37,
   "kr_boundary_tests_passed": 6,
   "verification": [
     "npm run test:renewal passed",
@@ -28,7 +28,7 @@
   ],
   "remaining_decisions": [
     "Cookie price",
-    "Provisional brownie price approvals",
+    "Provisional brownie cupcake price approvals",
     "Final photos/allergens/storage",
     "Exact manual opening time/readiness",
     "Physical-device QA",
@@ -40,5 +40,37 @@
   "real_orders_payments_notifications_sent": false,
   "core_commit": "b64fcee65d16a7c7ef09c8c3c6e9d81cb85b7f1c",
   "frontend_commit": "eee4b4adc6a6595251fc96f1ad731713509d1199",
-  "notes": "Application tests are distinct from document arithmetic cases. Browser capability responses and time were local fixtures. Private originals, prior ZIPs and R&D are excluded through an explicit document allowlist."
+  "notes": "Application tests are distinct from document arithmetic cases. Browser capability responses and time were local fixtures. Private originals, prior ZIPs and R&D are excluded through an explicit document allowlist.",
+  "decision_D09": "RESOLVED",
+  "price_update_2026_10_15": {
+    "currency": "AUD",
+    "whole_prices": {
+      "6in": 82,
+      "8in": 117,
+      "10in": 168
+    },
+    "cream_surcharge": 10,
+    "new_write_contract": "au-renewal.2026-10.v2",
+    "read_contracts": [
+      "au-renewal.2026-10.v1",
+      "au-renewal.2026-10.v2"
+    ],
+    "storage_version": 2,
+    "historical_prices_and_sizes_preserved": true,
+    "historical_idempotent_replay_verified": true,
+    "tests": [
+      "npm test passed (including 37 renewal tests)",
+      "npm run lint passed",
+      "AU production build passed",
+      "KR production build passed"
+    ],
+    "mobile_width_px": 390,
+    "mobile_basic_prices_verified": [
+      82,
+      117,
+      168
+    ],
+    "mobile_10in_with_cream_verified": 178,
+    "production_changed": false
+  }
 }

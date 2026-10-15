@@ -1,6 +1,10 @@
-// AU October contract. Historical September definitions remain immutable.
+// AU October pricing contracts. V1 and September snapshots remain immutable.
 import { ReservationApiError } from "./reservation-error.js";
-export const RENEWAL_CONTRACT = "au-renewal.2026-10.v1";
+export const RENEWAL_CONTRACT = "au-renewal.2026-10.v2";
+const HISTORICAL_CONTRACT = "au-renewal.2026-10.v1";
+export function isRenewalContract(value) {
+  return value === RENEWAL_CONTRACT || value === HISTORICAL_CONTRACT;
+}
 export const RENEWAL_MAX_BYTES = 60000;
 const fail = (code) => {
   throw new ReservationApiError(code, 400);
@@ -30,9 +34,8 @@ export const RENEWAL_OFFERS = Object.freeze({
   }),
   "brownie-whole": offer("Brownie Basque Whole Cake", 8200, 1, {
     family: "cake",
-    sizes: { "6in": 8200, "8in": 11500, "10in": 15500 },
+    sizes: { "6in": 8200, "8in": 11700, "10in": 16800 },
     cream: true,
-    provisionalSizes: ["8in", "10in"],
   }),
   "brownie-loaf": offer("Brownie Basque Loaf", 5800, 1, {
     family: "cake",
@@ -253,11 +256,21 @@ export function normalizeRenewalLines(value) {
 }
 export function priceRenewalOrder(
   value,
-  { localPreview = false, reviewCoupon } = {},
+  { localPreview = false, reviewCoupon, contractVersion = RENEWAL_CONTRACT } = {},
 ) {
+  if (!isRenewalContract(contractVersion)) fail("UNSUPPORTED_CONTRACT");
   const normalized = normalizeRenewalLines(value);
   const base = normalized.map((selection) => {
-    const p = RENEWAL_OFFERS[selection.offerId];
+    // V1 snapshots retain their original amounts and approval status forever.
+    const current = RENEWAL_OFFERS[selection.offerId];
+    const p =
+      contractVersion === HISTORICAL_CONTRACT && selection.offerId === "brownie-whole"
+        ? {
+            ...current,
+            sizes: { "6in": 8200, "8in": 11500, "10in": 15500 },
+            provisionalSizes: ["8in", "10in"],
+          }
+        : current;
     const provisional =
       p.provisional === true ||
       p.provisionalSizes?.includes(selection.size) === true;
@@ -295,7 +308,7 @@ export function priceRenewalOrder(
       physicalQuantity,
       flavourTotals,
       priceStatus: provisional ? "provisional" : "confirmed",
-      policyVersion: RENEWAL_CONTRACT,
+      policyVersion: contractVersion,
       individualPackaging: selection.individualPackaging,
       individualPackagingPieces: selection.individualPackaging
         ? physicalQuantity
@@ -379,7 +392,7 @@ export function priceRenewalOrder(
   );
   return {
     version: 2,
-    policyVersion: RENEWAL_CONTRACT,
+    policyVersion: contractVersion,
     lines,
     subtotalCents,
     discountCents,

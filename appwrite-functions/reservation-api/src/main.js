@@ -1,5 +1,5 @@
 import { RENEWAL_PICKUP_POLICY_VERSION } from './au-renewal-pickup-policy.js'
-import { RENEWAL_CONTRACT } from './au-renewal.js'
+import { RENEWAL_CONTRACT, isRenewalContract } from './au-renewal.js'
 import { canonicalRenewalRequest, buildRenewalOrderData } from './au-renewal-storage.js'
 import { AppwriteException, Client, Databases, ID, Query, Storage } from 'node-appwrite'
 import {
@@ -121,7 +121,7 @@ async function getIdempotentDocument(databases, databaseId, collectionId, docume
 
 function cakeRequestFingerprint(input, runtimeConfig) {
   return digestCakeRequestPayload(
-    input?.contractVersion === RENEWAL_CONTRACT ? canonicalRenewalRequest(input) : canonicalCakeRequestPayload(input, {
+    isRenewalContract(input?.contractVersion) ? canonicalRenewalRequest(input, { allowHistorical: true }) : canonicalCakeRequestPayload(input, {
       customerEmailMode: runtimeConfig.cakeCustomerEmailMode,
       cakeCatalogMode: runtimeConfig.cakeCatalogMode,
     }),

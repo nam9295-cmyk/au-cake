@@ -1,4 +1,4 @@
-# Local implementation ledger — 2026-10-14
+# Local implementation ledger — 2026-10-15 (history retained)
 
 Authority: latest user instruction and public-decisions-20261014.md plus the latest user instruction, then v0.7.
 Base: 079083664e8919a2d65abb347010766106633b95. Branch: codex/au-renewal-20261014.
@@ -23,16 +23,16 @@ Tasks 1–4: local implementation and verification complete. Release gates remai
 
 ## Deployment plan — NOT executed
 1. Verify target AU project/environment, schema limits for version2 JSON and productId, export/backup existing documents and record current Function/Pages IDs. Do not use KR resources.
-2. Deploy compatible version1+version2 readers in notification/reminder/reservation API and admin first. Shared artifact manifests include renewal core/reader dependencies. Keep writes closed.
+2. Deploy compatible September storage v1 and renewal storage v2 readers (renewal price contracts v1+v2) in notification/reminder/reservation API and admin first. Shared artifact manifests include renewal core/reader dependencies. Keep writes closed.
 3. Deploy API writer and health flags, still false. Do not deploy pending prices as approved prices; a later price approval requires a new policy version, preserving this version's historical decoder.
-4. Deploy matching AU frontend/static SEO, smoke-test with isolated fixtures; verify Custom Cake/KR read compatibility. Confirm cookie price, provisional prices, real photos/allergens, physical device checks.
+4. Deploy matching AU frontend/static SEO, smoke-test with isolated fixtures; verify Custom Cake/KR read compatibility. Confirm cookie price, provisional cupcake prices, real photos/allergens, physical device checks.
 5. After separate approval, enable AU_RENEWAL_WRITES_ENABLED to cut over general new orders. Legacy create-cake new writes then reject; already stored requests replay first. Custom Cake APIs are separate.
 6. On Sydney 2026-10-19 the operator may manually enable AU_RENEWAL_PREORDERS_ENABLED after readiness checks; no exact hour is assumed. D02 is resolved; AU_RENEWAL_WEEKEND_APPROVED no longer controls the approved schedule. No flags were changed in this session.
 
 Rollback: stop new renewal writes first and retain all version2 readers/operational output. Never roll notification/reminder/admin back to readers that reject already stored version2 orders. Restore a compatible frontend/API deployment checkpoint; do not rewrite old prices, assign sizes to old orders, delete records, or automatically cancel reservations. Current flags are proposed deployment controls, not an operational rollout record.
 
 ## Pending, not failed implementation
-Cookie sale price; production approval of provisional brownie prices; manual opening timing/readiness; final photos/allergens/storage guidance; physical phone QA; actual Appwrite schema/deployment compatibility in the target environment. No live DB inspection or mutation was performed.
+Cookie sale price; production approval of provisional brownie cupcake prices; manual opening timing/readiness; final photos/allergens/storage guidance; physical phone QA; actual Appwrite schema/deployment compatibility in the target environment. No live DB inspection or mutation was performed.
 
 ## Independent review and fix evidence
 The executing-plans skill required one fresh reviewer (gpt-6-astra). It reviewed the uncommitted working tree, including untracked files; no second review or implementation agents were used.
@@ -93,10 +93,16 @@ Validation and commit evidence will be appended after final checks.
 
 ## Remaining release items and sequence
 
-Cookie sale price remains null. Brownie whole8/10=115/155 and cupcake6=36/42,12=66/78 remain local-only provisional prices; server writes reject them until separately approved/versioned. Final photos/allergens/storage guidance and physical device checks remain pending. New-product opening hour remains unset; no automatic activation.
+Cookie sale price remains null. Brownie whole6/8/10=82/117/168 is user-confirmed on 2026-10-15 (D09 resolved). Cupcake6=36/42,12=66/78 remains local-only provisional pricing; server writes reject those cupcake offers until separately approved/versioned. Final photos/allergens/storage guidance and physical device checks remain pending. New-product opening hour remains unset; no automatic activation.
 
 Future rollout needs separate approval: (1) confirm AU target resources/schema/permissions and backup checkpoints; (2) compatible v1+v2 readers and notification/reminder/admin first, writes closed; (3) API writer+matching pickup-policy health, writes/preorders still closed; (4) matching AU frontend/SEO and isolated smoke checks, verify KR/Custom/Class; (5) separately activate confirmed general offers; (6) operator manually opens eligible cookie/mochi on SydneyOct19 when ready, with no assumed hour. The obsolete weekend approval variable needs no edit and is no longer a schedule gate. Cookie/provisional offers can stay blocked while confirmed offers proceed.
 
-Rollback stops renewal writes first and keeps v2 readers/operational output. Restore a compatible frontend/API checkpoint; do not reprice, reschedule, delete or automatically cancel stored orders. No production deployment, remote writes or transports took place during this task.
+Rollback stops renewal writes first and keeps storage v2 readers supporting renewal price v1+v2 and operational output. Restore a compatible frontend/API checkpoint; do not reprice, reschedule, delete or automatically cancel stored orders. No production deployment, remote writes or transports took place during this task.
 
 Final documentation check: imported Markdown hard-break whitespace was detected by the staged check and replaced with paragraph breaks. Public checksums were regenerated; the final full change-range whitespace check must pass before reporting the checkout clean. A small local documentation formatting commit records this correction.
+
+## 2026-10-15 — confirmed Brownie Whole Cake prices
+
+User replaced the prior8/10-inch provisional115/155 with confirmed6/8/10-inch AUD82/117/168. Vanilla cream remains+10 (92/127/178); loaf remains58/68. Shared frontend/server pricing now uses `au-renewal.2026-10.v2`; storage JSON remains version2 with no new DB attributes. New writes accept only the active price contract. Readers and operational renderers accept both immutable renewal price contracts; old request fingerprints still replay before new-write gates. Synthetic frozen v1 fixtures preserve82/115/155 and size facts; these do not represent real orders. Current v0.7/FE/BE/QA/fixtures/decision log were synchronized; original research is kept locally as superseded history. Cookie and provisional cupcake gates remain. No production changes or transports.
+
+2026-10-15 verification: `npm test` passed (includes `test:renewal`:31 Node +3 bundled +3 UI =37), `npm run lint` passed. AU and KR production builds passed (existing chunk-size warnings only). Playwright at390px verified all three displayed prices and10-inch vanilla cream178; scroll width remained390. External requests were blocked; only intentionally blocked font requests appeared in the console. No order submission. Local screenshot: `output/playwright/brownie-prices-20261015-390.png`. `git diff --check` passed. The full prior mobile QA remains recorded above. The price/storage tests were first run RED against the old provisional gate, then GREEN with the confirmed prices. A separate API test verifies the old v1 HMAC request fingerprint still replays unchanged and that new v1 writes are rejected.

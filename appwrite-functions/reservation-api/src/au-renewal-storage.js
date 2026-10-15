@@ -1,5 +1,6 @@
 import {
   RENEWAL_CONTRACT,
+  isRenewalContract,
   RENEWAL_MAX_BYTES,
   normalizeRenewalLines,
   priceRenewalOrder,
@@ -26,10 +27,10 @@ const requestKeys = new Set([
   "website",
   "orderLines",
 ]);
-export function canonicalRenewalRequest(input) {
+export function canonicalRenewalRequest(input, { allowHistorical = false } = {}) {
   if (
     !input ||
-    input.contractVersion !== RENEWAL_CONTRACT ||
+    (allowHistorical ? !isRenewalContract(input.contractVersion) : input.contractVersion !== RENEWAL_CONTRACT) ||
     Object.keys(input).some((k) => !requestKeys.has(k)) ||
     new TextEncoder().encode(JSON.stringify(input)).length > RENEWAL_MAX_BYTES
   )
@@ -42,7 +43,7 @@ export function canonicalRenewalRequest(input) {
   if (promoCode && !/^(?:VG|JENNIE|[A-Z]+)[A-Z0-9]+$/.test(promoCode))
     fail("PROMO_CODE_INVALID");
   return {
-    contractVersion: RENEWAL_CONTRACT,
+    contractVersion: input.contractVersion,
     customerName: requiredText(input.customerName, {
       min: 2,
       max: 80,

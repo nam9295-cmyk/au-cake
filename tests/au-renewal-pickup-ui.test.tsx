@@ -31,7 +31,7 @@ test("AU public copy and common notice match the approved calendar in both langu
 test("new order detail rendering retains actual product and size without altering a stored pickup appointment", () => {
   const doc = buildRenewalOrderData(
     {
-      contractVersion: "au-renewal.2026-10.v1",
+      contractVersion: "au-renewal.2026-10.v2",
       customerName: "Test Buyer",
       customerPhone: "0412345678",
       customerEmail: "buyer@example.com",
@@ -80,7 +80,7 @@ test("frontend refuses capabilities from a server with a different pickup policy
       responseBody: JSON.stringify({
         ok: true,
         result: {
-          contractVersion: "au-renewal.2026-10.v1",
+          contractVersion: "au-renewal.2026-10.v2",
           enabled: true,
           preordersEnabled: false,
           weekendApproved: true,
@@ -93,7 +93,7 @@ test("frontend refuses capabilities from a server with a different pickup policy
       responseBody: JSON.stringify({
         ok: true,
         result: {
-          contractVersion: "au-renewal.2026-10.v1",
+          contractVersion: "au-renewal.2026-10.v2",
           pickupPolicyVersion: RENEWAL_PICKUP_POLICY_VERSION,
           enabled: false,
           preordersEnabled: false,

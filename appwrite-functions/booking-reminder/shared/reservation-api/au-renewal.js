@@ -1,1 +1,1 @@
-export { renewalLineSummary } from '../../../reservation-api/src/au-renewal.js'
+export { renewalLineSummary, isRenewalContract } from '../../../reservation-api/src/au-renewal.js'

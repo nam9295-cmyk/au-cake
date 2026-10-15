@@ -1,6 +1,6 @@
 // Decoder for the immutable October contract. Never use a future active price table here.
 import {
-  RENEWAL_CONTRACT,
+  isRenewalContract,
   RENEWAL_MAX_BYTES,
   priceRenewalOrder,
 } from "./au-renewal.js";
@@ -27,7 +27,7 @@ export function readRenewalDocument(document) {
     const payload = JSON.parse(document.orderLinesJson);
     if (
       payload.version !== 2 ||
-      payload.policyVersion !== RENEWAL_CONTRACT ||
+      !isRenewalContract(payload.policyVersion) ||
       !Array.isArray(payload.lines) ||
       Object.keys(payload).sort().join(",") !==
         "discountPercent,lines,policyVersion,version"
@@ -44,6 +44,7 @@ export function readRenewalDocument(document) {
       payload.lines.map((l) => l.selection),
       {
         localPreview: true,
+        contractVersion: payload.policyVersion,
         reviewCoupon: payload.discountPercent
           ? { rewardPercent: payload.discountPercent }
           : undefined,
@@ -80,7 +81,7 @@ export function renewalReservationProjection(
 ) {
   const q = readRenewalDocument(document);
   return {
-    contractVersion: RENEWAL_CONTRACT,
+    contractVersion: q.policyVersion,
     reservationNumber: document.reservationNumber,
     productId: document.productId,
     cakeSize: document.cakeSize,
@@ -126,7 +127,7 @@ export function renewalReservationProjection(
 export function parseRenewalProjection(value) {
   if (
     !value ||
-    value.contractVersion !== RENEWAL_CONTRACT ||
+    !isRenewalContract(value.contractVersion) ||
     !Array.isArray(value.orderLines)
   )
     invalid();
@@ -134,7 +135,7 @@ export function parseRenewalProjection(value) {
     ...value,
     orderLinesJson: JSON.stringify({
       version: 2,
-      policyVersion: RENEWAL_CONTRACT,
+      policyVersion: value.contractVersion,
       lines: value.orderLines,
       discountPercent: value.discountPercent,
     }),

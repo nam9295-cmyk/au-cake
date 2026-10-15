@@ -6,12 +6,15 @@ const price = (lines, options = { localPreview: true }) => core.priceRenewalOrde
 test('renewal contract is available separately from historical contracts', () => {
   assert.equal(typeof core.priceRenewalOrder, 'function')
 })
-test('confirmed cake prices and provisional sizes are separate', () => {
-  for (const [offerId, size, expected] of [['pave-cake','6in',7500],['pave-cake','8in',10700],['pave-cake','10in',15900],['brownie-whole','6in',8200],['brownie-whole','8in',11500],['brownie-whole','10in',15500]]) {
-    assert.equal(price([line(offerId,1,{size})]).totalPriceCents, expected)
+test('all whole cake sizes use confirmed prices outside local preview', () => {
+  for (const [offerId, size, expected] of [['pave-cake','6in',7500],['pave-cake','8in',10700],['pave-cake','10in',15900],['brownie-whole','6in',8200],['brownie-whole','8in',11700],['brownie-whole','10in',16800]]) {
+    const quote = price([line(offerId,1,{size})],{})
+    assert.equal(quote.totalPriceCents, expected)
+    assert.equal(quote.lines[0].priceStatus,'confirmed')
+    if(offerId==='brownie-whole') assert.equal(price([line(offerId,2,{size,finish:'vanilla-fresh-cream'})],{}).totalPriceCents,2*(expected+1000))
   }
   assert.equal(price([line('brownie-loaf',2,{finish:'vanilla-fresh-cream'})]).totalPriceCents,13600)
-  assert.throws(() => price([line('brownie-whole',1,{size:'8in'})],{}), /PROVISIONAL_PRICE/)
+  assert.throws(() => price([line('brownie-cupcakes-6')],{}), /PROVISIONAL_PRICE/)
   assert.throws(() => price([line('cookie-six')]), /PRICE_UNAVAILABLE/)
 })
 test('brownie cupcake finish differs from gateau; packaging pools selected cupcake subtotal only', () => {
@@ -54,6 +57,7 @@ test('updated document fixtures are executable confirmed or local-only contracts
   const selections=[{lineId:c.id,...c.selection}]
   assert.equal(price(selections).totalPriceCents,c.total_cents,c.id)
   if(c.scope==='LOCAL_PREVIEW_ONLY')assert.throws(()=>price(selections,{}),/PROVISIONAL_PRICE/)
+  else assert.equal(price(selections,{}).totalPriceCents,c.total_cents,c.id)
  }
 })
 test('packaging exemption is before coupons and excludes unpacked cupcakes and all other goods',()=>{

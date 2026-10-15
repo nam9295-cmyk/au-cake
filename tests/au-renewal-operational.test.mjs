@@ -5,7 +5,7 @@ import { buildCakeNotificationRows, buildBookingConfirmationPayload, buildNotifi
 import { buildCakeReminderPayload } from '../appwrite-functions/booking-reminder/src/reminder-business.js'
 import { sanitizeCakeCalendarEvent } from '../appwrite-functions/reservation-api/src/calendar-access.js'
 test('renewal operational outputs preserve packs, physical counts, flavours and linked extras',()=>{
- const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v1',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'cake',offerId:'brownie-whole',size:'6in',finish:'vanilla-fresh-cream',quantity:1},{lineId:'extra',offerId:'addon-cream',parentLineId:'cake',quantity:1},{lineId:'mochi',offerId:'mochi',mode:'quantity',counts:[10,0,0,0],quantity:1,individualPackaging:true},{lineId:'eiffel',offerId:'eiffel-six-plus-one',quantity:1}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}})
+ const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'cake',offerId:'brownie-whole',size:'6in',finish:'vanilla-fresh-cream',quantity:1},{lineId:'extra',offerId:'addon-cream',parentLineId:'cake',quantity:1},{lineId:'mochi',offerId:'mochi',mode:'quantity',counts:[10,0,0,0],quantity:1,individualPackaging:true},{lineId:'eiffel',offerId:'eiffel-six-plus-one',quantity:1}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}})
  row.$id='renewal-test'
  const email=buildBookingConfirmationPayload({reservation:row,sourceType:'cake',from:'test@example.com'})
  const reminder=buildCakeReminderPayload({reservation:row,from:'test@example.com'})
@@ -23,7 +23,7 @@ test('each operational line names its stable ID so attached extras can be matche
 
 test('lookup notification reminder and PIN Calendar retain an existing approved out-of-hours appointment',async()=>{
  const {renewalReservationProjection}=await import('../appwrite-functions/reservation-api/src/au-renewal-reader.js')
- const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v1',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-24',pickupTime:'12:00',privacyConsent:true,orderLines:[{lineId:'a',offerId:'pave-cake',size:'6in',quantity:1}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'HISTORY-TEST'})
+ const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-24',pickupTime:'12:00',privacyConsent:true,orderLines:[{lineId:'a',offerId:'pave-cake',size:'6in',quantity:1}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'HISTORY-TEST'})
  row.$id='history-test';row.pickupDate='2026-10-26';row.pickupTime='18:30'
  const before=JSON.stringify(row)
  const lookup=renewalReservationProjection(row),calendar=sanitizeCakeCalendarEvent(row)

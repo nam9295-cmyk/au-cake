@@ -1,5 +1,5 @@
 {
-  "document": "AU-RENEWAL-001 v0.7 + confirmed decisions 2026-10-14",
+  "document": "AU-RENEWAL-001 v0.7 + confirmed decisions 2026-10-15",
   "status": "DOCUMENT_EXPECTATIONS_ONLY_NOT_APPLICATION_TEST_RESULTS",
   "currency": "AUD",
   "money_unit": "integer cents",
@@ -8,7 +8,7 @@
     "5+1 components express six retail units minus one retail unit; no required storage representation is implied.",
     "Mochi individual packaging is confirmed at 50 cents per packed physical piece. No cupcake 100-dollar waiver applies to mochi.",
     "Pure arithmetic quantity examples do not authorize production order limits.",
-    "Brownie whole6=8200 confirmed. Whole8/10=11500/15500 and brownie cupcake6=3600/4200,12=6600/7800 are LOCAL_PREVIEW_ONLY.",
+    "Brownie whole6/8/10=8200/11700/16800 confirmed on 2026-10-15. Brownie cupcake6=3600/4200,12=6600/7800 remain LOCAL_PREVIEW_ONLY. Historical snapshots retain their original contract prices.",
     "Only four Cake & Bake cakes can parent attached 5% extras. Cupcake historical extras do not authorize new writes.",
     "Custom-four one-each requires explicit signature conversion. Cookie price remains null."
   ],
@@ -1477,13 +1477,13 @@
       ],
       "prices_cents": {
         "6in": 8200,
-        "8in": 11500,
-        "10in": 15500
+        "8in": 11700,
+        "10in": 16800
       },
       "prior_whole_reference_cents": 8200,
       "prior_price_size_mapping": "DO_NOT_REMAP_HISTORY",
       "cream_surcharge_cents": 1000,
-      "status": "6IN_CONFIRMED_8IN_10IN_LOCAL_PREVIEW_ONLY"
+      "status": "ALL_SIZES_USER_CONFIRMED_2026_10_15"
     },
     {
       "id": "Q-BROWNIE-LOAF",
@@ -1702,23 +1702,23 @@
     },
     {
       "id": "R3",
-      "scope": "LOCAL_PREVIEW_ONLY",
+      "scope": "CONFIRMED",
       "selection": {
         "offerId": "brownie-whole",
         "size": "8in",
         "quantity": 1
       },
-      "total_cents": 11500
+      "total_cents": 11700
     },
     {
       "id": "R4",
-      "scope": "LOCAL_PREVIEW_ONLY",
+      "scope": "CONFIRMED",
       "selection": {
         "offerId": "brownie-whole",
         "size": "10in",
         "quantity": 1
       },
-      "total_cents": 15500
+      "total_cents": 16800
     },
     {
       "id": "R5",

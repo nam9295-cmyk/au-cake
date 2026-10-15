@@ -1,4 +1,4 @@
-import { renewalLineSummary } from '../shared/reservation-api/au-renewal.js'
+import { renewalLineSummary, isRenewalContract } from '../shared/reservation-api/au-renewal.js'
 import { Client, Databases } from 'node-appwrite'
 import { resolveNotificationAppwriteEndpoint } from './appwrite-endpoint.js'
 import {
@@ -551,7 +551,7 @@ function readStoredCakeLines(reservation) {
 }
 
 function cakeDetailRows(reservation, config, suffix = '') {
-  if (reservation?.policyVersion === 'au-renewal.2026-10.v1') return [['Order item', renewalLineSummary(reservation)]]
+  if (isRenewalContract(reservation?.policyVersion)) return [['Order item', renewalLineSummary(reservation)]]
   const quantity = getQuantity(reservation)
   const label = (value) => `${value}${suffix}`
   const chocolate = config.currency === 'AUD' ? getChocolateProduct(reservation.productId) : undefined

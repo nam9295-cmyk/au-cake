@@ -1,4 +1,5 @@
-export const RENEWAL_CONTRACT: "au-renewal.2026-10.v1";
+export const RENEWAL_CONTRACT: "au-renewal.2026-10.v2";
+export function isRenewalContract(value: unknown): boolean;
 export const RENEWAL_MAX_BYTES: number;
 export interface RenewalSelection {
   lineId: string;
@@ -71,6 +72,7 @@ export function priceRenewalOrder(
   options?: {
     localPreview?: boolean;
     reviewCoupon?: { rewardPercent: number };
+    contractVersion?: string;
   },
 ): RenewalQuote;
 export function renewalLineSummary(line: RenewalLine): string;

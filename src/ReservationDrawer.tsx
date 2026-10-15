@@ -1,3 +1,4 @@
+import { isRenewalContract } from '../appwrite-functions/reservation-api/src/au-renewal.js'
 import { AuPickupNotice } from './components/AuPickupNotice'
 import { renewalServiceSlots } from '../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
 import { useState } from 'react'
@@ -99,7 +100,7 @@ export function ReservationDrawer({
   })
   const draftReservation: Reservation = { ...reservation, ...draftUpdate }
   const selectedProduct = getProductById(draftUpdate.productId)
-  const isRenewalOrder = 'contractVersion' in reservation && reservation.contractVersion === 'au-renewal.2026-10.v1'
+  const isRenewalOrder = 'contractVersion' in reservation && isRenewalContract(reservation.contractVersion)
   const timeOptions = isRenewalOrder ? renewalServiceSlots(pickupDate) : timeOptionsForDate(pickupDate, settings)
   const displayedTimeOptions = timeOptions.includes(pickupTime) ? timeOptions : [pickupTime, ...timeOptions].filter(Boolean)
 
