@@ -194,3 +194,24 @@
 
 .au-redesign-shell .au-footer-pickup { flex-basis: 100%; line-height: 1.6; }
 .au-redesign-shell .au-pickup-notice { line-height: 1.65; overflow-wrap: anywhere; }
+
+.renewal-page .mochi-builder { margin: 0; gap: 18px; align-content: start; }
+.mochi-modes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.renewal-page .mochi-modes button[aria-pressed="false"] { background: white; color: #205b49; }
+.mochi-flavours { display: grid; gap: 14px; }
+.mochi-flavour { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.mochi-counter { display: grid; grid-template-columns: 44px 64px 44px; align-items: center; }
+.renewal-page .mochi-counter button { padding: 8px; }
+.renewal-page .mochi-counter input { text-align: center; padding: 8px 2px; max-width: 100%; }
+.mochi-builder p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
+.mochi-reselection { border-block: 1px solid #aebcb4; margin: 24px 0; padding: 16px 0; }
+.mochi-reselection p { line-height: 1.6; }
+@media (max-width: 365px) { .mochi-flavour { grid-template-columns: 1fr; } }
+@media (max-width: 700px) {
+  /* Keep help available below the page without covering the flavour controls. */
+  body:has(.renewal-detail .mochi-builder) #vg-chat-launcher {
+    position: static;
+    display: flex;
+    margin: 0 18px 24px auto;
+  }
+}

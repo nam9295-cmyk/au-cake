@@ -117,7 +117,7 @@ export function renderRenewalLlms(siteUrl, additionalEntries = []) {
         const p = RENEWAL_OFFERS[c.offers[0]];
         const price =
           c.id === "mochi"
-            ? "Signature four AUD 35.00. Other selections priced by flavour."
+            ? "Six flavours from AUD 8.00 each. Build a four-piece gift box at the sum of your selections, with free box packaging, or buy singles; optional individual packaging AUD 0.50 per piece."
             : p.price === null || p.provisional
               ? "Price to be confirmed."
               : `From AUD ${(p.price / 100).toFixed(2)}.`;

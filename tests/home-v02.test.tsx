@@ -97,7 +97,7 @@ test('AU home SEO description agrees with the visible hero without altering exis
 
 test('Home membership agrees with the five/four/three renewal catalogue',()=>{
  const groups=getAuHomeCollections('en');assert.deepEqual(groups.map(g=>g.products.length),[5,4,3])
- assert.equal(groups[1].products[0].id,'mochi')
+ assert.equal(groups[1].products[0].id,'mochi');assert.equal(groups[1].products[0].price,'From AUD 8.00 each');assert.equal(getAuHomeCollections('ko')[1].products[0].price,'개당 AUD 8.00부터')
  assert.deepEqual(getAuHomeBest('en').map(p=>p.id),['pave','gateau-loaf','brownie-whole'])
  const products=groups.flatMap(g=>g.products)
  for(const [id,amount]of [['pave','75'],['brownie-whole','82'],['brownie-loaf','58'],['smore','25']])assert.ok(products.find(p=>p.id===id)?.price.includes(amount))

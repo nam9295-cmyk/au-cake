@@ -10,7 +10,7 @@
     "Pure arithmetic quantity examples do not authorize production order limits.",
     "Brownie whole6/8/10=8200/11700/16800 confirmed on 2026-10-15. Brownie cupcake6=3600/4200,12=6600/7800 remain LOCAL_PREVIEW_ONLY. Historical snapshots retain their original contract prices.",
     "Only four Cake & Bake cakes can parent attached 5% extras. Cupcake historical extras do not authorize new writes.",
-    "Custom-four one-each requires explicit signature conversion. Cookie price remains null."
+    "Six-flavour mochi replaces the undeployed local four-flavour policy inside renewal v2. No fixed signature price or old mochi history branch. Cookie price remains null."
   ],
   "cases": [
     {
@@ -702,306 +702,6 @@
       }
     },
     {
-      "id": "Q-NUM33",
-      "label": "모찌시그니처4구1",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 900,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 850,
-          "qty": 1
-        },
-        {
-          "kind": "discount",
-          "cents": 200,
-          "qty": 1
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 3700,
-        "discount_cents": 200,
-        "packaging_cents": 0,
-        "total_cents": 3500,
-        "physical": {
-          "boxes": 1,
-          "mochi": 4,
-          "flavours": [
-            1,
-            1,
-            1,
-            1
-          ]
-        }
-      }
-    },
-    {
-      "id": "Q-NUM34",
-      "label": "모찌시그니처2+수량딸기1",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 3
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 2
-        },
-        {
-          "kind": "product",
-          "cents": 900,
-          "qty": 2
-        },
-        {
-          "kind": "product",
-          "cents": 850,
-          "qty": 2
-        },
-        {
-          "kind": "discount",
-          "cents": 200,
-          "qty": 2
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 8400,
-        "discount_cents": 400,
-        "packaging_cents": 0,
-        "total_cents": 8000,
-        "physical": {
-          "gift_boxes": 2,
-          "mochi": 9,
-          "flavours": [
-            3,
-            2,
-            2,
-            2
-          ]
-        }
-      }
-    },
-    {
-      "id": "Q-NUM35",
-      "label": "자유4구딸기4",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 4
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 4000,
-        "discount_cents": 0,
-        "packaging_cents": 0,
-        "total_cents": 4000,
-        "physical": {
-          "gift_boxes": 1,
-          "mochi": 4,
-          "flavours": [
-            4,
-            0,
-            0,
-            0
-          ]
-        }
-      }
-    },
-    {
-      "id": "Q-NUM36",
-      "label": "자유4구앙버터4",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 850,
-          "qty": 4
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 3400,
-        "discount_cents": 0,
-        "packaging_cents": 0,
-        "total_cents": 3400,
-        "physical": {
-          "gift_boxes": 1,
-          "mochi": 4,
-          "flavours": [
-            0,
-            0,
-            0,
-            4
-          ]
-        }
-      }
-    },
-    {
-      "id": "Q-NUM37",
-      "label": "자유4구딸기2청포도2",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 2
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 2
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 3900,
-        "discount_cents": 0,
-        "packaging_cents": 0,
-        "total_cents": 3900,
-        "physical": {
-          "gift_boxes": 1,
-          "mochi": 4,
-          "flavours": [
-            2,
-            2,
-            0,
-            0
-          ]
-        }
-      }
-    },
-    {
-      "id": "Q-NUM38",
-      "label": "자유딸기2청포도2상자2",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 4
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 4
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 7800,
-        "discount_cents": 0,
-        "packaging_cents": 0,
-        "total_cents": 7800,
-        "physical": {
-          "gift_boxes": 2,
-          "mochi": 8,
-          "flavours": [
-            4,
-            4,
-            0,
-            0
-          ]
-        }
-      }
-    },
-    {
-      "id": "Q-NUM39",
-      "label": "수량모찌딸기2청포도1아망드1앙버터1,포장없음",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 2
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 900,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 850,
-          "qty": 1
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 4700,
-        "discount_cents": 0,
-        "packaging_cents": 0,
-        "total_cents": 4700,
-        "physical": {
-          "mochi": 5,
-          "flavours": [
-            2,
-            1,
-            1,
-            1
-          ]
-        }
-      }
-    },
-    {
-      "id": "Q-NUM40",
-      "label": "시그니처1+자유앙버터4상자1",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 900,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 850,
-          "qty": 5
-        },
-        {
-          "kind": "discount",
-          "cents": 200,
-          "qty": 1
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 7100,
-        "discount_cents": 200,
-        "packaging_cents": 0,
-        "total_cents": 6900,
-        "physical": {
-          "gift_boxes": 2,
-          "mochi": 8,
-          "flavours": [
-            1,
-            1,
-            1,
-            5
-          ]
-        }
-      }
-    },
-    {
       "id": "Q-NUM41",
       "label": "파베 홀8in 신규107",
       "components": [
@@ -1074,305 +774,6 @@
       }
     },
     {
-      "id": "Q-NUM44",
-      "label": "모찌 수량5개+개별포장5개",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 2
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 900,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 850,
-          "qty": 1
-        },
-        {
-          "kind": "packaging",
-          "cents": 50,
-          "qty": 5
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 4700,
-        "discount_cents": 0,
-        "packaging_cents": 250,
-        "total_cents": 4950,
-        "physical": {
-          "mochi": 5,
-          "individual_containers": 5,
-          "flavours": [
-            2,
-            1,
-            1,
-            1
-          ]
-        }
-      },
-      "input": {
-        "mode": "quantity",
-        "counts": [
-          2,
-          1,
-          1,
-          1
-        ],
-        "individualPackaging": true
-      }
-    },
-    {
-      "id": "Q-NUM45",
-      "label": "딸기 모찌1개+개별포장",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 1
-        },
-        {
-          "kind": "packaging",
-          "cents": 50,
-          "qty": 1
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 1000,
-        "discount_cents": 0,
-        "packaging_cents": 50,
-        "total_cents": 1050,
-        "physical": {
-          "mochi": 1,
-          "individual_containers": 1,
-          "flavours": [
-            1,
-            0,
-            0,
-            0
-          ]
-        }
-      },
-      "input": {
-        "mode": "quantity",
-        "counts": [
-          1,
-          0,
-          0,
-          0
-        ],
-        "individualPackaging": true
-      }
-    },
-    {
-      "id": "Q-NUM46",
-      "label": "딸기 모찌10개+개별포장,100달러면제없음",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 10
-        },
-        {
-          "kind": "packaging",
-          "cents": 50,
-          "qty": 10
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 10000,
-        "discount_cents": 0,
-        "packaging_cents": 500,
-        "total_cents": 10500,
-        "physical": {
-          "mochi": 10,
-          "individual_containers": 10,
-          "flavours": [
-            10,
-            0,
-            0,
-            0
-          ]
-        }
-      },
-      "input": {
-        "mode": "quantity",
-        "counts": [
-          10,
-          0,
-          0,
-          0
-        ],
-        "individualPackaging": true,
-        "scope": "PURE_PRICING_NOT_ORDER_LIMIT_APPROVAL"
-      }
-    },
-    {
-      "id": "Q-NUM47",
-      "label": "모찌수량5개 포장토글off",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 2
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 900,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 850,
-          "qty": 1
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 4700,
-        "discount_cents": 0,
-        "packaging_cents": 0,
-        "total_cents": 4700,
-        "physical": {
-          "mochi": 5,
-          "individual_containers": 0,
-          "flavours": [
-            2,
-            1,
-            1,
-            1
-          ]
-        }
-      },
-      "input": {
-        "mode": "quantity",
-        "counts": [
-          2,
-          1,
-          1,
-          1
-        ],
-        "individualPackaging": false
-      }
-    },
-    {
-      "id": "Q-NUM48",
-      "label": "모찌 포장딸기2개+미포장청포도1개",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 2
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 1
-        },
-        {
-          "kind": "packaging",
-          "cents": 50,
-          "qty": 2
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 2950,
-        "discount_cents": 0,
-        "packaging_cents": 100,
-        "total_cents": 3050,
-        "physical": {
-          "mochi": 3,
-          "individual_containers": 2,
-          "flavours": [
-            2,
-            1,
-            0,
-            0
-          ]
-        }
-      },
-      "input": {
-        "mode": "quantity",
-        "packedCounts": [
-          2,
-          0,
-          0,
-          0
-        ],
-        "unpackedCounts": [
-          0,
-          1,
-          0,
-          0
-        ]
-      }
-    },
-    {
-      "id": "Q-NUM49",
-      "label": "시그니처무료4구1상자+개별포장딸기1개",
-      "components": [
-        {
-          "kind": "product",
-          "cents": 1000,
-          "qty": 2
-        },
-        {
-          "kind": "product",
-          "cents": 950,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 900,
-          "qty": 1
-        },
-        {
-          "kind": "product",
-          "cents": 850,
-          "qty": 1
-        },
-        {
-          "kind": "discount",
-          "cents": 200,
-          "qty": 1
-        },
-        {
-          "kind": "packaging",
-          "cents": 50,
-          "qty": 1
-        }
-      ],
-      "expected": {
-        "subtotal_cents": 4700,
-        "discount_cents": 200,
-        "packaging_cents": 50,
-        "total_cents": 4550,
-        "physical": {
-          "mochi": 5,
-          "gift_boxes": 1,
-          "individual_containers": 1,
-          "flavours": [
-            2,
-            1,
-            1,
-            1
-          ]
-        }
-      }
-    },
-    {
       "id": "Q-NUM50",
       "label": "파베 홀8in107+네추가단품각1",
       "components": [
@@ -1436,21 +837,25 @@
     },
     {
       "id": "Q-MOCHI-D01",
-      "mode": "custom-four",
-      "per_box": [
-        1,
-        1,
-        1,
-        1
+      "modes": [
+        "gift-four",
+        "singles"
       ],
-      "expected_final_price_cents": null,
-      "status": "EXPLICIT_SIGNATURE_CONVERSION_REQUIRED",
-      "converted_contract": "signature",
-      "converted_price_cents": 3500
+      "policy_version": "au-renewal.2026-10.v2",
+      "flavour_prices_cents": {
+        "strawberry": 1000,
+        "green_grape": 950,
+        "mandarin": 900,
+        "amande": 950,
+        "butter_redbean": 850,
+        "nama_chocolate": 800
+      },
+      "gift_box_fee_cents": 0,
+      "legacy_cart": "RESELECT_WITHOUT_AUTOMATIC_CONVERSION"
     },
     {
       "id": "Q-MOCHI-D03",
-      "mode": "quantity",
+      "mode": "singles",
       "individual_packaging": true,
       "fee_cents_per_piece": 50,
       "status": "CONFIRMED_IN_V07",
@@ -1759,6 +1164,101 @@
         "quantity": 1
       },
       "total_cents": 7800
+    },
+    {
+      "id": "M01",
+      "scope": "CONFIRMED",
+      "selection": {
+        "offerId": "mochi",
+        "mode": "gift-four",
+        "flavourCounts": {
+          "strawberry": 0,
+          "green_grape": 0,
+          "mandarin": 0,
+          "amande": 0,
+          "butter_redbean": 0,
+          "nama_chocolate": 4
+        },
+        "quantity": 1,
+        "individualPackaging": false
+      },
+      "total_cents": 3200
+    },
+    {
+      "id": "M02",
+      "scope": "CONFIRMED",
+      "selection": {
+        "offerId": "mochi",
+        "mode": "gift-four",
+        "flavourCounts": {
+          "strawberry": 4,
+          "green_grape": 0,
+          "mandarin": 0,
+          "amande": 0,
+          "butter_redbean": 0,
+          "nama_chocolate": 0
+        },
+        "quantity": 1,
+        "individualPackaging": false
+      },
+      "total_cents": 4000
+    },
+    {
+      "id": "M03",
+      "scope": "CONFIRMED",
+      "selection": {
+        "offerId": "mochi",
+        "mode": "gift-four",
+        "flavourCounts": {
+          "strawberry": 1,
+          "green_grape": 1,
+          "mandarin": 0,
+          "amande": 1,
+          "butter_redbean": 0,
+          "nama_chocolate": 1
+        },
+        "quantity": 2,
+        "individualPackaging": false
+      },
+      "total_cents": 7400
+    },
+    {
+      "id": "M04",
+      "scope": "CONFIRMED",
+      "selection": {
+        "offerId": "mochi",
+        "mode": "gift-four",
+        "flavourCounts": {
+          "strawberry": 0,
+          "green_grape": 0,
+          "mandarin": 2,
+          "amande": 0,
+          "butter_redbean": 2,
+          "nama_chocolate": 0
+        },
+        "quantity": 1,
+        "individualPackaging": false
+      },
+      "total_cents": 3500
+    },
+    {
+      "id": "M05",
+      "scope": "CONFIRMED",
+      "selection": {
+        "offerId": "mochi",
+        "mode": "singles",
+        "flavourCounts": {
+          "strawberry": 0,
+          "green_grape": 0,
+          "mandarin": 0,
+          "amande": 0,
+          "butter_redbean": 0,
+          "nama_chocolate": 3
+        },
+        "quantity": 1,
+        "individualPackaging": true
+      },
+      "total_cents": 2550
     }
   ],
   "pickup_policy": {

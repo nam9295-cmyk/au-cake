@@ -10,7 +10,7 @@ export interface RenewalSelection {
   chocolateType?: string;
   individualPackaging?: boolean;
   mode?: string;
-  counts?: number[];
+  flavourCounts?: MochiCounts;
   parentLineId?: string;
 }
 export interface RenewalOffer {
@@ -63,7 +63,9 @@ export interface RenewalQuote {
   orderItemCount: number;
 }
 export const RENEWAL_OFFERS: Readonly<Record<string, RenewalOffer>>;
-export const MOCHI_PRICES: readonly number[];
+export type MochiFlavourId = "strawberry" | "green_grape" | "mandarin" | "amande" | "butter_redbean" | "nama_chocolate";
+export type MochiCounts = Record<MochiFlavourId, number>;
+export const MOCHI_FLAVOURS: readonly Readonly<{ id: MochiFlavourId; en: string; ko: string; priceCents: number }>[];
 export const MOCHI_NAMES: readonly string[];
 export function safeAmount(n: number): number;
 export function normalizeRenewalLines(value: unknown): RenewalSelection[];

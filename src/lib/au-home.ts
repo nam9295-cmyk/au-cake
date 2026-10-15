@@ -35,7 +35,7 @@ export function getAuHomeCollections(language: Language) {
       href: card.href,
       price:
         card.id === "mochi"
-          ? "Signature 4 · AUD 35.00"
+          ? (language === "ko" ? "개당 AUD 8.00부터" : "From AUD 8.00 each")
           : RENEWAL_OFFERS[card.offers[0]].price === null ||
               RENEWAL_OFFERS[card.offers[0]].provisional
             ? ""

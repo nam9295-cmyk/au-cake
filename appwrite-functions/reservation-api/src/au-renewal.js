@@ -112,13 +112,15 @@ export const RENEWAL_OFFERS = Object.freeze({
     addon: true,
   }),
 });
-export const MOCHI_PRICES = Object.freeze([1000, 950, 900, 850]);
-export const MOCHI_NAMES = Object.freeze([
-  "Strawberry",
-  "Green Grape",
-  "Amande Chocolat",
-  "Butter & Sweet Bean",
-]);
+export const MOCHI_FLAVOURS = Object.freeze([
+  { id: "strawberry", en: "Strawberry", ko: "딸기", priceCents: 1000 },
+  { id: "green_grape", en: "Green Grape", ko: "청포도", priceCents: 950 },
+  { id: "mandarin", en: "Mandarin", ko: "귤", priceCents: 900 },
+  { id: "amande", en: "Amande Chocolat", ko: "아망드", priceCents: 950 },
+  { id: "butter_redbean", en: "Butter & Red Bean", ko: "앙버터", priceCents: 850 },
+  { id: "nama_chocolate", en: "Nama Chocolate", ko: "생초콜릿", priceCents: 800 },
+].map(Object.freeze));
+export const MOCHI_NAMES = Object.freeze(MOCHI_FLAVOURS.map((f) => f.en));
 const idPattern = /^[A-Za-z0-9_-]{1,64}$/;
 const allowedFields = new Set([
   "lineId",
@@ -129,7 +131,7 @@ const allowedFields = new Set([
   "chocolateType",
   "individualPackaging",
   "mode",
-  "counts",
+  "flavourCounts",
   "parentLineId",
 ]);
 export function normalizeRenewalLines(value) {
@@ -219,29 +221,24 @@ export function normalizeRenewalLines(value) {
       fail("INVALID_PACKAGING");
     line.individualPackaging = input.individualPackaging === true;
     if (p.family === "mochi") {
-      if (!["signature", "custom-four", "quantity"].includes(input.mode))
+      if (!["gift-four", "singles"].includes(input.mode))
         fail("INVALID_MOCHI_MODE");
+      const counts = input.flavourCounts;
+      if (!counts || Object.getPrototypeOf(counts) !== Object.prototype ||
+          Object.keys(counts).length !== MOCHI_FLAVOURS.length ||
+          MOCHI_FLAVOURS.some(({ id }) => !Object.hasOwn(counts, id) ||
+            !Number.isSafeInteger(counts[id]) || counts[id] < 0))
+        fail("INVALID_MOCHI_COUNTS");
       line.mode = input.mode;
-      line.counts =
-        input.counts ?? (input.mode === "signature" ? [1, 1, 1, 1] : null);
-      if (
-        !Array.isArray(line.counts) ||
-        line.counts.length !== 4 ||
-        line.counts.some((n) => !Number.isSafeInteger(n) || n < 0)
-      )
+      line.flavourCounts = Object.fromEntries(MOCHI_FLAVOURS.map(({ id }) => [id, counts[id]]));
+      const count = sum(Object.values(line.flavourCounts));
+      if ((input.mode === "gift-four" && count !== 4) || count === 0)
         fail("INVALID_MOCHI_COUNTS");
-      const count = sum(line.counts);
-      if (input.mode === "signature" && line.counts.some((n) => n !== 1))
-        fail("INVALID_MOCHI_COUNTS");
-      if ((input.mode === "custom-four" && count !== 4) || count === 0)
-        fail("INVALID_MOCHI_COUNTS");
-      if (input.mode === "custom-four" && line.counts.every((n) => n === 1))
-        fail("SIGNATURE_CHOICE_REQUIRED");
-      if (input.mode === "quantity" && input.quantity !== 1)
+      if (input.mode === "singles" && input.quantity !== 1)
         fail("INVALID_QUANTITY");
-      if (input.mode !== "quantity" && line.individualPackaging)
+      if (input.mode === "gift-four" && line.individualPackaging)
         fail("INVALID_PACKAGING");
-    } else if (input.mode !== undefined || input.counts !== undefined)
+    } else if (input.mode !== undefined || input.flavourCounts !== undefined)
       fail("INVALID_MOCHI_MODE");
     if (line.individualPackaging && !["mochi", "cupcake"].includes(p.family))
       fail("INVALID_PACKAGING");
@@ -285,15 +282,10 @@ export function priceRenewalOrder(
     let physicalQuantity = safeAmount(p.pieces * selection.quantity);
     let flavourTotals = [];
     if (p.family === "mochi") {
-      unitPriceCents =
-        selection.mode === "signature"
-          ? 3500
-          : sum(
-              selection.counts.map((n, i) => safeAmount(n * MOCHI_PRICES[i])),
-            );
-      flavourTotals = selection.counts.map((n) =>
-        safeAmount(n * selection.quantity),
-      );
+      unitPriceCents = sum(MOCHI_FLAVOURS.map(({ id, priceCents }) =>
+        safeAmount(selection.flavourCounts[id] * priceCents)));
+      flavourTotals = MOCHI_FLAVOURS.map(({ id }) =>
+        safeAmount(selection.flavourCounts[id] * selection.quantity));
       physicalQuantity = sum(flavourTotals);
     }
     if (unitPriceCents === null) fail("PRICE_UNAVAILABLE");
@@ -315,13 +307,13 @@ export function priceRenewalOrder(
         : 0,
       packagingUnitCents: selection.individualPackaging ? 50 : 0,
       packagingMode:
-        p.family === "mochi" && selection.mode !== "quantity"
+        p.family === "mochi" && selection.mode === "gift-four"
           ? "gift4"
           : selection.individualPackaging
             ? "individual"
             : "standard",
       giftBoxCount:
-        p.family === "mochi" && selection.mode !== "quantity"
+        p.family === "mochi" && selection.mode === "gift-four"
           ? selection.quantity
           : 0,
       discountPercent: p.addon ? 5 : 0,
@@ -419,13 +411,16 @@ export function renewalLineSummary(line) {
     s.size,
     s.finish === "basic" ? null : s.finish,
     s.chocolateType,
-    `${s.quantity} ${s.mode === "quantity" ? "selection" : "pack(s)"}`,
+    `${s.quantity} ${s.mode === "singles" ? "selection" : "pack(s)"}`,
     `${line.physicalQuantity} pieces`,
   ];
   if (s.mode)
     details.push(
       s.mode,
-      MOCHI_NAMES.map((name, i) => `${name} ${line.flavourTotals[i]}`).join(
+      ...(s.mode === "gift-four" ? ["Per box: " + MOCHI_FLAVOURS
+        .filter(({ id }) => s.flavourCounts[id] > 0)
+        .map(({ id, en }) => `${en} ${s.flavourCounts[id]}`).join(", ")] : []),
+      "Total: " + MOCHI_NAMES.map((name, i) => `${name} ${line.flavourTotals[i]}`).join(
         ", ",
       ),
     );

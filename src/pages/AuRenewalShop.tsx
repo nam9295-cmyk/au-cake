@@ -1,3 +1,4 @@
+import { MochiBuilder, MochiReselectionNotice } from "../components/MochiBuilder";
 import { AuPickupNotice } from "../components/AuPickupNotice";
 import { getCakeEditorialBySlug } from "../lib/cake-editorial";
 import { useEffect, useRef, useState } from "react";
@@ -12,7 +13,7 @@ import {
 import {
   RENEWAL_CONTRACT,
   RENEWAL_OFFERS,
-  MOCHI_NAMES,
+  MOCHI_FLAVOURS,
   priceRenewalOrder,
   type RenewalSelection,
 } from "../../appwrite-functions/reservation-api/src/au-renewal.js";
@@ -36,7 +37,7 @@ function displaySummary(
     labelFinish(line.selection.finish || "basic", ko),
     `${line.quantity}${ko ? "팩" : " pack(s)"} / ${line.physicalQuantity}${ko ? "개" : " pieces"}`,
     line.selection.mode
-      ? `${line.selection.mode} · ${line.flavourTotals.map((n, i) => `${ko ? ["딸기", "청포도", "아망드 쇼콜라", "앙버터"][i] : MOCHI_NAMES[i]} ${n}`).join(", ")}`
+      ? `${line.selection.mode === "gift-four" ? (ko ? "박스당 구성: " : "Per box: ") + MOCHI_FLAVOURS.filter(f => line.selection.flavourCounts![f.id]).map(f => `${ko ? f.ko : f.en} ${line.selection.flavourCounts![f.id]}`).join(", ") : (ko ? "단품" : "Singles")} · ${ko ? "맛별 총수량: " : "Flavour totals: "}${line.flavourTotals.map((n, i) => n ? `${ko ? MOCHI_FLAVOURS[i].ko : MOCHI_FLAVOURS[i].en} ${n}` : "").filter(Boolean).join(", ")}`
       : null,
     parent ? `${ko ? "추가상품:" : "Extra for:"} ${parent.productName}` : null,
     line.giftBoxCount
@@ -87,8 +88,8 @@ function NumberField({
     </label>
   );
 }
-function cardPrice(card: RenewalCard) {
-  if (card.id === "mochi") return "Signature 4 · AUD 35.00";
+function cardPrice(card: RenewalCard, ko = false) {
+  if (card.id === "mochi") return ko ? "개당 AUD 8.00부터" : "From AUD 8.00 each";
   const p = RENEWAL_OFFERS[card.offers[0]];
   return p.price === null || (p.provisional && !localPreview)
     ? ""
@@ -118,7 +119,7 @@ export function RenewalCollection({
                 <div className="renewal-photo-pending" aria-hidden="true" />
               )}
               <h2>{language === "ko" ? card.ko : card.en}</h2>
-              <p>{cardPrice(card)}</p>
+              <p>{cardPrice(card, language === "ko")}</p>
               {["mochi", "cookies"].includes(card.id) && (
                 <p>
                   {t(
@@ -148,10 +149,7 @@ function Product({ card }: { card: RenewalCard }) {
     [size, setSize] = useState(params.get("size") || "6in"),
     [finish, setFinish] = useState(params.get("finish") || "basic"),
     [chocolateType, setChocolate] = useState("dark");
-  const [quantity, setQuantity] = useState(1),
-    [packaging, setPackaging] = useState(false),
-    [mode, setMode] = useState("signature"),
-    [counts, setCounts] = useState([1, 1, 1, 1]);
+  const [quantity, setQuantity] = useState(1);
   const [packs, setPacks] = useState<
     Record<string, { quantity: number; finish: string; packaging: boolean }>
   >(() =>
@@ -168,8 +166,7 @@ function Product({ card }: { card: RenewalCard }) {
     language,
   );
   const p = RENEWAL_OFFERS[offerId],
-    isCup = p.family === "cupcake",
-    isMochi = p.family === "mochi";
+    isCup = p.family === "cupcake";
   useEffect(() => {
     const url = new URL(window.location.href);
     url.searchParams.set("offer", offerId);
@@ -194,16 +191,13 @@ function Product({ card }: { card: RenewalCard }) {
       {
         lineId: "preview-0",
         offerId,
-        quantity: isMochi && mode === "quantity" ? 1 : quantity,
+        quantity,
         finish,
-        individualPackaging: packaging,
+        individualPackaging: false,
         ...(p.sizes ? { size } : {}),
         ...(p.chocolate ||
         (offerId === "pound-cake" && finish === "extra-chocolate")
           ? { chocolateType }
-          : {}),
-        ...(isMochi
-          ? { mode, ...(mode === "signature" ? {} : { counts }) }
           : {}),
       },
     ];
@@ -223,9 +217,7 @@ function Product({ card }: { card: RenewalCard }) {
   } catch (e) {
     reason = e instanceof Error ? e.message : "INVALID_SELECTION";
   }
-  const same =
-    isMochi && mode === "custom-four" && counts.every((n) => n === 1);
-  function add(signature = false) {
+  function add() {
     try {
       const ids = new Map(
         selection.map((l) => [l.lineId, crypto.randomUUID()]),
@@ -234,9 +226,6 @@ function Product({ card }: { card: RenewalCard }) {
         ...l,
         lineId: ids.get(l.lineId)!,
         ...(l.parentLineId ? { parentLineId: ids.get(l.parentLineId)! } : {}),
-        ...(signature && l.offerId === "mochi"
-          ? { mode: "signature", counts: [1, 1, 1, 1] }
-          : {}),
       }));
       priceRenewalOrder(next, { localPreview });
       addRenewalLines(cart.renewalLines, next);
@@ -258,7 +247,7 @@ function Product({ card }: { card: RenewalCard }) {
         href={
           p.family === "cupcake" || p.family === "smore"
             ? "/celebrate"
-            : isMochi || !p.family
+            : !p.family
               ? "/chocolates"
               : "/cakes"
         }
@@ -449,93 +438,7 @@ function Product({ card }: { card: RenewalCard }) {
                   </select>
                 </label>
               )}
-              {isMochi && (
-                <>
-                  <label>
-                    {t("Choose your order", "주문 방식")}
-                    <select
-                      value={mode}
-                      onChange={(e) => {
-                        setMode(e.target.value);
-                        setPackaging(false);
-                        setQuantity(1);
-                      }}
-                    >
-                      <option value="signature">
-                        {t("Signature 4 · AUD 35", "시그니처 4구 · AUD 35")}
-                      </option>
-                      <option value="custom-four">
-                        {t("Choose your four flavours", "원하는 맛 4개 고르기")}
-                      </option>
-                      <option value="quantity">
-                        {t("Choose any quantity", "원하는 수량 주문")}
-                      </option>
-                    </select>
-                  </label>
-                  {mode === "signature" ? (
-                    <p>
-                      {t(
-                        "One of each flavour. Free four-piece gift box.",
-                        "네 맛 각 1개. 4구 기프트박스 무료.",
-                      )}
-                    </p>
-                  ) : (
-                    <>
-                      <div className="renewal-flavours">
-                        {MOCHI_NAMES.map((name, i) => (
-                          <NumberField
-                            key={name}
-                            label={
-                              ko
-                                ? ["딸기", "청포도", "아망드 쇼콜라", "앙버터"][
-                                    i
-                                  ]
-                                : name
-                            }
-                            value={counts[i]}
-                            onChange={(n) =>
-                              setCounts(counts.map((v, j) => (j === i ? n : v)))
-                            }
-                          />
-                        ))}
-                      </div>
-                      <p>
-                        {counts.reduce((a, b) => a + b, 0)}
-                        {t(" selected", "개 선택")}
-                        {mode === "custom-four"
-                          ? t(
-                              " / 4 · gift box included",
-                              " / 4 · 기프트박스 포함",
-                            )
-                          : ""}
-                      </p>
-                    </>
-                  )}
-                  {mode === "quantity" && (
-                    <label className="renewal-check">
-                      <input
-                        type="checkbox"
-                        checked={packaging}
-                        onChange={(e) => setPackaging(e.target.checked)}
-                      />
-                      {t(
-                        "Individual packaging · AUD 0.50 per mochi",
-                        "개별포장 · 모찌 개당 AUD 0.50",
-                      )}
-                    </label>
-                  )}
-                </>
-              )}
-              {!(isMochi && mode === "quantity") && (
-                <NumberField
-                  label={
-                    isMochi ? t("Boxes", "박스 수") : t("Quantity", "수량")
-                  }
-                  min={1}
-                  value={quantity}
-                  onChange={setQuantity}
-                />
-              )}
+              <NumberField label={t("Quantity", "수량")} min={1} value={quantity} onChange={setQuantity} />
             </>
           )}
           {isCup && (
@@ -569,19 +472,6 @@ function Product({ card }: { card: RenewalCard }) {
               ))}
             </fieldset>
           )}
-          {same && (
-            <div role="status">
-              <p>
-                {t(
-                  "This is the same selection as our Signature 4.",
-                  "시그니처 4구와 같은 구성이에요.",
-                )}
-              </p>
-              <button type="button" onClick={() => add(true)}>
-                {t("Add as AUD 35 Signature", "AUD 35 시그니처로 담기")}
-              </button>
-            </div>
-          )}
           {quote && (
             <div className="renewal-total" aria-live="polite">
               <p>
@@ -604,7 +494,7 @@ function Product({ card }: { card: RenewalCard }) {
                 )}
             </div>
           )}
-          {!quote && !same && (
+          {!quote && (
             <p role="status">
               {reason === "PRICE_UNAVAILABLE" || reason === "PROVISIONAL_PRICE"
                 ? t(
@@ -632,6 +522,28 @@ function Product({ card }: { card: RenewalCard }) {
     </main>
   );
 }
+function MochiProduct({ card }: { card: RenewalCard }) {
+  const { t, language } = useAuLanguage(), cart = useCart();
+  return <main className="renewal-page renewal-detail">
+    <a href="/chocolates">{t("Back to collection", "상품 목록")}</a>
+    <MochiReselectionNotice />
+    <div className="renewal-detail-grid">
+      <section>
+        {card.image && <img className="renewal-hero" src={card.image} alt={language === "ko" ? card.ko : card.en} />}
+        <h1>{language === "ko" ? card.ko : card.en}</h1>
+        <p>{t("Choose from six flavours · From AUD 8.00 each", "6가지 맛 선택 · 개당 AUD 8.00부터")}</p>
+        <p>{t("Pre-orders from 19 October 2026, subject to manual opening. Please allow at least 24 hours before collection.", "2026년 10월 19일 사전예약 시작 예정이며 운영자가 직접 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.")}</p>
+        <AuPickupNotice language={language} driver />
+        <p>{t("Please contact us about ingredients and allergies before ordering.", "원재료와 알레르기는 주문 전 문의해주세요.")}</p>
+      </section>
+      <MochiBuilder onSave={lines => {
+        const next = lines.map(l => ({ ...l, lineId: crypto.randomUUID() }));
+        addRenewalLines(cart.renewalLines, next);
+        cart.addRenewal(next);
+      }} />
+    </div>
+  </main>;
+}
 function Bag() {
   const { t, language } = useAuLanguage(),
     cart = useCart(),
@@ -640,7 +552,8 @@ function Bag() {
     [time, setTime] = useState(""),
     [busy, setBusy] = useState(false),
     [result, setResult] = useState(""),
-    [resultPickup, setResultPickup] = useState("");
+    [resultPickup, setResultPickup] = useState(""),
+    [editingMochi, setEditingMochi] = useState<string | null>(null);
   const [caps, setCaps] = useState({
     enabled: false,
     preordersEnabled: false,
@@ -665,7 +578,7 @@ function Bag() {
   const newProducts = lines.some((l) => RENEWAL_OFFERS[l.offerId].newProduct);
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (lock.current) return;
+    if (lock.current || editingMochi !== null) return;
     lock.current = true;
     setBusy(true);
     setError("");
@@ -720,6 +633,7 @@ function Bag() {
   return (
     <main className="renewal-page">
       <h1>{t("Your bag", "장바구니")}</h1>
+      <MochiReselectionNotice />
       {cart.lines.length > 0 && (
         <p role="status">
           {t(
@@ -746,7 +660,7 @@ function Bag() {
                       )
                     : RENEWAL_OFFERS[line.offerId].name}
                 </p>
-                {line.mode !== "quantity" && (
+                {line.mode !== "singles" && editingMochi !== line.lineId && (
                   <NumberField
                     min={1}
                     label={t("Quantity", "수량")}
@@ -775,11 +689,20 @@ function Bag() {
                     }}
                   />
                 )}
+                {line.offerId === "mochi" && (editingMochi === line.lineId ? (
+                  <MochiBuilder key={line.lineId} initial={line} disabled={busy} onCancel={() => setEditingMochi(null)} onSave={next => {
+                    if (lock.current) return;
+                    cart.replaceRenewal(line.lineId, next);
+                    requestId.current = crypto.randomUUID();
+                    setEditingMochi(null);
+                  }} />
+                ) : <button type="button" disabled={busy} onClick={() => setEditingMochi(line.lineId)}>{t("Edit mochi selection", "모찌 구성 수정")}</button>)}
                 <button
                   type="button"
                   disabled={busy}
                   onClick={() => {
                     cart.removeRenewal(line.lineId);
+                    if (editingMochi === line.lineId) setEditingMochi(null);
                     requestId.current = crypto.randomUUID();
                   }}
                 >
@@ -885,6 +808,7 @@ function Bag() {
               disabled={
                 busy ||
                 !caps.enabled ||
+                editingMochi !== null ||
                 !!provisional ||
                 (newProducts && !caps.preordersEnabled) ||
                 !quote ||
@@ -942,6 +866,7 @@ export function AuRenewalShop({ path }: { path: string }) {
       </main>
     );
   const card = renewalCardForPath(path, window.location.search);
+  if (card?.id === "mochi") return <MochiProduct card={card} />;
   return card ? (
     <Product key={card.id} card={card} />
   ) : (

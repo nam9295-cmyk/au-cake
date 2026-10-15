@@ -1,5 +1,5 @@
 import { marketConfig } from './lib/market'
-import { RENEWAL_CART_KEY, subtractRenewalSubmission, addRenewalLines, removeRenewalLine, parseRenewalCart } from './lib/renewal-cart'
+import { RENEWAL_CART_KEY, subtractRenewalSubmission, addRenewalLines, removeRenewalLine, inspectRenewalCart, replaceRenewalLines, MOCHI_RESELECTION_KEY } from './lib/renewal-cart'
 import { type RenewalSelection, priceRenewalOrder } from '../appwrite-functions/reservation-api/src/au-renewal.js'
 import {
   createContext,
@@ -24,6 +24,9 @@ import {
 import type { CakeDetailSelection } from './lib/cake-detail'
 
 type CartContextValue = {
+  mochiReselectionRequired: boolean
+  acknowledgeMochiReselection: () => void
+  replaceRenewal: (id: string, lines: RenewalSelection[]) => void
   renewalLines: readonly RenewalSelection[]
   addRenewal: (lines: RenewalSelection[]) => void
   removeRenewal: (id: string) => void
@@ -52,8 +55,30 @@ function getBrowserStorage(): StorageLike | null {
 }
 
 export function CartProvider({ children }: PropsWithChildren) {
-  const [renewalLines, setRenewalLines] = useState<RenewalSelection[]>(() => { if(marketConfig.market!=='AU')return [];try{return parseRenewalCart(getBrowserStorage()?.getItem(RENEWAL_CART_KEY)||null)}catch{return []} })
-  useEffect(() => { if(marketConfig.market!=='AU')return;try { getBrowserStorage()?.setItem(RENEWAL_CART_KEY, JSON.stringify({version:1,lines:renewalLines})) } catch { /* preserve in-memory cart */ } }, [renewalLines])
+  const [initialRenewal] = useState(() => {
+    if (marketConfig.market !== 'AU') return { lines: [] as RenewalSelection[], retiredMochi: [] as unknown[], acknowledged: true }
+    try {
+      const storage = getBrowserStorage()
+      const inspected = inspectRenewalCart(storage?.getItem(RENEWAL_CART_KEY) || null)
+      let archived = null
+      try { archived = JSON.parse(storage?.getItem(MOCHI_RESELECTION_KEY) || 'null') } catch { /* invalid archive does not discard the active cart */ }
+      const retiredMochi = [...(Array.isArray(archived?.lines) ? archived.lines : []), ...inspected.retiredMochi]
+      return { ...inspected, retiredMochi, acknowledged: inspected.retiredMochi.length ? false : archived?.acknowledged === true }
+    } catch { return { lines: [] as RenewalSelection[], retiredMochi: [] as unknown[], acknowledged: true } }
+  })
+  const [renewalLines, setRenewalLines] = useState<RenewalSelection[]>(initialRenewal.lines)
+  const [mochiReselectionRequired, setMochiReselectionRequired] = useState(initialRenewal.retiredMochi.length > 0 && !initialRenewal.acknowledged)
+  const acknowledgeMochiReselection = useCallback(() => setMochiReselectionRequired(false), [])
+  useEffect(() => {
+    if (marketConfig.market !== 'AU') return
+    try {
+      const storage = getBrowserStorage()
+      // Archive retired local selections before replacing the active cart. No automatic conversion.
+      if (initialRenewal.retiredMochi.length) storage?.setItem(MOCHI_RESELECTION_KEY, JSON.stringify({version:1,lines:initialRenewal.retiredMochi,acknowledged:!mochiReselectionRequired}))
+      storage?.setItem(RENEWAL_CART_KEY, JSON.stringify({version:1,lines:renewalLines}))
+    } catch { /* retain the original storage if archiving is unavailable */ }
+  }, [renewalLines, initialRenewal, mochiReselectionRequired])
+  const replaceRenewal = useCallback((id: string, incoming: RenewalSelection[]) => setRenewalLines(current => replaceRenewalLines(current, id, incoming)), [])
   const addRenewal = useCallback((incoming: RenewalSelection[]) => { setRenewalLines(current => addRenewalLines(current, incoming)) }, [])
   const removeRenewal = useCallback((id: string) => setRenewalLines(current => removeRenewalLine(current,id)), [])
   const updateRenewal = useCallback((id: string, quantity: number) => setRenewalLines(current => { const next=current.map(l=>l.lineId===id?{...l,quantity}:l);priceRenewalOrder(next,{localPreview:true});return next }), [])
@@ -88,7 +113,7 @@ export function CartProvider({ children }: PropsWithChildren) {
   const clear = useCallback(() => setLines([]), [])
   const itemCount = useMemo(() => getCartTotalQuantity(lines) + renewalLines.reduce((n,l)=>n+l.quantity,0), [lines, renewalLines])
   const value = useMemo<CartContextValue>(() => ({
-    renewalLines, addRenewal, removeRenewal, updateRenewal, clearRenewal, removeRenewalSubmitted,
+    mochiReselectionRequired, acknowledgeMochiReselection, replaceRenewal, renewalLines, addRenewal, removeRenewal, updateRenewal, clearRenewal, removeRenewalSubmitted,
     lines,
     itemCount,
     add,
@@ -96,7 +121,7 @@ export function CartProvider({ children }: PropsWithChildren) {
     remove,
     removeSubmitted,
     clear,
-  }), [lines, itemCount, add, update, remove, removeSubmitted, clear, renewalLines, addRenewal, removeRenewal, updateRenewal, clearRenewal, removeRenewalSubmitted])
+  }), [lines, itemCount, add, update, remove, removeSubmitted, clear, mochiReselectionRequired, acknowledgeMochiReselection, replaceRenewal, renewalLines, addRenewal, removeRenewal, updateRenewal, clearRenewal, removeRenewalSubmitted])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

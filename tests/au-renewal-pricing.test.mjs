@@ -26,17 +26,31 @@ test('brownie cupcake finish differs from gateau; packaging pools selected cupca
   assert.throws(() => price([line('brownie-cupcakes-6',1,{finish:'chocolate-buttercream'})]),/INVALID_FINISH/)
   assert.equal(price([line('cupcake-half-dozen',1,{finish:'chocolate-buttercream'})]).totalPriceCents,4100)
 })
-test('mochi modes, explicit signature transition, physical packaging and no business cap', () => {
-  assert.equal(price([line('mochi',2,{mode:'signature'})]).totalPriceCents,7000)
-  assert.throws(() => price([line('mochi',1,{mode:'custom-four',counts:[1,1,1,1]})]),/SIGNATURE_CHOICE_REQUIRED/)
-  assert.equal(price([line('mochi',1,{mode:'custom-four',counts:[2,2,0,0]})]).totalPriceCents,3900)
-  const q = price([line('mochi',1,{mode:'quantity',counts:[2,1,1,1],individualPackaging:true})])
-  assert.equal(q.totalPriceCents,4950)
-  assert.equal(q.lines[0].physicalQuantity,5)
-  assert.equal(price([line('mochi',1,{mode:'quantity',counts:[1,1,1,1],individualPackaging:true})]).totalPriceCents,3900)
-  assert.equal(price([line('mochi',1,{mode:'quantity',counts:[200,0,0,0],individualPackaging:true})]).totalPriceCents,210000)
-  assert.throws(() => price([line('mochi',2,{mode:'quantity',counts:[1,0,0,0]})]),/INVALID_QUANTITY/)
-  for(const n of [-1,0.5,Infinity,NaN,Number.MAX_SAFE_INTEGER]) assert.throws(() => price([line('mochi',1,{mode:'quantity',counts:[n,0,0,0]})]))
+const flavours = (values = {}) => ({strawberry:0,green_grape:0,mandarin:0,amande:0,butter_redbean:0,nama_chocolate:0,...values})
+const mochi = (id, mode, values, quantity=1, individualPackaging=false) => ({lineId:id,offerId:'mochi',mode,flavourCounts:flavours(values),quantity,individualPackaging})
+test('six-flavour gift boxes and singles keep compositions and charge only selected physical packaging',()=>{
+ for(const [values,expected] of [[{nama_chocolate:4},3200],[{strawberry:4},4000],[{strawberry:1,green_grape:1,amande:1,nama_chocolate:1},3700],[{mandarin:2,butter_redbean:2},3500]]){
+  const q=price([mochi('a','gift-four',values)],{})
+  assert.equal(q.totalPriceCents,expected);assert.equal(q.lines[0].giftBoxCount,1);assert.equal(q.lines[0].physicalQuantity,4);assert.equal(q.individualPackagingFeeCents,0)
+ }
+ const mixed=price([mochi('a','gift-four',{strawberry:1,green_grape:1,amande:1,nama_chocolate:1},2),mochi('b','gift-four',{mandarin:2,butter_redbean:2}),mochi('c','singles',{nama_chocolate:3},1,true)],{})
+ assert.equal(mixed.policyVersion,'au-renewal.2026-10.v2');assert.equal(mixed.totalPriceCents,13450)
+ assert.deepEqual(mixed.lines.map(l=>l.giftBoxCount),[2,1,0]);assert.deepEqual(mixed.lines.map(l=>l.physicalQuantity),[8,4,3])
+ assert.deepEqual(mixed.lines[0].flavourTotals,[2,2,0,2,0,2]);assert.equal(mixed.individualPackagingFeeCents,150)
+ for(const n of [4,8,200]){
+  const q=price([mochi('a','singles',{strawberry:n},1,true)],{})
+  assert.equal(q.totalPriceCents,n*1050);assert.equal(q.lines[0].giftBoxCount,0);assert.equal(q.individualPackagingFeeCents,n*50)
+ }
+})
+test('mochi rejects legacy modes, invalid counts, packaging combinations, overflow and client prices',()=>{
+ for(const mode of ['signature','custom-four','quantity'])assert.throws(()=>price([line('mochi',1,{mode,counts:[1,1,1,1]})]))
+ for(const n of [0,3,5])assert.throws(()=>price([mochi('a','gift-four',{strawberry:n})]))
+ assert.throws(()=>price([mochi('a','singles',{})]))
+ assert.throws(()=>price([mochi('a','singles',{strawberry:1},2)]),/INVALID_QUANTITY/)
+ assert.throws(()=>price([mochi('a','gift-four',{strawberry:4},1,true)]),/INVALID_PACKAGING/)
+ for(const n of [-1,0.5,Infinity,NaN,Number.MAX_SAFE_INTEGER])assert.throws(()=>price([mochi('a','singles',{strawberry:n})]))
+ for(const extra of [{unknown:1},{strawberry:'1'}])assert.throws(()=>price([mochi('a','singles',extra)]))
+ for(const key of ['price','total','giftBoxCount','packagingFee'])assert.throws(()=>price([{...mochi('a','gift-four',{strawberry:4}),[key]:0}]))
 })
 test('only four cake parents qualify for separately counted five percent addons', () => {
   assert.equal(price([line('pave-cake',1,{size:'6in'}),{...line('addon-pave',1,{parentLineId:'a'}),lineId:'b'}]).totalPriceCents,8640)
@@ -66,13 +80,13 @@ test('packaging exemption is before coupons and excludes unpacked cupcakes and a
  assert.equal(quote.subtotalCents,10000);assert.equal(quote.individualPackagingFeeCents,0);assert.equal(quote.totalPriceCents,9000)
  const unselected=price([a,{...b,individualPackaging:false}])
  assert.equal(unselected.individualPackagingFeeCents,300)
- const mixed=price([a,{...line('mochi',1,{mode:'quantity',counts:[10,0,0,0],individualPackaging:true}),lineId:'m'}])
+ const mixed=price([a,mochi('m','singles',{strawberry:10},1,true)])
  assert.equal(mixed.individualPackagingFeeCents,800)
 })
 
 test('string field coercion cannot bypass provisional or preorder policy boundaries',()=>{
  for(const [key,value]of [['lineId',['a']],['offerId',['mochi']],['parentLineId',['a']],['size',['8in']],['finish',['basic']]]) {
-  const base=key==='offerId'?line('mochi',1,{mode:'signature'}):line('brownie-whole',1,{size:'6in'})
+  const base=key==='offerId'?mochi('a','gift-four',{strawberry:4}):line('brownie-whole',1,{size:'6in'})
   assert.throws(()=>price([{...base,[key]:value}],{}),undefined,key)
  }
 })
