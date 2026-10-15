@@ -1,6 +1,6 @@
 {
   "document_version": "v0.7 + final pickup2026-10-14 + confirmed brownie prices2026-10-15 + six-flavour mochi2026-10-15",
-  "checked_at_date": "2026-10-15",
+  "checked_at_date": "2026-10-16",
   "decision_D02": "RESOLVED",
   "pickup_policy_version": "au-renewal-pickup.2026-10-14.v2",
   "timezone": "Australia/Sydney",
@@ -14,7 +14,7 @@
   "closing_slot_included": true,
   "new_product_elapsed_lead_hours": 24,
   "runtime_flags_changed": false,
-  "renewal_tests_passed": 46,
+  "renewal_tests_passed": 48,
   "kr_boundary_tests_passed": 6,
   "verification": [
     "npm run test:renewal passed",
@@ -104,5 +104,30 @@
     "production_changed": false,
     "browser_reservation_submitted": false,
     "physical_device_screenreader_audit": "not performed"
+  },
+  "production_launch_20261016": {
+    "status": "blocked_before_remote_mutation",
+    "cloudflare_project": "au-cake-next",
+    "previous_pages_deployment": "e8ec9daf-0150-4cef-9579-d78621ea4e58",
+    "production_branch": "main",
+    "previous_source_sha": "079083664e8919a2d65abb347010766106633b95",
+    "api_previous_deployment": "6abcb839d5640c83d30a",
+    "notification_previous_deployment": "6abcb73e4fa12c803750",
+    "reminder_previous_deployment": "6abcb727d0aa9411ed2d",
+    "legacy_new_mode": "compat (visual check; no save)",
+    "production_renewal_health": "404; not deployed",
+    "backup_verified": false,
+    "remote_flags_changed": false,
+    "git_pushed": false,
+    "production_changed": false,
+    "local_preorder_date": "2026-10-16",
+    "user_approved_mochi_product_information": true,
+    "runtime_imports": "API and Notification Node22; Reminder Node16",
+    "reminder_node16_tests": "passed",
+    "local_tests_lint_au_kr_builds": "passed",
+    "awaiting": [
+      "Verified restorable DB backup/checkpoint"
+    ],
+    "console_admin_access_verified": true
   }
 }
