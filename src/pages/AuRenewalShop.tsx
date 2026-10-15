@@ -126,15 +126,16 @@ export function RenewalCollection({
                   height="600"
                 />
               ) : (
-                <div className="renewal-photo-pending" aria-hidden="true" />
+                <ProductPhoto label={language === "ko" ? card.ko : card.en} />
               )}
               <h2>{language === "ko" ? card.ko : card.en}</h2>
               <p>{cardPrice(card, language === "ko")}</p>
+              {card.id === "brownie-cupcakes" && <p>{t("Reservations awaiting price approval", "가격 승인 후 예약 안내")}</p>}
               {["mochi", "cookies"].includes(card.id) && (
                 <p>
                   {t(
-                    "Pre-orders from 19 October 2026",
-                    "2026년 10월 19일 사전예약 시작",
+                    card.id === "mochi" ? "Pre-orders from 16 October 2026 · subject to manual opening" : "Reservations awaiting price approval",
+                    card.id === "mochi" ? "2026년 10월 16일부터 사전예약 · 운영자 수동 개시" : "가격 확정 후 예약 안내",
                   )}
                 </p>
               )}
@@ -668,8 +669,8 @@ function Product({ card }: { card: RenewalCard }) {
           {p.newProduct && (
             <p>
               {t(
-                "Pre-orders from 19 October 2026, subject to manual opening. Please allow at least 24 hours before collection.",
-                "2026년 10월 19일 사전예약 시작 예정이며 운영자가 직접 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.",
+                "Reservations will open after the sale price is approved. Please allow at least 24 hours before collection.",
+                "판매가 확정 후 예약 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.",
               )}
             </p>
           )}
@@ -724,10 +725,15 @@ function MochiProduct({ card }: { card: RenewalCard }) {
           </p>
           <p>
             {t(
-              "Pre-orders from 19 October 2026, subject to manual opening. Please allow at least 24 hours before collection.",
-              "2026년 10월 19일 사전예약 시작 예정이며 운영자가 직접 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.",
+              "Pre-orders from 16 October 2026, subject to readiness checks and manual opening. Please allow at least 24 hours before collection.",
+              "2026년 10월 16일부터 준비 확인 후 운영자가 예약 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.",
             )}
           </p>
+          <div className="mochi-product-information">
+            <p>{t("Approx. 80–100g each; weight varies with the fruit.", "개당 약 80–100g이며 과일 상태에 따라 중량이 달라집니다.")}</p>
+            <p>{t("Keep refrigerated. Best enjoyed on the day. Recommended refrigerated storage: up to 3 days.", "냉장 보관해주세요. 당일 섭취를 권장하며, 냉장 보관은 최대 3일 권장합니다.")}</p>
+                      <p>{t("Contains milk, almonds and soy. Made in a facility that also handles wheat, eggs, sesame and peanuts.", "우유·아몬드·대두 함유. 밀·계란·참깨·땅콩을 취급하는 시설에서 함께 제조합니다.")}</p>
+          </div>
           <MochiBuilder
             sticky
             onSave={(lines) => {

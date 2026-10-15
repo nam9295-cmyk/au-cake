@@ -81,9 +81,9 @@ export function ProductPhoto({
         <div
           className="renewal-photo-slot"
           role="img"
-          aria-label={`${label} · ${t("Photo coming soon", "사진 준비 중")}`}
+          aria-label={`${label} · ${t("PHOTO COMING SOON", "사진 준비 중")}`}
         >
-          <span>{t("Photo coming soon", "사진 준비 중")}</span>
+          <span>{t("PHOTO COMING SOON", "사진 준비 중")}</span>
         </div>
       )}
     </div>

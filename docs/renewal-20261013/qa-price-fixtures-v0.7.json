@@ -863,7 +863,7 @@
     },
     {
       "id": "Q-DATE",
-      "preorder_date": "2026-10-19",
+      "preorder_date": "2026-10-16",
       "weekday": "Monday",
       "timezone": "Australia/Sydney",
       "first_pickup_date": null,
@@ -1287,5 +1287,11 @@
     "closing_slot_included": true,
     "new_product_elapsed_lead_hours": 24,
     "auto_activation": false
+  },
+  "launch_20261016": {
+    "mochi_preorder_date": "2026-10-16",
+    "manual_activation_required": true,
+    "cookie_ordering": "blocked: price missing",
+    "brownie_cupcake_ordering": "blocked: provisional price"
   }
 }

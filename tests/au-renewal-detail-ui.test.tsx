@@ -68,3 +68,21 @@ test("pack choices reserve a separate photo area for each sales configuration", 
     assert.equal((html.match(/class="renewal-option-photo"/g) || []).length, card.offers.length, card.id);
   }
 });
+
+test("Oct16 product information distinguishes missing photos from unavailable offers", () => {
+ const mochi=render('/chocolates/chocolate-mochi');
+ assert.match(mochi,/16 October 2026/);
+ assert.doesNotMatch(mochi,/19 October 2026/);
+ assert.match(mochi,/PHOTO COMING SOON/);
+ assert.match(mochi,/80[–-]100g/);
+ assert.match(mochi,/refrigerated/i);
+ assert.match(mochi,/3 days/);
+ assert.match(mochi,/Contains milk, almonds and soy/);
+ assert.match(mochi,/wheat, eggs, sesame and peanuts/);
+ const korean=render('/chocolates/chocolate-mochi','ko');
+ assert.match(korean,/80[–-]100g/);
+ assert.match(korean,/최대 3일/);
+ const cookies=render('/cakes/levain-cookies');
+ assert.match(cookies,/sale price is approved/);
+ assert.doesNotMatch(cookies,/19 October 2026/);
+});

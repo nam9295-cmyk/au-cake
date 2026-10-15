@@ -46,7 +46,7 @@ export function renewalSeoPages(siteUrl, content) {
             : {}),
         },
       ],
-      fallbackHtml: `<main><nav>${nav}</nav><h1>${item.en.replace("&", "&amp;")}</h1><p>${description}</p>${list.map((c) => `<p><a href="${c.href}">${c.en}</a></p>`).join("")}<p>Cookie and mochi pre-orders from 19 October 2026, subject to manual opening. Minimum 24 hours preparation.</p></main>`,
+      fallbackHtml: `<main><nav>${nav}</nav><h1>${item.en.replace("&", "&amp;")}</h1><p>${description}</p>${list.map((c) => `<p><a href="${c.href}">${c.en}</a></p>`).join("")}<p>Mochi pre-orders from 16 October 2026, subject to readiness checks and manual opening. Minimum 24 hours preparation. Cookie reservations await price approval.</p></main>`,
     };
   }
   if (content) {
@@ -108,7 +108,7 @@ export function renderRenewalLlms(siteUrl, additionalEntries = []) {
     "",
     "Official Instagram: https://www.instagram.com/verygood_syd/",
     `Made-to-order cakes and treats with chocolatier-grade couverture chocolate. Pickup in Melrose Park, Sydney. ${renewalPickupCopy("en").hours} Requests are confirmed by our team after availability and payment checks.`,
-    "Cookie and mochi pre-orders from 19 October 2026, subject to manual opening, with at least 24 hours preparation.",
+    "Mochi pre-orders from 16 October 2026, subject to readiness checks and manual opening, with at least 24 hours preparation. Cookie reservations await price approval.",
     ...RENEWAL_NAV.map((n) => `- ${n.en}: ${siteUrl}${n.href}`),
     ...Object.entries(RENEWAL_CARDS).flatMap(([category, cards]) => [
       "",

@@ -10,7 +10,7 @@ import {
   zonedDateParts,
   addDaysToDateValue,
 } from "./reservation-input-policy.js";
-export const RENEWAL_PREORDER_DATE = "2026-10-19";
+export const RENEWAL_PREORDER_DATE = "2026-10-16";
 // D02 resolved: approved hours are fixed; activation flags do not redefine the schedule.
 export function validateRenewalPickup(
   lines,

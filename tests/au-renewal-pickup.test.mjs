@@ -84,7 +84,7 @@ test("D02 is fixed independently of obsolete weekend approval flag and does not 
         mochi,
         "2026-10-24",
         "09:00",
-        new Date("2026-10-18T12:59:59Z"),
+        new Date("2026-10-15T12:59:59Z"),
         open,
       ),
     /PREORDER_NOT_OPEN/,
@@ -195,4 +195,13 @@ test("public copy and service slots derive from the same approved week", () => {
       renewalPickupSlots(cake, date, now),
     );
   }
+});
+
+test("Oct16 launch remains manual and intersects actual24h with approved pickup slots", () => {
+  const receipt = new Date("2026-10-15T23:20:00Z"); // Friday Oct16 10:20 Sydney
+  assert.throws(() => validateRenewalPickup(mochi, "2026-10-17", "10:30", receipt), /PREORDER_NOT_OPEN/);
+  assert.doesNotThrow(() => validateRenewalPickup(mochi, "2026-10-17", "10:30", receipt, open));
+  assert.throws(() => validateRenewalPickup(mochi, "2026-10-17", "10:15", receipt, open), /PICKUP_TIME_TOO_SOON/);
+  assert.throws(() => validateRenewalPickup(mochi, "2026-10-16", "16:00", receipt, open), /PICKUP_TIME_TOO_SOON/);
+  assert.deepEqual(renewalPickupSlots(mochi,"2026-10-17",receipt,open),["10:30","10:45","11:00","11:15","11:30","11:45","12:00"]);
 });
