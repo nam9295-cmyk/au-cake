@@ -1,4 +1,5 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { OptionButton } from './components/ProductOptionControls'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
 import poundHeroImg from './assets/hero-cake-3.webp'
 import cupcakeHeroImg from './assets/cupcake-hero.webp'
@@ -334,27 +335,6 @@ type CakeDetailPageProps = {
   onOpenCake: (slug: string) => void
   onAddToOrder: (selection: CakeDetailSelection) => void
   onViewOrder: () => void
-}
-
-function OptionButton({
-  active,
-  children,
-  onClick,
-}: {
-  active: boolean
-  children: ReactNode
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      className={`cake-detail-option${active ? ' is-selected' : ''}`}
-      aria-pressed={active}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  )
 }
 
 function OptionPhotoPreview({

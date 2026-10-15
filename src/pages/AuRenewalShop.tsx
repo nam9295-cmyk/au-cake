@@ -1,4 +1,24 @@
-import { MochiBuilder, MochiReselectionNotice } from "../components/MochiBuilder";
+import {
+  OptionButton,
+  QuantityStepper,
+  ProductPhoto,
+  PurchaseBar,
+} from "../components/ProductOptionControls";
+import { AuPaveGallery } from "../components/AuPaveGallery";
+import { formatCurrentCakeSizeLabel } from "../lib/cake-serving";
+import gateauBasic from "../assets/options/gateau-basic.webp";
+import gateauChocolate from "../assets/options/gateau-onchocolate.webp";
+import gateauVanilla from "../assets/options/gateau-vanilla.webp";
+import cup6Basic from "../assets/options/cupcake-6-basic.webp";
+import cup6Vanilla from "../assets/options/cupcake-6-vanilla.webp";
+import cup6Chocolate from "../assets/options/cupcake-6-chocolate.webp";
+import cup12Basic from "../assets/options/cupcake-12-basic.webp";
+import cup12Vanilla from "../assets/options/cupcake-12-vanilla.webp";
+import cup12Chocolate from "../assets/options/cupcake-12-chocolate.webp";
+import {
+  MochiBuilder,
+  MochiReselectionNotice,
+} from "../components/MochiBuilder";
 import { AuPickupNotice } from "../components/AuPickupNotice";
 import { getCakeEditorialBySlug } from "../lib/cake-editorial";
 import { useEffect, useRef, useState } from "react";
@@ -37,7 +57,24 @@ function displaySummary(
     labelFinish(line.selection.finish || "basic", ko),
     `${line.quantity}${ko ? "팩" : " pack(s)"} / ${line.physicalQuantity}${ko ? "개" : " pieces"}`,
     line.selection.mode
-      ? `${line.selection.mode === "gift-four" ? (ko ? "박스당 구성: " : "Per box: ") + MOCHI_FLAVOURS.filter(f => line.selection.flavourCounts![f.id]).map(f => `${ko ? f.ko : f.en} ${line.selection.flavourCounts![f.id]}`).join(", ") : (ko ? "단품" : "Singles")} · ${ko ? "맛별 총수량: " : "Flavour totals: "}${line.flavourTotals.map((n, i) => n ? `${ko ? MOCHI_FLAVOURS[i].ko : MOCHI_FLAVOURS[i].en} ${n}` : "").filter(Boolean).join(", ")}`
+      ? `${
+          line.selection.mode === "gift-four"
+            ? (ko ? "박스당 구성: " : "Per box: ") +
+              MOCHI_FLAVOURS.filter((f) => line.selection.flavourCounts![f.id])
+                .map(
+                  (f) =>
+                    `${ko ? f.ko : f.en} ${line.selection.flavourCounts![f.id]}`,
+                )
+                .join(", ")
+            : ko
+              ? "단품"
+              : "Singles"
+        } · ${ko ? "맛별 총수량: " : "Flavour totals: "}${line.flavourTotals
+          .map((n, i) =>
+            n ? `${ko ? MOCHI_FLAVOURS[i].ko : MOCHI_FLAVOURS[i].en} ${n}` : "",
+          )
+          .filter(Boolean)
+          .join(", ")}`
       : null,
     parent ? `${ko ? "추가상품:" : "Extra for:"} ${parent.productName}` : null,
     line.giftBoxCount
@@ -60,36 +97,9 @@ const labelFinish = (f: string, ko: boolean) =>
     "chocolate-buttercream": ko ? "초코 버터크림" : "Chocolate Buttercream",
     "extra-chocolate": ko ? "초콜릿 추가" : "Extra Chocolate",
   })[f] || f;
-function NumberField({
-  label,
-  value,
-  onChange,
-  min = 0,
-}: {
-  label: string;
-  value: number;
-  onChange: (n: number) => void;
-  min?: number;
-}) {
-  return (
-    <label className="renewal-number">
-      {label}
-      <input
-        type="number"
-        min={min}
-        step="1"
-        inputMode="numeric"
-        value={value}
-        onChange={(e) => {
-          const n = Number(e.target.value);
-          if (Number.isSafeInteger(n) && n >= min) onChange(n);
-        }}
-      />
-    </label>
-  );
-}
 function cardPrice(card: RenewalCard, ko = false) {
-  if (card.id === "mochi") return ko ? "개당 AUD 8.00부터" : "From AUD 8.00 each";
+  if (card.id === "mochi")
+    return ko ? "개당 AUD 8.00부터" : "From AUD 8.00 each";
   const p = RENEWAL_OFFERS[card.offers[0]];
   return p.price === null || (p.provisional && !localPreview)
     ? ""
@@ -140,7 +150,7 @@ function Product({ card }: { card: RenewalCard }) {
     ko = language === "ko";
   const cart = useCart(),
     [error, setError] = useState(""),
-    [added, setAdded] = useState(false);
+    [addedSelection, setAddedSelection] = useState("");
   const params = new URLSearchParams(window.location.search);
   const initialOffer = card.offers.includes(params.get("offer") || "")
     ? params.get("offer")!
@@ -217,6 +227,63 @@ function Product({ card }: { card: RenewalCard }) {
   } catch (e) {
     reason = e instanceof Error ? e.message : "INVALID_SELECTION";
   }
+  const selectionKey = JSON.stringify(selection);
+  const added = addedSelection === selectionKey;
+  function finishImage(id: string, f: string) {
+    const images: Record<string, Record<string, string>> = {
+      "pound-cake": {
+        basic: gateauBasic,
+        "extra-chocolate": gateauChocolate,
+        "vanilla-fresh-cream": gateauVanilla,
+      },
+      "cupcake-half-dozen": {
+        basic: cup6Basic,
+        "vanilla-fresh-cream": cup6Vanilla,
+        "chocolate-buttercream": cup6Chocolate,
+      },
+      "cupcake-dozen": {
+        basic: cup12Basic,
+        "vanilla-fresh-cream": cup12Vanilla,
+        "chocolate-buttercream": cup12Chocolate,
+      },
+    };
+    return images[id]?.[f];
+  }
+  const extras = [
+    {
+      id: "addon-pave",
+      en: "Pavé Chocolate · 100g",
+      ko: "파베 초콜릿 · 100g",
+      image: "/products/chocolates/pave-heart-100g.png",
+    },
+    {
+      id: "addon-cream",
+      en: "Vanilla Cream Box · 100g",
+      ko: "생크림 박스 · 100g",
+      image: "",
+    },
+    {
+      id: "addon-almond",
+      en: "Almond Chocolate · 80g",
+      ko: "아몬드 초콜릿 · 80g",
+      image: "/products/chocolates/almond-chocoball.webp",
+    },
+    {
+      id: "addon-eiffel",
+      en: "Eiffel Tower · 6 pieces",
+      ko: "에펠탑 · 6피스",
+      image: "/products/chocolates/eiffel-tower-chocolate.webp",
+    },
+  ];
+  const packLabel = (id: string) => {
+    const o = RENEWAL_OFFERS[id];
+    if (o.bundle) return t("5 + 1 packs", "5 + 1팩");
+    if (id.includes("black-tub"))
+      return t("Black tub · 2 × 80g", "블랙 통 · 80g × 2");
+    if (id.includes("80g")) return "80g";
+    if (id.includes("100g")) return t("Heart tin · 100g", "하트 통 · 100g");
+    return `${o.pieces}${t(" pieces", "개")}`;
+  };
   function add() {
     try {
       const ids = new Map(
@@ -230,7 +297,7 @@ function Product({ card }: { card: RenewalCard }) {
       priceRenewalOrder(next, { localPreview });
       addRenewalLines(cart.renewalLines, next);
       cart.addRenewal(next);
-      setAdded(true);
+      setAddedSelection(selectionKey);
       setError("");
     } catch {
       setError(
@@ -242,66 +309,36 @@ function Product({ card }: { card: RenewalCard }) {
     }
   }
   return (
-    <main className="renewal-page renewal-detail">
-      <a
-        href={
-          p.family === "cupcake" || p.family === "smore"
-            ? "/celebrate"
-            : !p.family
-              ? "/chocolates"
-              : "/cakes"
-        }
-      >
-        {t("Back to collection", "상품 목록")}
-      </a>
-      <div className="renewal-detail-grid">
-        <section>
-          {card.image && (
-            <img
-              className="renewal-hero"
-              src={card.image}
-              alt={ko ? card.ko : card.en}
-            />
+    <main className="renewal-page renewal-detail au-product-detail">
+      <div className="au-pave-hero">
+        <div className="renewal-product-media">
+          {card.id === "pave" ? (
+            <AuPaveGallery />
+          ) : (
+            <ProductPhoto src={card.image} label={ko ? card.ko : card.en} />
           )}
-          <h1>{ko ? card.ko : card.en}</h1>
-          <AuPickupNotice language={language} driver />
-          {p.newProduct && (
+        </div>
+        <section className="renewal-options au-pave-purchase">
+          <a
+            href={
+              p.family === "cupcake" || p.family === "smore"
+                ? "/celebrate"
+                : !p.family
+                  ? "/chocolates"
+                  : "/cakes"
+            }
+          >
+            {t("Back to collection", "상품 목록")}
+          </a>
+          <header>
+            <h1>{ko ? card.ko : card.en}</h1>
             <p>
               {t(
-                "Pre-orders from 19 October 2026. Please allow at least 24 hours before collection.",
-                "2026년 10월 19일 사전예약 시작. 픽업까지 최소 24시간이 필요합니다.",
+                "Made to order. Availability is confirmed after your request.",
+                "주문 제작 상품입니다. 신청 후 가능 여부를 확인해드립니다.",
               )}
             </p>
-          )}
-          {card.id === "cookies" && (
-            <p>
-              {t(
-                "3 Chocolate Chip + 3 Double Chocolate in each box.",
-                "한 박스에 초코칩 3개 + 더블초코 3개.",
-              )}
-            </p>
-          )}
-          <p>
-            {t(
-              "Made to order. Availability is confirmed after your request.",
-              "주문 제작 상품입니다. 신청 후 가능 여부를 확인해드립니다.",
-            )}
-          </p>
-          {editorial && (
-            <p>
-              {"ingredientsAndAllergens" in editorial
-                ? editorial.ingredientsAndAllergens.allergens
-                : editorial.ingredients.allergens}
-            </p>
-          )}
-          <p>
-            {t(
-              "Please contact us about ingredients and allergies before ordering.",
-              "원재료와 알레르기는 주문 전 문의해주세요.",
-            )}
-          </p>
-        </section>
-        <section className="renewal-options">
+          </header>
           {card.id.startsWith("brownie-") && p.family === "cake" && (
             <nav className="renewal-inline">
               <a href="/cakes/brownie-cheesecake?form=whole">
@@ -313,72 +350,105 @@ function Product({ card }: { card: RenewalCard }) {
             </nav>
           )}
           {!isCup && card.offers.length > 1 && (
-            <label>
-              {t("Pack", "구성")}
-              <select
-                value={offerId}
-                onChange={(e) => {
-                  setOffer(e.target.value);
-                  setFinish("basic");
-                }}
-              >
+            <fieldset className="au-pave-fieldset">
+              <legend>{t("Choose your pack", "구성 선택")}</legend>
+              <div className="renewal-option-grid">
                 {card.offers.map((id) => (
-                  <option key={id} value={id}>
-                    {RENEWAL_OFFERS[id].name} ·{" "}
-                    {money(RENEWAL_OFFERS[id].price!)}
-                  </option>
+                  <OptionButton
+                    key={id}
+                    active={offerId === id}
+                    onClick={() => {
+                      setOffer(id);
+                      setFinish("basic");
+                    }}
+                  >
+                    <ProductPhoto option src={id === card.offers[0] ? card.image : undefined} label={packLabel(id)} />
+                    <strong>{packLabel(id)}</strong>
+                    <span className="au-pave-option-price">
+                      {money(RENEWAL_OFFERS[id].price!)}
+                    </span>
+                  </OptionButton>
                 ))}
-              </select>
-            </label>
+              </div>
+            </fieldset>
           )}
           {p.sizes && (
-            <label>
-              {t("Size", "사이즈")}
-              <select value={size} onChange={(e) => setSize(e.target.value)}>
-                {Object.keys(p.sizes).map((s) => (
-                  <option key={s} value={s}>
-                    {s.replace("in", "″")}
-                    {!p.provisionalSizes?.includes(s) || localPreview
-                      ? ` · ${money(p.sizes![s])}`
-                      : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <fieldset className="au-pave-fieldset">
+              <legend>{t("Choose your size", "사이즈 선택")}</legend>
+              <div className="au-pave-size-options">
+                {Object.keys(p.sizes).map((s) => {
+                  const serving =
+                    offerId === "pave-cake"
+                      ? formatCurrentCakeSizeLabel("pave-cake", s as "6in")
+                          ?.split("|")[1]
+                          ?.trim()
+                      : null;
+                  return (
+                    <OptionButton
+                      key={s}
+                      active={size === s}
+                      onClick={() => setSize(s)}
+                    >
+                      <strong>{s.replace("in", "″")}</strong>
+                      {serving && (
+                        <span>
+                          {ko
+                            ? serving.replace("serves approx.", "약") + "인분"
+                            : serving}
+                        </span>
+                      )}
+                      <span className="au-pave-option-price">
+                        {money(p.sizes![s])}
+                      </span>
+                    </OptionButton>
+                  );
+                })}
+              </div>
+            </fieldset>
           )}
           {isCup ? (
             card.offers.map((id) => {
               const offer = RENEWAL_OFFERS[id],
                 pack = packs[id];
               return (
-                <fieldset key={id}>
+                <fieldset
+                  key={id}
+                  className={`au-pave-fieldset renewal-cup-pack${pack.quantity ? " is-selected" : ""}`}
+                >
                   <legend>
                     {offer.pieces}
                     {t(" cupcakes per box", "개 / 박스")}
                   </legend>
-                  <label>
-                    {t("Finish", "토핑")}
-                    <select
-                      value={pack.finish}
-                      onChange={(e) =>
-                        setPacks({
-                          ...packs,
-                          [id]: { ...pack, finish: e.target.value },
-                        })
-                      }
-                    >
-                      {Object.entries(offer.finishes!).map(([f, cents]) => (
-                        <option key={f} value={f}>
-                          {labelFinish(f, ko)}
+                  <div className="renewal-option-grid">
+                    {Object.entries(offer.finishes!).map(([f, cents]) => (
+                      <OptionButton
+                        key={f}
+                        active={pack.finish === f}
+                        onClick={() =>
+                          setPacks({ ...packs, [id]: { ...pack, finish: f } })
+                        }
+                      >
+                        <ProductPhoto
+                          option
+                          src={finishImage(id, f)}
+                          label={labelFinish(f, ko)}
+                        />
+                        <strong>{labelFinish(f, ko)}</strong>
+                        <span className="au-pave-option-price">
                           {!offer.provisional || localPreview
-                            ? ` · ${money(cents)}`
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <NumberField
-                    label={t("Boxes", "박스 수")}
+                            ? money(cents)
+                            : t("Price awaiting approval", "가격 승인 대기")}
+                        </span>
+                        <span>
+                          {f !== "basic" && (!offer.provisional || localPreview)
+                            ? `+ ${money(cents - offer.finishes!.basic)}`
+                            : t("Included", "기본 구성")}
+                        </span>
+                      </OptionButton>
+                    ))}
+                  </div>
+                  <QuantityStepper
+                    label={`${offer.pieces}${t("-piece boxes", "개 박스 수")}`}
                     value={pack.quantity}
                     onChange={(n) =>
                       setPacks({ ...packs, [id]: { ...pack, quantity: n } })
@@ -389,56 +459,93 @@ function Product({ card }: { card: RenewalCard }) {
                     {t(" boxes", "박스")} · {pack.quantity * offer.pieces}
                     {t(" cupcakes", "개")}
                   </p>
-                  <label className="renewal-check">
-                    <input
-                      type="checkbox"
-                      checked={pack.packaging}
-                      onChange={(e) =>
-                        setPacks({
-                          ...packs,
-                          [id]: { ...pack, packaging: e.target.checked },
-                        })
-                      }
-                    />
-                    {t("Individual packaging", "개별포장")}
-                  </label>
+                  <OptionButton
+                    active={pack.packaging}
+                    onClick={() =>
+                      setPacks({
+                        ...packs,
+                        [id]: { ...pack, packaging: !pack.packaging },
+                      })
+                    }
+                  >
+                    <strong>{t("Individual packaging", "개별포장")}</strong>
+                    <span>
+                      {t("AUD 0.50 per cupcake", "컵케이크 개당 AUD 0.50")}
+                    </span>
+                  </OptionButton>
                 </fieldset>
               );
             })
           ) : (
             <>
               {(p.finishes || p.cream) && (
-                <label>
-                  {t("Finish", "토핑")}
-                  <select
-                    value={finish}
-                    onChange={(e) => setFinish(e.target.value)}
-                  >
+                <fieldset className="au-pave-fieldset">
+                  <legend>{t("Choose your finish", "토핑 선택")}</legend>
+                  <div className="renewal-option-grid">
                     {Object.keys(
                       p.finishes || { basic: 0, "vanilla-fresh-cream": 1000 },
-                    ).map((f) => (
-                      <option key={f} value={f}>
-                        {labelFinish(f, ko)}
-                        {p.cream && f !== "basic" ? " + AUD 10.00" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    ).map((f) => {
+                      const delta = p.cream
+                        ? f === "basic"
+                          ? 0
+                          : 1000
+                        : p.finishes![f] - p.finishes!.basic;
+                      return (
+                        <OptionButton
+                          key={f}
+                          active={finish === f}
+                          onClick={() => setFinish(f)}
+                        >
+                          <ProductPhoto
+                            option
+                            src={finishImage(offerId, f)}
+                            label={labelFinish(f, ko)}
+                          />
+                          <strong>{labelFinish(f, ko)}</strong>
+                          <span className="au-pave-option-price">
+                            {delta
+                              ? `+ ${money(delta)}`
+                              : t("Included", "기본 구성")}
+                          </span>
+                        </OptionButton>
+                      );
+                    })}
+                  </div>
+                </fieldset>
               )}
               {(p.chocolate ||
                 (offerId === "pound-cake" && finish === "extra-chocolate")) && (
-                <label>
-                  {t("Chocolate", "초콜릿")}
-                  <select
-                    value={chocolateType}
-                    onChange={(e) => setChocolate(e.target.value)}
-                  >
-                    <option value="dark">{t("Dark", "다크")}</option>
-                    <option value="milk">{t("Milk", "밀크")}</option>
-                  </select>
-                </label>
+                <fieldset className="au-pave-fieldset">
+                  <legend>{t("Chocolate", "초콜릿")}</legend>
+                  <div className="renewal-option-grid">
+                    {["dark", "milk"].map((c) => (
+                      <OptionButton
+                        key={c}
+                        active={chocolateType === c}
+                        onClick={() => setChocolate(c)}
+                      >
+                        <strong>
+                          {c === "dark" ? t("Dark", "다크") : t("Milk", "밀크")}
+                        </strong>
+                      </OptionButton>
+                    ))}
+                  </div>
+                </fieldset>
               )}
-              <NumberField label={t("Quantity", "수량")} min={1} value={quantity} onChange={setQuantity} />
+              {card.id === "cookies" && (
+                <p>
+                  {t(
+                    "6 cookies per box · 3 Chocolate Chip + 3 Double Chocolate.",
+                    "6개 세트 · 초코칩 3개 + 더블초코 3개.",
+                  )}
+                </p>
+              )}
+              <QuantityStepper
+                label={t("Quantity", "수량")}
+                min={1}
+                value={quantity}
+                onChange={setQuantity}
+              />
             </>
           )}
           {isCup && (
@@ -450,26 +557,55 @@ function Product({ card }: { card: RenewalCard }) {
             </p>
           )}
           {p.family === "cake" && (
-            <fieldset>
+            <fieldset className="au-pave-fieldset">
               <legend>
                 {t(
                   "Add something extra · 5% off",
                   "함께 담는 추가상품 · 5% 할인",
                 )}
               </legend>
-              {[
-                "addon-pave",
-                "addon-cream",
-                "addon-almond",
-                "addon-eiffel",
-              ].map((id) => (
-                <NumberField
-                  key={id}
-                  label={`${RENEWAL_OFFERS[id].name} · ${money(RENEWAL_OFFERS[id].price! * 0.95)}`}
-                  value={addons[id] || 0}
-                  onChange={(n) => setAddons({ ...addons, [id]: n })}
-                />
-              ))}
+              <div className="renewal-extras-grid">
+                {extras.map((extra) => {
+                  const n = addons[extra.id] || 0,
+                    name = ko ? extra.ko : extra.en;
+                  const extraQuote = priceRenewalOrder(
+                    [
+                      {
+                        lineId: "preview-0",
+                        offerId,
+                        quantity: 1,
+                        ...(p.sizes ? { size: Object.keys(p.sizes)[0] } : {}),
+                      },
+                      {
+                        lineId: "extra-price",
+                        offerId: extra.id,
+                        quantity: 1,
+                        parentLineId: "preview-0",
+                      },
+                    ],
+                    { localPreview },
+                  );
+                  const cents = extraQuote.lines[1].totalPriceCents;
+                  return (
+                    <div
+                      key={extra.id}
+                      data-extra={extra.id}
+                      className={`renewal-extra-card${n ? " is-selected" : ""}`}
+                    >
+                      <ProductPhoto option src={extra.image} label={name} />
+                      <strong>{name}</strong>
+                      <span>{money(cents)}</span>
+                      <QuantityStepper
+                        label={name}
+                        value={n}
+                        onChange={(v) =>
+                          setAddons({ ...addons, [extra.id]: v })
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </fieldset>
           )}
           {quote && (
@@ -478,6 +614,12 @@ function Product({ card }: { card: RenewalCard }) {
                 {t("Product subtotal", "상품 소계")}{" "}
                 {money(quote.subtotalCents)}
               </p>
+              {quote.discountCents > 0 && (
+                <p>
+                  {t("Extra savings", "추가상품 할인")} −
+                  {money(quote.discountCents)}
+                </p>
+              )}
               <p>
                 {t("Packaging", "포장비")}{" "}
                 {money(quote.individualPackagingFeeCents)}
@@ -508,7 +650,12 @@ function Product({ card }: { card: RenewalCard }) {
             </p>
           )}
           {error && <p role="alert">{error}</p>}
-          <button type="button" disabled={!quote} onClick={() => add()}>
+          <button
+            className="au-pave-order-button"
+            type="button"
+            disabled={!quote}
+            onClick={add}
+          >
             {t("Add to bag", "장바구니에 담기")}
           </button>
           {added && (
@@ -517,32 +664,92 @@ function Product({ card }: { card: RenewalCard }) {
               <a href="/cart">{t("View bag", "장바구니 보기")}</a>
             </p>
           )}
+          <AuPickupNotice language={language} driver />
+          {p.newProduct && (
+            <p>
+              {t(
+                "Pre-orders from 19 October 2026, subject to manual opening. Please allow at least 24 hours before collection.",
+                "2026년 10월 19일 사전예약 시작 예정이며 운영자가 직접 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.",
+              )}
+            </p>
+          )}
+          {editorial && (
+            <p>
+              {"ingredientsAndAllergens" in editorial
+                ? editorial.ingredientsAndAllergens.allergens
+                : editorial.ingredients.allergens}
+            </p>
+          )}
+          <p>
+            {t(
+              "Please contact us about ingredients and allergies before ordering.",
+              "원재료와 알레르기는 주문 전 문의해주세요.",
+            )}
+          </p>
+        </section>
+      </div>
+      <PurchaseBar
+        total={
+          quote ? money(quote.totalPriceCents) : t("Enquire", "문의해주세요")
+        }
+        disabled={!quote}
+        onAdd={add}
+        added={added}
+      />
+    </main>
+  );
+}
+
+function MochiProduct({ card }: { card: RenewalCard }) {
+  const { t, language } = useAuLanguage(),
+    cart = useCart();
+  return (
+    <main className="renewal-page renewal-detail au-product-detail">
+      <a href="/chocolates">{t("Back to collection", "상품 목록")}</a>
+      <MochiReselectionNotice />
+      <div className="au-pave-hero">
+        <div className="renewal-product-media">
+          <ProductPhoto
+            src={card.image}
+            label={language === "ko" ? card.ko : card.en}
+          />
+        </div>
+        <section className="au-pave-purchase">
+          <h1>{language === "ko" ? card.ko : card.en}</h1>
+          <p>
+            {t(
+              "Choose from six flavours · From AUD 8.00 each",
+              "6가지 맛 선택 · 개당 AUD 8.00부터",
+            )}
+          </p>
+          <p>
+            {t(
+              "Pre-orders from 19 October 2026, subject to manual opening. Please allow at least 24 hours before collection.",
+              "2026년 10월 19일 사전예약 시작 예정이며 운영자가 직접 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.",
+            )}
+          </p>
+          <MochiBuilder
+            sticky
+            onSave={(lines) => {
+              const next = lines.map((l) => ({
+                ...l,
+                lineId: crypto.randomUUID(),
+              }));
+              addRenewalLines(cart.renewalLines, next);
+              cart.addRenewal(next);
+            }}
+          />
+          <AuPickupNotice language={language} driver />
+          <p>
+            {t(
+              "Please contact us about ingredients and allergies before ordering.",
+              "원재료와 알레르기는 주문 전 문의해주세요.",
+            )}
+          </p>
         </section>
       </div>
     </main>
   );
-}
-function MochiProduct({ card }: { card: RenewalCard }) {
-  const { t, language } = useAuLanguage(), cart = useCart();
-  return <main className="renewal-page renewal-detail">
-    <a href="/chocolates">{t("Back to collection", "상품 목록")}</a>
-    <MochiReselectionNotice />
-    <div className="renewal-detail-grid">
-      <section>
-        {card.image && <img className="renewal-hero" src={card.image} alt={language === "ko" ? card.ko : card.en} />}
-        <h1>{language === "ko" ? card.ko : card.en}</h1>
-        <p>{t("Choose from six flavours · From AUD 8.00 each", "6가지 맛 선택 · 개당 AUD 8.00부터")}</p>
-        <p>{t("Pre-orders from 19 October 2026, subject to manual opening. Please allow at least 24 hours before collection.", "2026년 10월 19일 사전예약 시작 예정이며 운영자가 직접 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.")}</p>
-        <AuPickupNotice language={language} driver />
-        <p>{t("Please contact us about ingredients and allergies before ordering.", "원재료와 알레르기는 주문 전 문의해주세요.")}</p>
-      </section>
-      <MochiBuilder onSave={lines => {
-        const next = lines.map(l => ({ ...l, lineId: crypto.randomUUID() }));
-        addRenewalLines(cart.renewalLines, next);
-        cart.addRenewal(next);
-      }} />
-    </div>
-  </main>;
 }
 function Bag() {
   const { t, language } = useAuLanguage(),
@@ -661,7 +868,7 @@ function Bag() {
                     : RENEWAL_OFFERS[line.offerId].name}
                 </p>
                 {line.mode !== "singles" && editingMochi !== line.lineId && (
-                  <NumberField
+                  <QuantityStepper
                     min={1}
                     label={t("Quantity", "수량")}
                     value={line.quantity}
@@ -689,14 +896,29 @@ function Bag() {
                     }}
                   />
                 )}
-                {line.offerId === "mochi" && (editingMochi === line.lineId ? (
-                  <MochiBuilder key={line.lineId} initial={line} disabled={busy} onCancel={() => setEditingMochi(null)} onSave={next => {
-                    if (lock.current) return;
-                    cart.replaceRenewal(line.lineId, next);
-                    requestId.current = crypto.randomUUID();
-                    setEditingMochi(null);
-                  }} />
-                ) : <button type="button" disabled={busy} onClick={() => setEditingMochi(line.lineId)}>{t("Edit mochi selection", "모찌 구성 수정")}</button>)}
+                {line.offerId === "mochi" &&
+                  (editingMochi === line.lineId ? (
+                    <MochiBuilder
+                      key={line.lineId}
+                      initial={line}
+                      disabled={busy}
+                      onCancel={() => setEditingMochi(null)}
+                      onSave={(next) => {
+                        if (lock.current) return;
+                        cart.replaceRenewal(line.lineId, next);
+                        requestId.current = crypto.randomUUID();
+                        setEditingMochi(null);
+                      }}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setEditingMochi(line.lineId)}
+                    >
+                      {t("Edit mochi selection", "모찌 구성 수정")}
+                    </button>
+                  ))}
                 <button
                   type="button"
                   disabled={busy}

@@ -215,3 +215,52 @@
     margin: 0 18px 24px auto;
   }
 }
+
+/* Reuse Pavé's selection cards, typography and mobile purchase bar. */
+.renewal-detail.au-product-detail { --au-green: #205b49; --au-line: #dce5df; --au-text: #203d33; }
+.renewal-detail .au-pave-hero { gap: 40px; padding: 32px 20px; }
+.renewal-detail .au-pave-purchase { position: static; }
+.renewal-detail .au-pave-purchase h1 { margin: 0 0 12px; }
+.renewal-detail .au-pave-fieldset { margin: 0; padding: 0; border: 0; gap: 12px; }
+.renewal-option-grid, .renewal-extras-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.renewal-detail .cake-detail-option { min-height: 56px; width: 100%; overflow-wrap: anywhere; }
+.renewal-detail .cake-detail-option:focus-visible { outline-offset: 2px; }
+.renewal-product-media { min-width: 0; }
+.renewal-product-photo { width: 100%; aspect-ratio: 1; }
+.renewal-option-photo { position: relative; overflow: hidden; width: 100%; aspect-ratio: 4 / 3; }
+.renewal-option-photo > img, .renewal-option-photo > .renewal-photo-slot { position: absolute; inset: 0; }
+.renewal-detail .renewal-option-photo img { object-fit: contain; }
+.renewal-photo-slot { width: 100%; height: 100%; display: grid; place-items: center; background: #f5f6f3; border: 1px solid #dce5df; color: #617269; font-size: 12px; text-align: center; }
+.renewal-stepper-field { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; min-width: 0; }
+.renewal-stepper-field > span { font-size: 13px; }
+.renewal-page .au-pave-quantity { display: grid; grid-template-columns: 44px minmax(36px,auto) 44px; align-items: center; border: 1px solid #aebcb4; text-align: center; }
+.renewal-page .au-pave-quantity button { padding: 0; min-width: 44px; min-height: 44px; background: #fff; color: #205b49; border: 0; }
+.renewal-page .au-pave-quantity output { padding: 0 4px; overflow-wrap: anywhere; }
+.renewal-extra-card { min-width: 0; border: 1px solid #dce5df; padding: 10px; display: grid; align-content: start; gap: 10px; overflow-wrap: anywhere; }
+.renewal-extra-card.is-selected, .mochi-flavour.is-selected { border-color: #205b49; background: #f4f8f5; }
+.renewal-extra-card strong { font-size: 13px; }
+.renewal-extra-card .renewal-stepper-field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.renewal-extra-card .renewal-stepper-field { justify-content: center; }
+.renewal-detail .renewal-cup-pack { padding-bottom: 20px; border-bottom: 1px solid #dce5df; }
+.renewal-page .mochi-builder { border: 0; padding: 0; }
+.mochi-flavours { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.mochi-flavour { grid-template-columns: minmax(0,1fr); border: 1px solid #dce5df; padding: 10px; gap: 10px; }
+.mochi-flavour .renewal-stepper-field { justify-content: center; }
+.mochi-flavour .renewal-stepper-field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.renewal-page .mochi-modes .cake-detail-option { background: #fff; color: #203d33; }
+.renewal-page .mochi-modes .cake-detail-option.is-selected { background: #f4f8f5; color: #205b49; border-color: #205b49; }
+@media (max-width:767px) {
+  .renewal-detail.au-product-detail { padding: 0 0 100px; }
+  .renewal-detail .au-pave-hero { padding: 0; }
+  .renewal-detail .au-pave-purchase { padding: 20px 18px; }
+  .renewal-detail > a, .renewal-detail > .mochi-reselection { margin: 16px 18px; }
+  .renewal-detail .au-pave-sticky-order { gap: 8px; padding-inline: 18px; flex-wrap: wrap; }
+  .renewal-detail .au-pave-sticky-order > div { min-width: 0; }
+  .renewal-detail .au-pave-sticky-order strong { font-size: 16px; }
+  .renewal-detail .au-pave-view-order { flex-basis: 100%; text-align: right; }
+  body:has(.renewal-detail) #vg-chat-launcher { position: static; display: flex; margin: 0 18px 110px auto; }
+}
+/* The same cards are used by the in-bag mochi editor. */
+.renewal-page:not(.renewal-detail) .cake-detail-option { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; min-height: 56px; text-align: left; background: #fff; color: #203d33; border: 1px solid #dce5df; }
+.renewal-page:not(.renewal-detail) .cake-detail-option.is-selected { background: #f4f8f5; color: #205b49; border-color: #205b49; }
+.renewal-option-photo img { width: 100%; height: 100%; object-fit: contain; }
