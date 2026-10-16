@@ -4,7 +4,7 @@ import { ArrowUpRight, Menu, X } from 'lucide-react'
 import { AuLanguageToggle } from './AuLanguage'
 import { useAuLanguage } from '../lib/au-language'
 
-const primary = RENEWAL_NAV.map(link => ({ ...link, description: link.en, koreanDescription: link.ko }))
+const primary = RENEWAL_NAV
 
 export function AuNavigation({
   cartItemCount,
@@ -140,7 +140,6 @@ export function AuNavigation({
               >
                 <span>
                   <strong>{t(link.en, link.ko)}</strong>
-                  <small>{t(link.description, link.koreanDescription)}</small>
                 </span>
                 <ArrowUpRight size={16} aria-hidden="true" />
               </a>

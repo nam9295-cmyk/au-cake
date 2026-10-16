@@ -115,7 +115,7 @@ export function RenewalCollection({
 }) {
   const { language, t } = useAuLanguage();
   return (
-    <main className="renewal-page">
+    <main className="renewal-page renewal-collection">
       <h1>{RENEWAL_NAV.find((n) => n.href === `/${category}`)?.en}</h1>
       <div className="renewal-grid">
         {RENEWAL_CARDS[category].map((card) => (
@@ -133,9 +133,9 @@ export function RenewalCollection({
               )}
               <h2>{language === "ko" ? card.ko : card.en}</h2>
               <p>{cardPrice(card, language === "ko")}</p>
-              {card.id === "brownie-cupcakes" && <p>{t("Reservations awaiting price approval", "가격 승인 후 예약 안내")}</p>}
+              {card.id === "brownie-cupcakes" && <p className="renewal-card-note">{t("Reservations awaiting price approval", "가격 승인 후 예약 안내")}</p>}
               {["mochi", "cookies"].includes(card.id) && (
-                <p>
+                <p className="renewal-card-note">
                   {t(
                     card.id === "mochi" ? "Pre-orders from 16 October 2026 · subject to manual opening" : "Reservations awaiting price approval",
                     card.id === "mochi" ? "2026년 10월 16일부터 사전예약 · 운영자 수동 개시" : "가격 확정 후 예약 안내",
@@ -851,7 +851,7 @@ function Bag() {
       </main>
     );
   return (
-    <main className="renewal-page">
+    <main className="renewal-page renewal-cart">
       <h1>{t("Your bag", "장바구니")}</h1>
       <MochiReselectionNotice />
       {cart.lines.length > 0 && (
@@ -863,7 +863,10 @@ function Bag() {
         </p>
       )}
       {!lines.length ? (
-        <a href="/cakes">{t("Explore the menu", "메뉴 보기")}</a>
+        <div className="renewal-empty-bag">
+          <p>{t("Your bag is empty. Choose something you would like to enjoy.", "장바구니가 비어 있습니다. 원하는 상품을 골라 담아주세요.")}</p>
+          <a href="/cakes">{t("Explore the menu", "메뉴 보기")}</a>
+        </div>
       ) : (
         <>
           <ul className="renewal-bag">
