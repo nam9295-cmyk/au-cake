@@ -26,15 +26,15 @@ test('brownie cupcake finish differs from gateau; packaging pools selected cupca
   assert.throws(() => price([line('brownie-cupcakes-6',1,{finish:'chocolate-buttercream'})]),/INVALID_FINISH/)
   assert.equal(price([line('cupcake-half-dozen',1,{finish:'chocolate-buttercream'})]).totalPriceCents,4100)
 })
-const flavours = (values = {}) => ({strawberry:0,green_grape:0,mandarin:0,amande:0,butter_redbean:0,nama_chocolate:0,...values})
+const flavours = (values = {}) => ({strawberry:0,green_grape:0,mandarin:0,banana:0,butter_redbean:0,nama_chocolate:0,...values})
 const mochi = (id, mode, values, quantity=1, individualPackaging=false) => ({lineId:id,offerId:'mochi',mode,flavourCounts:flavours(values),quantity,individualPackaging})
 test('six-flavour gift boxes and singles keep compositions and charge only selected physical packaging',()=>{
- for(const [values,expected] of [[{nama_chocolate:4},3200],[{strawberry:4},4000],[{strawberry:1,green_grape:1,amande:1,nama_chocolate:1},3700],[{mandarin:2,butter_redbean:2},3500]]){
+ for(const [values,expected] of [[{nama_chocolate:4},3200],[{strawberry:4},4000],[{strawberry:1,green_grape:1,banana:1,nama_chocolate:1},3650],[{mandarin:2,butter_redbean:2},3500]]){
   const q=price([mochi('a','gift-four',values)],{})
   assert.equal(q.totalPriceCents,expected);assert.equal(q.lines[0].giftBoxCount,1);assert.equal(q.lines[0].physicalQuantity,4);assert.equal(q.individualPackagingFeeCents,0)
  }
- const mixed=price([mochi('a','gift-four',{strawberry:1,green_grape:1,amande:1,nama_chocolate:1},2),mochi('b','gift-four',{mandarin:2,butter_redbean:2}),mochi('c','singles',{nama_chocolate:3},1,true)],{})
- assert.equal(mixed.policyVersion,'au-renewal.2026-10.v2');assert.equal(mixed.totalPriceCents,13450)
+ const mixed=price([mochi('a','gift-four',{strawberry:1,green_grape:1,banana:1,nama_chocolate:1},2),mochi('b','gift-four',{mandarin:2,butter_redbean:2}),mochi('c','singles',{nama_chocolate:3},1,true)],{})
+ assert.equal(mixed.policyVersion,'au-renewal.2026-10.v2');assert.equal(mixed.totalPriceCents,13350)
  assert.deepEqual(mixed.lines.map(l=>l.giftBoxCount),[2,1,0]);assert.deepEqual(mixed.lines.map(l=>l.physicalQuantity),[8,4,3])
  assert.deepEqual(mixed.lines[0].flavourTotals,[2,2,0,2,0,2]);assert.equal(mixed.individualPackagingFeeCents,150)
  for(const n of [4,8,200]){
@@ -89,4 +89,20 @@ test('string field coercion cannot bypass provisional or preorder policy boundar
   const base=key==='offerId'?mochi('a','gift-four',{strawberry:4}):line('brownie-whole',1,{size:'6in'})
   assert.throws(()=>price([{...base,[key]:value}],{}),undefined,key)
  }
+})
+
+test('deployed almond snapshots retain exact prices, names and contents but cannot be ordered anew',async()=>{
+ const {readFile}=await import('node:fs/promises')
+ const old=JSON.parse(await readFile('tests/fixtures/au-renewal-amande-quote.json','utf8'))
+ assert.deepEqual(core.priceRenewalOrder(old.lines.map(l=>l.selection),{storedOnly:true}),old)
+ assert.throws(()=>price(old.lines.map(l=>l.selection)),/INVALID_MOCHI_COUNTS/)
+ assert.match(core.renewalLineSummary(old.lines[0]),/Amande Chocolat 2/)
+ assert.doesNotMatch(core.renewalLineSummary(old.lines[0]),/Banana/)
+})
+test('stored almond document remains readable without mutating its facts',async()=>{
+ const {readFile}=await import('node:fs/promises')
+ const {readRenewalDocument}=await import('../appwrite-functions/reservation-api/src/au-renewal-reader.js')
+ const q=JSON.parse(await readFile('tests/fixtures/au-renewal-amande-quote.json','utf8'))
+ const row={...q,productId:q.lines[0].productId,quantity:q.lines[0].quantity,orderLineCount:q.lines.length,orderLinesJson:JSON.stringify({version:2,policyVersion:q.policyVersion,lines:q.lines,discountPercent:q.discountPercent})}
+ const before=JSON.stringify(row);assert.deepEqual(readRenewalDocument(row),q);assert.equal(JSON.stringify(row),before)
 })

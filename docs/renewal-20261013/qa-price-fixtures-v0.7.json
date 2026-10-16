@@ -846,7 +846,7 @@
         "strawberry": 1000,
         "green_grape": 950,
         "mandarin": 900,
-        "amande": 950,
+        "banana": 900,
         "butter_redbean": 850,
         "nama_chocolate": 800
       },
@@ -1175,7 +1175,7 @@
           "strawberry": 0,
           "green_grape": 0,
           "mandarin": 0,
-          "amande": 0,
+          "banana": 0,
           "butter_redbean": 0,
           "nama_chocolate": 4
         },
@@ -1194,7 +1194,7 @@
           "strawberry": 4,
           "green_grape": 0,
           "mandarin": 0,
-          "amande": 0,
+          "banana": 0,
           "butter_redbean": 0,
           "nama_chocolate": 0
         },
@@ -1213,14 +1213,14 @@
           "strawberry": 1,
           "green_grape": 1,
           "mandarin": 0,
-          "amande": 1,
+          "banana": 1,
           "butter_redbean": 0,
           "nama_chocolate": 1
         },
         "quantity": 2,
         "individualPackaging": false
       },
-      "total_cents": 7400
+      "total_cents": 7300
     },
     {
       "id": "M04",
@@ -1232,7 +1232,7 @@
           "strawberry": 0,
           "green_grape": 0,
           "mandarin": 2,
-          "amande": 0,
+          "banana": 0,
           "butter_redbean": 2,
           "nama_chocolate": 0
         },
@@ -1251,7 +1251,7 @@
           "strawberry": 0,
           "green_grape": 0,
           "mandarin": 0,
-          "amande": 0,
+          "banana": 0,
           "butter_redbean": 0,
           "nama_chocolate": 3
         },

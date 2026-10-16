@@ -74,13 +74,13 @@ test("Oct16 product information distinguishes missing photos from unavailable of
  assert.match(mochi,/16 October 2026/);
  assert.doesNotMatch(mochi,/19 October 2026/);
  assert.match(mochi,/PHOTO COMING SOON/);
- assert.match(mochi,/80[–-]100g/);
+ assert.match(mochi,/80g/);
  assert.match(mochi,/refrigerated/i);
  assert.match(mochi,/3 days/);
- assert.match(mochi,/Contains milk, almonds and soy/);
+ assert.match(mochi,/Contains milk and soy/);
  assert.match(mochi,/wheat, eggs, sesame and peanuts/);
  const korean=render('/chocolates/chocolate-mochi','ko');
- assert.match(korean,/80[–-]100g/);
+ assert.match(korean,/80g/);
  assert.match(korean,/최대 3일/);
  const cookies=render('/cakes/levain-cookies');
  assert.match(cookies,/sale price is approved/);

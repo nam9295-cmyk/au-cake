@@ -38,7 +38,7 @@ function FlavourCounts({
   return (
     <div className="mochi-flavours">
       {MOCHI_FLAVOURS.map((f) => {
-        const name = language === "ko" ? f.ko : f.en;
+        const name = language === "ko" ? (f.id === "nama_chocolate" ? "오리지널 생초콜릿" : `${f.ko === "귤" ? "만다린(귤)" : f.ko}생초콜릿`) : (f.id === "nama_chocolate" ? "Original Nama Chocolate" : `${f.en} Nama Chocolate`);
         const max = Math.min(
           available?.[f.id] ?? Number.MAX_SAFE_INTEGER,
           box ? counts[f.id] + 4 - selected : Number.MAX_SAFE_INTEGER,
@@ -145,7 +145,7 @@ export function MochiBuilder({
   }
   const composition = (counts: MochiCounts) =>
     MOCHI_FLAVOURS.filter((f) => counts[f.id])
-      .map((f) => `${language === "ko" ? f.ko : f.en} ${counts[f.id]}`)
+      .map((f) => `${language === "ko" ? (f.id === "nama_chocolate" ? "오리지널 생초콜릿" : `${f.ko === "귤" ? "만다린(귤)" : f.ko}생초콜릿`) : (f.id === "nama_chocolate" ? "Original Nama Chocolate" : `${f.en} Nama Chocolate`)} ${counts[f.id]}`)
       .join(" · ");
   function save() {
     try {

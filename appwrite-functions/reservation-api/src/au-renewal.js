@@ -112,7 +112,7 @@ export const RENEWAL_OFFERS = Object.freeze({
     addon: true,
   }),
 });
-export const MOCHI_FLAVOURS = Object.freeze([
+const HISTORICAL_MOCHI_FLAVOURS = Object.freeze([
   { id: "strawberry", en: "Strawberry", ko: "딸기", priceCents: 1000 },
   { id: "green_grape", en: "Green Grape", ko: "청포도", priceCents: 950 },
   { id: "mandarin", en: "Mandarin", ko: "귤", priceCents: 900 },
@@ -120,6 +120,13 @@ export const MOCHI_FLAVOURS = Object.freeze([
   { id: "butter_redbean", en: "Butter & Red Bean", ko: "앙버터", priceCents: 850 },
   { id: "nama_chocolate", en: "Nama Chocolate", ko: "생초콜릿", priceCents: 800 },
 ].map(Object.freeze));
+// Stable IDs distinguish stored almond selections from the current banana assortment.
+export const MOCHI_FLAVOURS = Object.freeze(HISTORICAL_MOCHI_FLAVOURS.map(f =>
+  f.id === "amande" ? Object.freeze({ id: "banana", en: "Banana", ko: "바나나", priceCents: 900 }) : f));
+function mochiFlavours(selection, storedOnly = false) {
+  return storedOnly && Object.hasOwn(selection.flavourCounts || {}, "amande")
+    ? HISTORICAL_MOCHI_FLAVOURS : MOCHI_FLAVOURS;
+}
 export const MOCHI_NAMES = Object.freeze(MOCHI_FLAVOURS.map((f) => f.en));
 const idPattern = /^[A-Za-z0-9_-]{1,64}$/;
 const allowedFields = new Set([
@@ -134,7 +141,7 @@ const allowedFields = new Set([
   "flavourCounts",
   "parentLineId",
 ]);
-export function normalizeRenewalLines(value) {
+export function normalizeRenewalLines(value, { storedOnly = false } = {}) {
   if (
     !Array.isArray(value) ||
     !value.length ||
@@ -225,12 +232,12 @@ export function normalizeRenewalLines(value) {
         fail("INVALID_MOCHI_MODE");
       const counts = input.flavourCounts;
       if (!counts || Object.getPrototypeOf(counts) !== Object.prototype ||
-          Object.keys(counts).length !== MOCHI_FLAVOURS.length ||
-          MOCHI_FLAVOURS.some(({ id }) => !Object.hasOwn(counts, id) ||
+          Object.keys(counts).length !== mochiFlavours(input, storedOnly).length ||
+          mochiFlavours(input, storedOnly).some(({ id }) => !Object.hasOwn(counts, id) ||
             !Number.isSafeInteger(counts[id]) || counts[id] < 0))
         fail("INVALID_MOCHI_COUNTS");
       line.mode = input.mode;
-      line.flavourCounts = Object.fromEntries(MOCHI_FLAVOURS.map(({ id }) => [id, counts[id]]));
+      line.flavourCounts = Object.fromEntries(mochiFlavours(input, storedOnly).map(({ id }) => [id, counts[id]]));
       const count = sum(Object.values(line.flavourCounts));
       if ((input.mode === "gift-four" && count !== 4) || count === 0)
         fail("INVALID_MOCHI_COUNTS");
@@ -253,10 +260,10 @@ export function normalizeRenewalLines(value) {
 }
 export function priceRenewalOrder(
   value,
-  { localPreview = false, reviewCoupon, contractVersion = RENEWAL_CONTRACT } = {},
+  { localPreview = false, reviewCoupon, contractVersion = RENEWAL_CONTRACT, storedOnly = false } = {},
 ) {
   if (!isRenewalContract(contractVersion)) fail("UNSUPPORTED_CONTRACT");
-  const normalized = normalizeRenewalLines(value);
+  const normalized = normalizeRenewalLines(value, { storedOnly });
   const base = normalized.map((selection) => {
     // V1 snapshots retain their original amounts and approval status forever.
     const current = RENEWAL_OFFERS[selection.offerId];
@@ -282,9 +289,9 @@ export function priceRenewalOrder(
     let physicalQuantity = safeAmount(p.pieces * selection.quantity);
     let flavourTotals = [];
     if (p.family === "mochi") {
-      unitPriceCents = sum(MOCHI_FLAVOURS.map(({ id, priceCents }) =>
+      unitPriceCents = sum(mochiFlavours(selection, storedOnly).map(({ id, priceCents }) =>
         safeAmount(selection.flavourCounts[id] * priceCents)));
-      flavourTotals = MOCHI_FLAVOURS.map(({ id }) =>
+      flavourTotals = mochiFlavours(selection, storedOnly).map(({ id }) =>
         safeAmount(selection.flavourCounts[id] * selection.quantity));
       physicalQuantity = sum(flavourTotals);
     }
@@ -417,10 +424,10 @@ export function renewalLineSummary(line) {
   if (s.mode)
     details.push(
       s.mode,
-      ...(s.mode === "gift-four" ? ["Per box: " + MOCHI_FLAVOURS
+      ...(s.mode === "gift-four" ? ["Per box: " + mochiFlavours(s, true)
         .filter(({ id }) => s.flavourCounts[id] > 0)
         .map(({ id, en }) => `${en} ${s.flavourCounts[id]}`).join(", ")] : []),
-      "Total: " + MOCHI_NAMES.map((name, i) => `${name} ${line.flavourTotals[i]}`).join(
+      "Total: " + mochiFlavours(s, true).map(({ en }, i) => `${en} ${line.flavourTotals[i]}`).join(
         ", ",
       ),
     );

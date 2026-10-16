@@ -737,9 +737,9 @@ function MochiProduct({ card }: { card: RenewalCard }) {
             )}
           </p>
           <div className="mochi-product-information">
-            <p>{t("Approx. 80–100g each; weight varies with the fruit.", "개당 약 80–100g이며 과일 상태에 따라 중량이 달라집니다.")}</p>
+            <p>{t("Original: 80g. Fruit and butter & red bean: at least 85g each; fruit weight varies.", "오리지널 80g. 과일·앙버터는 개당 85g 이상이며 과일 상태에 따라 중량이 달라집니다.")}</p>
             <p>{t("Keep refrigerated. Best enjoyed on the day. Recommended refrigerated storage: up to 3 days.", "냉장 보관해주세요. 당일 섭취를 권장하며, 냉장 보관은 최대 3일 권장합니다.")}</p>
-                      <p>{t("Contains milk, almonds and soy. Made in a facility that also handles wheat, eggs, sesame and peanuts.", "우유·아몬드·대두 함유. 밀·계란·참깨·땅콩을 취급하는 시설에서 함께 제조합니다.")}</p>
+                      <p>{t("Contains milk and soy. Made in a facility that also handles almonds, wheat, eggs, sesame and peanuts.", "우유·대두 함유. 아몬드·밀·계란·참깨·땅콩을 취급하는 시설에서 함께 제조합니다.")}</p>
           </div>
           <MochiBuilder
             sticky

@@ -63,7 +63,7 @@ export interface RenewalQuote {
   orderItemCount: number;
 }
 export const RENEWAL_OFFERS: Readonly<Record<string, RenewalOffer>>;
-export type MochiFlavourId = "strawberry" | "green_grape" | "mandarin" | "amande" | "butter_redbean" | "nama_chocolate";
+export type MochiFlavourId = "strawberry" | "green_grape" | "mandarin" | "banana" | "butter_redbean" | "nama_chocolate";
 export type MochiCounts = Record<MochiFlavourId, number>;
 export const MOCHI_FLAVOURS: readonly Readonly<{ id: MochiFlavourId; en: string; ko: string; priceCents: number }>[];
 export const MOCHI_NAMES: readonly string[];

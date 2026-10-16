@@ -5,7 +5,7 @@ import { buildCakeNotificationRows, buildBookingConfirmationPayload, buildNotifi
 import { buildCakeReminderPayload } from '../appwrite-functions/booking-reminder/src/reminder-business.js'
 import { sanitizeCakeCalendarEvent } from '../appwrite-functions/reservation-api/src/calendar-access.js'
 test('renewal operational outputs preserve packs, physical counts, flavours and linked extras',()=>{
- const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'cake',offerId:'brownie-whole',size:'6in',finish:'vanilla-fresh-cream',quantity:1},{lineId:'extra',offerId:'addon-cream',parentLineId:'cake',quantity:1},{lineId:'mochi',offerId:'mochi',mode:'singles',flavourCounts:{strawberry:10,green_grape:0,mandarin:0,amande:0,butter_redbean:0,nama_chocolate:0},quantity:1,individualPackaging:true},{lineId:'eiffel',offerId:'eiffel-six-plus-one',quantity:1}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}})
+ const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'cake',offerId:'brownie-whole',size:'6in',finish:'vanilla-fresh-cream',quantity:1},{lineId:'extra',offerId:'addon-cream',parentLineId:'cake',quantity:1},{lineId:'mochi',offerId:'mochi',mode:'singles',flavourCounts:{strawberry:10,green_grape:0,mandarin:0,banana:0,butter_redbean:0,nama_chocolate:0},quantity:1,individualPackaging:true},{lineId:'eiffel',offerId:'eiffel-six-plus-one',quantity:1}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}})
  row.$id='renewal-test'
  const email=buildBookingConfirmationPayload({reservation:row,sourceType:'cake',from:'test@example.com'})
  const reminder=buildCakeReminderPayload({reservation:row,from:'test@example.com'})
@@ -36,15 +36,15 @@ test('lookup notification reminder and PIN Calendar retain an existing approved 
 
 test('six-flavour mixed boxes round-trip through v2 and all operational outputs without changing historical readers',async()=>{
  const {parseStoredOrderLines}=await import('../appwrite-functions/reservation-api/src/stored-order-reader.js')
- const counts=(v)=>({strawberry:0,green_grape:0,mandarin:0,amande:0,butter_redbean:0,nama_chocolate:0,...v})
+ const counts=(v)=>({strawberry:0,green_grape:0,mandarin:0,banana:0,butter_redbean:0,nama_chocolate:0,...v})
  const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[
-  {lineId:'box-a',offerId:'mochi',mode:'gift-four',flavourCounts:counts({strawberry:1,green_grape:1,amande:1,nama_chocolate:1}),quantity:2},
+  {lineId:'box-a',offerId:'mochi',mode:'gift-four',flavourCounts:counts({strawberry:1,green_grape:1,banana:1,nama_chocolate:1}),quantity:2},
   {lineId:'box-b',offerId:'mochi',mode:'gift-four',flavourCounts:counts({mandarin:2,butter_redbean:2}),quantity:1},
   {lineId:'singles',offerId:'mochi',mode:'singles',flavourCounts:counts({nama_chocolate:3}),quantity:1,individualPackaging:true},
  ]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}})
  row.$id='six-flavour-test'
  const saved=JSON.stringify(row),q=parseStoredOrderLines(row)
- assert.equal(q.policyVersion,'au-renewal.2026-10.v2');assert.equal(q.totalPriceCents,13450)
+ assert.equal(q.policyVersion,'au-renewal.2026-10.v2');assert.equal(q.totalPriceCents,13350)
  assert.deepEqual(q.lines.map(l=>l.giftBoxCount),[2,1,0]);assert.deepEqual(q.lines.map(l=>l.physicalQuantity),[8,4,3])
  for(const text of [JSON.stringify(buildCakeNotificationRows(row)),buildNotificationText(row),buildBookingConfirmationPayload({reservation:row,sourceType:'cake',from:'test@example.com'}).text,buildCakeReminderPayload({reservation:row,from:'test@example.com'}).text,sanitizeCakeCalendarEvent(row).label]){
   assert.match(text,/Item box-a/);assert.match(text,/Per box: Strawberry 1/);assert.match(text,/Mandarin 2/);assert.match(text,/Nama Chocolate 3/);assert.match(text,/AUD 25.50/)

@@ -1,0 +1,57 @@
+{
+  "version": 2,
+  "policyVersion": "au-renewal.2026-10.v2",
+  "lines": [
+    {
+      "selection": {
+        "lineId": "almond-history",
+        "offerId": "mochi",
+        "quantity": 2,
+        "finish": "basic",
+        "individualPackaging": false,
+        "mode": "gift-four",
+        "flavourCounts": {
+          "strawberry": 1,
+          "green_grape": 1,
+          "mandarin": 0,
+          "amande": 1,
+          "butter_redbean": 0,
+          "nama_chocolate": 1
+        }
+      },
+      "productId": "mochi",
+      "quantity": 2,
+      "productName": "Chocolate Mochi",
+      "unitPriceCents": 3700,
+      "subtotalCents": 7400,
+      "physicalQuantity": 8,
+      "flavourTotals": [
+        2,
+        2,
+        0,
+        2,
+        0,
+        2
+      ],
+      "priceStatus": "confirmed",
+      "policyVersion": "au-renewal.2026-10.v2",
+      "individualPackaging": false,
+      "individualPackagingPieces": 0,
+      "packagingUnitCents": 0,
+      "packagingMode": "gift4",
+      "giftBoxCount": 2,
+      "discountPercent": 0,
+      "discountCents": 0,
+      "individualPackagingFeeCents": 0,
+      "totalPriceCents": 7400
+    }
+  ],
+  "subtotalCents": 7400,
+  "discountCents": 0,
+  "discountBasisCents": 0,
+  "discountPercent": 0,
+  "individualPackagingFeeCents": 0,
+  "individualPackagingPieces": 0,
+  "totalPriceCents": 7400,
+  "orderItemCount": 2
+}

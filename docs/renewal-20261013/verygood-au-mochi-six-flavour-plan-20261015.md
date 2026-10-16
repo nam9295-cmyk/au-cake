@@ -17,7 +17,7 @@
 | `strawberry` | 딸기 | Strawberry | $10.00 | 1000 |
 | `green_grape` | 청포도 | Green Grape | $9.50 | 950 |
 | `mandarin` | 귤 | Mandarin | $9.00 | 900 |
-| `amande` | 아망드 | Amande Chocolat | $9.50 | 950 |
+| `banana` | 바나나생초콜릿 | Banana Nama Chocolate | $9.00 | 900 |
 | `butter_redbean` | 앙버터 | Butter & Red Bean | $8.50 | 850 |
 | `nama_chocolate` | 생초콜릿 | Nama Chocolate | $8.00 | 800 |
 
@@ -72,7 +72,7 @@ Choose from 6 flavours · From AUD $8.00
 ### 2.4 장바구니·관리자·생산 화면 예시
 
 ```
-Gift Box A   딸기1 · 청포도1 · 아망드1 · 생초콜릿1
+Gift Box A   딸기1 · 청포도1 · 바나나1 · 생초콜릿1
              $37.00 / box × 2 = $74.00
              2 boxes / 8 pieces / gift packaging $0
 
@@ -108,11 +108,11 @@ TOTAL $134.50 · 3 gift boxes + 3 singles · 15 pieces
 구현된 신규 주문 입력 형태:
 
 ```json
-{"offerId":"mochi","mode":"gift-four","flavourCounts":{"strawberry":1,"green_grape":1,"mandarin":0,"amande":1,"butter_redbean":0,"nama_chocolate":1},"quantity":2,"individualPackaging":false}
+{"offerId":"mochi","mode":"gift-four","flavourCounts":{"strawberry":1,"green_grape":1,"mandarin":0,"banana":1,"butter_redbean":0,"nama_chocolate":1},"quantity":2,"individualPackaging":false}
 ```
 
 ```json
-{"offerId":"mochi","mode":"singles","flavourCounts":{"strawberry":0,"green_grape":0,"mandarin":0,"amande":0,"butter_redbean":0,"nama_chocolate":3},"quantity":1,"individualPackaging":true}
+{"offerId":"mochi","mode":"singles","flavourCounts":{"strawberry":0,"green_grape":0,"mandarin":0,"banana":0,"butter_redbean":0,"nama_chocolate":3},"quantity":1,"individualPackaging":true}
 ```
 
 각 라인에는 기존처럼 별도의 `lineId` 부여; 위 JSON은 개념 설명이며 실제 타입/필드 이름은 기존 저장 호환성을 확인하여 최소 확장. `gift-four`의 단일 박스 구성을 `quantity`만큼 반복해 저장. `singles`의 실물 개수는 `sum(flavourCounts)`이며 `quantity`는 1로 고정하여 이중 곱셈 방지. UI에서 포장된 단품과 비포장 단품을 섞어 담으면 포장 상태별 서로 다른 라인에 저장.
@@ -135,7 +135,7 @@ TOTAL $134.50 · 3 gift boxes + 3 singles · 15 pieces
 |---|---|---|
 | M01 | 생초콜릿 4구 | $32, 4개, 박스 1개, 포장 $0 |
 | M02 | 딸기 4구 | $40, 4개, 박스 1개, 포장 $0 |
-| M03 | 딸기1+청포도1+아망드1+생초콜릿1 | $37, 박스1개 |
+| M03 | 딸기1+청포도1+바나나1+생초콜릿1 | $36.50, 박스1개 |
 | M04 | 위 구성 ×2박스 | $74, 8개, 박스2개 |
 | M05 | 귤2+앙버터2 | $35, 박스1개 |
 | M06 | 다른 구성 A×2 및 B×1 | $109, 12개, 박스3개, 조합 별도 보존 |
@@ -170,3 +170,8 @@ TOTAL $134.50 · 3 gift boxes + 3 singles · 15 pieces
 - 픽업 정책: 수·금09–16, 토·일09–12, Sydney; 모찌 24시간 준비시간. 다른 상품이나 KR 설정 손대지 않는다.
 - 새 상품 정책 구현은 **로컬**. 실제 주문 개시·프로덕션 배포·기존 v2 writer 활성화는 별도 검토 및 승인.
 - 실제 운영 케이크·초콜릿 주문과 역사 reader는 보존한다. 미배포 모찌35달러 전용 역사 호환 코드/테스트는 만들지 않는다.
+
+
+### 2026-10-16 추가 확정 — 사진과 함께 배포 대기
+신규 모찌: 오리지널 생초콜릿 $8, 딸기생초콜릿 $10, 청포도생초콜릿 $9.50, 만다린(귤)생초콜릿 $9, 바나나생초콜릿 $9, 앙버터생초콜릿 $8.50. 아몬드 신규 판매 제외. 오리지널 80g, 과일·앙버터 85g 이상. 우유·대두 함유; 아몬드·밀·계란·참깨·땅콩 공용 시설 교차접촉 가능. 냉장/당일 섭취 권장/최대3일 냉장 권장 유지. 배합 원본은 비공개.
+기존 v2 유지. 배포된 아몬드 구성은 저장 주문 검증 전용으로 보존하며 신규 주문에서는 거절한다. 기존 모찌 장바구니는 자동 변환 없이 재선택 안내하고 다른 상품은 유지한다. 무료4구박스/단품 포장50c 및 픽업 정책 유지. 운영 배포·접수 플래그 변경 없음.

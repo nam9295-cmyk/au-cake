@@ -44,6 +44,7 @@ export function readRenewalDocument(document) {
       payload.lines.map((l) => l.selection),
       {
         localPreview: true,
+        storedOnly: true,
         contractVersion: payload.policyVersion,
         reviewCoupon: payload.discountPercent
           ? { rewardPercent: payload.discountPercent }

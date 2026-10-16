@@ -54,7 +54,7 @@ export function inspectRenewalCart(raw: string | null): {
     const value = JSON.parse(raw || "null");
     if (value?.version !== 1 || !Array.isArray(value.lines)) return { lines: [], retiredMochi: [] };
     const retiredMochi = value.lines.filter((line: RenewalSelection) =>
-      line?.offerId === "mochi" && (!["gift-four", "singles"].includes(line.mode || "") || "counts" in line));
+      line?.offerId === "mochi" && (!["gift-four", "singles"].includes(line.mode || "") || "counts" in line || Object.hasOwn(line.flavourCounts || {}, "amande")));
     const lines = normalizeRenewalLines(value.lines.filter((line: unknown) => !retiredMochi.includes(line)));
     priceRenewalOrder(lines, { localPreview: true });
     return { lines, retiredMochi };
