@@ -60,7 +60,7 @@ test('AU Hero provides responsive first-frame artwork before video playback is a
   const hero = html.match(/<section class="rd-hero"[\s\S]*?<\/section>/)?.[0]
   assert.ok(hero)
   assert.match(hero, /<picture/)
-  assert.match(hero, /media="\(max-width: 768px\)"[^>]*srcSet="\/redesign\/hero\/cake-mobile.webp"/)
+  assert.match(hero, /media="\(max-width: 768px\)"[^>]*srcSet="\/redesign\/hero\/cake-mobile-8s.webp"/)
   assert.match(hero, /src="\/redesign\/hero\/cake-desktop.webp"/)
   assert.match(hero, /alt="Chocolate cake with a cut slice"/)
   assert.doesNotMatch(hero, /53935\.jpg|<video/)

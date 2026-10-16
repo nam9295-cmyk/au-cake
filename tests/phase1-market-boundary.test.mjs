@@ -332,11 +332,12 @@ test('all Phase 1 CSS rules require an AU-only shell', () => {
   })
 })
 
-test('chocolate previews have truthful AU metadata, not a 404 title or purchasable offer', async () => {
+test('current chocolates have truthful AU metadata and confirmed offers', async () => {
   for (const seo of (await render('AU')).chocolateSeo) {
     assert.match(seo.title, /chocolat/i)
     assert.notEqual(seo.noindex, true)
-    assert.doesNotMatch(JSON.stringify(seo), /"offers"|InStock/)
+    assert.doesNotMatch(JSON.stringify(seo), /InStock/)
+    assert.ok(seo.structuredData.some(entry => ["Product", "CollectionPage"].includes(entry["@type"])))
   }
   for (const seo of (await render('KR')).chocolateSeo) assert.match(seo.title, /Not Found/)
 })

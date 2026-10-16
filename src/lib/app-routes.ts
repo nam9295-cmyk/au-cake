@@ -37,6 +37,7 @@ export type Page =
   | 'calendar'
 
 export function getCakeSlugFromPath(path: string): string | null {
+  if (marketConfig.market === 'AU') path = path.replace(/\.html$/, '').replace(/\/+$/, '')
   const match = /^\/cakes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(path)
   if (!match?.[1] || !getCakeDetailBySlug(match[1], 'en')) return null
   return match[1]
@@ -71,7 +72,7 @@ export function getPageFromPath(path: string): Page {
   if (path === '/reserve') return 'reserve'
   if (path === '/complete') return 'complete'
   if (path === '/lookup') return 'lookup'
-  if (path === '/classes') return 'classes'
+  if (path === '/classes' || (marketConfig.market === 'AU' && /^\/classes(?:\/|\.html)$/.test(path))) return 'classes'
   if (path === '/class-reserve') return 'class-reserve'
   if (path === '/class-complete') return 'class-complete'
   if (path === '/admin/login') return 'admin-login'

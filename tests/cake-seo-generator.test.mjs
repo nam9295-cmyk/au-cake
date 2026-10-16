@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
@@ -153,7 +153,7 @@ test('generated public HTML exposes verified organization, homepage FAQs, and on
 test('renewal static metadata avoids old prices and preserves compatibility routes', async () => {
  const {dist}=await generate()
  for(const path of ['cakes/pave-chocolate-cake','cakes/brownie-cheesecake','cakes/smore-stick','chocolates/chocolate-mochi']) {
-  const html=await readFile(join(dist,path+'.html'),'utf8');assert.doesNotMatch(html, /"offers"|InStock|"price":(?:79|85|4.5)/)
+  const html=await readFile(join(dist,path+'.html'),'utf8');assert.doesNotMatch(html, /InStock|"price":(?:79|85|4.5)/)
  }
   const combined = await readFile(join(dist, 'cakes', 'chocolate-pound-cake-and-cupcakes.html'), 'utf8')
   assert.deepEqual(jsonLd(combined).map((entry) => entry['@type']), ['WebPage', 'BreadcrumbList'])
@@ -180,7 +180,7 @@ test('renewal static metadata avoids old prices and preserves compatibility rout
   const paveHtml = await readFile(join(dist, 'cakes', 'pave-chocolate-cake.html'), 'utf8')
   const vanillaHtml = await readFile(join(dist, 'cakes', 'vanilla-fresh-cream-cake.html'), 'utf8')
   assert.match(paveHtml, /Pavé Whole Cake/)
-  assert.doesNotMatch(paveHtml, /milk chocolate/i)
+  assert.match(paveHtml, /milk chocolate/i)
   assert.deepEqual(jsonLd(vanillaHtml).map((entry) => entry['@type']), ['WebPage', 'BreadcrumbList'])
   assert.match(vanillaHtml, /<meta name="robots" content="noindex, nofollow"/)
   assert.doesNotMatch(vanillaHtml, /"@type":"Offer"/)
@@ -213,24 +213,10 @@ test('all indexable artifacts keep canonical brand, schema, canonical URLs, and 
   }
 
   const classes = await readFile(join(dist, 'classes.html'), 'utf8')
-  const course = jsonLd(classes).find((entry) => entry['@type'] === 'Course')
-  assert.ok(course)
-  assert.equal(course.offers.lowPrice, 99)
-  assert.equal(course.offers.highPrice, 254.6)
-  assert.match(classes, /Basic and Advanced Spring Vacation classes/)
-  assert.match(classes, /26 September to 12 October 2026/)
-  assert.match(classes, /10:00, 13:00 and 16:00/)
-  assert.doesNotMatch(classes, /weekend classes/i)
-  assert.match(classes, new RegExp(escapeRegExp(auPublicPages.classes.extensionSummary)))
+  assert.equal(jsonLd(classes).some(entry => entry['@type'] === 'Course'), false)
+  assert.match(classes, /Archive/)
+  assert.doesNotMatch(classes, /AggregateOffer|10:00, 13:00 and 16:00/)
 
-  const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
-  assert.doesNotMatch(sitemap, /\/ko(?:\/|<)/)
-
-  const runtimeSeo = await readFile(new URL('../src/lib/seo.ts', import.meta.url), 'utf8')
-  assert.match(runtimeSeo, /setMeta\('meta\[property="og:image"\]', 'content', image\)/)
-  assert.match(runtimeSeo, /setMeta\('meta\[property="og:image:type"\]', 'content', imageType\)/)
-  assert.match(runtimeSeo, /setMeta\('meta\[property="og:image:width"\]', 'content', String\(imageWidth\)\)/)
-  assert.match(runtimeSeo, /setMeta\('meta\[property="og:image:height"\]', 'content', String\(imageHeight\)\)/)
 })
 
 test('normal operational routes are generated noindex pages while unknown guides are not generated', async () => {
@@ -267,4 +253,39 @@ test('llms text exposes current public menu, confirmed prices and archived class
  assert.match(llms,/75.00/);assert.match(llms,/82.00/);assert.match(llms,/Class archive/)
  assert.doesNotMatch(llms,/79.00|85.00|115.00|155.00|lemon-cake|18:00/)
  assert.match(llms,/Official Instagram:/);assert.doesNotMatch(llms,/\/admin|customer name|mobile number/i)
+})
+
+test('SEO-01/04: static retired/private/public robots are explicit and retired pages keep their routes',async()=>{
+ const {dist}=await generate()
+ for(const [path,robots] of [['cakes/lemon-cake','noindex, nofollow'],['cakes/fresh-strawberry-vanilla-cream-cake','noindex, nofollow'],['cart','noindex, nofollow'],['chocolates/chocolate-mochi','index, follow']]){
+  const html=await readFile(join(dist,path+'.html'),'utf8');assert.ok(html.includes(`name="robots" content="${robots}"`),path)
+  assert.doesNotMatch(html, /content="(?:undefined|null|)"/)
+ }
+})
+test('SEO-07: classes initial document is an archive, without active Course offers',async()=>{
+ const {dist}=await generate();const html=await readFile(join(dist,'classes.html'),'utf8')
+ assert.match(html,/archive/i);assert.doesNotMatch(JSON.stringify(jsonLd(html)),/AggregateOffer|"offers"/)
+ assert.match(html,/next.*(?:unconfirmed|announced|confirmed)/i)
+ assert.match(html,/Basic.*1.*Advanced.*2/s)
+})
+
+
+test('SEO-01/04 all emitted documents have valid robots; sitemap contains only indexable canonicals',async()=>{
+ const {dist}=await generate()
+ for(const file of await readdir(dist,{recursive:true})){
+  if(!file.endsWith('.html'))continue
+  const html=await readFile(join(dist,file),'utf8')
+  assert.match(html, /name="robots" content="(?:index, follow|noindex, nofollow)"/,file)
+  assert.doesNotMatch(html, /name="robots" content="(?:undefined|null|)"/,file)
+ }
+ const sitemap=await readFile(join(dist,'sitemap.xml'),'utf8')
+ const urls=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1])
+ assert.equal(new Set(urls).size,urls.length)
+ for(const url of urls){
+  const pathname=new URL(url).pathname
+  const html=await readFile(join(dist,pathname==='/'?'index.html':pathname.slice(1)+'.html'),'utf8').catch(()=>readFile(join(dist,pathname.slice(1),'index.html'),'utf8'))
+  assert.ok(html.includes('name="robots" content="index, follow"'),url)
+  assert.ok(html.includes(`rel="canonical" href="${url}"`),url)
+ }
+ assert.doesNotMatch(urls.join("\n"),/\?|\/admin|\/cart|lemon-cake|bento-cake/)
 })

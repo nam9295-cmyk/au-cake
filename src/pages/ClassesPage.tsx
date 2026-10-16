@@ -1,3 +1,5 @@
+import { CLASS_ARCHIVE_COPY } from '../../appwrite-functions/reservation-api/src/au-renewal-seo.js'
+import { marketConfig } from '../lib/market'
 import kidsClassHeroImg from '../assets/kids-class-hero.webp'
 import kidsClassProcessImg from '../assets/kids-class-process.webp'
 import kidsClassFinishedImg from '../assets/kids-class-finished.webp'
@@ -25,6 +27,27 @@ export function ClassesPage({ navigate, language, setLanguage, cartItemCount }: 
         description: 'Bookings will reopen for the next school holiday program.',
       }
 
+  if (marketConfig.market === 'AU') {
+    const archive = CLASS_ARCHIVE_COPY[language]
+    return <>
+      <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
+      <main className="kids-class-page">
+        <section className="kids-class-hero" aria-labelledby="kids-class-title">
+          <div className="kids-hero-copy">
+            <h1 id="kids-class-title">{archive.title}</h1>
+            <p>{archive.intro}</p>
+            <p>{archive.courses}</p>
+            <a href="/custom-cakes">{archive.link}</a>
+          </div>
+          <div className="kids-photo-card"><img src={kidsClassHeroImg} alt={archive.archive} /></div>
+        </section>
+        <section className="kids-gallery-section" aria-label={archive.archive}>
+          <figure className="kids-gallery-card"><img src={kidsClassProcessImg} alt={copy.landing.processImageAlt} /><figcaption>{archive.archive}</figcaption></figure>
+          <figure className="kids-gallery-card"><img src={kidsClassFinishedImg} alt={copy.landing.finishedImageAlt} /><figcaption>{archive.archive}</figcaption></figure>
+        </section>
+      </main>
+    </>
+  }
   return (
     <>
       <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />

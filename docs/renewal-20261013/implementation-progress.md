@@ -257,3 +257,10 @@ Mochi and confirmed offers are open. Cookie remains blocked for missing price; B
 Emergency rollback: run the private server release helper in close mode to disable both writer flags and activate the compatible closed API checkpoint6ad1dad43e38b7ebfbfd; retain new Notification/Reminder/readers. Verify health reports disabled. Keep the matching frontend unless a compatible replacement is required. Do not blindly restore old almond-only code after banana orders, and do not restore/delete/reprice/reschedule DB records. Private server release records contain deployment/config checkpoints and verified backup recovery references.
 
 This completion record is committed locally after deployment; deployed main remains8155e4a to avoid an unnecessary documentation-only rebuild.
+
+
+### 2026-10-17 — Local SEO/GEO audit fixes (not deployed)
+
+Reproduced SEO-01–08 against current6155ddc without resetting. Unified static/client robots, catalogue-driven initial product copy, confirmed Product Offers, retired noindex, current llms/prices, accurate social image metadata, AU class archive/enquiries and Whole/Loaf shared canonical. Preserved banana assortment, sale gates, pricing/order/pickup logic, KR and Custom Cake. Details: seo-geo-local-fix-20261017.md.
+
+Failing tests preceded fixes. SEO suite, renewal suite, full npm test, lint, KR then AU builds and diff check passed. Browser390px initial-HTML/JavaScript comparison passed on22 routes; English/Korean Mochi and Classes checked. Search Console, Bing and Rich Results account/tool verification remains unperformed. No production data access beyond public-page GETs, push, deployment, real order or notification.

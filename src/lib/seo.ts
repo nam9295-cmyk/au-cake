@@ -1,4 +1,4 @@
-import { renewalSeoPages } from '../../appwrite-functions/reservation-api/src/au-renewal-seo.js'
+import { renewalSeoPages, seoRobots, classArchiveSeo } from '../../appwrite-functions/reservation-api/src/au-renewal-seo.js'
 import portfolio from '../content/au-company-portfolio.json' with { type: 'json' }
 import homeV02 from '../content/au-home-v02.json' with { type: 'json' }
 import serviceRoutes from '../content/au-service-routes.json' with { type: 'json' }
@@ -23,6 +23,8 @@ export type SeoConfig = {
   description: string
   canonical?: string
   noindex?: boolean
+  robots?: string
+  imageAlt?: string
   ogType?: 'website' | 'product'
   omitImage?: boolean
   image?: string
@@ -282,8 +284,15 @@ const privateSeo: Record<string, SeoConfig> = {
 }
 
 function setMeta(selector: string, attribute: string, value: string) {
-  const element = document.head.querySelector<HTMLMetaElement>(selector)
-  if (element) element.setAttribute(attribute, value)
+  let element = document.head.querySelector<HTMLMetaElement>(selector)
+  if (!element) {
+    element = document.createElement('meta')
+    const match = /^meta\[(name|property)="([^"]+)"\]$/.exec(selector)
+    if (!match) throw new Error('Unsupported meta selector')
+    element.setAttribute(match[1], match[2])
+    document.head.appendChild(element)
+  }
+  element.setAttribute(attribute, value)
 }
 function removeMeta(selector: string) {
   document.head.querySelector<HTMLMetaElement>(selector)?.remove()
@@ -291,9 +300,13 @@ function removeMeta(selector: string) {
 
 
 export function getSeoConfig(pathname: string): SeoConfig {
+  if (marketConfig.market === 'AU') {
+    pathname = pathname.split('?')[0].replace(/\.html$/, '').replace(/\/+$/, '') || '/'
+    if (pathname === '/classes') return classArchiveSeo(SITE_URL)
+  }
   const renewed = marketConfig.market === 'AU' && renewalSeoPages(SITE_URL, publicContent)[pathname.replace(/\/$/, '') || '/']
   if (renewed) return renewed
-  if (marketConfig.market === 'AU' && /^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(pathname)) return {title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', noindex: true}
+  if (marketConfig.market === 'AU' && /^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(pathname)) return {title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', canonical: `${SITE_URL}${pathname}`, noindex: true}
 
   const service = marketConfig.market === 'AU' && serviceRoutes.find(route => route.path === pathname.replace(/\/$/, ''))
   if (service) return { title: service.title, description: service.description, canonical: `${SITE_URL}${service.path}`, structuredData: [{ '@type': 'WebPage', name: service.title, url: `${SITE_URL}${service.path}`, inLanguage: 'en-AU' }] }
@@ -347,18 +360,20 @@ export function applySeoConfig(config: SeoConfig, pathname: string) {
 
   document.title = config.title
   setMeta('meta[name="description"]', 'content', config.description)
-  setMeta('meta[name="robots"]', 'content', config.noindex ? 'noindex, nofollow' : 'index, follow')
+  setMeta('meta[name="robots"]', 'content', seoRobots(config))
   setMeta('meta[property="og:type"]', 'content', config.ogType || 'website')
   setMeta('meta[property="og:title"]', 'content', config.title)
   setMeta('meta[property="og:description"]', 'content', config.description)
   setMeta('meta[property="og:url"]', 'content', canonical)
   if (image) {
     setMeta('meta[property="og:image"]', 'content', image)
+    if (marketConfig.market === 'AU') setMeta('meta[property="og:image:alt"]', 'content', config.imageAlt || config.title)
     setMeta('meta[property="og:image:type"]', 'content', imageType)
     setMeta('meta[property="og:image:width"]', 'content', String(imageWidth))
     setMeta('meta[property="og:image:height"]', 'content', String(imageHeight))
   } else {
     removeMeta('meta[property="og:image"]')
+    removeMeta('meta[property="og:image:alt"]')
     removeMeta('meta[property="og:image:type"]')
     removeMeta('meta[property="og:image:width"]')
     removeMeta('meta[property="og:image:height"]')
@@ -371,8 +386,13 @@ export function applySeoConfig(config: SeoConfig, pathname: string) {
     removeMeta('meta[name="twitter:image"]')
   }
 
-  const canonicalElement = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
-  if (canonicalElement) canonicalElement.href = canonical
+  let canonicalElement = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+  if (!canonicalElement) {
+    canonicalElement = document.createElement('link')
+    canonicalElement.rel = 'canonical'
+    document.head.appendChild(canonicalElement)
+  }
+  canonicalElement.href = canonical
 
   document.head.querySelectorAll('link[data-vg-hreflang]').forEach((element) => element.remove())
   config.alternateLinks?.forEach(({ hreflang, href }) => {

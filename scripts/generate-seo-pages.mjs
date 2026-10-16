@@ -1,4 +1,4 @@
-import { renewalSeoPages, renderRenewalLlms } from '../appwrite-functions/reservation-api/src/au-renewal-seo.js'
+import { renewalSeoPages, renderRenewalLlms, seoRobots, classArchiveSeo } from '../appwrite-functions/reservation-api/src/au-renewal-seo.js'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
@@ -392,11 +392,12 @@ function renderPage(template, path, config) {
   const imageType = config.imageType || defaultSocialImage.type
   const imageWidth = config.imageWidth || defaultSocialImage.width
   const imageHeight = config.imageHeight || defaultSocialImage.height
+  const imageAlt = escapeHtml(config.imageAlt || config.title)
 
   let rendered = template
     .replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
     .replace(/<meta\s+name="description"[\s\S]*?\/>/, `<meta name="description" content="${description}" />`)
-    .replace(/<meta\s+name="robots"[\s\S]*?\/>/, `<meta name="robots" content="${config.robots}" />`)
+    .replace(/<meta\s+name="robots"[\s\S]*?\/>/, `<meta name="robots" content="${seoRobots(config)}" />`)
     .replace(/<link\s+rel="canonical"[\s\S]*?\/>/, `<link rel="canonical" href="${canonical}" />`)
     .replace(/<meta\s+property="og:title"[\s\S]*?\/>/, `<meta property="og:title" content="${title}" />`)
     .replace(/<meta\s+property="og:description"[\s\S]*?\/>/, `<meta property="og:description" content="${description}" />`)
@@ -411,6 +412,7 @@ function renderPage(template, path, config) {
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:type"[\s\S]*?\/>/, `<meta property="og:type" content="${config.ogType || 'website'}" />`)
   rendered = upsertHeadTag(rendered, /<meta\s+property="og:site_name"[\s\S]*?\/>/, `<meta property="og:site_name" content="${brand}" />`)
   if (image) {
+    if (isAuMarket) rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:alt"[\s\S]*?\/>/, `<meta property="og:image:alt" content="${imageAlt}" />`)
     rendered = upsertHeadTag(rendered, /<meta\s+property="og:image"[\s\S]*?\/>/, `<meta property="og:image" content="${image}" />`)
     rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:type"[\s\S]*?\/>/, `<meta property="og:image:type" content="${imageType}" />`)
     rendered = upsertHeadTag(rendered, /<meta\s+property="og:image:width"[\s\S]*?\/>/, `<meta property="og:image:width" content="${imageWidth}" />`)
@@ -449,6 +451,7 @@ const hogirlSeo = await getHogirlSeoDefinitions({ siteUrl, brand })
 const portfolioPages = isAuMarket ? { '/portfolio': await getPortfolioSeoDefinition(siteUrl) } : {}
 const servicePages = isAuMarket ? await getServiceSeoDefinitions(siteUrl) : {}
 const renewedPages = isAuMarket ? renewalSeoPages(siteUrl, auPublicPages) : {}
+if (isAuMarket) pages['/classes'] = classArchiveSeo(siteUrl)
 const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages, ...servicePages, ...renewedPages }
 if (isAuMarket) for (const path of Object.keys(allPages)) {
  if (/^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(path)) allPages[path] = { title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', noindex: true, fallbackHtml: '<main><h1>Explore our current menu</h1><a href="/cakes">Cake &amp; Bake</a></main>' }
@@ -480,7 +483,7 @@ const indexablePaths = [
 ]
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${indexablePaths.map((path) => `  <url><loc>${canonicalFor(path)}</loc></url>`).join('\n')}
+${indexablePaths.filter(path => seoRobots(allPages[path] || {}) === 'index, follow').map((path) => `  <url><loc>${canonicalFor(path)}</loc></url>`).join('\n')}
 </urlset>
 `
 await writeFile(join(distDir, 'sitemap.xml'), sitemap)

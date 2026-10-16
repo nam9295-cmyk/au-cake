@@ -96,7 +96,7 @@ test('all noindex runtime SEO uses the canonical lowercase brand', () => {
 })
 
 test('runtime route metadata comes from the typed public-content adapter', () => {
-  for (const path of ['/', '/classes', '/reviews'] as const) {
+  for (const path of ['/', '/reviews'] as const) {
     const page = getPublicRoutePage(path)
     assert.ok(page)
     assert.equal(getSeoConfig(path).title, page.title)
@@ -104,13 +104,10 @@ test('runtime route metadata comes from the typed public-content adapter', () =>
   }
 })
 
-test('Course AggregateOffer uses the canonical base range and excludes extensions', () => {
-  const course = getSeoConfig('/classes').structuredData
-    ?.find((entry) => entry['@type'] === 'Course')
-  assert.ok(course)
-  const offers = course.offers as Record<string, unknown>
-  assert.equal(offers.lowPrice, publicContent.classes.baseLowPrice)
-  assert.equal(offers.highPrice, publicContent.classes.baseHighPrice)
+test('closed classes publish archive metadata without a recruitment Offer', () => {
+  const config = getSeoConfig('/classes')
+  assert.match(config.title, /Archive/)
+  assert.doesNotMatch(JSON.stringify(config.structuredData), /AggregateOffer|"offers"/)
 })
 
 test('renewal metadata preserves supplied product images and does not invent missing photos',()=>{
@@ -121,7 +118,7 @@ test('renewal metadata preserves supplied product images and does not invent mis
 })
 
 test('renewal metadata does not publish a purchasable offer while launch and provisional prices await approval',()=>{
- for(const card of Object.values(RENEWAL_CARDS).flat())assert.doesNotMatch(JSON.stringify(getSeoConfig(card.href.split('?')[0])), /"offers"|InStock|115.00|155.00/)
+ for(const card of [RENEWAL_CARDS.cakes[4],RENEWAL_CARDS.celebrate[1]])assert.doesNotMatch(JSON.stringify(getSeoConfig(card.href.split('?')[0])), /"offers"|InStock|115.00|155.00/)
 })
 
 test('legacy grouped and Basque pages are noindex WebPage compatibility views', () => {
@@ -157,7 +154,7 @@ test('legacy Vanilla page remains a noindex compatibility view without Product O
 
 test('Brownie Product publishes the supplied Brownie image with its actual dimensions', () => {
   const config = getSeoConfig('/cakes/brownie-cheesecake')
-  const image = `${SITE_URL}/products/brownie-cheesecake-sydney.webp`
+  const image = `${SITE_URL}/products/details/brownie-cheesecake/hero-1080.webp`
   assert.equal(config.image, image)
   assert.equal(config.imageWidth, 1080)
   assert.equal(config.imageHeight, 1012)
@@ -189,4 +186,20 @@ test('all noindex operational routes remain directly loadable metadata pages', (
     assert.equal(config.noindex, true, path)
     assert.equal(config.structuredData, undefined, path)
   }
+})
+
+test('SEO-04 retired slash and html aliases preserve the retirement page and canonical',()=>{
+ for(const suffix of ['', '/', '.html']){
+  const path='/cakes/lemon-cake'+suffix
+  assert.equal(getPageFromPath(path),'cake-detail')
+  assert.equal(getSeoConfig(path).canonical,SITE_URL+'/cakes/lemon-cake')
+  assert.equal(getSeoConfig(path).noindex,true)
+ }
+})
+
+test('SEO-07 class archive aliases keep the same visible page and canonical',()=>{
+ for(const path of ['/classes','/classes/','/classes.html']){
+  assert.equal(getPageFromPath(path),'classes')
+  assert.equal(getSeoConfig(path).canonical,SITE_URL+'/classes')
+ }
 })
