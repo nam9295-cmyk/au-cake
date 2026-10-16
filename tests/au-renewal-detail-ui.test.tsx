@@ -65,7 +65,7 @@ test("cupcake finish cards are product specific and unavailable prices cannot be
 test("pack choices reserve a separate photo area for each sales configuration", () => {
   for (const card of [...RENEWAL_CARDS.chocolates.filter(c => c.id !== 'mochi'), RENEWAL_CARDS.celebrate[2]]) {
     const html = render(card.href);
-    assert.equal((html.match(/class="renewal-option-photo"/g) || []).length, card.offers.length, card.id);
+    assert.equal((html.match(/class="renewal-option-photo(?: [^"]*)?"/g) || []).length, card.offers.length, card.id);
   }
 });
 
@@ -106,7 +106,7 @@ test("restored stories use the current menu and do not revive discontinued brown
     const brownie = render("/cakes/brownie-cheesecake", language);
     assert.doesNotMatch(brownie, /Pavé Brownie Cheesecake|Pave chocolate on top|파베 초콜릿 on top|brownie-cheesecake\/edition-03/);
     const loaf = render("/cakes/brownie-cheesecake?form=loaf", language);
-    assert.doesNotMatch(loaf, /src="\/products\/details\/brownie-cheesecake\//, "whole-cake photographs must not stand in for the loaf");
+    assert.doesNotMatch(loaf.slice(loaf.indexOf("<main"), loaf.indexOf('class="au-pave-related"')), /src="\/products\/details\/brownie-cheesecake\//, "whole-cake photographs must not stand in for the loaf");
     for (const card of Object.values(RENEWAL_CARDS).flat().filter(c => c.id !== "mochi")) {
       const html = render(card.href, language);
       const related = html.slice(html.indexOf('class="au-pave-related"'));

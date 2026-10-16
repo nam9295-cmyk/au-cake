@@ -322,3 +322,44 @@
   .renewal-short-story-grid figcaption { font-size: 13px; }
 }
 .mochi-flavour-description { margin: 6px 0 0; font-size: 12px; line-height: 1.45; }
+
+/* AU mobile copy rhythm: prose 14px, monetary values 16px. Keep form
+   controls at 16px to avoid iOS focus zoom; desktop and KR stay unchanged. */
+@media (max-width: 767px) {
+  :is(.au-redesign-shell, .au-home-shell) :is(p, figcaption),
+  .au-redesign-shell .au-pave-specs details,
+  .au-redesign-shell .au-pave-packaging-copy {
+    font-size: 14px !important;
+    line-height: 1.6;
+  }
+  :is(.au-redesign-shell, .au-home-shell) :is(
+    .au-mobile-price, .au-pave-option-price, .au-pave-unit-price strong,
+    .renewal-total > strong, .au-pave-sticky-order strong,
+    .au-pave-related-grid p, .cake-detail-price-primary, .cake-detail-checkout-price,
+    .au-redesign-price, .rd-product-price-row, .rd-best-price-label
+  ) {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .au-home-shell #home-collection-panel .au-v02-product-heading p:empty { display: none; }
+  .au-home-shell #home-collection-panel .au-v02-product-price { font-size: 16px; }
+}
+
+/* Five original cutouts grouped together, plus one separated bonus pack. */
+.renewal-six-pack .renewal-pack-copy {
+  position: absolute; width: 42%; height: 90%; top: 5%; bottom: auto;
+  object-fit: contain; transform-origin: center bottom;
+}
+.renewal-six-pack .renewal-pack-copy-0 { left: 0%; transform: rotate(-12deg); }
+.renewal-six-pack .renewal-pack-copy-1 { left: 8%; transform: rotate(-8deg); }
+.renewal-six-pack .renewal-pack-copy-2 { left: 16%; transform: rotate(-4deg); }
+.renewal-six-pack .renewal-pack-copy-3 { left: 24%; transform: rotate(0deg); }
+.renewal-six-pack .renewal-pack-copy-4 { left: 32%; transform: rotate(4deg); }
+.renewal-six-pack .renewal-pack-copy-5 { left: 58%; transform: rotate(8deg); }
+
+/* Align each collection row by image, title, price and optional note. */
+.renewal-grid article { display: grid; grid-template-rows: subgrid; grid-row: span 4; row-gap: 0; }
+.renewal-grid article > a { display: grid; grid-template-rows: subgrid; grid-row: span 4; }
+.au-redesign-shell .renewal-grid .renewal-card-note { font-size: 12px !important; line-height: 1.45; }

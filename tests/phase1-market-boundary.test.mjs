@@ -310,7 +310,7 @@ test('chocolate Home mapping, list, detail and related cards share each product 
     assert.ok(homeCard, `${product.slug}: missing Home collection mapping`)
     assert.equal(homeCard.href, `/chocolates/${product.slug}`)
     assert.equal(homeCard.price, product.price)
-    assert.equal(homeCard.image, product.slug === 'pave-chocolate' ? '/products/chocolates/pave-heart-100g.png' : product.photography.src)
+    assert.equal(homeCard.image, product.slug === 'pave-chocolate' ? '/products/renewal-photos/pave-heart-cutout.webp' : product.photography.src)
     for (const markup of [card, ...(index === 0 ? [] : [chocolateDetails[index]])]) {
       assert.ok(markup.includes(`src="${product.photography.src}"`))
       assert.ok(markup.includes(`alt="${product.photography.alt}"`))

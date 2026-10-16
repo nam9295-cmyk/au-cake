@@ -37,7 +37,7 @@ export const RENEWAL_CARDS = Object.freeze({
       "브라우니 바스크 홀케이크",
       "/cakes/brownie-cheesecake?form=whole",
       ["brownie-whole"],
-      "/products/brownie-cheesecake-sydney.webp",
+      "/products/details/brownie-cheesecake/hero-1080.webp",
     ),
     card(
       "brownie-loaf",
@@ -53,6 +53,7 @@ export const RENEWAL_CARDS = Object.freeze({
       "르뱅쿠키 6개 세트",
       "/cakes/levain-cookies",
       ["cookie-six"],
+      "/products/renewal-photos/cookies-hero_v2.webp",
     ),
   ],
   chocolates: [
@@ -82,7 +83,7 @@ export const RENEWAL_CARDS = Object.freeze({
       "파베초콜릿 · 하트 통 100g",
       "/chocolates/pave-chocolate",
       ["pave-chocolate-100g", "pave-six-plus-one"],
-      "/products/chocolates/pave-heart-100g.png",
+      "/products/renewal-photos/pave-heart-cutout.webp",
     ),
     card(
       "eiffel",

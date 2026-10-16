@@ -1,5 +1,5 @@
 import { RENEWAL_PICKUP_POLICY_VERSION } from './au-renewal-pickup-policy.js'
-import { RENEWAL_CONTRACT, isRenewalContract } from './au-renewal.js'
+import { RENEWAL_CONTRACT, isRenewalContract, MOCHI_FLAVOURS } from './au-renewal.js'
 import { canonicalRenewalRequest, buildRenewalOrderData } from './au-renewal-storage.js'
 import { AppwriteException, Client, Databases, ID, Query, Storage } from 'node-appwrite'
 import {
@@ -739,7 +739,7 @@ return async ({ req, res, log, error }) => {
     const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req, env))
 
     let result
-    if (action === 'renewal-health') result = { contractVersion: RENEWAL_CONTRACT, enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true', preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true', pickupPolicyVersion: RENEWAL_PICKUP_POLICY_VERSION, weekendApproved: true }
+    if (action === 'renewal-health') result = { contractVersion: RENEWAL_CONTRACT, enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true', preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true', pickupPolicyVersion: RENEWAL_PICKUP_POLICY_VERSION, weekendApproved: true, mochiFlavours: MOCHI_FLAVOURS.map(({ id, priceCents }) => ({ id, priceCents })) }
     else if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig, { chocolateWritesEnabled })
     else if (action === 'create-cake') {
       const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: new Storage(clientForRequest(req, env)) }

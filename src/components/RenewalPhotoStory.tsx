@@ -15,7 +15,7 @@ export function RenewalPhotoGallery({ id, title }: { id: string; title: string }
 export function RenewalPhotoStory({ id, language }: { id: string; language: Language }) {
   const ko = language === 'ko'
   const photos = renewalPhotos(id)
-  if (!photos.length || id === 'mochi') return null
+  if (!photos.length || !['brownie-loaf', 'brownie-cupcakes'].includes(id)) return null
   const loaf = id === 'brownie-loaf'
   return <section className="renewal-short-story au-pave-story" data-detail-section="product-introduction">
     <h2>{ko ? '브라우니와 바스크 치즈케이크를 함께' : 'Brownie meets Basque cheesecake'}</h2>
@@ -25,4 +25,10 @@ export function RenewalPhotoStory({ id, language }: { id: string; language: Lang
       <figure><ProductPhoto src={renewalPhoto(photos[2])} label={ko ? '바닐라 생크림 옵션' : 'Vanilla fresh cream finish'} /><figcaption>{ko ? '취향에 따라 바닐라 생크림을 더하세요.' : 'Choose vanilla fresh cream for a finishing touch.'}</figcaption></figure>
     </div>
   </section>
+}
+
+export function SixPackPhoto({ src, label }: { src: string; label: string }) {
+  return <div className="renewal-option-photo renewal-six-pack" role="img" aria-label={label}>
+    {Array.from({ length: 6 }, (_, index) => <img key={index} src={src} alt="" aria-hidden="true" className={`renewal-pack-copy renewal-pack-copy-${index}`} loading="lazy" />)}
+  </div>
 }

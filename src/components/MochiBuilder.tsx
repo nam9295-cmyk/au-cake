@@ -52,7 +52,7 @@ function FlavourCounts({
             <ProductPhoto option src={renewalPhoto(mochiPhotos[f.id])} label={name} />
             <div>
               <strong>{name}</strong>
-              <div>{money(f.priceCents)}</div>
+              <div className="au-mobile-price">{money(f.priceCents)}</div>
               <p className="mochi-flavour-description">{f.id === "nama_chocolate" ? t("Pure nama chocolate centre · 80g", "생초콜릿을 가득 · 80g") : f.id === "butter_redbean" ? t("Red bean, butter & nama chocolate · 85g+", "앙금·버터·생초콜릿 · 85g 이상") : t("Fruit & nama chocolate · 85g+", "과일과 생초콜릿 · 85g 이상")}</p>
             </div>
             <QuantityStepper
@@ -221,7 +221,7 @@ export function MochiBuilder({
               }}
             />
           </div>
-          <p>{t("Gift-box packaging", "선물박스 포장비")} · AUD 0.00</p>
+          <p>{t("Gift-box packaging", "선물박스 포장비")} · <span className="au-mobile-price">AUD 0.00</span></p>
         </>
       ) : (
         <>
@@ -358,13 +358,13 @@ export function MochiBuilder({
       {quote && (
         <div className="renewal-total" aria-live="polite">
           <p>
-            {t("Product subtotal", "상품 소계")} {money(quote.subtotalCents)}
+            {t("Product subtotal", "상품 소계")} <span className="au-mobile-price">{money(quote.subtotalCents)}</span>
           </p>
           <p>
             {t("Packaging", "포장비")}{" "}
-            {money(quote.individualPackagingFeeCents)}
+            <span className="au-mobile-price">{money(quote.individualPackagingFeeCents)}</span>
           </p>
-          <strong>{money(quote.totalPriceCents)}</strong>
+          <strong><span className="au-mobile-price">{money(quote.totalPriceCents)}</span></strong>
           <p>
             {quote.lines.reduce((n, l) => n + l.giftBoxCount, 0)}{" "}
             {t("gift boxes", "선물박스")} ·{" "}

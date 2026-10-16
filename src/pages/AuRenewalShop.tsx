@@ -1,5 +1,5 @@
 import { renewalPhoto, renewalPhotos } from "../lib/renewal-photos";
-import { RenewalPhotoGallery } from "../components/RenewalPhotoStory";
+import { RenewalPhotoGallery, SixPackPhoto } from "../components/RenewalPhotoStory";
 import {
   OptionButton,
   QuantityStepper,
@@ -91,7 +91,8 @@ function displaySummary(
     money(line.totalPriceCents),
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(" · ").split(/(AUD \d+\.\d{2})/).map((part, index) =>
+      part.startsWith("AUD ") ? <span className="au-mobile-price" key={index}>{part}</span> : part);
 }
 const money = (n: number) => `AUD ${(n / 100).toFixed(2)}`;
 const localPreview = import.meta.env.DEV;
@@ -134,13 +135,13 @@ export function RenewalCollection({
                 <ProductPhoto label={language === "ko" ? card.ko : card.en} />
               )}
               <h2>{language === "ko" ? card.ko : card.en}</h2>
-              <p>{cardPrice(card, language === "ko")}</p>
+              <p className="au-mobile-price">{cardPrice(card, language === "ko")}</p>
               {card.id === "brownie-cupcakes" && <p className="renewal-card-note">{t("Reservations awaiting price approval", "가격 승인 후 예약 안내")}</p>}
               {["mochi", "cookies"].includes(card.id) && (
                 <p className="renewal-card-note">
                   {t(
-                    card.id === "mochi" ? "Pre-orders from 16 October 2026 · subject to manual opening" : "Reservations awaiting price approval",
-                    card.id === "mochi" ? "2026년 10월 16일부터 사전예약 · 운영자 수동 개시" : "가격 확정 후 예약 안내",
+                    card.id === "mochi" ? "Please allow at least 24 hours before pickup" : "Reservations awaiting price approval",
+                    card.id === "mochi" ? "픽업까지 최소 24시간이 필요합니다" : "가격 확정 후 예약 안내",
                   )}
                 </p>
               )}
@@ -375,7 +376,11 @@ function Product({ card }: { card: RenewalCard }) {
                       setFinish("basic");
                     }}
                   >
-                    <ProductPhoto option src={id === card.offers[0] ? card.image : undefined} label={packLabel(id)} />
+                    {["almond-chocoball-6pack", "pave-six-plus-one", "eiffel-six-plus-one"].includes(id) ? (
+                      <SixPackPhoto src={card.image} label={packLabel(id)} />
+                    ) : (
+                      <ProductPhoto option src={id === "almond-chocoball-black-tub-2x80g" ? renewalPhoto("almond-black-tub") : id === card.offers[0] || id === "smore-12" ? card.image : undefined} label={packLabel(id)} />
+                    )}
                     <strong>{packLabel(id)}</strong>
                     <span className="au-pave-option-price">
                       {money(RENEWAL_OFFERS[id].price!)}
@@ -607,7 +612,7 @@ function Product({ card }: { card: RenewalCard }) {
                     >
                       <ProductPhoto option src={extra.image} label={name} />
                       <strong>{name}</strong>
-                      <span>{money(cents)}</span>
+                      <span className="au-mobile-price">{money(cents)}</span>
                       <QuantityStepper
                         label={name}
                         value={n}
@@ -625,19 +630,19 @@ function Product({ card }: { card: RenewalCard }) {
             <div className="renewal-total" aria-live="polite">
               <p>
                 {t("Product subtotal", "상품 소계")}{" "}
-                {money(quote.subtotalCents)}
+                <span className="au-mobile-price">{money(quote.subtotalCents)}</span>
               </p>
               {quote.discountCents > 0 && (
                 <p>
                   {t("Extra savings", "추가상품 할인")} −
-                  {money(quote.discountCents)}
+                  <span className="au-mobile-price">{money(quote.discountCents)}</span>
                 </p>
               )}
               <p>
                 {t("Packaging", "포장비")}{" "}
-                {money(quote.individualPackagingFeeCents)}
+                <span className="au-mobile-price">{money(quote.individualPackagingFeeCents)}</span>
               </p>
-              <strong>{money(quote.totalPriceCents)}</strong>
+              <strong><span className="au-mobile-price">{money(quote.totalPriceCents)}</span></strong>
               {localPreview &&
                 quote.lines.some((l) => l.priceStatus === "provisional") && (
                   <p>
@@ -735,8 +740,8 @@ function MochiProduct({ card }: { card: RenewalCard }) {
           </p>
           <p>
             {t(
-              "Pre-orders from 16 October 2026, subject to readiness checks and manual opening. Please allow at least 24 hours before collection.",
-              "2026년 10월 16일부터 준비 확인 후 운영자가 예약 접수를 엽니다. 픽업까지 최소 24시간이 필요합니다.",
+              "Pre-orders from 16 October 2026. Please allow at least 24 hours before collection.",
+              "2026년 10월 16일부터 사전예약을 받습니다. 픽업까지 최소 24시간이 필요합니다.",
             )}
           </p>
           <div className="mochi-product-information">
@@ -955,7 +960,7 @@ function Bag() {
               </li>
             ))}
           </ul>
-          {quote && <h2>{money(quote.totalPriceCents)}</h2>}
+          {quote && <h2 className="au-mobile-price"><span className="au-mobile-price">{money(quote.totalPriceCents)}</span></h2>}
           <form
             className="renewal-checkout"
             onSubmit={submit}
