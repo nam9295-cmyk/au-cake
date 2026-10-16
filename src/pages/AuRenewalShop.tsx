@@ -5,6 +5,9 @@ import {
   PurchaseBar,
 } from "../components/ProductOptionControls";
 import { AuPaveGallery } from "../components/AuPaveGallery";
+import { AuDetailGallery } from "../components/AuDetailGallery";
+import { AuRenewalProductStory } from "../components/AuRenewalProductStory";
+import { renewalDetailPresentation } from "../lib/renewal-detail-presentation";
 import { formatCurrentCakeSizeLabel } from "../lib/cake-serving";
 import gateauBasic from "../assets/options/gateau-basic.webp";
 import gateauChocolate from "../assets/options/gateau-onchocolate.webp";
@@ -176,6 +179,7 @@ function Product({ card }: { card: RenewalCard }) {
     card.href.split("?")[0].split("/").at(-1)!,
     language,
   );
+  const presentation = renewalDetailPresentation(card);
   const p = RENEWAL_OFFERS[offerId],
     isCup = p.family === "cupcake";
   useEffect(() => {
@@ -315,6 +319,8 @@ function Product({ card }: { card: RenewalCard }) {
         <div className="renewal-product-media">
           {card.id === "pave" ? (
             <AuPaveGallery />
+          ) : presentation ? (
+            <AuDetailGallery key={card.id} presentation={presentation} />
           ) : (
             <ProductPhoto src={card.image} label={ko ? card.ko : card.en} />
           )}
@@ -697,6 +703,7 @@ function Product({ card }: { card: RenewalCard }) {
         onAdd={add}
         added={added}
       />
+      <AuRenewalProductStory card={card} language={language} />
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { getAuChocolateCollectionCards, getAuOrderableCakeCards } from '../lib/au-catalog'
 import { paveImageSource, paveOccasions, paveTexture } from '../lib/au-pave-presentation'
 import type { CakeDetailData } from '../lib/cake-detail'
@@ -58,8 +58,8 @@ export function PaveVideoMoment({ videoSrc }: { videoSrc?: string }) {
   </section>
 }
 
-export function AuPaveProductStory({ detail, editorial, language, onOpenCake }: {
-  detail: CakeDetailData; editorial: CakeEditorialContent | null; language: Language; onOpenCake: (slug: string) => void
+export function AuPaveProductStory({ detail, editorial, language, onOpenCake, relatedContent }: {
+  detail: Pick<CakeDetailData, 'accordions'>; editorial: CakeEditorialContent | null; language: Language; onOpenCake?: (slug: string) => void; relatedContent?: ReactNode
 }) {
   const root = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -135,11 +135,11 @@ export function AuPaveProductStory({ detail, editorial, language, onOpenCake }: 
         {detail.accordions.map((item) => <details key={item.title} open><summary>{item.title}</summary><div><p>{item.body}</p></div></details>)}
       </div>
     </section>
-    <section className="au-pave-related" data-pave-reveal>
+    {relatedContent ?? <section className="au-pave-related" data-pave-reveal>
       <StoryHeading eyebrow="EXPLORE MORE" title="You May Also Enjoy" />
       <div className="au-pave-related-grid">{related.map((card) => <a key={card.slug} href={card.href} onClick={(event) => {
-        if (card.cake && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onOpenCake(card.slug) }
+        if (card.cake && onOpenCake && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onOpenCake(card.slug) }
       }}><div><img src={card.image} alt={card.name} width={1080} height={1012} loading="lazy" decoding="async" /></div><h3>{card.name}</h3><p>{card.price}</p></a>)}</div>
-    </section>
+    </section>}
   </div>
 }

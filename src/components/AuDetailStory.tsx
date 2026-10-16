@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { getAuChocolateCollectionCards, getAuOrderableCakeCards } from '../lib/au-catalog'
 import { getDetailImage, type DetailPresentation } from '../lib/au-detail-presentation'
 import type { CakeDetailData } from '../lib/cake-detail'
@@ -84,8 +84,9 @@ export function DetailRelated({ presentation, language, onOpenCake }: { presenta
   </section>
 }
 
-export function AuDetailStory({ presentation, detail, editorial, language = 'en', onOpenCake }: {
-  presentation: DetailPresentation; detail?: CakeDetailData; editorial?: CakeEditorialContent | null; language?: Language; onOpenCake?: (slug: string) => void
+export function AuDetailStory({ presentation, detail, editorial, language = 'en', onOpenCake, relatedContent, packagingPhoto }: {
+  presentation: DetailPresentation; detail?: Pick<CakeDetailData, 'description' | 'features' | 'accordions'>; editorial?: CakeEditorialContent | null; language?: Language; onOpenCake?: (slug: string) => void
+  relatedContent?: ReactNode; packagingPhoto?: ReactNode
 }) {
   const root = useDetailReveal()
   const compact = editorial?.layout === 'compact' ? editorial : null
@@ -122,7 +123,7 @@ export function AuDetailStory({ presentation, detail, editorial, language = 'en'
       <div className="au-pave-occasion-grid" style={{ '--occasion-count': presentation.occasions.length } as React.CSSProperties}>{presentation.occasions.map((role, index) => <figure key={role}><div>{photo(role, `${presentation.title} · ${presentation.occasionCaptions[index]}`, '(max-width: 767px) 44vw, (max-width: 1099px) 45vw, 30vw')}</div><figcaption>{presentation.occasionCaptions[index]}</figcaption></figure>)}</div>
     </section>}
     <section className="au-pave-packaging" data-detail-section="packaging" data-detail-reveal>
-      <div className="au-pave-packaging-photo">{photo('packaging', `${presentation.title} packaging reference`, '(max-width: 767px) calc(100vw - 40px), 50vw')}</div>
+      <div className="au-pave-packaging-photo">{packagingPhoto ?? photo('packaging', `${presentation.title} packaging reference`, '(max-width: 767px) calc(100vw - 40px), 50vw')}</div>
       <DetailHeading eyebrow="PRESENTATION & COLLECTION" title="READY TO TAKE HOME." />
       <div className="au-pave-packaging-copy"><p>{presentation.packagingNote || 'Collection in Melrose Park, Sydney. Confirm your requirements and availability with our team.'}</p>
       </div>
@@ -140,6 +141,6 @@ export function AuDetailStory({ presentation, detail, editorial, language = 'en'
         {!detail && <details open><summary>Collection & product information</summary><div><p>Melrose Park pick-up by arrangement. Availability and payment details are confirmed after your request.</p><p>Please contact us before ordering for current ingredient and allergen information.</p></div></details>}
       </div>
     </section>
-    <DetailRelated presentation={presentation} language={language} onOpenCake={onOpenCake} />
+    {relatedContent ?? <DetailRelated presentation={presentation} language={language} onOpenCake={onOpenCake} />}
   </div>
 }
