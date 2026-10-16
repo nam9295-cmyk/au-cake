@@ -97,7 +97,7 @@ export function renewalSeoPages(siteUrl, content) {
   }
   if(content){
     pages['/'].title=content.home.title;
-    pages['/'].structuredData=[{'@type':'Organization',name:'verygood chocolate',url:siteUrl,sameAs:content.site.socialProfiles},{'@type':'WebSite',name:'verygood chocolate',url:siteUrl},pages['/'].structuredData[0].mainEntity,{'@type':'FAQPage',mainEntity:content.home.faq.map(f=>({'@type':'Question',name:f.question,acceptedAnswer:{'@type':'Answer',text:f.answer}}))}];
+    pages['/'].structuredData=[{'@type':'Organization',name:'verygood chocolate',url:siteUrl,sameAs:content.site.socialProfiles},{'@type':'WebSite',name:'verygood chocolate',url:siteUrl},pages['/'].structuredData[0].mainEntity];
     pages['/'].fallbackHtml=pages['/'].fallbackHtml.replace('</main>',content.home.faq.map(f=>`<h2>${escape(f.question)}</h2><p>${escape(f.answer)}</p>`).join('')+'</main>');
   }
   return pages;

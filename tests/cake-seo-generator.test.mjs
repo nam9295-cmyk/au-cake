@@ -129,18 +129,15 @@ test('public crawl metadata permits search while reserving AI training and priva
   assert.match(robots, new RegExp(`Sitemap: ${escapeRegExp(site)}/sitemap\\.xml`))
 })
 
-test('generated public HTML exposes verified organization, homepage FAQs, and one semantic top-level heading per indexable page', async () => {
+test('generated public HTML exposes verified organization without invisible homepage FAQs, and one semantic top-level heading per indexable page', async () => {
   const { dist } = await generate()
   const home = await readFile(join(dist, 'index.html'), 'utf8')
   const homeData = jsonLd(home)
   const organization = homeData.find((entry) => entry['@type'] === 'Organization')
   const faq = homeData.find((entry) => entry['@type'] === 'FAQPage')
   assert.deepEqual(organization?.sameAs, ['https://www.instagram.com/verygood_syd/'])
-  assert.deepEqual(faq?.mainEntity, auPublicPages.home.faq.map((item) => ({
-    '@type': 'Question',
-    name: item.question,
-    acceptedAnswer: { '@type': 'Answer', text: item.answer },
-  })))
+  assert.equal(faq, undefined)
+  assert.deepEqual(homeData.map(entry => entry['@type']), ['Organization', 'WebSite', 'ItemList'])
 
   for (const path of ['/', '/cakes', ...cakeSlugs.map((slug) => `/cakes/${slug}`), '/classes', '/reviews']) {
     const file = path === '/' ? 'index.html' : `${path.slice(1)}.html`

@@ -45,15 +45,11 @@ test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
   assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
   assert.equal(config.description, 'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.')
-  assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList', 'FAQPage'])
+  assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList'])
   const organization = config.structuredData?.find((entry) => entry['@type'] === 'Organization')
   const faq = config.structuredData?.find((entry) => entry['@type'] === 'FAQPage')
   assert.deepEqual(organization?.sameAs, ['https://www.instagram.com/verygood_syd/'])
-  assert.deepEqual(faq?.mainEntity, publicContent.home.faq.map((item) => ({
-    '@type': 'Question',
-    name: item.question,
-    acceptedAnswer: { '@type': 'Answer', text: item.answer },
-  })))
+  assert.equal(faq, undefined)
 })
 
 test('all indexable runtime SEO uses the canonical lowercase brand', () => {
@@ -202,4 +198,9 @@ test('SEO-07 class archive aliases keep the same visible page and canonical',()=
   assert.equal(getPageFromPath(path),'classes')
   assert.equal(getSeoConfig(path).canonical,SITE_URL+'/classes')
  }
+})
+
+
+test('AU hydrated homepage preserves organization, website and list without invisible FAQ schema', () => {
+  assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList'])
 })
