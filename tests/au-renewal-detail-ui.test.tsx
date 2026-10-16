@@ -73,7 +73,8 @@ test("Oct16 product information distinguishes missing photos from unavailable of
  const mochi=render('/chocolates/chocolate-mochi');
  assert.match(mochi,/16 October 2026/);
  assert.doesNotMatch(mochi,/19 October 2026/);
- assert.match(mochi,/PHOTO COMING SOON/);
+ assert.match(mochi,/mochi-mochi-hero.webp/);
+ assert.match(mochi,/mochi-banana.webp/);
  assert.match(mochi,/80g/);
  assert.match(mochi,/refrigerated/i);
  assert.match(mochi,/3 days/);

@@ -309,3 +309,16 @@
   .renewal-extra-card strong { font-size: 10px; }
   .renewal-extra-card > span { font-size: 11px; }
 }
+
+.renewal-upload-gallery .au-pave-thumbnails img { width: 100%; height: 100%; object-fit: cover; }
+.renewal-short-story { margin: 40px 0; }
+.renewal-short-story > p { max-width: 680px; line-height: 1.7; }
+.renewal-short-story-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.renewal-short-story-grid figure { margin: 0; min-width: 0; }
+.renewal-short-story-grid figcaption { margin-top: 12px; line-height: 1.5; }
+@media (max-width: 600px) {
+  .renewal-short-story { margin: 28px 0; }
+  .renewal-short-story-grid { gap: 12px; }
+  .renewal-short-story-grid figcaption { font-size: 13px; }
+}
+.mochi-flavour-description { margin: 6px 0 0; font-size: 12px; line-height: 1.45; }

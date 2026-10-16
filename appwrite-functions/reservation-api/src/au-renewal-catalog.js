@@ -45,6 +45,7 @@ export const RENEWAL_CARDS = Object.freeze({
       "브라우니 바스크 로프 파운드",
       "/cakes/brownie-cheesecake?form=loaf",
       ["brownie-loaf"],
+      "/products/renewal-photos/cheese-pound-hero.webp",
     ),
     card(
       "cookies",
@@ -61,6 +62,7 @@ export const RENEWAL_CARDS = Object.freeze({
       "쇼콜라모찌",
       "/chocolates/chocolate-mochi",
       ["mochi"],
+      "/products/renewal-photos/mochi-mochi-hero.webp",
     ),
     card(
       "almond",
@@ -106,6 +108,7 @@ export const RENEWAL_CARDS = Object.freeze({
       "브라우니 바스크 컵케이크",
       "/cakes/brownie-cupcakes",
       ["brownie-cupcakes-6", "brownie-cupcakes-12"],
+      "/products/renewal-photos/cheese-cupcake-hero.webp",
     ),
     card(
       "smore",

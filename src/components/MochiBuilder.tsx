@@ -1,3 +1,4 @@
+import { mochiPhotos, renewalPhoto } from "../lib/renewal-photos";
 import {
   OptionButton,
   QuantityStepper,
@@ -48,10 +49,11 @@ function FlavourCounts({
             className={`mochi-flavour${counts[f.id] ? " is-selected" : ""}`}
             key={f.id}
           >
-            <ProductPhoto option label={name} />
+            <ProductPhoto option src={renewalPhoto(mochiPhotos[f.id])} label={name} />
             <div>
               <strong>{name}</strong>
               <div>{money(f.priceCents)}</div>
+              <p className="mochi-flavour-description">{f.id === "nama_chocolate" ? t("Pure nama chocolate centre · 80g", "생초콜릿을 가득 · 80g") : f.id === "butter_redbean" ? t("Red bean, butter & nama chocolate · 85g+", "앙금·버터·생초콜릿 · 85g 이상") : t("Fruit & nama chocolate · 85g+", "과일과 생초콜릿 · 85g 이상")}</p>
             </div>
             <QuantityStepper
               label={`${prefix}${name} ${t("quantity", "수량")}`}

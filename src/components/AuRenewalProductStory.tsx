@@ -1,3 +1,4 @@
+import { RenewalPhotoStory } from "./RenewalPhotoStory"
 import { RENEWAL_CARDS, type RenewalCard } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { RENEWAL_OFFERS } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
@@ -71,6 +72,7 @@ export function AuRenewalProductStory({ card, language }: { card: RenewalCard; l
   if (presentation) return <AuDetailStory presentation={presentation} detail={detail} editorial={editorial} language={language} relatedContent={related}
     packagingPhoto={['gateau-loaf', 'brownie-whole'].includes(card.id) ? <ProductPhoto label={ko ? `${card.ko} 포장` : `${card.en} packaging`} /> : undefined} />
   return <div className="au-pave-story">
+    <RenewalPhotoStory id={card.id} language={language} />
     <section className="au-pave-practical" data-detail-section="practical">
       <DetailHeading eyebrow={ko ? '상품 안내' : 'DETAILS & CARE'} title={ko ? '상품 상세 및 알레르기 안내' : 'Product Details & Allergens'} />
       <div className="au-pave-specs">

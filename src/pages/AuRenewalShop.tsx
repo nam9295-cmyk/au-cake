@@ -1,3 +1,5 @@
+import { renewalPhoto, renewalPhotos } from "../lib/renewal-photos";
+import { RenewalPhotoGallery } from "../components/RenewalPhotoStory";
 import {
   OptionButton,
   QuantityStepper,
@@ -235,6 +237,8 @@ function Product({ card }: { card: RenewalCard }) {
   const selectionKey = JSON.stringify(selection);
   const added = addedSelection === selectionKey;
   function finishImage(id: string, f: string) {
+    const photos = renewalPhotos(id === "brownie-loaf" ? id : id.startsWith("brownie-cupcakes-") ? "brownie-cupcakes" : "");
+    if (photos.length) return renewalPhoto(photos[f === "basic" ? 0 : 2]);
     const images: Record<string, Record<string, string>> = {
       "pound-cake": {
         basic: gateauBasic,
@@ -259,13 +263,13 @@ function Product({ card }: { card: RenewalCard }) {
       id: "addon-pave",
       en: "Pavé Chocolate · 100g",
       ko: "파베 초콜릿 · 100g",
-      image: "/products/chocolates/pave-heart-100g.png",
+      image: renewalPhoto("extra-pave"),
     },
     {
       id: "addon-cream",
       en: "Vanilla Cream Box · 100g",
       ko: "생크림 박스 · 100g",
-      image: "",
+      image: renewalPhoto("extra-cream"),
     },
     {
       id: "addon-almond",
@@ -319,6 +323,8 @@ function Product({ card }: { card: RenewalCard }) {
         <div className="renewal-product-media">
           {card.id === "pave" ? (
             <AuPaveGallery />
+          ) : renewalPhotos(card.id).length ? (
+            <RenewalPhotoGallery id={card.id} title={ko ? card.ko : card.en} />
           ) : presentation ? (
             <AuDetailGallery key={card.id} presentation={presentation} />
           ) : (
@@ -717,10 +723,7 @@ function MochiProduct({ card }: { card: RenewalCard }) {
       <MochiReselectionNotice />
       <div className="au-pave-hero">
         <div className="renewal-product-media">
-          <ProductPhoto
-            src={card.image}
-            label={language === "ko" ? card.ko : card.en}
-          />
+          <RenewalPhotoGallery id="mochi" title={language === "ko" ? card.ko : card.en} />
         </div>
         <section className="au-pave-purchase">
           <h1>{language === "ko" ? card.ko : card.en}</h1>
