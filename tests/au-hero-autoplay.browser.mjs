@@ -12,7 +12,7 @@ async (page) => {
   const requested = new Promise(resolve => { videoRequested = resolve })
   let videoHandled
   const handled = new Promise(resolve => { videoHandled = resolve })
-  await page.route('**/redesign/hero/cake-mobile.mp4', async route => {
+  await page.route('**/redesign/hero/cake-mobile-8s.mp4', async route => {
     videoRequested()
     await heldVideo
     await route.continue()
@@ -58,13 +58,13 @@ async (page) => {
     check(playing.control === 'Pause hero video', 'Pause control is missing after playback begins')
     check(playing.opacityTransition.includes('opacity'), 'Poster-to-video fade is missing')
     const firstVideoDownloads = await page.evaluate(() => performance.getEntriesByType('resource')
-      .filter(entry => entry.name.endsWith('/redesign/hero/cake-mobile.mp4')).length)
+      .filter(entry => entry.name.endsWith('/redesign/hero/cake-mobile-8s.mp4')).length)
     await page.locator('.rd-collection-section').scrollIntoViewIfNeeded()
     await page.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.paused)
     await page.locator('.rd-hero').scrollIntoViewIfNeeded()
     await page.waitForFunction(() => !document.querySelector('video.rd-hero-photo')?.paused)
     const resumedVideoDownloads = await page.evaluate(() => performance.getEntriesByType('resource')
-      .filter(entry => entry.name.endsWith('/redesign/hero/cake-mobile.mp4')).length)
+      .filter(entry => entry.name.endsWith('/redesign/hero/cake-mobile-8s.mp4')).length)
     check(firstVideoDownloads === 1 && resumedVideoDownloads === 1,
       'Visibility resume downloaded the mobile video again')
 
@@ -206,6 +206,6 @@ async (page) => {
   } finally {
     releaseVideo()
     await handled
-    await page.unroute('**/redesign/hero/cake-mobile.mp4')
+    await page.unroute('**/redesign/hero/cake-mobile-8s.mp4')
   }
 }

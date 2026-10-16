@@ -308,14 +308,14 @@ async (page) => {
       const originalPlay = HTMLMediaElement.prototype.play
       HTMLMediaElement.prototype.play = function () {
         if (!this.matches('video.rd-hero-photo')) return originalPlay.call(this)
-        if (this.getAttribute('src')?.endsWith('cake-mobile.mp4')) {
+        if (this.getAttribute('src')?.endsWith('cake-mobile-8s.mp4')) {
           return new Promise((_resolve, reject) => { window.__rejectMobileHero = reject })
         }
         return originalPlay.call(this)
       }
     })
     await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
-    await probe.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.getAttribute('src')?.endsWith('cake-mobile.mp4'))
+    await probe.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.getAttribute('src')?.endsWith('cake-mobile-8s.mp4'))
     await probe.setViewportSize({ width: 1440, height: 900 })
     await probe.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.getAttribute('src')?.endsWith('cake-desktop.mp4'))
     await probe.waitForFunction(() => document.querySelector('.rd-hero-photo-wrap')?.dataset.playback === 'playing')

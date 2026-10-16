@@ -31,7 +31,7 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
   const pauseIntentionallyRef = useRef<() => void>(() => {})
   const [playbackState, setPlaybackState] = useState<PlaybackState>('loading')
   const failed = playbackState === 'failed'
-  const mediaPath = `/redesign/hero/cake-${variant}`
+  const mediaPath = variant === 'mobile' ? '/redesign/hero/cake-mobile-8s' : `/redesign/hero/cake-${variant}`
 
   useEffect(() => {
     const video = videoRef.current
@@ -216,7 +216,7 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
   return (
     <div className="rd-hero-photo-wrap" data-playback={playbackState}>
       <picture className="rd-hero-poster">
-        <source media={mobileQuery} srcSet="/redesign/hero/cake-mobile.webp" />
+        <source media={mobileQuery} srcSet="/redesign/hero/cake-mobile-8s.webp" />
         <img
           className="rd-hero-photo"
           src="/redesign/hero/cake-desktop.webp"

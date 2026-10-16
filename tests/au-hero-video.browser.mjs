@@ -31,7 +31,7 @@ async (page) => {
           collectionWidth:document.querySelector('.rd-collection-section').getBoundingClientRect().width}
       })
       const mobile = width <= 768
-      const expected = mobile ? 'cake-mobile.mp4' : 'cake-desktop.mp4'
+      const expected = mobile ? 'cake-mobile-8s.mp4' : 'cake-desktop.mp4'
       check(state.src.endsWith(expected), `Hero @ ${width}: wrong responsive video`)
       check(mediaRequests.length > 0 && mediaRequests.every(url => url.endsWith(expected)), `Hero @ ${width}: downloaded another viewport's video`)
       check(state.muted && state.loop && state.inline, `Hero @ ${width}: missing quiet inline loop`)
@@ -47,7 +47,7 @@ async (page) => {
     await page.waitForFunction(() => document.querySelector('video.rd-hero-photo').paused)
     for (const width of [390, 1440]) {
       await page.setViewportSize({width, height:1000})
-      const expected = width <= 768 ? 'cake-mobile.mp4' : 'cake-desktop.mp4'
+      const expected = width <= 768 ? 'cake-mobile-8s.mp4' : 'cake-desktop.mp4'
       await page.waitForFunction(expected => {
         const video = document.querySelector('video.rd-hero-photo')
         return video?.currentSrc.endsWith(expected) && video.readyState >= 2
