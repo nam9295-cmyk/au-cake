@@ -558,7 +558,11 @@
     gap: 20px;
   }
   .au-home-shell .au-home-v02 .rd-hero-photo-wrap {
-    height: 220px;
+    width: calc(100% + 32px);
+    margin-inline: -16px;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    border-radius: 0;
   }
   .au-home-shell .au-home-v02 .au-v02-hero-copy {
     gap: 16px;
