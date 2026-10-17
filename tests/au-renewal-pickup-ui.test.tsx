@@ -106,3 +106,12 @@ test("frontend refuses capabilities from a server with a different pickup policy
     functions.createExecution = original;
   }
 });
+
+test('Mochi lookup details show per-box contents separately from total pieces without irrelevant finish', () => {
+ const doc=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'private-line-id',offerId:'mochi',mode:'gift-four',quantity:2,flavourCounts:{strawberry:2,green_grape:0,mandarin:0,banana:0,butter_redbean:0,nama_chocolate:2}}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}})
+ const reservation=toReservation({...doc,$id:'fixture'} as never)
+ const html=renderToStaticMarkup(<OrderDetailRows reservation={reservation} language="en" />)
+ assert.match(html,/Each box/);assert.match(html,/Strawberry ×2, Original ×2/)
+ assert.match(html,/four-piece gift box/);assert.match(html,/8/)
+ assert.doesNotMatch(html,/private-line-id|gift-four|Green Grape|<dt>Finish<\/dt>/)
+})

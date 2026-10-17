@@ -96,7 +96,7 @@ test('deployed almond snapshots retain exact prices, names and contents but cann
  const old=JSON.parse(await readFile('tests/fixtures/au-renewal-amande-quote.json','utf8'))
  assert.deepEqual(core.priceRenewalOrder(old.lines.map(l=>l.selection),{storedOnly:true}),old)
  assert.throws(()=>price(old.lines.map(l=>l.selection)),/INVALID_MOCHI_COUNTS/)
- assert.match(core.renewalLineSummary(old.lines[0]),/Amande Chocolat 2/)
+ assert.match(core.renewalLineSummary(old.lines[0]),/Each box:.*Amande Chocolat ×1/)
  assert.doesNotMatch(core.renewalLineSummary(old.lines[0]),/Banana/)
 })
 test('stored almond document remains readable without mutating its facts',async()=>{

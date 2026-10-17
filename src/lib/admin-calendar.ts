@@ -1,6 +1,7 @@
+import { isRenewalContract, renewalProductName, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import { getCupcakePackSize, getProductById, isCupcakeProduct } from './constants.js'
 import { formatCupcakeFinishText } from './i18n.js'
-import { getReservationItemCount, getReservationOrderLines } from './order-lines.js'
+import { formatOrderLineSummary, getReservationItemCount, getReservationOrderLines } from './order-lines.js'
 import { formatClassBookingType, getClassCoursePlanLabel, getClassTypeLabel } from './class-utils.js'
 import type { CustomCakeLine, CustomCakeLookupResponse } from './custom-cake-contract.js'
 import type { ClassReservation, Reservation } from './types.js'
@@ -110,6 +111,15 @@ function shortProductName(productId: Reservation['productId']) {
 function mapCakeReservation(reservation: Reservation): RegularCakeDashboardEvent {
   const product = getProductById(reservation.productId)
   const orderLines = getReservationOrderLines(reservation)
+  if (orderLines.length && 'policyVersion' in orderLines[0] && isRenewalContract(orderLines[0].policyVersion)) {
+    const first = orderLines[0] as unknown as RenewalLine
+    return {
+      kind: 'cake', id: reservation.id, date: reservation.pickupDate, time: reservation.pickupTime,
+      title: `${reservation.customerName} · ${orderLines.length === 1 ? renewalProductName(first) : `${getReservationItemCount(reservation)} items`}`,
+      subtitle: orderLines.map((line, index) => `${orderLines.length > 1 ? `${index + 1}. ` : ''}${formatOrderLineSummary(line, orderLines)}`).join(' | ') + ` · ${reservation.paymentStatus}`,
+      isCancelled: reservation.status === '취소', itemCount: getReservationItemCount(reservation), isCustomCake: false, reservation,
+    }
+  }
   const isMultiLine = orderLines.length > 1
   const cupcakeSummary = isCupcakeProduct(reservation.productId) && reservation.cupcakeFinish !== undefined
     ? `${getCupcakePackSize(reservation.productId) === 6 ? 'Half Dozen' : 'Dozen'} · ${formatCupcakeFinishText(reservation.cupcakeFinish, 'en')}`

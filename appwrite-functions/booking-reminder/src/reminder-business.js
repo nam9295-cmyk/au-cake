@@ -85,8 +85,8 @@ function optionalReplyTo(value) {
   return normalizeRecipientEmail(value)
 }
 
-function compactCakeLineSummary(line) {
-  if (isRenewalContract(line?.policyVersion)) return renewalLineSummary(line)
+function compactCakeLineSummary(line, lines = []) {
+  if (isRenewalContract(line?.policyVersion)) return renewalLineSummary(line, { lines })
   const chocolate = getChocolateProduct(line?.productId)
   if (chocolate) return `${chocolate.name} · ${chocolate.saleUnit} · × ${line.quantity}`
   if (line?.productId === 'smore-stick') {
@@ -114,7 +114,7 @@ function compactCakeLineSummary(line) {
 function compactCakeOrderSummary(reservation) {
   const storedLines = parseStoredOrderLines(reservation)
   const lines = storedLines?.lines?.length ? storedLines.lines : [reservation]
-  return lines.map(compactCakeLineSummary).join(' / ')
+  return lines.map((line, index) => `${lines.length > 1 && isRenewalContract(line?.policyVersion) ? `${index + 1}. ` : ''}${compactCakeLineSummary(line, lines)}`).join(' / ')
 }
 
 function classCourseLabel(reservation) {

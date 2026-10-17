@@ -257,7 +257,7 @@ export function AdminReservationsPage({
                   {reservation.orderLines?.length ? (
                     <ul className="admin-order-lines">
                       {reservation.orderLines?.map((line, index) => (
-                        <li key={`${line.productId}-${index}`}>{formatOrderLineSummary(line)}</li>
+                        <li key={`${line.productId}-${index}`}>{index + 1}. {formatOrderLineSummary(line, reservation.orderLines)}</li>
                       ))}
                     </ul>
                   ) : getProductById(reservation.productId).name}

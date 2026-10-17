@@ -10,15 +10,15 @@ test('renewal operational outputs preserve packs, physical counts, flavours and 
  const email=buildBookingConfirmationPayload({reservation:row,sourceType:'cake',from:'test@example.com'})
  const reminder=buildCakeReminderPayload({reservation:row,from:'test@example.com'})
  for(const text of [JSON.stringify(buildCakeNotificationRows(row)),buildNotificationText(row),email.text,reminder.text,sanitizeCakeCalendarEvent(row).label]){
-  assert.match(text,/6in/);assert.match(text,/vanilla-fresh-cream/);assert.match(text,/Strawberry Pavé Chocolate 10/);assert.match(text,/36 pieces/);assert.match(text,/Add-on for cake/);assert.match(text,/fee AUD 5.00/)
+  assert.match(text,/6in/);assert.match(text,/Vanilla Fresh Cream/);assert.match(text,/Strawberry ×10/);assert.match(text,/36 pieces/);assert.match(text,/For item 1: Brownie Basque Whole Cake, 6in/);assert.match(text,/Individual packaging: 10 pieces \(AUD 5.00\)/)
  }
 })
 
-test('each operational line names its stable ID so attached extras can be matched unambiguously',async()=>{
+test('operational extras identify the numbered parent without leaking stable IDs',async()=>{
  const {priceRenewalOrder,renewalLineSummary}=await import('../appwrite-functions/reservation-api/src/au-renewal.js')
  const q=priceRenewalOrder([{lineId:'parent-a',offerId:'pave-cake',size:'6in',quantity:1},{lineId:'parent-b',offerId:'pave-cake',size:'8in',quantity:1},{lineId:'extra',offerId:'addon-cream',parentLineId:'parent-b',quantity:1}])
- assert.match(renewalLineSummary(q.lines[1]),/Item parent-b/)
- assert.match(renewalLineSummary(q.lines[2]),/Add-on for parent-b/)
+ assert.doesNotMatch(renewalLineSummary(q.lines[1]),/parent-b/)
+ assert.match(renewalLineSummary(q.lines[2], {lines:q.lines}),/For item 2: Pavé Whole Cake, 8in/)
 })
 
 test('lookup notification reminder and PIN Calendar retain an existing approved out-of-hours appointment',async()=>{
@@ -47,7 +47,7 @@ test('six-flavour mixed boxes round-trip through v2 and all operational outputs 
  assert.equal(q.policyVersion,'au-renewal.2026-10.v2');assert.equal(q.totalPriceCents,13350)
  assert.deepEqual(q.lines.map(l=>l.giftBoxCount),[2,1,0]);assert.deepEqual(q.lines.map(l=>l.physicalQuantity),[8,4,3])
  for(const text of [JSON.stringify(buildCakeNotificationRows(row)),buildNotificationText(row),buildBookingConfirmationPayload({reservation:row,sourceType:'cake',from:'test@example.com'}).text,buildCakeReminderPayload({reservation:row,from:'test@example.com'}).text,sanitizeCakeCalendarEvent(row).label]){
-  assert.match(text,/Item box-a/);assert.match(text,/Per box: Strawberry Pavé Chocolate 1/);assert.match(text,/Mandarin Pavé Chocolate 2/);assert.match(text,/Original Pavé Chocolate 3/);assert.match(text,/AUD 25.50/)
+  assert.doesNotMatch(text,/box-a|gift-four|Green Grape ×0/);assert.match(text,/Each box: Strawberry ×1/);assert.match(text,/Mandarin ×2/);assert.match(text,/Original ×3/);assert.match(text,/AUD 25.50/)
  }
  assert.equal(JSON.stringify(row),saved)
 })

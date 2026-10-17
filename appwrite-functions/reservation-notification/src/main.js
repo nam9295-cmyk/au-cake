@@ -550,8 +550,8 @@ function readStoredCakeLines(reservation) {
   }
 }
 
-function cakeDetailRows(reservation, config, suffix = '') {
-  if (isRenewalContract(reservation?.policyVersion)) return [['Order item', renewalLineSummary(reservation)]]
+function cakeDetailRows(reservation, config, suffix = '', lines = []) {
+  if (isRenewalContract(reservation?.policyVersion)) return [[`Order item${suffix}`, renewalLineSummary(reservation, { lines })]]
   const quantity = getQuantity(reservation)
   const label = (value) => `${value}${suffix}`
   const chocolate = config.currency === 'AUD' ? getChocolateProduct(reservation.productId) : undefined
@@ -608,8 +608,8 @@ function buildCakeRows(reservation, config) {
   const storedLines = readStoredCakeLines(reservation)
   const lines = storedLines || [reservation]
   const detailRows = lines.length > 1
-    ? lines.flatMap((line, index) => cakeDetailRows(line, config, ` ${index + 1}`))
-    : cakeDetailRows({ ...reservation, ...lines[0] }, config)
+    ? lines.flatMap((line, index) => cakeDetailRows(line, config, ` ${index + 1}`, lines))
+    : cakeDetailRows({ ...reservation, ...lines[0] }, config, '', lines)
   return [
     [config.labels.bookingNumber, reservation.reservationNumber],
     ...detailRows,
@@ -735,8 +735,8 @@ function customerCakeRows(reservation, config) {
   const storedLines = readStoredCakeLines(reservation)
   const lines = storedLines || [reservation]
   const detailRows = lines.length > 1
-    ? lines.flatMap((line, index) => cakeDetailRows(line, config, ` ${index + 1}`))
-    : cakeDetailRows({ ...reservation, ...lines[0] }, config)
+    ? lines.flatMap((line, index) => cakeDetailRows(line, config, ` ${index + 1}`, lines))
+    : cakeDetailRows({ ...reservation, ...lines[0] }, config, '', lines)
   const note = plainTextCell(reservation.requestNote)
   return [
     ['Name', reservation.customerName],

@@ -329,7 +329,7 @@ export function buildSmsMessage(reservation: Reservation, settings: StoreSetting
   const orderLines = getReservationOrderLines(reservation)
 
   if (marketConfig.market === 'AU' && (orderLines.length > 1 || orderLines.some(line=>'policyVersion' in line) || getChocolateProduct(reservation.productId))) {
-    const itemLines = orderLines.map((line, index) => `${index + 1}. ${formatOrderLineSummary(line)}`).join('\n')
+    const itemLines = orderLines.map((line, index) => `${index + 1}. ${formatOrderLineSummary(line, orderLines)}`).join('\n')
     return `${labels.title}
 
 Thank you for your order ${reservation.customerName}. (${reservation.customerPhone})
@@ -413,7 +413,7 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.adminMemo,
     String(getReservationLineCount(reservation)),
     String(getReservationItemCount(reservation)),
-    getReservationOrderLines(reservation).map(formatOrderLineSummary).join(' | '),
+    getReservationOrderLines(reservation).map((line, index, lines) => `${'policyVersion' in line ? `${index + 1}. ` : ''}${formatOrderLineSummary(line, lines)}`).join(' | '),
   ])
   return [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\n')
 }

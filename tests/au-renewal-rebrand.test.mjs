@@ -13,7 +13,7 @@ test('Pavé branding has a separate display order; persisted flavour indexes and
  assert.equal(q.lines[0].productName,'Chocolate Mochi')
  assert.deepEqual(q.lines[0].flavourTotals,[1,2,3,4,5,6])
  assert.match(core.renewalLineSummary(q.lines[0]),/Chocolate Mochi/)
- assert.match(core.renewalLineSummary(q.lines[0]),/Original Pavé Chocolate 6/)
+ assert.match(core.renewalLineSummary(q.lines[0]),/Original ×6/)
  assert.equal(JSON.stringify(q),before)
  assert.equal(core.mochiFlavourName('amande','en'),'Amande Chocolat')
  assert.equal(core.mochiFlavourName('mandarin','ko'),'만다린 생초콜릿')

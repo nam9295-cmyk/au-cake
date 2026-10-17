@@ -95,8 +95,8 @@ function formatHistoricalVanillaSheet(value: ReservationOrderLine['vanillaCakeSh
   return value === 'vanilla' ? 'Vanilla cake sheet' : 'Chocolate cake sheet'
 }
 
-export function formatOrderLineSummary(line: ReservationOrderLine) {
-  if ('policyVersion' in line && isRenewalContract(line.policyVersion)) return renewalLineSummary(line as unknown as RenewalLine)
+export function formatOrderLineSummary(line: ReservationOrderLine, lines?: ReservationOrderLine[]) {
+  if ('policyVersion' in line && isRenewalContract(line.policyVersion)) return renewalLineSummary(line as unknown as RenewalLine, { lines: lines as unknown as RenewalLine[] | undefined })
   const chocolate = marketConfig.market === 'AU' ? getChocolateProduct(line.productId) : undefined
   if (chocolate) return [chocolate.name, chocolate.saleUnit, `x${line.quantity}`,
     ...(Number.isSafeInteger(line.totalPriceCents) ? [formatLinePrice(line.totalPriceCents as number)] : [])].join(' · ')

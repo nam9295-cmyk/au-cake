@@ -429,34 +429,35 @@ export function priceRenewalOrder(
 function offerForLine(line) {
   return RENEWAL_OFFERS[line.productId];
 }
-export function renewalLineSummary(line) {
+// Read-only presentation: never serialize these labels back into order snapshots.
+export function renewalLineSummary(line, { lines = [], language = "en" } = {}) {
   const s = line.selection;
-  const details = [
-    `Item ${s.lineId}`,
-    renewalProductName(line),
-    s.size,
-    s.finish === "basic" ? null : s.finish,
-    s.chocolateType,
-    `${s.quantity} ${s.mode === "singles" ? "selection" : "pack(s)"}`,
-    `${line.physicalQuantity} pieces`,
-  ];
-  if (s.mode)
-    details.push(
-      s.mode,
-      ...(s.mode === "gift-four" ? ["Per box: " + mochiFlavours(s, true)
-        .filter(({ id }) => s.flavourCounts[id] > 0)
-        .map(({ id }) => `${mochiFlavourName(id)} ${s.flavourCounts[id]}`).join(", ")] : []),
-      "Total: " + mochiFlavours(s, true).map(({ id }, i) => `${mochiFlavourName(id)} ${line.flavourTotals[i]}`).join(
-        ", ",
-      ),
-    );
-  if (s.parentLineId) details.push(`Add-on for ${s.parentLineId}`);
-  if (line.giftBoxCount)
-    details.push(`${line.giftBoxCount} free 4-piece gift box(es)`);
-  if (line.individualPackaging)
-    details.push(
-      `Individual packaging ${line.individualPackagingPieces} × AUD 0.50; fee AUD ${(line.individualPackagingFeeCents / 100).toFixed(2)}`,
-    );
-  details.push(`AUD ${(line.totalPriceCents / 100).toFixed(2)}`);
+  const ko = language === "ko";
+  const money = cents => `AUD ${(cents / 100).toFixed(2)}`;
+  const details = [renewalProductName(line, language)];
+  if (s.mode) {
+    const gift = s.mode === "gift-four";
+    details.push(gift
+      ? `${ko ? "4구 선물박스" : "4-piece gift box"} ×${line.quantity}${line.quantity > 1 ? ` (${line.physicalQuantity}${ko ? "개" : " pieces"})` : ""}`
+      : `${ko ? "단품" : "Singles"} · ${line.physicalQuantity}${ko ? "개" : " pieces"}`);
+    const composition = mochiFlavours(s, true)
+      .filter(({ id }) => s.flavourCounts[id] > 0)
+      .map(({ id }) => `${mochiFlavourName(id, language).replace(ko ? " 생초콜릿" : " Pavé Chocolate", "")} ×${s.flavourCounts[id]}`)
+      .join(" / ");
+    details.push((gift && line.quantity > 1 ? (ko ? "박스당: " : "Each box: ") : "") + composition);
+  } else {
+    const finishes = {"vanilla-fresh-cream":"Vanilla Fresh Cream","chocolate-buttercream":"Chocolate Buttercream","extra-chocolate":"Extra Chocolate"};
+    details.push(s.size, s.finish === "basic" ? null : finishes[s.finish] || s.finish, s.chocolateType,
+      `×${line.quantity}`, line.physicalQuantity > line.quantity ? `${line.physicalQuantity} pieces` : null);
+  }
+  if (s.parentLineId) {
+    const index = lines.findIndex(parent => parent.selection?.lineId === s.parentLineId);
+    const parent = lines[index];
+    details.push(parent ? `${ko ? "연결 상품" : "For item"} ${index + 1}: ${renewalProductName(parent, language)}${parent.selection.size ? `, ${parent.selection.size}` : ""}` : (ko ? "케이크 추가상품" : "Cake add-on"));
+  }
+  if (line.individualPackaging) details.push(
+    `${ko ? "개별포장" : "Individual packaging"}: ${line.individualPackagingPieces}${ko ? "개" : " pieces"} (${line.individualPackagingFeeCents === 0 ? (ko ? "무료" : "FREE") : money(line.individualPackagingFeeCents)})`,
+  );
+  details.push(money(line.totalPriceCents));
   return details.filter(Boolean).join(" · ");
 }

@@ -53,8 +53,8 @@ export function verifyCalendarToken(token, secret, now = new Date()) {
   }
 }
 
-function cakeLineLabel(document) {
-  if (isRenewalContract(document?.policyVersion)) return renewalLineSummary(document)
+function cakeLineLabel(document, lines = []) {
+  if (isRenewalContract(document?.policyVersion)) return renewalLineSummary(document, { lines })
   const chocolate = getChocolateProduct(document.productId)
   if (chocolate) return `${chocolate.name} · ${chocolate.saleUnit} ×${document.quantity}`
   if (document.productId === 'smore-stick') {
@@ -131,7 +131,7 @@ function cakeLabel(document) {
   try {
     const stored = parseStoredOrderLines(document)
     const lines = stored?.lines || [document]
-    return lines.map(cakeLineLabel).join(' / ')
+    return lines.map((line, index) => `${lines.length > 1 && isRenewalContract(line?.policyVersion) ? `${index + 1}. ` : ''}${cakeLineLabel(line, lines)}`).join(' / ')
   } catch (caught) {
     if (caught?.code === 'INVALID_STORED_ORDER') return cakeLineLabel(document)
     throw caught
