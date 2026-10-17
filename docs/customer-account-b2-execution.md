@@ -1,4 +1,6 @@
-# Customer Account B2 생성 실행 — Key scope 불일치로 생성 전 중단
+# Customer Account B2 최초 생성 시도 — 역사적 중단 기록
+
+> **후속 실행에서 B2 완료:** 사용자가 공식 Owner API/CLI 경로를 승인한 뒤 [최종 B2 결과](customer-account-b2-owner-execution.md)대로 실행·검증했다. 아래 생성 0/미완료 표시는 최초 Console UI 시도 당시 기록이다.
 
 2026-10-17 KST. 사용자에게 test M/Key 3개/DB 2개/Collection 12개/baseline181 attributes·37 indexes/settings1건 및 조건부 owner migration1+1 생성 승인을 받았다. **B2는 완료하지 못했다. 실제 자원 생성 전에 Console의 승인 scope 선택 불가를 확인하여 중단했다.** B3 진행 승인은 요청할 단계가 아니다.
 

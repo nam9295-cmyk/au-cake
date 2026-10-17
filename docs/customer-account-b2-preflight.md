@@ -1,5 +1,7 @@
 # Customer Account B2 — 로컬 보호장치 및 자원 생성 승인안
 
+> 실행 상태: 승인된 manifest는 변경하지 않았으며, 공식 Owner 경로의 [B2 최종 실행 결과](customer-account-b2-owner-execution.md)를 참조한다. 아래는 승인 당시의 자원/권한 명세다.
+
 2026-10-17 KST. 승인 worktree `au-cake-customer-account`, branch `feat/customer-account`. 시작 HEAD `c1573545fd14fb615d93cd17027528b26969c6d7`는 clean이었다. Mac Codex가 단독으로 진행했다.
 
 **현재 완료 범위는 로컬 코드·테스트·offline dry-run이다. 실제 Key/사용자/DB/Collection 생성과 migration apply는 승인 대기다.** [B안 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)의 B2 전체 완료 또는 실제 인증 검증 완료를 의미하지 않는다.
