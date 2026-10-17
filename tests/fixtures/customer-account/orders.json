@@ -1,0 +1,22 @@
+[
+  {
+    "id": "legacy-a",
+    "customerUserId": "customer-a",
+    "format": "legacy",
+    "status": "pending",
+    "pickupDate": "2099-11-01"
+  },
+  {
+    "id": "renewal-b",
+    "customerUserId": "customer-b",
+    "format": "renewal",
+    "status": "completed",
+    "pickupDate": "2026-10-01"
+  },
+  {
+    "id": "guest",
+    "format": "legacy",
+    "status": "cancelled",
+    "pickupDate": "2026-10-01"
+  }
+]

@@ -28,7 +28,7 @@
 - 기존 canonical/fingerprint/가격/쿠폰 재시도 계약에 고객 인증 상태를 섞지 않는다.
 - 판매 비활성 상품, 미확정 가격, 닫힌 Class 모집, 신규 주문 계약이나 판매 플래그를 회원 기능 때문에 활성화하지 않는다.
 - 다른 브랜치와 main worktree, production DB/권한/Functions/사이트, 실제 고객 데이터는 변경하지 않는다. main 병합, reset, history rewrite도 하지 않는다.
-- 현재 승인은 설계 수정·상세 계획·문서 검증·커밋까지만이다. 아래 모든 구현 checkbox는 사용자 계획 승인 전 실행하지 않는다.
+- 2026-10-17 사용자 승인으로 Task 1–10의 로컬 구현·검증·기능별 커밋을 진행한다. 실제 Appwrite 리소스·운영 환경·main 변경은 별도 승인 대상이다.
 
 ## Review Focus
 
@@ -113,9 +113,9 @@ Frontend 전송 envelope는 기존 `{action,data}`에 `create-cake` 회원 요�
 
 - [ ] **Step 1 — RED 테스트 작성:** flag false는 DB 호출 0회. broad `read("users")`/`create("any")`, unknown admin, documentSecurity=true, active private resource 매핑 누락, owner/index mismatch/processing/failed는 not-ready. Class/custom owner 컬럼이 없어도 그 ACL이 안전하면 통과한다. migration transport spy에서 dry-run은 GET만, apply는 reservations의 누락 string/index만 생성하고 ACL update/delete/backfill 호출은 0회여야 한다.
 
-  대표 assertion: `assert.equal(health.ready,false)` for a `read("users")` fixture; `assert.ok(dryRunRequests.every(request=>request.method==='GET'))`; `assert.deepEqual(schemaWriteTargets,['cake-db/reservations'])` after the apply fixture.
+  대표 assertion: `assert.equal(health.ready,false)` for a `read("users")` fixture; `assert.ok(dryRunRequests.every(request=>request.method==='GET'))`; `assert.deepEqual(schemaWriteTargets,['cake-db/reservations'])` after the apply fixture. ACL 관리자 allowlist는 기존 `scripts/review-schema.mjs:parseAdminUserIds()`와 동일한 `APPWRITE_ADMIN_USER_IDS`만 사용한다.
 - [ ] **Step 2 — RED 실행:** `node --test tests/customer-account-readiness.test.mjs tests/customer-account-migration.test.mjs`. 요구된 검사 함수/행동의 assertion 실패를 확인한다.
-- [ ] **Step 3 — 최소 구현:** owner/index는 `APPWRITE_CAKE_DATABASE_ID`/`APPWRITE_CAKE_RESERVATIONS_TABLE_ID`만 대상으로 한다. server-only HTTPS `/v1` endpoint, `CUSTOMER_ACCOUNT_MIGRATION_MARKET=AU`, project/DB/collection 매핑, Appwrite 1.8.1을 검증하고 redirect/credential URL을 거부한다. `REVIEW_ADMIN_USER_IDS`의 정확한 IDs로 privacy ACL을 검사한다. 현재 사용하는 기존 Class/custom private 자원의 ACL은 읽기만 하며 자원/owner schema를 만들지 않는다. 미분류/확인 불가한 실제 개인정보 자원이 있으면 ready를 내지 않는다. attribute/index 생성 후 최대 30회×1초 polling, unknown/failed/timeout은 실패한다. setup은 AU이며 `CUSTOMER_ACCOUNT_ENABLED==='true'`인 신규 설치 때만 동일 정의를 포함하고 비어 있는 `APPWRITE_ADMIN_USER_IDS`를 거부한다. OFF 설치 동작은 유지한다. main의 고객 health dispatch는 기존 쓰기용 coupon 설정 resolution보다 먼저 분리해 flag OFF에 새 DB/Auth 호출이 없도록 한다. deploy config의 runtime/dry-run 양쪽에 기본 false 변수를 포함하고 새 고정 액션 이름만 log allowlist에 추가한다.
+- [ ] **Step 3 — 최소 구현:** owner/index는 `APPWRITE_CAKE_DATABASE_ID`/`APPWRITE_CAKE_RESERVATIONS_TABLE_ID`만 대상으로 한다. server-only HTTPS `/v1` endpoint, `CUSTOMER_ACCOUNT_MIGRATION_MARKET=AU`, project/DB/collection 매핑, Appwrite 1.8.1을 검증하고 redirect/credential URL을 거부한다. `APPWRITE_ADMIN_USER_IDS`의 정확한 IDs로 privacy ACL을 검사한다. 현재 사용하는 기존 Class/custom private 자원의 ACL은 읽기만 하며 자원/owner schema를 만들지 않는다. 미분류/확인 불가한 실제 개인정보 자원이 있으면 ready를 내지 않는다. attribute/index 생성 후 최대 30회×1초 polling, unknown/failed/timeout은 실패한다. setup은 AU이며 `CUSTOMER_ACCOUNT_ENABLED==='true'`인 신규 설치 때만 동일 정의를 포함하고 비어 있는 `APPWRITE_ADMIN_USER_IDS`를 거부한다. OFF 설치 동작은 유지한다. main의 고객 health dispatch는 기존 쓰기용 coupon 설정 resolution보다 먼저 분리해 flag OFF에 새 DB/Auth 호출이 없도록 한다. deploy config의 runtime/dry-run 양쪽에 기본 false 변수를 포함하고 새 고정 액션 이름만 log allowlist에 추가한다.
 - [ ] **Step 4 — GREEN 실행:** 새 테스트, `node --test tests/reservation-api-deploy.test.mjs tests/au-email-schema-migration.test.mjs tests/custom-cake-schema.test.mjs`. stub metadata로 idempotent 재실행, 다른 target 정의, async 실패를 확인한다. 실제 `.env.local`이나 production endpoint로 migration을 실행하지 않는다.
 - [ ] **Step 5 — 커밋:** Task 2 파일만 커밋하고 schema/ACL의 보호 조건을 diff로 확인한다.
 
