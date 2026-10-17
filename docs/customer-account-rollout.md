@@ -1,6 +1,6 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
-2026-10-17. 이 문서는 향후 승인된 작업을 위한 절차다. 현재 작업은 `feat/customer-account`의 로컬 구현·Mock 검증까지이며, 실제 Appwrite metadata 조회/dry-run/apply, Function·사이트 배포, 공급자 설정, 운영 데이터 변경 및 main 병합을 실행하지 않았다. 기능은 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
+2026-10-17. 이 문서는 향후 승인된 작업을 위한 절차다. 최초 로컬 구현·Mock 검증 이후 승인된 사전 조사에서 Appwrite 구성·schema/ACL metadata를 읽기 전용으로 확인했다. 실제 migration dry-run/apply, 프로젝트 생성, Function·사이트 배포, 공급자 설정 변경, 운영 고객 데이터 접근·변경 및 main 병합은 실행하지 않았다. 기능은 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
 
 ## 후속 안정화 배포 gate
 
@@ -23,7 +23,13 @@ main의 주말 13:00 정책 통합, profile focus 보존과 Node 22/24 로컬 �
 
 ## 격리 환경의 필수 gate
 
-전용 nonproduction Appwrite 1.8.1 project, SMTP 수신함, Google test users를 운영 리소스와 구분해 승인받아 준비한다. 테스트 실행 설정에서 운영 host/project를 거부하고, 실제 대상·버전·인증정보 주입 경로를 사람이 확인한다. 해당 환경은 제공되지 않아 아래 항목은 미실행이다.
+사용자가 선택한 환경은 **B안: very-server의 기존 Appwrite 1.8.1 인스턴스 안에 별도 nonproduction project 생성**이다. 새 호스트·Compose·Appwrite 설치는 하지 않는다. [현재 사전 점검과 단계별 승인 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 먼저 따른다. 프로젝트·SMTP·Google·Function·DB 등 실제 변경은 아직 미실행이다.
+
+같은 API host를 사용하므로 차단 기준은 **endpoint/project의 정확한 pair**다. 운영 project denylist와 테스트 resource ID allowlist를 확인하고, 운영 키·DB·사용자·Function을 복제/재사용하지 않는다. 새 프로젝트 생성에는 재시작이 필요 없다. 그러나 현재 공통 SMTP가 비어 있어 실제 OTP에는 별도 승인된 공통 설정 변경과 API/mail-worker 재생성이 필요하다. 기존 네 프로젝트의 저장된 OTP·Magic URL 설정이 켜져 있어 그 영향도 함께 승인받아야 한다. 프로젝트별 SMTP override만으로 이 영향을 없앨 수 없다.
+
+SMTP 복구는 테스트 중지와 분리한다. 테스트 중지 시 새 인증·Function 실행을 차단하고 테스트 키만 revoke한다. **프로젝트 SMTP override를 끄면 공통 transport로 fallback할 수 있으므로 이를 발송 중지 수단으로 사용하지 않는다.** 공통 설정을 되돌려야 하면 별도 승인된 기존 값으로 해당 keys만 복원하고 두 서비스만 재생성한다. 공유 DB/Redis/queue/volume 전체 복구·삭제는 하지 않는다.
+
+전용 SMTP credential·수신함·Google test users를 준비하고 실제 대상·버전·인증정보 주입 경로를 사람이 확인한다. 아래 실제 인증·권한 gate는 여전히 미실행이다.
 
 1. Google → logout → 같은 이메일 OTP, OTP → logout → 같은 이메일 Google에서 `$id`와 신규 주문 소유권이 동일한지 확인한다. 기존 계정·다른 이메일·동시 최초 로그인·남아 있는 관리자/고객 세션도 확인한다. 공급자 동작이 다르면 활성화를 중단한다. 이메일을 이용한 주문 재귀속으로 보완하지 않는다.
 2. 실제 OTP 신규/재로그인, 6자리 검증, 만료·재전송·429·SMTP 오류, Google 성공/취소/실패, blocked/deleted account, 세션 만료/로그아웃/재방문을 검증한다. cookie 제한과 Safari의 실제 동작을 포함한다.

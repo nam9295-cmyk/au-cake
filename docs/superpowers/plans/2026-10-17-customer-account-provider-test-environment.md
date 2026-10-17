@@ -1,5 +1,7 @@
 # Customer Account Provider Test Environment Implementation Plan
 
+> **SUPERSEDED / 실행 보류:** 사용자가 B안(very-server 기존 인스턴스의 별도 프로젝트)을 선택했다. 이 A2 계획의 호스트·Compose·Appwrite/Mailpit 설치 및 공통 SMTP를 sink로 교체하는 단계는 실행하지 않는다. [현재 B안 계획](2026-10-17-customer-account-very-server-test.md)이 우선한다. 아래 sharp/runtime 검토와 인증 인수 기준은 참고 자료로 유지하며 실제 변경은 별도 승인 대상이다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to execute this plan task by task after explicit approval. Mac Codex 단독으로 수행하며 subagent/Hermes에 넘기지 않는다. 체크되지 않은 모든 항목은 미래 작업이다.
 
 **Goal:** 운영 자원과 분리한 Appwrite 1.8.1에서 Google/6자리 OTP·주문 소유권·guest 복구를 실제 검증한다.
