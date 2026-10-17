@@ -32,6 +32,17 @@ const validEnv = {
   CALENDAR_TOKEN_SECRET: 'a-calendar-secret-that-is-at-least-32-characters',
 }
 
+test('customer flags default OFF and share existing APPWRITE_ADMIN_USER_IDS without changing scopes',()=>{
+  const base=resolveDeployConfig(validEnv)
+  assert.equal(base.runtimeVariables.CUSTOMER_ACCOUNT_ENABLED,'false')
+  const enabled=resolveDeployConfig({...validEnv,CUSTOMER_ACCOUNT_ENABLED:'true',APPWRITE_ADMIN_USER_IDS:'admin-1',APPWRITE_EMAIL_DELIVERIES_TABLE_ID:'private-email'})
+  assert.equal(enabled.runtimeVariables.APPWRITE_ADMIN_USER_IDS,'admin-1')
+  assert.equal(enabled.runtimeVariables.APPWRITE_EMAIL_DELIVERIES_TABLE_ID,'private-email')
+  const dry=buildDryRunPlan(validEnv)
+  assert.ok(dry.function.variableNames.includes('CUSTOMER_ACCOUNT_ENABLED'))
+  assert.ok(dry.function.variableNames.includes('APPWRITE_ADMIN_USER_IDS'))
+})
+
 test('reservation deployment diagnostics redact overlapping secrets, bare values, carriage returns, and stay bounded', () => {
   const shortSecret = '123456'
   const longSecret = `prefix${shortSecret}suffix_SECRET_MATERIAL`

@@ -41,6 +41,7 @@ import { createLegacyCakeGate } from './custom-cake-legacy-gate.js'
 import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from './custom-cake-persistence.js'
 import { scanCustomCakeSnapshots } from './custom-cake-list.js'
 import { resolveReservationAppwriteEndpoint } from './appwrite-endpoint.js'
+import { checkCustomerAccountReadiness } from './customer-account-readiness.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -219,6 +220,9 @@ function reviewCouponInput(value) {
 }
 
 const LOGGABLE_ACTIONS = new Set([
+  'customer-account-health',
+  'customer-orders',
+  'customer-order',
   'health',
   'create-cake',
   'create-class',
@@ -735,6 +739,15 @@ return async ({ req, res, log, error }) => {
   try {
     const body = requestBody(req)
     action = body.action
+    if (action === 'customer-account-health') {
+      let result = { enabled: env.CUSTOMER_ACCOUNT_ENABLED === 'true', ready: false }
+      try {
+        const databases = result.enabled
+          ? (servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req, env))) : undefined
+        result = await checkCustomerAccountReadiness(databases, env)
+      } catch { /* Readiness never returns configuration details. */ }
+      return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
+    }
     const runtimeConfig = resolveReservationConfig(env)
     const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req, env))
 
