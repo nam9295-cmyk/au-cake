@@ -63,7 +63,7 @@ export function createCustomerAccountTestMetadataTransport({target:input,credent
     const match=/^\/databases\/([A-Za-z0-9._-]+)(?:\/collections(?:\/([A-Za-z0-9._-]+)(?:\/(attributes|indexes)(?:\/([A-Za-z0-9_$.-]+))?)?)?)?(?:\?[^#]*)?$/.exec(path)
     if(match) assertCustomerAccountTestResource(target,{databaseId:match[1],...(match[2]?{collectionId:match[2]}:{})})
     else if(!/^\/databases(?:\?[^#]*)?$/.test(path)&&path!=='/health/version') fail()
-    const response=await transport(url,{method:'GET',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'X-Appwrite-Project':target.projectId,'X-Appwrite-Key':secret,'Content-Type':'application/json'}})
+    const response=await transport(url,{method:'GET',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'X-Appwrite-Project':target.projectId,...(path==='/health/version'?{}:{'X-Appwrite-Key':secret}),'Content-Type':'application/json'}})
     if(response.redirected||response.status>=300&&response.status<400||response.url&&response.url!==url) fail()
     return response
   }

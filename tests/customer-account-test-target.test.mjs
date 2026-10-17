@@ -61,3 +61,11 @@ test('metadata transport refuses unsafe targets/key provenance before networking
   const redirect=guard.createCustomerAccountTestMetadataTransport({target:valid(),credential:credential(),secret:'synthetic-key',clock:()=>now,transport:async()=>new Response('',{status:302,headers:{location:'https://evil.invalid'}})})
   await assert.rejects(redirect(valid().endpoint+'/health/version',{method:'GET'}))
 })
+test('public version probe omits API key so Appwrite 1.8.1 application roles need no added public scope',async()=>{
+ const calls=[]
+ const transport=async(url,options)=>{calls.push({url,options});return options.headers['X-Appwrite-Key']&&url.endsWith('/health/version')?new Response('{}',{status:401}):new Response('{"version":"1.8.1"}')}
+ const safe=guard.createCustomerAccountTestMetadataTransport({target:valid(),credential:credential(),secret:'synthetic-key',clock:()=>now,transport})
+ assert.equal((await safe(valid().endpoint+'/health/version',{method:'GET'})).status,200)
+ assert.equal(calls[0].options.headers['X-Appwrite-Key'],undefined)
+ await safe(valid().endpoint+'/databases',{method:'GET'});assert.equal(calls[1].options.headers['X-Appwrite-Key'],'synthetic-key')
+})
