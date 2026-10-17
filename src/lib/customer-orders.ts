@@ -25,7 +25,7 @@ export function parseCustomerOrdersPage(v:unknown):CustomerOrdersPage {
 }
 const legacyKeys=['format','reservationNumber','productId','cakeSize','chocolateType','poundAddon','cupcakeFinish','chocolateIcingCount','vanillaCreamCount','partyDecorationCount','vanillaCakeSheet','vanillaCakeFlavor','vanillaCakePointColor','individualPackaging','quantity','pickupDate','pickupTime','cacaoPercent','status','paymentStatus','orderLines','orderLineCount','orderItemCount','subtotalCents','discountBasisCents','discountPercent','discountCents','totalPriceCents','individualPackagingPieces','individualPackagingFeeCents','chocolateExtra','brownieCreamOption']
 const renewalKeys=['format','contractVersion','productId','quantity','orderLines','subtotalCents','discountCents','discountBasisCents','discountPercent','totalPriceCents','individualPackagingPieces','individualPackagingFeeCents','orderLineCount','orderItemCount']
-const lineKeys=['selection','productId','quantity','productName','unitPriceCents','subtotalCents','physicalQuantity','flavourTotals','priceStatus','policyVersion','individualPackaging','individualPackagingPieces','individualPackagingFeeCents','packagingUnitCents','packagingMode','giftBoxCount','discountPercent','discountCents','totalPriceCents','lineId','cakeSize','chocolateType','poundAddon','cacaoPercent','cupcakeFinish','cupcakeFinishCounts','chocolateIcingCount','vanillaCreamCount','partyDecorationCount','vanillaCakeSheet','vanillaCakeFlavor','vanillaCakePointColor','chocolateExtra','brownieCreamOption','optionLabel','productLabel','unitPrice','totalPrice']
+const lineKeys=['selection','productId','quantity','productName','unitPriceCents','subtotalCents','physicalQuantity','flavourTotals','priceStatus','policyVersion','individualPackaging','individualPackagingPieces','individualPackagingFeeCents','packagingUnitCents','packagingMode','giftBoxCount','discountPercent','discountCents','totalPriceCents','lineId','cakeSize','chocolateType','poundAddon','cacaoPercent','cupcakeFinish','cupcakeFinishCounts','chocolateIcingCount','vanillaCreamCount','partyDecorationCount','vanillaCakeSheet','vanillaCakeFlavor','vanillaCakePointColor','chocolateExtra','brownieCreamOption','chocolateExtraCents','optionLabel','productLabel','unitPrice','totalPrice']
 function view(v:unknown):CustomerOrderView {
   const r=object(v)
   if(r.format!=='legacy'&&r.format!=='renewal') invalid()
@@ -36,9 +36,14 @@ function view(v:unknown):CustomerOrderView {
       const l=object(line); keys(l,lineKeys)
       if(l.selection) {
         const s=object(l.selection); keys(s,['lineId','offerId','quantity','size','finish','chocolateType','individualPackaging','mode','flavourCounts','parentLineId'])
-        if(s.flavourCounts) keys(object(s.flavourCounts),['strawberry','green_grape','mandarin','banana','butter_redbean','nama_chocolate'])
+        if(s.flavourCounts) {
+          const counts=object(s.flavourCounts); keys(counts,['strawberry','green_grape','mandarin','banana','butter_redbean','nama_chocolate'])
+          if(Object.values(counts).some(n=>!Number.isSafeInteger(n)||Number(n)<0)) invalid()
+        }
+        for(const [k,value] of Object.entries(s)) if(k!=='flavourCounts'&&((typeof value!=='string'&&typeof value!=='number'&&typeof value!=='boolean')||(typeof value==='number'&&(!Number.isSafeInteger(value)||value<0)))) invalid()
       }
-      for(const [k,value] of Object.entries(l)) if(k!=='selection'&&k!=='flavourTotals'&&typeof value==='object') invalid()
+      if(l.flavourTotals!==undefined&&(!Array.isArray(l.flavourTotals)||l.flavourTotals.some(n=>!Number.isSafeInteger(n)||n<0))) invalid()
+      for(const [k,value] of Object.entries(l)) if(k!=='selection'&&k!=='flavourTotals'&&((typeof value!=='string'&&typeof value!=='number'&&typeof value!=='boolean')||(typeof value==='number'&&(!Number.isSafeInteger(value)||value<0)))) invalid()
     }
   }
   for(const [k,value] of Object.entries(r)) if(k!=='orderLines'&&value!==null&&typeof value==='object') invalid()

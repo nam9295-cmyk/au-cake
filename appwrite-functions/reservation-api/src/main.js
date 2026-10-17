@@ -41,8 +41,9 @@ import { createLegacyCakeGate } from './custom-cake-legacy-gate.js'
 import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from './custom-cake-persistence.js'
 import { scanCustomCakeSnapshots } from './custom-cake-list.js'
 import { resolveReservationAppwriteEndpoint } from './appwrite-endpoint.js'
-import { checkCustomerAccountReadiness } from './customer-account-readiness.js'
+import { checkCustomerAccountReadiness, resolveCustomerAccountResources } from './customer-account-readiness.js'
 import { resolveCustomerIdentity, assertCustomerOrderReplayOwner } from './customer-identity.js'
+import { getCustomerOrder, listCustomerOrders, validateCustomerOrderRequest } from './customer-orders.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -773,6 +774,20 @@ return async ({ req, res, log, error }) => {
       } catch { /* Readiness never returns configuration details. */ }
       return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
     }
+    if (action === 'customer-orders' || action === 'customer-order') {
+      if (env.CUSTOMER_ACCOUNT_ENABLED !== 'true') throw new ReservationApiError('CUSTOMER_ACCOUNT_DISABLED', 503)
+      if (Object.keys(body).some(k => !['action', 'data'].includes(k))) throw new ReservationApiError('INVALID_CUSTOMER_REQUEST', 400)
+      const input = validateCustomerOrderRequest(action, body.data)
+      const services = servicesForRequest ? servicesForRequest(req) : { databases: new Databases(clientForRequest(req, env)) }
+      const health = await checkCustomerAccountReadiness(services.databases, env)
+      if (!health.ready) throw new ReservationApiError('CUSTOMER_ACCOUNT_NOT_READY', 503)
+      const { userId } = await resolveCustomerIdentity({ headers: req.headers, env, accountForJwt: services.accountForJwt })
+      const resources = resolveCustomerAccountResources(env)
+      const result = action === 'customer-orders'
+        ? await listCustomerOrders(services.databases, { ...input, userId }, resources)
+        : await getCustomerOrder(services.databases, { ...input, userId }, resources)
+      return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
+    }
     const runtimeConfig = resolveReservationConfig(env)
     const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req, env))
     let verifiedCustomerUserId
@@ -802,6 +817,13 @@ return async ({ req, res, log, error }) => {
     if (action.startsWith('calendar-')) return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
     return res.json({ ok: true, result }, 200)
   } catch (caught) {
+    if (action === 'customer-orders' || action === 'customer-order') {
+      const allowed = new Set(['CUSTOMER_ACCOUNT_DISABLED', 'CUSTOMER_ACCOUNT_NOT_READY', 'CUSTOMER_UNAUTHORIZED', 'INVALID_CUSTOMER_REQUEST', 'CUSTOMER_ORDER_NOT_FOUND', 'CUSTOMER_ORDERS_UNAVAILABLE'])
+      const known = caught instanceof ReservationApiError && allowed.has(caught.code)
+      const code = known ? caught.code : 'CUSTOMER_ORDERS_UNAVAILABLE'
+      error(`reservation-api failed: ${safeReservationLogAction(action)} ${code}`)
+      return res.json({ ok: false, code }, known ? caught.status : 503, { 'Cache-Control': 'no-store' })
+    }
     const { code, status } = reservationFailureResponse(caught, action)
     const diagnostic = caught instanceof AppwriteException
       ? `appwrite=${caught.type || 'unknown'} http=${caught.code || 'unknown'}`

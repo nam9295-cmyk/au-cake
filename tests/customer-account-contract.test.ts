@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as config from '../src/lib/customer-account-config'
 import * as orders from '../src/lib/customer-orders'
+import * as serverOrders from '../appwrite-functions/reservation-api/src/customer-orders.js'
+import fixtures from './fixtures/customer-account/orders.json'
 
 test('customer feature requires AU, configured all API and exact explicit true', () => {
   const resolve = Reflect.get(config, 'resolveCustomerAccountConfig')
@@ -40,4 +42,22 @@ test('order parser rejects internal keys, invalid totals, oversized pages and ar
   assert.deepEqual(detail(value),value)
   assert.throws(()=>detail({...value,view:{...value.view,reviewCouponId:'private'}}))
   assert.throws(()=>detail({...value,view:{format:'custom'}}))
+})
+test('real legacy and historical Renewal server projections satisfy frontend DTO without current repricing',()=>{
+  const project=Reflect.get(serverOrders,'projectCustomerOrderDetail')
+  assert.equal(typeof project,'function')
+  for(const document of fixtures.slice(0,2)) {
+    const result=project(document)
+    assert.deepEqual(orders.parseCustomerOrderDetail(result),result)
+  }
+  assert.equal(project(fixtures[0]).totalPriceCents,8200)
+})
+test('nested customer DTO rejects credentials hidden in numeric arrays or selection counts',()=>{
+  const project=Reflect.get(serverOrders,'projectCustomerOrderDetail'),value=project(fixtures[0])
+  const arrayAttack=structuredClone(value)
+  arrayAttack.view.orderLines[0].flavourTotals=[{token:'private'}]
+  assert.throws(()=>orders.parseCustomerOrderDetail(arrayAttack))
+  const countAttack=structuredClone(value)
+  countAttack.view.orderLines[0].selection.flavourCounts={nama_chocolate:{jwt:'secret'}}
+  assert.throws(()=>orders.parseCustomerOrderDetail(countAttack))
 })
