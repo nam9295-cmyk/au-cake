@@ -1,6 +1,6 @@
 # Customer Account provider test — B2 로컬 준비 결과
 
-> **최신 상태:** 공식 Owner API/CLI 경로로 **B2 완료**. [최종 B2 결과](customer-account-b2-owner-execution.md)에 실제 자원·Key scope/만료·migration·운영 불변·최신 테스트(1,865 pass/0 fail/기존 skip1)를 기록했다. 아래는 이전 local preflight 당시의 역사적 기록이다. B3 이후와 실제 공급자 인증은 미실행이다.
+> **최신 상태:** [B2 완료](customer-account-b2-owner-execution.md) 후 별도 승인된 [B3 Google SDK 검증](customer-account-b3-google-validation.md)을 완료하고 Account OFF로 중지했다. 실제 신규 Google 로그인·세션 복원·로그아웃·취소와 사용자 보조 시크릿 쿠키 분리를 확인했다. 전체 로컬 테스트 1,872 pass/0 fail/기존 skip1. OTP/동일 이메일 UID 통합/제품 주문·계정 통합 및 B4 이후는 미검증·미실행이다. 아래는 이전 local preflight 당시의 역사적 기록이다.
 
 2026-10-17 KST. [B1](customer-account-b1-validation.md)은 완료했다. 이번 B2는 **local preflight 완료 / 실제 생성 승인 대기**다. 실제 Google/이메일 OTP/주문 서버 인수는 미완료다.
 

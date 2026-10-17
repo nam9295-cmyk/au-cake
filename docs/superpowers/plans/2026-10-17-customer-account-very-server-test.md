@@ -1,6 +1,6 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1/B2 완료, 여기서 중단.** [B2 최종 실행 결과](../../customer-account-b2-owner-execution.md)를 먼저 읽고 자원 생성/Key 발급/migration을 재실행하지 않는다. B3–B8은 별도 승인 전 실행 금지다.
+> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1/B2 및 별도 승인된 B3 Google SDK 검증 완료, Account OFF로 중단.** [B2 결과](../../customer-account-b2-owner-execution.md), [B3 결과와 검증 한계](../../customer-account-b3-google-validation.md)를 먼저 읽고 자원 생성/Key 발급/migration/인증 창을 재실행하지 않는다. B4–B8은 별도 승인 전 실행 금지다.
 
 **Goal:** 기존 very-server Appwrite 1.8.1에 운영과 분리한 테스트 프로젝트를 만들고 Google/6자리 OTP·일반 상품 주문을 합성 자료로 검증할 수 있게 준비한다.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 승인 worktree `/Users/nam9295/Desktop/john_2.0/code/au-cake-customer-account`, branch `feat/customer-account`만 수정한다. 조사 시작 HEAD는 `2150720cfed5b637aec9d35129252f9d87d97d94`다.
-- B1의 test project/Account OFF와 B2의 승인된 M1/Key3/DB2/Collection12/Attribute182/Index38/settings1 및 조건부 migration을 완료했다. [최종 결과](../../customer-account-b2-owner-execution.md). Function/SMTP/재시작/Google/사이트 배포는 여전히 미승인이다.
+- B1의 test project/Account OFF와 B2의 승인된 M1/Key3/DB2/Collection12/Attribute182/Index38/settings1 및 조건부 migration을 완료했다. [B2 결과](../../customer-account-b2-owner-execution.md). 이후 별도 승인된 B3에서 test HTTPS/Google SDK 검증만 완료하고 Account OFF로 복원했다. Function/SMTP/재시작/production Google·사이트 배포는 미승인이다.
 - 운영 고객 users/sessions·주문 document·업로드·메일/queue 본문·execution log를 조회/복사하지 않는다. 허용된 구성·schema/ACL·자원 metadata만 읽는다.
 - 운영 project의 Auth·DB·Function·ACL·판매 설정을 테스트 구성으로 덮어쓰지 않는다. main 병합/reset/history rewrite/GC 금지.
 - Google + 6자리 Email OTP만 고객 UI에 제공한다. guest 유지, 일반 케이크·초콜릿만 회원 연결. Custom Cake/Kids Class 회원 연동 제외.
@@ -144,11 +144,13 @@ Resend simulated delivery 주소는 bounce/sending smoke용일 뿐 실제 Google
 
 **승인 A3 필요:** 테스트 frontend 호스팅/DNS/TLS·test Web platform, Google Cloud client/consent/test users, test provider 설정 및 제한된 Google Auth SDK smoke. 운영 사이트 배포 아님.
 
-- [ ] test origin의 호스팅 위치와 DNS/TLS를 승인받고 준비한다. 새 Linux/Compose/Appwrite는 설치하지 않는다. wildcard/운영 stage origin을 재사용하지 않는다.
-- [ ] test project에 exact hostname을 Web platform으로 추가하고 별도 Google client의 Appwrite callback을 exact 등록한다. secret은 test project에만 저장한다.
-- [ ] 테스트 계정 G1/E1/B/M과 허용된 접속 범위를 검토한다. test Account service를 필요한 기간에만 ON, Email OTP/Magic URL 등 미검증 방법은 OFF로 유지한다. 고객 비밀번호 가입 UI는 만들지 않으며 관리자 비밀번호 계약은 보존한다.
-- [ ] 공통 SMTP 없이 가능한 신규 Google·로그아웃·세션 restore의 SDK 단독 smoke를 합성 계정으로 수행할 수 있다. Function readiness가 없는 상태를 제품 `/account` 통합 성공으로 보고하지 않는다.
-- [ ] callback 취소/실패·다른 계정의 기존 session guard를 기록한다. production provider/client·관리자 권한은 변경하지 않는다. 이후 SMTP/Function 단계 전 결과를 보고한다.
+- [x] test origin의 호스팅 위치와 DNS/TLS를 승인받고 준비한다. 새 Linux/Compose/Appwrite는 설치하지 않는다. wildcard/운영 stage origin을 재사용하지 않는다.
+- [x] test project에 exact hostname을 Web platform으로 추가하고 별도 Google client의 Appwrite callback을 exact 등록한다. secret은 test project에만 저장한다.
+- [x] 테스트 계정 G1/E1/B/M과 허용된 접속 범위를 검토한다. test Account service를 필요한 기간에만 ON, Email OTP/Magic URL 등 미검증 방법은 OFF로 유지한다. 고객 비밀번호 가입 UI는 만들지 않으며 관리자 비밀번호 계약은 보존한다.
+- [x] 공통 SMTP 없이 가능한 신규 Google·로그아웃·세션 restore의 SDK 단독 smoke를 수행했다. Function readiness가 없는 상태를 제품 `/account` 통합 성공으로 보고하지 않는다.
+- [x] 실제 Google 동의 취소/access_denied 실패 복귀, 로그인 중 재진입 버튼 차단과 cookie 격리의 검증 범위를 기록했다. 다른 Google 계정으로 기존 identity를 연결하는 실험은 하지 않았다. production provider/client·관리자 권한은 변경하지 않았다. 결과 보고 후 Account OFF로 중단한다.
+
+**B3 결과:** [최종 검증](../../customer-account-b3-google-validation.md). 테스트 Google 1명 추가, M+G 총2명. Google Testing의 기본 scope 예외를 설명하고 별도 승인받아 authLimit2/15분 이내/자동 OFF 감시로 한정했으며 약6분51초 후 OFF했다. 이메일 allowlist 보장으로 해석하지 않는다. 시크릿 cookie 격리는 사용자 보조 확인이며 실제 OTP/동일 이메일 UID 통합/제품 account·order/실기기 검증은 미완료다. B4 이후를 자동 진행하지 않는다.
 
 ## B4: 프로젝트별 Resend SMTP 준비
 

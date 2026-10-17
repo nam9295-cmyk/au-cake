@@ -1,6 +1,6 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
-2026-10-17. 이 문서는 향후 승인된 작업을 위한 절차다. 최초 로컬 구현·Mock 검증 이후 읽기 전용 조사와 별도 승인된 **B1 테스트 프로젝트 생성·Account OFF만** 완료했다([B1 결과](customer-account-b1-validation.md)). 실제 migration dry-run/apply, Function·사이트 배포, Google/SMTP 변경, 운영 고객 데이터 접근·변경 및 main 병합은 실행하지 않았다. 고객 기능은 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
+2026-10-18. 이 문서는 production 적용 전의 승인 절차다. 별도 승인 아래 [B1](customer-account-b1-validation.md), [B2 테스트 schema/조건부 migration](customer-account-b2-owner-execution.md), [B3 테스트 HTTPS·Google SDK 인증](customer-account-b3-google-validation.md)을 완료했다. 테스트 Account와 신규 인증 진입은 OFF로 복원했다. production migration/Function·사이트 배포/Google·SMTP 변경/고객 데이터 접근·변경/main 병합은 실행하지 않았다. 제품 고객 기능 frontend/server flag는 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
 
 ## 후속 안정화 배포 gate
 
@@ -17,15 +17,15 @@ main의 주말 13:00 정책 통합, profile focus 보존과 Node 22/24 로컬 �
 | 기존 private 자원 | cake/class 예약, review/coupon/mail ledgers, 구성된 private Custom Cake 자원은 metadata 권한만 확인한다. 회원 연동·새 owner schema를 만들지 않는다. 미분류 DB/collection, 불완전 inventory, broad private ACL은 활성화를 차단한다. |
 | 공개 설정·달력 | settings, cake pickup openings, class booked dates의 공개 read는 허용하되 일반 사용자 write 또는 documentSecurity 활성 상태는 거부한다. 실제 ACL이 맞지 않으면 OFF로 두고 원인을 보고한다. 자동 수정하지 않는다. |
 | Account | Appwrite Account 및 Preferences의 `verygoodAuCustomer` namespace. 이름, 주문 연락 이메일, AU 휴대전화, 언어. 로그인 이메일은 별도이며 수정하지 않는다. 다른 prefs 보존. |
-| 공급자 | Appwrite 1.8.1의 Google OAuth2 및 Email OTP 활성화, 승인된 Google test/production 클라이언트와 정확한 redirect URI, SMTP와 발신 도메인, Appwrite Web platform 등록 및 세션 cookie 정책 확인. 이번 작업에서 변경하지 않았다. |
+| 공급자 | Appwrite 1.8.1의 Google OAuth2 및 Email OTP 활성화, 승인된 Google test/production 클라이언트와 정확한 redirect URI, SMTP와 발신 도메인, Appwrite Web platform 등록 및 세션 cookie 정책 확인. B3은 별도 test Google/Web platform/SDK smoke만 완료했다. production provider/SMTP는 변경하지 않았다. |
 
 서버 매핑은 `.env.example`과 `resolveCustomerAccountResources()`를 따른다. `APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, server-only `APPWRITE_API_KEY`, cake/kids database·collection IDs, 기존 review/mail/custom 매핑을 승인된 대상으로 정확히 준비한다. 사용자 ID/키/실제 고객정보를 보고서·명령행 기록·브라우저 변수에 넣지 않는다. 신규 secret이나 API key scope 확대는 이 절차의 전제가 아니다. 현재 권한으로 metadata를 볼 수 없으면 활성화를 보류한다.
 
 ## 격리 환경의 필수 gate
 
-사용자가 선택한 환경은 **B안: very-server의 기존 Appwrite 1.8.1 인스턴스 안에 별도 nonproduction project 생성**이다. 새 호스트·Compose·Appwrite 설치는 하지 않는다. [현재 사전 점검과 단계별 승인 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 먼저 따른다. `verygood-au-account-test` 생성·Account OFF만 완료했고, key·DB·Google·SMTP·Function은 생성/설정하지 않았다.
+사용자가 선택한 환경은 **B안: very-server의 기존 Appwrite 1.8.1 인스턴스 안에 별도 nonproduction project 생성**이다. 새 호스트·Compose·Appwrite 설치는 하지 않는다. [현재 사전 점검과 단계별 승인 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 먼저 따른다. `verygood-au-account-test`의 B1/B2 자원과 B3 Google SDK 검증은 별도 승인 아래 완료했다. SMTP·Function·제품 주문 통합은 미실행이다. Account OFF·다른 인증 7개 OFF·test authLimit 2를 유지한다.
 
-SMTP/OAuth의 직접 SQL JSON은 암호화 envelope여서 enabled null을 미설정으로 해석하지 않는다. 기존 프로젝트의 실제 override/provider 상태는 별도 승인된 Console/API metadata 확인 대상이다. 신규 test project의 Custom SMTP OFF·OAuth disabled는 Console에서 확인했다.
+SMTP/OAuth의 직접 SQL JSON은 암호화 envelope여서 enabled null을 미설정으로 해석하지 않는다. 기존 프로젝트의 실제 override/provider 상태는 별도 승인된 Console/API metadata 확인 대상이다. 신규 test project의 Custom SMTP는 OFF다. Google provider는 B3에서 등록했지만 Account OFF가 신규 client 인증을 차단한다. 기본 Google 로그인은 Testing 사용자 목록만으로 접근을 제한하지 못하므로 후속 재활성화의 시간·사용자 상한/추가 접근 제한을 다시 승인받는다.
 
 같은 API host를 사용하므로 차단 기준은 **endpoint/project의 정확한 pair**다. 운영 project denylist와 테스트 resource ID allowlist를 확인하고, 운영 키·DB·사용자·Function을 복제/재사용하지 않는다. 새 프로젝트 생성에는 재시작이 필요 없다. 그러나 현재 공통 SMTP가 비어 있어 실제 OTP에는 별도 승인된 공통 설정 변경과 API/mail-worker 재생성이 필요하다. 기존 네 프로젝트의 저장된 OTP·Magic URL 설정이 켜져 있어 그 영향도 함께 승인받아야 한다. 프로젝트별 SMTP override만으로 이 영향을 없앨 수 없다.
 
@@ -41,7 +41,7 @@ SMTP 복구는 테스트 중지와 분리한다. 테스트 중지 시 새 인증
 
 ## 전용 additive migration
 
-아래는 **미래 승인 후** 실행할 명령이다. 실제 대상에 대한 dry-run도 이번 작업에서는 실행하지 않았다. `npm run setup:appwrite` 전체를 운영 migration으로 사용하지 않는다.
+아래는 **미래 production 승인 후** 실행할 명령이다. 테스트 프로젝트만 B2에서 승인된 dry-run/조건부 apply를 완료했다. production 대상의 dry-run/apply는 실행하지 않았다. `npm run setup:appwrite` 전체를 운영 migration으로 사용하지 않는다.
 
 사전에 shell 환경을 승인된 target으로 준비한다. 스크립트는 dotenv를 자동 로드하지 않는다. `CUSTOMER_ACCOUNT_MIGRATION_MARKET=AU`, HTTPS `/v1` endpoint, project ID, server key, 정확한 자원 매핑과 `APPWRITE_ADMIN_USER_IDS`가 필요하다. localhost/self-signed 우회나 redirect를 허용하지 않는다. 설정/권한 문제는 운영자 검토 후 별도 승인으로 해결한다.
 
