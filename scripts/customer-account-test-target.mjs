@@ -57,6 +57,8 @@ export function createCustomerAccountTestMetadataTransport({target:input,credent
   return async function metadataTransport(url,options={}) {
     assertCustomerAccountTestCredential(key,'metadata',clock())
     if(options.method!=='GET'||options.body!==undefined||typeof url!=='string'||!url.startsWith(target.endpoint+'/')) fail()
+    const headers=new Headers(options.headers)
+    if(headers.has('x-appwrite-project')&&headers.get('x-appwrite-project')!==target.projectId||headers.has('x-appwrite-key')&&headers.get('x-appwrite-key')!==secret) fail()
     const path=url.slice(target.endpoint.length)
     const match=/^\/databases\/([A-Za-z0-9._-]+)(?:\/collections(?:\/([A-Za-z0-9._-]+)(?:\/(attributes|indexes)(?:\/([A-Za-z0-9_$.-]+))?)?)?)?(?:\?[^#]*)?$/.exec(path)
     if(match) assertCustomerAccountTestResource(target,{databaseId:match[1],...(match[2]?{collectionId:match[2]}:{})})
