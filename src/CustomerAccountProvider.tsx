@@ -2,14 +2,14 @@ import {useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'reac
 import {appwriteConfig} from './lib/appwrite'
 import {createCustomerAuth,type CustomerAuth} from './lib/customer-auth'
 import {CustomerAccountContext,disabledCustomerAccount} from './lib/customer-account-context'
-import {CUSTOMER_AUTH_CHANGED_EVENT} from './lib/customer-account-config'
+import {CUSTOMER_AUTH_CHANGED_EVENT,CUSTOMER_AUTH_NOTICE_KEY,publishCustomerAuthChange} from './lib/customer-account-config'
 import {getCustomerAccountHealth} from './lib/customer-orders'
 import type {CustomerAccountHealth,CustomerAuthState,CustomerProfile,CustomerCheckoutDraft} from './lib/customer-account-types'
 import {saveCheckoutDraft,saveAccountReturn} from './lib/customer-checkout-draft'
 import {CustomerSignInDialog} from './components/CustomerSignInDialog'
 import type {Language} from './lib/i18n'
 const defaultAuth=createCustomerAuth()
-const authNoticeKey='verygood-au-auth-notice'
+const authNoticeKey=CUSTOMER_AUTH_NOTICE_KEY
 function bounded<T>(promise:Promise<T>):Promise<T> {
   let timer:ReturnType<typeof setTimeout>
   return Promise.race([promise,new Promise<never>((_resolve,reject)=>{timer=setTimeout(()=>reject(Error('AUTH_UNAVAILABLE')),10000)})]).finally(()=>clearTimeout(timer))
@@ -58,8 +58,7 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
     return ()=>{disposed=true;active.current=false;restoreEpoch.current++;authIntent.current++;window.removeEventListener('focus',focused);window.removeEventListener('pageshow',focused);window.removeEventListener(CUSTOMER_AUTH_CHANGED_EVENT,changed);window.removeEventListener('storage',stored)}
   },[enabled,refresh])
   const notify=useCallback(()=>{
-    window.dispatchEvent(new Event(CUSTOMER_AUTH_CHANGED_EVENT))
-    try{localStorage.setItem(authNoticeKey,crypto.randomUUID())}catch{/* Focus refresh covers storage-restricted browsers. */}
+    publishCustomerAuthChange()
   },[])
   const invalidateSession=useCallback(()=>{intent.current++;epoch.current++;identityUser.current=null;setOpen(false);setReady(false);setState({status:'unavailable'})},[])
   const signOut=useCallback(async()=>{
