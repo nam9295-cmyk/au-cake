@@ -1,6 +1,6 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 단계별 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1만 별도 승인받아 완료했다.** [B1 결과](../../customer-account-b1-validation.md)를 먼저 읽고 B1을 재실행하지 않는다. B2–B8은 승인 전 실행 금지다.
+> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 단계별 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1 완료, B2 로컬 준비 완료·생성 승인 대기다.** [B1 결과](../../customer-account-b1-validation.md)를 먼저 읽고 B1을 재실행하지 않는다. [B2 승인안](../../customer-account-b2-preflight.md)과 [검증 결과](../../customer-account-provider-test-results.md)를 기준으로 중단하며 실제 자원 생성·B3–B8은 별도 승인 전 실행 금지다.
 
 **Goal:** 기존 very-server Appwrite 1.8.1에 운영과 분리한 테스트 프로젝트를 만들고 Google/6자리 OTP·일반 상품 주문을 합성 자료로 검증할 수 있게 준비한다.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 승인 worktree `/Users/nam9295/Desktop/john_2.0/code/au-cake-customer-account`, branch `feat/customer-account`만 수정한다. 조사 시작 HEAD는 `2150720cfed5b637aec9d35129252f9d87d97d94`다.
-- 후속 B1 승인으로 테스트 project 1개 생성·Account OFF만 완료했다. 키/DB/Function 생성, 공통·프로젝트 SMTP 변경, 서비스 재시작, Google 설정, migration apply, 사이트 배포는 여전히 금지다.
+- B1에서 테스트 project 1개 생성·Account OFF를 완료했고, 후속 B2 승인으로 로컬 target guard/seed helper/테스트/offline dry-run을 완료했다. 실제 Key/DB/Collection/Auth M 생성과 migration apply는 최종 생성 승인 대기다. Function/SMTP/재시작/Google/사이트 배포는 여전히 미승인이다.
 - 운영 고객 users/sessions·주문 document·업로드·메일/queue 본문·execution log를 조회/복사하지 않는다. 허용된 구성·schema/ACL·자원 metadata만 읽는다.
 - 운영 project의 Auth·DB·Function·ACL·판매 설정을 테스트 구성으로 덮어쓰지 않는다. main 병합/reset/history rewrite/GC 금지.
 - Google + 6자리 Email OTP만 고객 UI에 제공한다. guest 유지, 일반 케이크·초콜릿만 회원 연결. Custom Cake/Kids Class 회원 연동 제외.
@@ -126,15 +126,16 @@ Resend simulated delivery 주소는 bounce/sending smoke용일 뿐 실제 Google
 
 ## B2: test target guard·전용 key·합성 baseline
 
-**승인 A2 필요:** 로컬 helper 코드/테스트, test key·DB·baseline schema/fixtures, owner dry-run/apply 범위를 각각 명시. customer flags OFF 유지.
+**진행 상태:** 사용자가 B2 로컬 helper/테스트/dry-run 준비만 승인했다. 실제 Key 발급·M/DB/Collection 생성·migration apply 전에 전체 생성안에 대한 재승인이 필수다. [정확한 생성안](../../customer-account-b2-preflight.md), [manifest](../../customer-account-b2-resource-manifest.json), [검증 결과](../../customer-account-provider-test-results.md)를 검토한다. customer flags OFF 유지. 현재 CLI는 offline-only이며 apply를 거부한다.
 
-**Files:** 새 `scripts/customer-account-test-target.mjs`, `tests/customer-account-test-target.test.mjs`, `scripts/seed-customer-account-test-project.mjs`, `tests/customer-account-test-seed.test.mjs`; 결과 `docs/customer-account-provider-test-results.md`. private run manifest는 Git 제외. 기존 `scripts/migrate-customer-account-schema.mjs`를 재사용한다.
+**Files:** 새 `scripts/customer-account-test-target.mjs`, `scripts/customer-account-test-baseline.mjs`, `tests/customer-account-test-target.test.mjs`, `scripts/seed-customer-account-test-project.mjs`, `tests/customer-account-test-seed.test.mjs`; 결과 `docs/customer-account-provider-test-results.md`. private run manifest는 Git 제외. 기존 `scripts/migrate-customer-account-schema.mjs`를 재사용한다.
 
-**Interfaces:** `assertCustomerAccountTestTarget({endpoint,projectId,manifest}) -> {endpoint,projectId}` 또는 throw. `buildCustomerAccountTestSeedPlan({target,resources,adminUserIds,runId}) -> {creates,fixtures}`는 승인된 test IDs의 create만 계획한다. 기본 dry-run, 기존 document update/delete·guest owner backfill 없음.
+**Interfaces:** `assertCustomerAccountTestTarget({endpoint,projectId,resources}) -> frozen target` 또는 throw. `resources`는 databaseIds/functionIds의 명시 allowlist subset이다. `buildCustomerAccountTestSeedPlan({target,adminUserIds,runId}) -> {creates,fixtures,migration,env,...}`는 승인된 test IDs의 create만 계획한다. 기본 dry-run, 기존 document update/delete·guest owner backfill 없음.
 
-- [ ] 같은 host의 `verygood-au`/기타 운영 project, 혼합 DB/Function, redirect/unknown key 소속을 거부하며 network count 0인 RED를 작성한다.
-- [ ] helper/seed의 Mock GREEN·기존 account 회귀 후 로컬 기능별 커밋한다. 운영 `.env` 자동 상속·키/secret 출력 금지.
-- [ ] test metadata-read key와 일시 bootstrap key를 발급한다. 양 key로 production read/write를 실제 시도하지 않고 Console key 소속·scope metadata와 target guard로 경계를 확인한다.
+- [x] 같은 host의 모든 운영 project, 혼합 DB/Function, redirect/unknown key 소속을 거부하는 RED → GREEN을 완료했다. 잘못된 대상/operation/header의 network count 0을 확인했다.
+- [x] helper/seed 12개·account 71개·전체 npm test 1,847 pass/0 fail/1 skip 및 lint/TypeScript를 확인하고 로컬 커밋했다. 운영 env 자동 상속·secret 출력 없음. 실제 생성 adapter/apply·공급자 검증은 미실행이다.
+- [x] 정확한 2 DB/12 collections/181 baseline attributes/37 indexes, owner migration 1+1, M UID/ACL, Key 3개/scope/expiry와 settings fixture를 확정했다. **현재 여기서 멈추고 생성 승인을 기다린다.**
+- [ ] 별도 생성 승인 후 test metadata-read/일시 bootstrap/fixtures Key 3개를 정확한 scope·만료로 발급한다. production read/write를 실제 시도하지 않고 Console Key 소속·scope metadata와 target guard로 경계를 확인한다.
 - [ ] 빈 test baseline만 승인된 seed plan으로 생성한다. 모든 고객·쿠폰·날짜·이메일은 run ID가 있는 합성 자료이며 운영 schema/data export 없음.
 - [ ] test 관리자 M UID와 정확한 schema ACL을 검증한다. 전용 migration GET-only dry-run → 결과 검토 → **apply 승인이 있는 경우에만** test apply → available 재확인한다. private 권한 자동 완화 금지.
 - [ ] 실제 생성 자원·권한·기능 OFF를 기록하고 보고한다. Function·Google·SMTP·재시작은 이 승인에 포함하지 않는다.
@@ -207,4 +208,4 @@ Resend simulated delivery 주소는 bounce/sending smoke용일 뿐 실제 Google
 
 **실제 OTP 및 주문 통합 테스트를 바로 시작할 준비는 완료되지 않았다.** 유효한 Resend 계정/domain·전용 키, 합성 수신자 제한, system sender, 기존 네 프로젝트 이메일 영향 승인, API/mail-worker 재생성 시간·복구 승인이 필요하다. Function 주문 통합은 별도 sharp/runtime 해결 gate도 통과해야 한다. 이 조건을 프로젝트 생성 승인에 포함된 것으로 간주하지 않는다.
 
-이번 B1에서는 새 test project 생성·Account OFF와 비인증 Account GET의 403 검증만 수행했다. 기존 프로젝트·공통 환경·SMTP/Google·ACL·고객 데이터·Function/runtime은 변경하지 않았다. 메일·고객 로그인·migration·B2는 미실행이다. 전체 제품 테스트/빌드는 재실행하지 않았고, 결과 문서·증거 및 metadata 비교 검증으로 완료를 기록한다. A2 권장과 runtime/native 분석은 역사적 근거로 보존한다.
+B1에서는 새 test project 생성·Account OFF와 비인증 Account GET의 403 검증만 수행했다. 기존 프로젝트·공통 환경·SMTP/Google·ACL·고객 데이터·Function/runtime은 변경하지 않았다. B1 시점에는 메일·고객 로그인·migration·B2와 전체 제품 테스트/빌드를 실행하지 않았다. 후속 B2는 로컬 helper/offline manifest 및 전체 테스트·lint/TypeScript만 완료했으며 실제 자원 생성·migration·고객 로그인은 여전히 미실행이다. B2 결과를 B1의 원격 변경 범위와 혼동하지 않는다. A2 권장과 runtime/native 분석은 역사적 근거로 보존한다.
