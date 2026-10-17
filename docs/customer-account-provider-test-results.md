@@ -1,5 +1,7 @@
 # Customer Account provider test — B2 로컬 준비 결과
 
+> **최신 상태:** B2 자원 생성 승인은 받았으나 Console의 legacy Key scope 선택 불가로 실제 생성 전에 중단했다. [B2 실행 결과](customer-account-b2-execution.md)가 최신 상태다. 아래는 앞선 로컬 사전 준비 기록이다.
+
 2026-10-17 KST. [B1](customer-account-b1-validation.md)은 완료했다. 이번 B2는 **local preflight 완료 / 실제 생성 승인 대기**다. 실제 Google/이메일 OTP/주문 서버 인수는 미완료다.
 
 정확한 자원·권한·키 만료·관리자 UID·합성 자료·실행/중단 절차는 [B2 승인안](customer-account-b2-preflight.md), 전체 schema는 [resource manifest](customer-account-b2-resource-manifest.json)에 있다.

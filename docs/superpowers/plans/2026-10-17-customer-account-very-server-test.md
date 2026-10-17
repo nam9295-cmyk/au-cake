@@ -1,6 +1,6 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 단계별 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1 완료, B2 로컬 준비 완료·생성 승인 대기다.** [B1 결과](../../customer-account-b1-validation.md)를 먼저 읽고 B1을 재실행하지 않는다. [B2 승인안](../../customer-account-b2-preflight.md)과 [검증 결과](../../customer-account-provider-test-results.md)를 기준으로 중단하며 실제 자원 생성·B3–B8은 별도 승인 전 실행 금지다.
+> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 단계별 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1 완료, B2 생성 승인 후 Console scope 문제로 생성 전 중단했다.** [B1 결과](../../customer-account-b1-validation.md)를 먼저 읽고 B1을 재실행하지 않는다. [B2 승인안](../../customer-account-b2-preflight.md)과 [검증 결과](../../customer-account-provider-test-results.md)를 기준으로 중단하며 [B2 실행 결과](../../customer-account-b2-execution.md)의 공식 Key 발급 경로 문제를 해결하기 전 생성하지 않는다. B3–B8은 별도 승인 전 실행 금지다.
 
 **Goal:** 기존 very-server Appwrite 1.8.1에 운영과 분리한 테스트 프로젝트를 만들고 Google/6자리 OTP·일반 상품 주문을 합성 자료로 검증할 수 있게 준비한다.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 승인 worktree `/Users/nam9295/Desktop/john_2.0/code/au-cake-customer-account`, branch `feat/customer-account`만 수정한다. 조사 시작 HEAD는 `2150720cfed5b637aec9d35129252f9d87d97d94`다.
-- B1에서 테스트 project 1개 생성·Account OFF를 완료했고, 후속 B2 승인으로 로컬 target guard/seed helper/테스트/offline dry-run을 완료했다. 실제 Key/DB/Collection/Auth M 생성과 migration apply는 최종 생성 승인 대기다. Function/SMTP/재시작/Google/사이트 배포는 여전히 미승인이다.
+- B1에서 테스트 project 1개 생성·Account OFF를 완료했고, 후속 B2 승인으로 로컬 target guard/seed helper/테스트/offline dry-run을 완료했다. 이후 B2 생성·조건부 apply 승인은 확보했으나 Console legacy scope 선택 불가로 실제 생성은 0이다. Function/SMTP/재시작/Google/사이트 배포는 여전히 미승인이다.
 - 운영 고객 users/sessions·주문 document·업로드·메일/queue 본문·execution log를 조회/복사하지 않는다. 허용된 구성·schema/ACL·자원 metadata만 읽는다.
 - 운영 project의 Auth·DB·Function·ACL·판매 설정을 테스트 구성으로 덮어쓰지 않는다. main 병합/reset/history rewrite/GC 금지.
 - Google + 6자리 Email OTP만 고객 UI에 제공한다. guest 유지, 일반 케이크·초콜릿만 회원 연결. Custom Cake/Kids Class 회원 연동 제외.
@@ -126,15 +126,15 @@ Resend simulated delivery 주소는 bounce/sending smoke용일 뿐 실제 Google
 
 ## B2: test target guard·전용 key·합성 baseline
 
-**진행 상태:** 사용자가 B2 로컬 helper/테스트/dry-run 준비만 승인했다. 실제 Key 발급·M/DB/Collection 생성·migration apply 전에 전체 생성안에 대한 재승인이 필수다. [정확한 생성안](../../customer-account-b2-preflight.md), [manifest](../../customer-account-b2-resource-manifest.json), [검증 결과](../../customer-account-provider-test-results.md)를 검토한다. customer flags OFF 유지. 현재 CLI는 offline-only이며 apply를 거부한다.
+**진행 상태:** 사용자가 B2 자원 생성과 exact dry-run 조건부 owner apply까지 승인했다. 승인 hash는 일치한다. 로컬 create-only adapter/20개 helper tests를 완료했으나 Console이 승인된 legacy Key scope를 표시하지 않아 원격 생성 전에 중단했다. M/Key/DB/Collection/migration 모두 실제 생성 0이다. [실행 결과와 재개 조건](../../customer-account-b2-execution.md)을 먼저 읽는다. [정확한 생성안](../../customer-account-b2-preflight.md), [manifest](../../customer-account-b2-resource-manifest.json), [검증 결과](../../customer-account-provider-test-results.md)를 검토한다. customer flags OFF 유지. 기존 seed CLI는 offline-only를 유지하며 신규 provision library는 승인 payload만 실행한다. 실제 생성 runner는 미실행이다.
 
-**Files:** 새 `scripts/customer-account-test-target.mjs`, `scripts/customer-account-test-baseline.mjs`, `tests/customer-account-test-target.test.mjs`, `scripts/seed-customer-account-test-project.mjs`, `tests/customer-account-test-seed.test.mjs`; 결과 `docs/customer-account-provider-test-results.md`. private run manifest는 Git 제외. 기존 `scripts/migrate-customer-account-schema.mjs`를 재사용한다.
+**Files:** 새 `scripts/customer-account-test-target.mjs`, `scripts/customer-account-test-baseline.mjs`, `tests/customer-account-test-target.test.mjs`, `scripts/seed-customer-account-test-project.mjs`, `tests/customer-account-test-seed.test.mjs`, `scripts/provision-customer-account-test-project.mjs`, `tests/customer-account-test-provision.test.mjs`; 결과 `docs/customer-account-provider-test-results.md`. private run manifest는 Git 제외. 기존 `scripts/migrate-customer-account-schema.mjs`를 재사용한다.
 
 **Interfaces:** `assertCustomerAccountTestTarget({endpoint,projectId,resources}) -> frozen target` 또는 throw. `resources`는 databaseIds/functionIds의 명시 allowlist subset이다. `buildCustomerAccountTestSeedPlan({target,adminUserIds,runId}) -> {creates,fixtures,migration,env,...}`는 승인된 test IDs의 create만 계획한다. 기본 dry-run, 기존 document update/delete·guest owner backfill 없음.
 
 - [x] 같은 host의 모든 운영 project, 혼합 DB/Function, redirect/unknown key 소속을 거부하는 RED → GREEN을 완료했다. 잘못된 대상/operation/header의 network count 0을 확인했다.
-- [x] helper/seed 12개·account 71개·전체 npm test 1,847 pass/0 fail/1 skip 및 lint/TypeScript를 확인하고 로컬 커밋했다. 운영 env 자동 상속·secret 출력 없음. 실제 생성 adapter/apply·공급자 검증은 미실행이다.
-- [x] 정확한 2 DB/12 collections/181 baseline attributes/37 indexes, owner migration 1+1, M UID/ACL, Key 3개/scope/expiry와 settings fixture를 확정했다. **현재 여기서 멈추고 생성 승인을 기다린다.**
+- [x] guard/seed/provision 20개·account 79개·전체 npm test 1,855 pass/0 fail/1 skip 및 lint/TypeScript를 확인하고 로컬 커밋했다. 운영 env 자동 상속·secret 출력 없음. 실제 생성 실행/apply·공급자 검증은 미실행이다.
+- [x] 정확한 2 DB/12 collections/181 baseline attributes/37 indexes, owner migration 1+1, M UID/ACL, Key 3개/scope/expiry와 settings fixture를 확정했다. 생성 승인은 이후 확보했으나 Console scope 차이로 원격 실행을 보류했다.
 - [ ] 별도 생성 승인 후 test metadata-read/일시 bootstrap/fixtures Key 3개를 정확한 scope·만료로 발급한다. production read/write를 실제 시도하지 않고 Console Key 소속·scope metadata와 target guard로 경계를 확인한다.
 - [ ] 빈 test baseline만 승인된 seed plan으로 생성한다. 모든 고객·쿠폰·날짜·이메일은 run ID가 있는 합성 자료이며 운영 schema/data export 없음.
 - [ ] test 관리자 M UID와 정확한 schema ACL을 검증한다. 전용 migration GET-only dry-run → 결과 검토 → **apply 승인이 있는 경우에만** test apply → available 재확인한다. private 권한 자동 완화 금지.
