@@ -1,6 +1,6 @@
 // Public presentation only: consumed by the AU frontend and static generator, never order validation.
 import { renewalPickupCopy } from "./au-renewal-pickup-policy.js";
-import { RENEWAL_OFFERS, MOCHI_FLAVOURS } from "./au-renewal.js";
+import { RENEWAL_OFFERS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName } from "./au-renewal.js";
 import { RENEWAL_NAV, RENEWAL_CARDS } from "./au-renewal-catalog.js";
 const escape = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = cents => (cents / 100).toFixed(2);
@@ -18,7 +18,7 @@ const summaries = {
   'brownie-whole': 'Brownie Basque cheesecake in whole cake and loaf forms, with optional Vanilla Fresh Cream. Made to order in Sydney.',
   'brownie-loaf': 'Brownie Basque cheesecake loaf with optional Vanilla Fresh Cream. Pickup in Melrose Park, Sydney.',
   cookies: 'A six-cookie set: three Chocolate Chip and three Double Chocolate. Photos and product introduction; reservations await price approval.',
-  mochi: 'Six chocolate mochi flavours in Sydney: choose singles or build a four-piece gift box with free box packaging. Pickup in Melrose Park.',
+  mochi: 'Six Pavé Mochi flavours in Sydney: choose singles or build a four-piece gift box with free box packaging. Pickup in Melrose Park.',
   almond: 'Almond Chocolate in 80g packs, a six-pack 5+1 bundle or a black tub with two 80g packs. Pickup in Melrose Park, Sydney.',
   'pave-chocolate': 'Pavé Chocolate in a 100g heart tin, individually or as a six-tin 5+1 bundle. A chocolate gift for pickup in Melrose Park, Sydney.',
   eiffel: 'Eiffel Tower Chocolate in six-piece packs or a 5+1 bundle of six packs. Chocolate gifts for pickup in Melrose Park, Sydney.',
@@ -39,7 +39,7 @@ export function classArchiveSeo(siteUrl) {
   return {title:c.title+' | verygood chocolate',description:c.intro,canonical:siteUrl+'/classes',robots:'index, follow',structuredData:[{'@type':'WebPage',name:c.title,description:c.intro,url:siteUrl+'/classes'}],fallbackHtml:`<main><h1>${escape(c.title)}</h1><p>${escape(c.intro)}</p><h2>${escape(c.archive)}</h2><p>${escape(c.courses)}</p><a href="/custom-cakes">${escape(c.link)}</a></main>`};
 }
 function selections(card) {
-  if (card.id==='mochi') return MOCHI_FLAVOURS.map(f=>({name:`${f.id === "nama_chocolate" ? "Original" : f.en} Nama Chocolate · 1 piece (single)`,price:f.priceCents,url:card.href}));
+  if (card.id==='mochi') return MOCHI_DISPLAY_FLAVOURS.map(f=>({name:`${mochiFlavourName(f.id)} · 1 piece (single)`,price:f.priceCents,url:card.href}));
   return card.offers.flatMap(id=>{
     const p=RENEWAL_OFFERS[id];
     if(p.price===null || p.provisional) return [];
@@ -68,7 +68,7 @@ export function renewalSeoPages(siteUrl, content) {
   const categoryDescriptions={
     '/':'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.',
     '/cakes':'Explore Pavé whole cake, Gâteau loaf, Brownie Basque whole cake and loaf, and Levain Cookies. Cake & Bake in Melrose Park, Sydney.',
-    '/chocolates':'Explore six-flavour Chocolate Mochi, Almond Chocolate, Pavé heart tins and Eiffel Tower Chocolate. Gift selections in Melrose Park, Sydney.',
+    '/chocolates':'Explore six-flavour Pavé Mochi, Almond Chocolate, Pavé heart tins and Eiffel Tower Chocolate. Gift selections in Melrose Park, Sydney.',
     '/celebrate':'Gâteau Cupcakes, Brownie Basque Cupcakes and S’more Sticks for celebrations in Sydney. Explore pack sizes and current reservation availability.',
     '/custom-cakes':'Explore bespoke celebration cakes and Basic one-tier or Advanced two-tier class enquiries in Sydney. Share your design, date and servings.',
     '/business':'Cakes and chocolate gifts for corporate events, café supply enquiries and menu consulting in Sydney. Explore VERYGOOD business services.',

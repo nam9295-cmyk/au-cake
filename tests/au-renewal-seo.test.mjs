@@ -19,7 +19,7 @@ test('SEO-01: all renewal pages explicitly declare indexability',()=>{
 })
 test('SEO-02: Mochi initial content contains six current flavours, prices, real image and gift terms',()=>{
  const p=pages['/chocolates/chocolate-mochi'];assert.match(p.fallbackHtml,/<img[^>]+alt=/)
- for(const word of ['Strawberry','Green Grape','Mandarin','Banana','Butter','Nama','10.00','9.50','8.50','8.00','0.50'])assert.ok(p.fallbackHtml.includes(word),word)
+ for(const word of ['Strawberry','Green Grape','Mandarin','Banana','Butter','Original Pavé','10.00','9.50','8.50','8.00','0.50'])assert.ok(p.fallbackHtml.includes(word),word)
  assert.match(p.fallbackHtml,/free/i);assert.match(p.fallbackHtml,/refrigerat/i)
  assert.doesNotMatch(p.fallbackHtml,/Amande|signature.*35|Cookie reservations/i)
 })

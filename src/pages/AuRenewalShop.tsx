@@ -40,6 +40,9 @@ import {
   RENEWAL_CONTRACT,
   RENEWAL_OFFERS,
   MOCHI_FLAVOURS,
+  MOCHI_DISPLAY_FLAVOURS,
+  mochiFlavourName,
+  renewalProductName,
   priceRenewalOrder,
   type RenewalSelection,
 } from "../../appwrite-functions/reservation-api/src/au-renewal.js";
@@ -58,7 +61,7 @@ function displaySummary(
     (l) => l.selection.lineId === line.selection.parentLineId,
   );
   return [
-    ko ? card?.ko || line.productName : line.productName,
+    ko ? card?.ko || renewalProductName(line, "ko") : renewalProductName(line),
     line.selection.size,
     labelFinish(line.selection.finish || "basic", ko),
     `${line.quantity}${ko ? "팩" : " pack(s)"} / ${line.physicalQuantity}${ko ? "개" : " pieces"}`,
@@ -66,19 +69,20 @@ function displaySummary(
       ? `${
           line.selection.mode === "gift-four"
             ? (ko ? "박스당 구성: " : "Per box: ") +
-              MOCHI_FLAVOURS.filter((f) => line.selection.flavourCounts![f.id])
+              MOCHI_DISPLAY_FLAVOURS.filter((f) => line.selection.flavourCounts![f.id])
                 .map(
                   (f) =>
-                    `${ko ? f.ko : f.en} ${line.selection.flavourCounts![f.id]}`,
+                    `${mochiFlavourName(f.id, ko ? "ko" : "en")} ${line.selection.flavourCounts![f.id]}`,
                 )
                 .join(", ")
             : ko
               ? "단품"
               : "Singles"
-        } · ${ko ? "맛별 총수량: " : "Flavour totals: "}${line.flavourTotals
-          .map((n, i) =>
-            n ? `${ko ? MOCHI_FLAVOURS[i].ko : MOCHI_FLAVOURS[i].en} ${n}` : "",
-          )
+        } · ${ko ? "맛별 총수량: " : "Flavour totals: "}${MOCHI_DISPLAY_FLAVOURS
+          .map((f) => {
+            const n = line.flavourTotals[MOCHI_FLAVOURS.findIndex(stored => stored.id === f.id)];
+            return n ? `${mochiFlavourName(f.id, ko ? "ko" : "en")} ${n}` : "";
+          })
           .filter(Boolean)
           .join(", ")}`
       : null,

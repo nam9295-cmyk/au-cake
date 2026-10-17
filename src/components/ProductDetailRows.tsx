@@ -1,4 +1,4 @@
-import { RENEWAL_CONTRACT, MOCHI_FLAVOURS, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
+import { RENEWAL_CONTRACT, mochiFlavourName, renewalProductName, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import { RENEWAL_CARDS } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import {
   CUPCAKE_PACK_SIZE,
@@ -39,11 +39,11 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
     const card = Object.values(RENEWAL_CARDS).flat().find(item=>item.offers.includes(line.productId))
     const finish = {'basic': language==='ko'?'기본':'Basic', 'vanilla-fresh-cream': language==='ko'?'바닐라 생크림':'Vanilla Fresh Cream', 'chocolate-buttercream': language==='ko'?'초코 버터크림':'Chocolate Buttercream', 'extra-chocolate': language==='ko'?'초콜릿 추가':'Extra Chocolate'}[line.selection.finish || 'basic']
     return <>
-      <div><dt>{language==='ko'?'제품':'Product'}</dt><dd>{language==='ko'?card?.ko||line.productName:line.productName}</dd></div>
+      <div><dt>{language==='ko'?'제품':'Product'}</dt><dd>{language==='ko'?card?.ko||renewalProductName(line, language):renewalProductName(line, language)}</dd></div>
       {line.selection.size && <div><dt>{language==='ko'?'사이즈':'Size'}</dt><dd>{line.selection.size}</dd></div>}
       <div><dt>{language==='ko'?'토핑':'Finish'}</dt><dd>{finish}</dd></div>
       <div><dt>{language==='ko'?'구성·수량':'Contents & quantity'}</dt><dd>{line.quantity} {language==='ko'?'팩':'pack(s)'} · {line.physicalQuantity} {language==='ko'?'개':'pieces'}</dd></div>
-      {line.selection.mode && <div><dt>{language==='ko'?'맛별 수량':'Flavours'}</dt><dd>{Object.entries(line.selection.flavourCounts || {}).filter(([,n])=>n>0).map(([id,n])=>`${id==='amande' ? (language==='ko'?'아망드':'Amande Chocolat') : MOCHI_FLAVOURS.find(f=>f.id===id)?.[language==='ko'?'ko':'en'] || id} ${n * (line.selection.mode==='gift-four'?line.quantity:1)}`).join(', ')}</dd></div>}
+      {line.selection.mode && <div><dt>{language==='ko'?'맛별 수량':'Flavours'}</dt><dd>{Object.entries(line.selection.flavourCounts || {}).filter(([,n])=>n>0).map(([id,n])=>`${mochiFlavourName(id, language)} ${n * (line.selection.mode==='gift-four'?line.quantity:1)}`).join(', ')}</dd></div>}
       {line.giftBoxCount>0 && <div><dt>{language==='ko'?'무료4구박스':'Free gift boxes'}</dt><dd>{line.giftBoxCount}</dd></div>}
       {line.individualPackaging && <div><dt>{language==='ko'?'개별포장':'Individual packaging'}</dt><dd>{line.individualPackagingPieces} · {formatCurrency(line.individualPackagingFeeCents/100)}</dd></div>}
     </>

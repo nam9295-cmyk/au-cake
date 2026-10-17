@@ -8,6 +8,8 @@ import {
 import { useState } from "react";
 import {
   MOCHI_FLAVOURS,
+  MOCHI_DISPLAY_FLAVOURS,
+  mochiFlavourName,
   priceRenewalOrder,
   type MochiCounts,
   type RenewalSelection,
@@ -38,8 +40,8 @@ function FlavourCounts({
   const selected = total(counts);
   return (
     <div className="mochi-flavours">
-      {MOCHI_FLAVOURS.map((f) => {
-        const name = language === "ko" ? (f.id === "nama_chocolate" ? "오리지널 생초콜릿" : `${f.ko === "귤" ? "만다린(귤)" : f.ko}생초콜릿`) : (f.id === "nama_chocolate" ? "Original Nama Chocolate" : `${f.en} Nama Chocolate`);
+      {MOCHI_DISPLAY_FLAVOURS.map((f) => {
+        const name = mochiFlavourName(f.id, language);
         const max = Math.min(
           available?.[f.id] ?? Number.MAX_SAFE_INTEGER,
           box ? counts[f.id] + 4 - selected : Number.MAX_SAFE_INTEGER,
@@ -146,8 +148,8 @@ export function MochiBuilder({
     /* incomplete or unsafe quantity cannot be added */
   }
   const composition = (counts: MochiCounts) =>
-    MOCHI_FLAVOURS.filter((f) => counts[f.id])
-      .map((f) => `${language === "ko" ? (f.id === "nama_chocolate" ? "오리지널 생초콜릿" : `${f.ko === "귤" ? "만다린(귤)" : f.ko}생초콜릿`) : (f.id === "nama_chocolate" ? "Original Nama Chocolate" : `${f.en} Nama Chocolate`)} ${counts[f.id]}`)
+    MOCHI_DISPLAY_FLAVOURS.filter((f) => counts[f.id])
+      .map((f) => `${mochiFlavourName(f.id, language)} ${counts[f.id]}`)
       .join(" · ");
   function save() {
     try {

@@ -102,3 +102,30 @@ test('Home membership agrees with the five/four/three renewal catalogue',()=>{
  const products=groups.flatMap(g=>g.products)
  for(const [id,amount]of [['pave','75'],['brownie-whole','82'],['brownie-loaf','58'],['smore','25']])assert.ok(products.find(p=>p.id===id)?.price.includes(amount))
 })
+
+// SSR-rendered card exercises bilingual markup; session lifecycle/Escape tested in Chrome.
+test('Pavé notice is home-only, bilingual, non-modal and respects the recorded session', async () => {
+  const { MochiLaunchNotice } = await import('../src/components/MochiLaunchNotice')
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
+  const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage')
+  let seen = false
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: {} })
+  Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: { getItem: () => seen ? '1' : null } })
+  try {
+    for (const language of ['en', 'ko'] as const) {
+      const html = renderToStaticMarkup(<MochiLaunchNotice language={language} />)
+      assert.match(html, /aria-labelledby="mochi-launch-title"/)
+      assert.match(html, /href="\/chocolates\/chocolate-mochi"/)
+      assert.match(html, language === 'ko' ? /파베 모찌, 예약 시작!/ : /Pavé Mochi Pre-orders Are Open!/)
+      assert.match(html, language === 'ko' ? /공지 닫기/ : /Dismiss announcement/)
+      assert.doesNotMatch(html, /aria-modal|autofocus/)
+    }
+    seen = true
+    assert.equal(renderToStaticMarkup(<MochiLaunchNotice language="en" />), '')
+  } finally {
+    if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow)
+    else Reflect.deleteProperty(globalThis, 'window')
+    if (originalStorage) Object.defineProperty(globalThis, 'sessionStorage', originalStorage)
+    else Reflect.deleteProperty(globalThis, 'sessionStorage')
+  }
+})

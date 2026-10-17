@@ -127,6 +127,25 @@ function mochiFlavours(selection, storedOnly = false) {
   return storedOnly && Object.hasOwn(selection.flavourCounts || {}, "amande")
     ? HISTORICAL_MOCHI_FLAVOURS : MOCHI_FLAVOURS;
 }
+// Presentation only. Never use this order for persisted flavourTotals or quote snapshots.
+const MOCHI_PUBLIC_NAMES = Object.freeze({
+  nama_chocolate: ["Original Pavé Chocolate", "오리지널 생초콜릿"],
+  strawberry: ["Strawberry Pavé Chocolate", "딸기 생초콜릿"],
+  green_grape: ["Green Grape Pavé Chocolate", "청포도 생초콜릿"],
+  mandarin: ["Mandarin Pavé Chocolate", "만다린 생초콜릿"],
+  banana: ["Banana Pavé Chocolate", "바나나 생초콜릿"],
+  butter_redbean: ["Butter & Red Bean Pavé Chocolate", "앙버터 생초콜릿"],
+  amande: ["Amande Chocolat", "아망드"],
+});
+export function mochiFlavourName(id, language = "en") {
+  return MOCHI_PUBLIC_NAMES[id]?.[language === "ko" ? 1 : 0] || id;
+}
+export function renewalProductName(line, language = "en") {
+  return line.productId === "mochi" ? (language === "ko" ? "파베 모찌" : "Pavé Mochi") : line.productName;
+}
+export const MOCHI_DISPLAY_FLAVOURS = Object.freeze([
+  "nama_chocolate", "strawberry", "green_grape", "mandarin", "banana", "butter_redbean",
+].map(id => MOCHI_FLAVOURS.find(f => f.id === id)));
 export const MOCHI_NAMES = Object.freeze(MOCHI_FLAVOURS.map((f) => f.en));
 const idPattern = /^[A-Za-z0-9_-]{1,64}$/;
 const allowedFields = new Set([
@@ -414,7 +433,7 @@ export function renewalLineSummary(line) {
   const s = line.selection;
   const details = [
     `Item ${s.lineId}`,
-    line.productName,
+    renewalProductName(line),
     s.size,
     s.finish === "basic" ? null : s.finish,
     s.chocolateType,
@@ -426,8 +445,8 @@ export function renewalLineSummary(line) {
       s.mode,
       ...(s.mode === "gift-four" ? ["Per box: " + mochiFlavours(s, true)
         .filter(({ id }) => s.flavourCounts[id] > 0)
-        .map(({ id, en }) => `${en} ${s.flavourCounts[id]}`).join(", ")] : []),
-      "Total: " + mochiFlavours(s, true).map(({ en }, i) => `${en} ${line.flavourTotals[i]}`).join(
+        .map(({ id }) => `${mochiFlavourName(id)} ${s.flavourCounts[id]}`).join(", ")] : []),
+      "Total: " + mochiFlavours(s, true).map(({ id }, i) => `${mochiFlavourName(id)} ${line.flavourTotals[i]}`).join(
         ", ",
       ),
     );

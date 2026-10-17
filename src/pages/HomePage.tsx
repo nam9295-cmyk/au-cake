@@ -1,3 +1,4 @@
+import { MochiLaunchNotice } from "../components/MochiLaunchNotice"
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
 import { RENEWAL_NAV } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { useEffect, useRef, useState } from 'react'
@@ -162,11 +163,12 @@ function AuHomePage({
   return (
     <div className="home-redesign-wrap au-home-v02">
       <AuRedesignHeader cartItemCount={cartItemCount} home />
+      <MochiLaunchNotice language={language} />
       <section className="rd-hero" aria-labelledby="au-home-title">
         <AuHeroVideo />
         <div className="au-v02-hero-copy">
           <p className="au-v02-eyebrow">VERYGOOD · SYDNEY</p>
-          <h1 id="au-home-title" className="rd-hero-copy">
+          <h1 tabIndex={-1} id="au-home-title" className="rd-hero-copy">
             {t(homeCopy.headline, '초콜릿, 케이크, 그리고 축하의 순간.')}
           </h1>
           <p className="au-v02-hero-description">

@@ -246,7 +246,7 @@ test('llms text exposes current public menu, confirmed prices and archived class
  const {dist}=await generate()
  const llms=await readFile(join(dist,'llms.txt'),'utf8')
  assert.equal(llms,renderRenewalLlms(site));assert.equal(llms,await readFile(llmsPath,'utf8'))
- assert.match(llms,/Cake & Bake/);assert.match(llms,/Chocolate Mochi/);assert.match(llms,/Brownie Basque/)
+ assert.match(llms,/Cake & Bake/);assert.match(llms,/Pavé Mochi/);assert.match(llms,/Brownie Basque/)
  assert.match(llms,/75.00/);assert.match(llms,/82.00/);assert.match(llms,/Class archive/)
  assert.doesNotMatch(llms,/79.00|85.00|115.00|155.00|lemon-cake|18:00/)
  assert.match(llms,/Official Instagram:/);assert.doesNotMatch(llms,/\/admin|customer name|mobile number/i)

@@ -78,3 +78,7 @@ export function priceRenewalOrder(
   },
 ): RenewalQuote;
 export function renewalLineSummary(line: RenewalLine): string;
+
+export const MOCHI_DISPLAY_FLAVOURS: typeof MOCHI_FLAVOURS;
+export function mochiFlavourName(id: string, language?: string): string;
+export function renewalProductName(line: { productId: string; productName: string }, language?: string): string;

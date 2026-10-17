@@ -59,8 +59,8 @@ export const RENEWAL_CARDS = Object.freeze({
   chocolates: [
     card(
       "mochi",
-      "Chocolate Mochi",
-      "쇼콜라모찌",
+      "Pavé Mochi",
+      "파베 모찌",
       "/chocolates/chocolate-mochi",
       ["mochi"],
       "/products/renewal-photos/mochi-mochi-hero.webp",
