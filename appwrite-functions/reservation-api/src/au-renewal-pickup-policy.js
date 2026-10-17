@@ -1,13 +1,14 @@
-// Approved general AU pickup hours. New-order activation remains a separate runtime decision.
+// Approved general AU pickup hours. Weekend closing extended to 13:00 on 2026-10-17.
+// This additive extension remains compatible with v2 clients; activation is independent.
 export const RENEWAL_PICKUP_POLICY_VERSION = "au-renewal-pickup.2026-10-14.v2";
 export const RENEWAL_PICKUP_SCHEDULE = Object.freeze({
   timezone: "Australia/Sydney",
   intervalMinutes: 15,
   weekdays: Object.freeze({
-    0: Object.freeze({ open: "09:00", close: "12:00" }),
+    0: Object.freeze({ open: "09:00", close: "13:00" }),
     3: Object.freeze({ open: "09:00", close: "16:00" }),
     5: Object.freeze({ open: "09:00", close: "16:00" }),
-    6: Object.freeze({ open: "09:00", close: "12:00" }),
+    6: Object.freeze({ open: "09:00", close: "13:00" }),
   }),
 });
 export function renewalServiceSlots(

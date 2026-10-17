@@ -23,7 +23,7 @@ test("AU public copy and common notice match the approved calendar in both langu
         <AuPickupNotice language={language} driver />,
       );
     assert.ok(html.includes("09:00–16:00"));
-    assert.ok(html.includes("09:00–12:00"));
+    assert.ok(html.includes("09:00–13:00"));
     assert.equal(cakeCopy(language).pickupHours[0], copy.hours);
     assert.doesNotMatch(html, /08:00|18:00|20:00/);
   }
@@ -64,7 +64,7 @@ test("new order detail rendering retains actual product and size without alterin
     />,
   );
   assert.match(drawer, /18:30/);
-  assert.match(drawer, /09:00–12:00/);
+  assert.match(drawer, /09:00–13:00/);
   assert.match(html, /Brownie Basque Whole Cake/);
   assert.match(html, /6in/);
   assert.doesNotMatch(html, /Pave Chocolate Cake/);
@@ -115,3 +115,22 @@ test('Mochi lookup details show per-box contents separately from total pieces wi
  assert.match(html,/four-piece gift box/);assert.match(html,/8/)
  assert.doesNotMatch(html,/private-line-id|gift-four|Green Grape|<dt>Finish<\/dt>/)
 })
+
+
+test("admin retains an approved 12:40 appointment alongside weekend slots through 13:00", () => {
+  const doc = buildRenewalOrderData({
+    contractVersion: "au-renewal.2026-10.v2", customerName: "Test Buyer",
+    customerPhone: "0412345678", customerEmail: "buyer@example.com",
+    pickupDate: "2026-10-24", pickupTime: "12:00", privacyConsent: true,
+    orderLines: [{ lineId: "fixture", offerId: "brownie-whole", size: "6in", quantity: 1 }],
+  }, { now: new Date("2026-10-20T00:00:00Z"), reservationNumber: "TEST" });
+  doc.pickupTime = "12:40";
+  const original = JSON.stringify(doc);
+  const reservation = toReservation({ ...doc, $id: "fixture" } as never);
+  const html = renderToStaticMarkup(<ReservationDrawer reservation={reservation} settings={DEFAULT_SETTINGS}
+    onClose={() => {}} onSave={async () => {}} onCopy={async () => {}} />);
+  assert.match(html, /12:40 \(기존 승인 시각\)/);
+  assert.match(html, /<option value="13:00"/);
+  assert.doesNotMatch(html, /<option value="13:15"/);
+  assert.equal(JSON.stringify(doc), original);
+});

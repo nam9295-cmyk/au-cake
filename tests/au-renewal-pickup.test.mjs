@@ -15,8 +15,8 @@ const now = new Date("2026-10-18T23:00:00Z"); // Monday10:00 Sydney
 for (const [date, close, count] of [
   ["2026-10-21", "16:00", 29],
   ["2026-10-23", "16:00", 29],
-  ["2026-10-24", "12:00", 13],
-  ["2026-10-25", "12:00", 13],
+  ["2026-10-24", "13:00", 17],
+  ["2026-10-25", "13:00", 17],
 ]) {
   test(`${date} opens09:00 through inclusive${close} in15-minute steps`, () => {
     const slots = renewalPickupSlots(cake, date, now);
@@ -28,7 +28,7 @@ for (const [date, close, count] of [
     for (const time of [
       "08:45",
       "09:01",
-      close === "16:00" ? "16:15" : "12:15",
+      close === "16:00" ? "16:15" : "13:15",
       "20:00",
     ])
       assert.throws(
@@ -72,7 +72,7 @@ test("D02 is fixed independently of obsolete weekend approval flag and does not 
     renewalPickupSlots(cake, "2026-10-24", now, { weekendApproved: false }).at(
       -1,
     ),
-    "12:00",
+    "13:00",
   );
   assert.throws(
     () => validateRenewalPickup(mochi, "2026-10-24", "09:00", now, {}),
@@ -184,9 +184,9 @@ test("public copy and service slots derive from the same approved week", () => {
     korean = p.renewalPickupCopy("ko");
   assert.match(
     english.hours,
-    /Wednesday.*Friday.*09:00–16:00.*Saturday.*Sunday.*09:00–12:00/,
+    /Wednesday.*Friday.*09:00–16:00.*Saturday.*Sunday.*09:00–13:00/,
   );
-  assert.match(korean.hours, /수·금.*09:00–16:00.*토·일.*09:00–12:00/);
+  assert.match(korean.hours, /수·금.*09:00–16:00.*토·일.*09:00–13:00/);
   assert.match(english.driver, /prior.*approval|approval.*prior/i);
   for (let day = 0; day < 7; day++) {
     const date = `2026-10-${String(25 + day).padStart(2, "0")}`;
@@ -203,5 +203,15 @@ test("Oct16 launch remains manual and intersects actual24h with approved pickup 
   assert.doesNotThrow(() => validateRenewalPickup(mochi, "2026-10-17", "10:30", receipt, open));
   assert.throws(() => validateRenewalPickup(mochi, "2026-10-17", "10:15", receipt, open), /PICKUP_TIME_TOO_SOON/);
   assert.throws(() => validateRenewalPickup(mochi, "2026-10-16", "16:00", receipt, open), /PICKUP_TIME_TOO_SOON/);
-  assert.deepEqual(renewalPickupSlots(mochi,"2026-10-17",receipt,open),["10:30","10:45","11:00","11:15","11:30","11:45","12:00"]);
+  assert.deepEqual(renewalPickupSlots(mochi,"2026-10-17",receipt,open),["10:30","10:45","11:00","11:15","11:30","11:45","12:00","12:15","12:30","12:45","13:00"]);
+});
+
+// Operator-approved appointments do not become public customer slots.
+test("weekend extension admits the final hour but keeps 15-minute customer slots", () => {
+  for (const date of ["2026-10-24", "2026-10-25"]) {
+    for (const time of ["12:15", "12:30", "12:45", "13:00"])
+      assert.doesNotThrow(() => validateRenewalPickup(mochi, date, time, now, open));
+    for (const time of ["12:40", "13:01", "13:15"])
+      assert.throws(() => validateRenewalPickup(mochi, date, time, now, open), /PICKUP_TIME_UNAVAILABLE/);
+  }
 });
