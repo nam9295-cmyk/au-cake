@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 로컬 구현 인수 기록
 
+최신 상태는 [통합 전 안정화 기록](customer-account-stabilization.md)을 참고한다. main `34ba107`을 feature에 일반 merge했고 profile focus 초기화 문제를 수정했다. 아래 Task 1–10 수치는 최초 인수 시점의 기록이다.
+
 2026-10-17. 승인된 `feat/customer-account` worktree에서 Mac Codex 단독으로 Task 1–10을 수행했다. 기준은 `45971f4b53224a199513448128cf3d26543219f2`다. 이 기록은 로컬 구현의 증거이며 운영 활성화 준비 완료 판정이 아니다. 격리 공급자·실기기·실제 ACL gate는 미완료다. [배포/rollback](customer-account-rollout.md), [개인정보 절차](customer-account-privacy.md)를 함께 검토한다.
 
 ## 구현 결과와 변경 경계
@@ -90,9 +92,9 @@ Node v24.12.0 / npm 11.6.2에서 locked `npm ci`를 사용했다. root package-l
 
 사용자가 Mac Codex 단독을 지정했으므로 독립 subagent 리뷰를 수행하지 않았다. 승인 설계/Review Focus에 따라 저자 자체 리뷰를 별도 수행하며, 이것은 독립적인 제3자 보안 검토를 대체하지 않는다. reviewer 검토 범위는 JWT 신뢰 경계, 모든 idempotency 분기, no-backfill, stale auth/profile/order 응답, OAuth callback 및 flag OFF, ACL/migration 비파괴성, 기존 관리자/guest 경로다.
 
-실행 중 다른 작업에서 `main`과 `origin/main`이 `34ba107`(주말 픽업 종료 13:00)로 이동한 것을 read-only ref/reflog 검사에서 확인했다. 이 feature branch의 merge-base는 승인된 `45971f4` 그대로다. main/다른 worktree를 수정하거나 새 main을 이 브랜치에 통합하지 않았다. 향후 merge 승인 전에 이 변경과 픽업시간 계약을 별도 통합·회귀 검증해야 한다. 두 기존 production 복구 태그와 두 worktree를 유지한다. push·merge·deploy·실제 migration은 실행하지 않았다.
+Task 10 종료 당시 main/origin-main `34ba107`의 주말 픽업 종료 13:00 변경은 미통합 상태였다. 이후 사용자 안정화 승인에 따라 `9b34129`로 main을 feature에 일반 merge하고 픽업/Checkout 회귀를 검증했다. main/다른 worktree·운영 환경은 변경하지 않았고 feature를 main에 병합하지 않았다. 두 기존 production 복구 태그와 두 worktree를 유지한다. [최신 통합 증거](customer-account-stabilization.md)를 참고한다.
 
-추가 사용성 제한: `/account`에서 창 focus로 인증을 재검사할 때 개인 패널을 비우므로 저장 전 profile 편집값과 열린 상세 화면은 초기화될 수 있다. Checkout 초안은 별도 보존하며 해당 경로는 회귀 검증했다.
+기존 focus 초기화 제한은 후속 `ec22c34`에서 해결했다. 같은 UID의 미저장 네 필드와 열린 detail을 보존하고, checking 중 hidden/inert 처리하며 계정 변경·만료·오류·명시적 인증 변경은 이전 패널을 폐기한다. Checkout 초안 보존도 재검증했다.
 
 최종 Task 10 및 인수 기록 SHA, 최종 Git 상태와 최종 artifact 수치는 아래 최종 증거 절에 기록한다. 최종 보고 뒤 로컬 구현을 멈추며 production 적용은 별도 승인을 기다린다.
 

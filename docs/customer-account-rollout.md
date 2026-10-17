@@ -2,6 +2,10 @@
 
 2026-10-17. 이 문서는 향후 승인된 작업을 위한 절차다. 현재 작업은 `feat/customer-account`의 로컬 구현·Mock 검증까지이며, 실제 Appwrite metadata 조회/dry-run/apply, Function·사이트 배포, 공급자 설정, 운영 데이터 변경 및 main 병합을 실행하지 않았다. 기능은 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
 
+## 후속 안정화 배포 gate
+
+main의 주말 13:00 정책 통합, profile focus 보존과 Node 22/24 로컬 검증은 [안정화 기록](customer-account-stabilization.md)에 추가했다. 운영 배포 전에는 해당 문서의 **sharp Function 위험 대응**, 실제 target runtime(Review node-22 및 기존 reservation 배포 gate 구분), Linux native codec·공급자/ACL/실기기 검증을 확인한다. root production audit 0이나 Mac Node 22 통과만으로 gate를 해제하지 않는다. 실제 프로젝트/리소스·설정·권한 변경은 별도 승인 대상이다.
+
 ## 적용 리소스와 설정
 
 | 위치 | 필요한 변경 / 유지할 조건 |
