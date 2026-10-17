@@ -1,19 +1,19 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1/B2 및 별도 승인된 B3 Google SDK 검증 완료, Account OFF로 중단.** [B2 결과](../../customer-account-b2-owner-execution.md), [B3 결과와 검증 한계](../../customer-account-b3-google-validation.md)를 먼저 읽고 자원 생성/Key 발급/migration/인증 창을 재실행하지 않는다. B4–B8은 별도 승인 전 실행 금지다.
+> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1/B2/B3 및 별도 승인된 B4 테스트 전용 SMTP 검증 완료, Account OFF로 중단.** [B2 결과](../../customer-account-b2-owner-execution.md), [B3 결과와 검증 한계](../../customer-account-b3-google-validation.md), [B4 결과](../../customer-account-b4-smtp-validation.md)를 먼저 읽고 자원 생성/Key 발급/migration/메일 발송/인증 창을 재실행하지 않는다. B5–B8은 별도 승인 전 실행 금지다.
 
 **Goal:** 기존 very-server Appwrite 1.8.1에 운영과 분리한 테스트 프로젝트를 만들고 Google/6자리 OTP·일반 상품 주문을 합성 자료로 검증할 수 있게 준비한다.
 
 **Architecture:** 기존 API/MariaDB/Redis/executor/mail worker는 공유하고, project·Auth users·keys·DB·Function·Google client·SMTP credential은 분리한다. 공통 SMTP 변경은 다른 프로젝트까지 영향을 주는 별도 운영 변경으로 취급한다. 새 호스트, 별도 Docker Compose, Appwrite 설치 또는 Mailpit 설치는 하지 않는다.
 
-**Tech Stack:** Appwrite 1.8.1, 기존 HTTPS API, Web SDK 23.0.0 / node-appwrite 22.1.3, Google OAuth2, 프로젝트별 Resend SMTP 후보, 기존 Node22 runtime.
+**Tech Stack:** Appwrite 1.8.1, 기존 HTTPS API, Web SDK 23.0.0 / node-appwrite 22.1.3, Google OAuth2, B4에서 검증한 프로젝트별 Resend SMTP, 기존 Node22 runtime.
 
 **Spec:** [최초 조사 및 A01–A11](../../customer-account-auth-test-environment.md), [제품 설계](../specs/2026-10-17-customer-account-design.md), [운영 적용/rollback](../../customer-account-rollout.md). 이 문서가 이전 A2 실행 계획을 대체한다.
 
 ## Global Constraints
 
 - 승인 worktree `/Users/nam9295/Desktop/john_2.0/code/au-cake-customer-account`, branch `feat/customer-account`만 수정한다. 조사 시작 HEAD는 `2150720cfed5b637aec9d35129252f9d87d97d94`다.
-- B1의 test project/Account OFF와 B2의 승인된 M1/Key3/DB2/Collection12/Attribute182/Index38/settings1 및 조건부 migration을 완료했다. [B2 결과](../../customer-account-b2-owner-execution.md). 이후 별도 승인된 B3에서 test HTTPS/Google SDK 검증만 완료하고 Account OFF로 복원했다. Function/SMTP/재시작/production Google·사이트 배포는 미승인이다.
+- B1의 test project/Account OFF와 B2의 승인된 M1/Key3/DB2/Collection12/Attribute182/Index38/settings1 및 조건부 migration을 완료했다. [B2 결과](../../customer-account-b2-owner-execution.md). 이후 별도 승인된 B3에서 test HTTPS/Google SDK 검증 후 Account OFF로 복원했고 B4에서 테스트 전용 Resend SMTP와 일반 sample 1건 수신을 확인했다. Function/공통 SMTP/재시작/production Google·사이트 배포는 미승인이다.
 - 운영 고객 users/sessions·주문 document·업로드·메일/queue 본문·execution log를 조회/복사하지 않는다. 허용된 구성·schema/ACL·자원 metadata만 읽는다.
 - 운영 project의 Auth·DB·Function·ACL·판매 설정을 테스트 구성으로 덮어쓰지 않는다. main 병합/reset/history rewrite/GC 금지.
 - Google + 6자리 Email OTP만 고객 UI에 제공한다. guest 유지, 일반 케이크·초콜릿만 회원 연결. Custom Cake/Kids Class 회원 연동 제외.
@@ -154,13 +154,13 @@ Resend simulated delivery 주소는 bounce/sending smoke용일 뿐 실제 Google
 
 ## B4: 프로젝트별 Resend SMTP 준비
 
-**승인 A4 필요:** 현재 계정 소유자 접근 확인, test 발신 subdomain/DNS 검증·전용 sending key, test SMTP override, 승인된 합성 수신자에 한한 SMTP test 발송. 공통 설정·재시작은 미포함.
+**승인 A4 아래 완료:** 현재 계정 소유자 접근 확인, test 발신 subdomain/DNS 검증·전용 sending key, test SMTP override, 사용자가 지정·승인한 수신함에 일반 sample 1건 발송·수신. 공통 설정·재시작은 미포함. 재실행하거나 B5로 자동 진행하지 않는다.
 
-- [ ] 보관 key의 `/domains` 401을 현재 운영 장애로 단정하지 말고 계정 소유자가 현재 verified domain·quota·사용 가능 key를 확인한다. 운영 Function key를 교체/회수하지 않는다.
-- [ ] test 전용 발신 domain/key·허용 수신함 목록 및 서버 측 접근/수신자 제한을 검토한다. domain-scoped key를 recipient allowlist라고 표시하지 않는다. 제한을 입증하지 못하면 실제 OTP 활성화는 보류한다.
-- [ ] test project에만 valid Resend SMTP override를 저장한다. secret은 기록하지 않고 project ID·sender domain·TLS 방식·key identifier만 확인한다.
-- [ ] 승인 범위에 있을 때 test SMTP sample을 합성 수신함으로 보낸다. worker는 payload override를 쓸 수 있지만 **이 성공은 공통 host gate를 통과하는 OTP 성공이 아니다**.
-- [ ] SMTP 연결·수신·테스트 설정 hash를 기록한다. 수신함 본문/OTP/메일 log를 보고서에 복사하지 않는다. 공통 SMTP·운영 프로젝트 설정을 변경하지 않고 결과를 보고한다.
+- [x] 현재 공식 Resend Owner Console에서 기존 verified domain·quota·Sending access Key metadata를 확인했다. 보관 key의 `/domains` 401을 운영 장애로 단정하지 않았고 운영 Key/Function은 변경하지 않았다.
+- [x] `auth-test.verygood-chocolate.com`과 신규 DNS3를 검증하고 테스트 도메인 전용 Sending access Key 1개를 구성했다. 도메인 제한이 TO allowlist가 아님을 명시하고 Account OFF/보호 credential/1회 승인 주소 helper를 유지했다. 실제 OTP 활성화는 보류했다.
+- [x] test project에만 `smtp.resend.com:465` / `ssl` override를 저장했다. secret은 Git 제외 보호 파일과 테스트 SMTP에만 보관하고 출력하지 않았다. Auth/OAuth 지문은 동일했다.
+- [x] 지정·승인된 수신함에 일반 SMTP sample을 1회 제출했다. Appwrite204/전용 Key 사용1회·200/사용자 받은편지함1건 수신을 확인했다. **이는 공통 host gate를 통과하는 OTP 성공이 아니다**.
+- [x] [B4 결과](../../customer-account-b4-smtp-validation.md)에 증거와 한계, 기존4 project/핵심 container 불변을 기록했다. Account OFF·신규 인증 창 OFF, CLI current session logout으로 중단했다. 공통 SMTP·재시작·B5는 실행하지 않았다.
 
 ## B5: 공통 SMTP와 두 서비스 재생성 — 운영 변경 전용 승인
 
