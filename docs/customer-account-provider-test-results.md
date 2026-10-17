@@ -2,6 +2,10 @@
 
 > **최신 상태:** [B2 완료](customer-account-b2-owner-execution.md), [B3 Google SDK 검증](customer-account-b3-google-validation.md)에 이어 별도 승인된 [B4 테스트 Resend SMTP](customer-account-b4-smtp-validation.md)를 완료했다. 테스트 전용 domain/DNS3/도메인 제한 sending Key/프로젝트 SMTP override를 구성하고 승인 수신함의 일반 sample 1건 수신을 확인했다. Account와 신규 인증 진입은 계속 OFF다. 전체 로컬 테스트 1,879 pass/0 fail/기존 skip1, 계정 그룹103 pass. 공통 SMTP/B5, OTP/동일 이메일 UID 통합/제품 주문·계정 통합은 미검증·미실행이다. 아래는 이전 local preflight 당시의 역사적 기록이다.
 
+> **B5 사전 점검 추가:** [읽기 전용 결과](customer-account-b5-preflight.md)와 [별도 승인 후 사용할 실행 계획](superpowers/plans/2026-10-18-customer-account-system-smtp.md)을 작성했다. 기존4의 이메일 인증 ON/SMTP override OFF를 공식 Console에서 확인했다. 공통 SMTP 실제 적용·system Key 발급·재생성·메일 발송은 하지 않았다. 공개 테스트 OTP는 TO 제한 미입증으로 보류한다. 위 테스트 수는 B4 실행 결과이며 B5에서 전체 제품 테스트를 다시 실행한 수치가 아니다.
+
+> B5 최종 raw 지문 비교는 Gallery의 project-config 1개가 불일치했다. 조회 접근 시각 저장/암호화 재생성과 일치하는 source·시각 근거는 확인했지만 이전 semantic 지문이 없어 완전 불변을 확정하지 않았다. 다른8범주·다른 프로젝트·핵심 container/공통 env 불변과 함께 보고서에 기록하고 실제 적용을 보류했다.
+
 2026-10-17 KST. [B1](customer-account-b1-validation.md)은 완료했다. 이번 B2는 **local preflight 완료 / 실제 생성 승인 대기**다. 실제 Google/이메일 OTP/주문 서버 인수는 미완료다.
 
 정확한 자원·권한·키 만료·관리자 UID·합성 자료·실행/중단 절차는 [B2 승인안](customer-account-b2-preflight.md), 전체 schema는 [resource manifest](customer-account-b2-resource-manifest.json)에 있다.

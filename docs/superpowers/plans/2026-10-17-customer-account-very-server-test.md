@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1/B2/B3 및 별도 승인된 B4 테스트 전용 SMTP 검증 완료, Account OFF로 중단.** [B2 결과](../../customer-account-b2-owner-execution.md), [B3 결과와 검증 한계](../../customer-account-b3-google-validation.md), [B4 결과](../../customer-account-b4-smtp-validation.md)를 먼저 읽고 자원 생성/Key 발급/migration/메일 발송/인증 창을 재실행하지 않는다. B5–B8은 별도 승인 전 실행 금지다.
 
+> **B5 사전 점검만 완료:** [실제 설정·운영 영향](../../customer-account-b5-preflight.md), [확정 실행 계획](2026-10-18-customer-account-system-smtp.md), [제안 manifest](../../customer-account-b5-system-smtp-manifest.json). B5 공통 env 변경/system Key/재생성과 공개 OTP는 미실행이다. 다음 실제 적용 승인을 기다린다.
+
 **Goal:** 기존 very-server Appwrite 1.8.1에 운영과 분리한 테스트 프로젝트를 만들고 Google/6자리 OTP·일반 상품 주문을 합성 자료로 검증할 수 있게 준비한다.
 
 **Architecture:** 기존 API/MariaDB/Redis/executor/mail worker는 공유하고, project·Auth users·keys·DB·Function·Google client·SMTP credential은 분리한다. 공통 SMTP 변경은 다른 프로젝트까지 영향을 주는 별도 운영 변경으로 취급한다. 새 호스트, 별도 Docker Compose, Appwrite 설치 또는 Mailpit 설치는 하지 않는다.
@@ -72,7 +74,7 @@ Resend는 기존 계정에서도 SMTP를 제공한다. 공식 설정은 `smtp.re
 | 테스트 project override | `enabled=true`, 같은 Resend host, 별도 **test 전용 domain-restricted sending key**, test sender/reply-to | 테스트 project에만 저장. SMTP 연결 검증을 수반하는 API 변경이며 별도 승인 필요. shared worker에서 override를 사용 |
 | 기존 주문 알림 | 현재 Resend HTTP API/Function/key·from 설정 유지 | Auth SMTP를 위해 기존 key를 revoke/교체하거나 운영 Function을 재배포하지 않음 |
 
-현재 API와 mail worker의 `_APP_SMTP_HOST/PORT/USERNAME/PASSWORD/SECURE`는 모두 비어 있고 system sender domain은 `appwrite.io`다. 이 sender를 그대로 Resend로 보내면 검증된 발신 도메인 조건을 충족한다고 볼 수 없다. system sender 후보는 기존 검증이 확인된 도메인의 `appwrite-system@<verified-domain>`, test sender 후보는 `customer-test@auth-test.verygood-chocolate.com`이다. 후자는 **미등록 후보**이며 별도 subdomain 검증/DNS 승인이 필요하다. test용 값을 인스턴스 전체 기본 발신자로 쓰지 않는다.
+현재 API와 mail worker의 `_APP_SMTP_HOST/PORT/USERNAME/PASSWORD/SECURE`는 모두 비어 있고 system sender domain은 `appwrite.io`다. 이 sender를 그대로 Resend로 보내면 검증된 발신 도메인 조건을 충족한다고 볼 수 없다. B5 system sender 후보는 Verified `verygood-chocolate.com`의 `appwrite-system@verygood-chocolate.com`이며 새 domain-scoped system Key가 필요하다. test sender `customer-test@auth-test.verygood-chocolate.com`은 B4에서 별도 subdomain/DNS/전용 Key를 검증했다. test용 값을 인스턴스 전체 기본 발신자로 쓰지 않는다.
 
 프로젝트 SMTP API는 host/port/sender/credentials를 저장하고 연결을 검사하며, 메일 payload가 별도 SMTP를 mail worker에 전달한다. 하지만 1.8.1 OTP endpoint는 **공통 host의 비어 있음부터 검사**하므로 프로젝트 override만으로 OTP를 활성화할 수 없다. 공통 SMTP를 유효하게 준비해야 한다. 기존 네 프로젝트의 OTP/Magic URL·password recovery 등 기본 메일 및 Console 메일에도 의미 있는 동작 변화가 생길 수 있다. 이 영향의 수용 또는 기존 프로젝트 보호 설정은 **별도 운영 승인 사항**이다. 기존 프로젝트 auth method를 임의로 OFF하지 않는다. [고정 버전 Account](https://github.com/appwrite/appwrite/blob/1.8.1/app/controllers/api/account.php), [프로젝트 SMTP](https://github.com/appwrite/appwrite/blob/1.8.1/app/controllers/api/projects.php), [메일 워커](https://github.com/appwrite/appwrite/blob/1.8.1/src/Appwrite/Platform/Workers/Mails.php)
 
@@ -165,6 +167,10 @@ Resend simulated delivery 주소는 bounce/sending smoke용일 뿐 실제 Google
 ## B5: 공통 SMTP와 두 서비스 재생성 — 운영 변경 전용 승인
 
 **승인 A5 필요:** system sender/새 system key·공통 SMTP 값, 기존 네 프로젝트/Console의 이메일 경로 변화 수용 또는 별도 보호 설정, 저부하 시간·API 중단 범위, 백업·두 서비스 재생성·원상복구 권한. A1/A4로 대체 불가.
+
+**2026-10-18 사전 점검:** 기존4 모두 Account/OTP/Magic URL/Email-Password ON, SMTP override OFF, session alerts OFF를 공식 Console에서 확인했다. queue0/processing0/failed1, `.env` root:root0644·비 UTF-8 bytes, 비대화식 sudo 실패를 기록했다. [B5 실행 계획](2026-10-18-customer-account-system-smtp.md)의 7개 변수·root 보호 백업·bytes 보존·worker→API 적용/API→worker 복구·AUTH-only 검증을 따른다. 이 결과는 실제 적용 승인이 아니며 아래 쓰기 항목은 계속 미완료다.
+
+Gallery raw config 지문 예외도 해당 보고서에 남겼다. 정상 조회의 활동 저장·무작위 IV 재암호화와 일치하지만 이전 semantic 자료가 없어 전부 불변을 확정하지 않는다. raw 증거를 보존하고 공식 Owner GET 기반 전후 semantic 비교·예외 검토를 실제 적용의 선행 gate로 추가했다.
 
 - [ ] 바로 전 compose/env/이미지 ID·metadata hash를 접근 제한된 서버 디렉터리에 백업한다. SMTP 외 설정 변경 여부, worker/API consumer 목록, 운영 metadata 불변을 확인한다.
 - [ ] 승인된 실제 Resend host/credentials·verified system sender만 설정한다. 임의 가짜 host, test sender의 전역 적용, Mailpit 전환 금지. 기존 Auth 설정을 임의 OFF/ON하지 않는다.
