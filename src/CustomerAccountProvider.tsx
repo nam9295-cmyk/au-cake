@@ -71,7 +71,9 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
     if(!active.current||generation!==intent.current)throw Error('AUTH_CANCELLED')
     epoch.current++;setState({status:'authenticated',identity});return identity
   },[auth])
-  const value=useMemo(()=>enabled?{enabled:true,ready,state,openSignIn(){
+  const value=useMemo(()=>enabled?{enabled:true,ready,state,openSignIn(event?:{currentTarget:HTMLElement}){
+    // Safari does not focus mouse-clicked buttons; capture the actual invoker before the dialog opens.
+    event?.currentTarget.focus()
     const lang=document.documentElement.lang
     setLanguage(lang==='ko'?'ko':'en');setOpeningIntent(intent.current);setOpen(true)
     if(!ready)void refresh()

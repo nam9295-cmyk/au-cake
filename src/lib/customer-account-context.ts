@@ -1,7 +1,7 @@
 import {createContext,useContext} from 'react'
 import type {CustomerAuthState,CustomerIdentity,CustomerProfile,CustomerCheckoutDraft} from './customer-account-types'
 export type CustomerAccountContextValue={
-  enabled:boolean;ready:boolean;state:CustomerAuthState;openSignIn:()=>void;refresh:()=>Promise<void>
+  enabled:boolean;ready:boolean;state:CustomerAuthState;openSignIn:(event?:{currentTarget:HTMLElement})=>void;refresh:()=>Promise<void>
   saveProfile:(profile:CustomerProfile)=>Promise<CustomerIdentity>;signOut:()=>Promise<void>
   registerCheckout:(capture:()=>CustomerCheckoutDraft,onGuest?:()=>void)=>()=>void
   invalidateSession:()=>void

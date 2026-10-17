@@ -20,6 +20,7 @@ export function createCustomerMigrationClient(env,transport=fetch) {
   return {
     getVersion:()=>request('GET','/health/version'),
     getDatabase:t=>request('GET',`/databases/${encodeURIComponent(t.databaseId)}`),
+    list:t=>request('GET',`/databases?${new URLSearchParams(t.queries.map(q=>['queries[]',q]))}`),
     listCollections:t=>request('GET',`/databases/${encodeURIComponent(t.databaseId)}/collections?${new URLSearchParams(t.queries.map(q=>['queries[]',q]))}`),
     getCollection:t=>request('GET',collection(t)),
     getAttribute:t=>request('GET',`${collection(t)}/attributes/${encodeURIComponent(t.key)}`),
@@ -36,13 +37,14 @@ export async function runCustomerAccountMigration({env,apply=false,client,sleep=
   if((await client.getVersion()).version!=='1.8.1') throw Error('CUSTOMER_ACCOUNT_UNSUPPORTED_VERSION')
   for(const databaseId of new Set(resources.privacyAuditTargets.map(t=>t.databaseId))) await client.getDatabase({databaseId})
   await assertCustomerResourceInventory(client,env,resources)
-  const metadata={collections:[],attribute:null,index:null}
+  const metadata={collections:[],publicCollections:[],attribute:null,index:null}
   for(const t of resources.privacyAuditTargets) metadata.collections.push(await client.getCollection(t))
+  for(const t of resources.publicReadTargets) metadata.publicCollections.push(await client.getCollection(t))
   const t=resources.ownershipTarget
   metadata.attribute=await optional(()=>client.getAttribute({...t,key:CUSTOMER_OWNER_ATTRIBUTE.key}))
   metadata.index=await optional(()=>client.getIndex({...t,key:CUSTOMER_OWNER_INDEX.key}))
   const plan=buildCustomerAccountMigrationPlan(env,metadata)
-  if(!apply) return {mode:'dry-run',...plan}
+  if(!apply) return {mode:'dry-run',ready:metadata.attribute?.status==='available'&&metadata.index?.status==='available',...plan}
   async function wait(kind,definition,validate) {
     for(let attempt=0;attempt<30;attempt++) {
       const v=await client[kind]({...t,key:definition.key})
@@ -56,7 +58,7 @@ export async function runCustomerAccountMigration({env,apply=false,client,sleep=
   await wait('getAttribute',CUSTOMER_OWNER_ATTRIBUTE,assertCustomerOwnerAttribute)
   if(!metadata.index) await client.createIndex({...t,...CUSTOMER_OWNER_INDEX})
   await wait('getIndex',CUSTOMER_OWNER_INDEX,assertCustomerOwnerIndex)
-  return {mode:'apply',...plan}
+  return {mode:'apply',ready:true,...plan}
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   const args=process.argv.slice(2)

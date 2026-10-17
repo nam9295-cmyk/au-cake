@@ -1,5 +1,5 @@
 export {CUSTOMER_OWNER_ATTRIBUTE,CUSTOMER_OWNER_INDEX} from '../appwrite-functions/reservation-api/src/customer-account-readiness.js'
-import {CUSTOMER_OWNER_ATTRIBUTE,CUSTOMER_OWNER_INDEX,resolveCustomerAccountResources,assertCustomerPrivateAcl,assertCustomerOwnerAttribute,assertCustomerOwnerIndex} from '../appwrite-functions/reservation-api/src/customer-account-readiness.js'
+import {CUSTOMER_OWNER_ATTRIBUTE,CUSTOMER_OWNER_INDEX,resolveCustomerAccountResources,assertCustomerPrivateAcl,assertCustomerPublicReadOnlyAcl,assertCustomerOwnerAttribute,assertCustomerOwnerIndex} from '../appwrite-functions/reservation-api/src/customer-account-readiness.js'
 
 export function customerAccountSetupDefinitions(env) {
   const market=String(env.VITE_MARKET||env.MARKET||'KR').toUpperCase()
@@ -15,6 +15,11 @@ export function buildCustomerAccountMigrationPlan(env,metadata) {
     if(!metadata.collections[i]) throw Error('CUSTOMER_ACCOUNT_INCOMPLETE_INVENTORY')
     assertCustomerPrivateAcl(metadata.collections[i],resources.adminUserIds)
     if(metadata.collections[i].$id && metadata.collections[i].$id!==target.collectionId) throw Error('CUSTOMER_ACCOUNT_INVALID_RESOURCE')
+  }
+  for(const [i,target] of resources.publicReadTargets.entries()) {
+    if(!metadata.publicCollections?.[i])throw Error('CUSTOMER_ACCOUNT_INCOMPLETE_INVENTORY')
+    assertCustomerPublicReadOnlyAcl(metadata.publicCollections[i],resources.adminUserIds)
+    if(metadata.publicCollections[i].$id&&metadata.publicCollections[i].$id!==target.collectionId)throw Error('CUSTOMER_ACCOUNT_INVALID_RESOURCE')
   }
   if(metadata.attribute) assertCustomerOwnerAttribute(metadata.attribute,{pending:true})
   if(metadata.index) assertCustomerOwnerIndex(metadata.index,{pending:true})

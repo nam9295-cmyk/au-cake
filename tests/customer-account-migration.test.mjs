@@ -12,8 +12,10 @@ test('migration defaults to read only; only missing reservations owner and index
     createStringAttribute:async args=>{calls.push(args);attribute=ownerAttribute},createIndex:async args=>{calls.push(args);index=ownerIndex}})
   const dry=await migration.runCustomerAccountMigration({env:accountEnv,client})
   assert.equal(dry.mode,'dry-run');assert.equal(dry.changes.length,2);assert.deepEqual(calls,[])
+  assert.equal(dry.ready,false)
   const apply=await migration.runCustomerAccountMigration({env:accountEnv,apply:true,client,sleep:async()=>{}})
   assert.equal(apply.mode,'apply');assert.equal(calls.length,2)
+  assert.equal(apply.ready,true)
   assert.deepEqual([...new Set(calls.map(c=>`${c.databaseId}/${c.collectionId}`))],['cake-db/reservations'])
   assert.equal(calls[0].required,false);assert.equal(calls[0].size,36)
   assert.deepEqual(calls[1].attributes,['customerUserId','$createdAt'])
@@ -37,10 +39,18 @@ test('HTTP dry-run uses only GET and rejects redirects; setup cannot combine cus
   const requests=[]
   const transport=async(url,options)=>{
     requests.push({url,...options})
-    const body=url.includes('/collections?')?{collections:[],total:0}:url.endsWith('/health/version')?{version:'1.8.1'}:url.includes('/attributes/')?ownerAttribute:url.includes('/indexes/')?ownerIndex:url.includes('/collections/')?{enabled:true,documentSecurity:false,$permissions:[]}:{$id:'cake-db'}
+    const body=url.includes('/databases?')?{databases:[],total:0}:url.includes('/collections?')?{collections:[],total:0}:url.endsWith('/health/version')?{version:'1.8.1'}:url.includes('/attributes/')?ownerAttribute:url.includes('/indexes/')?ownerIndex:url.includes('/collections/')?{enabled:true,documentSecurity:false,$permissions:[]}:{$id:'cake-db'}
     return new Response(JSON.stringify(body),{status:200})
   }
   await migration.runCustomerAccountMigration({env:accountEnv,client:migration.createCustomerMigrationClient(accountEnv,transport)})
   assert.ok(requests.length>5)
   assert.ok(requests.every(r=>r.method==='GET'&&r.redirect==='error'))
+})
+test('dry-run distinguishes processing from available schema and refuses broad public collection writes',async()=>{
+  const ready=await migration.runCustomerAccountMigration({env:accountEnv,client:metadataDb()})
+  assert.equal(ready.ready,true)
+  const pending=await migration.runCustomerAccountMigration({env:accountEnv,client:metadataDb({getAttribute:async()=>({...ownerAttribute,status:'processing'})})})
+  assert.equal(pending.ready,false)
+  const safe=metadataDb().getCollection
+  await assert.rejects(migration.runCustomerAccountMigration({env:accountEnv,client:metadataDb({getCollection:async t=>t.collectionId==='settings'?{enabled:true,documentSecurity:false,$permissions:['create("users")']}:safe(t)})}))
 })

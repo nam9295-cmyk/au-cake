@@ -65,3 +65,9 @@ test('detail validates stored readers and explicitly excludes nested coupon/admi
   const response=await call({db:dbFor([corrupt]),action:'customer-order',data:{id:'a-renewal'}})
   assert.equal(response.status,503);assert.equal(response.body.code,'CUSTOMER_ORDERS_UNAVAILABLE')
 })
+test('guest/same-email and approved-unlinked records stay absent for a reused account ID',async()=>{
+  const retained=fixtures.map(row=>({...row,customerEmail:'same-email@example.test',customerUserId:null}))
+  const result=await call({db:dbFor(retained)})
+  assert.equal(result.status,200);assert.deepEqual(result.body.result,{orders:[],nextCursor:null})
+  assert.equal((await call({db:dbFor(retained),action:'customer-order',data:{id:'a-legacy'}})).status,404)
+})

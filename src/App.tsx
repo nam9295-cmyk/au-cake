@@ -291,7 +291,7 @@ function App() {
   return (
     <AuLanguageProvider language={language} setLanguage={setLanguage}>
       {page === 'home' && <HomeTigerBackground />}
-      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage ? ' au-redesign-shell' : ''}${isPrivatePage && page !== 'account' ? ' admin-shell' : ''}`}>
+      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage || page === 'account' ? ' au-redesign-shell' : ''}${isPrivatePage && page !== 'account' ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && page !== 'portfolio' && page !== 'customer-stories' && page !== 'business' && (
         <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}

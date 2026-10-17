@@ -199,3 +199,8 @@ Backend는 reservation-api 내부의 `customer-identity.js`, `customer-account-r
 이 문서는 실제 코드와 공식 1.8.1 소스 분석에 기반한 1차 설계이며 제품 구현 완료 보고가 아니다. 현재까지 제품 코드·의존성·스키마·운영 설정은 변경하지 않았다. SMTP/Google 제공자 실제 인증, 격리 환경 공급자 간 ID 재사용, 모바일 브라우저와 새 코드 전체 테스트는 구현 후 검증 대상이다.
 
 사용자는 위 1차 범위 수정과 개인정보 운영 절차를 반영한 뒤 설계 재승인으로 중단하지 않고 상세 구현 계획 작성까지 진행하도록 승인했다. [상세 구현 계획](../plans/2026-10-17-customer-account.md)을 작성·문서 검증·커밋한 뒤 중단한다. 제품 구현은 사용자의 해당 계획 검토 승인 이후에만 시작한다. 실행 방식은 Mac Codex 단독을 유지한다. 계획 승인은 production 배포·실제 개인정보 삭제 처리를 포함하지 않는다.
+
+
+## 로컬 구현 검증 보완 — 2026-10-17
+
+승인된 1차 범위와 위 보호장치를 유지했다. readiness/migration은 project DB inventory도 확인하며 미분류 DB/collection 또는 불완전 metadata를 거부한다. 공개 settings/pickup calendar/booked dates의 의도된 read는 유지할 수 있지만 broad write는 거부한다. owner 정의의 암호화/format 불일치와 processing 상태도 활성화 준비 완료로 인정하지 않는다. 이 검사는 metadata-only이며 기존 운영 ACL을 수정하지 않는다. 관리자 ID 기준은 기존 `APPWRITE_ADMIN_USER_IDS`다. 상세 결과는 [로컬 인수 기록](../../customer-account-validation.md)과 [배포 절차](../../customer-account-rollout.md)에 연결한다. 실제 공급자·운영 metadata 검증은 미실행으로 남아 있다.

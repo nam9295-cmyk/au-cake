@@ -51,3 +51,13 @@ test('configured Custom Cake private inventory is ACL-only, even while Custom fl
   assert.deepEqual(attributes,['reservations'])
   assert.ok(names.every(key=>collections.includes(key.toLowerCase())))
 })
+test('unclassified project databases and public settings/calendar writes block customer activation',async()=>{
+  const safe=metadataDb().getCollection
+  for(const override of [
+    {list:async()=>({databases:[{$id:'unknown-personal-db'}],total:1})},
+    {getCollection:async t=>['settings','cake_pickup_openings','class_booked_dates'].includes(t.collectionId)?{enabled:true,documentSecurity:false,$permissions:['read("any")','update("users")']}:safe(t)},
+    {getAttribute:async()=>({key:'customerUserId',type:'string',size:36,required:false,status:'available',encrypt:true})},
+  ])assert.equal((await readiness.checkCustomerAccountReadiness(metadataDb(override),accountEnv)).ready,false)
+  const publicRead=metadataDb({getCollection:async t=>t.collectionId==='settings'?{enabled:true,documentSecurity:false,$permissions:['read("any")']}:safe(t)})
+  assert.equal((await readiness.checkCustomerAccountReadiness(publicRead,accountEnv)).ready,true)
+})

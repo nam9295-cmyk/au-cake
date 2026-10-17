@@ -1,5 +1,6 @@
 async (page) => {
   const check=(condition,message)=>{if(!condition)throw Error(message)}
+  await page.setViewportSize({width:390,height:844})
   const errors=[],submissions=[],drafts=[]
   let signedIn=false,oauth='cancel',otpFail=false,failOrder=false,productionRequests=0,oauthVisits=0
   let oauthCallback=''
@@ -52,9 +53,10 @@ async (page) => {
     return respond({code:404,message:'offline-only test endpoint'},404)
   })
   async function bag() {
-    await page.goto('http://localhost:4173/cart')
+    // Seed on an inert same-origin document, before CartProvider's initial persistence effect.
+    await page.goto('http://localhost:4173/robots.txt')
     await page.evaluate(()=>{localStorage.setItem('verygood-au-renewal-cart-v1',JSON.stringify({version:1,lines:[{lineId:'line-a',offerId:'pave-cake',size:'8in',quantity:1}]}));sessionStorage.clear()})
-    await page.reload();await page.locator('form.renewal-checkout').waitFor()
+    await page.goto('http://localhost:4173/cart');await page.locator('form.renewal-checkout').waitFor()
     await page.locator('input[name=name]').fill('Already typed')
     await page.locator('input[name=phone]').fill('0412345678')
     await page.locator('input[name=email]').fill('typed-contact@example.test')

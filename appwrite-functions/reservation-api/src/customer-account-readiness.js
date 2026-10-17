@@ -21,24 +21,33 @@ export function resolveCustomerAccountResources(env) {
     const databaseId=id(env.APPWRITE_CUSTOM_CAKE_DATABASE_ID)
     for(const key of ['CLAIMS','SNAPSHOTS','SESSIONS','PHOTOS','QUOTAS','OUTBOX','COMMITS','CHUNKS','HISTORIES','RATELIMITS']) privacyAuditTargets.push({databaseId,collectionId:id(env[`APPWRITE_CUSTOM_CAKE_${key}_TABLE_ID`])})
   }
-  return {ownershipTarget,privacyAuditTargets:[...new Map(privacyAuditTargets.map(t=>[`${t.databaseId}/${t.collectionId}`,t])).values()],adminUserIds:customerAdminUserIds(env)}
+  const publicReadTargets=[{databaseId:cake,collectionId:id(env.APPWRITE_SETTINGS_TABLE_ID||'settings')},{databaseId:cake,collectionId:id(env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID||'cake_pickup_openings')},{databaseId:kids,collectionId:id(env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID||'class_booked_dates')}]
+  return {ownershipTarget,publicReadTargets,privacyAuditTargets:[...new Map(privacyAuditTargets.map(t=>[`${t.databaseId}/${t.collectionId}`,t])).values()],adminUserIds:customerAdminUserIds(env)}
 }
 export function assertCustomerPrivateAcl(collection,adminUserIds) {
   if(!collection||collection.documentSecurity!==false||collection.enabled!==true||!Array.isArray(collection.$permissions)) throw Error('CUSTOMER_ACCOUNT_UNSAFE_ACL')
   const allowed=new Set(adminUserIds.flatMap(id=>['read','create','update','delete'].map(action=>`${action}("user:${id}")`)))
   if(collection.$permissions.some(permission=>!allowed.has(permission))) throw Error('CUSTOMER_ACCOUNT_UNSAFE_ACL')
 }
+export function assertCustomerPublicReadOnlyAcl(collection,adminUserIds) {
+  if(!collection||collection.documentSecurity!==false||collection.enabled!==true||!Array.isArray(collection.$permissions)) throw Error('CUSTOMER_ACCOUNT_UNSAFE_ACL')
+  const allowed=new Set([...adminUserIds.flatMap(id=>['read','create','update','delete'].map(action=>`${action}("user:${id}")`)),'read("any")','read("users")','read("guests")'])
+  if(collection.$permissions.some(permission=>!allowed.has(permission))) throw Error('CUSTOMER_ACCOUNT_UNSAFE_PUBLIC_WRITE')
+}
 export async function assertCustomerResourceInventory(databases,env,resources) {
+  void env
   const classified=new Set(resources.privacyAuditTargets.map(t=>`${t.databaseId}/${t.collectionId}`))
-  const cake=resources.ownershipTarget.databaseId,kids=env.APPWRITE_KIDS_DATABASE_ID
-  for(const [databaseId,collectionId] of [[cake,env.APPWRITE_SETTINGS_TABLE_ID||'settings'],[cake,env.APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID||'cake_pickup_openings'],[kids,env.APPWRITE_KIDS_BOOKED_DATES_TABLE_ID||'class_booked_dates']]) classified.add(`${databaseId}/${id(collectionId)}`)
-  for(const databaseId of new Set(resources.privacyAuditTargets.map(t=>t.databaseId))) {
+  for(const t of resources.publicReadTargets)classified.add(`${t.databaseId}/${t.collectionId}`)
+  const knownDatabases=new Set(resources.privacyAuditTargets.map(t=>t.databaseId))
+  const project=await databases.list({queries:[Query.limit(100)]})
+  if(!Array.isArray(project.databases)||!Number.isSafeInteger(project.total)||project.total!==project.databases.length||project.total>100||project.databases.some(d=>!knownDatabases.has(d.$id))) throw Error('CUSTOMER_ACCOUNT_UNCLASSIFIED_DATABASE')
+  for(const databaseId of knownDatabases) {
     const list=await databases.listCollections({databaseId,queries:[Query.limit(100)]})
     if(!Array.isArray(list.collections)||!Number.isSafeInteger(list.total)||list.total!==list.collections.length||list.total>100||list.collections.some(c=>!classified.has(`${databaseId}/${c.$id}`))) throw Error('CUSTOMER_ACCOUNT_UNCLASSIFIED_RESOURCE')
   }
 }
 export function assertCustomerOwnerAttribute(value,{pending=false}={}) {
-  if(!value||value.key!==CUSTOMER_OWNER_ATTRIBUTE.key||value.type!=='string'||value.size!==36||value.required!==false||value.array===true||(value.default!==undefined&&value.default!==null)||(value.status!=='available'&&!(pending&&value.status==='processing'))) throw Error('CUSTOMER_ACCOUNT_OWNER_SCHEMA_MISMATCH')
+  if(!value||value.key!==CUSTOMER_OWNER_ATTRIBUTE.key||value.type!=='string'||value.size!==36||value.required!==false||value.array===true||value.encrypt===true||(value.format!==undefined&&value.format!=='')||(value.default!==undefined&&value.default!==null)||(value.status!=='available'&&!(pending&&value.status==='processing'))) throw Error('CUSTOMER_ACCOUNT_OWNER_SCHEMA_MISMATCH')
 }
 export function assertCustomerOwnerIndex(value,{pending=false}={}) {
   if(!value||value.key!==CUSTOMER_OWNER_INDEX.key||value.type!=='key'||JSON.stringify(value.attributes)!==JSON.stringify(CUSTOMER_OWNER_INDEX.attributes)||JSON.stringify(value.orders)!==JSON.stringify(CUSTOMER_OWNER_INDEX.orders)||(value.status!=='available'&&!(pending&&value.status==='processing'))) throw Error('CUSTOMER_ACCOUNT_OWNER_INDEX_MISMATCH')
@@ -49,6 +58,7 @@ export async function checkCustomerAccountReadiness(databases,env) {
     const resources=resolveCustomerAccountResources(env)
     await assertCustomerResourceInventory(databases,env,resources)
     for(const target of resources.privacyAuditTargets) assertCustomerPrivateAcl(await databases.getCollection(target),resources.adminUserIds)
+    for(const target of resources.publicReadTargets) assertCustomerPublicReadOnlyAcl(await databases.getCollection(target),resources.adminUserIds)
     assertCustomerOwnerAttribute(await databases.getAttribute({...resources.ownershipTarget,key:CUSTOMER_OWNER_ATTRIBUTE.key}))
     assertCustomerOwnerIndex(await databases.getIndex({...resources.ownershipTarget,key:CUSTOMER_OWNER_INDEX.key}))
     return {enabled:true,ready:true}

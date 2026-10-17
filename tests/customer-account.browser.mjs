@@ -2,8 +2,9 @@ async (page) => {
   const check=(condition,message)=>{if(!condition)throw Error(message)}
   const fixture=await (await page.request.get('http://localhost:4173/tests/fixtures/customer-account/browser-orders.json')).json()
   let actor='a',unauthorized=false,holdNext=false,holdInitial=false,releaseNext,releaseInitial,initialStarted,logoutRequests=0
-  const errors=[],prefs={a:{unrelated:'keep',verygoodAuCustomer:{version:1,name:'Saved Name',contactEmail:'profile-a@example.test',phone:'0412345678',language:'en'}},b:{verygoodAuCustomer:{version:1,name:'Customer B',contactEmail:'profile-b@example.test',phone:'0498765432',language:'ko'}}}
-  page.on('pageerror',error=>errors.push(error.message))
+  const errors=[],failedRequests=[],prefs={a:{unrelated:'keep',verygoodAuCustomer:{version:1,name:'Saved Name',contactEmail:'profile-a@example.test',phone:'0412345678',language:'en'}},b:{verygoodAuCustomer:{version:1,name:'Customer B',contactEmail:'profile-b@example.test',phone:'0498765432',language:'ko'}}}
+  page.on('pageerror',error=>errors.push({message:error.message,stack:error.stack}))
+  page.on('requestfailed',request=>failedRequests.push({url:request.url(),reason:request.failure()}))
   await page.unroute('**/*')
   await page.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url())
@@ -32,9 +33,11 @@ async (page) => {
     return respond({code:404,message:'offline test only'},404)
   })
   await page.setViewportSize({width:1440,height:900})
+  await page.goto('http://localhost:4173/robots.txt')
+  await page.evaluate(()=>{localStorage.removeItem('au-cake-language');sessionStorage.clear()})
   await page.goto('http://localhost:4173/account')
-  await page.evaluate(()=>{localStorage.removeItem('au-cake-language');sessionStorage.clear()});await page.reload()
   await page.locator('input[name=loginEmail]').waitFor()
+  check(await page.locator('footer').evaluate(element=>getComputedStyle(element).display)==='flex','account did not reuse AU footer styles')
   check(await page.locator('input[name=loginEmail]').getAttribute('readonly')!==null,'login email editable')
   await page.locator('input[name=name]').fill('New Profile Name')
   await page.locator('input[name=contactEmail]').fill('new-contact@example.test')
@@ -46,6 +49,32 @@ async (page) => {
   await page.getByRole('region',{name:'Order details'}).waitFor()
   check((await page.getByRole('region',{name:'Order details'}).innerText()).includes('82.00'),'historical order repriced')
   check(!(await page.getByRole('region',{name:'Order details'}).innerText()).includes('new-contact@example.test'),'profile changed historical snapshot')
+  let locale='en'
+  const viewports=[]
+  for(const width of [360,390,768,1440])for(const language of ['en','ko']) {
+    await page.setViewportSize({width,height:900})
+    if(locale!==language) {
+      await (width<1100?page.locator('.au-v02-actions .au-language-compact'):page.locator(`.au-v02-actions .au-language-options button[lang=${language}]`)).click()
+      locale=language
+    }
+    await page.getByRole('heading',{name:language==='en'?'Upcoming Orders':'예정된 주문',exact:true}).waitFor()
+    const layout=await page.evaluate(()=>{
+      const brand=document.querySelector('header > .au-v02-wordmark').getBoundingClientRect(),actions=document.querySelector('header .au-v02-actions').getBoundingClientRect()
+      return {overflow:document.documentElement.scrollWidth>innerWidth,overlap:brand.right>actions.left}
+    })
+    check(!layout.overflow&&!layout.overlap,`account/header overflow ${width}/${language}: ${JSON.stringify(layout)}`)
+    if(width<1100) {
+      const menu=page.getByRole('button',{name:language==='en'?'Open menu':'메뉴 열기'})
+      await menu.click()
+      await page.getByRole('dialog',{name:language==='en'?'Menu':'메뉴',exact:true}).waitFor()
+      check(await page.getByRole('link',{name:language==='en'?'MY ACCOUNT':'마이 계정',exact:true}).isVisible(),'mobile account link missing')
+      await page.keyboard.press('Escape')
+      check(await menu.evaluate(element=>element===document.activeElement),'menu focus not restored')
+    }
+    if((width===360&&language==='ko')||(width===1440&&language==='en'))await page.screenshot({path:`output/playwright/customer-account/account-${width}-${language}.png`,fullPage:true})
+    viewports.push(`${width}/${language}`)
+  }
+  await page.locator('.au-v02-actions .au-language-options button[lang=en]').click()
   holdNext=true
   await page.getByRole('button',{name:'Load more orders'}).click()
   await page.getByRole('button',{name:new RegExp(fixture.a.orders[1].reservationNumber)}).click()
@@ -71,6 +100,6 @@ async (page) => {
   await page.getByText('Sign in is unavailable. You can continue as a guest.').waitFor()
   check(await page.locator('input[name=loginEmail]').count()===0,'401 retained old identity')
   check(logoutRequests===0,'401 silently deleted shared session')
-  check(errors.length===0,JSON.stringify(errors))
-  return {account:'profile/read-only login/stored prices/pagination/detail/A-B/401/language passed',pageErrors:errors.length}
+  check(errors.length===0,JSON.stringify({errors,failedRequests}))
+  return {account:'profile/read-only login/stored prices/pagination/detail/A-B/401/language passed',viewports,pageErrors:errors.length}
 }
