@@ -68,6 +68,7 @@
 
 - Frontend: `VITE_CUSTOMER_ACCOUNT_ENABLED=false` 기본값. AU에서 값이 정확히 `true`인 경우만 고객 provider, 링크, 로그인, 자동입력과 계정 페이지를 활성화한다. KR에서는 해당 기능을 노출/실행하지 않는다.
 - Server: `CUSTOMER_ACCOUNT_ENABLED=false` 기본값. 고객 조회와 소유권 연결을 제어하며 비회원 생성 경로를 변경하지 않는다.
+- 공개 `customer-account-health`는 enabled/ready 여부만 반환하고 DB ID·권한 목록·사용자 정보를 노출하지 않는다. frontend는 이 readiness를 확인한 뒤에만 고객 인증을 시작한다. readiness는 세 저장 경로의 optional 소유권 schema/index와 아래의 DB 권한 경계를 모두 검사한다.
 - 플래그가 꺼진 환경에서 고객 기능 때문에 Appwrite 인증 요청을 추가하지 않는다. `/account`는 noindex 비활성 안내와 기존 주문/조회 경로를 제공한다.
 - 고객 provider는 확인 중/비회원/로그인/일시적 오류를 구분한다. Account.get()으로 복원하고 앱 재진입·focus·인증 API의 401에서 최신 상태를 확인한다. 네트워크 오류를 로그아웃 성공으로 처리하지 않는다.
 - 로그인 화면은 Continue with Google, Continue with Email, Continue as Guest만 제공한다. OTP는 6자리 숫자, 진행 중 요청 잠금, 최신 요청만 반영, 만료/실패/429 안내와 60초 재전송 cooldown을 처리한다. Appwrite 서버의 email/IP rate limit이 최종 제한이며 UI cooldown을 보안 통제로 간주하지 않는다.
@@ -90,6 +91,12 @@ Google로 이동하기 전에 주문 종류별 draft를 versioned sessionStorage
 보존 대상은 실제 AU Bag의 모든 form 값, 날짜/시간, requestId와 해당 장바구니의 제출 기준 snapshot이다. 기존 ReservePage의 product/options/orderLines/promo handoff 및 Custom Cake/Class의 작성 내용도 포함한다. CartProvider의 기존 storage와 ID는 변경하지 않는다. callback 복원만으로 새 requestId를 만들거나 장바구니를 제거하지 않는다. 주문 성공 시에만 해당 draft와 실제 제출한 cart line을 정리한다.
 
 ## 7. 서버 소유권 계약
+
+고객 Auth 활성화 전 DB 권한 검증은 필수다. 현재 setup 소스는 관리자 ID 목록이 없을 때 `Role.users()`를 관리자 권한으로 fallback할 수 있고 direct 모드에서는 `create(Role.any())`를 허용한다. 이런 설정에서 단순히 고객 로그인을 추가하면 일반 고객이 DB를 직접 읽거나 임의 owner가 든 row를 생성할 수 있다. 실제 production collection 권한은 아직 인증된 조회로 확인하지 않았으며, 안전하다고 가정하지 않는다.
+
+고객 기능 readiness/전용 migration 사전 검증은 세 source collection의 `documentSecurity=false`, optional owner schema/index 준비, 그리고 collection의 권한이 비어 있거나 명시적인 기존 관리자 user ID에만 제한됐음을 확인한다. `any`, `users`, guest 또는 allowlist 밖의 principal에 예약 read/create/update/delete가 열려 있으면 고객 기능을 비활성 상태로 유지하고 실패한다. frontend API 모드도 `all`이어야 한다. 기존 API key의 collection metadata read scope를 사용하므로 추가 권한 확대가 필요하지 않다. 고객 조회/회원 주문 연결 시 서버에서 이 조건을 다시 확인한다.
+
+이번 additive migration은 발견한 기존 ACL을 자동으로 변경하지 않는다. 안전한 권한 상태가 아니면 production 활성화의 차단 사유로 보고하며, 권한 전환이 필요하면 대상·기존 비회원 경로·관리자 allowlist를 별도 검토/승인한다. Email OTP 활성화 자체도 이 권한 검증 이후에만 수행한다. 신규 설치 setup에서 고객 기능을 활성화하는 경우 관리자 ID 없는 broad fallback을 거부한다.
 
 주문 body의 `customerUserId`, 이메일 일치 또는 클라이언트가 보낸 user 객체를 신뢰하지 않는다. 회원 연결 의도는 pricing/canonical payload와 분리된 transport envelope에서만 전달한다. 그 의도는 신원 증명이 아니며 서버에서 검증한 Account ID만 저장한다.
 
@@ -141,7 +148,7 @@ Backend는 reservation-api 내부의 `customer-identity.js`와 `customer-orders.
 
 - OTP 신규/기존 계정, 6자리 입력, 실패/만료/429/재전송 cooldown/중복 요청/늦게 도착한 응답, 복원/로그아웃/계정 전환을 검증한다.
 - 실제 SDK가 보내는 endpoint/body를 로컬 HTTP 서버에서 검증한다. Google→OTP 및 OTP→Google의 동일 이메일은 별도 격리 Appwrite 프로젝트에서 동일 `$id`와 기존 owner 유지까지 확인한다. 서로 다른 이메일/기존 세션/동시 첫 로그인 충돌도 포함한다. mock 검증을 실제 provider 검증으로 보고하지 않는다.
-- 두 사용자와 guest fixture로 목록/상세/커서/위조 body·headers·JWT·이메일/플래그 off/직접 DB 거절/기존 비회원 재시도 미귀속을 검증한다. 각 신규 주문 종류의 원자적 owner 저장과 경쟁/쿠폰 reconciliation을 포함한다.
+- 두 사용자와 guest fixture로 목록/상세/커서/위조 body·headers·JWT·이메일/플래그 off/직접 DB 거절/기존 비회원 재시도 미귀속을 검증한다. broad read/write ACL, direct mode, documentSecurity=true, 누락된 owner schema/index에서 인증/회원 연결이 열리지 않는지 검증한다. 각 신규 주문 종류의 원자적 owner 저장과 경쟁/쿠폰 reconciliation을 포함한다.
 - 실제 AU Bag, 기존 예약, Custom Cake, Class 폼의 입력/동의/쿠폰/옵션/requestId/장바구니가 OTP와 Google 성공·실패 후 보존되는지 검증한다. 비동기 자동입력이 dirty 값을 덮어쓰지 않는지 확인한다.
 - 기존 번호+전화 조회, 관리자 Google/비밀번호/allowlist/서버 권한, 가격·결제·쿠폰·메일·reminder·출고 reader·배포 아카이브를 회귀 검증한다.
 - mobile Chromium/WebKit와 Safari/Chrome의 확인 범위를 분리 기록한다. 로컬 WebKit emulation을 실제 iOS Safari 기기 검사로 보고하지 않는다.
