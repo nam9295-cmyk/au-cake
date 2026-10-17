@@ -28,7 +28,7 @@
 | 7 | `019d9ab` | 실제 Bag/기존 Checkout·OAuth 복원 | 1817 / 0 / 1 |
 | 8 | `552b5be` | MY ACCOUNT·상세·static/private route | 1823 / 0 / 1 |
 | 9 | `5ee29eb` | 관리자 검사 및 명시적 계정 전환 | 1827 / 0 / 1 |
-| 10 | 최종 인수 커밋 참조 | 보안 보강·Chrome/WebKit·전체 검증·운영 문서 | **1831 / 0 / 1** |
+| 10 | `1260b64` | 보안 보강·Chrome/WebKit·전체 검증·운영 문서 | **1831 / 0 / 1** |
 
 Task 1의 합계에는 기존 customer-stories 2건이 신규 discovery runner에서도 중복 실행됐다. Task 2부터 신규 runner의 해당 중복을 제외했다. 마지막 단계의 추가 admin API 테스트 등 단계 전체 실행 이후 추가된 회귀는 해당 단계 dedicated 검증과 최종 전체 검증에서 다시 확인했다. 어떤 기존 business assertion도 삭제/완화하지 않았다. 기존 React hook harness에 useContext/useRef를 지원하고, 기존 private route inventory에 AccountPage만 추가했다.
 
@@ -177,3 +177,14 @@ tests/reservation-api-deploy.test.mjs
 tests/robots-policy.test.mjs
 tests/run-customer-account-tests.mjs
 ```
+
+## 최종 증거 — Task 10 커밋 이후 자체 리뷰
+
+- 검증된 구현 후보: `1260b6490e5edea518c1c90734e7aeb933814969`. 이후 이 인수 기록 보완은 문서만 변경하며 실행 코드는 동일하다. Task 10 완료 명령으로 신규 offline suite 57/57을 다시 확인했다.
+- 전체 리뷰 범위: `45971f4..1260b64`, 설계/계획 포함 14개 커밋·75개 파일. 기록한 Review Focus 1–5와 auth/config → checkout transport → Function identity/owner → stored read DTO → AccountPage 경계를 별도로 대조했다. 신규로 확인된 blocking code issue는 없으며, 공급자/운영 ACL/실기기 gate 및 명시한 사용성·의존성 제한은 남아 있다.
+- 기존 pricing/catalog/frozen Renewal reader/pickup policy, CartProvider, private Custom Cake 모듈·Class 화면·package-lock은 기준 커밋 대비 변경이 없다. 기존 테스트의 business/security assertion을 삭제하거나 완화하지 않았다. 신규 migration은 reservations의 누락 optional owner/index 생성만 포함하며 실제 실행은 하지 않았다.
+- 최종 AU static: 4 pass / 0 fail / 1 market skip. KR static: 3 pass / 0 fail / 2 market skips. 양 시장 build, lint, TypeScript, diff 및 문서 상대 링크 검증 exit 0. 마지막 AU 기본 OFF build를 유지한다.
+- 최종 flags-OFF preview도 같은 구현 후보의 test-only localhost 매핑으로 다시 build해 Chrome/WebKit 각각 Account 호출 0·pageErrors 0을 확인했다. 그 뒤 기본 OFF AU build와 static 검증을 다시 수행했다.
+- Task 10 커밋 시 `git status --short --branch`는 `## feat/customer-account`만 출력했다. 최종 문서 인수 커밋 후 HEAD와 clean 상태는 사용자 보고에 기재한다.
+- 보존 태그: `production-au-commerce-2026-09-29` → `1b3b468e7787a88c66f733f8b28db9f9ae729005`; `production-pre-redesign-2026-09-20` → `7ed17b1ddeaeb7e36d86ae8745f67625258742fc`.
+- worktree는 `/Users/nam9295/Desktop/john_2.0/code/au-cake` (`main`, 관측 `34ba107`), `/Users/nam9295/Desktop/john_2.0/code/au-cake-customer-account` (`feat/customer-account`) 두 곳을 보존한다. 승인된 feature worktree만 수정했다.
