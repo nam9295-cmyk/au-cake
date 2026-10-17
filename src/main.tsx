@@ -7,11 +7,12 @@ import './styles/au-business-services.css'
 import './styles/au-language.css'
 import App from './App.tsx'
 import { CartProvider } from './CartProvider'
+import { CustomerAccountProvider } from './CustomerAccountProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <CartProvider>
-      <App />
+      <CustomerAccountProvider><App /></CustomerAccountProvider>
     </CartProvider>
   </StrictMode>,
 )

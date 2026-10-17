@@ -53,7 +53,7 @@ test('profile saves merge namespace and preserve immutable prior order snapshots
   assert.equal((calls.find(c=>c[0]==='prefs')?.[1] as Record<string,unknown>).unrelated,'keep')
 })
 test('concurrent sends are serialized and provider errors become safe retry states',async()=>{
-  const {auth,account,calls}=setup();let release!:(v:unknown)=>void
+  const {auth,account}=setup();let release!:(v:unknown)=>void
   account.createEmailToken=async()=>new Promise(r=>{release=r}) as never
   const pending=auth.sendEmail('customer@example.test')
   await Promise.resolve();await Promise.resolve()

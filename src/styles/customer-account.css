@@ -1,0 +1,17 @@
+/* Optional account controls use the existing AU type, buttons and colour tokens. */
+.customer-account-dialog { width: min(28rem, calc(100% - 2rem)); padding: 2rem; border: 1px solid var(--au-line, #dce5df); color: var(--au-text, #203d33); background: var(--au-cream, #fffdf7); }
+.customer-account-dialog::backdrop { background: rgb(0 0 0 / 35%); }
+.customer-account-dialog h2 { margin: 0 1rem 1rem 0; font-size: 1.35rem; }
+.customer-account-dialog p { line-height: 1.5; }
+.customer-account-dialog form, .customer-account-dialog label { display: grid; gap: .75rem; }
+.customer-account-dialog form { margin-top: 1.25rem; }
+.customer-account-dialog input { width: 100%; box-sizing: border-box; min-height: 44px; padding: .65rem; border: 1px solid var(--au-line, #dce5df); background: white; color: inherit; font: inherit; }
+.customer-account-dialog button { min-height: 44px; font: inherit; cursor: pointer; }
+.customer-account-dialog > .secondary-button { width: 100%; }
+.customer-account-dialog button:disabled { cursor: default; opacity: .55; }
+.customer-account-close { position: absolute; right: .5rem; top: .5rem; width: 44px; background: transparent; border: 0; font-size: 1.5rem !important; }
+.customer-account-inline { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; }
+.customer-account-inline button, .customer-account-guest { background: none; color: inherit; border: 0; text-decoration: underline; }
+.customer-account-guest { width: 100%; }
+.customer-account-dialog :focus-visible { outline: 2px solid var(--au-green, #205b49); outline-offset: 3px; }
+@media (max-width: 480px) { .customer-account-dialog { padding: 1.5rem; } }
