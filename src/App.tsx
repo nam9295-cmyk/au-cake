@@ -1,4 +1,6 @@
 import { AuRenewalShop } from './pages/AuRenewalShop'
+import { CustomerAuthCallback } from './components/CustomerAuthCallback'
+import {readCheckoutResume} from './lib/customer-checkout-draft'
 import { renewalCardForPath } from '../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
@@ -94,6 +96,11 @@ function App() {
     remove: removeCartLine,
     removeSubmitted: removeSubmittedCartLines,
   } = useCart()
+  const [legacyResume]=useState(()=>readCheckoutResume('legacy'))
+  const legacyContext='draft' in legacyResume?legacyResume.draft.checkoutContext:null
+  const legacyOrigin=legacyResume.status==='cart-changed'?cartLines:Array.isArray(legacyContext?.cartOrigin)?legacyContext.cartOrigin as CartLine[]:[]
+  const legacySelection=legacyResume.status==='cart-changed'?legacyOrigin[0]?.selection:legacyContext?.initialSelection as CakeDetailSelection|null
+  const legacyOrderLines=legacyResume.status==='cart-changed'?legacyOrigin.map(line=>line.selection):legacyContext?.initialOrderLines as CakeDetailSelection[]|null
   const [pathname, setPathname] = useState(() => window.location.pathname)
   const page = getPageFromPath(pathname)
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
@@ -102,9 +109,9 @@ function App() {
   const [lookupRequestNumber, setLookupRequestNumber] = useState('')
 
   const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
-  const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
-  const [reservationSelection, setReservationSelection] = useState<CakeDetailSelection | null>(null)
-  const [reservationOrderLines, setReservationOrderLines] = useState<CakeDetailSelection[] | null>(null)
+  const [reservationProductId, setReservationProductId] = useState<ProductId>(()=>legacySelection?.productId||(legacyContext?.initialProductId as ProductId)||DEFAULT_PRODUCT_ID)
+  const [reservationSelection, setReservationSelection] = useState<CakeDetailSelection | null>(legacySelection||null)
+  const [reservationOrderLines, setReservationOrderLines] = useState<CakeDetailSelection[] | null>(legacyOrderLines||null)
   const [cakeOrderLinesAvailable, setCakeOrderLinesAvailable] = useState<boolean | null>(null)
   const [chocolateOrderLinesAvailable, setChocolateOrderLinesAvailable] = useState<boolean | null>(null)
   const hasChocolate = cartLines.some((line) => isChocolateProductId(line.selection.productId))
@@ -114,6 +121,8 @@ function App() {
   const [language, setLanguageState] = useState<Language>(readStoredLanguage)
   const hasLoadedSettings = useRef(false)
   const cartOriginLinesRef = useRef<CartLine[]>([])
+  const [initialLegacyOrigin] = useState(() => legacyOrigin.map(line => ({...line, selection:{...line.selection}})))
+  useEffect(() => { cartOriginLinesRef.current = initialLegacyOrigin }, [initialLegacyOrigin])
 
   const setLanguage = useCallback((nextLanguage: Language) => {
     setLanguageState(nextLanguage)
@@ -165,7 +174,7 @@ function App() {
   useEffect(() => {
     if (isHogirlPath(pathname)) return
     applySeo(pathname)
-    if (!pathname.startsWith('/admin') && page !== 'calendar' && page !== 'review') trackPageView(pathname)
+    if (!pathname.startsWith('/admin') && !pathname.startsWith('/account') && page !== 'calendar' && page !== 'review') trackPageView(pathname)
   }, [page, pathname])
 
   const pushPage = useCallback((nextPage: Page) => {
@@ -253,6 +262,7 @@ function App() {
   const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio', 'customer-stories', 'business'].includes(page)
 
   const renewalPath = pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/'
+  if (page === 'account-auth-callback') return <CustomerAuthCallback />
   const renewalRoute = marketConfig.market === 'AU' && (['/cakes','/chocolates','/celebrate','/custom-cakes','/business','/cart','/reserve'].includes(renewalPath) || !!renewalCardForPath(renewalPath, window.location.search) || page === 'cake-detail' || page === 'chocolate-detail')
   if (renewalRoute) return <AuLanguageProvider language={language} setLanguage={setLanguage}><div className="app-shell au-redesign-shell"><AuRedesignHeader cartItemCount={cartItemCount}/><AuRenewalShop path={renewalPath}/><AuRedesignFooter/><AnalyticsConsentBanner language={language}/></div></AuLanguageProvider>
 
@@ -368,6 +378,7 @@ function App() {
           initialOrderLines={reservationOrderLines}
           initialPromoCode={pendingReviewCoupon}
           initialRewardPercent={pendingReviewRewardPercent}
+          captureCartOrigin={() => cartOriginLinesRef.current}
           onInitialPromoConsumed={() => setPendingReviewCoupon('')}
           reviewDemoMode={import.meta.env.DEV && import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
           onComplete={completeReservation}

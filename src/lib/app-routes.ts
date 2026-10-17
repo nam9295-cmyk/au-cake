@@ -8,6 +8,7 @@ export { isHogirlPath } from '../stories/hogirl/routes.js'
 
 export type Page =
   | 'home'
+  | 'account-auth-callback'
   | 'portfolio'
   | 'customer-stories'
   | 'business'
@@ -54,6 +55,7 @@ export function getChocolateSlugFromPath(path: string): string | null {
 }
 
 export function getPageFromPath(path: string): Page {
+  if(marketConfig.market==='AU'&&/^\/account\/auth\/callback\/?$/.test(path))return 'account-auth-callback'
   if (getHogirlRouteFromPath(path)) return 'hogirl'
   if (path === '/') return 'home'
   if (marketConfig.market === 'AU' && serviceRoutes.some(route => route.path.startsWith('/business/') && route.path === path.replace(/\/$/, ''))) return 'business'
@@ -86,6 +88,7 @@ export function getPageFromPath(path: string): Page {
 
 export function pathForPage(page: Page): string {
   const paths: Record<Page, string> = {
+    'account-auth-callback':'/account/auth/callback',
     home: '/',
     portfolio: '/portfolio',
     'customer-stories': '/customer-stories/korea',

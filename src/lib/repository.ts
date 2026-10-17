@@ -85,10 +85,11 @@ function shouldUseReservationApi(scope: 'lookup' | 'all') {
   return appwriteConfig.reservationApiMode === 'lookup' || appwriteConfig.reservationApiMode === 'all'
 }
 
-export async function executeReservationApi<T>(action: string, data?: unknown, parseResult?: (value: unknown) => T): Promise<T> {
+export type CustomerOrderTransport = { customerAccount?: 'link' }
+export async function executeReservationApi<T>(action: string, data?: unknown, parseResult?: (value: unknown) => T, options?: CustomerOrderTransport): Promise<T> {
   const execution = await functions.createExecution({
     functionId: appwriteConfig.reservationApiFunctionId,
-    body: JSON.stringify({ action, data }),
+    body: JSON.stringify({ action, data, ...(action === 'create-cake' && options?.customerAccount === 'link' ? { customerAccount: 'link' } : {}) }),
     async: false,
     xpath: '/',
     method: ExecutionMethod.POST,
@@ -494,7 +495,7 @@ export async function getSettings(): Promise<StoreSettings> {
   }
 }
 
-export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrderReservation> {
+export async function createCakeOrder(input: CakeOrderRequest, options?: CustomerOrderTransport): Promise<CakeOrderReservation> {
   await requireChocolateOrderSupport(input.orderLines.map((line) => line.productId))
   if (!await supportsCakeOrderLines()) throw new Error(CAKE_ORDER_LINES_UNAVAILABLE_ERROR)
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
@@ -503,10 +504,11 @@ export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrde
   if (!isPickupTimeAllowed(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_TOO_SOON_ERROR)
   }
+  if (options?.customerAccount === 'link') return executeReservationApi<CakeOrderReservation>('create-cake', buildCakeOrderRequest(input), parseCakeOrderResult, options)
   return executeReservationApi<CakeOrderReservation>('create-cake', buildCakeOrderRequest(input), parseCakeOrderResult)
 }
 
-export async function createReservation(input: ReservationInput): Promise<Reservation> {
+export async function createReservation(input: ReservationInput, options?: CustomerOrderTransport): Promise<Reservation> {
   await requireChocolateOrderSupport([input.productId])
   const customerEmail = normalizeCustomerEmail(input.customerEmail)
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
@@ -517,10 +519,11 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   }
 
   if (shouldUseReservationApi('all')) {
-    const reservation = await executeReservationApi<Reservation>('create-cake', buildCakeReservationRequest(input), parseCakeReservationResult)
+    const reservation = await executeReservationApi<Reservation>('create-cake', buildCakeReservationRequest(input), parseCakeReservationResult, options)
     return normalizeReservation(reservation)
   }
 
+  if (options?.customerAccount === 'link') throw new Error('CUSTOMER_ACCOUNT_DISABLED')
   if (normalizeReviewCouponCode(input.promoCode)) throw new Error('PROMO_CODE_SERVER_REQUIRED')
 
   const now = new Date().toISOString()

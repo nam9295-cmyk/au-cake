@@ -1,4 +1,7 @@
 import { MOCHI_PUBLIC_INFORMATION } from '../../appwrite-functions/reservation-api/src/au-renewal-seo.js';
+import { useCustomerAccount } from '../lib/customer-account-context';
+import { CheckoutAccountPrompt } from '../components/CheckoutAccountPrompt';
+import { readCheckoutResume, acknowledgeCheckoutResume, checkoutCartSignature, fillUntouchedContact } from '../lib/customer-checkout-draft';
 import { renewalPhoto, renewalPhotos } from "../lib/renewal-photos";
 import { RenewalPhotoGallery, SixPackPhoto } from "../components/RenewalPhotoStory";
 import {
@@ -776,11 +779,18 @@ function MochiProduct({ card }: { card: RenewalCard }) {
   );
 }
 function Bag() {
+  const customer = useCustomerAccount();
+  const {registerCheckout} = customer;
+  const [resume] = useState(() => readCheckoutResume('renewal'));
+  const restored = 'draft' in resume ? resume.draft : undefined;
+  const [contact, setContact] = useState(() => ({ customerName: String(restored?.form.name || ''), customerPhone: String(restored?.form.phone || ''), customerEmail: String(restored?.form.email || '') }));
+  const [guest, setGuest] = useState(false), [cartChanged, setCartChanged] = useState(resume.status === 'cart-changed');
+  const dirty = useRef(new Set(restored?.dirtyFields || [])), formElement = useRef<HTMLFormElement>(null);
   const { t, language } = useAuLanguage(),
     cart = useCart(),
     [error, setError] = useState(""),
-    [date, setDate] = useState(""),
-    [time, setTime] = useState(""),
+    [date, setDate] = useState(String(restored?.form.date || '')),
+    [time, setTime] = useState(String(restored?.form.time || '')),
     [busy, setBusy] = useState(false),
     [result, setResult] = useState(""),
     [resultPickup, setResultPickup] = useState(""),
@@ -791,7 +801,26 @@ function Bag() {
     weekendApproved: true,
   });
   const lock = useRef(false),
-    requestId = useRef(crypto.randomUUID());
+    requestId = useRef<string>(restored?.requestId || crypto.randomUUID());
+  useEffect(() => { if (restored) acknowledgeCheckoutResume(restored); }, [restored]);
+  useEffect(() => {
+    if (guest || customer.state.status !== 'authenticated') return;
+    const profile = customer.state.identity.profile;
+    const modified = [...dirty.current].map(key => ({name:'customerName',phone:'customerPhone',email:'customerEmail'}[key] || key));
+    let cancelled = false;
+    queueMicrotask(() => { if (!cancelled) setContact(current => fillUntouchedContact(current, modified, profile)); });
+    return () => { cancelled = true; };
+  }, [guest, customer.state]);
+  useEffect(() => {
+    if (!cart.renewalLines.length || result) return;
+    return registerCheckout(() => {
+    if (!formElement.current || lock.current) throw Error('AUTH_DRAFT_UNAVAILABLE');
+    const values = new FormData(formElement.current);
+    return {version:1,kind:'renewal',flowId:crypto.randomUUID(),savedAt:Date.now(),returnTo:window.location.pathname === '/reserve' ? '/reserve' : '/cart',requestId:requestId.current,
+      form:{name:String(values.get('name')||''),phone:String(values.get('phone')||''),email:String(values.get('email')||''),date,time,note:String(values.get('note')||''),promo:String(values.get('promo')||''),privacy:values.get('privacy')==='on'},
+      dirtyFields:[...dirty.current],checkoutContext:{},cartSnapshot:[...cart.renewalLines],cartSignature:checkoutCartSignature('renewal')};
+    }, () => setGuest(true));
+  }, [registerCheckout, cart.renewalLines, date, time, result]);
   useEffect(() => {
     renewalCapabilities()
       .then(setCaps)
@@ -809,7 +838,7 @@ function Bag() {
   const newProducts = lines.some((l) => RENEWAL_OFFERS[l.offerId].newProduct);
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (lock.current || editingMochi !== null) return;
+    if (lock.current || editingMochi !== null || cartChanged || (customer.enabled && !guest && customer.state.status === 'checking')) return;
     lock.current = true;
     setBusy(true);
     setError("");
@@ -828,7 +857,7 @@ function Bag() {
         website: "",
         requestId: requestId.current,
         orderLines: lines,
-      });
+      }, customer.enabled && !guest && customer.state.status === 'authenticated' ? {customerAccount:'link'} : undefined);
       setResult(String(response.reservationNumber));
       setResultPickup(
         `${response.pickupDate} ${response.pickupTime} (Australia/Sydney)`,
@@ -965,25 +994,30 @@ function Bag() {
           </ul>
           {quote && <h2 className="au-mobile-price"><span className="au-mobile-price">{money(quote.totalPriceCents)}</span></h2>}
           <form
+            ref={formElement}
             className="renewal-checkout"
             onSubmit={submit}
-            onChange={() => {
-              if (!lock.current) requestId.current = crypto.randomUUID();
+            onChange={(event) => {
+              const target = event.target;
+              if ((target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) && target.name) dirty.current.add(target.name);
+              if (!lock.current && !cartChanged) requestId.current = crypto.randomUUID();
             }}
           >
             <h2>{t("Request a reservation", "예약 요청")}</h2>
+            <CheckoutAccountPrompt language={language} guest={guest} onGuest={setGuest} />
+            {cartChanged && <div role="status"><p>{t('Your bag changed in another tab. Your form is saved. Review the current items before sending.','다른 탭에서 장바구니가 변경되었습니다. 주문서는 보관했습니다. 현재 상품을 확인한 뒤 보내주세요.')}</p><button type="button" onClick={() => { requestId.current = crypto.randomUUID(); setCartChanged(false); }}>{t('I have reviewed the current bag','현재 장바구니 확인 완료')}</button></div>}
             <fieldset className="renewal-checkout-fields" disabled={busy}>
               <label>
                 {t("Name", "이름")}
-                <input name="name" required minLength={2} maxLength={80} />
+                <input name="name" required minLength={2} maxLength={80} value={contact.customerName} onChange={event => setContact(current => ({...current,customerName:event.target.value}))} />
               </label>
               <label>
                 {t("Australian mobile", "호주 휴대전화")}
-                <input name="phone" type="tel" required />
+                <input name="phone" type="tel" required value={contact.customerPhone} onChange={event => setContact(current => ({...current,customerPhone:event.target.value}))} />
               </label>
               <label>
                 {t("Email", "이메일")}
-                <input name="email" type="email" required maxLength={120} />
+                <input name="email" type="email" required maxLength={120} value={contact.customerEmail} onChange={event => setContact(current => ({...current,customerEmail:event.target.value}))} />
               </label>
               <label>
                 {t("Pickup date", "픽업 날짜")}
@@ -1029,14 +1063,14 @@ function Bag() {
               </p>
               <label>
                 {t("Promo code", "쿠폰 코드")}
-                <input name="promo" maxLength={80} />
+                <input name="promo" maxLength={80} defaultValue={String(restored?.form.promo || '')} />
               </label>
               <label>
                 {t("Note", "요청사항")}
-                <textarea name="note" maxLength={1000} />
+                <textarea name="note" maxLength={1000} defaultValue={String(restored?.form.note || '')} />
               </label>
               <label className="renewal-check">
-                <input name="privacy" type="checkbox" required />
+                <input name="privacy" type="checkbox" required defaultChecked={restored?.form.privacy === true} />
                 {t(
                   "I agree to the use of my details to process this request.",
                   "예약 처리를 위한 개인정보 이용에 동의합니다.",
@@ -1056,6 +1090,8 @@ function Bag() {
             <button
               disabled={
                 busy ||
+                cartChanged ||
+                (customer.enabled && !guest && customer.state.status === 'checking') ||
                 !caps.enabled ||
                 editingMochi !== null ||
                 !!provisional ||

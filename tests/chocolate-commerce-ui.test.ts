@@ -45,6 +45,12 @@ test('review demo mode cannot confirm a chocolate order without backend capabili
   const internals = (React as unknown as { __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE: { H: unknown } }).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
   const previous = internals.H
   const dispatcher = {
+    useContext(context: {_currentValue:unknown}) { return context._currentValue },
+    useRef(initial:unknown) {
+      const index=cursor++
+      if(!(index in states))states[index]={current:initial}
+      return states[index]
+    },
     useState(initial: unknown) {
       const index = cursor++
       if (!(index in states)) {

@@ -12,7 +12,7 @@ try {
   for(const [i,file] of files.entries()) {
     if(file.endsWith('.mjs')) { entries.push(resolve(file)); continue }
     const out=join(dir,`${i}-${basename(file)}.mjs`)
-    const bundle=await rolldown({input:resolve(file),platform:'node',transform:{jsx:{runtime:'automatic'},define:{'import.meta.env':JSON.stringify({VITE_MARKET:'AU'})}}})
+    const bundle=await rolldown({input:resolve(file),platform:'node',transform:{jsx:{runtime:'automatic'},define:{'import.meta.env':JSON.stringify({VITE_MARKET:'AU'})}},plugins:[{name:'test-assets',load(id){if(/\.(png|jpg|webp|svg)$/.test(id))return 'export default "test-image"'}}]})
     try {await bundle.write({file:out,format:'esm',codeSplitting:false})} finally {await bundle.close()}
     entries.push(out)
   }

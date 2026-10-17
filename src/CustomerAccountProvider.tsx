@@ -4,7 +4,8 @@ import {createCustomerAuth,type CustomerAuth} from './lib/customer-auth'
 import {CustomerAccountContext,disabledCustomerAccount} from './lib/customer-account-context'
 import {CUSTOMER_AUTH_CHANGED_EVENT} from './lib/customer-account-config'
 import {getCustomerAccountHealth} from './lib/customer-orders'
-import type {CustomerAccountHealth,CustomerAuthState,CustomerProfile} from './lib/customer-account-types'
+import type {CustomerAccountHealth,CustomerAuthState,CustomerProfile,CustomerCheckoutDraft} from './lib/customer-account-types'
+import {saveCheckoutDraft,saveAccountReturn} from './lib/customer-checkout-draft'
 import {CustomerSignInDialog} from './components/CustomerSignInDialog'
 import type {Language} from './lib/i18n'
 const defaultAuth=createCustomerAuth()
@@ -16,6 +17,17 @@ function bounded<T>(promise:Promise<T>):Promise<T> {
 export function CustomerAccountProvider({children,enabled=appwriteConfig.customerAccountEnabled,auth=defaultAuth,health=getCustomerAccountHealth}:{children:ReactNode;enabled?:boolean;auth?:CustomerAuth;health?:()=>Promise<CustomerAccountHealth>}) {
   const [state,setState]=useState<CustomerAuthState>({status:enabled?'checking':'guest'}),[ready,setReady]=useState(false),[open,setOpen]=useState(false),[language,setLanguage]=useState<Language>('en'),[openingIntent,setOpeningIntent]=useState(0)
   const active=useRef(false),epoch=useRef(0),intent=useRef(0),identityUser=useRef<string|null>(null)
+  const checkout=useRef<(()=>CustomerCheckoutDraft)|null>(null)
+  const checkoutGuest=useRef<(()=>void)|undefined>(undefined)
+  const registerCheckout=useCallback((capture:()=>CustomerCheckoutDraft,onGuest?:()=>void)=>{checkout.current=capture;checkoutGuest.current=onGuest;return ()=>{if(checkout.current===capture){checkout.current=null;checkoutGuest.current=undefined}}},[])
+  const startGoogle=useCallback(async()=>{
+    const draft=checkout.current?.()
+    const flowId=draft?.flowId||crypto.randomUUID()
+    let saved=false
+    try{saved=draft?saveCheckoutDraft(sessionStorage,draft).ok:saveAccountReturn(sessionStorage,{flowId,savedAt:Date.now(),returnTo:'/account'})}catch{/* No leave without a recoverable flow. */}
+    if(!saved)throw Error('AUTH_DRAFT_UNAVAILABLE')
+    await auth.startGoogle({flowId})
+  },[auth])
   const refresh=useCallback(async()=>{
     if(!enabled)return
     const generation=++epoch.current
@@ -63,8 +75,8 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
     const lang=document.documentElement.lang
     setLanguage(lang==='ko'?'ko':'en');setOpeningIntent(intent.current);setOpen(true)
     if(!ready)void refresh()
-  },refresh,saveProfile,signOut}:disabledCustomerAccount,[enabled,ready,state,refresh,saveProfile,signOut])
-  return <CustomerAccountContext.Provider value={value}>{children}{enabled&&open&&<CustomerSignInDialog auth={auth} language={language} available={ready} onClose={()=>setOpen(false)} onAuthenticated={identity=>{
+  },refresh,saveProfile,signOut,registerCheckout}:disabledCustomerAccount,[enabled,ready,state,refresh,saveProfile,signOut,registerCheckout])
+  return <CustomerAccountContext.Provider value={value}>{children}{enabled&&open&&<CustomerSignInDialog auth={auth} language={language} available={ready} onClose={()=>setOpen(false)} onGuest={()=>checkoutGuest.current?.()} onAuthenticated={identity=>{
     if(active.current&&openingIntent===intent.current){epoch.current++;identityUser.current=identity.userId;setState({status:'authenticated',identity});setOpen(false);notify()}
-  }} onGoogle={()=>auth.startGoogle({flowId:crypto.randomUUID()})}/>}</CustomerAccountContext.Provider>
+  }} onGoogle={startGoogle}/>}</CustomerAccountContext.Provider>
 }

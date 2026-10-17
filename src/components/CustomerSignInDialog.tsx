@@ -4,7 +4,7 @@ import type {CustomerAuth} from '../lib/customer-auth'
 import type {CustomerIdentity} from '../lib/customer-account-types'
 import {customerAccountCopy} from '../lib/customer-account-copy'
 
-export function CustomerSignInDialog({auth,language='en',available=true,onAuthenticated,onGoogle,onClose}:{auth:CustomerAuth;language?:Language;available?:boolean;onAuthenticated:(identity:CustomerIdentity)=>void;onGoogle:()=>Promise<void>;onClose:()=>void}) {
+export function CustomerSignInDialog({auth,language='en',available=true,onAuthenticated,onGoogle,onClose,onGuest}:{auth:CustomerAuth;language?:Language;available?:boolean;onAuthenticated:(identity:CustomerIdentity)=>void;onGoogle:()=>Promise<void>;onClose:()=>void;onGuest?:()=>void}) {
   const copy=customerAccountCopy(language),dialog=useRef<HTMLDialogElement>(null),active=useRef(false),running=useRef(false)
   const [email,setEmail]=useState(''),[code,setCode]=useState(''),[challenge,setChallenge]=useState<{userId:string;expire:string}|null>(null)
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[retryAt,setRetryAt]=useState(0),[now,setNow]=useState(Date.now)
@@ -35,6 +35,6 @@ export function CustomerSignInDialog({auth,language='en',available=true,onAuthen
       {challenge&&<div className="customer-account-inline"><button type="button" disabled={busy||seconds>0||!available} onClick={()=>void send()}>{seconds?copy.cooldown(seconds):copy.resend}</button><button type="button" disabled={busy} onClick={()=>{setChallenge(null);setCode('');setError('')}}>{copy.changeEmail}</button></div>}
     </form>
     <p role="status" aria-live="polite">{error}</p>
-    <button className="customer-account-guest" type="button" onClick={onClose}>{copy.guest}</button>
+    <button className="customer-account-guest" type="button" onClick={()=>{onGuest?.();onClose()}}>{copy.guest}</button>
   </dialog>
 }

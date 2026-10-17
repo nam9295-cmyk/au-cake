@@ -18,3 +18,5 @@ export type CustomerOrderDetail = CustomerOrderSummary & {
   contact:{name:string; phone:string; email:string}; requestNote:string; view:CustomerOrderView
 }
 export type CustomerOrdersPage = {orders:CustomerOrderSummary[]; nextCursor:string|null}
+export type CustomerCheckoutDraft={version:1;kind:'renewal'|'legacy';flowId:string;savedAt:number;returnTo:'/cart'|'/reserve';requestId:string;
+  form:Record<string,string|number|boolean>;dirtyFields:string[];checkoutContext:Record<string,unknown>;cartSnapshot:unknown[];cartSignature:string}
