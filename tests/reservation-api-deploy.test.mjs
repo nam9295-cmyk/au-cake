@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import {mkdtemp,rm} from 'node:fs/promises'
+import {execFileSync} from 'node:child_process'
+import {resolve,join} from 'node:path'
+import {pathToFileURL} from 'node:url'
+import {createReservationApiArchive} from '../scripts/reservation-api-deploy-rollout.mjs'
 import { test } from 'node:test'
 import {
   FUNCTION_SCOPES,
@@ -41,6 +46,19 @@ test('customer flags default OFF and share existing APPWRITE_ADMIN_USER_IDS with
   const dry=buildDryRunPlan(validEnv)
   assert.ok(dry.function.variableNames.includes('CUSTOMER_ACCOUNT_ENABLED'))
   assert.ok(dry.function.variableNames.includes('APPWRITE_ADMIN_USER_IDS'))
+})
+test('checkpoint/full archives include importable customer auth and readiness modules without changing sales policy',async()=>{
+  for(const phase of ['checkpoint','full']) {
+    const archive=await createReservationApiArchive({phase})
+    const directory=await mkdtemp(resolve('.superpowers/customer-account-archive-'))
+    try {
+      execFileSync('tar',['-xzf',archive.path,'-C',directory])
+      const auth=await import(pathToFileURL(join(directory,'src/customer-identity.js')).href)
+      const ready=await import(pathToFileURL(join(directory,'src/customer-account-readiness.js')).href)
+      assert.equal(typeof auth.resolveCustomerIdentity,'function')
+      assert.deepEqual(await ready.checkCustomerAccountReadiness(undefined,{}),{enabled:false,ready:false})
+    } finally {await archive.cleanup();await rm(directory,{recursive:true,force:true})}
+  }
 })
 
 test('reservation deployment diagnostics redact overlapping secrets, bare values, carriage returns, and stay bounded', () => {
