@@ -8,6 +8,6 @@ export function renewalPhotos(id: string) {
   if (id === 'cookies') return ['cookies-hero_v2', 'cookies-lineup1', 'cookies-lineup2']
   if (id === 'brownie-loaf') return ['cheese-pound-hero', 'cheese-pound-cross-section-01', 'cheese-pound-cheese-pound-in-vanilla']
   if (id === 'brownie-cupcakes') return ['cheese-cupcake-hero', 'cheese-cupcake-cheese-cross-section01', 'cheese-cupcake-cheese-cup-on-vanilla']
-  if (id === 'mochi') return ['mochi-mochi-hero', 'mochi-mochi-6']
+  if (id === 'mochi') return ['mochi-hero-v2', 'mochi-mochi-6']
   return []
 }

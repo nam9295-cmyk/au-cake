@@ -12,7 +12,7 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url))
 const dist = join(repoRoot, 'dist')
 const chocolateRoutes = [
   ['/chocolates', 'Chocolate'],
-  ['/chocolates/chocolate-mochi','Pavé Mochi'],
+  ['/chocolates/chocolate-mochi','Chocolate Mochi'],
   ['/chocolates/almond-chocoball', 'Almond Chocolate'],
   ['/chocolates/pave-chocolate', 'Pavé Chocolate · Heart Tin 100g'],
   ['/chocolates/eiffel-tower-chocolate', 'Eiffel Tower Chocolate'],

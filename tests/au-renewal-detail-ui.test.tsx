@@ -73,7 +73,7 @@ test("Oct16 product information distinguishes missing photos from unavailable of
  const mochi=render('/chocolates/chocolate-mochi');
  assert.match(mochi,/16 October 2026/);
  assert.doesNotMatch(mochi,/19 October 2026/);
- assert.match(mochi,/mochi-mochi-hero.webp/);
+ assert.match(mochi,/mochi-hero-v2.webp/);
  assert.match(mochi,/mochi-banana.webp/);
  assert.match(mochi,/80g/);
  assert.match(mochi,/refrigerated/i);
@@ -118,14 +118,14 @@ test("restored stories use the current menu and do not revive discontinued brown
   }
 });
 
-test('Pavé Mochi selector uses the approved bilingual display order and never shows the home notice', () => {
+test('Chocolate Mochi selector uses the approved bilingual display order and never shows the home notice', () => {
   const expected = {
-    en: ['Original Pavé Chocolate', 'Strawberry Pavé Chocolate', 'Green Grape Pavé Chocolate', 'Mandarin Pavé Chocolate', 'Banana Pavé Chocolate', 'Butter &amp; Red Bean Pavé Chocolate'],
+    en: ['Original Pavé Chocolate', 'Strawberry Pavé Chocolate', 'Green Grape Pavé Chocolate', 'Mandarin Pavé Chocolate', 'Banana Pavé Chocolate', 'Ang-Butter Pavé Chocolate'],
     ko: ['오리지널 생초콜릿', '딸기 생초콜릿', '청포도 생초콜릿', '만다린 생초콜릿', '바나나 생초콜릿', '앙버터 생초콜릿'],
   }
   for (const language of ['en', 'ko'] as const) {
     const html = render('/chocolates/chocolate-mochi', language)
-    assert.match(html, language === 'ko' ? /<h1>파베 모찌<\/h1>/ : /<h1>Pavé Mochi<\/h1>/)
+    assert.match(html, language === 'ko' ? /<h1>파베 모찌<\/h1>/ : /<h1>Chocolate Mochi<\/h1>/)
     let previous = -1
     for (const name of expected[language]) {
       const index = html.indexOf(`<strong>${name}</strong>`)

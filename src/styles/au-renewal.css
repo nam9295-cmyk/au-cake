@@ -364,26 +364,23 @@
 .renewal-grid article > a { display: grid; grid-template-rows: subgrid; grid-row: span 4; }
 .au-redesign-shell .renewal-grid .renewal-card-note { font-size: 12px !important; line-height: 1.45; }
 
-/* Home-only, non-modal launch announcement. Mobile stays in document flow. */
-.mochi-launch-notice {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  z-index: 40;
-  width: min(360px, calc(100% - 32px));
-  box-sizing: border-box;
-  padding: 20px;
-  border: 1px solid var(--brand-green, #234d35);
-  background: #fff;
-  color: #234d35;
-}
-.home-redesign-wrap.au-home-v02 .mochi-launch-notice h2 { margin: 0 28px 10px 0; text-transform: none; letter-spacing: normal; font-size: 18px; line-height: 1.35; }
-.home-redesign-wrap.au-home-v02 .mochi-launch-notice p { margin: 0 0 12px; font-size: 14px; line-height: 1.5; white-space: pre-line; }
-.mochi-launch-notice a { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; font-size: 14px; font-weight: 600; color: inherit; }
-.mochi-launch-close { position: absolute; top: 4px; right: 4px; width: 44px; height: 44px; border: 0; background: transparent; color: inherit; font-size: 24px; cursor: pointer; }
-.mochi-launch-notice :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+/* Home-only modal, sized to leave breathing room on mobile. */
+.mochi-launch-notice { position: fixed; inset: 0; margin: auto; width: min(380px, calc(100% - 48px)); max-height: 80dvh; padding: 0; border: 1px solid #234d35; background: #fff; color: #234d35; }
+.mochi-launch-notice::backdrop { background: rgb(0 0 0 / 38%); }
+.mochi-launch-content { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.mochi-launch-photo { display: block; width: 100%; height: 240px; min-height: 0; object-fit: contain; background: #f0f1ee; }
+.home-redesign-wrap.au-home-v02 .mochi-launch-notice h2 { margin: 0; text-transform: none; letter-spacing: normal; font-size: 18px; line-height: 1.35; }
+.home-redesign-wrap.au-home-v02 .mochi-launch-notice p { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-line; }
+.mochi-launch-order { display: flex; justify-content: center; align-items: center; min-height: 44px; background: #234d35; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+.mochi-launch-close { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; border: 0; background: #fff; color: #234d35; font-size: 24px; cursor: pointer; }
+.mochi-launch-actions { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #ddd; }
+.mochi-launch-actions button { min-height: 44px; padding: 4px 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+.mochi-launch-notice :focus-visible { outline: 2px solid #234d35; outline-offset: 3px; }
+.mochi-launch-order:focus-visible { outline-offset: -5px; outline-color: #fff; }
 @media (max-width: 600px) {
-  .mochi-launch-notice { position: relative; left: auto; bottom: auto; z-index: auto; width: auto; margin: 12px 16px; padding: 14px 16px 8px; }
-  .home-redesign-wrap.au-home-v02 .mochi-launch-notice h2 { font-size: 16px; margin-bottom: 6px; }
-  .home-redesign-wrap.au-home-v02 .mochi-launch-notice p { margin-bottom: 2px; }
+  .mochi-launch-notice { height: 68dvh; max-height: 70dvh; }
+  .mochi-launch-content { min-height: 100%; height: 100%; box-sizing: border-box; gap: 10px; }
+  .mochi-launch-photo { flex: 1 1 auto; height: 0; min-height: 80px; }
+  .home-redesign-wrap.au-home-v02 .mochi-launch-notice h2 { font-size: 17px; }
+  .mochi-launch-order, .mochi-launch-actions { flex-shrink: 0; }
 }

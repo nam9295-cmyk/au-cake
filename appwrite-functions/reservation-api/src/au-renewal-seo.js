@@ -18,7 +18,7 @@ const summaries = {
   'brownie-whole': 'Brownie Basque cheesecake in whole cake and loaf forms, with optional Vanilla Fresh Cream. Made to order in Sydney.',
   'brownie-loaf': 'Brownie Basque cheesecake loaf with optional Vanilla Fresh Cream. Pickup in Melrose Park, Sydney.',
   cookies: 'A six-cookie set: three Chocolate Chip and three Double Chocolate. Photos and product introduction; reservations await price approval.',
-  mochi: 'Six Pavé Mochi flavours in Sydney: choose singles or build a four-piece gift box with free box packaging. Pickup in Melrose Park.',
+  mochi: 'Six Chocolate Mochi flavours in Sydney: choose singles or build a four-piece gift box with free box packaging. Pickup in Melrose Park.',
   almond: 'Almond Chocolate in 80g packs, a six-pack 5+1 bundle or a black tub with two 80g packs. Pickup in Melrose Park, Sydney.',
   'pave-chocolate': 'Pavé Chocolate in a 100g heart tin, individually or as a six-tin 5+1 bundle. A chocolate gift for pickup in Melrose Park, Sydney.',
   eiffel: 'Eiffel Tower Chocolate in six-piece packs or a 5+1 bundle of six packs. Chocolate gifts for pickup in Melrose Park, Sydney.',
@@ -68,7 +68,7 @@ export function renewalSeoPages(siteUrl, content) {
   const categoryDescriptions={
     '/':'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.',
     '/cakes':'Explore Pavé whole cake, Gâteau loaf, Brownie Basque whole cake and loaf, and Levain Cookies. Cake & Bake in Melrose Park, Sydney.',
-    '/chocolates':'Explore six-flavour Pavé Mochi, Almond Chocolate, Pavé heart tins and Eiffel Tower Chocolate. Gift selections in Melrose Park, Sydney.',
+    '/chocolates':'Explore six-flavour Chocolate Mochi, Almond Chocolate, Pavé heart tins and Eiffel Tower Chocolate. Gift selections in Melrose Park, Sydney.',
     '/celebrate':'Gâteau Cupcakes, Brownie Basque Cupcakes and S’more Sticks for celebrations in Sydney. Explore pack sizes and current reservation availability.',
     '/custom-cakes':'Explore bespoke celebration cakes and Basic one-tier or Advanced two-tier class enquiries in Sydney. Share your design, date and servings.',
     '/business':'Cakes and chocolate gifts for corporate events, café supply enquiries and menu consulting in Sydney. Explore VERYGOOD business services.',

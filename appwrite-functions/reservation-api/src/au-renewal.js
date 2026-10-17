@@ -134,14 +134,14 @@ const MOCHI_PUBLIC_NAMES = Object.freeze({
   green_grape: ["Green Grape Pavé Chocolate", "청포도 생초콜릿"],
   mandarin: ["Mandarin Pavé Chocolate", "만다린 생초콜릿"],
   banana: ["Banana Pavé Chocolate", "바나나 생초콜릿"],
-  butter_redbean: ["Butter & Red Bean Pavé Chocolate", "앙버터 생초콜릿"],
+  butter_redbean: ["Ang-Butter Pavé Chocolate", "앙버터 생초콜릿"],
   amande: ["Amande Chocolat", "아망드"],
 });
 export function mochiFlavourName(id, language = "en") {
   return MOCHI_PUBLIC_NAMES[id]?.[language === "ko" ? 1 : 0] || id;
 }
 export function renewalProductName(line, language = "en") {
-  return line.productId === "mochi" ? (language === "ko" ? "파베 모찌" : "Pavé Mochi") : line.productName;
+  return line.productId === "mochi" ? (language === "ko" ? "파베 모찌" : "Chocolate Mochi") : line.productName;
 }
 export const MOCHI_DISPLAY_FLAVOURS = Object.freeze([
   "nama_chocolate", "strawberry", "green_grape", "mandarin", "banana", "butter_redbean",

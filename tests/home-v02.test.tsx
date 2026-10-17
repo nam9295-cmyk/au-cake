@@ -104,25 +104,34 @@ test('Home membership agrees with the five/four/three renewal catalogue',()=>{
 })
 
 // SSR-rendered card exercises bilingual markup; session lifecycle/Escape tested in Chrome.
-test('Pavé notice is home-only, bilingual, non-modal and respects the recorded session', async () => {
+test('Chocolate Mochi modal is bilingual and respects session and Sydney-day dismissal', async () => {
   const { MochiLaunchNotice } = await import('../src/components/MochiLaunchNotice')
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
   const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage')
+  const originalLocal = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  let hiddenDay = ''
   let seen = false
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: () => hiddenDay } })
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {} })
-  Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: { getItem: () => seen ? '1' : null } })
+  Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: { getItem: () => seen ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()) : null } })
   try {
     for (const language of ['en', 'ko'] as const) {
       const html = renderToStaticMarkup(<MochiLaunchNotice language={language} />)
       assert.match(html, /aria-labelledby="mochi-launch-title"/)
       assert.match(html, /href="\/chocolates\/chocolate-mochi"/)
-      assert.match(html, language === 'ko' ? /파베 모찌, 예약 시작!/ : /Pavé Mochi Pre-orders Are Open!/)
+      assert.match(html, language === 'ko' ? /파베 모찌, 예약 시작!/ : /Chocolate Mochi Pre-orders Are Open!/)
       assert.match(html, language === 'ko' ? /공지 닫기/ : /Dismiss announcement/)
-      assert.doesNotMatch(html, /aria-modal|autofocus/)
+      assert.match(html, /<dialog/); assert.match(html, language === 'ko' ? /오늘 하루 안 보기/ : /Don&#x27;t show again today/)
     }
+    hiddenDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+    assert.equal(renderToStaticMarkup(<MochiLaunchNotice language="en" />), '')
+    hiddenDay = '2000-01-01'
+    assert.match(renderToStaticMarkup(<MochiLaunchNotice language="en" />), /<dialog/)
     seen = true
     assert.equal(renderToStaticMarkup(<MochiLaunchNotice language="en" />), '')
   } finally {
+    if (originalLocal) Object.defineProperty(globalThis, 'localStorage', originalLocal)
+    else Reflect.deleteProperty(globalThis, 'localStorage')
     if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow)
     else Reflect.deleteProperty(globalThis, 'window')
     if (originalStorage) Object.defineProperty(globalThis, 'sessionStorage', originalStorage)

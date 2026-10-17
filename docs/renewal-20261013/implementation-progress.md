@@ -268,3 +268,7 @@ Failing tests preceded fixes. SEO suite, renewal suite, full npm test, lint, KR 
 ### 2026-10-17 — Pavé Mochi local rebranding and home notice
 
 Based on fetched main577aec4 on codex/pave-mochi-rebrand-20261017. Public names and selector order now follow the user's Pavé Mochi decision; persisted IDs/count indexes/quote names/snapshots remain unchanged. Added a session-once, dismissible AU home announcement, inline on mobile. SEO initial HTML/client/llms match; canonical/sitemap and photos preserved. Renewal/full tests, lint, KR/AU builds, 390px EN/KO browser checks and diff check passed. Twelve quotes are byte-identical to main. Operational naming depends on the existing API/Notification/Reminder shared presentation module; no production Functions or flags were touched. Details: pave-mochi-rebrand-20261017.md. Local commit only; no push/deploy.
+
+### 2026-10-17 — Latest Chocolate Mochi name/photo/modal amendment (local)
+
+User changed the public English parent name to Chocolate Mochi and butter/red bean flavour to Ang-Butter Pavé Chocolate. Korean names, stable IDs and stored quote fields remain unchanged. Supplied mochi-hero-v2.webp is1080×1012 and copied unchanged for detail/category/social hero and home popup. Mobile popup now uses68% viewport height with the real photo, close controls and Sydney-calendar-day suppression across tabs. Native modal plus explicit focus wrapping; Escape and focus restoration verified. Supersedes the preceding compact inline notice design. No push or deployment. Details in pave-mochi-rebrand-20261017.md.

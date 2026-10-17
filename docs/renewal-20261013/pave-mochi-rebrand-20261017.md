@@ -1,10 +1,10 @@
-# Pavé Mochi — local rebranding, 2026-10-17
+# Chocolate Mochi — local rebranding, 2026-10-17
 
 Base: fetched origin/main 577aec4. Branch: codex/pave-mochi-rebrand-20261017. No push or deployment authorized for this change.
 
 ## Public presentation
 
-Public product name is Pavé Mochi / 파베 모찌. Selector and public offer display order:
+Latest user amendment: public English product name is Chocolate Mochi. Korean remains 파베 모찌. Selector and public offer display order:
 
 | Stable ID | English | Korean | AUD |
 | --- | --- | --- | --- |
@@ -13,15 +13,17 @@ Public product name is Pavé Mochi / 파베 모찌. Selector and public offer di
 | green_grape | Green Grape Pavé Chocolate | 청포도 생초콜릿 | 9.50 |
 | mandarin | Mandarin Pavé Chocolate | 만다린 생초콜릿 | 9.00 |
 | banana | Banana Pavé Chocolate | 바나나 생초콜릿 | 9.00 |
-| butter_redbean | Butter & Red Bean Pavé Chocolate | 앙버터 생초콜릿 | 8.50 |
+| butter_redbean | Ang-Butter Pavé Chocolate | 앙버터 생초콜릿 | 8.50 |
 
 The existing core MOCHI_FLAVOURS order, flavourCounts serialization, flavourTotals indexes, quote productName, policy version and stored snapshots remain unchanged. Presentation helpers translate labels at rendering time. Historical amande remains almond; it is never mapped to banana. Historical summary ordering is retained. No database migration or repricing is needed.
 
-Catalogue/detail/selector/cart/order detail/operational summaries use the new public names. SEO initial HTML and React share the same catalogue: title, description, Product/Offer, BreadcrumbList, image alt and llms are synchronized. Canonical and sitemap paths stay unchanged (25 AU URLs). All photo assets remain unchanged.
+Catalogue/detail/selector/cart/order detail/operational summaries use the new public names. SEO initial HTML and React share the same catalogue: title, description, Product/Offer, BreadcrumbList, image alt and llms are synchronized. Canonical and sitemap paths stay unchanged (25 AU URLs). User-supplied mochi-hero-v2.webp (1080×1012, WebP) is copied without alteration and used for catalogue/detail/SEO and the popup; other photos and the Drive original are unchanged.
 
 ## Home announcement
 
-AU HomePage only. One display per tab session via sessionStorage, with memory fallback if storage is blocked. Dismissible non-modal aside; no autofocus or focus trap. Escape while focus is within the card dismisses it and restores focus to the home heading. Close button has a 44px target. Tab reaches the CTA; Enter opens the existing Mochi URL. Desktop is a small floating card; at <=600px it is an inline compact card above the hero, so it cannot overlay mobile content. Not mounted on cart/checkout/reservation/detail or KR HomePage.
+AU HomePage only. One display per tab session; an additional “오늘 하루 안 보기 / Don't show again today” action hides it across tabs through the current Australia/Sydney calendar date using localStorage. Normal close remains session-only. Storage failure falls back to in-tab dismissal.
+
+Native modal dialog with labelled heading/description, inert background, scroll lock, explicit Tab/Shift+Tab boundary wrapping, Escape, top close and bottom close buttons. Focus returns to the prior element or home heading. New supplied photo is shown uncropped. Desktop width is at most380px; mobile height68dvh (max70dvh), width viewport minus48px. Not mounted on cart/checkout/reservation/detail or KR HomePage.
 
 ## Verification completed
 
@@ -33,8 +35,8 @@ AU HomePage only. One display per tab session via sessionStorage, with memory fa
 - git diff --check passed.
 - Additional comparison: 12 Mochi quotes (six flavours × gift/singles) are byte-identical to baseline main 577aec4, including stored names/indexes/prices/packaging.
 - Chrome 390px: EN/KO selector order, unchanged prices, gift selection Original + Strawberry + Banana + Butter/Red Bean = AUD35.50 with free box; cart shows new names. No horizontal overflow (scrollWidth = innerWidth =390).
-- Chrome home: compact card, bilingual text, Escape/focus return, no notice after reload, Tab/Enter CTA; desktop 1440px reviewed. No notice in cart/checkout.
-- Script-disabled initial HTML and JavaScript-rendered product both show Pavé Mochi, identical six offers/prices, unchanged canonical and updated image alt.
+- Chrome home: photo modal, bilingual text, Escape/focus return, Tab/Shift+Tab wrapping, today suppression after reload and in a new tab. At390×844, modal height ratio0.68; content fits without internal scrolling. No notice in cart/checkout.
+- Script-disabled initial HTML and JavaScript-rendered product both use the shared current Chocolate Mochi metadata, identical six offers/prices, unchanged canonical and updated image alt.
 - Local screenshots: output/playwright/pave-rebrand-20261017/ (ignored, not committed).
 
 No customer data or production account was accessed for this implementation. No order/notification sent. The local demo cart was used only for browser QA.
