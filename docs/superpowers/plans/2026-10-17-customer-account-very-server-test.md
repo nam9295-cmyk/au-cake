@@ -1,6 +1,6 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 단계별 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. 현재는 조사·계획 작성까지만 승인됐다. 모든 checkbox는 미실행이다.
+> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 단계별 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1만 별도 승인받아 완료했다.** [B1 결과](../../customer-account-b1-validation.md)를 먼저 읽고 B1을 재실행하지 않는다. B2–B8은 승인 전 실행 금지다.
 
 **Goal:** 기존 very-server Appwrite 1.8.1에 운영과 분리한 테스트 프로젝트를 만들고 Google/6자리 OTP·일반 상품 주문을 합성 자료로 검증할 수 있게 준비한다.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 승인 worktree `/Users/nam9295/Desktop/john_2.0/code/au-cake-customer-account`, branch `feat/customer-account`만 수정한다. 조사 시작 HEAD는 `2150720cfed5b637aec9d35129252f9d87d97d94`다.
-- 이번에는 프로젝트/키/DB/Function 생성, 공통·프로젝트 SMTP 변경, 서비스 재시작, Google 설정, migration apply, 사이트 배포를 하지 않는다.
+- 후속 B1 승인으로 테스트 project 1개 생성·Account OFF만 완료했다. 키/DB/Function 생성, 공통·프로젝트 SMTP 변경, 서비스 재시작, Google 설정, migration apply, 사이트 배포는 여전히 금지다.
 - 운영 고객 users/sessions·주문 document·업로드·메일/queue 본문·execution log를 조회/복사하지 않는다. 허용된 구성·schema/ACL·자원 metadata만 읽는다.
 - 운영 project의 Auth·DB·Function·ACL·판매 설정을 테스트 구성으로 덮어쓰지 않는다. main 병합/reset/history rewrite/GC 금지.
 - Google + 6자리 Email OTP만 고객 UI에 제공한다. guest 유지, 일반 케이크·초콜릿만 회원 연결. Custom Cake/Kids Class 회원 연동 제외.
@@ -40,7 +40,7 @@
 | 기타 프로젝트 3 | 1 | 2 | 1 | 0 | 1 | 5 |
 | `verygood-au` | 2 | 22 | 2 | 4 | 3 | 7 |
 
-현재 4개 모두 version 1.8.1, 프로젝트 SMTP `enabled` 미설정이다. auth 설정의 **`emailOtp=true`, `usersAuthMagicURL=true`**도 4개 모두 관측됐다. 현재 공통 SMTP가 비어 있어 이 이메일 발송 경로가 막혀 있는 것이며, 저장된 Auth 설정이 OFF인 것은 아니다. 저장 metadata의 Google enabled/client는 미설정으로 관측했지만 운영 Google 로그인 흐름을 실행·검증하지는 않았다.
+위 B1 이전 4개 모두 version 1.8.1이다. **정정:** SMTP/OAuth는 암호화 envelope로 저장되므로 직접 SQL의 `enabled=null`·`googleEnabled=null`을 미설정으로 판정할 수 없다. 기존 프로젝트의 실제 override/provider 상태는 미판정이다. plain auth 설정의 **`emailOtp=true`, `usersAuthMagicURL=true`**는 4개 모두 관측됐다. 공통 SMTP empty와 OTP host gate도 확인했으므로 저장된 Auth method가 OFF인 것으로 해석하지 않는다. 운영 Google 로그인은 실행·검증하지 않았다. 이후 B1에서 신규 project가 추가되어 총 5개가 됐으며, 신규 project의 Custom SMTP OFF·Google 등 모든 provider disabled는 Console에서 확인했다.
 
 AU는 cake DB의 20개 collection(기존 private Custom 자원 포함), kids DB의 2개 collection을 사용한다. private 자원에서 `any/users/guests`의 일반 공개 grant는 관측되지 않았고 settings/pickup openings/class booked dates에는 공개 read가 있다. 실제 document는 조회하지 않았다. schema 관리자 UID의 server 환경값은 1개, admin API UID 환경값은 2개로 서로 다르다. 관측한 collection의 명시적 user grant는 schema allowlist 안이었다. **두 환경변수를 강제로 같은 집합으로 바꾸지 않는다.** 서버에 보관된 env와 deployed secret 변수의 완전한 일치 여부 및 전체 readiness 인수는 별도 확인 대상이다.
 
@@ -114,15 +114,15 @@ Resend simulated delivery 주소는 bounce/sending smoke용일 뿐 실제 Google
 
 ## B1: 빈 테스트 프로젝트 생성·초기 차단
 
-**승인 A1 필요:** project ID/name, 기존 Console owner team, 생성 직후 test Account service OFF까지. 다른 단계는 미포함.
+**승인 A1 확보·B1 완료(2026-10-17):** project ID/name, 기존 Console owner team, 생성 직후 test Account service OFF까지. 다른 단계는 미포함. 실행 시작 HEAD는 `df0f1d4`다.
 
 **변경 자원:** 신규 project 및 Appwrite 내부 namespace, 그 project의 service 설정만. 새 DB/Function/key/provider/SMTP 없음. 재시작 없음.
 
-- [ ] 실행 직전 branch/HEAD/clean, 기존 4개 project metadata·후보 ID 부재·서버 여유를 재확인한다.
-- [ ] 공식 Console/API로 후보 project 1개만 생성한다. 기존 project 복제·전체 setup 실행 금지.
-- [ ] 새 project의 Account service를 OFF로 두고 공개 로그인 진입을 막는다. 미사용 로그인 방법을 기본 허용 상태로 방치하지 않는 후속 설정 목록을 기록한다. 기존 project 설정은 건드리지 않는다.
-- [ ] 신규 test project에 DB·Function·bucket·API key·platform/provider가 아직 없는지 확인하고 기존 project metadata/ACL hash 불변을 검증한다. Appwrite 자체 내부 auth collections와 사용자 생성 자원을 구분한다.
-- [ ] 실제 생성 ID/자원 증분/중지 방법을 문서로 보고하고 **B2 전에 중단**한다.
+- [x] 실행 직전 branch/HEAD/clean, 기존 4개 project metadata·후보 ID 부재·서버 여유를 재확인했다.
+- [x] 정식 owner Console에서 지정 project 1개만 생성했다. 기존 project 복제·전체 setup은 실행하지 않았다.
+- [x] 새 project Account service OFF를 저장하고 reload 및 API 403으로 확인했다. 개별 Auth method는 기본값을 유지하며 이후 ON/방법 선택은 별도 승인 대상이다.
+- [x] 신규 test DB·Collection·Function·bucket·API key·platform·변수 0, Google 등 OAuth disabled·Custom SMTP OFF를 확인했다. 기존 project 9범주 지문이 모두 동일하며 내부 namespace와 사용자 자원을 구분했다.
+- [x] [실제 생성 ID·자원·검증 결과](../../customer-account-b1-validation.md)를 기록했다. **B2 전에 중단한다.**
 
 ## B2: test target guard·전용 key·합성 baseline
 
@@ -203,8 +203,8 @@ Resend simulated delivery 주소는 bounce/sending smoke용일 뿐 실제 Google
 
 ## 최종 판단과 단계별 승인 경계
 
-**기술적으로 B안의 빈 프로젝트 생성·초기 차단은 현재 인스턴스에서 가능하다고 판단한다. 단, A1 실제 생성 승인은 아직 없다.** 프로젝트 1개를 추가하는 데 공통 SMTP나 재시작이 필요하지 않으므로 그 단계만 독립적으로 승인할 수 있다. 실제 생성에 필요한 Console/API owner 접근은 아직 확인하지 않았다. 조사에 사용한 읽기 전용 SQL 접근은 공식 생성 권한 검증이 아니며, 승인 후에도 owner 접근이 없으면 중단한다. SQL write나 운영 API key scope 확대를 우회 수단으로 쓰지 않는다.
+**B1은 완료했다.** 정식 Console owner 접근을 확인한 뒤 `verygood-au-account-test`만 생성하고 Account OFF를 저장했다. 프로젝트 생성에 공통 SMTP 변경·서비스 재시작은 필요하지 않았다. SQL은 읽기 전용 metadata 비교에만 사용했고 운영 API key 권한을 확대하지 않았다. 프로젝트를 다시 생성/자동 삭제하지 않는다.
 
 **실제 OTP 및 주문 통합 테스트를 바로 시작할 준비는 완료되지 않았다.** 유효한 Resend 계정/domain·전용 키, 합성 수신자 제한, system sender, 기존 네 프로젝트 이메일 영향 승인, API/mail-worker 재생성 시간·복구 승인이 필요하다. Function 주문 통합은 별도 sharp/runtime 해결 gate도 통과해야 한다. 이 조건을 프로젝트 생성 승인에 포함된 것으로 간주하지 않는다.
 
-이번에는 4개 문서만 수정/추가했다. 서버/프로젝트/SMTP/Google/ACL/데이터/Function·런타임은 변경하지 않았고 메일·인증 요청도 실행하지 않았다. 전체 테스트/빌드는 문서 작업에서 재실행하지 않는다. 이전 A2 권장과 runtime/native 분석은 역사적 근거로 보존하되 새 호스트/Compose/Appwrite 설치를 실행하지 않도록 명시했다.
+이번 B1에서는 새 test project 생성·Account OFF와 비인증 Account GET의 403 검증만 수행했다. 기존 프로젝트·공통 환경·SMTP/Google·ACL·고객 데이터·Function/runtime은 변경하지 않았다. 메일·고객 로그인·migration·B2는 미실행이다. 전체 제품 테스트/빌드는 재실행하지 않았고, 결과 문서·증거 및 metadata 비교 검증으로 완료를 기록한다. A2 권장과 runtime/native 분석은 역사적 근거로 보존한다.

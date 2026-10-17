@@ -1,6 +1,6 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
-2026-10-17. 이 문서는 향후 승인된 작업을 위한 절차다. 최초 로컬 구현·Mock 검증 이후 승인된 사전 조사에서 Appwrite 구성·schema/ACL metadata를 읽기 전용으로 확인했다. 실제 migration dry-run/apply, 프로젝트 생성, Function·사이트 배포, 공급자 설정 변경, 운영 고객 데이터 접근·변경 및 main 병합은 실행하지 않았다. 기능은 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
+2026-10-17. 이 문서는 향후 승인된 작업을 위한 절차다. 최초 로컬 구현·Mock 검증 이후 읽기 전용 조사와 별도 승인된 **B1 테스트 프로젝트 생성·Account OFF만** 완료했다([B1 결과](customer-account-b1-validation.md)). 실제 migration dry-run/apply, Function·사이트 배포, Google/SMTP 변경, 운영 고객 데이터 접근·변경 및 main 병합은 실행하지 않았다. 고객 기능은 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
 
 ## 후속 안정화 배포 gate
 
@@ -23,7 +23,9 @@ main의 주말 13:00 정책 통합, profile focus 보존과 Node 22/24 로컬 �
 
 ## 격리 환경의 필수 gate
 
-사용자가 선택한 환경은 **B안: very-server의 기존 Appwrite 1.8.1 인스턴스 안에 별도 nonproduction project 생성**이다. 새 호스트·Compose·Appwrite 설치는 하지 않는다. [현재 사전 점검과 단계별 승인 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 먼저 따른다. 프로젝트·SMTP·Google·Function·DB 등 실제 변경은 아직 미실행이다.
+사용자가 선택한 환경은 **B안: very-server의 기존 Appwrite 1.8.1 인스턴스 안에 별도 nonproduction project 생성**이다. 새 호스트·Compose·Appwrite 설치는 하지 않는다. [현재 사전 점검과 단계별 승인 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 먼저 따른다. `verygood-au-account-test` 생성·Account OFF만 완료했고, key·DB·Google·SMTP·Function은 생성/설정하지 않았다.
+
+SMTP/OAuth의 직접 SQL JSON은 암호화 envelope여서 enabled null을 미설정으로 해석하지 않는다. 기존 프로젝트의 실제 override/provider 상태는 별도 승인된 Console/API metadata 확인 대상이다. 신규 test project의 Custom SMTP OFF·OAuth disabled는 Console에서 확인했다.
 
 같은 API host를 사용하므로 차단 기준은 **endpoint/project의 정확한 pair**다. 운영 project denylist와 테스트 resource ID allowlist를 확인하고, 운영 키·DB·사용자·Function을 복제/재사용하지 않는다. 새 프로젝트 생성에는 재시작이 필요 없다. 그러나 현재 공통 SMTP가 비어 있어 실제 OTP에는 별도 승인된 공통 설정 변경과 API/mail-worker 재생성이 필요하다. 기존 네 프로젝트의 저장된 OTP·Magic URL 설정이 켜져 있어 그 영향도 함께 승인받아야 한다. 프로젝트별 SMTP override만으로 이 영향을 없앨 수 없다.
 

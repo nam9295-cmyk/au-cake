@@ -1,6 +1,8 @@
 # Customer Account 실제 인증 테스트 환경 사전 점검
 
-> **현재 선택: B안.** 사용자는 2026-10-17에 기존 very-server의 별도 테스트 프로젝트를 선택했다. A2 구축은 보류한다. 아래 A2 권장 내용은 당시 비교 기록이며 실행 지시가 아니다. 이후 작업은 [B안 사전 점검·단계별 실행 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 따른다. 프로젝트 생성·SMTP 변경·재시작 등 실제 구축은 아직 승인되지 않았다.
+> **현재 선택: B안.** 사용자는 2026-10-17에 기존 very-server의 별도 테스트 프로젝트를 선택했다. A2 구축은 보류한다. 아래 A2 권장 내용은 당시 비교 기록이며 실행 지시가 아니다. 이후 작업은 [B안 사전 점검·단계별 실행 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 따른다. 최초 계획 작성 시에는 실제 구축이 승인되지 않았고, 이후 B1만 별도 승인됐다.
+
+> **B1 후속 기록:** 이후 사용자가 B1만 승인하여 `verygood-au-account-test` 생성·Account OFF를 완료했다. [B1 결과](customer-account-b1-validation.md)와 아래 암호화 설정 해석 정정사항을 따른다. B2 이후는 미실행이다.
 
 2026-10-17 KST. 조사 기준은 `feat/customer-account`의 `bd8a03dbc2993bcf5ae7b62f54e38c4b983d170d`다. 이 문서와 [후속 실행 계획](superpowers/plans/2026-10-17-customer-account-provider-test-environment.md)은 **조사 결과와 승인 후 수행할 계획**이다. 프로젝트·컨테이너 생성, dependency 패치, Function 실행/배포, migration dry-run/apply, 인증·메일 발송은 수행하지 않았다. main 및 다른 worktree를 수정하지 않았다.
 
@@ -34,11 +36,13 @@
 | 베리서버 | Linux x86_64, 4 CPU, RAM 15.57GiB. `free` available 약 8GiB, swap 1.7GiB/4GiB 사용. 디스크 84GiB available, 62% 사용. load 약 0.34/0.34/0.30 |
 | 공유 서비스 | Appwrite, Penpot, Chatwoot 등 공존. Appwrite API 약 588MiB, MariaDB 242MiB, Redis 20MiB, mail worker 17MiB. 관측된 Node 실행 컨테이너 약 32MiB. idle snapshot이며 build peak 아님 |
 | Appwrite | API/worker 이미지 `appwrite/appwrite:1.8.1`, console 7.5.7, executor 0.7.22, MariaDB 10.11, Redis 7.2.4-alpine. 해당 프로젝트 version metadata도 1.8.1 |
-| registry allowlist | 현재 `node-16.0`, `node-20.0`, exact `node-22` 포함. 프로젝트 SMTP enabled metadata는 null(명시적 활성화 아님). API·mail worker의 공통 SMTP host 모두 empty/unset |
+| registry allowlist | 현재 `node-16.0`, `node-20.0`, exact `node-22` 포함. API·mail worker의 공통 SMTP host 모두 empty/unset. 프로젝트 SMTP 값은 암호화 저장되어 직접 SQL의 enabled null로 활성 여부를 판정할 수 없음(B1 검증에서 정정) |
 
 SSH의 `free/df/uptime`, Docker의 선택한 상태·이미지·자원 정보 및 아래 두 Function의 배포 메타데이터/코드 아카이브만 읽었다. 기존 API key로 Function GET은 403이어서 키/권한을 변경하지 않았다. 대신 이미 허용된 서버 접근으로 DB의 **프로젝트 설정 중 version/SMTP enabled 및 대상 Function/deployment 메타데이터만** READ ONLY transaction에서 SELECT하고 종료했다. 고객 users/sessions, 예약/주문 document, 업로드, mail body/queue, execution/build log는 조회하지 않았다. 비밀값은 출력·문서화하지 않았다. DB ACL 인수 검증은 이번 조사에 포함되지 않았다.
 
 ## SMTP의 두 계층과 운영 영향
+
+**B1에서 확인한 해석 정정:** DB의 SMTP/OAuth JSON은 `data/method/iv/tag/version` 암호화 envelope다. 최초 조사에서 직접 SQL로 얻은 null을 프로젝트 override/provider 미설정으로 추론한 부분은 철회한다. 기존 4개 프로젝트의 실제 활성 상태는 미판정이며, 이번 B1에서 설정을 복호화·변경하지 않았다. 신규 테스트 프로젝트만 Console에서 Custom SMTP OFF·모든 OAuth provider disabled를 확인했다. 공통 SMTP empty 및 OTP gate 분석은 유효하다.
 
 1. 인스턴스 `_APP_SMTP_*`와 `_APP_SYSTEM_EMAIL_*`는 기본 transport/sender다. 공통 값을 바꾸면 기본 SMTP를 사용하는 다른 프로젝트와 Console 계정 메일까지 영향을 받을 수 있다. API/관련 worker에 설정을 반영하는 작업도 운영 변경이다. [1.8.1 환경변수 정의](https://github.com/appwrite/appwrite/blob/1.8.1/app/config/variables.php)
 2. 1.8.1에는 `/projects/:projectId/smtp`가 있고 `enabled`, host/port/secure/credentials/sender를 프로젝트에 저장한다. OTP의 mail payload가 override를 전달하고 mail worker는 override 또는 인스턴스 기본 mailer를 선택한다. 따라서 SMTP가 공통 설정만 있는 구조는 아니다. [프로젝트 SMTP 구현](https://github.com/appwrite/appwrite/blob/1.8.1/app/controllers/api/projects.php), [메일 워커 구현](https://github.com/appwrite/appwrite/blob/1.8.1/src/Appwrite/Platform/Workers/Mails.php)
