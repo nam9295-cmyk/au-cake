@@ -1,0 +1,1873 @@
+{
+  "mode": "offline-dry-run",
+  "network": false,
+  "target": {
+    "endpoint": "https://api.verygood-chocolate.com/v1",
+    "projectId": "verygood-au-account-test",
+    "resources": {
+      "databaseIds": [
+        "ca_test_cake_au",
+        "ca_test_kids_au"
+      ],
+      "functionIds": []
+    }
+  },
+  "runId": "20261017-b2",
+  "adminUserIds": [
+    "ca-test-admin-m-20261017"
+  ],
+  "creates": {
+    "databases": [
+      {
+        "databaseId": "ca_test_cake_au",
+        "name": "CA TEST Cake AU",
+        "enabled": true
+      },
+      {
+        "databaseId": "ca_test_kids_au",
+        "name": "CA TEST Kids baseline AU",
+        "enabled": true
+      }
+    ],
+    "collections": [
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "reservations",
+        "name": "reservations",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "create(\"user:ca-test-admin-m-20261017\")",
+          "read(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "reservationNumber",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "customerName",
+            "type": "string",
+            "size": 80,
+            "required": true
+          },
+          {
+            "key": "customerPhone",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "customerEmail",
+            "type": "string",
+            "size": 120,
+            "required": false
+          },
+          {
+            "key": "productId",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "cakeSize",
+            "type": "string",
+            "size": 20,
+            "required": false
+          },
+          {
+            "key": "chocolateType",
+            "type": "string",
+            "size": 20,
+            "required": false
+          },
+          {
+            "key": "poundAddon",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "cupcakeFinish",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "chocolateIcingCount",
+            "type": "integer",
+            "required": false,
+            "min": 0,
+            "max": 12
+          },
+          {
+            "key": "vanillaCreamCount",
+            "type": "integer",
+            "required": false,
+            "min": 0,
+            "max": 12
+          },
+          {
+            "key": "partyDecorationCount",
+            "type": "integer",
+            "required": false,
+            "min": 0,
+            "max": 12
+          },
+          {
+            "key": "vanillaCakeSheet",
+            "type": "string",
+            "size": 20,
+            "required": false
+          },
+          {
+            "key": "vanillaCakeFlavor",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "quantity",
+            "type": "integer",
+            "required": false,
+            "min": 1,
+            "max": 2147483647
+          },
+          {
+            "key": "pickupDate",
+            "type": "string",
+            "size": 20,
+            "required": true
+          },
+          {
+            "key": "pickupTime",
+            "type": "string",
+            "size": 10,
+            "required": true
+          },
+          {
+            "key": "cacaoPercent",
+            "type": "string",
+            "size": 10,
+            "required": true
+          },
+          {
+            "key": "requestNote",
+            "type": "string",
+            "size": 1000,
+            "required": false
+          },
+          {
+            "key": "adminMemo",
+            "type": "string",
+            "size": 1000,
+            "required": false
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "updatedAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "status",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "예약신청",
+              "예약확정",
+              "픽업완료",
+              "취소"
+            ]
+          },
+          {
+            "key": "paymentStatus",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "입금대기",
+              "입금확인",
+              "현장결제",
+              "환불필요"
+            ]
+          },
+          {
+            "key": "totalPrice",
+            "type": "integer",
+            "required": true,
+            "min": 0
+          },
+          {
+            "key": "totalPriceCents",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "subtotalCents",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "discountPercent",
+            "type": "integer",
+            "required": false,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "key": "discountCents",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "appliedPromoCodeLast4",
+            "type": "string",
+            "size": 4,
+            "required": false
+          },
+          {
+            "key": "reviewCouponId",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          {
+            "key": "orderLinesJson",
+            "type": "string",
+            "size": 65535,
+            "required": false
+          },
+          {
+            "key": "orderLineCount",
+            "type": "integer",
+            "required": false,
+            "min": 1
+          },
+          {
+            "key": "orderItemCount",
+            "type": "integer",
+            "required": false,
+            "min": 1
+          },
+          {
+            "key": "discountBasisCents",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "individualPackagingPieces",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "individualPackagingFeeCents",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "requestFingerprint",
+            "type": "string",
+            "size": 64,
+            "required": false
+          }
+        ],
+        "indexes": [
+          {
+            "key": "reservationNumber_idx",
+            "type": "key",
+            "attributes": [
+              "reservationNumber"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "pickupDate_idx",
+            "type": "key",
+            "attributes": [
+              "pickupDate"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "status_idx",
+            "type": "key",
+            "attributes": [
+              "status"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "status_pickupDate_idx",
+            "type": "key",
+            "attributes": [
+              "status",
+              "pickupDate"
+            ],
+            "orders": [
+              "ASC",
+              "ASC"
+            ]
+          },
+          {
+            "key": "paymentStatus_idx",
+            "type": "key",
+            "attributes": [
+              "paymentStatus"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "cacaoPercent_idx",
+            "type": "key",
+            "attributes": [
+              "cacaoPercent"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "createdAt_idx",
+            "type": "key",
+            "attributes": [
+              "createdAt"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "cake_pickup_openings",
+        "name": "cake_pickup_openings",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "read(\"any\")",
+          "create(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "pickupDate",
+            "type": "string",
+            "size": 20,
+            "required": true
+          },
+          {
+            "key": "pickupTime",
+            "type": "string",
+            "size": 10,
+            "required": true
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "pickupSlot_unique",
+            "type": "unique",
+            "attributes": [
+              "pickupDate",
+              "pickupTime"
+            ],
+            "orders": [
+              "ASC",
+              "ASC"
+            ]
+          },
+          {
+            "key": "pickupDate_idx",
+            "type": "key",
+            "attributes": [
+              "pickupDate"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "settings",
+        "name": "settings",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "read(\"any\")",
+          "create(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "price",
+            "type": "integer",
+            "required": true,
+            "min": 0
+          },
+          {
+            "key": "bankName",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "bankAccount",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "accountHolder",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "weekdayOpen",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "weekdayClose",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "weekendOpen",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "weekendClose",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "dailyLimitText",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "reservationNotice",
+            "type": "string",
+            "size": 1000,
+            "required": true
+          },
+          {
+            "key": "pickupNotice",
+            "type": "string",
+            "size": 1000,
+            "required": true
+          },
+          {
+            "key": "storeAddress",
+            "type": "string",
+            "size": 200,
+            "required": true
+          },
+          {
+            "key": "storePhone",
+            "type": "string",
+            "size": 200,
+            "required": true
+          }
+        ],
+        "indexes": []
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "review_invites",
+        "name": "review_invites",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [],
+        "attributes": [
+          {
+            "key": "sourceType",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "cake",
+              "class"
+            ]
+          },
+          {
+            "key": "sourceReservationId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "sourceReservationNumber",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "tokenHash",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "tokenCiphertext",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          {
+            "key": "tokenIv",
+            "type": "string",
+            "size": 16,
+            "required": false
+          },
+          {
+            "key": "tokenAuthTag",
+            "type": "string",
+            "size": 22,
+            "required": false
+          },
+          {
+            "key": "tokenEncryptionVersion",
+            "type": "integer",
+            "required": false,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "key": "expiresAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "usedAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "pendingPhotoFileId",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          {
+            "key": "pendingPhotoUploadedAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "photoUploadCount",
+            "type": "integer",
+            "required": false,
+            "min": 0,
+            "max": 10,
+            "default": 0
+          },
+          {
+            "key": "createdByUserId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "tokenHash_unique",
+            "type": "unique",
+            "attributes": [
+              "tokenHash"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "sourceReservation_unique",
+            "type": "unique",
+            "attributes": [
+              "sourceType",
+              "sourceReservationId"
+            ],
+            "orders": [
+              "ASC",
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "reviews",
+        "name": "reviews",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "read(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "sourceType",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "cake",
+              "class"
+            ]
+          },
+          {
+            "key": "sourceReservationId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "sourceReservationNumber",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "rating",
+            "type": "integer",
+            "required": true,
+            "min": 1,
+            "max": 5
+          },
+          {
+            "key": "body",
+            "type": "string",
+            "size": 2000,
+            "required": true
+          },
+          {
+            "key": "photoFileId",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          {
+            "key": "photoPublishConsent",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "key": "displayName",
+            "type": "string",
+            "size": 50,
+            "required": false
+          },
+          {
+            "key": "publishConsent",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "key": "moderationStatus",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "pending",
+              "published",
+              "hidden"
+            ]
+          },
+          {
+            "key": "rewardPercent",
+            "type": "integer",
+            "required": true,
+            "min": 5,
+            "max": 10
+          },
+          {
+            "key": "couponId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "updatedAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "sourceReservation_unique",
+            "type": "unique",
+            "attributes": [
+              "sourceType",
+              "sourceReservationId"
+            ],
+            "orders": [
+              "ASC",
+              "ASC"
+            ]
+          },
+          {
+            "key": "moderationStatus_idx",
+            "type": "key",
+            "attributes": [
+              "moderationStatus"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "createdAt_idx",
+            "type": "key",
+            "attributes": [
+              "createdAt"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "sourceType_idx",
+            "type": "key",
+            "attributes": [
+              "sourceType"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "public_reviews_idx",
+            "type": "key",
+            "attributes": [
+              "moderationStatus",
+              "publishConsent",
+              "createdAt"
+            ],
+            "orders": [
+              "ASC",
+              "ASC",
+              "DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "review_coupons",
+        "name": "review_coupons",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "read(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "codeHash",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "codeLast4",
+            "type": "string",
+            "size": 4,
+            "required": true
+          },
+          {
+            "key": "codeCiphertext",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          {
+            "key": "codeIv",
+            "type": "string",
+            "size": 16,
+            "required": false
+          },
+          {
+            "key": "codeAuthTag",
+            "type": "string",
+            "size": 22,
+            "required": false
+          },
+          {
+            "key": "codeEncryptionVersion",
+            "type": "integer",
+            "required": false,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "key": "rewardPercent",
+            "type": "integer",
+            "required": true,
+            "min": 5,
+            "max": 10
+          },
+          {
+            "key": "scope",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "cake"
+            ]
+          },
+          {
+            "key": "status",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "active",
+              "redeemed",
+              "expired",
+              "revoked"
+            ]
+          },
+          {
+            "key": "sourceReviewId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "expiresAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "redeemedAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "redeemedReservationId",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "codeHash_unique",
+            "type": "unique",
+            "attributes": [
+              "codeHash"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "sourceReview_unique",
+            "type": "unique",
+            "attributes": [
+              "sourceReviewId"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "status_idx",
+            "type": "key",
+            "attributes": [
+              "status"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "expiresAt_idx",
+            "type": "key",
+            "attributes": [
+              "expiresAt"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "manual_coupons",
+        "name": "manual_coupons",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "read(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "codeHash",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "codeLast4",
+            "type": "string",
+            "size": 4,
+            "required": true
+          },
+          {
+            "key": "rewardPercent",
+            "type": "integer",
+            "required": true,
+            "min": 5,
+            "max": 5
+          },
+          {
+            "key": "scope",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "cake"
+            ]
+          },
+          {
+            "key": "status",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "active",
+              "redeemed",
+              "expired",
+              "revoked"
+            ]
+          },
+          {
+            "key": "expiresAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "redeemedAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "redeemedReservationId",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "codeHash_unique",
+            "type": "unique",
+            "attributes": [
+              "codeHash"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "status_idx",
+            "type": "key",
+            "attributes": [
+              "status"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "expiresAt_idx",
+            "type": "key",
+            "attributes": [
+              "expiresAt"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "review_photo_cleanup",
+        "name": "review_photo_cleanup",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "read(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "fileId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "inviteId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "reason",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "replacement",
+              "remove",
+              "rotation",
+              "uncertain_attach",
+              "staged_upload"
+            ]
+          },
+          {
+            "key": "status",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "staging",
+              "pending",
+              "failed"
+            ]
+          },
+          {
+            "key": "attempts",
+            "type": "integer",
+            "required": true,
+            "min": 0
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "updatedAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "fileId_unique",
+            "type": "unique",
+            "attributes": [
+              "fileId"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "status_createdAt_idx",
+            "type": "key",
+            "attributes": [
+              "status",
+              "createdAt"
+            ],
+            "orders": [
+              "ASC",
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "email_deliveries",
+        "name": "email_deliveries",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [],
+        "attributes": [
+          {
+            "key": "eventKey",
+            "type": "string",
+            "size": 128,
+            "required": true
+          },
+          {
+            "key": "sourceType",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "cake",
+              "class",
+              "review",
+              "system"
+            ]
+          },
+          {
+            "key": "sourceId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "template",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "booking-received-operator",
+              "booking-received-customer",
+              "booking-confirmed-customer",
+              "review-invite-customer",
+              "review-reward-customer",
+              "booking-reminder-d1-customer"
+            ]
+          },
+          {
+            "key": "status",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "pending",
+              "sent",
+              "failed",
+              "uncertain"
+            ]
+          },
+          {
+            "key": "recipientHash",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "payloadHash",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "attempts",
+            "type": "integer",
+            "required": true,
+            "min": 0
+          },
+          {
+            "key": "firstAttemptAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "providerMessageId",
+            "type": "string",
+            "size": 128,
+            "required": false
+          },
+          {
+            "key": "lastAttemptAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "sentAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "lastErrorCode",
+            "type": "string",
+            "size": 80,
+            "required": false
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "updatedAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "eventKey_unique",
+            "type": "unique",
+            "attributes": [
+              "eventKey"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_cake_au",
+        "collectionId": "email_delivery_retry_claims",
+        "name": "email_delivery_retry_claims",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [],
+        "attributes": [
+          {
+            "key": "eventKey",
+            "type": "string",
+            "size": 128,
+            "required": true
+          },
+          {
+            "key": "sourceType",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "cake",
+              "class",
+              "review",
+              "system"
+            ]
+          },
+          {
+            "key": "sourceId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "template",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "booking-received-operator",
+              "booking-received-customer",
+              "booking-confirmed-customer",
+              "review-invite-customer",
+              "review-reward-customer",
+              "booking-reminder-d1-customer"
+            ]
+          },
+          {
+            "key": "status",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "pending",
+              "sent",
+              "failed",
+              "uncertain"
+            ]
+          },
+          {
+            "key": "claimedByUserId",
+            "type": "string",
+            "size": 64,
+            "required": true
+          },
+          {
+            "key": "claimedAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "completedAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "lastErrorCode",
+            "type": "string",
+            "size": 80,
+            "required": false
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "updatedAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "eventKey_unique",
+            "type": "unique",
+            "attributes": [
+              "eventKey"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_kids_au",
+        "collectionId": "class_reservations",
+        "name": "class_reservations",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "create(\"user:ca-test-admin-m-20261017\")",
+          "read(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "reservationNumber",
+            "type": "string",
+            "size": 48,
+            "required": true
+          },
+          {
+            "key": "classType",
+            "type": "string",
+            "size": 80,
+            "required": true
+          },
+          {
+            "key": "classDate",
+            "type": "string",
+            "size": 20,
+            "required": true
+          },
+          {
+            "key": "classTime",
+            "type": "string",
+            "size": 20,
+            "required": true
+          },
+          {
+            "key": "coursePlan",
+            "type": "enum",
+            "required": false,
+            "elements": [
+              "basic",
+              "advanced",
+              "basic-advanced-package"
+            ]
+          },
+          {
+            "key": "extensionMinutes",
+            "type": "integer",
+            "required": false,
+            "min": 0,
+            "max": 30
+          },
+          {
+            "key": "advancedClassDate",
+            "type": "string",
+            "size": 20,
+            "required": false
+          },
+          {
+            "key": "advancedClassTime",
+            "type": "string",
+            "size": 20,
+            "required": false
+          },
+          {
+            "key": "advancedExtensionMinutes",
+            "type": "integer",
+            "required": false,
+            "min": 0,
+            "max": 30
+          },
+          {
+            "key": "durationMinutes",
+            "type": "integer",
+            "required": false,
+            "min": 90,
+            "max": 150
+          },
+          {
+            "key": "advancedDurationMinutes",
+            "type": "integer",
+            "required": false,
+            "min": 120,
+            "max": 150
+          },
+          {
+            "key": "bookingType",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "year-1-2",
+              "1-child",
+              "2-friends"
+            ]
+          },
+          {
+            "key": "parentName",
+            "type": "string",
+            "size": 80,
+            "required": true
+          },
+          {
+            "key": "parentPhone",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "parentEmail",
+            "type": "string",
+            "size": 120,
+            "required": true
+          },
+          {
+            "key": "childName",
+            "type": "string",
+            "size": 80,
+            "required": true
+          },
+          {
+            "key": "childAge",
+            "type": "integer",
+            "required": true,
+            "min": 3,
+            "max": 18
+          },
+          {
+            "key": "schoolYear",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "secondChildName",
+            "type": "string",
+            "size": 80,
+            "required": false
+          },
+          {
+            "key": "secondChildAge",
+            "type": "integer",
+            "required": false,
+            "min": 3,
+            "max": 18
+          },
+          {
+            "key": "secondChildSchoolYear",
+            "type": "string",
+            "size": 40,
+            "required": false
+          },
+          {
+            "key": "allergyNote",
+            "type": "string",
+            "size": 1000,
+            "required": false
+          },
+          {
+            "key": "emergencyContact",
+            "type": "string",
+            "size": 120,
+            "required": true
+          },
+          {
+            "key": "pickupPerson",
+            "type": "string",
+            "size": 80,
+            "required": true
+          },
+          {
+            "key": "parentConsent",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "key": "cancellationAgreement",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "key": "photoConsent",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "key": "status",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "Requested",
+              "Confirmed",
+              "Completed",
+              "Cancelled"
+            ]
+          },
+          {
+            "key": "paymentStatus",
+            "type": "enum",
+            "required": true,
+            "elements": [
+              "Payment pending",
+              "Fully paid",
+              "Refund required",
+              "Pending deposit",
+              "Deposit paid"
+            ]
+          },
+          {
+            "key": "totalPrice",
+            "type": "integer",
+            "required": true,
+            "min": 0
+          },
+          {
+            "key": "subtotalCents",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "discountPercent",
+            "type": "integer",
+            "required": false,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "key": "discountCents",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "totalPriceCents",
+            "type": "integer",
+            "required": false,
+            "min": 0
+          },
+          {
+            "key": "depositAmount",
+            "type": "integer",
+            "required": true,
+            "min": 0
+          },
+          {
+            "key": "adminMemo",
+            "type": "string",
+            "size": 1000,
+            "required": false
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          },
+          {
+            "key": "updatedAt",
+            "type": "string",
+            "size": 40,
+            "required": false
+          }
+        ],
+        "indexes": [
+          {
+            "key": "reservationNumber_idx",
+            "type": "key",
+            "attributes": [
+              "reservationNumber"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "classDate_idx",
+            "type": "key",
+            "attributes": [
+              "classDate"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "advancedClassDate_idx",
+            "type": "key",
+            "attributes": [
+              "advancedClassDate"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "status_idx",
+            "type": "key",
+            "attributes": [
+              "status"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "status_classDate_idx",
+            "type": "key",
+            "attributes": [
+              "status",
+              "classDate"
+            ],
+            "orders": [
+              "ASC",
+              "ASC"
+            ]
+          },
+          {
+            "key": "status_advancedClassDate_idx",
+            "type": "key",
+            "attributes": [
+              "status",
+              "advancedClassDate"
+            ],
+            "orders": [
+              "ASC",
+              "ASC"
+            ]
+          },
+          {
+            "key": "paymentStatus_idx",
+            "type": "key",
+            "attributes": [
+              "paymentStatus"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          },
+          {
+            "key": "createdAt_idx",
+            "type": "key",
+            "attributes": [
+              "createdAt"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          }
+        ]
+      },
+      {
+        "databaseId": "ca_test_kids_au",
+        "collectionId": "class_booked_dates",
+        "name": "class_booked_dates",
+        "enabled": true,
+        "documentSecurity": false,
+        "permissions": [
+          "read(\"any\")",
+          "create(\"user:ca-test-admin-m-20261017\")",
+          "update(\"user:ca-test-admin-m-20261017\")",
+          "delete(\"user:ca-test-admin-m-20261017\")"
+        ],
+        "attributes": [
+          {
+            "key": "classDate",
+            "type": "string",
+            "size": 20,
+            "required": true
+          },
+          {
+            "key": "classTime",
+            "type": "string",
+            "size": 20,
+            "required": false
+          },
+          {
+            "key": "durationMinutes",
+            "type": "integer",
+            "required": false,
+            "min": 90,
+            "max": 150
+          },
+          {
+            "key": "createdAt",
+            "type": "string",
+            "size": 40,
+            "required": true
+          }
+        ],
+        "indexes": [
+          {
+            "key": "classSlot_unique",
+            "type": "unique",
+            "attributes": [
+              "classDate",
+              "classTime"
+            ],
+            "orders": [
+              "ASC",
+              "ASC"
+            ]
+          },
+          {
+            "key": "classDate_idx",
+            "type": "key",
+            "attributes": [
+              "classDate"
+            ],
+            "orders": [
+              "ASC"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "APPWRITE_ENDPOINT": "https://api.verygood-chocolate.com/v1",
+    "APPWRITE_PROJECT_ID": "verygood-au-account-test",
+    "MARKET": "AU",
+    "CUSTOMER_ACCOUNT_MIGRATION_MARKET": "AU",
+    "APPWRITE_CAKE_DATABASE_ID": "ca_test_cake_au",
+    "APPWRITE_KIDS_DATABASE_ID": "ca_test_kids_au",
+    "APPWRITE_CAKE_RESERVATIONS_TABLE_ID": "reservations",
+    "APPWRITE_KIDS_RESERVATIONS_TABLE_ID": "class_reservations",
+    "APPWRITE_KIDS_BOOKED_DATES_TABLE_ID": "class_booked_dates",
+    "APPWRITE_SETTINGS_TABLE_ID": "settings",
+    "APPWRITE_CAKE_PICKUP_OPENINGS_TABLE_ID": "cake_pickup_openings",
+    "APPWRITE_ADMIN_USER_IDS": "ca-test-admin-m-20261017",
+    "REVIEW_ADMIN_USER_IDS": "ca-test-admin-m-20261017",
+    "APPWRITE_RESERVATION_WRITE_MODE": "function",
+    "CUSTOMER_ACCOUNT_ENABLED": "false",
+    "VITE_CUSTOMER_ACCOUNT_ENABLED": "false"
+  },
+  "fixtures": [
+    {
+      "databaseId": "ca_test_cake_au",
+      "collectionId": "settings",
+      "documentId": "ca-settings-20261017-b2",
+      "permissions": [],
+      "data": {
+        "price": 45,
+        "bankName": "TEST ONLY",
+        "bankAccount": "TEST ONLY - DO NOT PAY",
+        "accountHolder": "CA TEST",
+        "weekdayOpen": "10:00",
+        "weekdayClose": "20:00",
+        "weekendOpen": "10:00",
+        "weekendClose": "17:00",
+        "dailyLimitText": "TEST ONLY",
+        "reservationNotice": "TEST ONLY - no payment or delivery",
+        "pickupNotice": "TEST ONLY",
+        "storeAddress": "TEST ONLY",
+        "storePhone": "TEST ONLY"
+      }
+    }
+  ],
+  "migration": {
+    "target": {
+      "databaseId": "ca_test_cake_au",
+      "collectionId": "reservations"
+    },
+    "attribute": {
+      "key": "customerUserId",
+      "type": "string",
+      "size": 36,
+      "required": false
+    },
+    "index": {
+      "key": "customerUser_created_idx",
+      "type": "key",
+      "attributes": [
+        "customerUserId",
+        "$createdAt"
+      ],
+      "orders": [
+        "ASC",
+        "DESC"
+      ]
+    }
+  }
+}
