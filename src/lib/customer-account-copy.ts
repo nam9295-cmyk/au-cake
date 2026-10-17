@@ -1,4 +1,8 @@
 import type {Language} from './i18n'
+export function customerOrderStatusLabel(status:string,language:Language):string {
+  if(language==='ko')return status
+  return ({'예약신청':'Requested','예약확정':'Confirmed','픽업완료':'Picked up','취소':'Cancelled','입금대기':'Pending payment','입금확인':'Paid','현장결제':'Pay on pick-up','환불필요':'Refund required'} as Record<string,string>)[status]||status
+}
 export function customerAccountCopy(language:Language) {
   const t=(en:string,ko:string)=>language==='ko'?ko:en
   return {

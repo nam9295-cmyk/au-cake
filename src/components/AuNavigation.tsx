@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 import { AuLanguageToggle } from './AuLanguage'
 import { useAuLanguage } from '../lib/au-language'
+import { useCustomerAccount } from '../lib/customer-account-context'
 
 const primary = RENEWAL_NAV
 
@@ -14,6 +15,7 @@ export function AuNavigation({
   home?: boolean
 }) {
   const { t } = useAuLanguage()
+  const customer = useCustomerAccount()
   const [open, setOpen] = useState(false)
   const dialog = useRef<HTMLDialogElement>(null)
   const opener = useRef<HTMLButtonElement>(null)
@@ -68,6 +70,7 @@ export function AuNavigation({
       <div className="au-v02-actions">
         <span className="au-v02-studio">MELROSE PARK STUDIO</span>
         <AuLanguageToggle />
+        {customer.enabled && (customer.state.status === 'authenticated' ? <a className="customer-account-nav" href="/account">ACCOUNT</a> : <button className="customer-account-nav" type="button" onClick={customer.openSignIn}>SIGN IN</button>)}
         {bag}
         <button
           ref={opener}
@@ -127,6 +130,7 @@ export function AuNavigation({
           </div>
           <p className="au-v02-menu-location">MELROSE PARK ATELIER · SYDNEY</p>
           <nav className="au-v02-menu-links" aria-label="Mobile navigation">
+            {customer.enabled && (customer.state.status === 'authenticated' ? <a href="/account" onClick={()=>setOpen(false)}>{t('MY ACCOUNT','마이 계정')}</a> : <button type="button" className="customer-account-nav" onClick={()=>{setOpen(false);setTimeout(()=>customer.openSignIn(),0)}}>{t('SIGN IN','로그인')}</button>)}
             {primary.map((link) => (
               <a
                 className={

@@ -235,6 +235,8 @@ function getCakeDetailSeo(pathname: string): SeoConfig | null {
 }
 
 const privateSeo: Record<string, SeoConfig> = {
+  '/account': {title:`My Account | ${brand}`,description:'Private customer account.',noindex:true},
+  '/account/auth/callback': {title:`Sign in | ${brand}`,description:'Private authentication return.',noindex:true},
   '/cart': {
     title: `Your Cart | ${brand}`,
     description: `Review your selected cakes before sending one cake request to ${brand} Sydney.`,

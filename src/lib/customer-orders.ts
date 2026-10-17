@@ -59,3 +59,18 @@ export function parseCustomerOrderDetail(v:unknown):CustomerOrderDetail {
 export async function getCustomerAccountHealth(execute=executeReservationApi):Promise<CustomerAccountHealth> {
   return execute('customer-account-health',undefined,parseCustomerAccountHealth)
 }
+export async function getCustomerOrders({cursor}:{cursor?:string}={}):Promise<CustomerOrdersPage> {
+  if(cursor!==undefined&&!/^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/.test(cursor))throw Error('INVALID_CUSTOMER_REQUEST')
+  return executeReservationApi('customer-orders',{...(cursor?{cursor}:{}),limit:25},parseCustomerOrdersPage)
+}
+export async function getCustomerOrder(id:string):Promise<CustomerOrderDetail> {
+  if(!/^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/.test(id))throw Error('INVALID_CUSTOMER_REQUEST')
+  return executeReservationApi('customer-order',{id},parseCustomerOrderDetail)
+}
+export function classifyCustomerOrder(order:CustomerOrderSummary,now=new Date()):'upcoming'|'past' {
+  if(['픽업완료','취소','completed','cancelled'].includes(order.status))return 'past'
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Sydney',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now)
+  const value=(type:Intl.DateTimeFormatPartTypes)=>parts.find(p=>p.type===type)?.value||''
+  const local=`${value('year')}-${value('month')}-${value('day')} ${value('hour')}:${value('minute')}`
+  return `${order.pickupDate} ${order.pickupTime}`>local?'upcoming':'past'
+}

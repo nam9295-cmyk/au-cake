@@ -61,6 +61,7 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
     window.dispatchEvent(new Event(CUSTOMER_AUTH_CHANGED_EVENT))
     try{localStorage.setItem(authNoticeKey,crypto.randomUUID())}catch{/* Focus refresh covers storage-restricted browsers. */}
   },[])
+  const invalidateSession=useCallback(()=>{intent.current++;epoch.current++;identityUser.current=null;setOpen(false);setReady(false);setState({status:'unavailable'})},[])
   const signOut=useCallback(async()=>{
     intent.current++;epoch.current++;identityUser.current=null;setOpen(false);setState({status:'guest'})
     try{await auth.signOut();if(active.current)notify()}
@@ -75,7 +76,7 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
     const lang=document.documentElement.lang
     setLanguage(lang==='ko'?'ko':'en');setOpeningIntent(intent.current);setOpen(true)
     if(!ready)void refresh()
-  },refresh,saveProfile,signOut,registerCheckout}:disabledCustomerAccount,[enabled,ready,state,refresh,saveProfile,signOut,registerCheckout])
+  },refresh,saveProfile,signOut,registerCheckout,invalidateSession}:disabledCustomerAccount,[enabled,ready,state,refresh,saveProfile,signOut,registerCheckout,invalidateSession])
   return <CustomerAccountContext.Provider value={value}>{children}{enabled&&open&&<CustomerSignInDialog auth={auth} language={language} available={ready} onClose={()=>setOpen(false)} onGuest={()=>checkoutGuest.current?.()} onAuthenticated={identity=>{
     if(active.current&&openingIntent===intent.current){epoch.current++;identityUser.current=identity.userId;setState({status:'authenticated',identity});setOpen(false);notify()}
   }} onGoogle={startGoogle}/>}</CustomerAccountContext.Provider>

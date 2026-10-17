@@ -70,7 +70,8 @@
     "test:renewal": "node --test tests/au-renewal-*.test.mjs && VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/au-renewal-cart.test.ts tests/au-renewal-consumers.test.ts && VITE_MARKET=AU node tests/run-custom-cake-ui.mjs tests/au-renewal-pickup-ui.test.tsx && VITE_MARKET=AU node tests/run-custom-cake-ui.mjs tests/au-renewal-detail-ui.test.tsx",
     "test:seo": "VITE_MARKET=AU node --test tests/au-renewal-seo.test.mjs tests/cake-seo-generator.test.mjs tests/robots-policy.test.mjs && VITE_MARKET=AU node tests/run-custom-cake-ui.mjs tests/seo-class-archive.test.ts",
     "test:customer-account": "node tests/run-customer-account-tests.mjs",
-    "migrate:customer-account": "node scripts/migrate-customer-account-schema.mjs"
+    "migrate:customer-account": "node scripts/migrate-customer-account-schema.mjs",
+    "test:customer-account-static": "node --test tests/customer-account-static.test.mjs"
   },
   "dependencies": {
     "appwrite": "^23.0.0",

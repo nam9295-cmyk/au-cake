@@ -5,7 +5,7 @@ import {join,resolve,basename} from 'node:path'
 import {rolldown} from 'rolldown'
 
 const supplied=process.argv.slice(2)
-const files=supplied.length?supplied:(await readdir('tests')).filter(f=>/^customer-(account|auth|profile|order|orders|checkout|admin).*\.test\.(ts|tsx|mjs)$/.test(f)).sort().map(f=>`tests/${f}`)
+const files=supplied.length?supplied:(await readdir('tests')).filter(f=>f!=='customer-account-static.test.mjs'&&/^customer-(account|auth|profile|order|orders|checkout|admin).*\.test\.(ts|tsx|mjs)$/.test(f)).sort().map(f=>`tests/${f}`)
 const dir=await mkdtemp(join(tmpdir(),'au-customer-tests-'))
 try {
   const entries=[]

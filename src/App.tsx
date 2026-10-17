@@ -1,6 +1,7 @@
 import { AuRenewalShop } from './pages/AuRenewalShop'
 import { CustomerAuthCallback } from './components/CustomerAuthCallback'
 import {readCheckoutResume} from './lib/customer-checkout-draft'
+import {useCustomerAccount} from './lib/customer-account-context'
 import { renewalCardForPath } from '../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
@@ -74,6 +75,7 @@ const ReadOnlyCalendarPage = lazy(() => import('./ReadOnlyCalendarPage'))
 const HogirlApp = lazy(() => import('./stories/hogirl/HogirlApp'))
 const KoreaCustomerStoriesPage = lazy(() => import('./pages/KoreaCustomerStoriesPage'))
 const AuBusinessServicePage = lazy(() => import('./pages/AuBusinessServicePage'))
+const AccountPage = lazy(() => import('./pages/AccountPage').then(({ AccountPage }) => ({ default: AccountPage })))
 
 function PrivateRouteFallback() {
   return <div role="status" aria-live="polite">Loading…</div>
@@ -88,6 +90,9 @@ function EditorialRouteFallback() {
 }
 
 function App() {
+  const customer = useCustomerAccount()
+  const preferredLanguageApplied = useRef(new Set<string>())
+  const explicitLanguage = useRef(false)
   const {
     lines: cartLines,
     itemCount: cartItemCount,
@@ -125,9 +130,24 @@ function App() {
   useEffect(() => { cartOriginLinesRef.current = initialLegacyOrigin }, [initialLegacyOrigin])
 
   const setLanguage = useCallback((nextLanguage: Language) => {
+    explicitLanguage.current = true
+    try { sessionStorage.setItem('verygood-au-language-explicit', 'true') } catch { /* Current visit still takes precedence. */ }
     setLanguageState(nextLanguage)
     storeLanguage(nextLanguage)
   }, [])
+  useEffect(() => {
+    if (marketConfig.market !== 'AU' || !customer.enabled || customer.state.status !== 'authenticated') return
+    const identity = customer.state.identity
+    let cancelled = false
+    queueMicrotask(() => {
+      if (cancelled || preferredLanguageApplied.current.has(identity.userId)) return
+      preferredLanguageApplied.current.add(identity.userId)
+      let selected = explicitLanguage.current
+      try { selected ||= sessionStorage.getItem('verygood-au-language-explicit') === 'true' } catch { /* Respect the in-memory choice. */ }
+      if (!selected) { setLanguageState(identity.profile.language); try { storeLanguage(identity.profile.language) } catch { /* The in-memory language still applies. */ } }
+    })
+    return () => { cancelled = true }
+  }, [customer.enabled, customer.state])
 
   useEffect(() => {
     if (page === 'review' || page === 'hogirl') return
@@ -138,7 +158,7 @@ function App() {
   }, [language, page])
 
   useEffect(() => {
-    if (page === 'portfolio' || page === 'customer-stories' || page === 'business' || !shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
+    if (page === 'account' || page === 'account-auth-callback' || page === 'portfolio' || page === 'customer-stories' || page === 'business' || !shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
     hasLoadedSettings.current = true
     getSettings().then(setSettings)
   }, [page])
@@ -257,7 +277,7 @@ function App() {
     page === 'admin-custom-cakes' ||
     page === 'admin-classes' ||
     page === 'admin-reviews'
-  const isPrivatePage = isAdminPage || page === 'calendar'
+  const isPrivatePage = isAdminPage || page === 'calendar' || page === 'account'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
   const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio', 'customer-stories', 'business'].includes(page)
 
@@ -271,7 +291,7 @@ function App() {
   return (
     <AuLanguageProvider language={language} setLanguage={setLanguage}>
       {page === 'home' && <HomeTigerBackground />}
-      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage ? ' au-redesign-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
+      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage ? ' au-redesign-shell' : ''}${isPrivatePage && page !== 'account' ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && page !== 'portfolio' && page !== 'customer-stories' && page !== 'business' && (
         <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}
@@ -402,6 +422,7 @@ function App() {
       )}
       {isPrivatePage && (
         <Suspense fallback={<PrivateRouteFallback />}>
+          {page === 'account' && <><AuRedesignHeader cartItemCount={cartItemCount}/><AccountPage language={language}/><AuRedesignFooter/></>}
           {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
           {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
           {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
