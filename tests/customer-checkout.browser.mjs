@@ -61,7 +61,7 @@ async (page) => {
     await page.locator('input[name=phone]').fill('0412345678')
     await page.locator('input[name=email]').fill('typed-contact@example.test')
     await page.locator('input[type=date]').fill('2099-11-01')
-    await page.locator('select').selectOption('09:00')
+    await page.locator('select').selectOption('13:00')
     await page.locator('input[name=promo]').fill('SAVED')
     await page.locator('textarea[name=note]').fill('Keep my note')
     await page.locator('input[name=privacy]').check()
@@ -88,6 +88,7 @@ async (page) => {
     check(await page.locator('input[name=name]').inputValue()==='Already typed','OAuth replaced typed name')
     check(await page.locator('input[name=email]').inputValue()==='typed-contact@example.test','OAuth replaced order email')
     check(await page.locator('textarea[name=note]').inputValue()==='Keep my note','OAuth lost note')
+    check(await page.locator('input[type=date]').inputValue()==='2099-11-01'&&await page.locator('select').inputValue()==='13:00','OAuth lost the approved weekend closing pickup')
     check(await page.locator('input[name=privacy]').isChecked(),'OAuth changed consent')
     if(mode==='changed') {
       check(await page.getByRole('button',{name:'Send request',exact:true}).isDisabled(),'changed cart can submit')
@@ -101,6 +102,7 @@ async (page) => {
     check(mode==='changed'?sent.data.requestId!==draft.requestId:sent.data.requestId===draft.requestId,'requestId restore/changed-cart confirmation incorrect')
     check((sent.customerAccount==='link')===(mode==='success'),'guest/member marker incorrect')
     check(sent.data.customerEmail==='typed-contact@example.test','login email replaced order email')
+    check(sent.data.pickupTime==='13:00','weekend closing pickup changed before submission')
     check(sent.data.orderLines[0].quantity===(mode==='changed'?2:1),'submitted stale cart')
   }
   signedIn=false;await bag()

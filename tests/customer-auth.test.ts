@@ -47,10 +47,21 @@ test('profile saves merge namespace and preserve immutable prior order snapshots
   const {auth,calls,setUser}=setup()
   setUser({$id:'a',status:true,email:'login@example.test',name:'Google Name',prefs:{unrelated:'keep'}})
   const order={customerName:'Old Name',customerEmail:'old@example.test'}
-  const result=await auth.saveProfile({version:1,name:'New Name',contactEmail:'contact@example.test',phone:'0412345678',language:'en'})
+  const result=await auth.saveProfile({version:1,name:'New Name',contactEmail:'contact@example.test',phone:'0412345678',language:'en'},'a')
   assert.equal(result.loginEmail,'login@example.test');assert.equal(result.profile.contactEmail,'contact@example.test')
   assert.deepEqual(order,{customerName:'Old Name',customerEmail:'old@example.test'})
   assert.equal((calls.find(c=>c[0]==='prefs')?.[1] as Record<string,unknown>).unrelated,'keep')
+})
+test('profile save is bound to the displayed user before any preference write',async()=>{
+  const {auth,account,calls,setUser}=setup()
+  const profile={version:1,name:'A draft',contactEmail:'a-contact@example.test',phone:'0412345678',language:'en'}
+  setUser({$id:'b',status:true,email:'b@example.test',prefs:{}})
+  await assert.rejects(auth.saveProfile(profile,'a'),/AUTH_SESSION_CHANGED/)
+  assert.equal(calls.filter(c=>c[0]==='prefs').length,0)
+  setUser({$id:'a',status:true,email:'a@example.test',prefs:{}})
+  account.getPrefs=async()=>{setUser({$id:'b',status:true,email:'b@example.test',prefs:{}});return {}}
+  await assert.rejects(auth.saveProfile(profile,'a'),/AUTH_SESSION_CHANGED/)
+  assert.equal(calls.filter(c=>c[0]==='prefs').length,0)
 })
 test('concurrent sends are serialized and provider errors become safe retry states',async()=>{
   const {auth,account}=setup();let release!:(v:unknown)=>void
@@ -73,7 +84,7 @@ test('expired/blocked sessions restore as guest and preference failures never ex
   assert.equal(await auth.restore(),null)
   account.getSession=original
   account.getPrefs=async()=>{throw Error('private operator information')}
-  await assert.rejects(auth.saveProfile({version:1,name:'New Name',contactEmail:'contact@example.test',phone:'',language:'en'}),/^Error: AUTH_UNAVAILABLE$/)
+  await assert.rejects(auth.saveProfile({version:1,name:'New Name',contactEmail:'contact@example.test',phone:'',language:'en'},'a'),/^Error: AUTH_UNAVAILABLE$/)
 })
 test('logout invalidates a delayed token response and never leaves a reusable stale challenge',async()=>{
   const {auth,account}=setup();let release!:(value:unknown)=>void

@@ -85,10 +85,10 @@ export function createCustomerAuth({account=sharedAccount,idFactory=()=>ID.uniqu
         try {await account.deleteSession({sessionId:'current'})}catch(error){if((error as {code?:number})?.code!==401)safeError(error)}
       } finally {signingOut=false}
     },
-    saveProfile(input:CustomerProfile) {
+    saveProfile(input:CustomerProfile,expectedUserId:string) {
       return exclusive(async generation=>{
         const profile=validateCustomerProfile(input)
-        const identity=await restore();if(!identity)fail('AUTH_SESSION_CHANGED')
+        const identity=await restore();if(!identity||identity.userId!==expectedUserId)fail('AUTH_SESSION_CHANGED')
         const prefs=await account.getPrefs()
         const current=await account.get()
         if(generation!==epoch||current.$id!==identity.userId)fail('AUTH_SESSION_CHANGED')

@@ -31,7 +31,10 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
   const refresh=useCallback(async()=>{
     if(!enabled)return
     const generation=++epoch.current
-    setState({status:'checking'})
+    setState(current=>{
+      const previousIdentity=current.status==='authenticated'?current.identity:current.status==='checking'?current.previousIdentity:undefined
+      return {status:'checking',...(previousIdentity?{previousIdentity}:{})}
+    })
     try {
       const status=await bounded(health())
       if(!active.current||epoch.current!==generation)return
@@ -51,7 +54,8 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
     let disposed=false
     const restoreEpoch=epoch,authIntent=intent
     queueMicrotask(()=>{if(!disposed)void refresh()})
-    const changed=()=>{intent.current++;void refresh()}
+    // An explicit auth change ends the old session view, even when a UID is reused.
+    const changed=()=>{intent.current++;setState({status:'checking'});void refresh()}
     const focused=()=>void refresh()
     const stored=(event:StorageEvent)=>{if(event.key===authNoticeKey)changed()}
     window.addEventListener('focus',focused);window.addEventListener('pageshow',focused);window.addEventListener(CUSTOMER_AUTH_CHANGED_EVENT,changed);window.addEventListener('storage',stored)
@@ -67,8 +71,10 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
     catch(error){if(active.current)setState({status:'unavailable'});throw error}
   },[auth,notify])
   const saveProfile=useCallback(async(profile:CustomerProfile)=>{
-    const generation=intent.current,identity=await auth.saveProfile(profile)
-    if(!active.current||generation!==intent.current)throw Error('AUTH_CANCELLED')
+    const expectedUserId=identityUser.current
+    if(!expectedUserId)throw Error('AUTH_SESSION_CHANGED')
+    const generation=intent.current,refreshGeneration=epoch.current,identity=await auth.saveProfile(profile,expectedUserId)
+    if(!active.current||generation!==intent.current||refreshGeneration!==epoch.current||identity.userId!==expectedUserId)throw Error('AUTH_CANCELLED')
     epoch.current++;setState({status:'authenticated',identity});return identity
   },[auth])
   const value=useMemo(()=>enabled?{enabled:true,ready,state,openSignIn(event?:{currentTarget:HTMLElement}){

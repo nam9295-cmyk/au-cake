@@ -4,7 +4,7 @@ import type { RenewalLine } from '../../appwrite-functions/reservation-api/src/a
 export type CustomerProfile = {version:1; name:string; contactEmail:string; phone:string; language:'en'|'ko'}
 export type CustomerIdentity = {userId:string; loginEmail:string; profile:CustomerProfile}
 export type CustomerAccountHealth = {enabled:boolean; ready:boolean}
-export type CustomerAuthState = {status:'checking'|'guest'|'unavailable'} | {status:'authenticated'; identity:CustomerIdentity}
+export type CustomerAuthState = {status:'checking';previousIdentity?:CustomerIdentity} | {status:'guest'|'unavailable'} | {status:'authenticated'; identity:CustomerIdentity}
 export type CustomerOrderSummary = {
   id:string; reservationNumber:string; createdAt:string; pickupDate:string; pickupTime:string
   status:string; paymentStatus:string; totalPriceCents:number|null

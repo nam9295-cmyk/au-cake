@@ -31,3 +31,13 @@ test('customer detail renders frozen legacy/Renewal prices without admin/coupon 
     assert.doesNotMatch(html,/예약신청|입금대기/)
   }
 })
+test('checking retains only a hidden inert previous account panel; lost sessions render no previous profile',()=>{
+  const Account=Reflect.get(page,'AccountPage')
+  const identity={userId:'customer-a',loginEmail:'private-a@example.test',profile:{version:1,name:'Saved A',phone:'0412345678',contactEmail:'contact-a@example.test',language:'en'}}
+  const render=(state:unknown)=>renderToStaticMarkup(<CustomerAccountContext.Provider value={{...disabledCustomerAccount,enabled:true,ready:true,state} as never}><Account language="en"/></CustomerAccountContext.Provider>)
+  const pending=render({status:'checking',previousIdentity:identity})
+  assert.match(pending,/Checking your session/)
+  assert.match(pending,/<div[^>]*hidden=""[^>]*inert=""/)
+  assert.match(pending,/private-a@example.test/)
+  for(const status of ['guest','unavailable'])assert.doesNotMatch(render({status,previousIdentity:identity}),/private-a@example.test|Saved A|contact-a@example.test/)
+})

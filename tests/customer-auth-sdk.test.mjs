@@ -38,7 +38,7 @@ test('real SDK 23 email token/session/prefs routes and Google URL match pinned 1
     assert.equal(user.userId,'existing-account')
     assert.deepEqual(requests.find(r=>r.path==='/v1/account/tokens/email'),{method:'POST',path:'/v1/account/tokens/email',body:{userId:'unique-test',email:'buyer@example.test'}})
     assert.deepEqual(requests.find(r=>r.path==='/v1/account/sessions/token'),{method:'POST',path:'/v1/account/sessions/token',body:{userId:'existing-account',secret:'123456'}})
-    await auth.saveProfile({version:1,name:'New Name',contactEmail:'contact@example.test',phone:'0412345678',language:'ko'})
+    await auth.saveProfile({version:1,name:'New Name',contactEmail:'contact@example.test',phone:'0412345678',language:'ko'},'existing-account')
     assert.equal(prefs.unrelated,'keep');assert.equal(prefs.verygoodAuCustomer.contactEmail,'contact@example.test')
     await auth.signOut();assert.ok(requests.some(r=>r.method==='DELETE'&&r.path==='/v1/account/sessions/current'))
     const oauth=new URL(account.createOAuth2Session({provider:OAuthProvider.Google,success:'http://localhost:4173/account/auth/callback',failure:'http://localhost:4173/account/auth/callback'}))

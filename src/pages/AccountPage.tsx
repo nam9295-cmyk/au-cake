@@ -19,7 +19,7 @@ function AccountPanel({identity,language}:{identity:CustomerIdentity;language:La
     return ()=>{active.current=false;sequence.current++;detailSequence.current++}
   },[identity.userId,invalidateSession])
   async function save(event:React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();if(saving)return;setSaving(true);setMessage('')
+    event.preventDefault();if(saving||customer.state.status!=='authenticated')return;setSaving(true);setMessage('')
     try{await customer.saveProfile(profile);if(active.current)setMessage(t('Saved. These details will be available for your next order.','저장했습니다. 다음 주문에서 사용할 수 있습니다.'))}
     catch(caught){if(active.current)setMessage(customerAccountCopy(language).error(caught))}
     finally{if(active.current)setSaving(false)}
@@ -58,8 +58,12 @@ function AccountPanel({identity,language}:{identity:CustomerIdentity;language:La
 }
 export function AccountPage({language='en'}:{language?:Language}) {
   const customer=useCustomerAccount(),t=(en:string,ko:string)=>language==='ko'?ko:en
+  const checking=customer.enabled&&customer.state.status==='checking'
+  // Only this private panel retains the old identity; it is not an authenticated session.
+  const identity=customer.enabled?(customer.state.status==='authenticated'?customer.state.identity:customer.state.status==='checking'?customer.state.previousIdentity:undefined):undefined
   return <main className="customer-account-page"><h1>MY ACCOUNT</h1>
-    {!customer.enabled?<p>{t('Customer accounts are currently unavailable. Guest ordering is available.','지금은 회원 기능을 사용할 수 없습니다. 비회원 주문은 가능합니다.')}</p>:customer.state.status==='authenticated'?<AccountPanel key={customer.state.identity.userId} identity={customer.state.identity} language={language}/>:customer.state.status==='checking'?<p role="status">{t('Checking your session…','로그인 상태 확인 중…')}</p>:<><p>{t('Sign in to save your details and view your new cake and chocolate orders.','로그인하고 정보를 저장하거나 새 케이크·초콜릿 주문을 확인하세요.')}</p><button type="button" onClick={customer.openSignIn}>{t('Sign in','로그인')}</button>{customer.state.status==='unavailable'&&<p role="status">{customerAccountCopy(language).unavailable}</p>}</>}
+    {!customer.enabled?<p>{t('Customer accounts are currently unavailable. Guest ordering is available.','지금은 회원 기능을 사용할 수 없습니다. 비회원 주문은 가능합니다.')}</p>:identity?<div hidden={checking} inert={checking}><AccountPanel key={identity.userId} identity={identity} language={language}/></div>:checking?null:<><p>{t('Sign in to save your details and view your new cake and chocolate orders.','로그인하고 정보를 저장하거나 새 케이크·초콜릿 주문을 확인하세요.')}</p><button type="button" onClick={customer.openSignIn}>{t('Sign in','로그인')}</button>{customer.state.status==='unavailable'&&<p role="status">{customerAccountCopy(language).unavailable}</p>}</>}
+    {checking&&<p role="status">{t('Checking your session…','로그인 상태 확인 중…')}</p>}
     <p><a href="/cakes">{t('Continue shopping','계속 둘러보기')}</a> · <a href="/lookup">{t('Order number & phone lookup','예약번호·전화번호 조회')}</a></p>
     <p>{t('To request account deletion or help with your personal information, please use Contact Us. Some order and accounting records may need to be retained.','계정 삭제 또는 개인정보 관련 요청은 Contact Us로 문의해 주세요. 일부 주문·회계 기록은 필요한 기간 동안 보관될 수 있습니다.')} <a href="https://www.instagram.com/verygood_syd/" target="_blank" rel="noreferrer">Contact Us</a></p>
   </main>
