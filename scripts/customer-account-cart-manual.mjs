@@ -13,14 +13,29 @@ const fail=()=>{throw Error('MANUAL_CART_UNVERIFIED')}
 export function manualCartEmergencyReason(state,journal,at=Date.now()){
  if(!Number.isFinite(at)||at<journal.startedAt)return {code:'CLOCK_INVALID',stage:'worker'}
  const opening=journal.phase==='opening'&&Number.isSafeInteger(journal.openingAt)&&at>=journal.openingAt&&at-journal.openingAt<=8000
- if(!opening&&state.accountEnabled!==(journal.phase==='open'&&journal.accountOn===true))return {code:'ACCOUNT_STATE_MISMATCH',stage:'account-state'}
  for(const [id,sessions] of Object.entries(state.sessions))for(const s of sessions){
   if(!Object.values(GOOGLE_ONLY_USERS).some(u=>u.id===id)||s.userId!==id)return {code:'SESSION_USER_NOT_ALLOWED',stage:'session-attribution'}
   if(s.provider!=='google')return {code:'SESSION_PROVIDER_MISMATCH',stage:'session-attribution'}
   const t=Date.parse(s.createdAt)
   if(!Number.isFinite(t)||t<journal.startedAt||t>at)return {code:'SESSION_OUTSIDE_WINDOW',stage:'session-attribution'}
  }
+ if(!opening&&state.accountEnabled!==(journal.phase==='open'&&journal.accountOn===true))return {code:'ACCOUNT_STATE_MISMATCH',stage:'account-state'}
  return null
+}
+export async function probeManualCartState({inspect,readJournal,clock=Date.now}){
+ let before=await readJournal()
+ for(let samples=1;samples<=2;samples++){
+  const state=await inspect(),after=await readJournal(),reason=manualCartEmergencyReason(state,after,clock())
+  // Never discard an unsafe session, clock failure, API error or stable mismatch.
+  if(reason&&reason.code!=='ACCOUNT_STATE_MISMATCH')return {state,reason,samples}
+  if(JSON.stringify(before)===JSON.stringify(after))return {state,reason,samples}
+  const phases=['prepared','opening','open']
+  const advancing=before.kind==='MANUAL_CART'&&after.kind===before.kind&&after.runId===before.runId&&after.startedAt===before.startedAt&&phases.indexOf(before.phase)>=0&&phases.indexOf(after.phase)>phases.indexOf(before.phase)
+  if(!advancing||samples===2)return {state,reason:{code:'JOURNAL_INVALID',stage:'journal'},samples}
+  // A project GET made before Account ON cannot be compared with a later open
+  // journal. Take one fresh sample; all original predicates still apply.
+  before=after
+ }
 }
 export function createManualCartManager({target:input,cliSession,transport=fetch,clock=Date.now,expectedBaseline,onDiagnostic}){
  const target=assertGoogleTestTarget(input),manager=createGoogleOnlyTestManager({target,cliSession,transport,clock,expectedBaseline,onDiagnostic});let attempted=false
@@ -93,9 +108,9 @@ async function monitor(configPath){
   while(!stop){
    try{await access(join(c.directory,'stop.request'));await close();break}catch(e){if(e.code!=='ENOENT'){await close({code:'STOP_MARKER_READ_FAILED',stage:'worker'});break}}
    try{
-    const state=await manager.inspect(),journal=await readGoogleOnlyPrivateJson(c.journalPath),reason=manualCartEmergencyReason(state,journal)
+    const {state,reason,samples}=await probeManualCartState({inspect:manager.inspect,readJournal:()=>readGoogleOnlyPrivateJson(c.journalPath)})
     if(reason){await close(reason);break}
-    await save(c.directory,'heartbeat.json',{pid:process.pid,at:Date.now(),manual:true,accountOn:state.accountEnabled,noDeadline:true})
+    await save(c.directory,'heartbeat.json',{pid:process.pid,at:Date.now(),manual:true,accountOn:state.accountEnabled,noDeadline:true,samples})
    }catch(error){await close(googleOnlyErrorReason(error,{code:'PROBE_EXCEPTION',stage:'probe'}));break}
    for(let i=0;i<15&&!stop;i++)await new Promise(r=>setTimeout(r,1000))
   }

@@ -40,6 +40,57 @@ test('manual monitor remains open after 15 minutes and emergency-closes real pol
  const unauthorized={...state,sessions:{'ca-test-admin-m-20261017':[{userId:'ca-test-admin-m-20261017',provider:'google',createdAt:new Date(now).toISOString()}]}}
  assert.equal(control.manualCartEmergencyReason(unauthorized,{phase:'opening',openingAt:now,startedAt:now},now).code,'SESSION_USER_NOT_ALLOWED')
 })
+test('manual probe resamples OFF metadata captured across the opening to open journal transition',async()=>{
+ assert.equal(typeof control.probeManualCartState,'function')
+ const opening={kind:'MANUAL_CART',runId:mode.runId,startedAt:now,phase:'opening',openingAt:now,accountOn:false}
+ let journal=opening,calls=0
+ const result=await control.probeManualCartState({readJournal:async()=>journal,clock:()=>now+1000,inspect:async()=>{
+  calls++
+  if(calls===1){journal={...opening,phase:'open',accountOn:true};return {accountEnabled:false,sessions:{}}}
+  return {accountEnabled:true,sessions:{}}
+ }})
+ assert.equal(result.reason,null);assert.equal(result.samples,2);assert.equal(calls,2)
+})
+test('manual probe still closes stable state drift and unapproved sessions without resampling',async()=>{
+ assert.equal(typeof control.probeManualCartState,'function')
+ const open={kind:'MANUAL_CART',runId:mode.runId,startedAt:now,phase:'open',accountOn:true}
+ let calls=0
+ const probe=state=>control.probeManualCartState({readJournal:async()=>open,clock:()=>now+1000,inspect:async()=>{calls++;return state}})
+ assert.equal((await probe({accountEnabled:false,sessions:{}})).reason.code,'ACCOUNT_STATE_MISMATCH');assert.equal(calls,1)
+ const bad={accountEnabled:false,sessions:{unknown:[{userId:'unknown',provider:'google',createdAt:new Date(now+500).toISOString()}]}}
+ assert.equal((await probe(bad)).reason.code,'SESSION_USER_NOT_ALLOWED');assert.equal(calls,2)
+})
+test('manual probe allows at most one coherent resample and never retries a network error',async()=>{
+ assert.equal(typeof control.probeManualCartState,'function')
+ let journal={kind:'MANUAL_CART',runId:mode.runId,startedAt:now,phase:'opening',openingAt:now,accountOn:false},calls=0
+ const result=await control.probeManualCartState({readJournal:async()=>journal,clock:()=>now+1000,inspect:async()=>{
+  calls++;journal={...journal,phase:calls===1?'open':'prepared',accountOn:calls===1};return {accountEnabled:calls===1,sessions:{}}
+ }})
+ assert.equal(result.reason.code,'JOURNAL_INVALID');assert.equal(calls,2)
+ calls=0
+ await assert.rejects(control.probeManualCartState({readJournal:async()=>journal,inspect:async()=>{calls++;throw Error('synthetic network failure')}}))
+ assert.equal(calls,1)
+})
+test('manual probe closes when the fresh sample still disagrees after an activation transition',async()=>{
+ let journal={kind:'MANUAL_CART',runId:mode.runId,startedAt:now,phase:'opening',openingAt:now,accountOn:false},calls=0
+ const result=await control.probeManualCartState({readJournal:async()=>journal,clock:()=>now+1000,inspect:async()=>{
+  calls++;journal={...journal,phase:'open',accountOn:true};return {accountEnabled:false,sessions:{}}
+ }})
+ assert.equal(result.reason.code,'ACCOUNT_STATE_MISMATCH');assert.equal(calls,2)
+})
+test('manual probe never hides an unauthorized session during an activation transition',async()=>{
+ let journal={kind:'MANUAL_CART',runId:mode.runId,startedAt:now,phase:'opening',openingAt:now,accountOn:false},calls=0
+ const result=await control.probeManualCartState({readJournal:async()=>journal,clock:()=>now+1000,inspect:async()=>{
+  calls++;journal={...journal,phase:'open',accountOn:true};return {accountEnabled:false,sessions:{unknown:[{userId:'unknown',provider:'google',createdAt:new Date(now+500).toISOString()}]}}
+ }})
+ assert.equal(result.reason.code,'SESSION_USER_NOT_ALLOWED');assert.equal(calls,1)
+})
+test('manual probe preserves the eight second activation allowance without an open-ended grace period',async()=>{
+ const journal={kind:'MANUAL_CART',runId:mode.runId,startedAt:now,phase:'opening',openingAt:now,accountOn:false}
+ let calls=0
+ const result=await control.probeManualCartState({readJournal:async()=>journal,clock:()=>now+8001,inspect:async()=>{calls++;return {accountEnabled:true,sessions:{}}}})
+ assert.equal(result.reason.code,'ACCOUNT_STATE_MISMATCH');assert.equal(calls,1)
+})
 test('manual Pages budget is exactly OPEN10/CLOSED11, never a repeat OPEN or third deployment',async()=>{
  assert.equal(typeof build.createManualCartPages,'function')
  const dir=await mkdtemp(join(tmpdir(),'manual-cart-pages-')),artifactDirectory=join(dir,'artifact');await mkdir(artifactDirectory)
