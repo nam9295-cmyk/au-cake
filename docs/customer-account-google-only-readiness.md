@@ -1,5 +1,7 @@
 # Google-only 로그인 단독 인수 — 준비 결과
 
+> **후속 실제 실행:** 사용자 `시작` 승인으로 OPEN8·Account ON을 수행했고 G 로그인/세션/새로고침은 사용자 Chrome에서 PASS했다. 프로필 단계 전 안전 감시가 조기 종료해 전체 인수는 미완료다. Account OFF403·세션0·Function OFF/B6·CLOSED9와 운영 불변을 확인했다. 현재 Pages **9/9**, Function **8/120**. [실제 결과와 UNVERIFIED 중단 원인](customer-account-google-only-acceptance-results.md)을 확인한다. 아래는 실행 전 준비 기록이다.
+
 2026-10-18 KST. Branch `feat/customer-account`, 시작 커밋 `204421a`. [승인 계획](superpowers/plans/2026-10-18-customer-account-google-only-acceptance.md)의 로컬 준비와 CLOSED 사전 점검을 수행했다. **사용자의 새 `시작` 지시 전까지 Account ON·Pages 배포·실제 인증 창을 실행하지 않는다.**
 
 ## 구현과 보호 경계

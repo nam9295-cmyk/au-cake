@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **Google-only 실제 인수:** [실행 결과](customer-account-google-only-acceptance-results.md). 사용자 Chrome의 G Google 로그인·Account/session·새로고침 PASS. 프로필 저장 전에 안전 감시가 조기 종료해 G 프로필/명시적 로그아웃·H는 NOT RUN, 전체 인수 미완료다. 최초 중단 predicate는 UNVERIFIED이며 Account OFF403·세션0·Function OFF/B6·사이트 CLOSED 복원과 운영 불변은 PASS다. Pages **9/9 소진**, Function **8/120 불변**. 재시험·추가 배포는 별도 승인 대상이다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 아래는 보존된 이전 준비/실행 기록이다.
+
 > **Google-only 로컬 준비:** [준비 결과와 사용자 클릭 순서](customer-account-google-only-readiness.md). 신규26개 회귀 포함 전체2,072 PASS/0 FAIL/기존 SKIP1, 계정295 PASS. 실제 OFF403/B6/CLOSED·운영4개/Function6개 및 test 보호 설정 검증, idempotent Account OFF1회만 수행했다. 사용자의 새 `시작` 전 ON/Pages 배포/새900초 창0이며 누적8/120·Pages7/9 유지. 실제 Google/profile 인수는 NOT RUN이다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
 
 > **Google 로그인 단독 인수 제안:** [최소 실행 계획](superpowers/plans/2026-10-18-customer-account-google-only-acceptance.md). 기존 G/H·상한2를 유지하고 제품 인증/프로필만 시험한다. Function 실행/배포0, OPEN8/CLOSED9·새 최대900초 Account 창은 **별도 승인 전 미실행**이다. 현재는 계획 작성만 완료, 누적8/120·Pages7/9 불변. D1/backend 최적화·실제 MY ORDERS 인수와 분리하며 **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
