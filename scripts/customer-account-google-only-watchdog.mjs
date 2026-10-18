@@ -92,6 +92,7 @@ function diagnosticWriter(directory){return event=>{
   writeSync(fd,JSON.stringify(event)+'\n')
  }finally{closeSync(fd)}
 }}
+export {diagnosticWriter as createGoogleOnlyDiagnosticWriter}
 export async function runGoogleOnlyWatchdog(configPath){
  process.umask(0o077);const c=await configAt(configPath)
  const onDiagnostic=diagnosticWriter(c.directory)
