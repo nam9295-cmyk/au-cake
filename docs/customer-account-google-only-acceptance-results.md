@@ -1,5 +1,7 @@
 # Google-only 실제 인수 결과 — G 로그인 성공, 조기 안전 종료
 
+> 후속 [로컬 watchdog 조사·진단 보완](customer-account-google-only-watchdog-investigation.md): 기존 기록을 보존한 채 세션/API/lease/네트워크/drift별 종료 사유와 시간을 추가했다. 과거 최초 원인은 계속 **UNVERIFIED**, G 로그인 PASS와 실제 인수의 미완료 판정은 그대로다. 추가 원격 실행·배포는 없었다.
+
 2026-10-18 KST. `feat/customer-account`, 실행 시작 HEAD `cfb3330`. 사용자의 새 `시작!` 지시와 [승인 계획](superpowers/plans/2026-10-18-customer-account-google-only-acceptance.md)에 따라 기존 테스트 프로젝트에서만 실행했다. **전체 인수는 미완료이며 현재 Account OFF / Function OFF / 사이트 CLOSED다. 자동 재시도·새 창·시간 연장은 하지 않았다.**
 
 ## 실행 범위와 시간

@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **Google-only watchdog 로컬 조사:** [기록 대조와 진단 보완](customer-account-google-only-watchdog-investigation.md). 과거 중단 원인 UNVERIFIED·G 로그인/세션/새로고침 PASS를 보존한다. 종료 사유·API/세션/lease/drift·복구 소요 시간만 로컬에서 계측했으며5초 기준·자동 OFF는 유지한다. 추가 원격 실행/배포0, Pages9/9·Function8/120 불변. 새 시험은 별도 승인 전 금지다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
+
 > **Google-only 실제 인수:** [실행 결과](customer-account-google-only-acceptance-results.md). 사용자 Chrome의 G Google 로그인·Account/session·새로고침 PASS. 프로필 저장 전에 안전 감시가 조기 종료해 G 프로필/명시적 로그아웃·H는 NOT RUN, 전체 인수 미완료다. 최초 중단 predicate는 UNVERIFIED이며 Account OFF403·세션0·Function OFF/B6·사이트 CLOSED 복원과 운영 불변은 PASS다. Pages **9/9 소진**, Function **8/120 불변**. 재시험·추가 배포는 별도 승인 대상이다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 아래는 보존된 이전 준비/실행 기록이다.
 
 > **Google-only 로컬 준비:** [준비 결과와 사용자 클릭 순서](customer-account-google-only-readiness.md). 신규26개 회귀 포함 전체2,072 PASS/0 FAIL/기존 SKIP1, 계정295 PASS. 실제 OFF403/B6/CLOSED·운영4개/Function6개 및 test 보호 설정 검증, idempotent Account OFF1회만 수행했다. 사용자의 새 `시작` 전 ON/Pages 배포/새900초 창0이며 누적8/120·Pages7/9 유지. 실제 Google/profile 인수는 NOT RUN이다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
