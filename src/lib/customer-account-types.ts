@@ -4,6 +4,7 @@ import type { RenewalLine } from '../../appwrite-functions/reservation-api/src/a
 export type CustomerProfile = {version:1; name:string; contactEmail:string; phone:string; language:'en'|'ko'}
 export type CustomerIdentity = {userId:string; loginEmail:string; profile:CustomerProfile}
 export type CustomerAccountHealth = {enabled:boolean; ready:boolean}
+export type CustomerOrdersStatus = 'idle'|'checking'|'ready'|'unavailable'
 export type CustomerAuthState = {status:'checking';previousIdentity?:CustomerIdentity} | {status:'guest'|'unavailable'} | {status:'authenticated'; identity:CustomerIdentity}
 export type CustomerOrderSummary = {
   id:string; reservationNumber:string; createdAt:string; pickupDate:string; pickupTime:string
@@ -18,5 +19,6 @@ export type CustomerOrderDetail = CustomerOrderSummary & {
   contact:{name:string; phone:string; email:string}; requestNote:string; view:CustomerOrderView
 }
 export type CustomerOrdersPage = {orders:CustomerOrderSummary[]; nextCursor:string|null}
+export type CustomerOrderService = {list:(options?:{cursor?:string})=>Promise<CustomerOrdersPage>;detail:(id:string)=>Promise<CustomerOrderDetail>}
 export type CustomerCheckoutDraft={version:1;kind:'renewal'|'legacy';flowId:string;savedAt:number;returnTo:'/cart'|'/reserve';requestId:string;
   form:Record<string,string|number|boolean>;dirtyFields:string[];checkoutContext:Record<string,unknown>;cartSnapshot:unknown[];cartSignature:string}

@@ -10,7 +10,8 @@ test('disabled provider renders existing checkout without making any Account or 
   assert.equal(typeof Provider,'function')
   let calls=0
   const auth=new Proxy({}, {get(){calls++;throw Error('disabled')}})
-  const html=renderToStaticMarkup(<Provider enabled={false} auth={auth} health={()=>{calls++;throw Error('disabled')}}><form><input name="customerName" defaultValue="Already typed"/></form></Provider>)
+  const orders=new Proxy({}, {get(){calls++;throw Error('disabled')}})
+  const html=renderToStaticMarkup(<Provider enabled={false} auth={auth} orderService={orders}><form><input name="customerName" defaultValue="Already typed"/></form></Provider>)
   assert.match(html,/Already typed/);assert.equal(calls,0)
 })
 test('optional bilingual dialog offers Google, Email OTP and guest without passwords',()=>{

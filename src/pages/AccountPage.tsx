@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from 'react'
 import {useCustomerAccount} from '../lib/customer-account-context'
 import type {CustomerIdentity,CustomerOrderDetail as Detail,CustomerOrderSummary,CustomerProfile} from '../lib/customer-account-types'
 import type {Language} from '../lib/i18n'
-import {getCustomerOrders,getCustomerOrder,classifyCustomerOrder} from '../lib/customer-orders'
+import {classifyCustomerOrder} from '../lib/customer-orders'
 import {CustomerOrderDetail} from '../components/CustomerOrderDetail'
 import {customerAccountCopy,customerOrderStatusLabel} from '../lib/customer-account-copy'
 
@@ -11,13 +11,13 @@ function AccountPanel({identity,language}:{identity:CustomerIdentity;language:La
   const [profile,setProfile]=useState<CustomerProfile>(identity.profile),[saving,setSaving]=useState(false),[message,setMessage]=useState('')
   const [orders,setOrders]=useState<CustomerOrderSummary[]>([]),[cursor,setCursor]=useState<string|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[detail,setDetail]=useState<Detail|null>(null)
   const active=useRef(false),operation=useRef(0),detailOperation=useRef(0)
-  const {invalidateSession}=customer
+  const {invalidateSession,getOrders,getOrder}=customer
   useEffect(()=>{
     active.current=true;const generation=++operation.current
-    getCustomerOrders().then(page=>{if(active.current&&generation===operation.current){setOrders(page.orders);setCursor(page.nextCursor);setError('')}}).catch(caught=>{if(active.current&&generation===operation.current){setOrders([]);setDetail(null);setError('orders');if(caught instanceof Error&&caught.message==='CUSTOMER_UNAUTHORIZED')invalidateSession()}}).finally(()=>{if(active.current&&generation===operation.current)setLoading(false)})
+    getOrders().then(page=>{if(active.current&&generation===operation.current){setOrders(page.orders);setCursor(page.nextCursor);setError('')}}).catch(caught=>{if(active.current&&generation===operation.current){setOrders([]);setCursor(null);setDetail(null);setError('orders');if(caught instanceof Error&&caught.message==='CUSTOMER_UNAUTHORIZED')invalidateSession()}}).finally(()=>{if(active.current&&generation===operation.current)setLoading(false)})
     const sequence=operation,detailSequence=detailOperation
     return ()=>{active.current=false;sequence.current++;detailSequence.current++}
-  },[identity.userId,invalidateSession])
+  },[identity.userId,invalidateSession,getOrders])
   async function save(event:React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();if(saving||customer.state.status!=='authenticated')return;setSaving(true);setMessage('')
     try{await customer.saveProfile(profile);if(active.current)setMessage(t('Saved. These details will be available for your next order.','저장했습니다. 다음 주문에서 사용할 수 있습니다.'))}
@@ -26,13 +26,13 @@ function AccountPanel({identity,language}:{identity:CustomerIdentity;language:La
   }
   async function load(next?:string) {
     if(loading)return;const generation=operation.current;setLoading(true);setError('')
-    try{const page=await getCustomerOrders(next?{cursor:next}:{});if(active.current&&generation===operation.current){setOrders(current=>next?[...current,...page.orders.filter(o=>!current.some(p=>p.id===o.id))]:page.orders);setCursor(page.nextCursor)}}
-    catch(caught){if(active.current&&generation===operation.current){setError('orders');if(caught instanceof Error&&caught.message==='CUSTOMER_UNAUTHORIZED')invalidateSession()}}
+    try{const page=await getOrders(next?{cursor:next}:{});if(active.current&&generation===operation.current){setOrders(current=>next?[...current,...page.orders.filter(o=>!current.some(p=>p.id===o.id))]:page.orders);setCursor(page.nextCursor)}}
+    catch(caught){if(active.current&&generation===operation.current){setOrders([]);setCursor(null);setDetail(null);setError('orders');if(caught instanceof Error&&caught.message==='CUSTOMER_UNAUTHORIZED')invalidateSession()}}
     finally{if(active.current&&generation===operation.current)setLoading(false)}
   }
   async function show(id:string) {
     const generation=++detailOperation.current;setDetail(null);setError('')
-    try{const order=await getCustomerOrder(id);if(active.current&&generation===detailOperation.current)setDetail(order)}
+    try{const order=await getOrder(id);if(active.current&&generation===detailOperation.current)setDetail(order)}
     catch(caught){if(active.current&&generation===detailOperation.current){setError('detail');if(caught instanceof Error&&caught.message==='CUSTOMER_UNAUTHORIZED')invalidateSession()}}
   }
   return <>
@@ -45,6 +45,7 @@ function AccountPanel({identity,language}:{identity:CustomerIdentity;language:La
       <button type="submit" className="primary-button" disabled={saving}>{saving?t('Saving…','저장 중…'):t('Save details','정보 저장')}</button>
       <p role="status">{message}</p>
     </form>
+    {customer.ordersStatus==='unavailable'?<p role="alert">{customerAccountCopy(language).ordersUnavailable} <button type="button" disabled={loading} onClick={()=>void load()}>{t('Try again','다시 시도')}</button></p>:<>
     {(['upcoming','past'] as const).map(group=><section key={group}><h2>{group==='upcoming'?t('Upcoming Orders','예정된 주문'):t('Past Orders','지난 주문')}</h2>
       <ul className="customer-orders">{orders.filter(o=>classifyCustomerOrder(o)===group).map(o=><li key={o.id}><button type="button" onClick={()=>void show(o.id)}><strong>{o.reservationNumber}</strong><span>{o.pickupDate} {o.pickupTime} · {customerOrderStatusLabel(o.status,language)}</span><span>{o.totalPriceCents===null?t('To be confirmed','확인 예정'):new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(o.totalPriceCents/100)}</span></button></li>)}</ul>
       {!loading&&!orders.some(o=>classifyCustomerOrder(o)===group)&&<p>{cursor?t('No orders in this group among the loaded orders.','불러온 주문 중 해당하는 주문이 없습니다.'):t('No orders in this group.','해당하는 주문이 없습니다.')}</p>}
@@ -53,6 +54,7 @@ function AccountPanel({identity,language}:{identity:CustomerIdentity;language:La
     {cursor&&<><p>{t('These groups show loaded orders. More orders can be loaded.','불러온 주문을 표시하고 있습니다. 더 많은 주문을 불러올 수 있습니다.')}</p><button type="button" disabled={loading} onClick={()=>void load(cursor)}>{t('Load more orders','주문 더 불러오기')}</button></>}
     {error&&<p role="alert">{error==='detail'?t('Order details are unavailable.','주문 상세를 불러올 수 없습니다.'):t('Orders could not be loaded. Try again.','주문을 불러오지 못했습니다. 다시 시도해 주세요.')} <button type="button" disabled={loading} onClick={()=>void load()}>{t('Try again','다시 시도')}</button></p>}
     {detail&&<CustomerOrderDetail detail={detail} language={language} onClose={()=>setDetail(null)}/>}
+    </>}
     <button type="button" onClick={()=>void customer.signOut().catch(caught=>setMessage(customerAccountCopy(language).error(caught)))}>{t('Sign out','로그아웃')}</button>
   </>
 }

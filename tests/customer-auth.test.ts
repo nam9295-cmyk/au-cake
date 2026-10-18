@@ -43,6 +43,13 @@ test('Google requires no existing session, same-origin callback with only random
   await assert.rejects(auth.sendEmail('other@example.test'),/ACCOUNT_SWITCH_REQUIRED/)
   assert.equal(calls.filter(c=>c[0]==='logout').length,0)
 })
+test('Account service OFF blocks OAuth at the fresh Account check without creating a session or redirect',async()=>{
+  const {auth,account,calls}=setup()
+  account.get=async()=>{throw Object.assign(Error('service disabled'),{code:403,type:'general_service_disabled'})}
+  await assert.rejects(auth.restore(),/AUTH_UNAVAILABLE/)
+  await assert.rejects(auth.startGoogle({flowId:'11111111-1111-4111-8111-111111111111'}),/AUTH_UNAVAILABLE/)
+  assert.equal(calls.length,0)
+})
 test('profile saves merge namespace and preserve immutable prior order snapshots',async()=>{
   const {auth,calls,setUser}=setup()
   setUser({$id:'a',status:true,email:'login@example.test',name:'Google Name',prefs:{unrelated:'keep'}})

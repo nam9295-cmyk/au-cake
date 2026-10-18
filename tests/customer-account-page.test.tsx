@@ -11,7 +11,7 @@ test('account disabled/guest/checking and bilingual profile separate login email
   const Account=Reflect.get(page,'AccountPage');assert.equal(typeof Account,'function')
   assert.match(renderToStaticMarkup(<Account language="en"/>),/unavailable/)
   for(const language of ['en','ko']) {
-    const context={...disabledCustomerAccount,enabled:true,ready:true,state:{status:'authenticated',identity:{userId:'customer-a',loginEmail:'login@example.test',profile:{version:1,name:'Saved Name',phone:'0412345678',contactEmail:'contact@example.test',language:'en'}}}}
+    const context={...disabledCustomerAccount,enabled:true,ordersStatus:'ready',state:{status:'authenticated',identity:{userId:'customer-a',loginEmail:'login@example.test',profile:{version:1,name:'Saved Name',phone:'0412345678',contactEmail:'contact@example.test',language:'en'}}}}
     const html=renderToStaticMarkup(<CustomerAccountContext.Provider value={context as never}><Account language={language}/></CustomerAccountContext.Provider>)
     assert.match(html,/value="login@example.test"[^>]*readOnly|readOnly[^>]*value="login@example.test"/)
     assert.match(html,/value="contact@example.test"/);assert.match(html,/Saved Name/)
@@ -34,7 +34,7 @@ test('customer detail renders frozen legacy/Renewal prices without admin/coupon 
 test('checking retains only a hidden inert previous account panel; lost sessions render no previous profile',()=>{
   const Account=Reflect.get(page,'AccountPage')
   const identity={userId:'customer-a',loginEmail:'private-a@example.test',profile:{version:1,name:'Saved A',phone:'0412345678',contactEmail:'contact-a@example.test',language:'en'}}
-  const render=(state:unknown)=>renderToStaticMarkup(<CustomerAccountContext.Provider value={{...disabledCustomerAccount,enabled:true,ready:true,state} as never}><Account language="en"/></CustomerAccountContext.Provider>)
+  const render=(state:unknown)=>renderToStaticMarkup(<CustomerAccountContext.Provider value={{...disabledCustomerAccount,enabled:true,ordersStatus:'ready',state} as never}><Account language="en"/></CustomerAccountContext.Provider>)
   const pending=render({status:'checking',previousIdentity:identity})
   assert.match(pending,/Checking your session/)
   assert.match(pending,/<div[^>]*hidden=""[^>]*inert=""/)

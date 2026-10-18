@@ -13,6 +13,7 @@ export function customerAccountCopy(language:Language) {
     sending:t('Sending…','발송 중…'),working:t('Please wait…','잠시 기다려 주세요…'),close:t('Close sign in','로그인 닫기'),sent:t('Check your inbox for your verification code.','이메일에서 인증번호를 확인해 주세요.'),
     cooldown:(seconds:number)=>t(`Resend in ${seconds}s`,`${seconds}초 후 재전송`),
     unavailable:t('Sign in is unavailable. You can continue as a guest.','지금은 로그인할 수 없습니다. 비회원으로 계속할 수 있습니다.'),
+    ordersUnavailable:t('Orders are temporarily unavailable. You are still signed in. Please try again later.','지금은 주문 내역을 불러올 수 없습니다. 로그인은 유지됩니다. 잠시 후 다시 시도해 주세요.'),
     error:(error:unknown)=>{
       const code=error instanceof Error?error.message:''
       if(code==='INVALID_EMAIL')return t('Enter a valid email address.','올바른 이메일 주소를 입력해 주세요.')

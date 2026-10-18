@@ -1,7 +1,7 @@
 async (page) => {
   const check=(condition,message)=>{if(!condition)throw Error(message)}
   const fixture=await (await page.request.get('http://localhost:4173/tests/fixtures/customer-account/browser-orders.json')).json()
-  let actor='a',expired=false,ready=true,holdRestores=false,restoreStarted,holdDetail=false,detailStarted,releaseDetail,holdSave=false,saveStarted,releaseSave
+  let actor='a',expired=false,ready=true,accountOff=false,holdRestores=false,restoreStarted,holdDetail=false,detailStarted,releaseDetail,holdSave=false,saveStarted,releaseSave
   const pendingRestores=[],errors=[],calls={list:0,detail:0,save:0,logout:0},prefs={
     a:{verygoodAuCustomer:{version:1,name:'Saved A',contactEmail:'contact-a@example.test',phone:'0412345678',language:'en'}},
     b:{verygoodAuCustomer:{version:1,name:'Saved B',contactEmail:'contact-b@example.test',phone:'0498765432',language:'en'}},
@@ -16,8 +16,8 @@ async (page) => {
     const execution=result=>respond({responseStatusCode:200,responseBody:JSON.stringify({ok:true,result})})
     if(url.pathname.includes('/functions/')) {
       const {action,data}=JSON.parse(request.postDataJSON().body)
-      if(action==='customer-account-health')return execution({enabled:true,ready})
-      if(action==='customer-orders'){calls.list++;return execution(fixture[actor])}
+      check(action!=='customer-account-health','auth restore made a heavy readiness request')
+      if(action==='customer-orders'){calls.list++;return ready?execution(fixture[actor]):respond({responseStatusCode:503,responseBody:JSON.stringify({ok:false,code:'CUSTOMER_ACCOUNT_NOT_READY'})})}
       if(action==='customer-order') {
         calls.detail++
         if(holdDetail)return new Promise(resolve=>{releaseDetail=()=>resolve(execution(fixture.details[data.id]));detailStarted()})
@@ -38,6 +38,7 @@ async (page) => {
       return respond({userId:'customer-'+actor,expire:'2099-01-01T00:00:00Z'})
     }
     if(url.pathname.endsWith('/account')) {
+      if(accountOff)return respond({code:403,type:'general_service_disabled'},403)
       const body={$id:'customer-'+actor,status:true,email:'login-'+actor+'@example.test',name:'Account '+actor,prefs:prefs[actor]}
       if(holdRestores)return new Promise(resolve=>{pendingRestores.push(()=>resolve(expired?respond({code:401},401):respond(body)));restoreStarted()})
       return expired?respond({code:401},401):respond(body)
@@ -130,7 +131,11 @@ async (page) => {
   check(await name.count()===0,'explicit auth change retained the old session panel')
   await finishRefresh()
   check(await name.inputValue()==='Saved B','explicit auth change reused an old session draft')
-  ready=false;await page.evaluate(()=>window.dispatchEvent(new Event('focus')))
+  const listBefore=calls.list
+  ready=false;await beginRefresh();await finishRefresh()
+  check(await name.inputValue()==='Saved B','order outage removed the signed-in profile')
+  check(calls.list===listBefore,'focus repeated the order readiness/read')
+  accountOff=true;await page.evaluate(()=>window.dispatchEvent(new Event('focus')))
   await page.getByText('Sign in is unavailable. You can continue as a guest.').waitFor()
   check(await name.count()===0&&await page.locator('.customer-order-detail').count()===0,'failed verification retained private data')
   check(calls.logout===0,'background verification deleted shared session')
