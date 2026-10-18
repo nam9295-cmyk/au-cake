@@ -208,6 +208,8 @@ Gallery raw config 지문 예외도 해당 보고서에 남겼다. 정상 조회
 
 ## B7: 실제 인증·주문 인수
 
+**2026-10-18 Google-only 준비 계획 작성, 실행 미승인:** [B7 준비 결과](../../customer-account-b7-preflight.md), [상세 계획](2026-10-18-customer-account-b7-google-orders.md), [제안 manifest](../../customer-account-b7-execution-manifest.json). 원래 B7의 OTP/교차 UID 범위는 B5 release blocker로 남기며 이번 준비가 ON/주문 생성 승인이 되지 않는다.
+
 **승인 A7 필요:** 합성 Auth users·주문·쿠폰 및 한정된 테스트 메일, 실제 브라우저/실기기 검증. 운영 데이터 사용/실제 결제 없음.
 
 - [ ] [최초 조사 A01–A11](../../customer-account-auth-test-environment.md)의 case를 test 프로젝트에 한정해 실행한다. 신규 Google/OTP, 6자리 오류·만료·재전송, 세션 유지/로그아웃을 확인한다.

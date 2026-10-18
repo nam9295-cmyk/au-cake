@@ -38,6 +38,8 @@ Gallery raw project-config 지문 예외는 B5 보고서에 원인 추론과 한
 
 ## 격리 환경의 필수 gate
 
+[B7 Google-only 준비 계획](customer-account-b7-preflight.md)을 작성했으나 guard 구현·실제 활성화/주문 인수는 아직 미실행이다. 15분 제한·잔여 공개 invocation 위험과 정확한 자원 범위를 최종 승인받은 뒤 선행 검증을 통과해야 시작한다. B5의 미완료 체크박스는 그대로 유지한다.
+
 사용자가 선택한 환경은 **B안: very-server의 기존 Appwrite 1.8.1 인스턴스 안에 별도 nonproduction project 생성**이다. 새 호스트·Compose·Appwrite 설치는 하지 않는다. [현재 사전 점검과 단계별 승인 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 먼저 따른다. `verygood-au-account-test`의 B1/B2 자원과 B3 Google SDK, B4 테스트 SMTP 일반 메일 검증은 별도 승인 아래 완료했다. B6의 테스트 Function 1개는 차단 상태로 배포·검증했으나 공통 SMTP·실제 OTP·제품 회원 주문 통합은 미실행이다. Account OFF·다른 인증 7개 OFF·test authLimit 2를 유지한다.
 
 SMTP/OAuth의 직접 SQL JSON은 암호화 envelope여서 enabled null을 미설정으로 해석하지 않는다. 기존 프로젝트의 실제 override/provider 상태는 별도 승인된 Console/API metadata 확인 대상이다. test project의 Custom SMTP는 B4에서 `auth-test.verygood-chocolate.com` 전용 Resend Key로 ON 설정했다. 도메인 제한은 수신자 제한이 아니며 1건 승인 주소 제한은 로컬 helper의 통제다. Google provider는 B3에서 등록했지만 Account OFF가 신규 client 인증을 차단한다. 기본 Google 로그인은 Testing 사용자 목록만으로 접근을 제한하지 못하므로 후속 재활성화의 시간·사용자 상한/추가 접근 제한을 다시 승인받는다.
