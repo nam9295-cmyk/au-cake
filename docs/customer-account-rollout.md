@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **Google-only 로컬 준비:** [준비 결과와 사용자 클릭 순서](customer-account-google-only-readiness.md). 신규26개 회귀 포함 전체2,072 PASS/0 FAIL/기존 SKIP1, 계정295 PASS. 실제 OFF403/B6/CLOSED·운영4개/Function6개 및 test 보호 설정 검증, idempotent Account OFF1회만 수행했다. 사용자의 새 `시작` 전 ON/Pages 배포/새900초 창0이며 누적8/120·Pages7/9 유지. 실제 Google/profile 인수는 NOT RUN이다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
+
 > **Google 로그인 단독 인수 제안:** [최소 실행 계획](superpowers/plans/2026-10-18-customer-account-google-only-acceptance.md). 기존 G/H·상한2를 유지하고 제품 인증/프로필만 시험한다. Function 실행/배포0, OPEN8/CLOSED9·새 최대900초 Account 창은 **별도 승인 전 미실행**이다. 현재는 계획 작성만 완료, 누적8/120·Pages7/9 불변. D1/backend 최적화·실제 MY ORDERS 인수와 분리하며 **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
 
 > **최신 로컬 제품 개선:** [인증/주문 상태 분리와 검증 결과](customer-account-auth-orders-separation.md). Account 인증에서 reservation health 선행 호출을 제거하고 MY ORDERS의 실제 API 결과로 주문 상태를 판단한다. 서버 JWT/owner/ACL/readiness는 그대로이며 17→5회 최적화는 설계 제안만 있다. 로컬 전체 2,046 PASS/0 FAIL/기존 SKIP1, 실제 Google·MY ORDERS 인수 NOT RUN. 이번 원격 작업0·누적8/120·Pages7/9 불변. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 아래는 기존 진단/실행 기록이다.
