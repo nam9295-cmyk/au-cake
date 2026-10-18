@@ -1,8 +1,8 @@
 import {createHmac,timingSafeEqual} from 'node:crypto'
 // Appwrite 1.8.1 stores requestPath but filters custom requestHeaders. Path contains
 // only an expiring MAC, nonce, timestamp and body digest; never JWT or signing key.
-export function createB7ExecutionMonitor({secret,startsAt,endsAt,baselineIds=[]}) {
- if(!/^[A-Za-z0-9_-]{43}$/.test(secret||'')||!Number.isSafeInteger(startsAt)||!Number.isSafeInteger(endsAt)||endsAt<=startsAt||endsAt-startsAt>900000)throw Error('B7_MONITOR_REJECTED')
+export function createB7ExecutionMonitor({secret,startsAt,endsAt,baselineIds=[],previousExecutions=0}) {
+ if(!/^[A-Za-z0-9_-]{43}$/.test(secret||'')||!Number.isSafeInteger(startsAt)||!Number.isSafeInteger(endsAt)||endsAt<=startsAt||endsAt-startsAt>900000||!Number.isInteger(previousExecutions)||previousExecutions<0||previousExecutions>120)throw Error('B7_MONITOR_REJECTED')
  const baseline=new Set(baselineIds),ids=new Map(),nonces=new Map();let failed=false
  return {observe(executions){
   if(!Array.isArray(executions)||executions.length>120)failed=true
@@ -20,7 +20,7 @@ export function createB7ExecutionMonitor({secret,startsAt,endsAt,baselineIds=[]}
    nonces.set(nonce,x.$id);ids.set(x.$id,x.requestPath)
    if(x.status==='failed'||x.responseBody&&String(x.responseBody).includes('B7_GUARD_REJECTED'))failed=true
   }
-  if(ids.size>120)failed=true
-  return {unexpectedExecutions:failed?1:0,executions:ids.size,budgetReached:ids.size>=120}
+  if(ids.size+previousExecutions>120)failed=true
+  return {unexpectedExecutions:failed?1:0,executions:ids.size+previousExecutions,budgetReached:ids.size+previousExecutions>=120}
  }}
 }

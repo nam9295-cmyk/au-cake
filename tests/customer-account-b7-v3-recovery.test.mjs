@@ -64,6 +64,7 @@ test('live watchdog wiring polls only metadata, detects an unsigned execution, a
   const p=new URL(url).pathname.replace('/v1','')
   if(p==='/databases/ca_test_cake_au/collections/email_deliveries/documents')return Response.json({total:emailQueued?1:0,documents:[]})
   if(p==='/health/version')return Response.json({version:'1.8.1'})
+  if(p==='/test-window.json')return Response.json({enabled:false})
   if(p==='/users')return Response.json({total:3,users:m.requiredBeforeOpen.exactUsers.map($id=>({$id,status:true}))})
   if(p.endsWith('/executions'))return Response.json({executions:unexpected?[{$id:'unknown',requestPath:'/',requestMethod:'POST'}]:[]})
   if(p.startsWith('/projects/')&&!p.includes(m.target.projectId))return Response.json({$id:p.split('/').at(-1),authEmailOtp:true})
@@ -74,5 +75,14 @@ test('live watchdog wiring polls only metadata, detects an unsigned execution, a
  emailQueued=true;assert.equal((await adapter.probe()).metadataChanged,true);emailQueued=false
  s.p.smtpSenderEmail='unexpected@example.invalid';assert.equal((await adapter.probe()).metadataChanged,true);delete s.p.smtpSenderEmail
  unexpected=true;assert.equal((await adapter.probe()).unexpectedExecutions,1)
+ unexpected=false;s.p.serviceStatusForAccount=false;s.p.authLimit=2;s.f.enabled=false;s.f.execute=[];s.f.deploymentId=m.target.baseDeploymentId
+ for(const key of Object.keys(m.restoreState.serverFlags))s.vars.find(v=>v.key===key).value='false'
+ const closedAdapter=await createB7LiveWatchdogAdapters({...config,closedPreflight:true},{transport,readMetrics:async()=>({memoryAvailableBytes:8*2**30,diskAvailableBytes:80*2**30,load1:0,oomKills:0}),siteOff:async()=>{}})
+ assert.equal((await closedAdapter.probe()).metadataChanged,false)
+ s.vars.find(v=>v.key==='AU_RENEWAL_WRITES_ENABLED').value='true';assert.equal((await closedAdapter.probe()).metadataChanged,true)
+ s.state.continuation={priorExecutions:3};await writeFile(config.statePath,JSON.stringify(s.state),{mode:0o600});let deployments=0
+ const continuation=await createB7LiveWatchdogAdapters({...config,priorExecutionCount:3},{transport,siteOff:async()=>{deployments++}})
+ await continuation.operations.siteOff();assert.equal(deployments,0)
+ s.state.attempts.pagesOpen=true;await writeFile(config.statePath,JSON.stringify(s.state),{mode:0o600});await continuation.operations.siteOff();assert.equal(deployments,1)
  assert.ok(s.calls.every(c=>c.method==='GET'))
 })
