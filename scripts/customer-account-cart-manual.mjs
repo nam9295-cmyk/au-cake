@@ -4,7 +4,7 @@ import {pathToFileURL,fileURLToPath} from 'node:url'
 import {resolve,join} from 'node:path'
 import {createGoogleOnlyTestManager,GOOGLE_TEST_TARGET,assertGoogleTestTarget} from './customer-account-google-test.mjs'
 import {readGoogleOnlyPrivateJson} from './customer-account-google-only-live.mjs'
-import {googleOnlyErrorReason,safeGoogleOnlyReason} from './customer-account-google-only-diagnostics.mjs'
+import {googleOnlyErrorReason,safeGoogleOnlyReason,googleOnlyDiagnosticError} from './customer-account-google-only-diagnostics.mjs'
 import {createGoogleOnlyDiagnosticWriter} from './customer-account-google-only-watchdog.mjs'
 import {GOOGLE_ONLY_USERS} from '../tools/customer-account-google-only/contract.mjs'
 import {assertManualCartMode} from '../tools/customer-account-cart-manual/contract.mjs'
@@ -35,6 +35,20 @@ export async function probeManualCartState({inspect,readJournal,clock=Date.now})
   // A project GET made before Account ON cannot be compared with a later open
   // journal. Take one fresh sample; all original predicates still apply.
   before=after
+ }
+}
+export async function probeManualCartWithNetworkRecovery({probe,pause=ms=>new Promise(r=>setTimeout(r,ms)),onTransient=()=>{},shouldStop=()=>false}){
+ for(let networkAttempts=1;networkAttempts<=3;networkAttempts++){
+  if(await shouldStop())throw googleOnlyDiagnosticError('STOP_MARKER','worker')
+  try{return {...await probe(),networkAttempts}}
+  catch(error){
+   const reason=googleOnlyErrorReason(error,{code:'PROBE_EXCEPTION',stage:'probe'})
+   // Only failed read probes are repeated. Confirmed policy/session drift,
+   // owner denial, journal errors and all writes keep their immediate stop.
+   if(!['API_NETWORK_EXCEPTION','API_TIMEOUT'].includes(reason.code)||networkAttempts===3)throw error
+   await onTransient(reason,networkAttempts)
+   await pause(2000)
+  }
  }
 }
 export function createManualCartManager({target:input,cliSession,transport=fetch,clock=Date.now,expectedBaseline,onDiagnostic}){
@@ -110,9 +124,14 @@ async function monitor(configPath){
   while(!stop){
    try{await access(join(c.directory,'stop.request'));await close();break}catch(e){if(e.code!=='ENOENT'){await close({code:'STOP_MARKER_READ_FAILED',stage:'worker'});break}}
    try{
-    const {state,reason,samples}=await probeManualCartState({inspect:manager.inspect,readJournal:()=>readGoogleOnlyPrivateJson(c.journalPath)})
+    const {state,reason,samples,networkAttempts}=await probeManualCartWithNetworkRecovery({
+     probe:()=>probeManualCartState({inspect:manager.inspect,readJournal:()=>readGoogleOnlyPrivateJson(c.journalPath)}),
+     onTransient:(reason,attempt)=>save(c.directory,'network-warning.safe.json',{...safeGoogleOnlyReason(reason),attempt,at:Date.now()}),
+     shouldStop:async()=>{if(stop)return true;try{await access(join(c.directory,'stop.request'));return true}catch(e){if(e.code==='ENOENT')return false;throw e}},
+    })
+    if(stop)break
     if(reason){await close(reason);break}
-    await save(c.directory,'heartbeat.json',{pid:process.pid,at:Date.now(),manual:true,accountOn:state.accountEnabled,noDeadline:true,samples})
+    await save(c.directory,'heartbeat.json',{pid:process.pid,at:Date.now(),manual:true,accountOn:state.accountEnabled,noDeadline:true,samples,networkAttempts})
    }catch(error){await close(googleOnlyErrorReason(error,{code:'PROBE_EXCEPTION',stage:'probe'}));break}
    for(let i=0;i<15&&!stop;i++)await new Promise(r=>setTimeout(r,1000))
   }

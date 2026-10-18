@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {managementFixture,now,G} from './fixtures/customer-account/google-only-management.mjs'
 import {GOOGLE_TEST_TARGET,createGoogleOnlyTestManager} from '../scripts/customer-account-google-test.mjs'
+import {googleOnlyDiagnosticError} from '../scripts/customer-account-google-only-diagnostics.mjs'
 const contract=await import('../tools/customer-account-cart-manual/contract.mjs').catch(()=>({}))
 const build=await import('../scripts/build-customer-account-cart-manual.mjs').catch(()=>({}))
 const control=await import('../scripts/customer-account-cart-manual.mjs').catch(()=>({}))
@@ -91,20 +92,50 @@ test('manual probe preserves the eight second activation allowance without an op
  const result=await control.probeManualCartState({readJournal:async()=>journal,clock:()=>now+8001,inspect:async()=>{calls++;return {accountEnabled:true,sessions:{}}}})
  assert.equal(result.reason.code,'ACCOUNT_STATE_MISMATCH');assert.equal(calls,1)
 })
-for(const priorPagesUsed of [9,11])test(`manual Pages budget is exactly OPEN${priorPagesUsed+1}/CLOSED${priorPagesUsed+2}, never a repeat OPEN or third deployment`,async()=>{
+test('manual monitoring recovers a transient metadata network failure without closing authentication',async()=>{
+ assert.equal(typeof control.probeManualCartWithNetworkRecovery,'function')
+ let calls=0,waits=0;const warnings=[]
+ const state={accountEnabled:true,sessions:{}}
+ const result=await control.probeManualCartWithNetworkRecovery({probe:async()=>{calls++;if(calls===1)throw googleOnlyDiagnosticError('API_NETWORK_EXCEPTION','platforms.get');return {state,reason:null,samples:1}},pause:async ms=>{assert.equal(ms,2000);waits++},onTransient:reason=>warnings.push(reason)})
+ assert.equal(result.state.accountEnabled,true);assert.equal(result.reason,null);assert.equal(result.networkAttempts,2);assert.equal(calls,2);assert.equal(waits,1)
+ assert.equal(warnings.length,1);assert.equal(warnings[0].code,'API_NETWORK_EXCEPTION')
+})
+test('manual monitoring never retries confirmed drift, owner denial or unknown failures',async()=>{
+ assert.equal(typeof control.probeManualCartWithNetworkRecovery,'function')
+ for(const code of ['OWNER_AUTH_DENIED','AUTH_USERS_DRIFT','FUNCTION_DRIFT','DIAGNOSTICS_FAILED']){
+  let calls=0
+  await assert.rejects(control.probeManualCartWithNetworkRecovery({probe:async()=>{calls++;throw googleOnlyDiagnosticError(code,'manager.inspect')},pause:async()=>assert.fail('must not retry')}))
+  assert.equal(calls,1)
+ }
+ const reason={code:'SESSION_USER_NOT_ALLOWED',stage:'session-attribution'}
+ const result=await control.probeManualCartWithNetworkRecovery({probe:async()=>({reason}),pause:async()=>assert.fail('must not retry')})
+ assert.deepEqual(result.reason,reason)
+ await assert.rejects(control.probeManualCartWithNetworkRecovery({probe:async()=>{throw Error('unclassified')},pause:async()=>assert.fail('must not retry')}))
+})
+test('manual monitoring bounds network retries to three reads and honors manual stop between reads',async()=>{
+ assert.equal(typeof control.probeManualCartWithNetworkRecovery,'function')
+ let calls=0,waits=0
+ await assert.rejects(control.probeManualCartWithNetworkRecovery({probe:async()=>{calls++;throw googleOnlyDiagnosticError('API_TIMEOUT','platforms.get')},pause:async()=>{waits++}}))
+ assert.equal(calls,3);assert.equal(waits,2)
+ calls=0;let stopping=false
+ await assert.rejects(control.probeManualCartWithNetworkRecovery({probe:async()=>{calls++;throw googleOnlyDiagnosticError('API_NETWORK_EXCEPTION','platforms.get')},pause:async()=>{stopping=true},shouldStop:()=>stopping}),e=>e.diagnostic?.code==='STOP_MARKER')
+ assert.equal(calls,1)
+})
+for(const priorPagesUsed of [9,11,13])test(`manual Pages budget is exactly OPEN${priorPagesUsed+1}/CLOSED${priorPagesUsed+2}, never a repeat OPEN or third deployment`,async()=>{
  assert.equal(typeof build.createManualCartPages,'function')
  const dir=await mkdtemp(join(tmpdir(),'manual-cart-pages-')),artifactDirectory=join(dir,'artifact');await mkdir(artifactDirectory)
  try{
   let uploads=0;const p=build.createManualCartPages({directory:dir,artifactDirectory,wranglerPath:'/synthetic/wrangler.mjs',run:async()=>{uploads++}})
   const proof={kind:'MANUAL_CART',startAuthorized:true,runId:mode.runId,startedAt:now,priorPagesUsed,openSlot:priorPagesUsed+1,closedSlot:priorPagesUsed+2}
+  await assert.rejects(p.open({...proof,startAuthorized:false}));assert.equal(uploads,0)
   await assert.rejects(p.open({...proof,priorPagesUsed:7}));assert.equal(uploads,0)
-  await assert.rejects(p.open({...proof,priorPagesUsed:13,openSlot:14,closedSlot:15}));assert.equal(uploads,0)
+  await assert.rejects(p.open({...proof,priorPagesUsed:15,openSlot:16,closedSlot:17}));assert.equal(uploads,0)
   assert.equal((await p.open(proof)).pagesUsed,proof.openSlot);await assert.rejects(p.open(proof));assert.equal((await p.closed(proof)).pagesUsed,proof.closedSlot);await p.closed(proof)
   assert.equal(uploads,2);assert.equal(JSON.parse(await readFile(join(dir,'closed-site/test-mode.json'))).enabled,false)
   assert.ok(!/<script\b/.test(await readFile(join(dir,'closed-site/cart.html'),'utf8')))
  }finally{await rm(dir,{recursive:true,force:true})}
 })
-for(const priorPagesUsed of [9,11])test(`manual activation OPEN${priorPagesUsed+1} validates fresh approval and fixed target; OFF works without read prerequisites`,async()=>{
+for(const priorPagesUsed of [9,11,13])test(`manual activation OPEN${priorPagesUsed+1} validates fresh approval and fixed target; OFF works without read prerequisites`,async()=>{
  assert.equal(typeof control.createManualCartManager,'function');const h=managementFixture()
  const m=control.createManualCartManager({target:GOOGLE_TEST_TARGET,cliSession:{endpoint:GOOGLE_TEST_TARGET.endpoint,cookie:'synthetic-owner'},transport:h.transport,clock:()=>now})
  await assert.rejects(m.open({kind:'GOOGLE_ONLY'}));assert.equal(h.writes.length,0)
@@ -126,7 +157,7 @@ test('compiled manual artifact reuses real CartProvider/Bag, has product images 
   assert.equal(JSON.parse(await readFile(join(a.directory,'test-mode.json'))).enabled,false)
  }finally{await rm(dir,{recursive:true,force:true})}
 })
-for(const priorPagesUsed of [9,11])test(`manual recovery CLOSED${priorPagesUsed+2} performs exact Account OFF before upload and verifies without Function calls`,async t=>{
+for(const priorPagesUsed of [9,11,13])test(`manual recovery CLOSED${priorPagesUsed+2} performs exact Account OFF before upload and verifies without Function calls`,async t=>{
  t.mock.method(globalThis,'fetch',async()=>{throw Error('UNEXPECTED_REAL_NETWORK')})
  const directory=await mkdtemp(join(tmpdir(),'manual-cart-recovery-')),h=managementFixture(),cookie={endpoint:GOOGLE_TEST_TARGET.endpoint,cookie:'synthetic-owner'}
  try{

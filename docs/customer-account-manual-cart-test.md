@@ -1,6 +1,6 @@
 # 사용자 직접 조작 — AU 장바구니 공유 확인
 
-> **현재: OPEN12 이후 관리 API 통신 예외로 비상 종료, CLOSED13 복원 확인.** Account OFF403·세션0·Function disabled/execute=[]/B6·flags false·실행 목록 불변을 직접 재확인했다. Pages13회 사용 완료, Function8/120이다. 새 배포·활성화·인증 재시도는 하지 않았다. G/H 장바구니 인수 결과는 미검증이다.
+> **현재: 통신 예외 복구 수정 후 추가 승인된 OPEN14 배포·Account ON·HTTPS·실제 ON 감시2주기 확인.** 사용자 Chrome 수동 조작을 기다리며15분 자동 종료는 없다. CLOSED15를 종료용으로 예약했다. Function disabled/execute=[]/B6·flags false, 실행 누적8/120을 유지한다. G/H 장바구니 인수는 사용자 결과 확인 전 미검증이다.
 
 2026-10-18. Branch `feat/customer-account`. 사용자가 승인한 수동 장바구니 시험이다. 기존 Google-only의 G 로그인·세션·새로고침 PASS, 과거 watchdog 종료 원인 UNVERIFIED는 보존한다. 기존 900초 계획·manifest·proof·journal을 수정하거나 재사용하지 않는다.
 
@@ -68,6 +68,16 @@ Pages는 기존9회에 이어 **OPEN10 1회 / CLOSED11 1회**만 허용한다. O
 직접 차단 원인은 증명된다. DNS·TLS·연결 종료 등 하위 통신 실패 원인은 현재 로그에 보존되지 않아 **UNVERIFIED**다. 실제 보안 설정 변경이나 알 수 없는 사용자·주문·Function 실행을 감지한 것으로 보고하지 않는다. 현재 감시가 단일 통신 예외에도 fail-closed하도록 작성되어 있어 사용자의 수동 조작이 중단됐다.
 
 후속 읽기 전용 확인에서 공개 Account403 `general_service_disabled`, `/test-mode.json` enabled=false, 정적 `/account` CLOSED, 관리 API의 Account OFF·M/G/H 세션0·Function OFF/B6·변수 및 실행 inventory 불변을 확인했다. CLOSED13은 정확히1회 사용했다. 추가 OPEN·배포·Function 실행·코드 수정은 이번 원인 확인에서 수행하지 않았다. Google/장바구니 인수 완료로 판단하지 않으며, 통신 예외와 확인된 보안 이상을 구분하는 감시 정책 보완은 별도 후속 작업이다.
+
+### 통신 예외 복구와 승인된 OPEN14 재개
+
+사용자의 로그인 재개 요청에 따라 수동 감시만 수정했다. `API_NETWORK_EXCEPTION`/`API_TIMEOUT`인 읽기 전용 probe는2초 간격으로 최대3번 확인한다. 첫 통신 실패를 보안 이상으로 확정하지 않고 비민감 경고 파일에 기록한다. 정상 응답이 오면 기존 사용자·정책·Function·세션 검증을 모두 수행한 뒤에만 heartbeat를 갱신한다.3번 모두 실패하면 감시 불능으로 차단하며, owner401/403·확인된 drift·알 수 없는 사용자/세션·journal 오류·알 수 없는 예외는 즉시 실패한다. Account/Pages 등 쓰기 작업은 이 재시도 대상으로 넣지 않는다. 수동 종료 요청·즉시 OFF 경로와 기존 상태 전환 경합 수정, JWT/ACL/주문 로직은 유지한다.
+
+사용자가 OPEN14/CLOSED15 추가2회를 별도로 승인했다. 기존13회와 모든 이전 증거를 보존하고 새 보호 폴더 `2026-10-18-customer-account-manual-cart-14-15`의 승인·journal을 사용했다. 기존 빌드를 복사해 재사용했으며 Function/Pages preview를 만들지 않았다. 운영4개 프로젝트/기존 Function의 현시점 지문과 Cloudflare 인증, 테스트 Account OFF403·Function/flags/실행 목록·정적 CLOSED를 사전 확인했다.
+
+네트워크 복구와14/15 예산에 대해 각각 RED3개를 확인한 뒤 전체 수동 테스트23개 GREEN, 전체 `npm test` **2,110 PASS / 0 FAIL / 기존 SKIP1**, 변경 MJS ESLint·diff·secret 검사 PASS다. 운영/제품 UI 코드는 수정하지 않았다. 실행 시 OPEN14를 정확히1회 배포하고 실제 HTTPS7경로·JS/CSS2개 hash/MIME·CSP·상품 이미지·hard404를 확인했다. 테스트 Account ON 및 공개 Account401을 확인하고 수정된 독립 감시의 ON heartbeat2주기를 관측했다. Function 실행/배포·주문/결제/쿠폰/프로필 쓰기0이다.
+
+현재 사용자가 기존 G/H로 직접 로그인·장바구니 확인을 진행할 수 있다. Google/장바구니 인수 결과는 아직 미검증이다. 사용자 `종료` 또는 확인된 보호 위반/지속적인 감시 불능 시 OFF와 CLOSED15를 수행한다. 순간 통신 예외의 실제 하위 원인은 과거 로그로 증명할 수 없어 UNVERIFIED를 유지하며, 복구 코드를 실제 장애로 검증한 것과 로컬 모의를 구분한다. 새 배포/재활성화의 반복은 승인되지 않았다.
 
 로컬 검증: 신규 수동 모드8개 RED→GREEN, target/header/쓰기 거부·15분 이후 유지·비상 계정 검사·OPEN10/CLOSED11 예산·실제 source/이미지 빌드·OFF 우선 복구를 검증한다. 실제 Chrome 조작·Google 인증은 사용자가 직접 수행한다. 준비/실행 evidence는 Git 제외 보호 폴더에 두고 secret을 출력하지 않는다.
 
