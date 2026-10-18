@@ -35,3 +35,7 @@ Expected: closed proof, functional commits and clean branch, final PASS/FAIL/NOT
 원래 V3 manifest·승인 SHA·계획은 보존한다. 사용자는 이전 Pages2회를 인정하고 CLOSED preview/OPEN/최종 CLOSED 각1회, 추가3회·누적5회만 별도 승인했다. 다른 cap과900초 단일 창은 유지하며 승인 proof는 보호 파일에 별도 기록한다.
 
 [재개 결과](../../customer-account-b7-v3-https-resume-results.md): HTTPS/native body/7변수/guarded deployment/실제 서명 runtime3/독립 watchdog을 검증했다. OPEN 배포 후 결합 readiness gate 실패로 Account를 열지 않았고, watchdog이 B6·명시적 OFF flags·사이트 CLOSED까지 검증 복구했다. Pages5회 예산을 모두 사용했으며 실제 Google 회원 주문 시험은 NOT RUN이다. 실패 predicate 원인과 과거 AU raw 지문은 UNVERIFIED, B5는 DEFERRED — RELEASE BLOCKER다. 재실행하지 않는다.
+
+## 2026-10-18 활성화 게이트 조사 — 로컬만 승인
+
+[조사·계측 결과](../../customer-account-b7-v3-activation-gate-investigation.md)를 추가했다. 과거 실패 조건은 증거 부족으로 UNVERIFIED를 유지한다. 새 read-only site gate와 상세 lease/append history를 연결하고 정상·전파 지연·stale/PID 종료·window 불일치·진단 기록 실패 복구를 검증했다. 원본 manifest/실행 script/proof와 기존 H·쿠폰·7변수·guarded deployment는 보존한다. 새 Account/Function 활성화·배포·생성은 없다. 다음 실행에는 별도 새 단일900초 창과 최소 Pages2회(OPEN/CLOSED, 누적7) 승인 및 cumulative proof/continuation 연결 검증이 필요하다. 기존 cap/window/journal을 초기화하지 않으며 **B5 — DEFERRED — RELEASE BLOCKER**다.

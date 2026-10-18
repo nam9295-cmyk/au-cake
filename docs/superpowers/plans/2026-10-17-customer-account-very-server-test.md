@@ -1,5 +1,7 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
+> **최신 B7 V3 조사:** [활성화 게이트 진단·로컬 검증](../../customer-account-b7-v3-activation-gate-investigation.md). 과거 원인은 UNVERIFIED이며 이번에는 원격 쓰기0이다. 이전 실행·자원·만료 window·Pages5/5 기록을 보존한다. 새 창/최소 추가 Pages2회는 아직 승인받지 않았으며 B5는 **DEFERRED — RELEASE BLOCKER**다. 아래 단계는 과거 승인 범위의 기록이며 재실행하지 않는다.
+
 > **B7 V3 준비:** [새 manifest](../../customer-account-b7-execution-manifest-v3.json), [준비 계획](2026-10-18-customer-account-b7-v3-preparation.md), [검증 결과](../../customer-account-b7-v3-readiness.md)를 추가했다. 신규 변수 상한 7개는 로컬 명세이며 실제 추가/활성화/배포는 하지 않았다. V1/V2 승인 기록은 보존하며 V3는 별도 실행 승인이 필요하다. 운영 AU의 과거 raw 설정 차이는 UNVERIFIED다. **B5 — DEFERRED — RELEASE BLOCKER** 유지.
 
 > **B7 V2:** 신규6건을 Renewal v2로 통일한 별도 manifest/실행 계획 및 [로컬 검증 결과](../../customer-account-b7-v2-validation.md)를 작성했다. 기존 V1 승인 기록은 보존하며, 새 SHA에 대한 실제 실행 승인은 대기 중이다. B5는 DEFERRED — RELEASE BLOCKER다.

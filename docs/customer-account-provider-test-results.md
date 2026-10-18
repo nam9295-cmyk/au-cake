@@ -1,5 +1,7 @@
 # Customer Account provider test — B2 로컬 준비 결과
 
+> **B7 V3 게이트 조사:** [최신 진단·로컬 검증](customer-account-b7-v3-activation-gate-investigation.md). 과거 실패 원인은 UNVERIFIED 유지. 사이트/lease 개별 계측, 고정 deadline 내 최대5 GET, probe 이력과 진단 I/O 실패 시 OFF를 보강했다. 실제 provider 재시험은 NOT RUN, Account OFF/Function disabled/B6/CLOSED 유지, 원격 쓰기0이다. B5 — DEFERRED — RELEASE BLOCKER.
+
 > **B7 V3 HTTPS 재개:** [최신 실행 결과](customer-account-b7-v3-https-resume-results.md). 실제 HTTPS/native Checkout·7변수·guarded deployment·Owner 서명 health3은 PASS. OPEN 직후 site/window/lease gate가 통과하지 않아 Account/Function을 열지 않았고 자동 복원 verified=true다. H1·쿠폰2·변수7·guarded deployment1은 보존, 주문0·실제 Google 회원 인수 NOT RUN. Pages5/5, B5는 계속 DEFERRED — RELEASE BLOCKER다.
 
 > **2026-10-18 B7 V3:** [실행 준비·중단 결과](customer-account-b7-v3-execution-results.md). 로컬 보호 검증은 PASS지만 실제 CLOSED preview의 Checkout 경로404로 Account/Function을 열지 않았다. 새 Function·H·쿠폰·주문0, 사이트 CLOSED 복원. 실제 Google 회원 주문 인수는 NOT RUN이며 B5는 **DEFERRED — RELEASE BLOCKER**다. 아래 단계별 기록은 보존한다.

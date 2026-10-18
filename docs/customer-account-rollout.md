@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **B7 V3 활성화 게이트 조사:** [진단·로컬 검증](customer-account-b7-v3-activation-gate-investigation.md). 과거 실패 predicate는 UNVERIFIED다. 사이트/lease 계측·bounded GET·진단 I/O 실패 시 OFF를 보강했고 실제 활성화·배포는 하지 않았다. 기존 H/쿠폰/7변수/guarded deployment 보존, 다음 실행에는 새 단일 창과 최소 Pages2회(누적7) 승인이 필요하다. 현재 OFF/B6/CLOSED, **B5 — DEFERRED — RELEASE BLOCKER** 및 과거 AU raw 차이 UNVERIFIED 유지.
+
 > **B7 V3 HTTPS 재개 결과:** [최신 보고](customer-account-b7-v3-https-resume-results.md). 실제 HTTPS와 guarded runtime 검증은 PASS, OPEN 후 활성화 gate는 FAIL로 Account/공개 Function을 열지 않았다. watchdog 복원 verified=true, 명시적 flags false/B6/사이트 CLOSED. Pages 누적5/5, 실제 Google·회원 주문은 NOT RUN. B5 DEFERRED — RELEASE BLOCKER 및 과거 AU 차이 UNVERIFIED 유지. 아래 기록은 이전 단계의 증거다.
 
 > **2026-10-18 B7 V3 조건부 실행 결과:** [최신 보고](customer-account-b7-v3-execution-results.md). V3 SHA 연결·7변수·guard/watchdog 로컬 검증을 완료했다. 실제 CLOSED Pages preview의 경로404로 필수 사전 조건이 실패해 인증 창은 열지 않았다. 신규 Function·변수·사용자·쿠폰·주문0, Account OFF403/Function disabled/B6/사이트 CLOSED를 확인했다. routing 수정은 로컬만 검증했으며 재개에는 HTTPS 재검증 및 배포 예산 승인이 필요하다. **B5 — DEFERRED — RELEASE BLOCKER** 유지. 아래 이전 승인·준비 기록은 역사적 근거다.
