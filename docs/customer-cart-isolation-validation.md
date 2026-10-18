@@ -2,6 +2,8 @@
 
 Date: 2026-10-18. Worktree: `au-cake-customer-account`; branch: `feat/customer-account`.
 
+**Latest deployment update:** the user approved an additional OPEN/CLOSED pair after the local report. The prior test was closed and verified through CLOSED15, and its monitor exited before the new monitor started. The cart-isolation product commit `69609e4` is now deployed to the test site as **OPEN16**, with **CLOSED17 reserved**. Test Account ON and actual HTTPS route/JS/CSS hashes, MIME, CSP, hard 404 and build marker are verified. Function remains disabled/execute empty/B6, protected settings match the prior baseline, and B7 execution usage stays 8/120. The test has no timed expiry; user `종료` or a safety failure triggers OFF/CLOSED17. Live G/H cart isolation remains **NOT RUN** pending the user's Chrome test. The earlier no-deployment result below is preserved as the local-stage record.
+
 ## Product behavior
 
 - Both existing cake and Renewal carts use the verified Appwrite UID. Guest, G and H have independent browser storage. The original common keys remain Guest base data; they are never copied to the first member automatically.
@@ -29,6 +31,8 @@ The first full attempt found that temporary artifact builders copy only Git-trac
 Read-only official Owner GET and actual HTTPS/API check at `2026-10-18T12:58:50Z` confirmed the existing **OPEN14** site, test Account ON, Function disabled/execute empty/B6 active and all three write flags false. Function metadata/settings/variables/execution inventory matched the pre-existing protected baseline. Account API returned unauthenticated 401; the site served its current app. No remote write or deployment was performed for this change.
 
 The deployed site still contains the **previous shared-cart code**. Pages usage is 14; slot 15 is reserved exclusively for CLOSED restoration. There is **no approved new OPEN slot**, so this product change must not consume CLOSED15 and is **not deployed**. The existing manual monitor and explicit user-close path are unchanged; no timed window was added.
+
+This paragraph records the state before the subsequent deployment approval; it is superseded by the update at the top. The new OPEN16/CLOSED17 allowlist was tested RED → GREEN: the three newly approved activation/budget/recovery cases first failed at the old budget guard, then all 26 manual-test cases passed with the explicit pair added. Unapproved OPEN18/CLOSED19 is still rejected, and repeat OPEN or duplicate CLOSED uploads remain blocked. The focused cart/provider/Checkout suite was rerun: 26 PASS/0 FAIL. The existing independent monitor and fixed OFF recovery were reused rather than rebuilt.
 
 After a separately authorized test deployment, the user must verify in one Chrome profile: Guest items remain Guest; G adds an item; logout shows Guest; H sees no G items and adds a different item; G returns to only G items; refresh and a second tab retain the correct owner. Also verify explicit Guest import and OAuth return with the existing form. New-build live Google/cart acceptance is **NOT RUN**. No actual order, payment, coupon or email is required.
 

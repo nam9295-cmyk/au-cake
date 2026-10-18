@@ -8,7 +8,7 @@ export const MANUAL_CART_ROUTES=['account','account/auth/callback','cart','cakes
 const closed={enabled:false,mode:'manual-cart'}
 const closureUnverified=()=>{throw Error('MANUAL_CART_CLOSED_UNVERIFIED')}
 export function assertManualCartBudget(p){
- if(p?.kind!=='MANUAL_CART'||p.startAuthorized!==true||![9,11,13].includes(p.priorPagesUsed)||p.openSlot!==p.priorPagesUsed+1||p.closedSlot!==p.priorPagesUsed+2)throw Error('MANUAL_CART_APPROVAL_REQUIRED')
+ if(p?.kind!=='MANUAL_CART'||p.startAuthorized!==true||![9,11,13,15].includes(p.priorPagesUsed)||p.openSlot!==p.priorPagesUsed+1||p.closedSlot!==p.priorPagesUsed+2)throw Error('MANUAL_CART_APPROVAL_REQUIRED')
  return {priorPagesUsed:p.priorPagesUsed,openSlot:p.openSlot,closedSlot:p.closedSlot}
 }
 export async function buildManualCartSite({directory}){
