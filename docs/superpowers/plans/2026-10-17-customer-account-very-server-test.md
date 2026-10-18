@@ -1,5 +1,7 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
+> **D1 timeout 후속 조사:** [읽기 전용 결과](../../customer-account-b7-d1-timeout-investigation.md), [미승인 계측 계획](2026-10-18-customer-account-b7-health-timing-diagnostic.md). Node soft timeout500 계층 확인, 정확한 DB 대기 단계/transport 원인은 UNVERIFIED. 회원 readiness17개 순차·과거17.46초/제품10초 제한을 별도 통합 차단 요소로 기록했다. 이번 새 배포/execution0·누적8/120·Pages7/9·OFF/B6/CLOSED 유지. 최소 추가 deployment1/Owner health1은 별도 승인 필요. B5 DEFERRED — RELEASE BLOCKER·과거 AU raw UNVERIFIED 유지.
+
 > **최신 D1 실제 진단:** [결과](../../customer-account-b7-d1-runtime-results.md). 사용자 별도 승인 아래 닫힌300초/새 deployment1/health1을 실행했다. 새 runtime guard PASS, health timeout/HTTP500 FAIL로 나머지2회 NOT RUN. Account/공개 Function/Pages OPEN0, 자동·직접 OFF403/B6/CLOSED 및 운영 현재 지문 검증 PASS. 누적8/120·Pages7/9. Google 준비 완료 아님, timeout 구간 확인과 새 승인이 필요하다. B5 DEFERRED — RELEASE BLOCKER·과거 AU raw UNVERIFIED 유지. 아래 이전 승인/제안은 역사적 기록이다.
 
 > **health403 집중 조사:** [결과](../../customer-account-b7-health-403-investigation.md). 변수 API readback·기존 deployment 활성화를 runtime 환경 반영으로 취급한 계약 결함을 확인. 실제 거부 predicate는 UNVERIFIED이며 [D1 닫힌 진단/new deployment1개 제안](2026-10-18-customer-account-b7-runtime-env-verification.md)은 승인 대기다. 이번 원격 쓰기/새 execution0, OFF/B6/CLOSED. B5 DEFERRED — RELEASE BLOCKER·과거 AU raw UNVERIFIED 유지.

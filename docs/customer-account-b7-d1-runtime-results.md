@@ -1,5 +1,7 @@
 # B7 D1 — 새 runtime guard 통과, health timeout으로 중단
 
+> **후속 읽기 전용 조사:** [timeout 계층·호출 구조·시간 예산](customer-account-b7-d1-timeout-investigation.md). Node soft timeout500을 확인했으나 정확한 DB 대기 단계는 UNVERIFIED다. 신규 배포/execution 없이 로컬 구조 probe10개·기존 관련88개를 통과했고 [최소 계측 계획](superpowers/plans/2026-10-18-customer-account-b7-health-timing-diagnostic.md)을 제안했다. 아래 D1 실제 기록은 보존한다.
+
 2026-10-18 KST. **D1 전체 판정은 FAIL이다.** 배포 전 새 key/window/fixture/flags를 동결한 새 Node22 deployment에서 CONFIG/TIME/SECRET_SHAPE/BODY/HEADERS/SIGNATURE/PATH 검사를 통과했다. 이어진 원래 reservation handler의 첫 `health`가 약19.74초 뒤 timeout/HTTP500으로 끝나 나머지 두 health를 실행하지 않았다. Account와 Function 공개 실행은 열지 않았으며 자동 복구와 별도 Owner GET 검증은 PASS다.
 
 ## 승인·보존·사용량
