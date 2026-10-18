@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **B7 V3 최종 인수 재개:** [실제 결과](customer-account-b7-v3-continuation-results.md). 새 gate/실제 runtime·watchdog·복구 PASS. Chrome 파일 권한과 운영 탭 자동 화면 관찰로 중단했으며 Google/회원 주문 NOT RUN이다. H/쿠폰/7변수/deployment 재사용, 누적 실행6/120·Pages7/7, Account OFF403/Function OFF/B6/CLOSED 복원 확인. 운영 화면 관찰 FAIL을 별도 기록했다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 새 창 자동 재개 금지.
+
 > **B7 V3 활성화 게이트 조사:** [진단·로컬 검증](customer-account-b7-v3-activation-gate-investigation.md). 과거 실패 predicate는 UNVERIFIED다. 사이트/lease 계측·bounded GET·진단 I/O 실패 시 OFF를 보강했고 실제 활성화·배포는 하지 않았다. 기존 H/쿠폰/7변수/guarded deployment 보존, 다음 실행에는 새 단일 창과 최소 Pages2회(누적7) 승인이 필요하다. 현재 OFF/B6/CLOSED, **B5 — DEFERRED — RELEASE BLOCKER** 및 과거 AU raw 차이 UNVERIFIED 유지.
 
 > **B7 V3 HTTPS 재개 결과:** [최신 보고](customer-account-b7-v3-https-resume-results.md). 실제 HTTPS와 guarded runtime 검증은 PASS, OPEN 후 활성화 gate는 FAIL로 Account/공개 Function을 열지 않았다. watchdog 복원 verified=true, 명시적 flags false/B6/사이트 CLOSED. Pages 누적5/5, 실제 Google·회원 주문은 NOT RUN. B5 DEFERRED — RELEASE BLOCKER 및 과거 AU 차이 UNVERIFIED 유지. 아래 기록은 이전 단계의 증거다.

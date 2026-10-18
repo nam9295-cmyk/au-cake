@@ -39,3 +39,7 @@ Expected: closed proof, functional commits and clean branch, final PASS/FAIL/NOT
 ## 2026-10-18 활성화 게이트 조사 — 로컬만 승인
 
 [조사·계측 결과](../../customer-account-b7-v3-activation-gate-investigation.md)를 추가했다. 과거 실패 조건은 증거 부족으로 UNVERIFIED를 유지한다. 새 read-only site gate와 상세 lease/append history를 연결하고 정상·전파 지연·stale/PID 종료·window 불일치·진단 기록 실패 복구를 검증했다. 원본 manifest/실행 script/proof와 기존 H·쿠폰·7변수·guarded deployment는 보존한다. 새 Account/Function 활성화·배포·생성은 없다. 다음 실행에는 별도 새 단일900초 창과 최소 Pages2회(OPEN/CLOSED, 누적7) 승인 및 cumulative proof/continuation 연결 검증이 필요하다. 기존 cap/window/journal을 초기화하지 않으며 **B5 — DEFERRED — RELEASE BLOCKER**다.
+
+## 2026-10-18 새 단일 창 / Pages6·7 승인 실행 결과
+
+승인된 별도 continuation proof/journal로 기존 자원과 누적 실행3을 인계했다. [결과](../../customer-account-b7-v3-continuation-results.md): 실제 gate·Owner health3·독립 watchdog PASS. Chrome 파일 권한 부족과 native 앱 호출의 운영 탭 화면 관찰로 조기 중단, Google/고객 JWT/주문 인수 NOT RUN. 자동 복구와 직접 GET으로 OFF403/Function OFF/B6/flags false/CLOSED/세션0을 확인했다. Pages7/7·B7 실행6/120이며 새 창을 시작하지 않는다. B5 — DEFERRED — RELEASE BLOCKER, 과거 AU raw UNVERIFIED를 유지한다. 다음 브라우저 준비는 실제 창 전에 로컬 dummy 파일 가져오기와 정확한 tab/origin 확인으로 검증하며, 앱 이름만 지정한 native fallback을 사용하지 않는다.
