@@ -5,7 +5,7 @@ import {B6_BUILD_COMMAND} from './customer-account-test-function.mjs'
 import {sha256} from './customer-account-b7-v3-execution-contract.mjs'
 import {assertB7Run} from './customer-account-b7-v3-execution-contract.mjs'
 const fail=()=>{throw Error('B7_RUNNER_REJECTED')}
-export function createB7Runner({manifestBytes,approvalProof,target:inputTarget,cliSession,transport=fetch,clock=Date.now,persist,state,activationLease=async()=>false}) {
+export function createB7Runner({manifestBytes,approvalProof,target:inputTarget,cliSession,transport=fetch,clock=Date.now,persist,state,activationLease=async()=>false,activationSiteGate=async()=>false}) {
  const checked=assertB7Run({manifestBytes,approvalProof,target:inputTarget,phase:'prepare',now:clock()}),manifest=checked.manifest,target=checked.target
  if(cliSession?.endpoint!==target.endpoint||typeof cliSession.cookie!=='string'||!cliSession.cookie||/[\r\n]/.test(cliSession.cookie)||cliSession.key||cliSession.selfSigned||typeof persist!=='function'||!state?.attempts)fail()
  const project='/projects/'+target.projectId,fn='/functions/'+target.functionId
@@ -115,6 +115,9 @@ export function createB7Runner({manifestBytes,approvalProof,target:inputTarget,c
     if(users.total!==3||JSON.stringify(actual)!==JSON.stringify(expected)||s.project.authLimit!==3||s.function.deploymentId!==state.deploymentId)fail()
     assertB7Run({manifestBytes,approvalProof,target,phase:'open',now:clock(),window:proof.window})
     if(!state.window||JSON.stringify(state.window)!==JSON.stringify(proof.window))fail()
+    // The historical one-shot private controller cannot open without the new observed gate.
+    if(await activationSiteGate({window:{...state.window}})!==true)fail()
+    assertB7Run({manifestBytes,approvalProof,target,phase:'open',now:clock(),window:proof.window})
     state.attempts.open=true;state.window={...proof.window};await persist(structuredClone(state))
     try{
      if(await activationLease()!==true)fail()

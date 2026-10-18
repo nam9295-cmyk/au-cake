@@ -45,7 +45,7 @@ test('guard deployment is one-shot, uses multipart Node22 native build, and refu
 })
 test('expiry during read-only preflight prevents every activation write',async()=>{
  const now=1792281600000,window={startsAt:now,endsAt:now+900000};let time=now,writes=0
- const s=setup({clock:()=>time,state:{attempts:{},deploymentId:'guarded-deployment',window},activationLease:async()=>true})
+ const s=setup({clock:()=>time,state:{attempts:{},deploymentId:'guarded-deployment',window},activationLease:async()=>true,activationSiteGate:async()=>true})
  s.args.transport=async(url,o)=>{
   if(o.method!=='GET'){writes++;throw Error('must not write')}
   if(url.includes('/users?')){time=window.endsAt;return Response.json({total:3,users:manifest.requiredBeforeOpen.exactUsers.map($id=>({$id}))})}
@@ -55,16 +55,16 @@ test('expiry during read-only preflight prevents every activation write',async()
  await assert.rejects(r.open({...proof,window,deploymentId:'guarded-deployment'}));assert.equal(writes,0)
 })
 test('deadline reached after Function enable prevents Account ON and performs emergency OFF',async()=>{
- const now=1792281600000,window={startsAt:now,endsAt:now+900000};let time=now,accountOn=0
- const s=setup({clock:()=>time,state:{attempts:{},deploymentId:'guarded-deployment',window},activationLease:async()=>true})
+ const now=1792281600000,window={startsAt:now,endsAt:now+900000};let time=now,accountOn=0,functionOn=0
+ const s=setup({clock:()=>time,state:{attempts:{},deploymentId:'guarded-deployment',window},activationLease:async()=>true,activationSiteGate:async()=>true})
  s.args.transport=async(url,o)=>{
   if(o.method==='GET'&&url.includes('/users?'))return Response.json({total:3,users:manifest.requiredBeforeOpen.exactUsers.map($id=>({$id}))})
-  if(o.method==='PUT'){const body=JSON.parse(o.body);if(body.enabled===true)time=window.endsAt}
+  if(o.method==='PUT'){const body=JSON.parse(o.body);if(body.enabled===true){functionOn++;time=window.endsAt}}
   if(o.method==='PATCH'&&JSON.parse(o.body).status===true)accountOn++
   return Response.json(url.includes('/projects/')?{...project,authLimit:3}:{...fn,name:'CA TEST Reservation API B6',deploymentId:'guarded-deployment',scopes:['databases.read','databases.write','collections.read','attributes.read','indexes.read','documents.read','documents.write']})
  }
  const r=api.createB7Runner(s.args),proof=Object.fromEntries(['allLocalTestsGreen','guardNegativeTestsGreen','browserMockGreen','secretScanGreen','manualRecoveryVerified','watchdogArmedAndTested','schemaAclUnchanged','platformHeaderVerified','runtimeFlagsVerified'].map(k=>[k,true]))
- await assert.rejects(r.open({...proof,window,deploymentId:'guarded-deployment'}));assert.equal(accountOn,0)
+ await assert.rejects(r.open({...proof,window,deploymentId:'guarded-deployment'}));assert.equal(accountOn,0);assert.equal(functionOn,1)
 })
 test('unprepared V3 variables stop arming before any write',async()=>{
  const now=1792281600000,s=setup({clock:()=>now,state:{attempts:{},fixtureSha256:'a'.repeat(64)}});let writes=0
@@ -74,4 +74,29 @@ test('unprepared V3 variables stop arming before any write',async()=>{
   return Response.json(url.includes('/projects/')?project:{...fn,name:'CA TEST Reservation API B6',scopes:['databases.read','databases.write','collections.read','attributes.read','indexes.read','documents.read','documents.write']})
  }
  await assert.rejects(api.createB7Runner(s.args).configureGuard({window:{startsAt:now,endsAt:now+900000},secret:Buffer.alloc(32,3).toString('base64url'),fixtureSha256:'a'.repeat(64)}));assert.equal(writes,0)
+})
+test('fresh lease alone cannot open when the separate HTTPS gate is absent or failed',async()=>{
+ for(const activationSiteGate of [undefined,async()=>false]){
+  const now=1792281600000,window={startsAt:now,endsAt:now+900000},s=setup({clock:()=>now,state:{attempts:{},deploymentId:'guarded-deployment',window},activationLease:async()=>true,activationSiteGate})
+  let writes=0;s.args.transport=async(url,o)=>{
+   if(o.method!=='GET'){writes++;return Response.json({})}
+   if(url.includes('/users?'))return Response.json({total:3,users:manifest.requiredBeforeOpen.exactUsers.map($id=>({$id}))})
+   return Response.json(url.includes('/projects/')?{...project,authLimit:3}:{...fn,name:'CA TEST Reservation API B6',deploymentId:'guarded-deployment',scopes:['databases.read','databases.write','collections.read','attributes.read','indexes.read','documents.read','documents.write']})
+  }
+  const proof=Object.fromEntries(['allLocalTestsGreen','guardNegativeTestsGreen','browserMockGreen','secretScanGreen','manualRecoveryVerified','watchdogArmedAndTested','schemaAclUnchanged','platformHeaderVerified','runtimeFlagsVerified'].map(k=>[k,true]))
+  await assert.rejects(api.createB7Runner(s.args).open({...proof,window,deploymentId:'guarded-deployment'}));assert.equal(writes,0)
+ }
+})
+test('site gate plus fresh independent leases permits the original bounded open contract locally',async()=>{
+ const now=1792281600000,window={startsAt:now,endsAt:now+900000};let siteGates=0,leases=0
+ const p={...project,authLimit:3},f={...fn,name:'CA TEST Reservation API B6',deploymentId:'guarded-deployment',scopes:['databases.read','databases.write','collections.read','attributes.read','indexes.read','documents.read','documents.write']}
+ const s=setup({clock:()=>now,state:{attempts:{},deploymentId:'guarded-deployment',window},activationLease:async()=>{leases++;return true},activationSiteGate:async input=>{siteGates++;assert.deepEqual(input.window,window);return true}})
+ s.args.transport=async(url,o)=>{
+  if(o.method==='PUT')Object.assign(f,JSON.parse(o.body))
+  if(o.method==='PATCH')p.serviceStatusForAccount=JSON.parse(o.body).status
+  if(url.includes('/users?'))return Response.json({total:3,users:manifest.requiredBeforeOpen.exactUsers.map($id=>({$id}))})
+  return Response.json(url.includes('/projects/')?p:f)
+ }
+ const proof=Object.fromEntries(['allLocalTestsGreen','guardNegativeTestsGreen','browserMockGreen','secretScanGreen','manualRecoveryVerified','watchdogArmedAndTested','schemaAclUnchanged','platformHeaderVerified','runtimeFlagsVerified'].map(k=>[k,true]))
+ assert.equal((await api.createB7Runner(s.args).open({...proof,window,deploymentId:'guarded-deployment'})).opened,true);assert.equal(siteGates,1);assert.equal(leases,3)
 })

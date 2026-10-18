@@ -1,5 +1,6 @@
 import {readFileSync,lstatSync,writeFileSync} from 'node:fs'
-import {writeFile,rename,access} from 'node:fs/promises'
+import {writeFile,rename,access,appendFile} from 'node:fs/promises'
+import {performance} from 'node:perf_hooks'
 import {spawn} from 'node:child_process'
 import {fileURLToPath,pathToFileURL} from 'node:url'
 import {join,resolve} from 'node:path'
@@ -18,17 +19,34 @@ export function startB7WatchdogProcess({configPath}) {
  const child=spawn(process.execPath,[file,'--worker',resolve(configPath)],{detached:true,stdio:'ignore',env:{PATH:process.env.PATH||'/usr/bin:/bin',HOME:process.env.HOME||''}})
  child.unref();return {pid:child.pid}
 }
-export function createB7ActivationLease({configPath,clock=Date.now}){
- return async()=>{
-  try{
-   const c=configAt(configPath)
-   if(c.mode!=='controlled-run'||c.liveExecutionAuthorized!==true||clock()>=c.endsAt)return false
-   for(const name of ['stop.request','closed.json','worker-failed.json']){try{await access(join(c.directory,name));return false}catch{/* no stop evidence */}}
-   const heartbeat=JSON.parse(readFileSync(join(c.directory,'heartbeat.json'),'utf8'))
-   if(!Number.isFinite(Date.parse(heartbeat.at))||heartbeat.mode!=='controlled-run'||heartbeat.closed!==false||heartbeat.endsAt!==c.endsAt||!Number.isInteger(heartbeat.pid)||clock()-Date.parse(heartbeat.at)>5000||Date.parse(heartbeat.at)>clock()+1000)return false
-   process.kill(heartbeat.pid,0);return true
-  }catch{return false}
+// Only allowlisted scalar diagnostics leave this boundary; never config/session/error text.
+export async function inspectB7ActivationLease({configPath,clock=Date.now}){
+ const checks={},details={},now=clock(),mark=(key,pass)=>{checks[key]=pass?'PASS':'FAIL'}
+ let c,heartbeat
+ try{c=configAt(configPath);mark('configuration',c.mode==='controlled-run'&&c.liveExecutionAuthorized===true)}catch{mark('configuration',false)}
+ if(!c)return {pass:false,checks,details}
+ mark('beforeDeadline',Number.isFinite(now)&&now<c.endsAt);details.remainingMs=Number.isFinite(now)?c.endsAt-now:null
+ details.markers=[]
+ let markersReadable=true
+ for(const name of ['stop.request','closed.json','worker-failed.json']){try{await access(join(c.directory,name));details.markers.push(name)}catch(e){if(e.code!=='ENOENT')markersReadable=false}}
+ mark('noStopMarkers',markersReadable&&details.markers.length===0)
+ try{heartbeat=JSON.parse(readFileSync(join(c.directory,'heartbeat.json'),'utf8'));mark('heartbeatReadable',true)}catch{mark('heartbeatReadable',false)}
+ if(heartbeat){
+  const at=Date.parse(heartbeat.at),age=now-at
+  details.heartbeatAt=Number.isFinite(at)?at:null;details.heartbeatAgeMs=Number.isFinite(age)?age:null
+  details.probeDurationMs=Number.isFinite(heartbeat.probe?.durationMs)?heartbeat.probe.durationMs:null
+  details.probeClockDeltaMs=Number.isFinite(heartbeat.probe?.clockDeltaMs)?heartbeat.probe.clockDeltaMs:null
+  details.loopGapMs=Number.isFinite(heartbeat.probe?.loopGapMs)?heartbeat.probe.loopGapMs:null
+  details.inFlightProbe=null;details.inFlightProbeElapsedMs=null
+  try{const p=JSON.parse(readFileSync(join(c.directory,'probe-start.json'),'utf8'));if(Number.isFinite(p.startedAt)){details.inFlightProbe=p.startedAt>(heartbeat.probe?.startedAt??at);details.inFlightProbeElapsedMs=details.inFlightProbe?now-p.startedAt:null}}catch{/* optional timing evidence, never authority for the lease */}
+  mark('heartbeatContract',heartbeat.mode==='controlled-run'&&heartbeat.closed===false&&heartbeat.endsAt===c.endsAt)
+  mark('heartbeatFresh',Number.isFinite(age)&&age<=5000&&age>=-1000)
+  try{if(!Number.isInteger(heartbeat.pid)||heartbeat.pid<1)throw Error();process.kill(heartbeat.pid,0);mark('workerAlive',true)}catch{mark('workerAlive',false)}
  }
+ return {pass:Object.values(checks).every(x=>x==='PASS'),checks,details}
+}
+export function createB7ActivationLease({configPath,clock=Date.now,record=async()=>{}}){
+ return async()=>{try{const result=await inspectB7ActivationLease({configPath,clock});await record(result);return result.pass}catch{return false}}
 }
 export async function requestB7Stop({configPath}) {const c=configAt(configPath);await writeFile(join(c.directory,'stop.request'),'stop\n',{mode:0o600,flag:'wx'})}
 export async function runB7WatchdogWorker(configPath){
@@ -47,12 +65,26 @@ export async function runB7WatchdogWorker(configPath){
  let sleepGuard
  if(process.platform==='darwin'&&config.mode==='controlled-run'){sleepGuard=spawn('/usr/bin/caffeinate',['-w',String(process.pid)],{stdio:'ignore'});sleepGuard.on('error',()=>{stop=true})}
  try{
+  let previousFinished,diagnosticRecordingFailed=false
   while(true){
+   const startedAt=Date.now(),monotonicStart=performance.now()
+   try{await writeFile(join(config.directory,'probe-start.json.tmp'),JSON.stringify({startedAt}),{mode:0o600});await rename(join(config.directory,'probe-start.json.tmp'),join(config.directory,'probe-start.json'))}catch{diagnosticRecordingFailed=true;stop=true}
    try{await access(join(config.directory,'stop.request'));stop=true}catch{/* no manual stop yet */}
    const result=stop?await wd.stop():await wd.tick()
-   const evidence={...result,mode:config.mode,operations:operationsRun,pid:process.pid,at:new Date().toISOString(),endsAt:config.endsAt}
-   const path=join(config.directory,result.closed?'closed.json':'heartbeat.json')
-   await writeFile(path+'.tmp',JSON.stringify(evidence),{mode:0o600});await rename(path+'.tmp',path)
+   const finishedAt=Date.now(),durationMs=performance.now()-monotonicStart,wallElapsedMs=finishedAt-startedAt
+   const probe={startedAt,finishedAt,durationMs,wallElapsedMs,clockDeltaMs:wallElapsedMs-durationMs,loopGapMs:previousFinished===undefined?0:startedAt-previousFinished}
+   previousFinished=finishedAt
+   const evidence={...result,mode:config.mode,operations:operationsRun,pid:process.pid,at:new Date(finishedAt).toISOString(),endsAt:config.endsAt,probe,diagnosticRecordingFailed}
+   try{
+    await appendFile(join(config.directory,'heartbeat-history.jsonl'),JSON.stringify(evidence)+'\n',{mode:0o600})
+    const path=join(config.directory,result.closed?'closed.json':'heartbeat.json')
+    await writeFile(path+'.tmp',JSON.stringify(evidence),{mode:0o600});await rename(path+'.tmp',path)
+   }catch{
+    // Diagnostic I/O must never be a prerequisite for the actual OFF operations.
+    const closed=await wd.stop(),path=join(config.directory,'closed.json')
+    await writeFile(path+'.tmp',JSON.stringify({...evidence,...closed,at:new Date().toISOString(),diagnosticRecordingFailed:true}),{mode:0o600});await rename(path+'.tmp',path)
+    return closed
+   }
    if(result.closed)return result
    await new Promise(r=>setTimeout(r,config.mode==='self-test'?Math.min(config.intervalMs||20,100):1000))
   }
