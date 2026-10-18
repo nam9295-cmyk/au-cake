@@ -1,5 +1,7 @@
 # Customer Account provider test — B2 로컬 준비 결과
 
+> **2026-10-18 B7 V3:** [실행 준비·중단 결과](customer-account-b7-v3-execution-results.md). 로컬 보호 검증은 PASS지만 실제 CLOSED preview의 Checkout 경로404로 Account/Function을 열지 않았다. 새 Function·H·쿠폰·주문0, 사이트 CLOSED 복원. 실제 Google 회원 주문 인수는 NOT RUN이며 B5는 **DEFERRED — RELEASE BLOCKER**다. 아래 단계별 기록은 보존한다.
+
 > **최신 상태:** [B2 완료](customer-account-b2-owner-execution.md), [B3 Google SDK 검증](customer-account-b3-google-validation.md)에 이어 별도 승인된 [B4 테스트 Resend SMTP](customer-account-b4-smtp-validation.md)를 완료했다. 테스트 전용 domain/DNS3/도메인 제한 sending Key/프로젝트 SMTP override를 구성하고 승인 수신함의 일반 sample 1건 수신을 확인했다. Account와 신규 인증 진입은 계속 OFF다. 전체 로컬 테스트 1,879 pass/0 fail/기존 skip1, 계정 그룹103 pass. 공통 SMTP/B5, OTP/동일 이메일 UID 통합/제품 주문·계정 통합은 미검증·미실행이다. 아래는 이전 local preflight 당시의 역사적 기록이다.
 
 > **B5 사전 점검 추가:** [읽기 전용 결과](customer-account-b5-preflight.md)와 [별도 승인 후 사용할 실행 계획](superpowers/plans/2026-10-18-customer-account-system-smtp.md)을 작성했다. 기존4의 이메일 인증 ON/SMTP override OFF를 공식 Console에서 확인했다. 공통 SMTP 실제 적용·system Key 발급·재생성·메일 발송은 하지 않았다. 공개 테스트 OTP는 TO 제한 미입증으로 보류한다. 위 테스트 수는 B4 실행 결과이며 B5에서 전체 제품 테스트를 다시 실행한 수치가 아니다.

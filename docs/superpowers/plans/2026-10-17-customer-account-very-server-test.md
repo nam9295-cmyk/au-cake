@@ -214,6 +214,8 @@ Gallery raw config 지문 예외도 해당 보고서에 남겼다. 정상 조회
 
 ## B7: 실제 인증·주문 인수
 
+**2026-10-18 V3 조건부 실행 중단:** [최신 결과](../../customer-account-b7-v3-execution-results.md). V3 별도 승인·로컬 보호 검증 후 CLOSED preview의 실제 Checkout 경로404에서 중단했다. 인증 창·Function·새7변수·H·쿠폰·주문은 미실행이며 CLOSED 복원했다. Pages2/3회를 사용해 재실행 예산을 임의 재설정하지 않는다. 아래 초기 계획·승인 기록은 보존하며 V1/V2를 재실행하지 않는다. **B5 — DEFERRED — RELEASE BLOCKER**는 계속 미완료다.
+
 **2026-10-18 Google-only 준비 계획 작성, 실행 미승인:** [B7 준비 결과](../../customer-account-b7-preflight.md), [상세 계획](2026-10-18-customer-account-b7-google-orders.md), [제안 manifest](../../customer-account-b7-execution-manifest.json). 원래 B7의 OTP/교차 UID 범위는 B5 release blocker로 남기며 이번 준비가 ON/주문 생성 승인이 되지 않는다.
 
 **승인 A7 필요:** 합성 Auth users·주문·쿠폰 및 한정된 테스트 메일, 실제 브라우저/실기기 검증. 운영 데이터 사용/실제 결제 없음.

@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **2026-10-18 B7 V3 조건부 실행 결과:** [최신 보고](customer-account-b7-v3-execution-results.md). V3 SHA 연결·7변수·guard/watchdog 로컬 검증을 완료했다. 실제 CLOSED Pages preview의 경로404로 필수 사전 조건이 실패해 인증 창은 열지 않았다. 신규 Function·변수·사용자·쿠폰·주문0, Account OFF403/Function disabled/B6/사이트 CLOSED를 확인했다. routing 수정은 로컬만 검증했으며 재개에는 HTTPS 재검증 및 배포 예산 승인이 필요하다. **B5 — DEFERRED — RELEASE BLOCKER** 유지. 아래 이전 승인·준비 기록은 역사적 근거다.
+
 > **B7 V3 준비:** [새 manifest](customer-account-b7-execution-manifest-v3.json), [준비 계획](superpowers/plans/2026-10-18-customer-account-b7-v3-preparation.md), [검증 결과](customer-account-b7-v3-readiness.md)를 추가했다. 신규 변수 한도 7개는 제안 명세이며 `executionApproved=false`, 실제 추가/활성화/배포는 하지 않았다. 기존 V1/V2와 승인 SHA는 보존한다. 과거 운영 AU `projectConfig` 차이는 미확인이고 새 관찰 지문을 정상 기준선으로 승인하지 않았다. 실제 V3 실행 wiring·별도 승인·원격 명시적 flag 준비가 필요하다. **B5 — DEFERRED — RELEASE BLOCKER** 유지.
 
 > **B7 V2:** 신규6건을 Renewal v2로 통일한 별도 manifest/실행 계획 및 [로컬 검증 결과](customer-account-b7-v2-validation.md)를 작성했다. 기존 V1 승인 기록은 보존하며, 새 SHA에 대한 조건부 실행 승인을 받았으나 compiled artifact 오류로 창을 열지 않았다. 후속 로컬 수정·보호장치 검증 결과는 [B7 V2 실행 준비 보고](customer-account-b7-v2-readiness.md)를 확인한다. 현재 신규 변수 필요7/승인5 충돌로 실제 실행은 차단 상태다. B5는 DEFERRED — RELEASE BLOCKER다.
