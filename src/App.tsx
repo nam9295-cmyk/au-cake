@@ -2,8 +2,9 @@ import { AuRenewalShop } from './pages/AuRenewalShop'
 import { CustomerAuthCallback } from './components/CustomerAuthCallback'
 import {readCheckoutResume} from './lib/customer-checkout-draft'
 import {useCustomerAccount} from './lib/customer-account-context'
+import {GuestCartImport} from './components/GuestCartImport'
 import { renewalCardForPath } from '../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
 import CakesPage from './CakesPage'
 import { AuRedesignFooter, AuRedesignHeader } from './components/AuRedesignChrome'
@@ -93,6 +94,7 @@ function App() {
   const customer = useCustomerAccount()
   const preferredLanguageApplied = useRef(new Set<string>())
   const explicitLanguage = useRef(false)
+  const cart=useCart()
   const {
     lines: cartLines,
     itemCount: cartItemCount,
@@ -100,10 +102,11 @@ function App() {
     update: updateCartLine,
     remove: removeCartLine,
     removeSubmitted: removeSubmittedCartLines,
-  } = useCart()
-  const [legacyResume]=useState(()=>readCheckoutResume('legacy'))
+  } = cart
+  const [reservationOwner,setReservationOwner]=useState(cart.checkoutOwner)
+  const legacyResume=useMemo(()=>readCheckoutResume('legacy',cart.checkoutOwner),[cart.checkoutOwner])
   const legacyContext='draft' in legacyResume?legacyResume.draft.checkoutContext:null
-  const legacyOrigin=legacyResume.status==='cart-changed'?cartLines:Array.isArray(legacyContext?.cartOrigin)?legacyContext.cartOrigin as CartLine[]:[]
+  const legacyOrigin=useMemo(()=>legacyResume.status==='cart-changed'?cartLines:Array.isArray(legacyContext?.cartOrigin)?legacyContext.cartOrigin as CartLine[]:[],[legacyResume.status,cartLines,legacyContext])
   const legacySelection=legacyResume.status==='cart-changed'?legacyOrigin[0]?.selection:legacyContext?.initialSelection as CakeDetailSelection|null
   const legacyOrderLines=legacyResume.status==='cart-changed'?legacyOrigin.map(line=>line.selection):legacyContext?.initialOrderLines as CakeDetailSelection[]|null
   const [pathname, setPathname] = useState(() => window.location.pathname)
@@ -114,9 +117,13 @@ function App() {
   const [lookupRequestNumber, setLookupRequestNumber] = useState('')
 
   const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
-  const [reservationProductId, setReservationProductId] = useState<ProductId>(()=>legacySelection?.productId||(legacyContext?.initialProductId as ProductId)||DEFAULT_PRODUCT_ID)
-  const [reservationSelection, setReservationSelection] = useState<CakeDetailSelection | null>(legacySelection||null)
-  const [reservationOrderLines, setReservationOrderLines] = useState<CakeDetailSelection[] | null>(legacyOrderLines||null)
+  const [reservationProductIdState, setReservationProductId] = useState<ProductId>(()=>legacySelection?.productId||(legacyContext?.initialProductId as ProductId)||DEFAULT_PRODUCT_ID)
+  const [reservationSelectionState, setReservationSelection] = useState<CakeDetailSelection | null>(legacySelection||null)
+  const [reservationOrderLinesState, setReservationOrderLines] = useState<CakeDetailSelection[] | null>(legacyOrderLines||null)
+  const sameReservationOwner=reservationOwner===cart.checkoutOwner
+  const reservationProductId=sameReservationOwner?reservationProductIdState:legacySelection?.productId||DEFAULT_PRODUCT_ID
+  const reservationSelection=sameReservationOwner?reservationSelectionState:legacySelection||null
+  const reservationOrderLines=sameReservationOwner?reservationOrderLinesState:legacyOrderLines||null
   const [cakeOrderLinesAvailable, setCakeOrderLinesAvailable] = useState<boolean | null>(null)
   const [chocolateOrderLinesAvailable, setChocolateOrderLinesAvailable] = useState<boolean | null>(null)
   const hasChocolate = cartLines.some((line) => isChocolateProductId(line.selection.productId))
@@ -128,6 +135,7 @@ function App() {
   const cartOriginLinesRef = useRef<CartLine[]>([])
   const [initialLegacyOrigin] = useState(() => legacyOrigin.map(line => ({...line, selection:{...line.selection}})))
   useEffect(() => { cartOriginLinesRef.current = initialLegacyOrigin }, [initialLegacyOrigin])
+  useEffect(()=>{if('draft'in legacyResume)cartOriginLinesRef.current=legacyOrigin.map(line=>({...line,selection:{...line.selection}}))},[legacyResume,legacyOrigin])
 
   const setLanguage = useCallback((nextLanguage: Language) => {
     explicitLanguage.current = true
@@ -210,12 +218,13 @@ function App() {
     cartOriginLinesRef.current = []
     setReservationOrderLines(null)
     if (nextPage === 'reserve') {
+      setReservationOwner(cart.checkoutOwner)
       setReservationProductId(DEFAULT_PRODUCT_ID)
       setReservationSelection(null)
       setReservationSessionKey((current) => current + 1)
     }
     pushPage(nextPage)
-  }, [pushPage])
+  }, [pushPage,cart.checkoutOwner])
 
   const navigateToCake = useCallback((slug: string) => {
     cartOriginLinesRef.current = []
@@ -241,6 +250,8 @@ function App() {
   }, [pushPage])
 
   const continueCartOrder = useCallback(() => {
+    if(!cart.isCurrent())return
+    setReservationOwner(cart.checkoutOwner)
     const snapshot: CartLine[] = cartLines.map((line) => ({ lineKey: line.lineKey, selection: { ...line.selection } }))
     if (snapshot.length === 0 || (snapshot.length > 1 && cakeOrderLinesAvailable !== true) || (hasChocolate && chocolateOrderLinesAvailable !== true)) return
     const first = snapshot[0]
@@ -250,7 +261,7 @@ function App() {
     cartOriginLinesRef.current = snapshot
     setReservationSessionKey((current) => current + 1)
     pushPage('reserve')
-  }, [cakeOrderLinesAvailable, chocolateOrderLinesAvailable, hasChocolate, cartLines, pushPage])
+  }, [cakeOrderLinesAvailable, chocolateOrderLinesAvailable, hasChocolate, cartLines, pushPage,cart])
 
   const orderCakeFromReview = useCallback((couponCode: string, rewardPercent: 5 | 10) => {
     const normalized = normalizeReviewCouponCode(couponCode)
@@ -261,6 +272,7 @@ function App() {
   }, [navigate])
 
   const completeReservation = useCallback((reservation: Reservation) => {
+    if(!cart.isCurrent())return
     const originLines = cartOriginLinesRef.current
     removeSubmittedCartLines(originLines)
     cartOriginLinesRef.current = []
@@ -268,7 +280,7 @@ function App() {
     setPendingReviewCoupon('')
     setPendingReviewRewardPercent(null)
     setCompletedReservation(reservation)
-  }, [removeSubmittedCartLines])
+  }, [removeSubmittedCartLines,cart])
 
   const isAdminPage =
     page === 'admin-login' ||
@@ -348,6 +360,7 @@ function App() {
         <>
           <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
           <CartPage
+            guestCartNotice={<GuestCartImport language={language}/>}
             language={language}
             lines={cartLines}
             cakeOrderLinesAvailable={cakeOrderLinesAvailable}
@@ -388,9 +401,10 @@ function App() {
       )}
       {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
-      {page === 'reserve' && (
+      {page === 'reserve' && !sameReservationOwner&&!('draft'in legacyResume)&&<main role="status">{language==='ko'?'계정이 변경되었습니다. 장바구니에서 다시 시작해주세요.':'Your account changed. Continue from your bag.'}<a href="/cart">{language==='ko'?'장바구니':'Your bag'}</a></main>}
+      {page === 'reserve' && (sameReservationOwner||'draft'in legacyResume) && (
         <ReservePage
-          key={reservationSessionKey}
+          key={`${reservationSessionKey}:${cart.checkoutOwner}`}
           navigate={navigate}
           settings={settings}
           initialProductId={reservationProductId}

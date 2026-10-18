@@ -122,7 +122,9 @@ test('direct, review, and cart reserve entries retain fresh session-key behavior
   assert.match(appSource, /nextPage === ['"]reserve['"][\s\S]*setReservationProductId\(DEFAULT_PRODUCT_ID\)[\s\S]*setReservationSelection\(null\)[\s\S]*setReservationSessionKey\(\(current\) => current \+ 1\)/)
   assert.match(appSource, /const continueCartOrder = useCallback[\s\S]*setReservationSessionKey\(\(current\) => current \+ 1\)[\s\S]*pushPage\(['"]reserve['"]\)/)
   assert.match(appSource, /const orderCakeFromReview = useCallback[\s\S]*navigate\(['"]reserve['"]\)/)
-  assert.match(appSource, /<ReservePage[\s\S]*key=\{reservationSessionKey\}/)
+  // Retain a fresh session per entry and reset private form state when the
+  // authenticated cart owner changes in the same mounted application.
+  assert.match(appSource, /<ReservePage[\s\S]*key=\{`\$\{reservationSessionKey\}:\$\{cart\.checkoutOwner\}`\}/)
 })
 
 test('ordinary and history navigation clear cart origin without a direct detail request callback', () => {

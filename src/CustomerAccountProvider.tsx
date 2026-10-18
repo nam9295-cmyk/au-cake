@@ -2,7 +2,7 @@ import {useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'reac
 import {appwriteConfig} from './lib/appwrite'
 import {createCustomerAuth,type CustomerAuth} from './lib/customer-auth'
 import {CustomerAccountContext,disabledCustomerAccount} from './lib/customer-account-context'
-import {CUSTOMER_AUTH_CHANGED_EVENT,CUSTOMER_AUTH_NOTICE_KEY,publishCustomerAuthChange} from './lib/customer-account-config'
+import {CUSTOMER_AUTH_CHANGED_EVENT,CUSTOMER_AUTH_NOTICE_KEY,publishCustomerAuthChange,publishCustomerAuthStorageNotice} from './lib/customer-account-config'
 import {getCustomerOrders,getCustomerOrder} from './lib/customer-orders'
 import type {CustomerAuthState,CustomerProfile,CustomerCheckoutDraft,CustomerOrdersStatus,CustomerOrderService} from './lib/customer-account-types'
 import {saveCheckoutDraft,saveAccountReturn} from './lib/customer-checkout-draft'
@@ -43,7 +43,7 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
       if(active.current&&epoch.current===generation){
         authChecking.current=false
         const nextUser=identity?.userId??null
-        if(identityUser.current!==nextUser){intent.current++;identityUser.current=nextUser;resetOrders()}
+        if(identityUser.current!==nextUser){intent.current++;identityUser.current=nextUser;resetOrders();publishCustomerAuthStorageNotice()}
         setState(identity?{status:'authenticated',identity}:{status:'guest'})
       }
     } catch {if(active.current&&epoch.current===generation){authChecking.current=false;intent.current++;identityUser.current=null;resetOrders();setState({status:'unavailable'})}}

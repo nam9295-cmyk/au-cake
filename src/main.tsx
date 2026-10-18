@@ -11,8 +11,8 @@ import { CustomerAccountProvider } from './CustomerAccountProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <CartProvider>
-      <CustomerAccountProvider><App /></CustomerAccountProvider>
-    </CartProvider>
+    <CustomerAccountProvider>
+      <CartProvider><App /></CartProvider>
+    </CustomerAccountProvider>
   </StrictMode>,
 )

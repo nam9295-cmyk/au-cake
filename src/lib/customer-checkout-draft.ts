@@ -1,5 +1,6 @@
 import type {CustomerCheckoutDraft,CustomerProfile} from './customer-account-types'
 import {MARKET} from './market'
+import {scopedCartSignature,type CartOwner} from './customer-cart-storage'
 export type DraftStorage=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 export const CUSTOMER_DRAFT_PREFIX='verygood-au-customer-checkout-v1:'
 const returnPrefix='verygood-au-customer-return-v1:'
@@ -21,7 +22,8 @@ function validReturn(v:{version?:unknown;flowId?:unknown;savedAt?:unknown;return
 }
 function validDraft(d:CustomerCheckoutDraft,now:number) {
   if(!validReturn(d,now)||!['renewal','legacy'].includes(d.kind)||!uuid.test(d.requestId)||!['/cart','/reserve'].includes(d.returnTo)||!d.form||typeof d.form!=='object'||Array.isArray(d.form)||!Array.isArray(d.dirtyFields)||!Array.isArray(d.cartSnapshot)||typeof d.cartSignature!=='string'||!d.checkoutContext||Array.isArray(d.checkoutContext)||typeof d.checkoutContext!=='object'||!safeTree(d))return false
-  if(Object.keys(d).some(k=>!['version','kind','flowId','savedAt','returnTo','requestId','form','dirtyFields','checkoutContext','cartSnapshot','cartSignature'].includes(k)))return false
+  if(Object.keys(d).some(k=>!['version','kind','cartOwner','flowId','savedAt','returnTo','requestId','form','dirtyFields','checkoutContext','cartSnapshot','cartSignature'].includes(k)))return false
+  if(d.cartOwner!==undefined&&d.cartOwner!=='guest'&&!/^user:[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$/.test(d.cartOwner))return false
   const allowed=d.kind==='renewal'?renewalForm:legacyForm
   if(Object.entries(d.form).some(([k,v])=>!allowed.includes(k)||!['string','number','boolean'].includes(typeof v))||d.dirtyFields.some(k=>typeof k!=='string'||!allowed.includes(k)))return false
   return Object.keys(d.checkoutContext).every(k=>['initialProductId','initialSelection','initialOrderLines','initialPromoCode','initialRewardPercent','reviewRewardHandoff','cartOrigin'].includes(k))
@@ -42,8 +44,8 @@ export function saveCheckoutDraft(storage:DraftStorage,draft:CustomerCheckoutDra
     return {ok:true}
   }catch{return {ok:false}}
 }
-export type CheckoutResume={status:'missing'|'invalid'}|{status:'restored'|'cart-changed';draft:CustomerCheckoutDraft}
-export function restoreCheckoutDraft(storage:DraftStorage,{flowId,now,cartSignature}:{flowId:string;now:number;cartSignature:string}):CheckoutResume {
+export type CheckoutResume={status:'missing'|'invalid'|'owner-changed'}|{status:'restored'|'cart-changed';draft:CustomerCheckoutDraft}
+export function restoreCheckoutDraft(storage:DraftStorage,{flowId,now,cartSignature,cartOwner}:{flowId:string;now:number;cartSignature:string;cartOwner?:CartOwner}):CheckoutResume {
   try {
     if(!uuid.test(flowId))return {status:'invalid'}
     const text=storage.getItem(CUSTOMER_DRAFT_PREFIX+flowId)
@@ -51,24 +53,33 @@ export function restoreCheckoutDraft(storage:DraftStorage,{flowId,now,cartSignat
     if(new TextEncoder().encode(text).length>maxBytes)return {status:'invalid'}
     const draft=JSON.parse(text)
     if(draft.flowId!==flowId||!validDraft(draft,now))return {status:'invalid'}
+    if(cartOwner!==undefined&&draft.cartOwner&&draft.cartOwner!=='guest'&&draft.cartOwner!==cartOwner)return {status:'owner-changed'}
     return {status:draft.cartSignature===cartSignature?'restored':'cart-changed',draft}
   } catch{return {status:'invalid'}}
 }
 export function clearCheckoutDraft(storage:DraftStorage,flowId:string) {if(!uuid.test(flowId))return;try{storage.removeItem(CUSTOMER_DRAFT_PREFIX+flowId);storage.removeItem(returnPrefix+flowId)}catch{/* No navigation or order write on storage failure. */}}
+export function checkoutCallbackTarget(storage:DraftStorage,flowId:string,now=Date.now()):string {
+  const flow=readAccountReturn(storage,flowId,now)
+  if(!flow||flow.returnTo==='/account')return '/account'
+  // Callback only validates and routes. The authenticated destination checks the
+  // actual cart owner before applying fields, and acknowledges after review.
+  const result=restoreCheckoutDraft(storage,{flowId,now,cartSignature:''})
+  return 'draft'in result&&result.draft.returnTo===flow.returnTo?`${flow.returnTo}?customerResume=${encodeURIComponent(flowId)}`:'/account'
+}
 export function fillUntouchedContact<T extends {customerName:string;customerPhone:string;customerEmail:string}>(form:T,dirtyFields:readonly string[],profile:CustomerProfile):T {
   const next={...form}
   for(const [field,key] of [['customerName','name'],['customerPhone','phone'],['customerEmail','contactEmail']] as const)if(!dirtyFields.includes(field)&&!form[field])next[field]=profile[key]
   return next
 }
-export function checkoutCartSignature(kind:'renewal'|'legacy'):string {
-  try{return localStorage.getItem(kind==='renewal'?'verygood-au-renewal-cart-v1':'verygood-au-cake-cart-v1')||''}catch{throw Error('AUTH_DRAFT_UNAVAILABLE')}
+export function checkoutCartSignature(kind:'renewal'|'legacy',owner:CartOwner='guest'):string {
+  try{return scopedCartSignature(localStorage,kind,owner)}catch{throw Error('AUTH_DRAFT_UNAVAILABLE')}
 }
-export function readCheckoutResume(kind:'renewal'|'legacy'):CheckoutResume {
+export function readCheckoutResume(kind:'renewal'|'legacy',owner:CartOwner='guest'):CheckoutResume {
   if(typeof window==='undefined'||MARKET!=='AU')return {status:'missing'}
   try {
     const flowId=new URL(window.location.href).searchParams.get('customerResume')
     if(!flowId)return {status:'missing'}
-    const result=restoreCheckoutDraft(sessionStorage,{flowId,now:Date.now(),cartSignature:checkoutCartSignature(kind)})
+    const result=restoreCheckoutDraft(sessionStorage,{flowId,now:Date.now(),cartSignature:checkoutCartSignature(kind,owner),cartOwner:owner})
     return 'draft'in result&&result.draft.kind!==kind?{status:'invalid'}:result
   }catch{return {status:'invalid'}}
 }

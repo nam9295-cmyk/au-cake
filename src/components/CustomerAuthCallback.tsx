@@ -1,5 +1,6 @@
 import {useEffect,useRef} from 'react'
-import {readAccountReturn,restoreCheckoutDraft,checkoutCartSignature} from '../lib/customer-checkout-draft'
+import {checkoutCallbackTarget} from '../lib/customer-checkout-draft'
+import {publishCustomerAuthStorageNotice} from '../lib/customer-account-config'
 // This component intentionally does not call Account, including when flags changed during OAuth.
 export function CustomerAuthCallback() {
   const handled=useRef(false)
@@ -10,14 +11,9 @@ export function CustomerAuthCallback() {
     window.history.replaceState(null,'',url.pathname)
     let target='/account'
     try {
-      const flow=readAccountReturn(sessionStorage,flowId)
-      if(flow?.returnTo==='/account')target='/account'
-      else if(flow) {
-        // Validate without consuming. Checkout acknowledges only after applying its fields.
-        const first=restoreCheckoutDraft(sessionStorage,{flowId,now:Date.now(),cartSignature:checkoutCartSignature('renewal')})
-        if('draft'in first)target=`${flow.returnTo}?customerResume=${encodeURIComponent(flowId)}`
-      }
+      target=checkoutCallbackTarget(sessionStorage,flowId)
     }catch{/* Keep the callback free of provider errors, emails and credentials. */}
+    publishCustomerAuthStorageNotice()
     window.location.replace(target)
   },[])
   return <main className="customer-account-page" role="status">Returning to your order… / 주문 화면으로 돌아가는 중…</main>

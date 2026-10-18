@@ -42,3 +42,30 @@ test('legacy draft retains multi-line selection, coupon reward handoff and exact
   const form=Reflect.get(draftModule,'restoreCheckoutForm')({customerName:'',privacy:false,quantity:1},result.draft)
   assert.deepEqual(form,{customerName:'Typed',privacy:false,quantity:2})
 })
+test('member cart signatures and drafts are owner-scoped; Guest OAuth keeps form without moving goods',()=>{
+ const previous=globalThis.localStorage,storage=memory(),signature=Reflect.get(draftModule,'checkoutCartSignature'),restore=Reflect.get(draftModule,'restoreCheckoutDraft'),save=Reflect.get(draftModule,'saveCheckoutDraft')
+ try{
+  globalThis.localStorage=storage as never
+  assert.notEqual(signature('renewal','user:G'),signature('renewal','user:H'))
+  const member={...draft,cartOwner:'user:G',cartSignature:signature('renewal','user:G')}
+  assert.deepEqual(save(storage,member),{ok:true})
+  assert.equal(restore(storage,{flowId,now,cartSignature:member.cartSignature,cartOwner:'user:G'}).status,'restored')
+  const denied=restore(storage,{flowId,now,cartSignature:signature('renewal','user:H'),cartOwner:'user:H'})
+  assert.equal(denied.status,'owner-changed');assert.equal('draft'in denied,false)
+  assert.ok(storage.data.has(draftModule.CUSTOMER_DRAFT_PREFIX+flowId))
+  const guest={...draft,cartOwner:'guest',cartSignature:signature('renewal','guest')};save(storage,guest)
+  const resumed=restore(storage,{flowId,now,cartSignature:signature('renewal','user:G'),cartOwner:'user:G'})
+  assert.equal(resumed.status,'cart-changed');assert.equal(resumed.draft.requestId,draft.requestId);assert.equal(resumed.draft.form.name,'Already typed')
+  assert.equal(storage.getItem('verygood-au-renewal-cart-v1:user:G'),null)
+ }finally{globalThis.localStorage=previous}
+})
+test('OAuth callback routes saved Guest/member checkouts without consuming drafts or consulting readiness',()=>{
+ const target=Reflect.get(draftModule,'checkoutCallbackTarget'),storage=memory()
+ assert.equal(typeof target,'function');draftModule.saveCheckoutDraft(storage,draft as never)
+ assert.equal(target(storage,flowId,now),'/cart?customerResume='+flowId)
+ assert.ok(storage.getItem(draftModule.CUSTOMER_DRAFT_PREFIX+flowId))
+ assert.equal(target(storage,flowId,now+30*60*1000+1),'/account')
+ assert.equal(target(storage,'bad',now),'/account')
+ draftModule.saveAccountReturn(storage,{flowId,savedAt:now,returnTo:'/account'})
+ assert.equal(target(storage,flowId,now),'/account')
+})

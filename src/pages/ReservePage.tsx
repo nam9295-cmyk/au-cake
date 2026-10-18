@@ -1,6 +1,8 @@
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {useCustomerAccount} from '../lib/customer-account-context'
+import {useOptionalCart} from '../CartProvider'
+import {customerCartOwner} from '../lib/customer-cart-storage'
 import {CheckoutAccountPrompt} from '../components/CheckoutAccountPrompt'
 import {readCheckoutResume,restoreCheckoutForm,acknowledgeCheckoutResume,checkoutCartSignature,fillUntouchedContact} from '../lib/customer-checkout-draft'
 import type {CartLine} from '../lib/cart'
@@ -164,8 +166,9 @@ export function ReservePage({
   captureCartOrigin?: () => readonly CartLine[]
 }) {
   const customer=useCustomerAccount()
+  const cart=useOptionalCart(),owner=cart?.checkoutOwner||customerCartOwner(customer.state,customer.enabled)||'guest'
   const {registerCheckout}=customer
-  const [resume]=useState(()=>readCheckoutResume('legacy'))
+  const [resume]=useState(()=>readCheckoutResume('legacy',owner))
   const restored='draft' in resume?resume.draft:undefined
   const [guest,setGuest]=useState(false),[cartChanged,setCartChanged]=useState(resume.status==='cart-changed')
   const dirty=useRef(new Set(restored?.dirtyFields||[]))
@@ -209,7 +212,7 @@ export function ReservePage({
     couponCode: normalizeReviewCouponCode(initialPromoCode),
     rewardPercent: initialRewardPercent,
   }})
-  useEffect(()=>{if(restored)acknowledgeCheckoutResume(restored)},[restored])
+  useEffect(()=>{if(restored&&!cartChanged&&(!cart||cart.ready))acknowledgeCheckoutResume(restored)},[restored,cartChanged,cart])
   useEffect(()=>{
     if(guest||customer.state.status!=='authenticated')return
     const profile=customer.state.identity.profile
@@ -217,9 +220,9 @@ export function ReservePage({
     queueMicrotask(()=>{if(!cancelled)setForm(current=>fillUntouchedContact(current,[...dirty.current],profile))})
     return ()=>{cancelled=true}
   },[guest,customer.state])
-  useEffect(()=>registerCheckout(()=>({version:1,kind:'legacy',flowId:crypto.randomUUID(),savedAt:Date.now(),returnTo:'/reserve',requestId,form:{...form},dirtyFields:[...dirty.current],
+  useEffect(()=>registerCheckout(()=>{if(cart&&!cart.isCurrent())throw Error('AUTH_DRAFT_UNAVAILABLE');return {version:1,kind:'legacy',cartOwner:owner,flowId:crypto.randomUUID(),savedAt:Date.now(),returnTo:'/reserve',requestId,form:{...form},dirtyFields:[...dirty.current],
     checkoutContext:{initialProductId,initialSelection,initialOrderLines,initialPromoCode,initialRewardPercent,reviewRewardHandoff,cartOrigin:[...(captureCartOrigin?.()||[])]},
-    cartSnapshot:[...(initialOrderLines||(initialSelection?[initialSelection]:[]))],cartSignature:checkoutCartSignature('legacy')}),()=>setGuest(true)),[registerCheckout,requestId,form,initialProductId,initialSelection,initialOrderLines,initialPromoCode,initialRewardPercent,reviewRewardHandoff,captureCartOrigin])
+    cartSnapshot:[...(initialOrderLines||(initialSelection?[initialSelection]:[]))],cartSignature:checkoutCartSignature('legacy',owner)}},()=>setGuest(true)),[registerCheckout,requestId,form,initialProductId,initialSelection,initialOrderLines,initialPromoCode,initialRewardPercent,reviewRewardHandoff,captureCartOrigin,cart,owner])
   const currentReviewCoupon = normalizeReviewCouponCode(form.promoCode)
   const knownReviewRewardPercent = currentReviewCoupon && currentReviewCoupon === reviewRewardHandoff.couponCode
     ? reviewRewardHandoff.rewardPercent
@@ -240,7 +243,7 @@ export function ReservePage({
 
   async function submitReservation(event: React.FormEvent) {
     event.preventDefault()
-    if(cartChanged||(customer.enabled&&!guest&&customer.state.status==='checking'))return
+    if((cart&&!cart.isCurrent())||cartChanged||(customer.enabled&&!guest&&customer.state.status==='checking'))return
     setError('')
     const phone = normalizePhone(form.customerPhone)
     const customerEmail = form.customerEmail.trim().toLowerCase()
@@ -411,6 +414,7 @@ export function ReservePage({
         currency: 'AUD',
       })
       setForm((current) => ({ ...current, promoCode: '' }))
+      if(cart&&!cart.isCurrent())return
       onComplete(reservation)
       navigate('complete')
     } catch (submitError) {
@@ -647,6 +651,7 @@ export function ReservePage({
     })
   }
 
+  if(cart&&!cart.ready)return <main role="status">{language==='ko'?'계정을 확인하고 있습니다…':'Checking your account…'}</main>
   return (
     <>
       <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />

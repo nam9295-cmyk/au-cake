@@ -2,6 +2,7 @@ import { MOCHI_PUBLIC_INFORMATION } from '../../appwrite-functions/reservation-a
 import { useCustomerAccount } from '../lib/customer-account-context';
 import { CheckoutAccountPrompt } from '../components/CheckoutAccountPrompt';
 import { readCheckoutResume, acknowledgeCheckoutResume, checkoutCartSignature, fillUntouchedContact } from '../lib/customer-checkout-draft';
+import {GuestCartImport} from '../components/GuestCartImport';
 import { renewalPhoto, renewalPhotos } from "../lib/renewal-photos";
 import { RenewalPhotoGallery, SixPackPhoto } from "../components/RenewalPhotoStory";
 import {
@@ -780,14 +781,15 @@ function MochiProduct({ card }: { card: RenewalCard }) {
 }
 function Bag() {
   const customer = useCustomerAccount();
+  const cart = useCart();
   const {registerCheckout} = customer;
-  const [resume] = useState(() => readCheckoutResume('renewal'));
+  const [resume] = useState(() => readCheckoutResume('renewal',cart.checkoutOwner));
   const restored = 'draft' in resume ? resume.draft : undefined;
   const [contact, setContact] = useState(() => ({ customerName: String(restored?.form.name || ''), customerPhone: String(restored?.form.phone || ''), customerEmail: String(restored?.form.email || '') }));
+  const [extras,setExtras]=useState(()=>({note:String(restored?.form.note||''),promo:String(restored?.form.promo||''),privacy:restored?.form.privacy===true}));
   const [guest, setGuest] = useState(false), [cartChanged, setCartChanged] = useState(resume.status === 'cart-changed');
   const dirty = useRef(new Set(restored?.dirtyFields || [])), formElement = useRef<HTMLFormElement>(null);
   const { t, language } = useAuLanguage(),
-    cart = useCart(),
     [error, setError] = useState(""),
     [date, setDate] = useState(String(restored?.form.date || '')),
     [time, setTime] = useState(String(restored?.form.time || '')),
@@ -802,7 +804,16 @@ function Bag() {
   });
   const lock = useRef(false),
     requestId = useRef<string>(restored?.requestId || crypto.randomUUID());
-  useEffect(() => { if (restored) acknowledgeCheckoutResume(restored); }, [restored]);
+  const observedCart=useRef<string|null>(null);
+  useEffect(()=>{
+    if(!cart.ready)return;
+    const current=JSON.stringify(cart.renewalLines),previous=observedCart.current,changed=previous!==null&&previous!==current;
+    observedCart.current=current;
+    if(!changed)return;
+    if(cart.changedInAnotherTab){let cancelled=false,applied=false;queueMicrotask(()=>{if(!cancelled){applied=true;setCartChanged(true)}});return ()=>{cancelled=true;if(!applied)observedCart.current=previous}}
+    if(!cartChanged&&!lock.current)requestId.current=crypto.randomUUID();
+  },[cart.ready,cart.renewalLines,cart.changedInAnotherTab,cartChanged]);
+  useEffect(() => { if (restored && cart.ready && !cartChanged) acknowledgeCheckoutResume(restored); }, [restored,cart.ready,cartChanged]);
   useEffect(() => {
     if (guest || customer.state.status !== 'authenticated') return;
     const profile = customer.state.identity.profile;
@@ -814,13 +825,13 @@ function Bag() {
   useEffect(() => {
     if (!cart.renewalLines.length || result) return;
     return registerCheckout(() => {
-    if (!formElement.current || lock.current) throw Error('AUTH_DRAFT_UNAVAILABLE');
+    if (!formElement.current || lock.current || !cart.isCurrent()) throw Error('AUTH_DRAFT_UNAVAILABLE');
     const values = new FormData(formElement.current);
-    return {version:1,kind:'renewal',flowId:crypto.randomUUID(),savedAt:Date.now(),returnTo:window.location.pathname === '/reserve' ? '/reserve' : '/cart',requestId:requestId.current,
+    return {version:1,kind:'renewal',cartOwner:cart.owner||'guest',flowId:crypto.randomUUID(),savedAt:Date.now(),returnTo:window.location.pathname === '/reserve' ? '/reserve' : '/cart',requestId:requestId.current,
       form:{name:String(values.get('name')||''),phone:String(values.get('phone')||''),email:String(values.get('email')||''),date,time,note:String(values.get('note')||''),promo:String(values.get('promo')||''),privacy:values.get('privacy')==='on'},
-      dirtyFields:[...dirty.current],checkoutContext:{},cartSnapshot:[...cart.renewalLines],cartSignature:checkoutCartSignature('renewal')};
+      dirtyFields:[...dirty.current],checkoutContext:{},cartSnapshot:[...cart.renewalLines],cartSignature:checkoutCartSignature('renewal',cart.owner||'guest')};
     }, () => setGuest(true));
-  }, [registerCheckout, cart.renewalLines, date, time, result]);
+  }, [registerCheckout, cart, date, time, result]);
   useEffect(() => {
     renewalCapabilities()
       .then(setCaps)
@@ -838,7 +849,7 @@ function Bag() {
   const newProducts = lines.some((l) => RENEWAL_OFFERS[l.offerId].newProduct);
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (lock.current || editingMochi !== null || cartChanged || (customer.enabled && !guest && customer.state.status === 'checking')) return;
+    if (!cart.isCurrent() || lock.current || editingMochi !== null || cartChanged || (customer.enabled && !guest && customer.state.status === 'checking')) return;
     lock.current = true;
     setBusy(true);
     setError("");
@@ -858,6 +869,7 @@ function Bag() {
         requestId: requestId.current,
         orderLines: lines,
       }, customer.enabled && !guest && customer.state.status === 'authenticated' ? {customerAccount:'link'} : undefined);
+      if(!cart.isCurrent())return;
       setResult(String(response.reservationNumber));
       setResultPickup(
         `${response.pickupDate} ${response.pickupTime} (Australia/Sydney)`,
@@ -874,6 +886,7 @@ function Bag() {
       setBusy(false);
     }
   }
+  if(!cart.ready)return <main className="renewal-page" role="status">{t('Checking your account…','계정을 확인하고 있습니다…')}</main>;
   if (result)
     return (
       <main className="renewal-page">
@@ -893,6 +906,8 @@ function Bag() {
   return (
     <main className="renewal-page renewal-cart">
       <h1>{t("Your bag", "장바구니")}</h1>
+      <GuestCartImport language={language}/>
+      {resume.status==='owner-changed'&&<p role="status">{t('The saved checkout belongs to another account. Sign back in to that account to restore it.','저장된 주문서는 다른 회원의 주문서입니다. 해당 계정으로 다시 로그인하면 복원할 수 있습니다.')}</p>}
       <MochiReselectionNotice />
       {cart.lines.length > 0 && (
         <p role="status">
@@ -1063,14 +1078,14 @@ function Bag() {
               </p>
               <label>
                 {t("Promo code", "쿠폰 코드")}
-                <input name="promo" maxLength={80} defaultValue={String(restored?.form.promo || '')} />
+                <input name="promo" maxLength={80} value={extras.promo} onChange={event=>setExtras(current=>({...current,promo:event.target.value}))} />
               </label>
               <label>
                 {t("Note", "요청사항")}
-                <textarea name="note" maxLength={1000} defaultValue={String(restored?.form.note || '')} />
+                <textarea name="note" maxLength={1000} value={extras.note} onChange={event=>setExtras(current=>({...current,note:event.target.value}))} />
               </label>
               <label className="renewal-check">
-                <input name="privacy" type="checkbox" required defaultChecked={restored?.form.privacy === true} />
+                <input name="privacy" type="checkbox" required checked={extras.privacy} onChange={event=>setExtras(current=>({...current,privacy:event.target.checked}))} />
                 {t(
                   "I agree to the use of my details to process this request.",
                   "예약 처리를 위한 개인정보 이용에 동의합니다.",
@@ -1111,10 +1126,11 @@ function Bag() {
     </main>
   );
 }
+function ScopedBag(){const cart=useCart();return <Bag key={cart.checkoutOwner}/>}
 export function AuRenewalShop({ path }: { path: string }) {
   path = path.replace(/\/+$/, "") || "/";
   const { t } = useAuLanguage();
-  if (path === "/cart" || path === "/reserve") return <Bag />;
+  if (path === "/cart" || path === "/reserve") return <ScopedBag />;
   const category = path.slice(1) as keyof typeof RENEWAL_CARDS;
   if (Object.hasOwn(RENEWAL_CARDS, category))
     return <RenewalCollection category={category} />;

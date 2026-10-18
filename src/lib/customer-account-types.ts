@@ -20,5 +20,5 @@ export type CustomerOrderDetail = CustomerOrderSummary & {
 }
 export type CustomerOrdersPage = {orders:CustomerOrderSummary[]; nextCursor:string|null}
 export type CustomerOrderService = {list:(options?:{cursor?:string})=>Promise<CustomerOrdersPage>;detail:(id:string)=>Promise<CustomerOrderDetail>}
-export type CustomerCheckoutDraft={version:1;kind:'renewal'|'legacy';flowId:string;savedAt:number;returnTo:'/cart'|'/reserve';requestId:string;
+export type CustomerCheckoutDraft={version:1;kind:'renewal'|'legacy';cartOwner?:'guest'|`user:${string}`;flowId:string;savedAt:number;returnTo:'/cart'|'/reserve';requestId:string;
   form:Record<string,string|number|boolean>;dirtyFields:string[];checkoutContext:Record<string,unknown>;cartSnapshot:unknown[];cartSignature:string}
