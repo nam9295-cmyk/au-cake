@@ -3,8 +3,10 @@ import {join,isAbsolute} from 'node:path'
 import {spawn} from 'node:child_process'
 function execute(command,args,options){return new Promise((resolve,reject)=>{const child=spawn(command,args,{...options,stdio:'ignore'});child.once('error',()=>reject(Error('B7_CLOSED_SITE_DEPLOY_FAILED')));child.once('close',status=>resolve({status}))})}
 // Stop operation only. No production project, open-window artifact or arbitrary upload.
-export function createB7ClosedSiteAdapter({directory,pagesAttemptSlotsUsed,wranglerPath,run=execute}) {
- if(!isAbsolute(directory||'')||!isAbsolute(wranglerPath||'')||!Number.isInteger(pagesAttemptSlotsUsed)||pagesAttemptSlotsUsed<0||pagesAttemptSlotsUsed>=3)throw Error('B7_PAGES_CONFIGURATION_REJECTED')
+export function createB7ClosedSiteAdapter({directory,pagesAttemptSlotsUsed,wranglerPath,run=execute,budgetApprovalProof}) {
+ const expanded=budgetApprovalProof?.approved===true&&budgetApprovalProof.manifestSha256==='1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90'&&budgetApprovalProof.previousUsed===2&&budgetApprovalProof.additionalMax===3&&budgetApprovalProof.cumulativeMax===5
+ if(budgetApprovalProof!==undefined&&!expanded)throw Error('B7_PAGES_CONFIGURATION_REJECTED')
+ if(!isAbsolute(directory||'')||!isAbsolute(wranglerPath||'')||!Number.isInteger(pagesAttemptSlotsUsed)||pagesAttemptSlotsUsed<0||pagesAttemptSlotsUsed>=(expanded?5:3))throw Error('B7_PAGES_CONFIGURATION_REJECTED')
  let attempted=false
  return async()=>{
   if(attempted)throw Error('B7_PAGES_ALREADY_ATTEMPTED')

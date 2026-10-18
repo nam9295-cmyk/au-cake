@@ -12,3 +12,11 @@ test('recovery Pages adapter publishes only a closed cover on the fixed test pro
  assert.equal(JSON.parse(await readFile(join(dir,'closed-site/test-window.json'),'utf8')).enabled,false)
  await assert.rejects(stop());assert.equal(calls,1)
 })
+test('V3 explicit additional approval permits the fifth closed recovery deployment only within the cumulative cap',async()=>{
+ const proof={approved:true,manifestSha256:'1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90',previousUsed:2,additionalMax:3,cumulativeMax:5}
+ const directory=await mkdtemp(join(tmpdir(),'b7-pages-approved-'));let calls=0
+ for(const budgetApprovalProof of [undefined,{...proof,approved:false},{...proof,manifestSha256:'wrong'},{...proof,cumulativeMax:6}])assert.throws(()=>api.createB7ClosedSiteAdapter({directory,pagesAttemptSlotsUsed:4,wranglerPath:'/synthetic/wrangler.js',budgetApprovalProof,run:async()=>{calls++;return {status:0}}}))
+ const stop=api.createB7ClosedSiteAdapter({directory,pagesAttemptSlotsUsed:4,wranglerPath:'/synthetic/wrangler.js',budgetApprovalProof:proof,run:async()=>{calls++;return {status:0}}})
+ assert.deepEqual(await stop(),{attempts:5,entryEnabled:false});assert.equal(calls,1)
+ assert.throws(()=>api.createB7ClosedSiteAdapter({directory,pagesAttemptSlotsUsed:5,wranglerPath:'/synthetic/wrangler.js',budgetApprovalProof:proof}))
+})

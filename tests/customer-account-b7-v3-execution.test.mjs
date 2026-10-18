@@ -6,6 +6,15 @@ const runner=await import('../scripts/customer-account-b7-v3-runner.mjs').catch(
 const bytes=readFileSync(new URL('../docs/customer-account-b7-execution-manifest-v3.json',import.meta.url)),m=JSON.parse(bytes)
 const hash='1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90',proof={manifestSha256:hash,manifestVersion:3,approved:true,residualPublicInvocationRiskAccepted:true,allowAutoExtend:false}
 export const v3Proof=proof
+test('native G Checkout default options are frozen byte-for-byte without permitting price-changing options',async()=>{
+ const {b7Inputs}=await import('./fixtures/customer-account/b7.mjs'),rows=b7Inputs()
+ for(const row of rows.slice(0,2))Object.assign(row.data.orderLines[0],{finish:'basic',individualPackaging:false})
+ const frozen=JSON.parse(api.freezeB7Fixtures(rows))
+ assert.equal(frozen.createBodies[0],JSON.stringify(rows[0]));assert.equal(frozen.createBodies[1],JSON.stringify(rows[1]))
+ for(const patch of [{finish:'extra-chocolate'},{individualPackaging:true},{unknownOption:false}]){
+  const changed=structuredClone(rows);Object.assign(changed[0].data.orderLines[0],patch);assert.throws(()=>api.freezeB7Fixtures(changed))
+ }
+})
 test('V3 execution rejects every older proof or manifest and wrong target before network',()=>{
  assert.equal(typeof api.assertB7Run,'function')
  const input={manifestBytes:bytes,approvalProof:proof,target:m.target,phase:'prepare',now:Date.now()}

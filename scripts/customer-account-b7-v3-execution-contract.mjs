@@ -15,4 +15,31 @@ export function assertB7Run({manifestBytes,approvalProof,target,phase,now,window
 }
 
 
-export {freezeB7Fixtures} from './customer-account-b7-contract.mjs'
+// V3 preserves explicit native default options; V2 remains immutable.
+export function freezeB7Fixtures(requests) {
+ const fail=()=>{throw Error('B7_FIXTURE_REJECTED')}
+ if(!Array.isArray(requests)||requests.length!==6)fail()
+ const products=['pave-cake','pave-chocolate-100g','pave-cake','pave-chocolate-100g','pave-cake','pave-chocolate-100g'],actors=['G','G','H','H','G','G'],ids=[]
+ const uuid=/^[a-f\d]{8}-[a-f\d]{4}-4[a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i
+ for(const [i,body] of requests.entries()) {
+  const data=body?.data,line=data?.orderLines?.[0],actor=actors[i]
+  const nativeDefaults=i<2?{...(Object.hasOwn(line||{},'finish')?{finish:'basic'}:{}),...(Object.hasOwn(line||{},'individualPackaging')?{individualPackaging:false}:{})}:{}
+  const expected={action:'create-cake',...(i<4?{customerAccount:'link'}:{}),data:{contractVersion:'au-renewal.2026-10.v2',requestId:data?.requestId,customerName:'B7 TEST ONLY '+actor,customerPhone:actor==='G'?'0400000001':'0400000002',customerEmail:actor==='G'?'b7-g@example.invalid':'b7-h@example.invalid',pickupDate:'2026-10-23',pickupTime:'10:00',privacyConsent:true,website:'',requestNote:'',promoCode:data?.promoCode,orderLines:[{lineId:line?.lineId,offerId:products[i],quantity:1,...(i%2===0?{size:'6in',chocolateType:'dark'}:{}),...nativeDefaults}]}}
+  if(!isDeepStrictEqual(body,expected)||!uuid.test(data.requestId)||typeof line.lineId!=='string'||!/^[A-Za-z0-9._-]{1,64}$/.test(line.lineId)||i>=2&&data.requestId!==`b700000${i+1}-0000-4000-8000-00000000000${i+1}`)fail()
+  if(i===2?!/^JENNIE[A-Z0-9]{5}$/.test(data.promoCode):i===3?!/^FOXKIWI[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(data.promoCode):data.promoCode!=='')fail()
+  ids.push(data.requestId)
+ }
+ if(new Set(ids).size!==6)fail()
+ const variants=requests.map(x=>structuredClone(x))
+ // Exact bounded negatives/replays reach unmodified business authorization/idempotence.
+ for(const request of requests){
+  variants.push({...request,data:{...request.data,requestNote:'B7 changed payload'}})
+  variants.push({...request,customerAccount:'link'})
+  variants.push({...request,customerAccount:'link',data:{...request.data,customerUserId:'6ad38e4e0ffd5f810e23'}})
+ }
+ const legacy=requests[2]
+ const {contractVersion:unused,orderLines:unusedLines,...data}=legacy.data
+ void unused;void unusedLines
+ variants.push({...legacy,data:{...data,productId:'pave-cake',cakeSize:'6in',chocolateType:'dark',quantity:1}})
+ return Buffer.from(JSON.stringify({requestIds:ids,createBodies:[...new Set(variants.map(x=>JSON.stringify(x)))]}))
+}

@@ -13,7 +13,7 @@ export async function createB7LiveWatchdogAdapters(config,{transport=fetch,readM
  const runner=createB7Runner({manifestBytes,approvalProof,target:manifest.target,cliSession,transport,persist:async()=>{throw Error('B7_WATCHDOG_CANNOT_OPEN')},state})
  const monitor=createB7ExecutionMonitor({secret:config.signingSecret,startsAt:state.window.startsAt,endsAt:state.window.endsAt,baselineIds:config.executionBaselineIds})
  const resources=createCustomerAccountTestProbe({target:{endpoint,projectId,resources:{databaseIds:manifest.target.databaseIds,functionIds:[functionId]}},transport,readMetrics})
- const siteOff=providedSiteOff||createB7ClosedSiteAdapter({directory:config.directory,pagesAttemptSlotsUsed:config.pagesAttemptSlotsUsed,wranglerPath:config.wranglerPath})
+ const siteOff=providedSiteOff||createB7ClosedSiteAdapter({directory:config.directory,pagesAttemptSlotsUsed:config.pagesAttemptSlotsUsed,wranglerPath:config.wranglerPath,budgetApprovalProof:config.pagesBudgetApprovalProof})
  const get=async(path,consoleProject=false)=>{
   const r=await transport(endpoint+path,{method:'GET',redirect:'error',signal:AbortSignal.timeout(5000),headers:{'X-Appwrite-Project':consoleProject?'console':projectId,...(consoleProject?{}:{'X-Appwrite-Mode':'admin'}),Cookie:cliSession.cookie}})
   if(!r.ok||r.redirected)throw Error('B7_MONITOR_GET_FAILED');return r.json()
