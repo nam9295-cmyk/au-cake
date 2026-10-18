@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **B7 V3 준비:** [새 manifest](customer-account-b7-execution-manifest-v3.json), [준비 계획](superpowers/plans/2026-10-18-customer-account-b7-v3-preparation.md), [검증 결과](customer-account-b7-v3-readiness.md)를 추가했다. 신규 변수 한도 7개는 제안 명세이며 `executionApproved=false`, 실제 추가/활성화/배포는 하지 않았다. 기존 V1/V2와 승인 SHA는 보존한다. 과거 운영 AU `projectConfig` 차이는 미확인이고 새 관찰 지문을 정상 기준선으로 승인하지 않았다. 실제 V3 실행 wiring·별도 승인·원격 명시적 flag 준비가 필요하다. **B5 — DEFERRED — RELEASE BLOCKER** 유지.
+
 > **B7 V2:** 신규6건을 Renewal v2로 통일한 별도 manifest/실행 계획 및 [로컬 검증 결과](customer-account-b7-v2-validation.md)를 작성했다. 기존 V1 승인 기록은 보존하며, 새 SHA에 대한 조건부 실행 승인을 받았으나 compiled artifact 오류로 창을 열지 않았다. 후속 로컬 수정·보호장치 검증 결과는 [B7 V2 실행 준비 보고](customer-account-b7-v2-readiness.md)를 확인한다. 현재 신규 변수 필요7/승인5 충돌로 실제 실행은 차단 상태다. B5는 DEFERRED — RELEASE BLOCKER다.
 
 > **2026-10-18 B7 조건부 실행 중단:** 승인 SHA는 일치하지만 Renewal writes ON에서 신규 legacy fixture 3건이 원본 서버의 `409 RENEWAL_CONTRACT_REQUIRED`로 거부된다. guard 구현/시험 창 개방 전 중단했으며 Account·Function은 OFF다. [실패 근거와 재개 조건](customer-account-b7-validation.md). 승인 manifest는 보존했다. 아래 기존 계획은 이 충돌을 해결하기 전 실행하지 않는다.
