@@ -29,6 +29,7 @@ test('relay keeps signing material server-side and forwards actual user JWT; una
  const request=(jwt)=>new Request('https://au-account-test.verygood-chocolate.com/__acceptance/orders',{method:'POST',headers:{Origin:'https://au-account-test.verygood-chocolate.com','Content-Type':'application/json',...(jwt?{Authorization:'Bearer '+jwt}:{})},body:JSON.stringify({action:'customer-orders',data:{limit:25}})})
  assert.equal((await relay(request())).status,401);assert.equal(calls.length,0)
  const r=await relay(request('synthetic-jwt')),text=await r.text();assert.equal(r.status,200);assert.equal(calls.length,2);assert.equal(calls[1].o.headers['X-Appwrite-JWT'],'synthetic-jwt');assert.equal(calls[1].o.headers.Cookie,undefined)
+ for(const call of calls)assert.equal(call.o.redirect,'manual')
  const wire=JSON.parse(calls[1].o.body);assert.match(wire.path,/^\/ca-integrated\//);assert.equal(text.includes(secret),false);assert.equal(text.includes(wire.headers['x-ca-signature']),false);assert.equal(text.includes('synthetic-jwt'),false)
 })
 test('relay rejects arbitrary origins/actions and enforces ten dispatches with no retry',async()=>{
@@ -38,4 +39,18 @@ test('relay rejects arbitrary origins/actions and enforces ten dispatches with n
  assert.equal((await relay(req('create-cake'))).status,403);assert.equal((await relay(req('customer-order','https://evil.invalid'))).status,403);assert.equal(executions,0)
  for(let i=0;i<10;i++)assert.equal((await relay(req())).status,404)
  assert.equal((await relay(req())).status,429);assert.equal(executions,10)
+})
+test('an upstream authentication redirect fails closed without executing or following a different origin',async()=>{
+ assert.equal(typeof api.createIntegratedRelay,'function');const requests=[]
+ const relay=api.createIntegratedRelay({config,clock:()=>at,transport:async(url,options)=>{requests.push({url,options});return Response.redirect('https://unapproved.invalid/',302)}})
+ const request=new Request('https://au-account-test.verygood-chocolate.com/__acceptance/orders',{method:'POST',headers:{Origin:'https://au-account-test.verygood-chocolate.com',Authorization:'Bearer synthetic-jwt'},body:JSON.stringify({action:'customer-orders',data:{limit:25}})})
+ const r=await relay(request);assert.equal(r.status,503);assert.equal(requests.length,1);assert.equal(requests[0].url.endsWith('/account'),true);assert.equal(requests[0].options.redirect,'manual')
+})
+test('an execution redirect is rejected with no retry and no JWT or signing material in the response',async()=>{
+ const calls=[]
+ const relay=api.createIntegratedRelay({config,clock:()=>at,transport:async(url,options)=>{calls.push({url,options});return url.endsWith('/account')?Response.json({$id:'6ad38e4e0ffd5f810e23',status:true}):Response.redirect('https://unapproved.invalid/',307)}})
+ const request=new Request('https://au-account-test.verygood-chocolate.com/__acceptance/orders',{method:'POST',headers:{Origin:'https://au-account-test.verygood-chocolate.com',Authorization:'Bearer synthetic-jwt'},body:JSON.stringify({action:'customer-orders',data:{limit:25}})})
+ const r=await relay(request),text=await r.text();assert.equal(r.status,503);assert.equal(calls.length,2)
+ for(const call of calls)assert.equal(call.options.redirect,'manual')
+ assert.equal(text.includes('synthetic-jwt'),false);assert.equal(text.includes(secret),false);assert.equal(text.includes('unapproved.invalid'),false)
 })

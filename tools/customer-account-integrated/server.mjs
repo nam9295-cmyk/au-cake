@@ -52,13 +52,15 @@ export function createIntegratedRelay({config,transport=fetch,clock=Date.now}){
    if(clock()<config.startedAt||!/^[A-Za-z0-9_-]{43}$/.test(config.secret||''))throw Error()
    const text=await request.text();if(encoder.encode(text).length>3000)return json({ok:false,code:'TEST_ROUTE_DENIED'},403)
    const body=JSON.parse(text);if(!integratedBodyAllowed(body))return json({ok:false,code:'TEST_ROUTE_DENIED'},403)
-   const authHeaders={'X-Appwrite-Project':t.projectId,'X-Appwrite-JWT':jwt},userResponse=await transport(t.endpoint+'/account',{method:'GET',redirect:'error',signal:AbortSignal.timeout(5000),headers:authHeaders})
+   // Workers supports manual redirects; never follow one carrying a customer JWT.
+   const authHeaders={'X-Appwrite-Project':t.projectId,'X-Appwrite-JWT':jwt},userResponse=await transport(t.endpoint+'/account',{method:'GET',redirect:'manual',signal:AbortSignal.timeout(5000),headers:authHeaders})
+   if(userResponse.redirected||(userResponse.status>=300&&userResponse.status<400))return json({ok:false,code:'CUSTOMER_ORDERS_UNAVAILABLE'},503)
    if(!userResponse.ok)return json({ok:false,code:'CUSTOMER_UNAUTHORIZED'},401)
    const user=await userResponse.json();if(user.status!==true||!actorFor(user.$id))return json({ok:false,code:'CUSTOMER_UNAUTHORIZED'},401)
    const time=String(clock()),nonce=crypto.randomUUID(),hash=await integratedHash(text),sig=await signature(config,time,nonce,hash,config.secret)
    // No Owner credential is present here. Appwrite derives platform user headers from this JWT.
-   count++;const began=clock(),r=await transport(t.endpoint+'/functions/'+t.functionId+'/executions',{method:'POST',redirect:'error',signal:AbortSignal.timeout(15000),headers:{...authHeaders,'Content-Type':'application/json'},body:JSON.stringify({body:text,async:false,method:'POST',path:`/ca-integrated/${time}/${nonce}/${hash}/${sig}`,headers:{'x-ca-time':time,'x-ca-nonce':nonce,'x-ca-signature':sig}})})
-   if(!r.ok)return json({ok:false,code:'CUSTOMER_ORDERS_UNAVAILABLE'},503)
+   count++;const began=clock(),r=await transport(t.endpoint+'/functions/'+t.functionId+'/executions',{method:'POST',redirect:'manual',signal:AbortSignal.timeout(15000),headers:{...authHeaders,'Content-Type':'application/json'},body:JSON.stringify({body:text,async:false,method:'POST',path:`/ca-integrated/${time}/${nonce}/${hash}/${sig}`,headers:{'x-ca-time':time,'x-ca-nonce':nonce,'x-ca-signature':sig}})})
+   if(r.redirected||!r.ok)return json({ok:false,code:'CUSTOMER_ORDERS_UNAVAILABLE'},503)
    const execution=await r.json();if(execution.status!=='completed'||!Number.isInteger(execution.responseStatusCode)||execution.responseStatusCode<200||execution.responseStatusCode>599)throw Error()
    const result=JSON.parse(execution.responseBody);if(typeof result?.ok!=='boolean')throw Error()
    return json(result,execution.responseStatusCode,{'X-CA-Upstream-Ms':String(clock()-began),'X-CA-Execution-Ms':String(Math.round(Number(execution.duration||0)*1000))})

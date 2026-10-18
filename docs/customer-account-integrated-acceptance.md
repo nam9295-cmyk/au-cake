@@ -72,3 +72,32 @@ must match. Synthetics, saved profiles and carts are preserved.
 **B5 — DEFERRED / RELEASE BLOCKER**. Original D1 health timeout remains
 UNRESOLVED; historical AU raw fingerprint difference remains UNVERIFIED.
 Actual order creation/JWT owner linkage is NOT RUN in this read-only acceptance.
+
+## Manual results and relay correction
+
+The user confirmed that G/H show separate carts, names and phone numbers.
+These observations are PASS; they do not establish order ownership checks.
+Copied browser evidence records G list HTTP 503 in 1,095 ms and H's foreign
+fixture detail HTTP 503 in 1,017 ms, both with zero upstream/execution timing.
+Three Guest requests returned relay HTTP 401. The independent inventory monitor
+observed zero additional Function executions. The G list and H foreign-detail
+attempts are FAIL (503); successful own-detail 200 and foreign-detail 404 remain
+NOT RUN. Guest 401 proves the relay boundary only.
+
+The deployed relay passed `redirect: 'error'` to native fetch. Native Cloudflare
+workerd rejects that option with a TypeError before sending the first request;
+the injected Node transport tests had not exercised that runtime contract.
+A network-isolated local workerd reproduction returned 503 with zero mocked
+outbound requests before correction. With `redirect: 'manual'`, the same
+reproduction returns 200 after two mocked requests. Neither reproduction calls
+real Appwrite or consumes the execution budget.
+
+The local correction explicitly rejects authentication redirects and never
+follows redirects with a user JWT; execution redirects remain fail-closed too.
+Related guard/relay/original ownership/storage tests: 15 PASS, 0 FAIL, 0 skipped.
+The native workerd result is a local mock result, not provider acceptance.
+No Function or DB change is needed. Applying the correction requires one more
+OPEN Pages deployment beyond OPEN20, while preserving a final CLOSED deployment;
+that extra deployment is not authorized by the original OPEN20/CLOSED21 limit.
+Until separately approved, the deployed relay is unchanged and no additional
+Pages deployment or Function execution is performed for this correction.
