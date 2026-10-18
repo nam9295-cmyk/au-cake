@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **B7 V2:** 신규6건을 Renewal v2로 통일한 별도 manifest/실행 계획 및 [로컬 검증 결과](customer-account-b7-v2-validation.md)를 작성했다. 기존 V1 승인 기록은 보존하며, 새 SHA에 대한 실제 실행 승인은 대기 중이다. B5는 DEFERRED — RELEASE BLOCKER다.
+
 > **2026-10-18 B7 조건부 실행 중단:** 승인 SHA는 일치하지만 Renewal writes ON에서 신규 legacy fixture 3건이 원본 서버의 `409 RENEWAL_CONTRACT_REQUIRED`로 거부된다. guard 구현/시험 창 개방 전 중단했으며 Account·Function은 OFF다. [실패 근거와 재개 조건](customer-account-b7-validation.md). 승인 manifest는 보존했다. 아래 기존 계획은 이 충돌을 해결하기 전 실행하지 않는다.
 
 2026-10-18. 이 문서는 production 적용 전의 승인 절차다. 별도 승인 아래 [B1](customer-account-b1-validation.md), [B2 테스트 schema/조건부 migration](customer-account-b2-owner-execution.md), [B3 테스트 HTTPS·Google SDK 인증](customer-account-b3-google-validation.md), [B4 테스트 전용 Resend SMTP와 일반 sample 1건 수신](customer-account-b4-smtp-validation.md)을 완료했다. 테스트 Account와 신규 인증 진입은 OFF다. production migration/Function·사이트 배포/운영 Google·SMTP 변경/고객 데이터 접근·변경/main 병합은 실행하지 않았다. 공통 SMTP와 B5는 미실행이다. [B6 테스트 Function 구축·검증](customer-account-b6-function-validation.md)은 별도 승인 아래 완료했으며 공개 Function/Account는 차단 상태로 보존한다. 제품 고객 기능 frontend/server flag는 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
