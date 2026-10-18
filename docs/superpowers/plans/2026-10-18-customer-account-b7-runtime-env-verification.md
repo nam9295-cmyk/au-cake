@@ -1,5 +1,7 @@
 # B7 runtime 환경 반영 검증 — 제안 / 실행 미승인
 
+> **후속 승인·실행 기록:** 사용자가 D1 로컬 보완·새 진단 deployment 최대1·Owner health 최대3/300초를 별도 승인했다. [실제 결과](../../customer-account-b7-d1-runtime-results.md): 새 runtime guard PASS, 첫 health timeout/HTTP500 FAIL로1회만 실행 후 OFF/B6/CLOSED 복구 PASS. 누적8/120·Pages7/9. D1은 종료했고 Google/D2·추가 execution/deployment는 미승인이다. 아래 원래 제안은 당시 승인 경계의 기록으로 보존한다.
+
 2026-10-18. [health403 조사](../../customer-account-b7-health-403-investigation.md)에 근거한 좁은 계획이다. **현재 승인 범위는 조사와 계획까지다. 아래 코드 변경·변수 PUT·배포·Owner execution을 지금 실행하지 않는다.** Account OFF, Function disabled/execute=[], flagsfalse, B6 active, 사이트 CLOSED를 유지하고 승인 대기한다.
 
 ## 다음 단계의 권장 승인 범위

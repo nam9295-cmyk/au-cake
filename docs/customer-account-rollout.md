@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **최신 D1 실제 진단:** [결과](customer-account-b7-d1-runtime-results.md). 배포 전 key/window/flags 동결→새 Node22 deployment에서 guard·header/path 계약 PASS. 첫 health는 timeout/HTTP500으로 FAIL, 나머지2회 NOT RUN으로 즉시 종료했다. Account/공개 Function/Pages OPEN0, 복구·직접 OFF403/B6/CLOSED·운영 현재 지문 불변 PASS. 누적8/120·Pages7/9, Google 인수 미완료. B5 DEFERRED — RELEASE BLOCKER 및 과거 AU raw UNVERIFIED 유지. 아래는 보존된 이전 기록이다.
+
 > **health403 집중 조사:** [결과](customer-account-b7-health-403-investigation.md). 변수 갱신 뒤 기존 deployment/runtime 재사용의 계약 결함을 확인했다. 이전 warm env/TIME 거부가 강하게 지지되지만 실제 최초 predicate는 UNVERIFIED다. [새 deployment 기반 닫힌 검증 제안](superpowers/plans/2026-10-18-customer-account-b7-runtime-env-verification.md)은 실행 미승인. 이번 execution/배포/새 창0, OFF/B6/CLOSED 유지, B5 DEFERRED — RELEASE BLOCKER. Google 재개 전 별도 승인 필요.
 
 > **최신 수동 B7 실행:** [실제 결과](customer-account-b7-manual-run-results.md). 사용자 시작 승인 뒤 첫 Owner health가403 `B7_GUARD_REJECTED`로 실패해 OPEN 전 중단했다. Account/공개 Function/Pages 배포·Google/주문0, watchdog 및 직접 OFF/B6/CLOSED 검증 PASS. 실행 누적7/120, Pages7/9. 실패 predicate UNVERIFIED, 새 창 자동 재시도 금지. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.

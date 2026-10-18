@@ -1,5 +1,7 @@
 # B7 health403 — 환경변수와 기존 runtime 재사용 조사
 
+> **후속 D1 실제 근거:** [새 runtime 검증 결과](customer-account-b7-d1-runtime-results.md). 배포 전 새 key/window/flags를 동결한 새 deployment에서 guard·플랫폼 계약은 PASS했다. 이후 첫 health가 timeout/HTTP500으로 실패해 종료·복구했다. 재배포 없는 환경 갱신 절차를 보완한 경로는 통과했지만 과거403 최초 predicate는 여전히 UNVERIFIED다. Google/주문은 NOT RUN이다. 아래는 최초 조사 기록을 보존한다.
+
 2026-10-18 KST. **기존 절차의 결함은 확인했다: 변수 API 갱신·기존 deployment 재활성화를 runtime 설정 갱신으로 취급했다. Appwrite의 재배포 계약과 맞지 않는다.** 실패 원인으로는 **이전 window/key를 가진 warm runtime 재사용**이 가장 유력하다. 다만 당시 runtime 환경은 이미 제거돼 직접 대조할 수 없고 guard의 세부 로그도 없어 **실제 최초 거부 predicate는 UNVERIFIED**다. 저장 metadata의 HMAC 성공을 runtime 내부 환경 일치로 보지 않는다.
 
 이번에는 공식 문서/버전 고정 소스·기존 evidence·Owner GET·서버 metadata/비민감 로그만 조사했다. Appwrite execution/재배포/새 창/Pages/주문/설정 쓰기0, 전체 suite 재실행0이다. 원본 guard에 대한 로컬7개 시나리오만 실행했다. CUA·자동 브라우저·운영 고객정보 접근도0이다.
