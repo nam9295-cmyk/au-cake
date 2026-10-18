@@ -5,6 +5,7 @@ import {readFile,mkdtemp,writeFile} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {createB7Runner} from '../scripts/customer-account-b7-v3-runner.mjs'
+import {d1VariablesDigest} from '../scripts/customer-account-b7-d1.mjs'
 const manifestBytes=await readFile(new URL('../docs/customer-account-b7-execution-manifest-v3.json',import.meta.url)),m=JSON.parse(manifestBytes)
 const approvalProof={manifestVersion:3,approved:true,allowAutoExtend:false,residualPublicInvocationRiskAccepted:true,manifestSha256:'1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90'}
 function setup(){
@@ -85,4 +86,25 @@ test('live watchdog wiring polls only metadata, detects an unsigned execution, a
  await continuation.operations.siteOff();assert.equal(deployments,0)
  s.state.attempts.pagesOpen=true;await writeFile(config.statePath,JSON.stringify(s.state),{mode:0o600});await continuation.operations.siteOff();assert.equal(deployments,1)
  assert.ok(s.calls.every(c=>c.method==='GET'))
+})
+test('D1 watchdog requires Account/execute OFF, authLimit two, frozen variables and state-aware fresh deployment with no Pages capability',async()=>{
+ const {createB7LiveWatchdogAdapters}=await import('../scripts/customer-account-b7-v3-watchdog-adapters.mjs'),s=setup(),directory=await mkdtemp(join(tmpdir(),'b7-d1-watchdog-')),now=Date.now(),window={startsAt:now-1000,endsAt:now+299000}
+ s.p.serviceStatusForAccount=false;s.p.authLimit=2;s.f.enabled=false;s.f.execute=[];s.f.deploymentId=m.target.baseDeploymentId
+ s.vars.find(v=>v.key==='AU_RENEWAL_PREORDERS_ENABLED').value='false'
+ for(const[key,value]of Object.entries({B7_TEST_RUN_ID:m.runId,B7_TEST_STARTS_AT:String(window.startsAt),B7_TEST_ENDS_AT:String(window.endsAt),B7_TEST_FIXTURE_MANIFEST_SHA256:'a'.repeat(64)}))s.vars.push({$id:key,key,value,secret:false})
+ for(let i=0;i<22;i++)s.vars.push({$id:'base'+i,key:'BASE_'+i,value:'existing',secret:false})
+ Object.assign(s.state,{window,fixtureSha256:'a'.repeat(64),deploymentId:'d1-new-deployment',continuation:{priorExecutions:7},guardVariableIds:Object.fromEntries(m.newFunctionVariableNames.map(key=>[key,s.vars.find(v=>v.key===key).$id])),d1:{kind:'B7_D1',phase:'configured',variablesDigest:d1VariablesDigest(s.vars),healthAttempts:[]}})
+ const proof={...approvalProof,diagnostic:{kind:'B7_D1',approved:true,priorJournalSha256:'b'.repeat(64),priorExecutions:7,priorPages:7,deploymentMax:1,healthMax:3,windowSecondsMax:300,accountMayOpen:false,pagesMayDeploy:false,archiveSha256:'c'.repeat(64),fixtureSha256:'a'.repeat(64)}}
+ const file=async(name,value)=>{const path=join(directory,name);await writeFile(path,JSON.stringify(value),{mode:0o600});return path}
+ const config={diagnosticMode:'d1',liveExecutionAuthorized:true,manifestPath:new URL('../docs/customer-account-b7-execution-manifest-v3.json',import.meta.url),approvalProofPath:await file('approval.json',proof),cliSessionPath:await file('cli.json',{endpoint:m.target.endpoint,cookie:'synthetic-owner'}),statePath:await file('state.json',s.state),directory,endsAt:window.endsAt,baselineOom:0,signingSecret:Buffer.alloc(32,9).toString('base64url'),executionBaselineIds:Array.from({length:17},(_,i)=>'historic'+i),priorExecutionCount:7,operatingProjectFingerprints:Object.fromEntries(['verygood-main','verygood-au','69cb27ef002b63e77c53','69db3ae20026cdc0c7fe'].map(id=>[id,semanticSettingsEvidence({$id:id,authEmailOtp:true}).sha256])),testProtectedSettingsFingerprint:semanticSettingsEvidence(Object.fromEntries(Object.entries(s.p).filter(([k])=>!['authLimit','serviceStatusForAccount'].includes(k)))).sha256}
+ let pages=0
+ const transport=async(url,o)=>{const p=new URL(url).pathname.slice(3);if(new URL(url).pathname==='/test-window.json')return Response.json({enabled:false});if(p==='/health/version')return Response.json({version:'1.8.1'});if(p==='/users')return Response.json({total:3,users:m.requiredBeforeOpen.exactUsers.map($id=>({$id,status:true}))});if(p.endsWith('/executions'))return Response.json({total:0,executions:[]});if(p.includes('/email_deliveries/documents'))return Response.json({total:0,documents:[]});if(p.startsWith('/projects/')&&!p.includes(m.target.projectId))return Response.json({$id:p.split('/').at(-1),authEmailOtp:true});return s.transport(url,o)}
+ const adapter=await createB7LiveWatchdogAdapters(config,{transport,siteOff:async()=>{pages++},readMetrics:async()=>({memoryAvailableBytes:8*2**30,diskAvailableBytes:80*2**30,load1:0,oomKills:0})})
+ assert.equal((await adapter.probe()).metadataChanged,false)
+ s.state.d1.phase='activating';await writeFile(config.statePath,JSON.stringify(s.state));s.f.deploymentId=s.state.deploymentId;assert.equal((await adapter.probe()).metadataChanged,false)
+ s.state.d1.phase='active';await writeFile(config.statePath,JSON.stringify(s.state));assert.equal((await adapter.probe()).metadataChanged,false)
+ for(const mutate of [()=>{s.p.serviceStatusForAccount=true},()=>{s.p.authLimit=3},()=>{s.f.enabled=true},()=>{s.f.execute=['any']},()=>{s.vars[0].value='drift'}]){mutate();assert.equal((await adapter.probe()).metadataChanged,true);s.p.serviceStatusForAccount=false;s.p.authLimit=2;s.f.enabled=false;s.f.execute=[];s.vars[0].value='true'}
+ await adapter.operations.siteOff();assert.equal(pages,0)
+ s.state.attempts.pagesOpen=true;await writeFile(config.statePath,JSON.stringify(s.state));await assert.rejects(adapter.operations.siteOff());assert.equal(pages,0)
+ await assert.rejects(createB7LiveWatchdogAdapters({...config,priorExecutionCount:0},{transport}));await assert.rejects(createB7LiveWatchdogAdapters({...config,closedPreflight:true},{transport}))
 })
