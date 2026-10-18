@@ -1,6 +1,6 @@
 # 사용자 직접 조작 — AU 장바구니 공유 확인
 
-> **현재: 재개 시도 중 감시의 상태 전환 경합으로 비상 종료, OFF/CLOSED 복원 확인.** 승인된 OPEN10/CLOSED11을 사용했고 Pages 누적11회, Function8/120이다. 실제 Google/장바구니 수동 조작은 안내 전 중단되어 NOT RUN이다. Account OFF403·M/G/H 세션0·Function OFF/B6·flags false·사이트 CLOSED와 운영/테스트 보호 설정 불변을 직접 재확인했다. 추가 배포는 승인하지 않았으며 자동 재개하지 않는다.
+> **현재: 추가 승인된 OPEN12 배포·HTTPS·테스트 Account ON 확인, 사용자 수동 조작 대기.** 15분 자동 종료는 없고 사용자의 `종료` 또는 실제 보호 조건 위반 시 차단한다. Function은 계속 disabled/execute=[]/B6·flags false, 누적8/120이며 주문·결제·쿠폰을 시험하지 않는다. CLOSED13은 종료용으로 예약했다. G/H 장바구니 인수 결과는 사용자 확인 전 NOT RUN이다.
 
 2026-10-18. Branch `feat/customer-account`. 사용자가 승인한 수동 장바구니 시험이다. 기존 Google-only의 G 로그인·세션·새로고침 PASS, 과거 watchdog 종료 원인 UNVERIFIED는 보존한다. 기존 900초 계획·manifest·proof·journal을 수정하거나 재사용하지 않는다.
 
@@ -50,6 +50,16 @@ Pages는 기존9회에 이어 **OPEN10 1회 / CLOSED11 1회**만 허용한다. O
 추가 회귀6개를 작성하고 누락된 동기화 검증의 RED를 확인한 뒤 GREEN으로 수정했다. 활성화 경합, 안정된 설정 불일치, 지속된 불일치, 악성 세션, 반복/역행 전환, API 예외와 기존8초 제한을 검증한다. 전체 `npm test`는 **2,101 PASS / 0 FAIL / 기존 SKIP1**, 프로젝트 ESLint·변경 MJS 별도 ESLint·diff check PASS다. 변경3개 파일의 알려진 Owner credential 및 credential pattern 검사에서 노출0건이다. 제품 UI/TypeScript는 변경하지 않았고 별도 KR 빌드·실제 Chrome 재검증은 이번 수정에서 실행하지 않았다.
 
 새 시험에는 OPEN/CLOSED 각1회에 대한 별도 승인이 필요하다. 사용한 proof·journal·claim·배포/종료 evidence는 보호 폴더에 보존하며11회 사용량을 초기화하지 않는다. 현 수동 proof를 재실행하지 않는다. 로컬 수정의 실제 provider 재검증은 **NOT RUN**이다.
+
+## OPEN12 / CLOSED13 추가 승인에 따른 재개
+
+사용자가 OPEN12/CLOSED13 각1회를 명시적으로 추가 승인했다. 앞선11회 사용량과 모든 proof·journal·종료 기록은 그대로 보존했다. 별도 보호 폴더 `2026-10-18-customer-account-manual-cart-12-13`에 새 수동 승인·journal·복구 명령을 만들었다. 기존 화면 산출물을 복사해 재사용했으며 신규 preview·Function 배포는 없다. 서버 설정 쓰기는 정확한 테스트 프로젝트의 Account 서비스 ON/OFF에 한정한다.
+
+배포 adapter·manager·감시 context가 승인된 누적 예산11→12→13을 동일하게 검사하도록 수정했다. 기존9→10→11 계약은 보존하며14/15 등 미승인 슬롯, 반복 OPEN과 세 번째 배포는 전송 전 거부한다. RED3건을 확인한 뒤 수동 모드17개 GREEN, 전체 `npm test` **2,104 PASS / 0 FAIL / 기존 SKIP1**, 변경 MJS ESLint·diff·secret 검사 PASS다. CartProvider·상품·주문·결제·운영 코드는 수정하지 않았다.
+
+실행 전 Owner·Cloudflare 인증, 운영4개 프로젝트/Function 지문, 테스트 schema/ACL/Google/B4 SMTP/flags/실행 목록의 불변과 Account OFF403·정적 CLOSED를 GET-only로 확인했다. 수정된 독립 감시가 준비 상태에서 여러 주기 정상 동작한 후 OPEN12를 정확히1회 배포했다. 실제 HTTPS7경로, JS/CSS2개 hash/status/MIME, CSP, 상품 이미지, 비허용4경로 hard404를 재확인했다. 그 후 테스트 Account ON 관리 응답과 공개 Account API401, ON 상태의 실제 감시 heartbeat 및 최종 metadata를 확인했다. 900초 만료·기한 연장·자동 재활성화는 없다.
+
+현재 사이트는 OPEN이며 사용자가 같은 Chrome 프로필에서 기존 G/H로 직접 로그인·로그아웃하고 Bag을 확인한다. 인수 결과는 아직 **NOT RUN**이다. Function 실행·배포0, DB/주문/결제/쿠폰/프로필 변경0을 유지한다. 종료 시 Account OFF403·이번 G/H 세션 정리·CLOSED13·Function/flags 불변을 검증해야 한다. 추가 OPEN 또는 다른 배포 예산은 승인되지 않았다.
 
 로컬 검증: 신규 수동 모드8개 RED→GREEN, target/header/쓰기 거부·15분 이후 유지·비상 계정 검사·OPEN10/CLOSED11 예산·실제 source/이미지 빌드·OFF 우선 복구를 검증한다. 실제 Chrome 조작·Google 인증은 사용자가 직접 수행한다. 준비/실행 evidence는 Git 제외 보호 폴더에 두고 secret을 출력하지 않는다.
 

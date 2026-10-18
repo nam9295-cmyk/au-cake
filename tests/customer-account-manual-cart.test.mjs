@@ -91,23 +91,25 @@ test('manual probe preserves the eight second activation allowance without an op
  const result=await control.probeManualCartState({readJournal:async()=>journal,clock:()=>now+8001,inspect:async()=>{calls++;return {accountEnabled:true,sessions:{}}}})
  assert.equal(result.reason.code,'ACCOUNT_STATE_MISMATCH');assert.equal(calls,1)
 })
-test('manual Pages budget is exactly OPEN10/CLOSED11, never a repeat OPEN or third deployment',async()=>{
+for(const priorPagesUsed of [9,11])test(`manual Pages budget is exactly OPEN${priorPagesUsed+1}/CLOSED${priorPagesUsed+2}, never a repeat OPEN or third deployment`,async()=>{
  assert.equal(typeof build.createManualCartPages,'function')
  const dir=await mkdtemp(join(tmpdir(),'manual-cart-pages-')),artifactDirectory=join(dir,'artifact');await mkdir(artifactDirectory)
  try{
   let uploads=0;const p=build.createManualCartPages({directory:dir,artifactDirectory,wranglerPath:'/synthetic/wrangler.mjs',run:async()=>{uploads++}})
-  const proof={kind:'MANUAL_CART',startAuthorized:true,runId:mode.runId,startedAt:now,priorPagesUsed:9,openSlot:10,closedSlot:11}
+  const proof={kind:'MANUAL_CART',startAuthorized:true,runId:mode.runId,startedAt:now,priorPagesUsed,openSlot:priorPagesUsed+1,closedSlot:priorPagesUsed+2}
   await assert.rejects(p.open({...proof,priorPagesUsed:7}));assert.equal(uploads,0)
-  await p.open(proof);await assert.rejects(p.open(proof));await p.closed(proof);await p.closed(proof)
+  await assert.rejects(p.open({...proof,priorPagesUsed:13,openSlot:14,closedSlot:15}));assert.equal(uploads,0)
+  assert.equal((await p.open(proof)).pagesUsed,proof.openSlot);await assert.rejects(p.open(proof));assert.equal((await p.closed(proof)).pagesUsed,proof.closedSlot);await p.closed(proof)
   assert.equal(uploads,2);assert.equal(JSON.parse(await readFile(join(dir,'closed-site/test-mode.json'))).enabled,false)
   assert.ok(!/<script\b/.test(await readFile(join(dir,'closed-site/cart.html'),'utf8')))
  }finally{await rm(dir,{recursive:true,force:true})}
 })
-test('manual activation validates fresh approval and fixed target; OFF works without read prerequisites',async()=>{
+for(const priorPagesUsed of [9,11])test(`manual activation OPEN${priorPagesUsed+1} validates fresh approval and fixed target; OFF works without read prerequisites`,async()=>{
  assert.equal(typeof control.createManualCartManager,'function');const h=managementFixture()
  const m=control.createManualCartManager({target:GOOGLE_TEST_TARGET,cliSession:{endpoint:GOOGLE_TEST_TARGET.endpoint,cookie:'synthetic-owner'},transport:h.transport,clock:()=>now})
  await assert.rejects(m.open({kind:'GOOGLE_ONLY'}));assert.equal(h.writes.length,0)
- const proof={kind:'MANUAL_CART',startAuthorized:true,runId:mode.runId,startedAt:now,httpsVerified:true,monitorVerified:true,pagesUsed:10,closedReserved:true}
+ const proof={kind:'MANUAL_CART',startAuthorized:true,runId:mode.runId,startedAt:now,httpsVerified:true,monitorVerified:true,priorPagesUsed,openSlot:priorPagesUsed+1,closedSlot:priorPagesUsed+2,pagesUsed:priorPagesUsed+1,closedReserved:true}
+ await assert.rejects(m.open({...proof,pagesUsed:99}));assert.equal(h.writes.length,0)
  await m.open(proof);assert.equal(h.project.serviceStatusForAccount,true)
  await m.stop();assert.equal(h.project.serviceStatusForAccount,false)
  assert.ok(h.writes.every(x=>x.path==='/projects/verygood-au-account-test/service'))
@@ -124,16 +126,16 @@ test('compiled manual artifact reuses real CartProvider/Bag, has product images 
   assert.equal(JSON.parse(await readFile(join(a.directory,'test-mode.json'))).enabled,false)
  }finally{await rm(dir,{recursive:true,force:true})}
 })
-test('manual recovery performs exact Account OFF before CLOSED upload and verifies without Function calls',async t=>{
+for(const priorPagesUsed of [9,11])test(`manual recovery CLOSED${priorPagesUsed+2} performs exact Account OFF before upload and verifies without Function calls`,async t=>{
  t.mock.method(globalThis,'fetch',async()=>{throw Error('UNEXPECTED_REAL_NETWORK')})
  const directory=await mkdtemp(join(tmpdir(),'manual-cart-recovery-')),h=managementFixture(),cookie={endpoint:GOOGLE_TEST_TARGET.endpoint,cookie:'synthetic-owner'}
  try{
   const state=await createGoogleOnlyTestManager({target:GOOGLE_TEST_TARGET,cliSession:cookie,transport:h.transport}).inspect()
   const artifactDirectory=join(directory,'artifact');await mkdir(artifactDirectory)
-  const proof={kind:'MANUAL_CART',startAuthorized:true,runId:mode.runId,startedAt:now,priorPagesUsed:9,openSlot:10,closedSlot:11}
+  const proof={kind:'MANUAL_CART',startAuthorized:true,runId:mode.runId,startedAt:now,priorPagesUsed,openSlot:priorPagesUsed+1,closedSlot:priorPagesUsed+2}
   const config={kind:'MANUAL_CART',startAuthorized:true,runId:mode.runId,startedAt:now,directory,artifactDirectory,wranglerPath:'/synthetic/wrangler.mjs',cliSessionPath:join(directory,'cli.json'),baselinePath:join(directory,'baseline.json'),approvalProofPath:join(directory,'proof.json')}
-  for(const [name,data] of [['cli.json',cookie],['baseline.json',{state,functionExecutionsUsed:8,pagesUsed:9}],['proof.json',proof],['config.json',config]])await writeFile(join(directory,name),JSON.stringify(data),{mode:0o600})
-  await writeFile(join(directory,'pages-10.claim'),mode.runId,{mode:0o600});h.project.serviceStatusForAccount=true
+  for(const [name,data] of [['cli.json',cookie],['baseline.json',{state,functionExecutionsUsed:8,pagesUsed:priorPagesUsed}],['proof.json',proof],['config.json',config]])await writeFile(join(directory,name),JSON.stringify(data),{mode:0o600})
+  await writeFile(join(directory,`pages-${proof.openSlot}.claim`),mode.runId,{mode:0o600});h.project.serviceStatusForAccount=true
   let closed=false,uploads=0
   const transport=async(url,o)=>{
    if(url===GOOGLE_TEST_TARGET.endpoint+'/account')return new Response('{"type":"general_service_disabled"}',{status:h.project.serviceStatusForAccount?401:403})

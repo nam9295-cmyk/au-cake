@@ -8,7 +8,7 @@ import {googleOnlyErrorReason,safeGoogleOnlyReason} from './customer-account-goo
 import {createGoogleOnlyDiagnosticWriter} from './customer-account-google-only-watchdog.mjs'
 import {GOOGLE_ONLY_USERS} from '../tools/customer-account-google-only/contract.mjs'
 import {assertManualCartMode} from '../tools/customer-account-cart-manual/contract.mjs'
-import {createManualCartPages} from './build-customer-account-cart-manual.mjs'
+import {createManualCartPages,assertManualCartBudget} from './build-customer-account-cart-manual.mjs'
 const fail=()=>{throw Error('MANUAL_CART_UNVERIFIED')}
 export function manualCartEmergencyReason(state,journal,at=Date.now()){
  if(!Number.isFinite(at)||at<journal.startedAt)return {code:'CLOCK_INVALID',stage:'worker'}
@@ -47,7 +47,8 @@ export function createManualCartManager({target:input,cliSession,transport=fetch
  return {
   inspect:manager.inspect,stop:manager.stop,
   async open(proof){
-   if(attempted||proof?.kind!=='MANUAL_CART'||proof.startAuthorized!==true||proof.httpsVerified!==true||proof.monitorVerified!==true||proof.pagesUsed!==10||proof.closedReserved!==true)fail()
+   const {openSlot}=assertManualCartBudget(proof)
+   if(attempted||proof.httpsVerified!==true||proof.monitorVerified!==true||proof.pagesUsed!==openSlot||proof.closedReserved!==true)fail()
    assertManualCartMode({enabled:true,mode:'manual-cart',runId:proof.runId,startedAt:proof.startedAt},{now:clock()})
    const before=await manager.inspect();if(before.accountEnabled||Object.values(before.sessions).some(s=>s.length))fail()
    attempted=true;await mutate('PATCH','/projects/'+target.projectId+'/service',{service:'account',status:true},true)
@@ -68,7 +69,8 @@ async function context(configPath,{transport=fetch,runPages}={}){
  if(c.kind!=='MANUAL_CART'||c.startAuthorized!==true||resolve(c.directory)!==c.directory)fail()
  assertManualCartMode({enabled:true,mode:'manual-cart',runId:c.runId,startedAt:c.startedAt},{now:c.startedAt})
  const [cliSession,baseline,proof]=await Promise.all([readGoogleOnlyPrivateJson(c.cliSessionPath),readGoogleOnlyPrivateJson(c.baselinePath),readGoogleOnlyPrivateJson(c.approvalProofPath)])
- if(proof.kind!=='MANUAL_CART'||proof.startAuthorized!==true||proof.runId!==c.runId||proof.startedAt!==c.startedAt||proof.priorPagesUsed!==9||baseline.functionExecutionsUsed!==8||baseline.pagesUsed!==9)fail()
+ const {priorPagesUsed}=assertManualCartBudget(proof)
+ if(proof.runId!==c.runId||proof.startedAt!==c.startedAt||baseline.functionExecutionsUsed!==8||baseline.pagesUsed!==priorPagesUsed)fail()
  const onDiagnostic=createGoogleOnlyDiagnosticWriter(c.directory)
  const manager=createManualCartManager({target:GOOGLE_TEST_TARGET,cliSession,expectedBaseline:baseline.state,onDiagnostic,transport})
  const pages=createManualCartPages({directory:c.directory,artifactDirectory:c.artifactDirectory,wranglerPath:c.wranglerPath,...(runPages?{run:runPages}:{})})
