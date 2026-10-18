@@ -20,10 +20,17 @@ export type CartAction=
 type SavedAction=Exclude<CartAction,{type:'import-guest'}>|{type:'import-guest';signature:string;legacy:string;renewal:RenewalSelection[]}
 type CartRecord={version:1;clock:number;id:string;action:SavedAction}
 type Contents={lines:CartLine[];renewalLines:RenewalSelection[];mochiReselectionRequired:boolean;imports:string[]}
-export type CustomerCartSnapshot=Contents&{owner:CartOwner|null;ready:boolean;epoch:number;canImportGuest:boolean;storageError:boolean;changedInAnotherTab:boolean}
+export type CustomerCartSnapshot=Contents&{owner:CartOwner|null;ready:boolean;epoch:number;canImportGuest:boolean;guestItemCount:number;guestSignature:string;storageError:boolean;changedInAnotherTab:boolean}
 export type CartTicket={owner:CartOwner|null;epoch:number;notice:string|null}
 const empty=():Contents=>({lines:[],renewalLines:[],mochiReselectionRequired:false,imports:[]})
 const text=(storage:CartStorage,key:string)=>{try{return storage.getItem(key)}catch{return null}}
+const guestChoiceKey=(owner:CartOwner)=>'verygood-au-cart-import-choice-v1:'+owner
+export function hasDeclinedGuestImport(storage:Pick<Storage,'getItem'>|undefined,owner:CartOwner,signature:string):boolean {
+ try{return owner!=='guest'&&!!signature&&storage?.getItem(guestChoiceKey(owner))===signature}catch{return false}
+}
+export function declineGuestImport(storage:Pick<Storage,'setItem'>|undefined,owner:CartOwner,signature:string):void {
+ try{if(owner!=='guest'&&signature)storage?.setItem(guestChoiceKey(owner),signature)}catch{/* The choice still applies in this view; Guest goods are untouched. */}
+}
 function records(storage:CartStorage,owner:CartOwner,known:Iterable<string>=[]):CartRecord[]{
  const prefix=CART_EVENT_PREFIX+owner+':',keys=new Set(known),result:CartRecord[]=[]
  try{for(let i=0;i<(storage.length??0);i++){const k=storage.key?.(i);if(k?.startsWith(prefix))keys.add(k)}}catch{/* failed storage leaves the previous valid base untouched */}
@@ -82,7 +89,8 @@ export function createCustomerCartStore({storage,owner:initialOwner,authFence=tr
  const guestSignature=()=>{const guest=readCustomerCart(storage,'guest',known);return JSON.stringify({legacy:serializeCartLines(guest.lines),renewal:guest.renewalLines})}
  const snapshot=():CustomerCartSnapshot=>{
   const contents=owner?readCustomerCart(storage,owner,known):empty(),guest=owner?.startsWith('user:')?readCustomerCart(storage,'guest',known):empty()
-  return {...contents,owner,ready:owner!==null,epoch,storageError,changedInAnotherTab,canImportGuest:!!owner?.startsWith('user:')&&(guest.lines.length+guest.renewalLines.length)>0&&!contents.imports.includes(guestSignature())}
+  const signature=owner?.startsWith('user:')?guestSignature():''
+  return {...contents,owner,ready:owner!==null,epoch,storageError,changedInAnotherTab,guestSignature:signature,guestItemCount:guest.lines.reduce((n,l)=>n+l.selection.quantity,0)+guest.renewalLines.reduce((n,l)=>n+l.quantity,0),canImportGuest:!!owner?.startsWith('user:')&&(guest.lines.length+guest.renewalLines.length)>0&&!contents.imports.includes(signature)}
  }
  let value=snapshot()
  const publish=()=>{const next=snapshot();if(JSON.stringify(next)!==JSON.stringify(value)){value=next;for(const fn of listeners)fn()}}

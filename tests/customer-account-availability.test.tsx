@@ -8,6 +8,7 @@ import {CustomerAccountContext,disabledCustomerAccount,type CustomerAccountConte
 import {functions} from '../src/lib/appwrite'
 import type {CustomerAuth} from '../src/lib/customer-auth'
 import type {CustomerIdentity,CustomerOrdersPage} from '../src/lib/customer-account-types'
+import {checkoutCallbackTarget} from '../src/lib/customer-checkout-draft'
 
 const a:CustomerIdentity={userId:'customer-a',loginEmail:'login-a@example.test',profile:{version:1,name:'Saved A',contactEmail:'contact-a@example.test',phone:'0412345678',language:'en'}}
 const b:CustomerIdentity={...a,userId:'customer-b',loginEmail:'login-b@example.test'}
@@ -41,9 +42,9 @@ function browser() {
   return {window,cleanup(){for(const[key,value]of originals)if(value)Object.defineProperty(globalThis,key,value);else Reflect.deleteProperty(globalThis,key)}}
 }
 function setup(t:TestContext,options:{identity?:CustomerIdentity|null;restore?:()=>Promise<CustomerIdentity|null>;list?:()=>Promise<CustomerOrdersPage>}={}) {
-  const {window,cleanup}=browser(),calls={restore:0,health:0,list:0,google:0,logout:0}
+  const {window,cleanup}=browser(),calls={restore:0,health:0,list:0,google:0,logout:0,googleFlowId:''}
   let identity=options.identity??null
-  const auth={restore:async()=>{calls.restore++;return options.restore?options.restore():identity},startGoogle:async()=>{calls.google++},signOut:async()=>{calls.logout++;identity=null},saveProfile:async(profile)=>({...a,profile}),sendEmail:async()=>{throw Error('NOT_USED')},verifyEmail:async()=>{throw Error('NOT_USED')}} satisfies CustomerAuth
+  const auth={restore:async()=>{calls.restore++;return options.restore?options.restore():identity},startGoogle:async(options)=>{calls.google++;calls.googleFlowId=options.flowId},signOut:async()=>{calls.logout++;identity=null},saveProfile:async(profile)=>({...a,profile}),sendEmail:async()=>{throw Error('NOT_USED')},verifyEmail:async()=>{throw Error('NOT_USED')}} satisfies CustomerAuth
   const originalExecution=functions.createExecution
   functions.createExecution=async()=>{calls.health++;throw Error('UNEXPECTED_FUNCTION_EXECUTION')}
   const page=mount({enabled:true,auth,orderService:{list:async()=>{calls.list++;return options.list?options.list():empty},detail:async()=>{throw Error('CUSTOMER_ORDER_NOT_FOUND')}},children:<div>Existing checkout</div>})
@@ -55,6 +56,12 @@ test('guest Google entry works without a reservation health call and preserves a
   assert.equal(page.value.state.status,'guest');assert.equal(calls.health,0);assert.equal(calls.list,0)
   page.value.openSignIn();page.render();assert.equal(page.dialog?.props.available,true)
   await page.dialog!.props.onGoogle();assert.equal(calls.google,1);assert.equal(calls.health,0)
+})
+test('Google opened from an empty bag returns to that bag without health, orders or a fabricated form',async t=>{
+ const {page,calls,window}=setup(t);Object.assign(window.location,{pathname:'/cart'});await page.flush()
+ page.value.openSignIn();page.render();await page.dialog!.props.onGoogle()
+ assert.equal(checkoutCallbackTarget(sessionStorage,calls.googleFlowId),'/cart')
+ assert.equal(calls.health,0);assert.equal(calls.list,0);assert.equal(calls.google,1)
 })
 test('signed-in identity and profile restore independently from unavailable order service',async t=>{
   const {page,calls}=setup(t,{identity:a,list:async()=>{throw Error('CUSTOMER_ACCOUNT_NOT_READY')}});await page.flush()

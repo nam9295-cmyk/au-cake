@@ -8,7 +8,7 @@ import {CUSTOMER_AUTH_CHANGED_EVENT,CUSTOMER_AUTH_NOTICE_KEY} from './lib/custom
 import {CART_EVENT_PREFIX,createCustomerCartStore,customerCartOwner,type CartOwner,type CartAction,type CartStorage} from './lib/customer-cart-storage'
 
 type CartContextValue={
- owner:CartOwner|null;checkoutOwner:CartOwner;ready:boolean;isCurrent:()=>boolean;canImportGuest:boolean;importGuest:()=>void;storageError:boolean;changedInAnotherTab:boolean
+ owner:CartOwner|null;checkoutOwner:CartOwner;ready:boolean;isCurrent:()=>boolean;canImportGuest:boolean;guestItemCount:number;guestSignature:string;importGuest:()=>void;storageError:boolean;changedInAnotherTab:boolean
  mochiReselectionRequired:boolean;acknowledgeMochiReselection:()=>void
  replaceRenewal:(id:string,lines:RenewalSelection[])=>void;renewalLines:readonly RenewalSelection[]
  addRenewal:(lines:RenewalSelection[])=>void;removeRenewal:(id:string)=>void;updateRenewal:(id:string,quantity:number)=>void
@@ -54,9 +54,9 @@ export function CartProvider({children}:PropsWithChildren){
  const acknowledgeMochiReselection=useCallback(()=>commit({type:'acknowledge-mochi'}),[commit])
  const importGuest=useCallback(()=>commit({type:'import-guest'}),[commit])
  const itemCount=getCartTotalQuantity(lines)+renewalLines.reduce((n,l)=>n+l.quantity,0)
- const value=useMemo<CartContextValue>(()=>({owner:ready?owner:null,checkoutOwner,ready,isCurrent,canImportGuest:ready&&snapshot.canImportGuest,importGuest,storageError:snapshot.storageError,changedInAnotherTab:snapshot.changedInAnotherTab,
+ const value=useMemo<CartContextValue>(()=>({owner:ready?owner:null,checkoutOwner,ready,isCurrent,canImportGuest:ready&&snapshot.canImportGuest,guestItemCount:ready?snapshot.guestItemCount:0,guestSignature:ready?snapshot.guestSignature:'',importGuest,storageError:snapshot.storageError,changedInAnotherTab:snapshot.changedInAnotherTab,
   mochiReselectionRequired:ready&&snapshot.mochiReselectionRequired,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,
-  lines,itemCount,add,update,remove,removeSubmitted,clear}),[ready,owner,checkoutOwner,isCurrent,snapshot.canImportGuest,snapshot.storageError,snapshot.changedInAnotherTab,snapshot.mochiReselectionRequired,importGuest,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,lines,itemCount,add,update,remove,removeSubmitted,clear])
+  lines,itemCount,add,update,remove,removeSubmitted,clear}),[ready,owner,checkoutOwner,isCurrent,snapshot.canImportGuest,snapshot.guestItemCount,snapshot.guestSignature,snapshot.storageError,snapshot.changedInAnotherTab,snapshot.mochiReselectionRequired,importGuest,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,lines,itemCount,add,update,remove,removeSubmitted,clear])
  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
 // eslint-disable-next-line react-refresh/only-export-components

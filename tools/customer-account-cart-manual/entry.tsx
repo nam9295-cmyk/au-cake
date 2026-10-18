@@ -30,7 +30,7 @@ export function ManualCartPage(){
  return <AuLanguageContext.Provider value={{language,setLanguage}}>
   <header className="renewal-page manual-cart-nav">
    <p>VERYGOOD AU · Cart test · 주문·결제 불가</p>
-   <nav aria-label="Cart test"><a href="/account">{signedIn?'ACCOUNT':'SIGN IN'}</a> <a href="/cakes/pave-chocolate-cake">케이크</a> <a href="/chocolates/pave-chocolate">초콜릿</a> <a href="/cart">Bag ({cart.itemCount})</a></nav>
+   <nav aria-label="Cart test">{signedIn?<a href="/account">ACCOUNT</a>:<button type="button" onClick={customer.openSignIn}>SIGN IN</button>} <a href="/cakes/pave-chocolate-cake">케이크</a> <a href="/chocolates/pave-chocolate">초콜릿</a> <a href="/cart">Bag ({cart.itemCount})</a></nav>
    <p>{signedIn?customer.state.status==='authenticated'&&customer.state.identity.loginEmail:customer.state.status==='checking'?'Checking session…':'Signed out'}</p>
    {signedIn&&<button type="button" onClick={()=>void logout()}>Sign out / 로그아웃</button>}
    <p role="status">{error}</p><p id="manual-cart-connection" role="status"/>

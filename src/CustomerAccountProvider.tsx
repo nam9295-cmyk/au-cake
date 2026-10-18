@@ -5,7 +5,7 @@ import {CustomerAccountContext,disabledCustomerAccount} from './lib/customer-acc
 import {CUSTOMER_AUTH_CHANGED_EVENT,CUSTOMER_AUTH_NOTICE_KEY,publishCustomerAuthChange,publishCustomerAuthStorageNotice} from './lib/customer-account-config'
 import {getCustomerOrders,getCustomerOrder} from './lib/customer-orders'
 import type {CustomerAuthState,CustomerProfile,CustomerCheckoutDraft,CustomerOrdersStatus,CustomerOrderService} from './lib/customer-account-types'
-import {saveCheckoutDraft,saveAccountReturn} from './lib/customer-checkout-draft'
+import {saveCustomerSignInReturn} from './lib/customer-checkout-draft'
 import {CustomerSignInDialog} from './components/CustomerSignInDialog'
 import type {Language} from './lib/i18n'
 const defaultAuth=createCustomerAuth()
@@ -26,7 +26,7 @@ export function CustomerAccountProvider({children,enabled=appwriteConfig.custome
     const draft=checkout.current?.()
     const flowId=draft?.flowId||crypto.randomUUID()
     let saved=false
-    try{saved=draft?saveCheckoutDraft(sessionStorage,draft).ok:saveAccountReturn(sessionStorage,{flowId,savedAt:Date.now(),returnTo:'/account'})}catch{/* No leave without a recoverable flow. */}
+    try{saved=saveCustomerSignInReturn(sessionStorage,{flowId,savedAt:Date.now(),pathname:window.location.pathname,draft})}catch{/* No leave without a recoverable flow. */}
     if(!saved)throw Error('AUTH_DRAFT_UNAVAILABLE')
     await auth.startGoogle({flowId})
   },[auth])

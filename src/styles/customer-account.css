@@ -33,4 +33,6 @@
 .customer-order-detail dd { margin: 0; overflow-wrap: anywhere; }
 .customer-checkout-prompt { padding: 1rem 0; border-block: 1px solid var(--au-line, #dce5df); margin-bottom: 1rem; }
 .customer-checkout-prompt button { margin-right: 1rem; }
+.customer-cart-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.customer-cart-actions button { min-height: 44px; margin-right: 0; }
 @media (max-width: 600px) { .customer-profile-form { grid-template-columns: 1fr; } .customer-account-page { padding-inline: 1rem; } }

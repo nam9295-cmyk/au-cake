@@ -1020,7 +1020,7 @@ function Bag() {
           >
             <h2>{t("Request a reservation", "예약 요청")}</h2>
             <CheckoutAccountPrompt language={language} guest={guest} onGuest={setGuest} />
-            {cartChanged && <div role="status"><p>{t('Your bag changed in another tab. Your form is saved. Review the current items before sending.','다른 탭에서 장바구니가 변경되었습니다. 주문서는 보관했습니다. 현재 상품을 확인한 뒤 보내주세요.')}</p><button type="button" onClick={() => { requestId.current = crypto.randomUUID(); setCartChanged(false); }}>{t('I have reviewed the current bag','현재 장바구니 확인 완료')}</button></div>}
+            {cartChanged && <div role="status"><p>{t('Your bag changed. Your form is saved. Review the current items before sending.','장바구니의 상품이 변경되었습니다. 주문서는 보관했습니다. 현재 상품을 확인한 뒤 보내주세요.')}</p><button type="button" onClick={() => { requestId.current = crypto.randomUUID(); setCartChanged(false); }}>{t('I have reviewed the current bag','현재 장바구니 확인 완료')}</button></div>}
             <fieldset className="renewal-checkout-fields" disabled={busy}>
               <label>
                 {t("Name", "이름")}

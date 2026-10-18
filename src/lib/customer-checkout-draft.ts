@@ -17,8 +17,8 @@ function safeTree(value:unknown,depth=0):boolean {
   if(typeof value==='object')return Object.entries(value).every(([k,v])=>!['__proto__','constructor','prototype','customerUserId','token','jwt','secret'].includes(k)&&safeTree(v,depth+1))
   return false
 }
-function validReturn(v:{version?:unknown;flowId?:unknown;savedAt?:unknown;returnTo?:unknown},now:number) {
-  return v?.version===1&&typeof v.flowId==='string'&&uuid.test(v.flowId)&&typeof v.savedAt==='number'&&Number.isFinite(v.savedAt)&&now>=v.savedAt&&now-v.savedAt<=ttl&&['/account','/cart','/reserve'].includes(String(v.returnTo))
+function validReturn(v:{version?:unknown;flowId?:unknown;savedAt?:unknown;returnTo?:unknown;cartOnly?:unknown},now:number) {
+  return v?.version===1&&typeof v.flowId==='string'&&uuid.test(v.flowId)&&typeof v.savedAt==='number'&&Number.isFinite(v.savedAt)&&now>=v.savedAt&&now-v.savedAt<=ttl&&['/account','/cart','/reserve'].includes(String(v.returnTo))&&(v.cartOnly===undefined||v.cartOnly===true&&v.returnTo==='/cart')
 }
 function validDraft(d:CustomerCheckoutDraft,now:number) {
   if(!validReturn(d,now)||!['renewal','legacy'].includes(d.kind)||!uuid.test(d.requestId)||!['/cart','/reserve'].includes(d.returnTo)||!d.form||typeof d.form!=='object'||Array.isArray(d.form)||!Array.isArray(d.dirtyFields)||!Array.isArray(d.cartSnapshot)||typeof d.cartSignature!=='string'||!d.checkoutContext||Array.isArray(d.checkoutContext)||typeof d.checkoutContext!=='object'||!safeTree(d))return false
@@ -28,12 +28,17 @@ function validDraft(d:CustomerCheckoutDraft,now:number) {
   if(Object.entries(d.form).some(([k,v])=>!allowed.includes(k)||!['string','number','boolean'].includes(typeof v))||d.dirtyFields.some(k=>typeof k!=='string'||!allowed.includes(k)))return false
   return Object.keys(d.checkoutContext).every(k=>['initialProductId','initialSelection','initialOrderLines','initialPromoCode','initialRewardPercent','reviewRewardHandoff','cartOrigin'].includes(k))
 }
-export function saveAccountReturn(storage:DraftStorage,value:{flowId:string;savedAt:number;returnTo:string}):boolean {
-  const flow={version:1,flowId:value.flowId,savedAt:value.savedAt,returnTo:value.returnTo}
+export function saveAccountReturn(storage:DraftStorage,value:{flowId:string;savedAt:number;returnTo:string;cartOnly?:true}):boolean {
+  const flow={version:1,flowId:value.flowId,savedAt:value.savedAt,returnTo:value.returnTo,...(value.cartOnly!==undefined?{cartOnly:value.cartOnly}:{})}
   try{if(!validReturn(flow,value.savedAt))return false;storage.setItem(returnPrefix+flow.flowId,JSON.stringify(flow));return true}catch{return false}
 }
-export function readAccountReturn(storage:DraftStorage,flowId:string,now=Date.now()):{returnTo:string}|null {
-  try{if(!uuid.test(flowId))return null;const flow=JSON.parse(storage.getItem(returnPrefix+flowId)||'null');return flow?.flowId===flowId&&validReturn(flow,now)?{returnTo:flow.returnTo}:null}catch{return null}
+export function readAccountReturn(storage:DraftStorage,flowId:string,now=Date.now()):{returnTo:string;cartOnly?:true}|null {
+  try{if(!uuid.test(flowId))return null;const flow=JSON.parse(storage.getItem(returnPrefix+flowId)||'null');return flow?.flowId===flowId&&validReturn(flow,now)?{returnTo:flow.returnTo,...(flow.cartOnly===true?{cartOnly:true as const}:{})}:null}catch{return null}
+}
+export function saveCustomerSignInReturn(storage:DraftStorage,value:{flowId:string;savedAt:number;pathname:string;draft?:CustomerCheckoutDraft}):boolean {
+ if(value.draft)return saveCheckoutDraft(storage,value.draft).ok
+ const cartOnly=value.pathname==='/cart'||value.pathname==='/cart/'
+ return saveAccountReturn(storage,{flowId:value.flowId,savedAt:value.savedAt,returnTo:cartOnly?'/cart':'/account',...(cartOnly?{cartOnly:true}:{} )})
 }
 export function saveCheckoutDraft(storage:DraftStorage,draft:CustomerCheckoutDraft):{ok:true}|{ok:false} {
   try {
@@ -61,6 +66,7 @@ export function clearCheckoutDraft(storage:DraftStorage,flowId:string) {if(!uuid
 export function checkoutCallbackTarget(storage:DraftStorage,flowId:string,now=Date.now()):string {
   const flow=readAccountReturn(storage,flowId,now)
   if(!flow||flow.returnTo==='/account')return '/account'
+  if(flow.cartOnly)return '/cart'
   // Callback only validates and routes. The authenticated destination checks the
   // actual cart owner before applying fields, and acknowledges after review.
   const result=restoreCheckoutDraft(storage,{flowId,now,cartSignature:''})

@@ -69,3 +69,21 @@ test('OAuth callback routes saved Guest/member checkouts without consuming draft
  draftModule.saveAccountReturn(storage,{flowId,savedAt:now,returnTo:'/account'})
  assert.equal(target(storage,flowId,now),'/account')
 })
+test('bag-only Google return restores the same bag without a fake checkout; unsafe or expired returns fail closed',()=>{
+ const storage=memory(),save=Reflect.get(draftModule,'saveCustomerSignInReturn')
+ assert.equal(typeof save,'function')
+ assert.equal(save(storage,{flowId,savedAt:now,pathname:'/cart'}),true)
+ assert.equal(draftModule.checkoutCallbackTarget(storage,flowId,now),'/cart')
+ assert.equal(storage.getItem(draftModule.CUSTOMER_DRAFT_PREFIX+flowId),null)
+ assert.equal(draftModule.checkoutCallbackTarget(storage,flowId,now+30*60*1000+1),'/account')
+ for(const pathname of ['/account','/classes','//evil.test','https://evil.test/cart']){
+  assert.equal(save(storage,{flowId,savedAt:now,pathname}),true)
+  assert.equal(draftModule.checkoutCallbackTarget(storage,flowId,now),'/account')
+ }
+ assert.equal(save(storage,{flowId,savedAt:now,pathname:'/cart',draft}),true)
+ assert.equal(draftModule.checkoutCallbackTarget(storage,flowId,now),'/cart?customerResume='+flowId)
+ assert.equal(JSON.parse(storage.getItem(draftModule.CUSTOMER_DRAFT_PREFIX+flowId)!).requestId,requestId)
+ assert.equal(save({setItem(){throw Error('full')},getItem(){return null},removeItem(){}},{flowId,savedAt:now,pathname:'/cart'}),false)
+ for(const returnTo of ['/reserve','//evil.test','/account'])assert.equal(draftModule.saveAccountReturn(storage,{flowId,savedAt:now,returnTo,cartOnly:true}),false)
+ assert.equal(draftModule.saveAccountReturn(storage,{flowId,savedAt:now,returnTo:'/cart',cartOnly:'true'} as never),false)
+})
