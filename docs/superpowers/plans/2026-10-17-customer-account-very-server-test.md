@@ -1,5 +1,7 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
+> **health403 집중 조사:** [결과](../../customer-account-b7-health-403-investigation.md). 변수 API readback·기존 deployment 활성화를 runtime 환경 반영으로 취급한 계약 결함을 확인. 실제 거부 predicate는 UNVERIFIED이며 [D1 닫힌 진단/new deployment1개 제안](2026-10-18-customer-account-b7-runtime-env-verification.md)은 승인 대기다. 이번 원격 쓰기/새 execution0, OFF/B6/CLOSED. B5 DEFERRED — RELEASE BLOCKER·과거 AU raw UNVERIFIED 유지.
+
 > **최신 수동 B7 실행:** [실제 결과](../../customer-account-b7-manual-run-results.md). 사용자 시작 뒤 기존 guarded deployment의 Owner health1회가403으로 실패, Account/공개 Function/Pages OPEN 전 중지했다. 복구 PASS/OFF403/B6/CLOSED/flagsfalse·세션0 확인. 누적 실행7/120·Pages7/9, 실패 predicate UNVERIFIED. 같은 창 재시작·자동 배포 금지. **B5 — DEFERRED — RELEASE BLOCKER**와 과거 AU raw UNVERIFIED 유지.
 
 > **최신 B7 수동 전환:** [CLI/사용자 Chrome 계획](2026-10-18-customer-account-b7-manual-chrome.md), [준비 결과](../../customer-account-b7-manual-preparation.md). CUA/getApp/자동 브라우저 조작 중단. 사용자의 `시작` 전 Account/Function 활성화·Pages 배포 금지. 현재 OFF/B6/CLOSED, H/쿠폰/같은7 변수/기존 guarded deployment 재사용, 실행6+최대114·Pages7+OPEN8/CLOSED9. 새900초 창은 아직 시작하지 않았다. **B5 — DEFERRED — RELEASE BLOCKER** 및 과거 AU raw UNVERIFIED 유지. 다음 내용은 과거 기록으로 보존한다.

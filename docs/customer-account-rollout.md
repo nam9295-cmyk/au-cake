@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **health403 집중 조사:** [결과](customer-account-b7-health-403-investigation.md). 변수 갱신 뒤 기존 deployment/runtime 재사용의 계약 결함을 확인했다. 이전 warm env/TIME 거부가 강하게 지지되지만 실제 최초 predicate는 UNVERIFIED다. [새 deployment 기반 닫힌 검증 제안](superpowers/plans/2026-10-18-customer-account-b7-runtime-env-verification.md)은 실행 미승인. 이번 execution/배포/새 창0, OFF/B6/CLOSED 유지, B5 DEFERRED — RELEASE BLOCKER. Google 재개 전 별도 승인 필요.
+
 > **최신 수동 B7 실행:** [실제 결과](customer-account-b7-manual-run-results.md). 사용자 시작 승인 뒤 첫 Owner health가403 `B7_GUARD_REJECTED`로 실패해 OPEN 전 중단했다. Account/공개 Function/Pages 배포·Google/주문0, watchdog 및 직접 OFF/B6/CLOSED 검증 PASS. 실행 누적7/120, Pages7/9. 실패 predicate UNVERIFIED, 새 창 자동 재시도 금지. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
 
 > **최신 B7 수동 전환:** [사용자 Chrome 직접 조작 계획](superpowers/plans/2026-10-18-customer-account-b7-manual-chrome.md), [준비 결과](customer-account-b7-manual-preparation.md). 앞으로 CUA/getApp/자동 브라우저 제어를 사용하지 않는다. 현재 OFF/B6/CLOSED이며 `시작` 전 원격 활성화·Pages 배포 금지. 기존 자원 재사용, 누적 실행6/120(잔여114), Pages7회 사용·OPEN8/CLOSED9만 다음 단일900초 창에 허용한다. 첫 주문은 frozen body를 수동 테스트 패널로 제출하며 일반 Checkout 인수와 구분한다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 아래는 보존된 과거 기록이다.
