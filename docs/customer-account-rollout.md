@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **Google 로그인 단독 인수 제안:** [최소 실행 계획](superpowers/plans/2026-10-18-customer-account-google-only-acceptance.md). 기존 G/H·상한2를 유지하고 제품 인증/프로필만 시험한다. Function 실행/배포0, OPEN8/CLOSED9·새 최대900초 Account 창은 **별도 승인 전 미실행**이다. 현재는 계획 작성만 완료, 누적8/120·Pages7/9 불변. D1/backend 최적화·실제 MY ORDERS 인수와 분리하며 **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
+
 > **최신 로컬 제품 개선:** [인증/주문 상태 분리와 검증 결과](customer-account-auth-orders-separation.md). Account 인증에서 reservation health 선행 호출을 제거하고 MY ORDERS의 실제 API 결과로 주문 상태를 판단한다. 서버 JWT/owner/ACL/readiness는 그대로이며 17→5회 최적화는 설계 제안만 있다. 로컬 전체 2,046 PASS/0 FAIL/기존 SKIP1, 실제 Google·MY ORDERS 인수 NOT RUN. 이번 원격 작업0·누적8/120·Pages7/9 불변. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 아래는 기존 진단/실행 기록이다.
 
 > **D1 timeout 읽기 전용 조사:** [결과](customer-account-b7-d1-timeout-investigation.md), [계측 제안](superpowers/plans/2026-10-18-customer-account-b7-health-timing-diagnostic.md). 실제 Node soft timeout500은 확인, settings/metadata 대기 위치와 transport 원인은 UNVERIFIED. 회원 readiness17회 순차·기존 실측17.46초와 제품10초 제한 충돌을 확인했다. 새 배포/실행0, 누적8/120·Pages7/9·OFF/B6/CLOSED 유지. Google 인수 준비 미완료, 다음 최소 deployment1/health1도 별도 승인 대상이다. B5 DEFERRED — RELEASE BLOCKER·과거 AU raw UNVERIFIED 유지.
