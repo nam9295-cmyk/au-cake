@@ -1,6 +1,6 @@
 # 사용자 직접 조작 — AU 장바구니 공유 확인
 
-> **현재: 추가 승인된 OPEN12 배포·HTTPS·테스트 Account ON 확인, 사용자 수동 조작 대기.** 15분 자동 종료는 없고 사용자의 `종료` 또는 실제 보호 조건 위반 시 차단한다. Function은 계속 disabled/execute=[]/B6·flags false, 누적8/120이며 주문·결제·쿠폰을 시험하지 않는다. CLOSED13은 종료용으로 예약했다. G/H 장바구니 인수 결과는 사용자 확인 전 NOT RUN이다.
+> **현재: OPEN12 이후 관리 API 통신 예외로 비상 종료, CLOSED13 복원 확인.** Account OFF403·세션0·Function disabled/execute=[]/B6·flags false·실행 목록 불변을 직접 재확인했다. Pages13회 사용 완료, Function8/120이다. 새 배포·활성화·인증 재시도는 하지 않았다. G/H 장바구니 인수 결과는 미검증이다.
 
 2026-10-18. Branch `feat/customer-account`. 사용자가 승인한 수동 장바구니 시험이다. 기존 Google-only의 G 로그인·세션·새로고침 PASS, 과거 watchdog 종료 원인 UNVERIFIED는 보존한다. 기존 900초 계획·manifest·proof·journal을 수정하거나 재사용하지 않는다.
 
@@ -60,6 +60,14 @@ Pages는 기존9회에 이어 **OPEN10 1회 / CLOSED11 1회**만 허용한다. O
 실행 전 Owner·Cloudflare 인증, 운영4개 프로젝트/Function 지문, 테스트 schema/ACL/Google/B4 SMTP/flags/실행 목록의 불변과 Account OFF403·정적 CLOSED를 GET-only로 확인했다. 수정된 독립 감시가 준비 상태에서 여러 주기 정상 동작한 후 OPEN12를 정확히1회 배포했다. 실제 HTTPS7경로, JS/CSS2개 hash/status/MIME, CSP, 상품 이미지, 비허용4경로 hard404를 재확인했다. 그 후 테스트 Account ON 관리 응답과 공개 Account API401, ON 상태의 실제 감시 heartbeat 및 최종 metadata를 확인했다. 900초 만료·기한 연장·자동 재활성화는 없다.
 
 현재 사이트는 OPEN이며 사용자가 같은 Chrome 프로필에서 기존 G/H로 직접 로그인·로그아웃하고 Bag을 확인한다. 인수 결과는 아직 **NOT RUN**이다. Function 실행·배포0, DB/주문/결제/쿠폰/프로필 변경0을 유지한다. 종료 시 Account OFF403·이번 G/H 세션 정리·CLOSED13·Function/flags 불변을 검증해야 한다. 추가 OPEN 또는 다른 배포 예산은 승인되지 않았다.
+
+### OPEN12 종료: 관리 API 통신 예외
+
+사용자가 로그인 버튼을 누르자 CLOSED가 보인다고 보고했다. 기존 보호 기록에서 UTC11:53:08.488 READY 후11:54:31.215에 `platforms.get`가 약1,593ms 뒤 `API_NETWORK_EXCEPTION`으로 실패했고, 같은 검사 주기의 `function.get`도 통신 예외를 기록했다. 감시는 첫 예외에 즉시 OFF를 요청했다. **94초 뒤인11:54:42.813에 OFF/CLOSED 복원 검증이 끝났다.** 수동 모드에는15분 타이머가 없으며 종료 사유도 타이머/상태 전환 경합/세션 귀속/설정 drift가 아닌 통신 예외다.
+
+직접 차단 원인은 증명된다. DNS·TLS·연결 종료 등 하위 통신 실패 원인은 현재 로그에 보존되지 않아 **UNVERIFIED**다. 실제 보안 설정 변경이나 알 수 없는 사용자·주문·Function 실행을 감지한 것으로 보고하지 않는다. 현재 감시가 단일 통신 예외에도 fail-closed하도록 작성되어 있어 사용자의 수동 조작이 중단됐다.
+
+후속 읽기 전용 확인에서 공개 Account403 `general_service_disabled`, `/test-mode.json` enabled=false, 정적 `/account` CLOSED, 관리 API의 Account OFF·M/G/H 세션0·Function OFF/B6·변수 및 실행 inventory 불변을 확인했다. CLOSED13은 정확히1회 사용했다. 추가 OPEN·배포·Function 실행·코드 수정은 이번 원인 확인에서 수행하지 않았다. Google/장바구니 인수 완료로 판단하지 않으며, 통신 예외와 확인된 보안 이상을 구분하는 감시 정책 보완은 별도 후속 작업이다.
 
 로컬 검증: 신규 수동 모드8개 RED→GREEN, target/header/쓰기 거부·15분 이후 유지·비상 계정 검사·OPEN10/CLOSED11 예산·실제 source/이미지 빌드·OFF 우선 복구를 검증한다. 실제 Chrome 조작·Google 인증은 사용자가 직접 수행한다. 준비/실행 evidence는 Git 제외 보호 폴더에 두고 secret을 출력하지 않는다.
 
