@@ -39,6 +39,8 @@ async page=>{
  await page.getByRole('button',{name:'Use key in this tab'}).click()
  await page.locator('input[name=loginEmail]').waitFor()
  check(await page.locator('input[name=loginEmail]').inputValue()==='local-google@example.invalid','actual compiled auth target/config unavailable')
+ // Profile renders before the asynchronous order request finishes signing/loading.
+ await page.getByText('No orders in this group.',{exact:true}).first().waitFor()
  check(calls>=2,'actual compiled account/order paths were not exercised')
  // Synthetic cart only; the original checkout generates its own UUID and submit body.
  await page.evaluate(()=>localStorage.setItem('verygood-au-renewal-cart-v1',JSON.stringify({version:1,lines:[{lineId:'b7-native-line',offerId:'pave-cake',size:'6in',chocolateType:'dark',quantity:1}]})))
