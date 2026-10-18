@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **최신 로컬 제품 개선:** [인증/주문 상태 분리와 검증 결과](customer-account-auth-orders-separation.md). Account 인증에서 reservation health 선행 호출을 제거하고 MY ORDERS의 실제 API 결과로 주문 상태를 판단한다. 서버 JWT/owner/ACL/readiness는 그대로이며 17→5회 최적화는 설계 제안만 있다. 로컬 전체 2,046 PASS/0 FAIL/기존 SKIP1, 실제 Google·MY ORDERS 인수 NOT RUN. 이번 원격 작업0·누적8/120·Pages7/9 불변. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 아래는 기존 진단/실행 기록이다.
+
 > **D1 timeout 읽기 전용 조사:** [결과](customer-account-b7-d1-timeout-investigation.md), [계측 제안](superpowers/plans/2026-10-18-customer-account-b7-health-timing-diagnostic.md). 실제 Node soft timeout500은 확인, settings/metadata 대기 위치와 transport 원인은 UNVERIFIED. 회원 readiness17회 순차·기존 실측17.46초와 제품10초 제한 충돌을 확인했다. 새 배포/실행0, 누적8/120·Pages7/9·OFF/B6/CLOSED 유지. Google 인수 준비 미완료, 다음 최소 deployment1/health1도 별도 승인 대상이다. B5 DEFERRED — RELEASE BLOCKER·과거 AU raw UNVERIFIED 유지.
 
 > **최신 D1 실제 진단:** [결과](customer-account-b7-d1-runtime-results.md). 배포 전 key/window/flags 동결→새 Node22 deployment에서 guard·header/path 계약 PASS. 첫 health는 timeout/HTTP500으로 FAIL, 나머지2회 NOT RUN으로 즉시 종료했다. Account/공개 Function/Pages OPEN0, 복구·직접 OFF403/B6/CLOSED·운영 현재 지문 불변 PASS. 누적8/120·Pages7/9, Google 인수 미완료. B5 DEFERRED — RELEASE BLOCKER 및 과거 AU raw UNVERIFIED 유지. 아래는 보존된 이전 기록이다.
