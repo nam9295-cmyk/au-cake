@@ -6,6 +6,7 @@ import {semanticSettingsEvidence} from './customer-account-settings-fingerprint.
 import {createCustomerAccountTestProbe} from './customer-account-test-monitor.mjs'
 import {createGoogleOnlyPages} from './build-customer-account-google-only.mjs'
 import {assertCustomerPrivateAcl,assertCustomerPublicReadOnlyAcl,assertCustomerOwnerAttribute,assertCustomerOwnerIndex} from '../appwrite-functions/reservation-api/src/customer-account-readiness.js'
+import {createGoogleOnlyDiagnostics,googleOnlyDiagnosticError} from './customer-account-google-only-diagnostics.mjs'
 const target=GOOGLE_TEST_TARGET,operating=['verygood-main','verygood-au','69cb27ef002b63e77c53','69db3ae20026cdc0c7fe'],team='69bf44eb000f319a38a2'
 const metricsTarget={endpoint:target.endpoint,projectId:target.projectId,resources:{databaseIds:[],functionIds:[]}}
 const fail=()=>{throw Error('GOOGLE_ONLY_LIVE_UNVERIFIED')}
@@ -102,23 +103,44 @@ export async function captureGoogleOnlyCheckpoint({cliSession,manifestBytes,tran
  if(!metrics.apiHealthy||metrics.memoryAvailableBytes<3*2**30||metrics.diskAvailableBytes<30*2**30)fail()
  return {ownerVerified:true,ownerSessionExpiresAt:session.expire,state,operatingProjects,operatingFunctions,testProtectedSettingsFingerprint:semanticSettingsEvidence(Object.fromEntries(Object.entries(project).filter(([k])=>!['authLimit','serviceStatusForAccount'].includes(k)))).sha256,schema:{dbs:2,collections,attributes,indexes,aclVerified:true,sha256:hash(metadata.sort((a,b)=>(a.db+'/'+a.id).localeCompare(b.db+'/'+b.id)))},accountOff403:true,siteClosed:true,metrics,historicalAuRaw:'UNVERIFIED',functionExecutionsUsed:8,pagesUsed:7}
 }
-export async function createGoogleOnlyLiveAdapters(c,{transport=fetch,readMetrics,readJson=readGoogleOnlyPrivateJson,clock=Date.now,runPages}={}){
+export async function createGoogleOnlyLiveAdapters(c,{transport=fetch,readMetrics,readJson=readGoogleOnlyPrivateJson,clock=Date.now,runPages,onDiagnostic}={}){
  if(c?.kind!=='GOOGLE_ONLY'||c.startAuthorized!==true||c.planSha256!==GOOGLE_ONLY_PLAN_SHA256)fail()
  const [proof,cliSession,baseline]=await Promise.all([readJson(c.approvalProofPath),readJson(c.cliSessionPath),readJson(c.baselinePath)])
  if(proof.kind!=='GOOGLE_ONLY'||proof.startAuthorized!==true||proof.planSha256!==GOOGLE_ONLY_PLAN_SHA256||JSON.stringify(proof.window)!==JSON.stringify(c.window)||baseline.ownerVerified!==true||baseline.functionExecutionsUsed!==8||baseline.pagesUsed!==7)fail()
  assertGoogleOnlyWindow(c.window,{now:c.window.startsAt})
- const manager=createGoogleOnlyTestManager({target,cliSession,transport,clock,expectedBaseline:baseline.state})
+ const diagnostics=createGoogleOnlyDiagnostics({clock,onDiagnostic})
+ const manager=createGoogleOnlyTestManager({target,cliSession,transport,clock,expectedBaseline:baseline.state,onDiagnostic})
  const pages=createGoogleOnlyPages({directory:c.directory,artifactDirectory:c.artifactDirectory,wranglerPath:c.wranglerPath,clock,...(runPages?{run:runPages}:{} )})
- const resource=createCustomerAccountTestProbe({target:metricsTarget,transport,clock,...(readMetrics?{readMetrics}:{} )})
- async function journal(){const j=await readJson(c.journalPath);if(j.kind!=='GOOGLE_ONLY'||j.runId!==c.window.runId)fail();return j}
+ const resource=createCustomerAccountTestProbe({target:metricsTarget,transport,clock,onDiagnostic,...(readMetrics?{readMetrics}:{} )})
+ async function journal(){return diagnostics.measure('journal',async()=>{
+  let j;try{j=await readJson(c.journalPath)}catch{throw googleOnlyDiagnosticError('JOURNAL_INVALID','journal')}
+  if(j.kind!=='GOOGLE_ONLY'||j.runId!==c.window.runId)throw googleOnlyDiagnosticError('JOURNAL_INVALID','journal');return j
+ })}
  function attributed(s,userId,j){return s.userId===userId&&s.provider==='google'&&Date.parse(s.createdAt)>=c.window.startsAt&&Date.parse(s.createdAt)<=c.window.endsAt&&j.loginIntents?.some(x=>x.userId===userId&&x.at>=c.window.startsAt&&x.at<=Date.parse(s.createdAt)&&x.at<c.window.endsAt)}
+ function sessionFailure(s,id,j){
+  if(!Object.values(GOOGLE_ONLY_USERS).some(u=>u.id===id))return 'SESSION_USER_NOT_ALLOWED'
+  if(s.userId!==id)return 'SESSION_USER_MISMATCH'
+  if(s.provider!=='google')return 'SESSION_PROVIDER_MISMATCH'
+  const created=Date.parse(s.createdAt)
+  if(!Number.isFinite(created))return 'SESSION_TIMESTAMP_INVALID'
+  if(created<c.window.startsAt||created>c.window.endsAt)return 'SESSION_OUTSIDE_WINDOW'
+  if(!attributed(s,id,j))return 'SESSION_LOGIN_INTENT_MISSING'
+ }
  return {
   off:()=>manager.stop(),
   async probe(){
-   const [state,metrics,j]=await Promise.all([manager.inspect(),resource(),journal()])
-   let safe=googleOnlyAccountStateSafe(state.accountEnabled,j,c.window,clock())
-   for(const [id,rows] of Object.entries(state.sessions))for(const s of rows){if(!Object.values(GOOGLE_ONLY_USERS).some(u=>u.id===id)||!attributed(s,id,j))safe=false}
-   return {...metrics,safe:safe&&metrics.apiHealthy===true}
+   const [state,metrics,j]=await Promise.all([manager.inspect(),diagnostics.measure('resource',resource),journal()])
+   await diagnostics.measure('account-state',async()=>{
+    if(!googleOnlyAccountStateSafe(state.accountEnabled,j,c.window,clock()))throw googleOnlyDiagnosticError('ACCOUNT_STATE_MISMATCH','account-state')
+   })
+   await diagnostics.measure('session-attribution',async()=>{
+    for(const [id,rows] of Object.entries(state.sessions))for(const s of rows){
+     const code=sessionFailure(s,id,j)
+     if(code)throw googleOnlyDiagnosticError(code,'session-attribution')
+    }
+   })
+   const reason=metrics.apiHealthy===true?undefined:metrics.reason||{code:'API_VERSION_UNHEALTHY',stage:'resource.api-version'}
+   return {...metrics,safe:metrics.apiHealthy===true,...(reason?{reason}:{})}
   },
   async cleanup(){
    const state=await manager.inspect(),j=await journal()

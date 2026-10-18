@@ -1,6 +1,7 @@
 import {GOOGLE_ONLY_PLAN_SHA256,GOOGLE_ONLY_USERS,assertGoogleOnlyWindow} from '../tools/customer-account-google-only/contract.mjs'
 import {semanticSettingsEvidence} from './customer-account-settings-fingerprint.mjs'
 import {createHash} from 'node:crypto'
+import {createGoogleOnlyDiagnostics,googleOnlyDiagnosticError,googleOnlyNetworkError,googleOnlyResponseError} from './customer-account-google-only-diagnostics.mjs'
 export const GOOGLE_TEST_TARGET=Object.freeze({endpoint:'https://api.verygood-chocolate.com/v1',projectId:'verygood-au-account-test',origin:'https://au-account-test.verygood-chocolate.com',pagesProject:'au-cake-account-test',cloudflareAccountId:'f10bef6fa6f6abc7982d3792e250a9bc'})
 export const GOOGLE_TEST_CALLBACK=GOOGLE_TEST_TARGET.endpoint+'/account/sessions/oauth2/callback/google/'+GOOGLE_TEST_TARGET.projectId
 const fields={'email-password':'authEmailPassword',phone:'authPhone','magic-url':'authUsersAuthMagicURL','email-otp':'authEmailOtp',anonymous:'authAnonymous',invites:'authInvites',jwt:'authJWT'}
@@ -49,10 +50,12 @@ export function createGoogleTestManager({target:input,cliSession,transport=fetch
 }
 
 // Separate Google-only contract. No Function/DB/user/key/limit/auth-method writes.
-export function createGoogleOnlyTestManager({target:input,cliSession,transport=fetch,clock=Date.now,expectedBaseline}){
+export function createGoogleOnlyTestManager({target:input,cliSession,transport=fetch,clock=Date.now,expectedBaseline,onDiagnostic}){
  const target=assertGoogleTestTarget(input),root='/projects/'+target.projectId,functionRoot='/functions/ca-test-reservation-api',known=['ca-test-admin-m-20261017',...Object.values(GOOGLE_ONLY_USERS).map(u=>u.id)]
  if(cliSession?.endpoint!==target.endpoint||typeof cliSession.cookie!=='string'||!cliSession.cookie||/[\r\n]/.test(cliSession.cookie)||cliSession.key||cliSession.selfSigned===true)fail()
  let baseline=expectedBaseline?structuredClone(expectedBaseline):null,openAttempted=false
+ const diagnostics=createGoogleOnlyDiagnostics({clock,onDiagnostic})
+ const reject=(code)=>{throw googleOnlyDiagnosticError(code,'manager.inspect')}
  const baselineSessions=new Set()
  if(baseline)for(const group of Object.values(baseline.sessions))for(const s of group)baselineSessions.add(s.id)
  function proofValid(proof,allowEnded=false){
@@ -63,27 +66,35 @@ export function createGoogleOnlyTestManager({target:input,cliSession,transport=f
   const read=method==='GET'&&([root,root+'/platforms','/users',functionRoot,functionRoot+'/executions',functionRoot+'/variables',...known.map(id=>'/users/'+id+'/sessions')].includes(path))
   const write=method==='PATCH'&&path===root+'/service'&&data?.service==='account'&&typeof data.status==='boolean'||method==='DELETE'&&Object.values(GOOGLE_ONLY_USERS).some(u=>path.startsWith('/users/'+u.id+'/sessions/'))&&/^[-\w.]{1,36}$/.test(path.split('/').at(-1))
   if(!read&&!write)fail()
-  try{
-   const response=await transport(target.endpoint+path,{method,redirect:'error',signal:AbortSignal.timeout(4500),headers:{'X-Appwrite-Project':consoleMode?'console':target.projectId,...(consoleMode?{}:{'X-Appwrite-Mode':'admin'}),Cookie:cliSession.cookie,'Content-Type':'application/json'},...(data?{body:JSON.stringify(data)}:{})})
-   if(!response.ok||response.redirected||response.url&&response.url!==target.endpoint+path)fail()
-   return response.status===204?null:await response.json()
-  }catch{fail()}
+  const stage=path===root?'project.get':path===root+'/platforms'?'platforms.get':path==='/users'?'users.get':path===functionRoot?'function.get':path===functionRoot+'/variables'?'function.variables.get':path===functionRoot+'/executions'?'function.executions.get':path===root+'/service'?(data.status?'project.account-on':'project.account-off'):method==='DELETE'?'session.delete':'sessions.'+(['M','G','H'][known.indexOf(path.split('/')[2])])+'.get'
+  return diagnostics.measure(stage,async()=>{
+   let response
+   try{response=await transport(target.endpoint+path,{method,redirect:'error',signal:AbortSignal.timeout(4500),headers:{'X-Appwrite-Project':consoleMode?'console':target.projectId,...(consoleMode?{}:{'X-Appwrite-Mode':'admin'}),Cookie:cliSession.cookie,'Content-Type':'application/json'},...(data?{body:JSON.stringify(data)}:{})})}catch(error){throw googleOnlyNetworkError(error,stage)}
+   if(!response.ok||response.redirected||response.url&&response.url!==target.endpoint+path)throw googleOnlyDiagnosticError([401,403].includes(response.status)?'OWNER_AUTH_DENIED':'API_HTTP_ERROR',stage,{status:response.status})
+   try{return response.status===204?null:await response.json()}catch(error){throw googleOnlyResponseError(error,stage)}
+  },'STEP_FAILED',{mustRun:method==='PATCH'&&path===root+'/service'&&data?.status===false})
  }
- async function inspect(){
+ async function inspect(){return diagnostics.measure('manager.inspect',async()=>{
   const [p,platforms,users,f,variables,executions,...sessions]=await Promise.all([call('GET',root,null,true),call('GET',root+'/platforms',null,true),call('GET','/users'),call('GET',functionRoot),call('GET',functionRoot+'/variables'),call('GET',functionRoot+'/executions'),...known.map(id=>call('GET','/users/'+id+'/sessions'))])
-  if(p.$id!==target.projectId||p.teamId!=='69bf44eb000f319a38a2'||p.authLimit!==2||Object.values(fields).some(key=>p[key]!==false)||p.authSessionAlerts!==false||p.oAuthProviders?.find(x=>x.key==='google')?.enabled!==true||p.oAuthProviders.some(x=>x.key!=='google'&&x.enabled)||platforms.total!==1||platforms.platforms?.length!==1||platforms.platforms[0].hostname!==new URL(target.origin).hostname||platforms.platforms[0].type!=='web')fail()
-  if(users.total!==3||users.users?.length!==3||JSON.stringify(users.users.map(u=>u.$id).sort())!==JSON.stringify([...known].sort())||users.users.some(u=>u.status!==true))fail()
-  if(f.$id!=='ca-test-reservation-api'||f.enabled!==false||f.execute?.length!==0||f.deploymentId!=='6ad41e576cb7a8f346af'||f.runtime!=='node-22'||f.events?.length!==0||f.schedule!=='')fail()
-  if(variables.total!==30||variables.variables?.length!==30||new Set(variables.variables.map(v=>v.key)).size!==30||['CUSTOMER_ACCOUNT_ENABLED','AU_RENEWAL_WRITES_ENABLED','AU_RENEWAL_PREORDERS_ENABLED'].some(key=>variables.variables?.find(v=>v.key===key)?.value!=='false'))fail()
-  if(!Number.isInteger(executions.total)||!Array.isArray(executions.executions)||executions.total<0||sessions.some(s=>!Number.isInteger(s.total)||!Array.isArray(s.sessions)||s.total!==s.sessions.length))fail()
+  if(p.$id!==target.projectId||p.teamId!=='69bf44eb000f319a38a2'||p.authLimit!==2||Object.values(fields).some(key=>p[key]!==false)||p.authSessionAlerts!==false||p.oAuthProviders?.find(x=>x.key==='google')?.enabled!==true||p.oAuthProviders.some(x=>x.key!=='google'&&x.enabled))reject('AUTH_POLICY_DRIFT')
+  if(platforms.total!==1||platforms.platforms?.length!==1||platforms.platforms[0].hostname!==new URL(target.origin).hostname||platforms.platforms[0].type!=='web')reject('PLATFORM_DRIFT')
+  if(users.total!==3||users.users?.length!==3||JSON.stringify(users.users.map(u=>u.$id).sort())!==JSON.stringify([...known].sort())||users.users.some(u=>u.status!==true))reject('AUTH_USERS_DRIFT')
+  if(f.$id!=='ca-test-reservation-api'||f.enabled!==false||f.execute?.length!==0||f.deploymentId!=='6ad41e576cb7a8f346af'||f.runtime!=='node-22'||f.events?.length!==0||f.schedule!=='')reject('FUNCTION_DRIFT')
+  if(variables.total!==30||variables.variables?.length!==30||new Set(variables.variables.map(v=>v.key)).size!==30||['CUSTOMER_ACCOUNT_ENABLED','AU_RENEWAL_WRITES_ENABLED','AU_RENEWAL_PREORDERS_ENABLED'].some(key=>variables.variables?.find(v=>v.key===key)?.value!=='false'))reject('FUNCTION_FLAGS_DRIFT')
+  if(!Number.isInteger(executions.total)||!Array.isArray(executions.executions)||executions.total<0)reject('FUNCTION_EXECUTION_DRIFT')
+  if(sessions.some(s=>!Number.isInteger(s.total)||!Array.isArray(s.sessions)||s.total!==s.sessions.length))reject('SESSION_METADATA_INVALID')
   const safeSessions=Object.fromEntries(known.map((id,i)=>[id,sessions[i].sessions.map(s=>({id:s.$id,userId:s.userId,provider:s.provider,createdAt:s.$createdAt,expire:s.expire}))]))
   const protectedProject=Object.fromEntries(Object.entries(p).filter(([key])=>key!=='serviceStatusForAccount'))
   const variableFingerprint=createHash('sha256').update(JSON.stringify(variables.variables.map(v=>({id:v.$id,key:v.key,value:v.value,secret:v.secret})).sort((a,b)=>a.key.localeCompare(b.key)))).digest('hex')
   const result={accountEnabled:p.serviceStatusForAccount,projectFingerprint:semanticSettingsEvidence(protectedProject).sha256,variableFingerprint,functionClosed:true,executionTotal:executions.total,executionIds:executions.executions.map(x=>x.$id).sort(),sessions:safeSessions}
   if(!baseline){baseline=structuredClone(result);for(const group of Object.values(safeSessions))for(const s of group)baselineSessions.add(s.id)}
-  else if(result.executionTotal!==baseline.executionTotal||JSON.stringify(result.executionIds)!==JSON.stringify(baseline.executionIds)||result.projectFingerprint!==baseline.projectFingerprint||result.variableFingerprint!==baseline.variableFingerprint)fail()
+  else {
+   if(result.executionTotal!==baseline.executionTotal||JSON.stringify(result.executionIds)!==JSON.stringify(baseline.executionIds))reject('FUNCTION_EXECUTION_DRIFT')
+   if(result.projectFingerprint!==baseline.projectFingerprint)reject('PROJECT_SETTINGS_DRIFT')
+   if(result.variableFingerprint!==baseline.variableFingerprint)reject('FUNCTION_VARIABLE_DRIFT')
+  }
   return result
- }
+ })}
  return {
   inspect,
   async enable(proof){
