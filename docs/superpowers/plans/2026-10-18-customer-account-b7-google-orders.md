@@ -1,5 +1,7 @@
 # Customer Account B7 Google Order Acceptance Implementation Plan
 
+> **2026-10-18 B7 조건부 실행 중단:** 승인 SHA는 일치하지만 Renewal writes ON에서 신규 legacy fixture 3건이 원본 서버의 `409 RENEWAL_CONTRACT_REQUIRED`로 거부된다. guard 구현/시험 창 개방 전 중단했으며 Account·Function은 OFF다. [실패 근거와 재개 조건](../../customer-account-b7-validation.md). 승인 manifest는 보존했다. 아래 기존 계획은 이 충돌을 해결하기 전 실행하지 않는다.
+
 > **For agentic workers:** 승인 후 `superpowers:executing-plans`로 Mac Codex가 단독 실행한다. 이번에는 조사·설계·실행 명세만 작성했다. 아래 코드·배포·데이터·활성화 작업은 아직 실행하지 않았으며, 최종 승인이 선행되어야 한다. subagent/Hermes 위임 없음. 단계는 checkbox로 추적한다.
 
 **Goal:** 기존 G와 별도 H가 실제 Google 세션/플랫폼 JWT로 일반 케이크·초콜릿 합성 주문을 만들고 원래 제품 코드의 소유권·조회·guest 분리·복원을 검증한다.

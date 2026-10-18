@@ -1,5 +1,7 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
+> **2026-10-18 B7 조건부 실행 중단:** 승인 SHA는 일치하지만 Renewal writes ON에서 신규 legacy fixture 3건이 원본 서버의 `409 RENEWAL_CONTRACT_REQUIRED`로 거부된다. guard 구현/시험 창 개방 전 중단했으며 Account·Function은 OFF다. [실패 근거와 재개 조건](../../customer-account-b7-validation.md). 승인 manifest는 보존했다. 아래 기존 계획은 이 충돌을 해결하기 전 실행하지 않는다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1/B2/B3 및 별도 승인된 B4 테스트 전용 SMTP 검증 완료, Account OFF로 중단.** [B2 결과](../../customer-account-b2-owner-execution.md), [B3 결과와 검증 한계](../../customer-account-b3-google-validation.md), [B4 결과](../../customer-account-b4-smtp-validation.md)를 먼저 읽고 자원 생성/Key 발급/migration/메일 발송/인증 창을 재실행하지 않는다. B5/B7/B8은 별도 승인 전 실행 금지다. 2026-10-18 B6 승인은 test-only reservation-api 및 로컬 sharp/runtime 수정에만 적용한다.
 
 > **B5 사전 점검만 완료:** [실제 설정·운영 영향](../../customer-account-b5-preflight.md), [확정 실행 계획](2026-10-18-customer-account-system-smtp.md), [제안 manifest](../../customer-account-b5-system-smtp-manifest.json). B5 공통 env 변경/system Key/재생성과 공개 OTP는 미실행이다. 다음 실제 적용 승인을 기다린다.
