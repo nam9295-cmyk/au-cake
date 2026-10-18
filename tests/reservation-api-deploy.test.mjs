@@ -329,3 +329,18 @@ test('dedicated cupcakeFinish migration leaves an available compatible attribute
   assert.equal(result.created, false)
   assert.equal(created, false)
 })
+
+// A test-only Node22 choice must not activate the separate Custom Cake deployment.
+test('isolated customer test target selects Node22 while preserving production runtime contracts', () => {
+ const env={...validEnv,APPWRITE_ENDPOINT:'https://api.verygood-chocolate.com/v1',APPWRITE_PROJECT_ID:'verygood-au-account-test',APPWRITE_RESERVATION_API_FUNCTION_ID:'ca-test-reservation-api',APPWRITE_CAKE_DATABASE_ID:'ca_test_cake_au',APPWRITE_KIDS_DATABASE_ID:'ca_test_kids_au',APPWRITE_RESERVATION_API_RUNTIME:'node-22',APPWRITE_ADMIN_USER_IDS:'ca-test-admin-m-20261017'}
+ const config=resolveDeployConfig(env,{customerAccountTest:true})
+ assert.equal(config.runtime,'node-22')
+ assert.equal(config.customCakeFunctionOptions,undefined)
+ assert.equal(config.runtimeVariables.CUSTOMER_ACCOUNT_ENABLED,'false')
+ assert.equal(config.runtimeVariables.CUSTOM_CAKE_PERSISTENCE_ENABLED,undefined)
+ assert.equal(resolveDeployConfig(validEnv).runtime,'node-16.0')
+ assert.throws(()=>resolveDeployConfig({...validEnv,APPWRITE_RESERVATION_API_RUNTIME:'node-22'}),/RUNTIME/)
+ for(const changed of [{APPWRITE_PROJECT_ID:'verygood-au'},{APPWRITE_ENDPOINT:'https://wrong.example/v1'},{APPWRITE_RESERVATION_API_FUNCTION_ID:'reservation-api'},{APPWRITE_CAKE_DATABASE_ID:'verygood_cake_au'},{CUSTOMER_ACCOUNT_ENABLED:'true'},{CUSTOM_CAKE_BACKEND_DEPLOY_ENABLED:'true'}]) {
+  assert.throws(()=>resolveDeployConfig({...env,...changed},{customerAccountTest:true}))
+ }
+})
