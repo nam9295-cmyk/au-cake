@@ -8,11 +8,22 @@ export const accountEnv = {
 export const ownerAttribute={key:'customerUserId',type:'string',size:36,required:false,array:false,status:'available',default:null}
 export const ownerIndex={key:'customerUser_created_idx',type:'key',attributes:['customerUserId','$createdAt'],orders:['ASC','DESC'],status:'available'}
 export function metadataDb(overrides={}) {
+  const getCollection=overrides.getCollection|| (async()=>({enabled:true,documentSecurity:false,$permissions:['read("user:admin-a")','update("user:admin-b")']}))
+  const byDatabase={
+    'cake-db':['reservations','review_invites','reviews','review_coupons','manual_coupons','review_photo_cleanup','email_deliveries','email_delivery_retry_claims','settings','cake_pickup_openings'],
+    'kids-db':['class_reservations','class_booked_dates'],
+    'private-custom':['claims','snapshots','sessions','photos','quotas','outbox','commits','chunks','histories','ratelimits'],
+  }
+  const listCollections=overrides.listCollections|| (async({databaseId})=>{
+    const ids=byDatabase[databaseId]||[]
+    const collections=await Promise.all(ids.map(async $id=>({$id,...await getCollection({databaseId,collectionId:$id})})))
+    return {collections,total:collections.length}
+  })
   return {
     getVersion:async()=>({version:'1.8.1'}),getDatabase:async()=>({$id:'cake-db'}),
     list:async()=>({databases:[{$id:'cake-db'},{$id:'kids-db'}],total:2}),
-    listCollections:async({databaseId})=>({collections:(databaseId==='cake-db'?['reservations','review_invites','reviews','review_coupons','manual_coupons','review_photo_cleanup','email_deliveries','email_delivery_retry_claims','settings','cake_pickup_openings']:databaseId==='kids-db'?['class_reservations','class_booked_dates']:[]).map($id=>({$id})),total:databaseId==='cake-db'?10:databaseId==='kids-db'?2:0}),
-    getCollection:async()=>({enabled:true,documentSecurity:false,$permissions:['read("user:admin-a")','update("user:admin-b")']}),
+    listCollections,
+    getCollection,
     getAttribute:async()=>({...ownerAttribute}),getIndex:async()=>({...ownerIndex}),...overrides,
   }
 }

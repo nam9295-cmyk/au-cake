@@ -97,7 +97,7 @@ test('wrong origin/hash or expired window are rejected before network or leases'
  for(const change of [{siteOrigin:'https://user:credential@evil.invalid'},{manifestSha256:'bad'},{window:{startsAt:start-900000,endsAt:start}}]){let calls=0;await assert.rejects(gate.waitForB7ActivationGate({siteOrigin:origin,manifestSha256:sha,window:{startsAt:start,endsAt:start+900000},clock:()=>start,inspectLease:async()=>{calls++},record:async()=>{},transport:async()=>{calls++},...change}),/B7_GATE_CONFIGURATION_REJECTED/);assert.equal(calls,0)}
 })
 test('independent worker preserves per-tick timing history instead of only its latest heartbeat',async()=>{
- const f=await fixture();await writeFile(f.configPath,JSON.stringify({mode:'self-test',endsAt:Date.now()+250,intervalMs:20,directory:f.directory}),{mode:0o600})
+ const f=await fixture();await writeFile(f.configPath,JSON.stringify({mode:'self-test',endsAt:Date.now()+1000,intervalMs:20,directory:f.directory}),{mode:0o600})
  watchdog.startB7WatchdogProcess({configPath:f.configPath});let closed
  for(let i=0;i<100;i++){try{closed=JSON.parse(await readFile(join(f.directory,'closed.json'),'utf8'));break}catch{await new Promise(r=>setTimeout(r,20))}}
  assert.equal(closed?.verified,true);const history=(await readFile(join(f.directory,'heartbeat-history.jsonl'),'utf8')).trim().split('\n').map(JSON.parse)

@@ -36,10 +36,19 @@ test('HTTP dry-run uses only GET and rejects redirects; setup cannot combine cus
   assert.throws(()=>schema.customerAccountSetupDefinitions({...accountEnv,APPWRITE_ADMIN_USER_IDS:''}))
   assert.throws(()=>schema.customerAccountSetupDefinitions({...accountEnv,APPWRITE_RESERVATION_WRITE_MODE:'direct'}))
   assert.deepEqual(schema.customerAccountSetupDefinitions({...accountEnv,CUSTOMER_ACCOUNT_ENABLED:'false'}),{attributes:[],indexes:[]})
-  const requests=[]
+  const requests=[],fixtures=metadataDb()
   const transport=async(url,options)=>{
     requests.push({url,...options})
-    const body=url.includes('/databases?')?{databases:[],total:0}:url.includes('/collections?')?{collections:[],total:0}:url.endsWith('/health/version')?{version:'1.8.1'}:url.includes('/attributes/')?ownerAttribute:url.includes('/indexes/')?ownerIndex:url.includes('/collections/')?{enabled:true,documentSecurity:false,$permissions:[]}:{$id:'cake-db'}
+    const pathname=new URL(url).pathname
+    const parts=pathname.split('/')
+    let body
+    if(pathname.endsWith('/health/version'))body={version:'1.8.1'}
+    else if(pathname==='/v1/databases')body=await fixtures.list()
+    else if(pathname.endsWith('/collections'))body=await fixtures.listCollections({databaseId:parts[3]})
+    else if(pathname.includes('/attributes/'))body=ownerAttribute
+    else if(pathname.includes('/indexes/'))body=ownerIndex
+    else if(pathname.includes('/collections/'))body=await fixtures.getCollection({databaseId:parts[3],collectionId:parts[5]})
+    else body={$id:parts.at(-1)}
     return new Response(JSON.stringify(body),{status:200})
   }
   await migration.runCustomerAccountMigration({env:accountEnv,client:migration.createCustomerMigrationClient(accountEnv,transport)})

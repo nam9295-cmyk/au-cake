@@ -52,7 +52,10 @@ test('real reservation handler, not wrapper, returns foreign detail/cursor404 an
  const meta=metadataDb(),cake='ca_test_cake_au',kids='ca_test_kids_au'
  const db={...meta,
  list:async()=>({databases:[{$id:cake},{$id:kids}],total:2}),
- listCollections:async({databaseId})=>meta.listCollections({databaseId:databaseId===cake?'cake-db':'kids-db'}),
+ listCollections:async({databaseId})=>{
+  const rows=await meta.listCollections({databaseId:databaseId===cake?'cake-db':'kids-db'})
+  return {...rows,collections:rows.collections.map(c=>({...c,$permissions:['read("user:ca-test-admin-m-20261017")']}))}
+ },
  getCollection:async()=>({enabled:true,documentSecurity:false,$permissions:['read("user:ca-test-admin-m-20261017")']}),
  getDocument:async()=>({$id:id,customerUserId:H,customerPhone:'0400000001'})}
  const s=setup(async c=>handler({...c,log(){},error(){}}))

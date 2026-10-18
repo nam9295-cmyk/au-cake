@@ -44,10 +44,10 @@ test('real handler creates owner atomically, preserves contact email, and reject
   assert.equal(b.status,409);assert.equal(b.value.code,'REQUEST_ID_CONFLICT');assert.equal(db.writes,1)
 })
 test('guest paths avoid identity and readiness; later authenticated replay never adopts guest order',async()=>{
-  const db=database();db.getCollection=async()=>{throw Error('guest must skip readiness')}
+  const db=database(),safeList=db.listCollections;db.listCollections=async()=>{throw Error('guest must skip readiness')}
   const guest=await call(db,{body:{action:'create-cake',data:request}})
   assert.equal(guest.status,200,JSON.stringify(guest));assert.equal(Object.hasOwn(db.rows.get(request.requestId),'customerUserId'),false)
-  db.getCollection=metadataDb().getCollection
+  db.listCollections=safeList
   const replay=await call(db)
   assert.equal(replay.status,200);assert.equal(Object.hasOwn(db.rows.get(request.requestId),'customerUserId'),false)
 })
@@ -60,7 +60,11 @@ test('member failures before writes include disabled, unsafe ACL, invalid JWT/bo
     const db=database(),response=await call(db,options)
     assert.ok(response.status>=400,JSON.stringify(options));assert.equal(db.writes,0)
   }
-  const unsafe=database();unsafe.getCollection=async()=>({enabled:true,documentSecurity:false,$permissions:['read("users")']})
+  const unsafe=database(),safeList=unsafe.listCollections
+  unsafe.listCollections=async args=>{
+    const rows=await safeList(args)
+    return {...rows,collections:rows.collections.map(c=>c.$id==='reservations'?{...c,$permissions:['read("users")']}:c)}
+  }
   assert.equal((await call(unsafe)).value.code,'CUSTOMER_ACCOUNT_NOT_READY');assert.equal(unsafe.writes,0)
 })
 test('legacy general orders retain fingerprints and persist verified owner',async()=>{

@@ -40,11 +40,24 @@ export async function assertCustomerResourceInventory(databases,env,resources) {
   for(const t of resources.publicReadTargets)classified.add(`${t.databaseId}/${t.collectionId}`)
   const knownDatabases=new Set(resources.privacyAuditTargets.map(t=>t.databaseId))
   const project=await databases.list({queries:[Query.limit(100)]})
-  if(!Array.isArray(project.databases)||!Number.isSafeInteger(project.total)||project.total!==project.databases.length||project.total>100||project.databases.some(d=>!knownDatabases.has(d.$id))) throw Error('CUSTOMER_ACCOUNT_UNCLASSIFIED_DATABASE')
-  for(const databaseId of knownDatabases) {
+  const actualDatabases=project?.databases?.map(d=>d.$id)
+  if(!Array.isArray(actualDatabases)||!Number.isSafeInteger(project.total)||project.total!==actualDatabases.length||project.total!==knownDatabases.size||project.total>100||new Set(actualDatabases).size!==actualDatabases.length||actualDatabases.some(id=>!knownDatabases.has(id))) throw Error('CUSTOMER_ACCOUNT_UNCLASSIFIED_DATABASE')
+  // Fetch each database's complete, fresh collection inventory once. The returned
+  // collection objects include permissions, enabled and documentSecurity in Appwrite.
+  // Missing/partial metadata fails closed; never replace it with cached ACL results.
+  const inventories=await Promise.all([...knownDatabases].map(async databaseId=>{
     const list=await databases.listCollections({databaseId,queries:[Query.limit(100)]})
-    if(!Array.isArray(list.collections)||!Number.isSafeInteger(list.total)||list.total!==list.collections.length||list.total>100||list.collections.some(c=>!classified.has(`${databaseId}/${c.$id}`))) throw Error('CUSTOMER_ACCOUNT_UNCLASSIFIED_RESOURCE')
+    if(!Array.isArray(list?.collections)||!Number.isSafeInteger(list.total)||list.total!==list.collections.length||list.total>100) throw Error('CUSTOMER_ACCOUNT_UNCLASSIFIED_RESOURCE')
+    return {databaseId,collections:list.collections}
+  }))
+  const collections=new Map()
+  for(const {databaseId,collections:items} of inventories)for(const collection of items) {
+    const key=`${databaseId}/${collection?.$id}`
+    if(!classified.has(key)||collections.has(key)) throw Error('CUSTOMER_ACCOUNT_UNCLASSIFIED_RESOURCE')
+    collections.set(key,collection)
   }
+  if(collections.size!==classified.size) throw Error('CUSTOMER_ACCOUNT_UNCLASSIFIED_RESOURCE')
+  return collections
 }
 export function assertCustomerOwnerAttribute(value,{pending=false}={}) {
   if(!value||value.key!==CUSTOMER_OWNER_ATTRIBUTE.key||value.type!=='string'||value.size!==36||value.required!==false||value.array===true||value.encrypt===true||(value.format!==undefined&&value.format!=='')||(value.default!==undefined&&value.default!==null)||(value.status!=='available'&&!(pending&&value.status==='processing'))) throw Error('CUSTOMER_ACCOUNT_OWNER_SCHEMA_MISMATCH')
@@ -56,11 +69,15 @@ export async function checkCustomerAccountReadiness(databases,env) {
   if(env.CUSTOMER_ACCOUNT_ENABLED!=='true') return {enabled:false,ready:false}
   try {
     const resources=resolveCustomerAccountResources(env)
-    await assertCustomerResourceInventory(databases,env,resources)
-    for(const target of resources.privacyAuditTargets) assertCustomerPrivateAcl(await databases.getCollection(target),resources.adminUserIds)
-    for(const target of resources.publicReadTargets) assertCustomerPublicReadOnlyAcl(await databases.getCollection(target),resources.adminUserIds)
-    assertCustomerOwnerAttribute(await databases.getAttribute({...resources.ownershipTarget,key:CUSTOMER_OWNER_ATTRIBUTE.key}))
-    assertCustomerOwnerIndex(await databases.getIndex({...resources.ownershipTarget,key:CUSTOMER_OWNER_INDEX.key}))
+    const collections=await assertCustomerResourceInventory(databases,env,resources)
+    for(const target of resources.privacyAuditTargets) assertCustomerPrivateAcl(collections.get(`${target.databaseId}/${target.collectionId}`),resources.adminUserIds)
+    for(const target of resources.publicReadTargets) assertCustomerPublicReadOnlyAcl(collections.get(`${target.databaseId}/${target.collectionId}`),resources.adminUserIds)
+    const [attribute,index]=await Promise.all([
+      databases.getAttribute({...resources.ownershipTarget,key:CUSTOMER_OWNER_ATTRIBUTE.key}),
+      databases.getIndex({...resources.ownershipTarget,key:CUSTOMER_OWNER_INDEX.key}),
+    ])
+    assertCustomerOwnerAttribute(attribute)
+    assertCustomerOwnerIndex(index)
     return {enabled:true,ready:true}
   } catch { return {enabled:true,ready:false} }
 }

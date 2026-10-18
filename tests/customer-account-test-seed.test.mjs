@@ -53,7 +53,7 @@ test('ownership migration is reservations-only and remains separate from the bas
   assert.deepEqual(p.migration.attribute,{key:'customerUserId',type:'string',size:36,required:false})
   assert.deepEqual(p.migration.index,{key:'customerUser_created_idx',type:'key',attributes:['customerUserId','$createdAt'],orders:['ASC','DESC']})
   const missing=()=>{throw Object.assign(Error('missing'),{code:404})}
-  const client={list:async()=>({databases:p.creates.databases.map(d=>({$id:d.databaseId})),total:2}),listCollections:async({databaseId})=>{const values=collections.filter(c=>c.databaseId===databaseId).map(c=>({$id:c.collectionId}));return {collections:values,total:values.length}},getCollection:async({databaseId,collectionId})=>{const c=collections.find(c=>c.databaseId===databaseId&&c.collectionId===collectionId);return {...c,$id:c.collectionId,$permissions:c.permissions}},getAttribute:async()=>missing(),getIndex:async()=>missing()}
+  const client={list:async()=>({databases:p.creates.databases.map(d=>({$id:d.databaseId})),total:2}),listCollections:async({databaseId})=>{const values=collections.filter(c=>c.databaseId===databaseId).map(c=>({...c,$id:c.collectionId,$permissions:c.permissions}));return {collections:values,total:values.length}},getCollection:async({databaseId,collectionId})=>{const c=collections.find(c=>c.databaseId===databaseId&&c.collectionId===collectionId);return {...c,$id:c.collectionId,$permissions:c.permissions}},getAttribute:async()=>missing(),getIndex:async()=>missing()}
   const env={...p.env,CUSTOMER_ACCOUNT_ENABLED:'true'} // In-memory readiness probe only.
   assert.deepEqual(await checkCustomerAccountReadiness(client,env),{enabled:true,ready:false})
   client.getAttribute=async()=>({...p.migration.attribute,status:'available'})

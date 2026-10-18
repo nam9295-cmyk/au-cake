@@ -46,7 +46,7 @@ test('configured Custom Cake private inventory is ACL-only, even while Custom fl
   const names=['CLAIMS','SNAPSHOTS','SESSIONS','PHOTOS','QUOTAS','OUTBOX','COMMITS','CHUNKS','HISTORIES','RATELIMITS']
   for(const key of names)env[`APPWRITE_CUSTOM_CAKE_${key}_TABLE_ID`]=key.toLowerCase()
   const attributes=[],collections=[]
-  const db=metadataDb({getAttribute:async t=>{attributes.push(t.collectionId);return {key:'customerUserId',type:'string',size:36,required:false,status:'available'}},getCollection:async t=>{collections.push(t.collectionId);return {documentSecurity:false,enabled:true,$permissions:[]}}})
+  const db=metadataDb({list:async()=>({databases:[{$id:'cake-db'},{$id:'kids-db'},{$id:'private-custom'}],total:3}),getAttribute:async t=>{attributes.push(t.collectionId);return {key:'customerUserId',type:'string',size:36,required:false,status:'available'}},getCollection:async t=>{collections.push(t.collectionId);return {documentSecurity:false,enabled:true,$permissions:[]}}})
   assert.equal((await readiness.checkCustomerAccountReadiness(db,env)).ready,true)
   assert.deepEqual(attributes,['reservations'])
   assert.ok(names.every(key=>collections.includes(key.toLowerCase())))
