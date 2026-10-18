@@ -1,6 +1,6 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1/B2/B3 및 별도 승인된 B4 테스트 전용 SMTP 검증 완료, Account OFF로 중단.** [B2 결과](../../customer-account-b2-owner-execution.md), [B3 결과와 검증 한계](../../customer-account-b3-google-validation.md), [B4 결과](../../customer-account-b4-smtp-validation.md)를 먼저 읽고 자원 생성/Key 발급/migration/메일 발송/인증 창을 재실행하지 않는다. B5–B8은 별도 승인 전 실행 금지다.
+> **For agentic workers:** REQUIRED SUB-SKILL: 승인 후 `superpowers:executing-plans`로 실행한다. Mac Codex 단독, subagent/Hermes 위임 없음. **B1/B2/B3 및 별도 승인된 B4 테스트 전용 SMTP 검증 완료, Account OFF로 중단.** [B2 결과](../../customer-account-b2-owner-execution.md), [B3 결과와 검증 한계](../../customer-account-b3-google-validation.md), [B4 결과](../../customer-account-b4-smtp-validation.md)를 먼저 읽고 자원 생성/Key 발급/migration/메일 발송/인증 창을 재실행하지 않는다. B5/B7/B8은 별도 승인 전 실행 금지다. 2026-10-18 B6 승인은 test-only reservation-api 및 로컬 sharp/runtime 수정에만 적용한다.
 
 > **B5 사전 점검만 완료:** [실제 설정·운영 영향](../../customer-account-b5-preflight.md), [확정 실행 계획](2026-10-18-customer-account-system-smtp.md), [제안 manifest](../../customer-account-b5-system-smtp-manifest.json). B5 공통 env 변경/system Key/재생성과 공개 OTP는 미실행이다. 다음 실제 적용 승인을 기다린다.
 
@@ -12,10 +12,21 @@
 
 **Spec:** [최초 조사 및 A01–A11](../../customer-account-auth-test-environment.md), [제품 설계](../specs/2026-10-17-customer-account-design.md), [운영 적용/rollback](../../customer-account-rollout.md). 이 문서가 이전 A2 실행 계획을 대체한다.
 
+## B5 — DEFERRED — RELEASE BLOCKER
+
+B5는 취소가 아니라 뒤로 미룬 필수 작업이다. B6 테스트 Function 성공은 B5 완료가 아니다. 아래 항목이 해소되기 전 native Email OTP는 OFF이며 Google+OTP 최종 출시 준비는 미완료다. Google-only 출시는 별도 제품 결정과 승인이 필요하다.
+
+- [ ] 기존 운영 4개 프로젝트와 Console의 공통 SMTP 영향 검토·승인
+- [ ] 테스트 OTP의 수신자 접근 제한과 남용 방지 입증
+- [ ] Gallery 설정 의미적 지문 전후 검증 및 B5 raw 지문 예외 검토
+- [ ] System SMTP 전용 Sending Key·발신자 확정 및 별도 발급 승인
+- [ ] 운영 보호 백업, 정식 root 인증, API/mail-worker 재생성·복구 승인 및 검증
+- [ ] 실제 6자리 이메일 OTP와 Google↔OTP 동일 UID 검증
+
 ## Global Constraints
 
 - 승인 worktree `/Users/nam9295/Desktop/john_2.0/code/au-cake-customer-account`, branch `feat/customer-account`만 수정한다. 조사 시작 HEAD는 `2150720cfed5b637aec9d35129252f9d87d97d94`다.
-- B1의 test project/Account OFF와 B2의 승인된 M1/Key3/DB2/Collection12/Attribute182/Index38/settings1 및 조건부 migration을 완료했다. [B2 결과](../../customer-account-b2-owner-execution.md). 이후 별도 승인된 B3에서 test HTTPS/Google SDK 검증 후 Account OFF로 복원했고 B4에서 테스트 전용 Resend SMTP와 일반 sample 1건 수신을 확인했다. Function/공통 SMTP/재시작/production Google·사이트 배포는 미승인이다.
+- B1의 test project/Account OFF와 B2의 승인된 M1/Key3/DB2/Collection12/Attribute182/Index38/settings1 및 조건부 migration을 완료했다. [B2 결과](../../customer-account-b2-owner-execution.md). 이후 별도 승인된 B3에서 test HTTPS/Google SDK 검증 후 Account OFF로 복원했고 B4에서 테스트 전용 Resend SMTP와 일반 sample 1건 수신을 확인했다. 공통 SMTP/재시작/production Google·사이트 배포는 미승인이다. B6에서 정확히 `ca-test-reservation-api` 1개만 별도 승인됐다.
 - 운영 고객 users/sessions·주문 document·업로드·메일/queue 본문·execution log를 조회/복사하지 않는다. 허용된 구성·schema/ACL·자원 metadata만 읽는다.
 - 운영 project의 Auth·DB·Function·ACL·판매 설정을 테스트 구성으로 덮어쓰지 않는다. main 병합/reset/history rewrite/GC 금지.
 - Google + 6자리 Email OTP만 고객 UI에 제공한다. guest 유지, 일반 케이크·초콜릿만 회원 연결. Custom Cake/Kids Class 회원 연동 제외.
@@ -179,14 +190,21 @@ Gallery raw config 지문 예외도 해당 보고서에 남겼다. 정상 조회
 - [ ] 기존 DB/Function/ACL·비SMTP env 불변, test SMTP override·운영 HTTP Resend 설정 불변, host 자원/공유 서비스 상태를 확인한다. 운영 주문 생성/고객 조회는 smoke에 포함하지 않는다.
 - [ ] 실패하면 test 요청을 차단하고 승인된 SMTP keys의 원래 값으로 복원, 두 서비스만 재생성한다. 전체 `.env` 덮어쓰기/DB restore/Redis flush 금지. 결과 보고 후 중단한다.
 
-## B6: 테스트 Function 배포 — 별도 runtime/sharp 해결 gate
+## B6: 승인된 테스트 전용 reservation-api 구축
 
-**승인 A6 필요:** 새 test Function/key/specification·검증된 artifact 배포. 운영 Function 배포/변수/권한·runtime 변경은 미포함.
+**2026-10-18 승인:** 로컬 sharp 패치와 분리된 Node22 배포 경로, `ca-test-reservation-api` 1개 구축·검증. 운영 Function/DB/ACL/판매·가격·쿠폰 정책 변경은 금지한다. B5와 B7의 선후 순서만 분리하며 B5 출시 blocker는 유지한다.
 
-- [ ] 별도 해결 작업에서 sharp 0.35.5와 reservation Node22 배포 계약·Linux transaction/native 검증을 검토한다. 아직 미완료면 project/provider 구성까지 유지하고 주문 통합 인수는 미완료로 남긴다.
-- [ ] test-only artifact의 가격·판매·쿠폰·flags·정확한 test mappings를 확인한다. Custom 배포 flag를 켜거나 운영 Function을 clone/deploy해서 runtime gate를 우회하지 않는다.
-- [ ] 승인된 1vCPU/1GiB급 test Function을 customer OFF, schedule/events 기본 없음으로 배포한다. guest/readiness·실제 JWT·private ACL을 합성 자료로 확인한다.
-- [ ] test flags를 승인된 순서로만 ON하고 자원 peak·운영 metadata 불변을 기록한다. review/알림 Function이 필요하면 별도 resource 승인을 받는다.
+- [x] 실행 직전 Settings ID/endpoint, 정식 Owner, Account OFF/인증 7개 OFF, Google·SMTP 보존, B2 schema/ACL, 기존 4개 metadata와 host 여유를 확인한다.
+- [x] reservation 및 로컬 시험용 sharp만 0.35.5로 패치한다. 별도 review-api 0.35.4는 미해결 추적하며 배포하지 않는다. JPEG/PNG/WebP·잘못된 형식·픽셀·메타데이터 회귀를 검증한다.
+- [x] production Node16 기본값과 기존 Custom opt-in 계약을 유지하고 exact test pair/DB/Function에서만 `node-22`를 명시 선택한다. Custom 배포 flag를 켜지 않는다. runtime 선택·대상 제한 RED→GREEN.
+- [x] 공식 registry의 node-22/활성 1vCPU·1GiB를 확인한다. 공식 Owner CLI 관리 경로로 create-only Function 1개·test 전용 변수·deployment 1개만 만든다. 새 API Key는 필요하지 않으면 발급하지 않는다.
+- [x] `enabled=false`, execute roles `[]`, events `[]`, schedule empty, customer OFF, test DB/Admin M 매핑, test-only 새 HMAC/PIN을 사용한다. SMTP/Resend/payment credential을 넣지 않는다. Function 생성에 수반되는 내부 비활성 schedule metadata는 활성 작업이 아니다.
+- [x] Appwrite 1.8.1 Function API에는 per-Function build/execution concurrency 인자가 없다. 전역 executor 설정은 변경하지 않고, 공개 실행 차단과 관리 runner의 단일 in-flight 작업으로 이번 시험 동시성 1을 유지한다. 이를 서버의 별도 hard-cap 설정으로 보고하지 않는다.
+- [x] source/package/lock/native-smoke만 archive에 담고 `npm ci --omit=dev --include=optional` 후 실제 Linux x86_64 Node22 codec gate를 실행한다. 실패 시 activate/retry/overwrite/delete하지 않는다.
+- [x] readiness·test schema·allowlist/ACL·guest 유효성/lookup·private 직접 접근 거부·customer OFF 차단을 검증한다. actual JWT/회원 주문/MY ORDERS는 B7 미실행으로 기록한다.
+- [x] 전체 npm test, account, Node22 focused, lint/TS, KR→AU 순차 빌드, 서버 자원·기존 운영 불변을 검증하고 커밋·결과를 보고한 뒤 중단한다. Account/Email OTP는 OFF이며 B5/B7/B8 자동 진행 금지.
+
+실제 결과와 검증 한계: [B6 결과](../../customer-account-b6-function-validation.md). 정상 guest 생성은 로컬 suite, 실제 Function은 validation/lookup까지만 확인했다. 실제 JWT/회원 주문은 B7 미실행이다.
 
 ## B7: 실제 인증·주문 인수
 

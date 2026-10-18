@@ -1,6 +1,17 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
-2026-10-18. 이 문서는 production 적용 전의 승인 절차다. 별도 승인 아래 [B1](customer-account-b1-validation.md), [B2 테스트 schema/조건부 migration](customer-account-b2-owner-execution.md), [B3 테스트 HTTPS·Google SDK 인증](customer-account-b3-google-validation.md), [B4 테스트 전용 Resend SMTP와 일반 sample 1건 수신](customer-account-b4-smtp-validation.md)을 완료했다. 테스트 Account와 신규 인증 진입은 OFF다. production migration/Function·사이트 배포/운영 Google·SMTP 변경/고객 데이터 접근·변경/main 병합은 실행하지 않았다. 공통 SMTP와 B5도 미실행이다. 제품 고객 기능 frontend/server flag는 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
+2026-10-18. 이 문서는 production 적용 전의 승인 절차다. 별도 승인 아래 [B1](customer-account-b1-validation.md), [B2 테스트 schema/조건부 migration](customer-account-b2-owner-execution.md), [B3 테스트 HTTPS·Google SDK 인증](customer-account-b3-google-validation.md), [B4 테스트 전용 Resend SMTP와 일반 sample 1건 수신](customer-account-b4-smtp-validation.md)을 완료했다. 테스트 Account와 신규 인증 진입은 OFF다. production migration/Function·사이트 배포/운영 Google·SMTP 변경/고객 데이터 접근·변경/main 병합은 실행하지 않았다. 공통 SMTP와 B5는 미실행이다. [B6 테스트 Function 구축·검증](customer-account-b6-function-validation.md)은 별도 승인 아래 완료했으며 공개 Function/Account는 차단 상태로 보존한다. 제품 고객 기능 frontend/server flag는 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
+
+## B5 — DEFERRED — RELEASE BLOCKER
+
+B5는 취소가 아니라 뒤로 미룬 필수 작업이다. B6 테스트 Function 성공은 B5 완료가 아니다. 아래 항목이 해소되기 전 native Email OTP는 OFF이며 Google+OTP 최종 출시 준비는 미완료다. Google-only 출시는 별도 제품 결정과 승인이 필요하다.
+
+- [ ] 기존 운영 4개 프로젝트와 Console의 공통 SMTP 영향 검토·승인
+- [ ] 테스트 OTP의 수신자 접근 제한과 남용 방지 입증
+- [ ] Gallery 설정 의미적 지문 전후 검증 및 B5 raw 지문 예외 검토
+- [ ] System SMTP 전용 Sending Key·발신자 확정 및 별도 발급 승인
+- [ ] 운영 보호 백업, 정식 root 인증, API/mail-worker 재생성·복구 승인 및 검증
+- [ ] 실제 6자리 이메일 OTP와 Google↔OTP 동일 UID 검증
 
 ## 후속 안정화 배포 gate
 
@@ -27,7 +38,7 @@ Gallery raw project-config 지문 예외는 B5 보고서에 원인 추론과 한
 
 ## 격리 환경의 필수 gate
 
-사용자가 선택한 환경은 **B안: very-server의 기존 Appwrite 1.8.1 인스턴스 안에 별도 nonproduction project 생성**이다. 새 호스트·Compose·Appwrite 설치는 하지 않는다. [현재 사전 점검과 단계별 승인 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 먼저 따른다. `verygood-au-account-test`의 B1/B2 자원과 B3 Google SDK, B4 테스트 SMTP 일반 메일 검증은 별도 승인 아래 완료했다. 공통 SMTP·실제 OTP·Function·제품 주문 통합은 미실행이다. Account OFF·다른 인증 7개 OFF·test authLimit 2를 유지한다.
+사용자가 선택한 환경은 **B안: very-server의 기존 Appwrite 1.8.1 인스턴스 안에 별도 nonproduction project 생성**이다. 새 호스트·Compose·Appwrite 설치는 하지 않는다. [현재 사전 점검과 단계별 승인 계획](superpowers/plans/2026-10-17-customer-account-very-server-test.md)을 먼저 따른다. `verygood-au-account-test`의 B1/B2 자원과 B3 Google SDK, B4 테스트 SMTP 일반 메일 검증은 별도 승인 아래 완료했다. B6의 테스트 Function 1개는 차단 상태로 배포·검증했으나 공통 SMTP·실제 OTP·제품 회원 주문 통합은 미실행이다. Account OFF·다른 인증 7개 OFF·test authLimit 2를 유지한다.
 
 SMTP/OAuth의 직접 SQL JSON은 암호화 envelope여서 enabled null을 미설정으로 해석하지 않는다. 기존 프로젝트의 실제 override/provider 상태는 별도 승인된 Console/API metadata 확인 대상이다. test project의 Custom SMTP는 B4에서 `auth-test.verygood-chocolate.com` 전용 Resend Key로 ON 설정했다. 도메인 제한은 수신자 제한이 아니며 1건 승인 주소 제한은 로컬 helper의 통제다. Google provider는 B3에서 등록했지만 Account OFF가 신규 client 인증을 차단한다. 기본 Google 로그인은 Testing 사용자 목록만으로 접근을 제한하지 못하므로 후속 재활성화의 시간·사용자 상한/추가 접근 제한을 다시 승인받는다.
 
