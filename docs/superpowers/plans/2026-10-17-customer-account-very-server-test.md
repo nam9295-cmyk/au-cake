@@ -1,5 +1,7 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
+> **최신 B7 수동 전환:** [CLI/사용자 Chrome 계획](2026-10-18-customer-account-b7-manual-chrome.md), [준비 결과](../../customer-account-b7-manual-preparation.md). CUA/getApp/자동 브라우저 조작 중단. 사용자의 `시작` 전 Account/Function 활성화·Pages 배포 금지. 현재 OFF/B6/CLOSED, H/쿠폰/같은7 변수/기존 guarded deployment 재사용, 실행6+최대114·Pages7+OPEN8/CLOSED9. 새900초 창은 아직 시작하지 않았다. **B5 — DEFERRED — RELEASE BLOCKER** 및 과거 AU raw UNVERIFIED 유지. 다음 내용은 과거 기록으로 보존한다.
+
 > **최신 B7 V3 재개:** [실제 결과](../../customer-account-b7-v3-continuation-results.md). 기존 자원을 재사용해 별도 승인 창에서 gate/Owner health/watchdog을 검증했으나 Chrome 파일 권한 및 운영 탭 자동 관찰로 중지했다. Google/주문 NOT RUN, 복구 PASS, Pages7/7·누적 실행6/120. 현재 OFF/B6/CLOSED, 새 창/배포 자동 재개 금지. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.
 
 > **최신 B7 V3 조사:** [활성화 게이트 진단·로컬 검증](../../customer-account-b7-v3-activation-gate-investigation.md). 과거 원인은 UNVERIFIED이며 이번에는 원격 쓰기0이다. 이전 실행·자원·만료 window·Pages5/5 기록을 보존한다. 새 창/최소 추가 Pages2회는 아직 승인받지 않았으며 B5는 **DEFERRED — RELEASE BLOCKER**다. 아래 단계는 과거 승인 범위의 기록이며 재실행하지 않는다.

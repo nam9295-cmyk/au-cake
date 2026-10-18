@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **최신 B7 수동 전환:** [사용자 Chrome 직접 조작 계획](superpowers/plans/2026-10-18-customer-account-b7-manual-chrome.md), [준비 결과](customer-account-b7-manual-preparation.md). 앞으로 CUA/getApp/자동 브라우저 제어를 사용하지 않는다. 현재 OFF/B6/CLOSED이며 `시작` 전 원격 활성화·Pages 배포 금지. 기존 자원 재사용, 누적 실행6/120(잔여114), Pages7회 사용·OPEN8/CLOSED9만 다음 단일900초 창에 허용한다. 첫 주문은 frozen body를 수동 테스트 패널로 제출하며 일반 Checkout 인수와 구분한다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 아래는 보존된 과거 기록이다.
+
 > **B7 V3 최종 인수 재개:** [실제 결과](customer-account-b7-v3-continuation-results.md). 새 gate/실제 runtime·watchdog·복구 PASS. Chrome 파일 권한과 운영 탭 자동 화면 관찰로 중단했으며 Google/회원 주문 NOT RUN이다. H/쿠폰/7변수/deployment 재사용, 누적 실행6/120·Pages7/7, Account OFF403/Function OFF/B6/CLOSED 복원 확인. 운영 화면 관찰 FAIL을 별도 기록했다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 새 창 자동 재개 금지.
 
 > **B7 V3 활성화 게이트 조사:** [진단·로컬 검증](customer-account-b7-v3-activation-gate-investigation.md). 과거 실패 predicate는 UNVERIFIED다. 사이트/lease 계측·bounded GET·진단 I/O 실패 시 OFF를 보강했고 실제 활성화·배포는 하지 않았다. 기존 H/쿠폰/7변수/guarded deployment 보존, 다음 실행에는 새 단일 창과 최소 Pages2회(누적7) 승인이 필요하다. 현재 OFF/B6/CLOSED, **B5 — DEFERRED — RELEASE BLOCKER** 및 과거 AU raw 차이 UNVERIFIED 유지.
