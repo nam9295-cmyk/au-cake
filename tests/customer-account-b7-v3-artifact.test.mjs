@@ -40,5 +40,10 @@ test('isolated build excludes inherited env and supplies only test targets, clos
   for(const forbidden of ['B7_SENTINEL_MUST_NEVER_SHIP','G-B7S2L88TQF','googletagmanager.com/gtag'])assert.equal(source.includes(forbidden),false,forbidden)
   assert.ok(source.includes('ca-test-reservation-api'));assert.ok(source.includes('B7_CLOSED'))
   assert.ok(source.includes('B7v3:1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90'))
+  const shell=await readFile(join(result.directory,'index.html'),'utf8')
+  for(const path of ['account','account/auth/callback','cart','reserve','lookup','cakes','cakes/pave-chocolate-cake','chocolates','chocolates/pave-chocolate']){
+   assert.equal(await readFile(join(result.directory,path,'index.html'),'utf8'),shell,'missing concrete Pages entry: '+path)
+  }
+  assert.doesNotMatch(await readFile(join(result.directory,'404.html'),'utf8'),/<script[^>]+src=/)
  }finally{if(prior===undefined)delete process.env.VITE_B7_LEAK_SENTINEL;else process.env.VITE_B7_LEAK_SENTINEL=prior;if(result)await rm(result.stage,{recursive:true,force:true})}
 })

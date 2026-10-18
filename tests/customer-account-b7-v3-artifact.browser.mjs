@@ -32,7 +32,18 @@ async page=>{
   if(url.pathname.endsWith('/account/prefs'))return respond({})
   return respond({documents:[],total:0})
  })
- await page.goto('http://localhost:4174/account')
+ for(const path of ['/cakes/pave-chocolate-cake','/chocolates/pave-chocolate','/cart','/account/auth/callback?status=cancelled']){
+  const response=await page.goto('http://localhost:4174'+path)
+  check(response.status()===200,'concrete Pages route missing: '+path)
+  if(path.includes('/callback'))await page.getByText('Sign in is unavailable. You can continue as a guest.').waitFor()
+  else await page.locator('.app-shell').waitFor()
+ }
+ for(const path of ['/b7-unknown-route','/assets/b7-missing.js']){
+  const response=await page.goto('http://localhost:4174'+path)
+  check(response.status()===404,'missing route/asset silently received app shell')
+ }
+ const accountResponse=await page.goto('http://localhost:4174/account')
+ check(accountResponse.status()===200,'account route did not serve a concrete artifact')
  await page.getByText('Sign in is unavailable. You can continue as a guest.').waitFor()
  check(calls===0,'closed site invoked Function')
  open=true

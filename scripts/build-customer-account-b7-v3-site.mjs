@@ -32,6 +32,14 @@ export async function buildB7Site({window:state}={}) {
  const result=spawnSync(process.execPath,['build.mjs'],{cwd:stage,env:{PATH:process.env.PATH||'/usr/bin:/bin',HOME:process.env.HOME||'',TMPDIR:tmpdir()},encoding:'utf8',timeout:120000,maxBuffer:4*1024*1024})
  if(result.status!==0)throw Error('B7_BUILD_FAILED: '+String(result.stderr).slice(-1000))
  const directory=join(stage,'dist')
+ // Pages keeps a hard 404 when public/404.html exists. Materialize only the
+ // approved test journey's routes; do not rely on a dev server's SPA fallback.
+ const shell=await readFile(join(directory,'index.html'))
+ for(const path of ['account','account/auth/callback','cart','reserve','lookup','complete','cakes','cakes/pave-chocolate-cake','chocolates','chocolates/pave-chocolate']){
+  await mkdir(join(directory,path),{recursive:true})
+  await writeFile(join(directory,path,'index.html'),shell)
+  await writeFile(join(directory,path+'.html'),shell)
+ }
  await writeFile(join(directory,'b7-approved-manifest.json'),bytes)
  await writeFile(join(directory,'test-window.json'),JSON.stringify(state))
  await writeFile(join(directory,'b7-public-config.json'),JSON.stringify(config))
