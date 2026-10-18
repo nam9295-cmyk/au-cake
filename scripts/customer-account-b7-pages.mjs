@@ -6,8 +6,9 @@ function execute(command,args,options){return new Promise((resolve,reject)=>{con
 export function createB7ClosedSiteAdapter({directory,pagesAttemptSlotsUsed,wranglerPath,run=execute,budgetApprovalProof}) {
  const expanded=budgetApprovalProof?.approved===true&&budgetApprovalProof.manifestSha256==='1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90'&&budgetApprovalProof.previousUsed===2&&budgetApprovalProof.additionalMax===3&&budgetApprovalProof.cumulativeMax===5
  const continuation=budgetApprovalProof?.approved===true&&budgetApprovalProof.manifestSha256==='1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90'&&budgetApprovalProof.previousUsed===5&&budgetApprovalProof.additionalMax===2&&budgetApprovalProof.cumulativeMax===7&&budgetApprovalProof.openSlot===6&&budgetApprovalProof.closedSlot===7
- if(budgetApprovalProof!==undefined&&!expanded&&!continuation)throw Error('B7_PAGES_CONFIGURATION_REJECTED')
- if(!isAbsolute(directory||'')||!isAbsolute(wranglerPath||'')||!Number.isInteger(pagesAttemptSlotsUsed)||pagesAttemptSlotsUsed<0||(continuation?pagesAttemptSlotsUsed!==6:pagesAttemptSlotsUsed>=(expanded?5:3)))throw Error('B7_PAGES_CONFIGURATION_REJECTED')
+ const manual=budgetApprovalProof?.approved===true&&budgetApprovalProof.manifestSha256==='1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90'&&budgetApprovalProof.previousUsed===7&&budgetApprovalProof.additionalMax===2&&budgetApprovalProof.cumulativeMax===9&&budgetApprovalProof.openSlot===8&&budgetApprovalProof.closedSlot===9
+ if(budgetApprovalProof!==undefined&&!expanded&&!continuation&&!manual)throw Error('B7_PAGES_CONFIGURATION_REJECTED')
+ if(!isAbsolute(directory||'')||!isAbsolute(wranglerPath||'')||!Number.isInteger(pagesAttemptSlotsUsed)||pagesAttemptSlotsUsed<0||(manual?pagesAttemptSlotsUsed!==8:continuation?pagesAttemptSlotsUsed!==6:pagesAttemptSlotsUsed>=(expanded?5:3)))throw Error('B7_PAGES_CONFIGURATION_REJECTED')
  let attempted=false
  return async()=>{
   if(attempted)throw Error('B7_PAGES_ALREADY_ATTEMPTED')

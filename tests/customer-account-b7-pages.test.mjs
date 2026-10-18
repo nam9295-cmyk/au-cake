@@ -27,3 +27,10 @@ test('continuation reserves only slot seven for CLOSED and rejects any eighth de
  const stop=api.createB7ClosedSiteAdapter(args);assert.deepEqual(await stop(),{attempts:7,entryEnabled:false});assert.equal(calls,1)
  for(const change of [{pagesAttemptSlotsUsed:5},{pagesAttemptSlotsUsed:7},{budgetApprovalProof:{...proof,closedSlot:8}},{budgetApprovalProof:{...proof,additionalMax:3}}])assert.throws(()=>api.createB7ClosedSiteAdapter({...args,...change}))
 })
+test('manual continuation reserves slot nine exclusively for CLOSED after OPEN eight',async()=>{
+ const proof={approved:true,manifestSha256:'1c4245230e8bd89e72548bc0573ca158247462e93a8b427cdaa175d84b4d7c90',previousUsed:7,additionalMax:2,cumulativeMax:9,openSlot:8,closedSlot:9}
+ const directory=await mkdtemp(join(tmpdir(),'b7-pages-manual-'));let calls=0
+ const args={directory,pagesAttemptSlotsUsed:8,wranglerPath:'/synthetic/wrangler.js',budgetApprovalProof:proof,run:async()=>{calls++;return {status:0}}}
+ const stop=api.createB7ClosedSiteAdapter(args);assert.deepEqual(await stop(),{attempts:9,entryEnabled:false});assert.equal(calls,1)
+ for(const change of [{pagesAttemptSlotsUsed:7},{pagesAttemptSlotsUsed:9},{budgetApprovalProof:{...proof,closedSlot:10}},{budgetApprovalProof:{...proof,approved:false}},{budgetApprovalProof:{...proof,additionalMax:3}}])assert.throws(()=>api.createB7ClosedSiteAdapter({...args,...change}))
+})
