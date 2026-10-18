@@ -1,0 +1,5 @@
+/* Test controls only. Keep the actual product cart, profile and account styles. */
+.integration-nav nav{display:flex;flex-wrap:wrap;gap:1rem}
+.integration-nav pre{white-space:pre-wrap}
+.renewal-checkout button[type=submit]{display:none!important}
+.customer-account-dialog form,.customer-account-guest{display:none!important}
