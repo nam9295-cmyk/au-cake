@@ -1,0 +1,203 @@
+{
+  "kind": "B5_FINAL_NATIVE_OTP_EXECUTION_V3",
+  "status": "PREFLIGHT_ONLY_PENDING_NEW_OPERATIONAL_APPROVAL",
+  "executionApproved": false,
+  "supersedesExecutionConditionsOnly": "G-only server recipient restriction is not required for this one-shot trial after explicit residual-risk acceptance; original evidence/manifests remain unchanged.",
+  "target": {
+    "endpoint": "https://api.verygood-chocolate.com/v1",
+    "projectId": "verygood-au-account-test",
+    "functionId": "ca-test-reservation-api",
+    "baselineDeploymentId": "6ad41e576cb7a8f346af",
+    "hostname": "very-server"
+  },
+  "baseline": {
+    "pagesUsed": 27,
+    "b7FunctionExecutionsUsed": 16,
+    "state": "CLOSED27 / Account, Email OTP, JWT OFF / Function disabled, execute=[], B6 / customer flags false"
+  },
+  "approvedTrialUser": {
+    "uid": "6ad38e4e0ffd5f810e23",
+    "email": "nam9295@gmail.com",
+    "newUserCreationAllowed": false
+  },
+  "recipientPolicy": {
+    "intendedRecipientOnly": "nam9295@gmail.com",
+    "serverRecipientAllowlistEnforced": false,
+    "globalSendLimitEnforcedByThisPlan": false,
+    "operatorEmailTokenRequestMax": 1,
+    "operatorEmailTokenRequestAutomaticRetry": false,
+    "operatorOtpSessionCreateMax": 1,
+    "repeatGoogleSignInForUidComparisonMax": 1,
+    "unexpectedSendTriggersRollback": true,
+    "monitorIsPreventiveHardLimit": false
+  },
+  "temporarySettings": {
+    "account": true,
+    "authEmailOtp": true,
+    "authJWT": false,
+    "googleProviderChanged": false,
+    "otherTestAuthMethodsRemainOff": true,
+    "authLimit": 2,
+    "functionEnabled": false,
+    "functionExecute": [],
+    "customerServerFlags": false
+  },
+  "pages": {
+    "newDeploymentsMax": 2,
+    "openSlot": 28,
+    "closedSlot": 29,
+    "projectName": "au-cake-account-test",
+    "productionSiteChangesAllowed": false
+  },
+  "systemCredential": {
+    "newKeysMax": 1,
+    "name": "VERYGOOD Appwrite SYSTEM SMTP B5 FINAL 20261019",
+    "permission": "sending_access",
+    "domain": "verygood-chocolate.com",
+    "domainId": "43b81ebb-788c-41ac-8f0b-2160249a1470",
+    "nativeAutoExpiryProven": false,
+    "secretStorageMode": "0600",
+    "revokeOnlyNewKeyAfterSuccessfulRestore": true,
+    "existingNotificationAndB4KeysUnchanged": true
+  },
+  "commonSmtp": {
+    "originalManifestPath": "docs/customer-account-b5-system-smtp-manifest.json",
+    "originalManifestSha256": "6516ad5400b40955f6e6604eca2161560c5e5cb10305a6638af4b9377f1539ce",
+    "environmentKeysExact": [
+      "_APP_SMTP_HOST",
+      "_APP_SMTP_PORT",
+      "_APP_SMTP_SECURE",
+      "_APP_SMTP_USERNAME",
+      "_APP_SMTP_PASSWORD",
+      "_APP_SYSTEM_EMAIL_NAME",
+      "_APP_SYSTEM_EMAIL_ADDRESS"
+    ],
+    "preserveAllOtherBytes": true,
+    "envFileModeDuringAndAfter": "0600",
+    "systemSender": "appwrite-system@verygood-chocolate.com",
+    "systemNameEncoded": "VERYGOOD%20Chocolate%20System",
+    "host": "smtp.resend.com",
+    "port": 465,
+    "security": "ssl",
+    "username": "resend",
+    "keepAppliedAfterSuccess": false,
+    "maximumExposureSeconds": 600,
+    "exposureStartsAt": "before first recreation capable of sending with new SMTP, not at first successful OTP",
+    "extendExposureOrRetryAllowed": false
+  },
+  "containers": {
+    "exactServices": [
+      "appwrite-worker-mails",
+      "appwrite"
+    ],
+    "imageTag": "appwrite/appwrite:1.8.1",
+    "imageId": "sha256:d6c8a343ef61ed16389b19664cfc30f0559aa5bfdb81965fcd2763d354f4964d",
+    "applyOrder": [
+      "appwrite-worker-mails",
+      "appwrite"
+    ],
+    "restoreOrder": [
+      "appwrite",
+      "appwrite-worker-mails"
+    ],
+    "applyRecreationsMax": 2,
+    "restoreRecreationsMax": 2,
+    "maximumApiRecreations": 2,
+    "automaticReapplyOrRedeploy": false,
+    "imagePullOrUpgradeAllowed": false,
+    "healthDeadlineSeconds": 60
+  },
+  "guardrails": {
+    "nativeAbuseMustRemainEnabled": true,
+    "otpEmailRouteLimitPerHour": 10,
+    "otpEmailRateKeys": [
+      "url,email",
+      "url,ip"
+    ],
+    "otpSessionRouteLimitPerHour": 10,
+    "otpSessionRateKey": "ip,userId",
+    "magicUrlOtherProjectsLimitPerHour": 60,
+    "newGlobalRateLimitClaimed": false,
+    "testAdminAppwriteKeysInBrowserAllowed": false,
+    "queueBefore": {
+      "pending": 0,
+      "processing": 0,
+      "failed": 1
+    },
+    "queueFailedRetryOrDeleteAllowed": false,
+    "minimumDailyEmailsRemaining": 50,
+    "minimumMonthlyEmailsRemaining": 500,
+    "quotaSourceMustBeFresh": true,
+    "minimumRamAvailableGiB": 3,
+    "minimumDiskAvailableGiB": 30,
+    "unexpectedConfigOrImageDriftStops": true,
+    "serverSideRollbackDeadlineRequired": true,
+    "independentRootRecoveryChannelRequired": true,
+    "serverRollbackScope": "Common SMTP bytes and the two containers only; test Account/OTP/session and Pages closure use existing Mac credentials.",
+    "macAwakeAndConnectedRequired": true,
+    "copyOwnerOrCloudflareCredentialsToServerAllowed": false,
+    "unverifiedTestAuthOrPagesClosureMustBeReported": true,
+    "sessionPhasePolicy": {
+      "otp": {
+        "uid": "6ad38e4e0ffd5f810e23",
+        "provider": "token",
+        "createdDuringTrialOnly": true,
+        "providerAloneProvesEmailOtp": false
+      },
+      "googleAfterOtp": {
+        "uid": "6ad38e4e0ffd5f810e23",
+        "provider": "google",
+        "createdDuringTrialOnly": true
+      },
+      "newHOrMOrUnknownSession": "STOP",
+      "cleanupApprovedTrialGProviders": [
+        "token",
+        "google"
+      ],
+      "reuseGoogleOnlySessionPredicateUnchangedAllowed": false
+    }
+  },
+  "testData": {
+    "newOrders": 0,
+    "newCoupons": 0,
+    "newUsers": 0,
+    "newDbOrSchemaChanges": 0,
+    "functionExecutions": 0,
+    "functionDeployments": 0,
+    "profileWrites": 0,
+    "cartMutations": 0,
+    "orderAccessAcceptanceReruns": 0
+  },
+  "completion": {
+    "otpDeliveryAndSessionAndSameUidMustBeObserved": true,
+    "prefsAndOwnerMetadataHashesPreserved": true,
+    "existingPassResultsReused": true,
+    "googleAfterOtpUidMustMatch": true,
+    "commonSmtpRestoredEvenOnSuccess": true,
+    "normalUserEmailVerificationMetadataChangeMayOccur": true,
+    "uidAutoMergeOrUserDeleteAllowed": false,
+    "closed29AndAccountOtpJwtOffRequired": true
+  },
+  "release": {
+    "b5UntilExecution": "BLOCKED — RELEASE BLOCKER",
+    "pastGalleryAndAuRawUncertainty": "UNVERIFIED",
+    "originalD1HealthTimeout": "UNRESOLVED",
+    "alwaysOnProductionSmtpApprovalIncluded": false,
+    "productionReleaseOrMainMergeAllowed": false
+  },
+  "runId": "b5-final-native-20261019",
+  "priorAttempt": {
+    "manifestSha256": "1ba95fe97db0dbc939227b832b9377918a0a1126e93ccc5f11de58e255d479a1",
+    "resultCommit": "dfd438a",
+    "recordsPreserved": true,
+    "oldApprovalReusable": false,
+    "quotaIncreaseFourAttribution": "UNVERIFIED"
+  },
+  "preflight": {
+    "rootScriptShaMustEqualMac": true,
+    "publicCurlHttps200Required": true,
+    "containerInternalHealthRequired": true,
+    "rootIndependentTimerProbeRequired": true,
+    "noSmtpChangeBeforeNewApproval": true
+  }
+}

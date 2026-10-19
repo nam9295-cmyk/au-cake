@@ -86,3 +86,34 @@ with tempfile.TemporaryDirectory() as tmp:
  assert state['phase']=='restoring'
 `);assert.equal(r.status,0,r.stderr)
 })
+test('final SMTP attempt rejects previous approval and requires its own run and manifest',()=>{
+ const r=run(`import ast
+from pathlib import Path
+s=ast.parse(open('scripts/customer-account-system-smtp-operator.py').read());proof={};ns={'STAGE':Path('/unused'),'SHA':'new-sha','RUN_ID':'new-run','load':lambda p:proof}
+for name in ('fail','approval'):
+ n=next((n for n in s.body if isinstance(n,ast.FunctionDef) and n.name==name),None);assert n is not None,'fresh approval validator missing';exec(compile(ast.Module(body=[n],type_ignores=[]),'actual-root-helper','exec'),ns)
+for value in [{'executionApproved':True,'manifestSha256':'old-sha','runId':'new-run'},{'executionApproved':True,'manifestSha256':'new-sha','runId':'old-run'},{'executionApproved':False,'manifestSha256':'new-sha','runId':'new-run'}]:
+ proof.clear();proof.update(value)
+ try:ns['approval']()
+ except ValueError:pass
+ else:raise AssertionError('stale or absent approval accepted')
+proof.clear();proof.update(executionApproved=True,manifestSha256='new-sha',runId='new-run');ns['approval']()
+`);assert.equal(r.status,0,r.stderr)
+})
+test('container health accepts only the fixed API container and exact version response',()=>{
+ const r=run(`import ast
+s=ast.parse(open('scripts/customer-account-system-smtp-operator.py').read());calls=[];reply=[b'INTERNAL_HEALTH_1.8.1_OK']
+def command(args,data=None,**kw):
+ assert args==['docker','exec','-i','appwrite','php']
+ assert b'http://127.0.0.1/v1/health/version' in data
+ calls.append(args);return reply[0]
+ns={'run':command}
+for name in ('fail','internal_health'):
+ n=next((n for n in s.body if isinstance(n,ast.FunctionDef) and n.name==name),None);assert n is not None,'container health missing';exec(compile(ast.Module(body=[n],type_ignores=[]),'actual-root-helper','exec'),ns)
+ns['internal_health']();reply[0]=b'wrong-version'
+try:ns['internal_health']()
+except ValueError:pass
+else:raise AssertionError('invalid internal health accepted')
+assert len(calls)==2
+`);assert.equal(r.status,0,r.stderr)
+})

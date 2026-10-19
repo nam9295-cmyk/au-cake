@@ -10,7 +10,7 @@ import {saveCustomerSignInReturn} from '../../src/lib/customer-checkout-draft'
 import type {CustomerOrderService} from '../../src/lib/customer-account-types'
 import '../../src/index.css'
 import '../../src/styles/customer-account.css'
-const G='6ad38e4e0ffd5f810e23',email='nam9295@gmail.com',endpoint='https://api.verygood-chocolate.com',project='verygood-au-account-test',nativeFetch=window.fetch.bind(window),runId='b5-otp-one-shot-20261019'
+const G='6ad38e4e0ffd5f810e23',email='nam9295@gmail.com',endpoint='https://api.verygood-chocolate.com',project='verygood-au-account-test',nativeFetch=window.fetch.bind(window),runId='b5-final-native-20261019'
 const root=createRoot(document.getElementById('root')!)
 const key=(name:string)=>runId+':'+name
 function claim(name:string){if(localStorage.getItem(key(name)))throw Error('OTP_TRIAL_ALREADY_ATTEMPTED');localStorage.setItem(key(name),'1')}

@@ -16,10 +16,11 @@ import subprocess
 import sys
 import time
 
-STAGE = Path('/home/john/.verygood-b5-20261019')
+STAGE = Path('/home/john/.verygood-b5-final-native-20261019')
 ROOT = Path('/home/john/srv/appwrite/appwrite')
 BACKUPS = Path('/root/verygood-b5-backups')
-SHA = '1ba95fe97db0dbc939227b832b9377918a0a1126e93ccc5f11de58e255d479a1'
+SHA = '179f9f06113e7d81d60316744a86692501ec9b80a49537cb5bca11f55e92ba8f'
+RUN_ID = 'b5-final-native-20261019'
 OLD_SHA = '6516ad5400b40955f6e6604eca2161560c5e5cb10305a6638af4b9377f1539ce'
 IMAGE = 'sha256:d6c8a343ef61ed16389b19664cfc30f0559aa5bfdb81965fcd2763d354f4964d'
 SERVICES = ('appwrite', 'appwrite-worker-mails')
@@ -123,6 +124,18 @@ def health():
     fail('HEALTH_60S_FAILED')
 
 
+def internal_health():
+    code=b'''<?php
+$c=stream_context_create(['http'=>['timeout'=>5,'ignore_errors'=>true,'header'=>"Host: api.verygood-chocolate.com\\r\\n"]]);$r=@file_get_contents('http://127.0.0.1/v1/health/version',false,$c);$v=json_decode($r?:'',true);if(($v['version']??null)!=='1.8.1'){exit(1);}echo 'INTERNAL_HEALTH_1.8.1_OK';
+'''
+    if run(['docker','exec','-i','appwrite','php'],code,timeout=10)!=b'INTERNAL_HEALTH_1.8.1_OK':fail('INTERNAL_HEALTH_FAILED')
+
+
+def approval():
+    proof=load(STAGE/'execution-approval.private.json')
+    if proof.get('executionApproved') is not True or proof.get('manifestSha256')!=SHA or proof.get('runId')!=RUN_ID:fail('FRESH_APPROVAL_REQUIRED')
+
+
 def smtp_auth(service):
     code=b'''<?php
 require '/usr/src/code/vendor/autoload.php';
@@ -143,11 +156,11 @@ def validate_candidate(before, after, values):
         if a!=b:fail('NON_SMTP_COMPOSE_DRIFT')
 
 
-def prepare():
+def preflight():
     root_guard()
-    manifest=load(STAGE/'manifest.json');old=load(STAGE/'original-manifest.json');proof=load(STAGE/'execution-approval.private.json')
+    manifest=load(STAGE/'manifest.json');old=load(STAGE/'original-manifest.json')
     if sha((STAGE/'manifest.json').read_bytes())!=SHA or sha((STAGE/'original-manifest.json').read_bytes())!=OLD_SHA:fail('MANIFEST_DRIFT')
-    if proof.get('executionApproved') is not True or proof.get('manifestSha256')!=SHA:fail('APPROVAL_REQUIRED')
+    if manifest.get('executionApproved') is not False or manifest.get('runId')!=RUN_ID:fail('FRESH_MANIFEST_REQUIRED')
     for name,expected in load(STAGE/'tool-sha.safe.json').items():
         if Path(name).name!=name or sha((STAGE/name).read_bytes())!=expected:fail('TOOL_DRIFT')
     resources()
@@ -156,10 +169,11 @@ def prepare():
     if sha(before_env)!=old['compose']['expectedEnvSha256'] or sha(before_compose)!=old['compose']['expectedComposeSha256']:fail('ORIGINAL_FILE_DRIFT')
     rows=containers();d=selected(rows)
     if any(envmap(d[n]).get('_APP_SMTP_HOST')!='' for n in SERVICES):fail('SMTP_ALREADY_ENABLED')
+    health();internal_health()
     BACKUPS.mkdir(mode=0o700,exist_ok=True)
-    backup=BACKUPS/('b5-otp-20261019-'+time.strftime('%Y%m%dT%H%M%SZ',time.gmtime()))
+    backup=BACKUPS/(RUN_ID+'-'+time.strftime('%Y%m%dT%H%M%SZ',time.gmtime()))
     backup.mkdir(mode=0o700)
-    for name in ('customer-account-system-smtp-env.py','customer-account-system-smtp-operator.py','manifest.json','original-manifest.json','execution-approval.private.json'):
+    for name in ('customer-account-system-smtp-env.py','customer-account-system-smtp-operator.py','manifest.json','original-manifest.json','tool-sha.safe.json'):
         shutil.copyfile(STAGE/name,backup/name);os.chmod(backup/name,0o600)
     for source,name in ((ROOT/'.env','env.before'),(ROOT/'docker-compose.yml','compose.before')):
         shutil.copyfile(source,backup/name);os.chmod(backup/name,0o600)
@@ -169,30 +183,38 @@ def prepare():
     run(['docker','image','save','--output',str(backup/'appwrite-1.8.1.tar'),'appwrite/appwrite:1.8.1'],timeout=120)
     resources()
     save(backup/'image-backup.safe.json',{'sha256':sha((backup/'appwrite-1.8.1.tar').read_bytes()),'bytes':(backup/'appwrite-1.8.1.tar').stat().st_size})
-    os.chmod(ROOT/'.env',0o600)
-    state={'phase':'prepared','manifestSha256':SHA,'envChanged':False,'applyServices':[],'restoreServices':[],'preparedAt':time.time()};save(backup/'state.private.json',state)
-    phase(backup,'awaiting-key')
-    end=time.monotonic()+1800
-    while not (STAGE/'system-key.private.json').exists():
-        if time.monotonic()>end:fail('PREPARE_WAIT_EXPIRED')
-        time.sleep(2)
-    credential=load(STAGE/'system-key.private.json')
-    if credential.get('permission')!='sending_access' or credential.get('domainId')!=manifest['systemCredential']['domainId'] or credential.get('name')!=manifest['systemCredential']['name'] or credential.get('consoleFormVerified') is not True or not re.fullmatch(r're_[A-Za-z0-9_-]{20,}',credential.get('secret','')):fail('CREDENTIAL_SCOPE_INVALID')
-    save(backup/'system-key.private.json',credential)
-    values={'_APP_SMTP_HOST':b'smtp.resend.com','_APP_SMTP_PORT':b'465','_APP_SMTP_SECURE':b'ssl','_APP_SMTP_USERNAME':b'resend','_APP_SMTP_PASSWORD':credential['secret'].encode(),'_APP_SYSTEM_EMAIL_NAME':b'VERYGOOD%20Chocolate%20System','_APP_SYSTEM_EMAIL_ADDRESS':b'appwrite-system@verygood-chocolate.com'}
-    after,transform=module(backup).plan_env(before_env,values)
-    fd=os.open(backup/'env.candidate',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
-    with os.fdopen(fd,'wb') as f:f.write(after)
-    save(backup/'env-transform.private.json',transform)
-    candidate_cmd=COMPOSE.copy();candidate_cmd[candidate_cmd.index('--env-file')+1]=str(backup/'env.candidate')
-    candidate=json.loads(run(candidate_cmd+['config','--format','json']));validate_candidate(conf,candidate,values)
-    unit='verygood-b5-probe-'+str(os.getpid())
+    if stat.S_IMODE((ROOT/'.env').stat().st_mode)!=0o600:fail('ENV_NOT_0600')
+    state={'phase':'preflight','manifestSha256':SHA,'runId':RUN_ID,'envChanged':False,'applyServices':[],'restoreServices':[],'preparedAt':time.time()};save(backup/'state.private.json',state)
+    unit='verygood-b5-final-probe-'+str(os.getpid())
     run(['systemd-run','--unit='+unit,'--on-active=2s','--timer-property=AccuracySec=1s','--collect','/usr/bin/python3',str(backup/'customer-account-system-smtp-operator.py'),'verify',str(backup)])
-    deadline=time.monotonic()+15
+    deadline=time.monotonic()+20
     while not (backup/'timer-probe.safe.json').exists():
         if time.monotonic()>deadline:fail('ROOT_TIMER_PROBE_FAILED')
         time.sleep(.5)
     if load(backup/'timer-probe.safe.json').get('pass') is not True:fail('ROOT_TIMER_PROBE_FAILED')
+    phase(backup,'preflight-pass',backupVerified=True,rootTimerVerified=True,publicCurlHealthy=True,containerInternalHealthy=True,commonSmtpUnchanged=True,toolSha256=sha((backup/'customer-account-system-smtp-operator.py').read_bytes()))
+    return backup
+
+
+def prepare(backup):
+    manifest=load(STAGE/'manifest.json')
+    end=time.monotonic()+1800
+    while not (STAGE/'system-key.private.json').exists() or not (STAGE/'execution-approval.private.json').exists():
+        if time.monotonic()>end:fail('PREPARE_WAIT_EXPIRED')
+        time.sleep(2)
+    approval()
+    save(backup/'execution-approval.private.json',load(STAGE/'execution-approval.private.json'))
+    credential=load(STAGE/'system-key.private.json')
+    if credential.get('permission')!='sending_access' or credential.get('domainId')!=manifest['systemCredential']['domainId'] or credential.get('name')!=manifest['systemCredential']['name'] or credential.get('consoleFormVerified') is not True or not re.fullmatch(r're_[A-Za-z0-9_-]{20,}',credential.get('secret','')):fail('CREDENTIAL_SCOPE_INVALID')
+    save(backup/'system-key.private.json',credential)
+    values={'_APP_SMTP_HOST':b'smtp.resend.com','_APP_SMTP_PORT':b'465','_APP_SMTP_SECURE':b'ssl','_APP_SMTP_USERNAME':b'resend','_APP_SMTP_PASSWORD':credential['secret'].encode(),'_APP_SYSTEM_EMAIL_NAME':b'VERYGOOD%20Chocolate%20System','_APP_SYSTEM_EMAIL_ADDRESS':b'appwrite-system@verygood-chocolate.com'}
+    after,transform=module(backup).plan_env((backup/'env.before').read_bytes(),values)
+    fd=os.open(backup/'env.candidate',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+    with os.fdopen(fd,'wb') as f:f.write(after)
+    save(backup/'env-transform.private.json',transform)
+    candidate_cmd=COMPOSE.copy();candidate_cmd[candidate_cmd.index('--env-file')+1]=str(backup/'env.candidate')
+    candidate=json.loads(run(candidate_cmd+['config','--format','json']));validate_candidate(load(backup/'compose.before.private.json'),candidate,values)
+    state=load(backup/'state.private.json');state['phase']='prepared';save(backup/'state.private.json',state)
     phase(backup,'prepared',backupVerified=True,candidateExactSeven=True,rootTimerVerified=True)
     return backup
 
@@ -201,6 +223,7 @@ def apply(backup):
     root_guard();lock=open(backup/'operation.lock','a');os.chmod(backup/'operation.lock',0o600);fcntl.flock(lock,fcntl.LOCK_EX)
     state=load(backup/'state.private.json')
     if state['phase']!='prepared' or state['envChanged']:fail('APPLY_ONCE_REQUIRED')
+    approval()
     resources()
     if queue()!={'queue':0,'processing':0,'failed':1}:fail('QUEUE_BASELINE_DRIFT')
     if (ROOT/'.env').read_bytes()!=(backup/'env.before').read_bytes() or (ROOT/'docker-compose.yml').read_bytes()!=(backup/'compose.before').read_bytes():fail('BEFORE_APPLY_DRIFT')
@@ -218,7 +241,8 @@ def apply(backup):
             d=selected(containers())
             if not d[name]['State']['Running']:fail('CONTAINER_NOT_RUNNING')
             smtp_auth(name)
-            if name=='appwrite':health()
+            save(backup/(name+'-smtp-auth.safe.json'),{'pass':True,'at':time.time()})
+            if name=='appwrite':health();internal_health()
         state['phase']='active';save(backup/'state.private.json',state);phase(backup,'active',hardDeadline=state['hardDeadline'],rollbackAt=state['rollbackAt'],smtpTlsAuth=True)
     except Exception:
         lock.close();restore(backup);raise
@@ -243,7 +267,7 @@ def restore(backup):
             run(COMPOSE+['up','-d','--no-deps','--no-build','--pull','never','--force-recreate','--timeout','30',name],timeout=90)
     # Complete both approved restorations before the final API health gate.
     # A public probe failure must not leave the worker on the trial credential.
-    health();d=selected(containers());before=selected(load(backup/'containers.before.private.json'))
+    health();internal_health();d=selected(containers());before=selected(load(backup/'containers.before.private.json'))
     for name in SERVICES:
         a=envmap(before[name]);b=envmap(d[name])
         if a!=b or not d[name]['State']['Running']:fail('RESTORE_ENV_MISMATCH')
@@ -258,7 +282,7 @@ def restore(backup):
 def main():
     root_guard()
     if sys.argv[1:] == ['serve']:
-        backup=prepare();end=time.monotonic()+1800
+        backup=preflight();prepare(backup);end=time.monotonic()+1800
         while time.monotonic()<end:
             for name in ('apply','restore','abort'):
                 p=STAGE/(name+'.request.json')
@@ -279,7 +303,8 @@ def main():
         if backup.parent!=BACKUPS or backup.is_symlink() or backup.stat().st_uid!=0:fail('BACKUP_TARGET_REJECTED')
         if sys.argv[1]=='verify':
             if (ROOT/'.env').read_bytes()!=(backup/'env.before').read_bytes():fail('PROBE_ENV_DRIFT')
-            save(backup/'timer-probe.safe.json',{'pass':True,'uid':os.geteuid(),'at':time.time()})
+            health();internal_health()
+            save(backup/'timer-probe.safe.json',{'pass':True,'uid':os.geteuid(),'at':time.time(),'publicCurlHealthy':True,'containerInternalHealthy':True})
         else:restore(backup)
     else:fail('EXPLICIT_FIXED_ACTION_REQUIRED')
 
