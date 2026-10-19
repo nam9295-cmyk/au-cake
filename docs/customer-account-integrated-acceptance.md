@@ -334,3 +334,37 @@ new credential validity test or access Penpot.
 B5 remains **DEFERRED — RELEASE BLOCKER**. D1 reservation health timeout and the
 historical AU raw configuration fingerprint difference remain unresolved/UNVERIFIED.
 Production, main, DB, ACL, coupons, payment and email were not changed.
+
+## 2026-10-19 — Approved OPEN24 published and visibly verified
+
+The user approved the additional OPEN deployment after `19b38f7`. Its separate
+0600 approval addendum preserves the earlier scope, approval and journals.
+OPEN24 is used; **CLOSED25 is reserved**. No new Function deployment/execution,
+user, order, coupon, profile write, schema or environment-variable change occurred.
+
+The new build scanned 926 public files with zero signing-key/credential-pattern
+matches. The server-only relay and Worker entry were byte-for-byte preserved.
+HTTPS `/cart` returned 200, JS/CSS content types and bytes matched the new local
+artifact, and `/_worker.js` remained inaccessible (404). Account remains ON, the
+same G/H-only Function deployment remains active, and operating project fingerprints
+still match the session baseline.
+
+The independent monitor was handed over in 10.538 seconds to the controller that
+reserves CLOSED25; it reported multiple healthy cycles before publishing. Its
+read budget, drift detection, automatic emergency closure and manual-only normal
+termination are unchanged. The active controller is now
+`.superpowers/sdd/2026-10-19-customer-account-integrated-retry/manage-open24.mjs`;
+use its `close` action on the user's `종료`, not the former `manage.mjs` controller.
+No new authentication window was started or time limit introduced.
+
+Actual Chrome after reloading `/cart`: signed-in G, the new account bag/login-email
+label visible, G's two existing pavé units retained, Guest separate-save explanation
+visible, and order submission disabled. No cart mutation was performed. The
+already-imported Guest explanation is deployed and locally covered, but H's live
+historical notice has not been claimed as visually verified in this publication.
+
+Real G/H list/detail ownership acceptance remains PASS from the preceding section;
+it was not rerun to publish a bag label. Remaining release blockers are unchanged:
+B5 **DEFERRED — RELEASE BLOCKER**, actual Email OTP/Google↔OTP UID verification
+NOT RUN, actual member order creation/JWT owner assignment NOT RUN, D1 original
+health timeout unresolved, and historical AU raw settings difference UNVERIFIED.
