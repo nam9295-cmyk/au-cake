@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **최신 B5 실행 결과:** [단발 OTP 시도 및 원복 기록](customer-account-b5-one-shot-otp-results.md). 공통 SMTP를 임시 적용했으나 Python health403/curl200 검사 차이로 Account/OTP ON 전에 중단했다. 자동 복구가 API 검사에서 멈춰 남은 worker는 사용자 root 실행으로 복원했고, 원본 bytes/이미지·큐0/0/failed1·운영4개 지문·OFF403/B6/CLOSED27을 직접 검증했다. 신규 SMTP Key는 폐기, OTP 요청0·UID검증 NOT RUN, Pages27·기존 Function16/120 보존. **B5 — BLOCKED / DEFERRED — RELEASE BLOCKER**, D1 timeout·과거 AU/Gallery raw UNVERIFIED 유지. 아래 이전 기록은 역사적 증거다.
+
 > **최신 수동 장바구니 시험 종료:** [장바구니 분리·로그인 후 가져오기 검증 및 CLOSED19 기록](customer-cart-isolation-validation.md). 사용자 종료 요청으로 Account OFF/API403·test 세션0·Function OFF/B6/flags false·사이트 CLOSED19·감시 종료를 직접 확인했다. 사용자가 G/H 분리를 확인한 PASS는 보존하며, 새 가져오기/회원 장바구니 선택의 실제 결과는 명시 확인되지 않아 NOT RUN/unconfirmed다. 제품 로컬 전체2,136 PASS/0 FAIL/기존 SKIP1, TypeScript/lint/AU build PASS. 누적 Pages19·Function8/120, 추가 창/배포는 미승인. 프로필·실제 회원주문/MY ORDERS·권한 인수와 D1 timeout 후속 검증, **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw **UNVERIFIED**가 남아 있어 운영 활성화 완료로 분류하지 않는다. 아래는 보존된 이전 단계 기록이다.
 
 > **Google-only watchdog 로컬 조사:** [기록 대조와 진단 보완](customer-account-google-only-watchdog-investigation.md). 과거 중단 원인 UNVERIFIED·G 로그인/세션/새로고침 PASS를 보존한다. 종료 사유·API/세션/lease/drift·복구 소요 시간만 로컬에서 계측했으며5초 기준·자동 OFF는 유지한다. 추가 원격 실행/배포0, Pages9/9·Function8/120 불변. 새 시험은 별도 승인 전 금지다. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지.

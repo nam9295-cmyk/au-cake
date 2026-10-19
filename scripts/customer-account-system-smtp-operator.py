@@ -15,7 +15,6 @@ import stat
 import subprocess
 import sys
 import time
-import urllib.request
 
 STAGE = Path('/home/john/.verygood-b5-20261019')
 ROOT = Path('/home/john/srv/appwrite/appwrite')
@@ -117,8 +116,8 @@ def health():
     end=time.monotonic()+60
     while time.monotonic()<end:
         try:
-            with urllib.request.urlopen('https://api.verygood-chocolate.com/v1/health/version',timeout=5) as r:
-                if r.status==200 and json.load(r)['version']=='1.8.1':return
+            raw=run(['curl','--silent','--show-error','--fail','--max-time','5','--proto','=https','--tlsv1.2','https://api.verygood-chocolate.com/v1/health/version'],timeout=7)
+            if json.loads(raw).get('version')=='1.8.1':return
         except Exception:pass
         time.sleep(2)
     fail('HEALTH_60S_FAILED')
@@ -242,7 +241,8 @@ def restore(backup):
             if name in state['restoreServices']:fail('RESTORE_ALREADY_ATTEMPTED')
             state['restoreServices'].append(name);save(backup/'state.private.json',state)
             run(COMPOSE+['up','-d','--no-deps','--no-build','--pull','never','--force-recreate','--timeout','30',name],timeout=90)
-            if name=='appwrite':health()
+    # Complete both approved restorations before the final API health gate.
+    # A public probe failure must not leave the worker on the trial credential.
     health();d=selected(containers());before=selected(load(backup/'containers.before.private.json'))
     for name in SERVICES:
         a=envmap(before[name]);b=envmap(d[name])

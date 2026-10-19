@@ -50,3 +50,39 @@ for bad in ('other-service','image','non-smtp'):
  raise AssertionError('must reject '+bad)
 `);assert.equal(r.status,0,r.stderr)
 })
+test('root health uses verified HTTPS curl without disabling TLS validation',()=>{
+ const r=run(`import ast,json,types
+s=ast.parse(open('scripts/customer-account-system-smtp-operator.py').read());clock=[0];calls=[]
+def command(args,**kwargs):
+ calls.append(args)
+ assert args[0]=='curl' and '--fail' in args and '--max-time' in args
+ assert '--insecure' not in args and '-k' not in args
+ assert args[-1]=='https://api.verygood-chocolate.com/v1/health/version'
+ return b'{"version":"1.8.1"}'
+def sleep(n):clock[0]+=n
+ns={'json':json,'run':command,'time':types.SimpleNamespace(monotonic=lambda:clock[0],sleep=sleep)}
+for name in ('fail','health'):
+ n=next(n for n in s.body if isinstance(n,ast.FunctionDef) and n.name==name);exec(compile(ast.Module(body=[n],type_ignores=[]),'actual-root-helper','exec'),ns)
+ns['health']();assert len(calls)==1
+`);assert.equal(r.status,0,r.stderr)
+})
+test('rollback restores both approved services before a failing final health probe',()=>{
+ const r=run(`import ast,fcntl,os,tempfile,types
+from pathlib import Path
+s=ast.parse(open('scripts/customer-account-system-smtp-operator.py').read())
+with tempfile.TemporaryDirectory() as tmp:
+ root=Path(tmp)/'root';backup=Path(tmp)/'backup';root.mkdir();backup.mkdir()
+ for a,b in [('.env','env.before'),('docker-compose.yml','compose.before')]:
+  (root/a).write_bytes(b'original');(backup/b).write_bytes(b'original')
+ state={'phase':'active','envChanged':True,'applyServices':['appwrite-worker-mails','appwrite'],'restoreServices':[]};calls=[]
+ def unhealthy():raise ValueError('HEALTH_60S_FAILED')
+ ns={'fcntl':fcntl,'os':os,'ROOT':root,'SERVICES':('appwrite','appwrite-worker-mails'),'COMPOSE':['compose'],'root_guard':lambda:None,'load':lambda p:state,'save':lambda *a:None,'phase':lambda *a:None,'run':lambda args,**kw:calls.append(args[-1]),'health':unhealthy}
+ for name in ('fail','restore'):
+  n=next(n for n in s.body if isinstance(n,ast.FunctionDef) and n.name==name);exec(compile(ast.Module(body=[n],type_ignores=[]),'actual-root-helper','exec'),ns)
+ try:ns['restore'](backup)
+ except ValueError as e:assert str(e)=='HEALTH_60S_FAILED'
+ else:raise AssertionError('must not report restoration success with unhealthy API')
+ assert calls==['appwrite','appwrite-worker-mails'],calls
+ assert state['phase']=='restoring'
+`);assert.equal(r.status,0,r.stderr)
+})
