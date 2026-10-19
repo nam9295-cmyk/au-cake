@@ -166,3 +166,62 @@ FAIL (403 identity rejection); own detail, H empty list and H foreign-order 404
 are NOT RUN. Guest relay 401 is PASS, distinct from original Function 401.
 **B5 — DEFERRED / RELEASE BLOCKER**, original D1 timeout and historical AU raw
 configuration UNVERIFIED remain unchanged.
+
+## Local JWT transport correction — pending retry approval
+
+The user's request to retry is being prepared locally. The original closed run,
+its V3 evidence and usage counters are preserved. No new Function/Pages
+deployment or authentication window has been opened.
+
+The test-only relay now forwards the short-lived Appwrite customer JWT in a
+nonreserved execution header. HMAC protocol `CA-INTEGRATED-JWT-v2` binds the
+request body, nonce, timestamp and a digest of the relay-verified UID plus JWT.
+The runtime derives that digest from Appwrite's actual platform UID; changing
+the UID or token invalidates the signature. Missing/unknown platform UID still
+fails closed. The JWT itself is absent from the path, returned evidence and logs.
+
+After transport validation, the test adapter supplies that JWT to the unmodified
+product handler. The original `resolveCustomerIdentity()` still calls Appwrite
+Account.get() and requires the returned UID to match the platform UID; the
+original order-owner and DB readiness/ACL checks still run. A signed but expired
+JWT or a valid token belonging to a different UID returns original HTTP 401.
+H's foreign-order request reaches the original owner check and returns 404 in
+local tests. A transport signature alone never establishes order ownership.
+Identity diagnostics now distinguish `IDENTITY_UID` and `IDENTITY_JWT` and log
+only credential-presence/UID-allowlist booleans. Historical runtime evidence
+still cannot identify the missing field and remains UNVERIFIED.
+
+Local RED reproduced the 403 before the transport correction. GREEN evidence:
+
+- Related guard/ownership/storage tests: 28 PASS on Node 24 and Node 22.23.3.
+- Customer account suite: 378 PASS, 0 FAIL, 0 skipped; ESLint and TypeScript pass.
+- Native Cloudflare workerd fetch → test guard → original product handler:
+  G list/detail 200, H empty list 200 / foreign detail 404, Guest relay 401.
+  This uses synthetic local API responses, an empty generated platform JWT,
+  and zero real Appwrite calls/executions. These are not provider PASS results.
+- AU test client and server archive built. All 56 original Function files,
+  including dependency manifests/lockfile, match the worktree originals.
+  Scans of 58 unpacked archive files and 926 public assets find no signing key.
+  The manual CLOSED artifact and its no-script page are ready.
+
+Read-only retry preflight confirms OFF/B6/CLOSED, three existing M/G/H users,
+no unexpected Functions/webhooks and unchanged production semantic fingerprints.
+It also found one G Google session created 8.5 seconds after the prior closure
+receipt. That session was removed under the already authorized G/H cleanup;
+creation cause is UNVERIFIED. Subsequent GET confirms all test sessions empty.
+Account and JWT issuance stayed OFF throughout that cleanup.
+
+Prepared retry scope, **not yet execution-approved**: one new test Function
+deployment with a fresh key/window fixed before deployment, OPEN23/CLOSED24,
+temporary test Account/JWT ON, existing G/H only, manual termination with the
+same emergency shutdown. At most nine additional read executions remain from
+the original ten-call acceptance limit; frontend/relay/runtime/monitor all use
+that cap. Prior B7 usage is 10/120 and Pages usage 22. No new orders, users,
+coupons, health executions, profile writes, schema or operational configuration
+changes are included. Existing G/H fixture, carts, saved profiles and PASS
+results are reused. The protected retry controller rejects external writes
+without a separate approval proof and reserves CLOSED24 for restoration.
+
+Protected local artifacts:
+`.superpowers/sdd/2026-10-19-customer-account-integrated-retry/`.
+**B5 — DEFERRED / RELEASE BLOCKER** and other unresolved findings persist.

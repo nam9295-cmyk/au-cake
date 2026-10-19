@@ -16,10 +16,10 @@ import '../../src/index.css'
 import '../../src/styles/au-renewal.css'
 import './test.css'
 const originalFetch=window.fetch.bind(window),root=createRoot(document.getElementById('root')!)
-type Mode={enabled:boolean;mode:string;runId:string;startedAt:number}
+type Mode={enabled:boolean;mode:string;runId:string;startedAt:number;executionsMax:number}
 let mode:Mode
 let currentUser:string|null=null
-async function readMode(){const r=await originalFetch('/test-mode.json',{cache:'no-store',redirect:'error',signal:AbortSignal.timeout(5000)});if(!r.ok)throw Error('AUTH_UNAVAILABLE');const m=await r.json() as Mode;if(m.enabled!==true||m.mode!=='integrated-read'||!m.runId||!Number.isSafeInteger(m.startedAt)||m.startedAt>Date.now())throw Error('AUTH_UNAVAILABLE');return m}
+async function readMode(){const r=await originalFetch('/test-mode.json',{cache:'no-store',redirect:'error',signal:AbortSignal.timeout(5000)});if(!r.ok)throw Error('AUTH_UNAVAILABLE');const m=await r.json() as Mode;if(m.enabled!==true||m.mode!=='integrated-read'||!m.runId||!Number.isSafeInteger(m.startedAt)||m.startedAt>Date.now()||!Number.isInteger(m.executionsMax)||m.executionsMax<1||m.executionsMax>10)throw Error('AUTH_UNAVAILABLE');return m}
 // Test-only transport boundary. Native order submission and direct DB/Function access cannot leave this build.
 window.fetch=async(input,options)=>{
  const u=new URL(typeof input==='string'?input:input instanceof URL?input.href:input.url,location.origin),method=(options?.method||(input instanceof Request?input.method:'GET')).toUpperCase(),h=new Headers(options?.headers||(input instanceof Request?input.headers:undefined))
@@ -46,7 +46,7 @@ async function query(action:string,data:Record<string,unknown>,unauthenticated=f
  return navigator.locks.request(mode.runId+':query',{ifAvailable:true},async lock=>{
   if(!lock)throw Error('TEST_QUERY_BUSY')
   let actor='Guest',jwt=''
-  if(!unauthenticated){if(!currentUser||!label(currentUser))throw Error('CUSTOMER_UNAUTHORIZED');actor=label(currentUser)!;const count=Number(localStorage.getItem(countKey())||'0');if(count>=10)throw Error('TEST_QUERY_LIMIT');localStorage.setItem(countKey(),String(count+1));jwt=(await account.createJWT()).jwt}
+  if(!unauthenticated){if(!currentUser||!label(currentUser))throw Error('CUSTOMER_UNAUTHORIZED');actor=label(currentUser)!;const count=Number(localStorage.getItem(countKey())||'0');if(count>=mode.executionsMax)throw Error('TEST_QUERY_LIMIT');localStorage.setItem(countKey(),String(count+1));jwt=(await account.createJWT()).jwt}
   const left=10000-Math.round(performance.now()-began);if(left<=0)throw Error('CUSTOMER_ORDERS_UNAVAILABLE')
   let r:Response
   try{r=await originalFetch('/__acceptance/orders',{method:'POST',redirect:'error',signal:AbortSignal.timeout(left),headers:{'Content-Type':'application/json',...(jwt?{Authorization:'Bearer '+jwt}:{})},body:JSON.stringify({action,data})})}
