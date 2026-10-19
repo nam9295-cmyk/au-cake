@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory() as tmp:
  else:raise AssertionError('queue drift admitted')
 `);assert.equal(r.status,0,r.stderr)});
 test('fixed production adapter rejects old approval/targets before any remote action',()=>{const r=run(`
-base={'mode':'production-always-on','executionApproved':False,'runId':'ca-smtp-production-20261019','host':'very-server','projectIds':['verygood-main','verygood-au','69cb27ef002b63e77c53','69db3ae20026cdc0c7fe'],'rollbackSeconds':480,'hardDeadlineSeconds':600,'services':['appwrite-worker-mails','appwrite'],'smtpVariableCount':7}
+base={'mode':'production-always-on','executionApproved':False,'runId':m.RUN_ID,'host':'very-server','projectIds':['verygood-main','verygood-au','69cb27ef002b63e77c53','69db3ae20026cdc0c7fe'],'rollbackSeconds':480,'hardDeadlineSeconds':600,'services':['appwrite-worker-mails','appwrite'],'smtpVariableCount':7}
 m.validate_manifest(base)
 for k,v in [('mode','one-shot'),('executionApproved',True),('rollbackSeconds',0),('services',['database']),('smtpVariableCount',8),('runId','old')]:
  try:m.validate_manifest({**base,k:v})
@@ -84,9 +84,9 @@ assert actual==['systemd-run','--unit=fixed','--on-active=480s','--timer-propert
 assert actual.count('/usr/bin/python3')==1
 `);assert.equal(r.status,0,r.stderr)});
 test('operating approval is fresh for this run and includes explicit always-on permission',()=>{const r=run(`
-p={'executionApproved':True,'runId':m.RUN_ID,'manifestSha256':'sha','alwaysOnApproved':True,'operatingChangeApproved':True}
+p={'executionApproved':True,'runId':m.RUN_ID,'manifestSha256':'sha','alwaysOnApproved':True,'operatingChangeApproved':True,'responsibleOperator':'nam9295','operatorAcceptance':True}
 m.validate_operating_approval(p,'sha')
-for k,v in [('executionApproved',False),('runId','old-b5'),('manifestSha256','old'),('alwaysOnApproved',False),('operatingChangeApproved',False)]:
+for k,v in [('executionApproved',False),('runId','old-b5'),('manifestSha256','old'),('alwaysOnApproved',False),('operatingChangeApproved',False),('responsibleOperator','unaccepted-other'),('operatorAcceptance',False)]:
  try:m.validate_operating_approval({**p,k:v},'sha')
  except ValueError:continue
  raise AssertionError('old/narrow approval accepted')
@@ -105,4 +105,23 @@ b=Path('/root/verygood-b5-backups/fresh');args=['systemd-run','--unit=probe','--
 x=m.production_probe_command(args,b)
 assert x[-4:]==['/usr/bin/python3',str(b/'customer-account-system-smtp-production.py'),'verify-original',str(b)]
 assert x.count('/usr/bin/python3')==1
+`);assert.equal(r.status,0,r.stderr)});
+
+test('resumed release binds the new checkpoint and budgets and rejects the prior production approval',()=>{const r=run(`
+import hashlib
+manifest=json.loads(Path('docs/customer-account-production-release-manifest.json').read_text())
+assert m.RUN_ID=='ca-release-resume-20261019'
+assert str(m.STAGE)=='/home/john/.verygood-account-smtp-production-resume'
+assert manifest['runId']==m.RUN_ID and manifest['executionApproved'] is False
+assert manifest['productionRelease']['sourceCommit']=='08799b739f6d8047154c0ea699aab81837196ce2'
+assert manifest['productionRelease']['priorPagesDeployment']=='65a7ccae-422a-4d79-9262-fccea9b51c7f'
+assert manifest['productionRelease']['mainIntegration']['remainingMergesMax']==0
+assert manifest['productionRelease']['pagesNormalDeploymentsMax']==1
+assert manifest['completedUsage']['productionPagesBuildAttempts']==2
+assert manifest['completedUsage']['productionKeyIssuedThenRevoked']==1
+assert hashlib.sha256(Path('docs/customer-account-production-release-manifest.json').read_bytes()).hexdigest()==m.EXPECTED_MANIFEST_SHA256
+old={'executionApproved':True,'runId':'ca-smtp-production-20261019','manifestSha256':'ef000413dab463a916e7fe6df821e390750f7d25f14ff44b0600f36a1b1e9fb2','alwaysOnApproved':True,'operatingChangeApproved':True}
+try:m.validate_operating_approval(old,m.EXPECTED_MANIFEST_SHA256)
+except ValueError:pass
+else:raise AssertionError('historical operating approval reused')
 `);assert.equal(r.status,0,r.stderr)});

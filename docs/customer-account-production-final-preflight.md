@@ -1,5 +1,7 @@
 # AU Customer Account — Production Final Preflight
 
+> Historical initial preflight below. Current main08799b7/OFF Pages65a7ccae and consumed budgets are in [current release results](customer-account-production-release-results.md). Execute only the [new remaining-release plan](superpowers/plans/2026-10-19-customer-account-production-resume.md) after approval of its new manifest SHA; old main/Pages/budgets and approval below are not reusable.
+
 2026-10-19. 시작 `c24e6ee`, 기존 feature worktree에서 Mac Codex 단독 진행. **운영 적용은 미승인/미실행**이다. 기존 Google·OTP·동일 UID·장바구니·MY ORDERS·실제 JWT 생성 PASS는 [최종 인수](customer-account-final-release-preparation.md)를 인용하고 반복하지 않았다. B5 단발 PASS와 상시 SMTP 미적용을 구분한다.
 
 ## 1. 실제 운영 metadata와 additive migration

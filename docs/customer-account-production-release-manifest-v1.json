@@ -1,0 +1,160 @@
+{
+  "mode": "production-always-on",
+  "executionApproved": false,
+  "runId": "ca-smtp-production-20261019",
+  "host": "very-server",
+  "projectIds": [
+    "verygood-main",
+    "verygood-au",
+    "69cb27ef002b63e77c53",
+    "69db3ae20026cdc0c7fe"
+  ],
+  "rollbackSeconds": 480,
+  "hardDeadlineSeconds": 600,
+  "confirmationMaxAgeSeconds": 30,
+  "services": [
+    "appwrite-worker-mails",
+    "appwrite"
+  ],
+  "smtpVariableCount": 7,
+  "originalManifestSha256": "6516ad5400b40955f6e6604eca2161560c5e5cb10305a6638af4b9377f1539ce",
+  "systemCredential": {
+    "name": "VERYGOOD Appwrite SYSTEM SMTP PRODUCTION 20261019",
+    "permission": "sending_access",
+    "domainId": "43b81ebb-788c-41ac-8f0b-2160249a1470",
+    "domain": "verygood-chocolate.com",
+    "newKeysMax": 1
+  },
+  "semanticBaseline": {
+    "verygood-main": "7f1cdfdb1140e258298481525731d25c0d228518bbc4d3a0f58560e55d83e573",
+    "verygood-au": "c9cbb38e2208ede894a93c8e5e78c9252d231029f5f170bccdc10e70216f4de1",
+    "69cb27ef002b63e77c53": "b8db9e5fe576907648466f4a87f44d3f51ea3e5790342903835c267668e8150a",
+    "69db3ae20026cdc0c7fe": "b8db9e5fe576907648466f4a87f44d3f51ea3e5790342903835c267668e8150a"
+  },
+  "productionRelease": {
+    "projectId": "verygood-au",
+    "endpoint": "https://api.verygood-chocolate.com/v1",
+    "migration": [
+      {
+        "kind": "attribute",
+        "key": "customerUserId",
+        "type": "string",
+        "size": 36,
+        "required": false
+      },
+      {
+        "kind": "index",
+        "key": "customerUser_created_idx",
+        "type": "key",
+        "attributes": [
+          "customerUserId",
+          "$createdAt"
+        ],
+        "orders": [
+          "ASC",
+          "DESC"
+        ]
+      }
+    ],
+    "ownershipTarget": {
+      "databaseId": "verygood_cake_au",
+      "collectionId": "reservations"
+    },
+    "adminAuditIds": [
+      "6a3785f5000b3e6adfc6"
+    ],
+    "adminAuditVariable": "APPWRITE_ADMIN_USER_IDS",
+    "customerFlag": "CUSTOMER_ACCOUNT_ENABLED",
+    "runtime": "node-22",
+    "preserveFunctionDeployment": "6ad33cd2615e4096f7bf",
+    "functionDeploymentsMax": 2,
+    "pagesNormalDeploymentsMax": 2,
+    "pagesRollbackDeploymentsMax": 1,
+    "preserveRenewalFlags": {
+      "writes": true,
+      "preorders": true
+    },
+    "preserveAccountJwtOtpAndAdminAuth": true,
+    "googleCallback": "https://api.verygood-chocolate.com/v1/account/sessions/oauth2/callback/google/verygood-au",
+    "successAndFailurePath": "/account/auth/callback",
+    "googleCloudRedirectGetVerified": true,
+    "pagesProject": "au-cake-next",
+    "productionBranch": "main",
+    "domains": [
+      "au.verygood-chocolate.com",
+      "au-stage.verygood-chocolate.com"
+    ],
+    "priorPagesDeployment": "0af308ee-ad99-4345-838e-649c5a60111a",
+    "functionOptionsPreserved": {
+      "runtime": "node-22",
+      "execute": [
+        "any"
+      ],
+      "events": [],
+      "schedule": "0 * * * *",
+      "timeout": 60,
+      "specification": "s-8vcpu-8gb",
+      "scopes": [
+        "databases.read",
+        "databases.write",
+        "collections.read",
+        "attributes.read",
+        "indexes.read",
+        "documents.read",
+        "documents.write",
+        "functions.read",
+        "buckets.read",
+        "files.read",
+        "files.write"
+      ],
+      "logging": true
+    },
+    "functionExecutionsMax": 1,
+    "readOnlyRuntimeProbe": "customer-account-health",
+    "nativeAuthProjectSettingsChanges": 0,
+    "frontendProductionEnvAdd": {
+      "VITE_CUSTOMER_ACCOUNT_ENABLED": "true"
+    },
+    "readerBuildCommand": "npm ci --omit=dev --include=optional && node scripts/native-smoke.mjs --linux-node22",
+    "agentInitiatedOrdersPaymentsEmailsMax": 0,
+    "preparedArtifactHashes": {
+      "frontend-off": "2929b7ed8f747d919b46b35565def58e13c97a2996c9a0e8ee71209cd787f379",
+      "frontend-on": "a2f5c4d1c3886b4a5c0ccd2dfb53a97d129003fd298defc5e13e60bc561b9f9d",
+      "function": "2b8000e09c9255145c84282e0762aca09da16ab72cc8f89021afc21b54962b32"
+    },
+    "mainIntegration": {
+      "requiresExplicitApproval": true,
+      "currentOriginMain": "34ba1072f475ba8458b25a8ffd7a9e5467293dbe",
+      "mode": "normal merge with required checks; no history rewrite",
+      "triggersFirstCustomerOffPagesDeployment": true,
+      "otherAuCakeAutomaticBuilds": false
+    },
+    "functionVariablesBefore": 37,
+    "functionVariablesAfter": 39,
+    "functionVariablesAddedMax": 2,
+    "googlePublishingState": "Testing",
+    "googleDefaultScopesOnly": true,
+    "googlePublishingChangeIncluded": false
+  },
+  "approvalRequired": {
+    "operatingImpact": true,
+    "rootAndSevenVariables": true,
+    "keepSmtpAfterGates": true,
+    "rollbackMaximumFourContainerRecreations": true,
+    "quotaPolicyAndNamedOnCall": true,
+    "migrationAndFunctionPagesRelease": true,
+    "mainMerge": true
+  },
+  "responsibleOperator": "nam9295",
+  "responsibleOperatorAcceptanceRequired": true,
+  "latestReadOnlyResendObservation": {
+    "dailyUsed": 5,
+    "dailyLimit": 100,
+    "monthlyUsed": 87,
+    "monthlyLimit": 3000,
+    "ratePerSecond": 10,
+    "rootDomainVerified": true,
+    "testDomainVerified": true,
+    "freshCheckRequiredBeforeApply": true
+  }
+}
