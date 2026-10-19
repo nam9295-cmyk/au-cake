@@ -14,9 +14,9 @@ import socket
 import sys
 import time
 
-STAGE = Path('/home/john/.verygood-account-smtp-production-resume')
-RUN_ID = 'ca-release-resume-20261019'
-EXPECTED_MANIFEST_SHA256 = "0fd7a7c99681f6c236679a29c84e1d084c861c5d6cd65ca4d61e93653682acc3"
+STAGE = Path('/home/john/.verygood-account-smtp-ui-final')
+RUN_ID = 'ca-release-smtp-ui-20261019'
+EXPECTED_MANIFEST_SHA256 = "6a498278d9cef1cfc5b4aa1a937fac101db0387a7a5b41dd484a04914bb9725d"
 GATES = ('operatingSemanticUnchanged','consoleUnchanged','quotaAccepted','onCallAssigned')
 PROJECTS = ['verygood-main','verygood-au','69cb27ef002b63e77c53','69db3ae20026cdc0c7fe']
 SMTP_KEYS = ('_APP_SMTP_HOST','_APP_SMTP_PORT','_APP_SMTP_SECURE','_APP_SMTP_USERNAME','_APP_SMTP_PASSWORD','_APP_SYSTEM_EMAIL_NAME','_APP_SYSTEM_EMAIL_ADDRESS')

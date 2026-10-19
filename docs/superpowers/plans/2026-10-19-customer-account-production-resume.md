@@ -8,7 +8,7 @@
 
 **Tech Stack:** Appwrite1.8.1; existing node-22 reservation-api; Node22.16.0/npm10.9.2 frontend build; existing Cloudflare au-cake-next; Resend SMTP.
 
-**Spec:** `docs/customer-account-production-release-manifest.json` (version3, executionApproved=false), `docs/customer-account-production-release-results.md`, approved original customer-account design.
+**Spec:** `docs/customer-account-production-release-manifest-v3-stopped.json` (version3, executionApproved=false; historical stopped authority), `docs/customer-account-production-release-results.md`, approved original customer-account design.
 
 **Latest execution status:** Amended v3 SHA0fd7a7c9… was approved. Backend owner1+1/Function2/readiness1513ms remain complete. A single SMTP apply passed TLS/AUTH but the executor had failed to propagate Cloudflare401 and missing-counter preflight errors. Immediate restoration succeeded after84.021sec, using apply2/restore2; no keep or UI deployment. False reader6ad5ce82a6ae17a3830a/customerfalse, original common SMTP and OFF Pages65a7ccae are restored. Root global apply claim is consumed; execution proofs are archived. The user revoked the new Key and official Console confirmed absence; original keys/quota unchanged. **No remaining application may proceed under this stopped authorization.**
 

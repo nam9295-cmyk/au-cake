@@ -2,6 +2,10 @@
 
 2026-10-19. **PR25/26 integration and the customer-OFF production deployment are complete.** This document supersedes the operational instructions in the [first stopped release report](customer-account-production-release-results-v1-stopped.md); that evidence remains unchanged. No completed merge, OFF deployment or functional acceptance is repeated.
 
+## New SMTP/UI-only proposal — awaiting approval
+
+V4 manifest SHA **`6a498278d9cef1cfc5b4aa1a937fac101db0387a7a5b41dd484a04914bb9725d`**, run `ca-release-smtp-ui-20261019`. [Minimal execution plan](superpowers/plans/2026-10-19-customer-account-smtp-ui-final.md). Preparation only: official Wrangler refresh/Cloudflare GET200 and Owner policy GET passed; current reader/customerfalse, member ready and OFF65a7ccae unchanged. The corrected versioned apply entry is connected to fresh local helpers;20 targeted tests PASS, failed auth/policy/claim→root requests0. Old run/claims/journals, used Keys2 and container actions4 are preserved. New scope proposes key1/SMTP apply2/UI1/member-reactivation1 with Pages recovery1/container recovery2; schema/deployment/readiness0. No executable approval or new operating mutation. Fresh root backup/timer/quota checks remain mandatory after explicit approval. No earlier PASS is repeated.
+
 ## Latest execution after amended approval — SMTP restored, UI still OFF
 
 The user approved amended SHA `0fd7a7c99681f6c236679a29c84e1d084c861c5d6cd65ca4d61e93653682acc3`. A fresh proof was created and counters2 schema writes/2 Function deployments/1 readiness were preserved. Legitimate root preflight and independent timer probe passed using the new SHA and a new immutable root backup. The user created the single Sending access root-domain system Key and captured it into protected storage. The validated existing member deployment was reactivated without deployment/execution.

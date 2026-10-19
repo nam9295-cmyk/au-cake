@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {spawnSync} from 'node:child_process';
+import test from 'node:test';import assert from 'node:assert/strict';import {spawnSync} from 'node:child_process';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
 const source=`import importlib.util,tempfile,types,json,time
 from pathlib import Path
 s=importlib.util.spec_from_file_location('keep','scripts/customer-account-system-smtp-production.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
@@ -110,18 +110,59 @@ assert x.count('/usr/bin/python3')==1
 test('resumed release binds the new checkpoint and budgets and rejects the prior production approval',()=>{const r=run(`
 import hashlib
 manifest=json.loads(Path('docs/customer-account-production-release-manifest.json').read_text())
-assert m.RUN_ID=='ca-release-resume-20261019'
-assert str(m.STAGE)=='/home/john/.verygood-account-smtp-production-resume'
+assert m.RUN_ID=='ca-release-smtp-ui-20261019'
+assert str(m.STAGE)=='/home/john/.verygood-account-smtp-ui-final'
 assert manifest['runId']==m.RUN_ID and manifest['executionApproved'] is False
 assert manifest['productionRelease']['sourceCommit']=='08799b739f6d8047154c0ea699aab81837196ce2'
 assert manifest['productionRelease']['priorPagesDeployment']=='65a7ccae-422a-4d79-9262-fccea9b51c7f'
 assert manifest['productionRelease']['mainIntegration']['remainingMergesMax']==0
 assert manifest['productionRelease']['pagesNormalDeploymentsMax']==1
 assert manifest['completedUsage']['productionPagesBuildAttempts']==2
-assert manifest['completedUsage']['productionKeyIssuedThenRevoked']==1
+assert manifest['completedUsage']['productionKeyIssuedThenRevoked']==2
+assert manifest['completedUsage']['productionSmtpApplyContainerRecreations']==2
+assert manifest['completedUsage']['productionSmtpRollbackContainerRecreations']==2
+assert manifest['remainingBudget']['ownerAttributes']==manifest['remainingBudget']['ownerIndexes']==manifest['remainingBudget']['compatibleReaderDeployments']==manifest['remainingBudget']['memberWritesDeployments']==manifest['remainingBudget']['customerReadinessExecutions']==0
 assert hashlib.sha256(Path('docs/customer-account-production-release-manifest.json').read_bytes()).hexdigest()==m.EXPECTED_MANIFEST_SHA256
 old={'executionApproved':True,'runId':'ca-smtp-production-20261019','manifestSha256':'ef000413dab463a916e7fe6df821e390750f7d25f14ff44b0600f36a1b1e9fb2','alwaysOnApproved':True,'operatingChangeApproved':True}
 try:m.validate_operating_approval(old,m.EXPECTED_MANIFEST_SHA256)
 except ValueError:pass
 else:raise AssertionError('historical operating approval reused')
+`);assert.equal(r.status,0,r.stderr)});
+
+
+test('actual SMTP entry stops before root dispatch when Wrangler, policy or claim fails',()=>{
+ const command=path.resolve('scripts/customer-account-production-smtp-apply.command');
+ assert.ok(fs.existsSync(command),'corrected command must be the actual versioned execution entry');
+ for(const failAt of [1,2,3,0]){
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ca-smtp-entry-'));
+  try{
+   const scripts=path.join(dir,'scripts');fs.mkdirSync(scripts);fs.copyFileSync(command,path.join(scripts,path.basename(command)));
+   fs.mkdirSync(path.join(dir,'.superpowers/sdd/2026-10-19-customer-account-smtp-ui-final'),{recursive:true});
+   const nodeStub=`#!/bin/bash
+set -eu
+n=0; if [ -f "$TEST_STATE" ]; then n=$(cat "$TEST_STATE"); fi
+n=$((n+1)); echo "$n" > "$TEST_STATE"
+if [ "$n" = "$TEST_FAIL_AT" ]; then exit 41; fi
+cat >/dev/null
+`;
+   fs.writeFileSync(path.join(dir,'node'),nodeStub,{mode:0o700});
+   fs.writeFileSync(path.join(dir,'ssh'),'#!/bin/bash\nset -eu\ncat >/dev/null\necho root-dispatch >> "$TEST_ROOT_CALLS"\n',{mode:0o700});
+   const result=spawnSync('/bin/bash',[path.join(scripts,path.basename(command))],{encoding:'utf8',env:{...process.env,PATH:dir+':'+process.env.PATH,TEST_STATE:path.join(dir,'state'),TEST_FAIL_AT:String(failAt),TEST_ROOT_CALLS:path.join(dir,'root')}});
+   assert.equal(result.status,failAt===0?0:41,result.stderr);
+   assert.equal(fs.existsSync(path.join(dir,'root'))?fs.readFileSync(path.join(dir,'root'),'utf8').trim().split('\n').length:0,failAt===0?1:0);
+  }finally{fs.rmSync(dir,{recursive:true,force:true})}
+ }
+});
+
+
+test('new SMTP scope preserves the stopped global claim and blocks replay within its own run',()=>{const r=run(`
+with tempfile.TemporaryDirectory() as tmp:
+ root=Path(tmp);old=root/'ca-release-resume-20261019.apply.claim';old.write_bytes(b'previous-claim-must-stay')
+ m.claim_apply_once(root,'new-sha',root/'fresh-backup')
+ assert old.read_bytes()==b'previous-claim-must-stay'
+ assert (root/(m.RUN_ID+'.apply.claim')).exists()
+ try:m.claim_apply_once(root,'new-sha',root/'another-backup')
+ except FileExistsError:pass
+ else:raise AssertionError('new scope replay accepted')
+ assert old.read_bytes()==b'previous-claim-must-stay'
 `);assert.equal(r.status,0,r.stderr)});
