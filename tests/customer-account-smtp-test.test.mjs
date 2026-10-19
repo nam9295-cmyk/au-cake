@@ -56,3 +56,16 @@ test('B4 redirects and auth drift stop configuration without following or repair
  const drifting=async(url,o)=>{if(o.method==='PATCH'){writes++;Object.assign(h.project,Object.fromEntries(Object.entries({...manifest.smtp,password:credential.secret}).map(([k,v])=>['smtp'+k[0].toUpperCase()+k.slice(1),v])));h.project.oAuthProviders[0].secret='changed-by-another-writer'}return new Response(JSON.stringify(h.project))}
  await assert.rejects(h.make({transport:drifting}).configure());assert.equal(writes,1)
 })
+
+test('B5 accepts only trial G token sessions during OTP and G Google sessions after logout',async()=>{
+ const m=await import('../scripts/customer-account-email-otp-test.mjs').catch(()=>({}))
+ assert.equal(typeof m.assertOtpTrialSessions,'function')
+ const start=Date.parse('2026-10-19T00:00:00Z'),g={userId:'6ad38e4e0ffd5f810e23',provider:'token',createdAt:'2026-10-19T00:00:01Z',id:'trial-session'}
+ assert.equal(m.assertOtpTrialSessions([g],{phase:'otp',startedAt:start}).length,1)
+ assert.throws(()=>m.assertOtpTrialSessions([{...g,userId:'ca-test-customer-h-20261018'}],{phase:'otp',startedAt:start}))
+ assert.throws(()=>m.assertOtpTrialSessions([g],{phase:'google',startedAt:start}))
+ assert.throws(()=>m.assertOtpTrialSessions([{...g,createdAt:'2026-10-18T00:00:00Z'}],{phase:'otp',startedAt:start}))
+ assert.equal(m.assertOtpTrialSessions([{...g,provider:'google'}],{phase:'google',startedAt:start}).length,1)
+ assert.equal(m.trialSessionsForCleanup([g,{...g,id:'google-session',provider:'google'}],start).length,2)
+ assert.throws(()=>m.trialSessionsForCleanup([{...g,userId:'unknown'}],start))
+})
