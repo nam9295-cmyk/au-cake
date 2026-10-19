@@ -1,5 +1,7 @@
 # Customer Account B안 — very-server Test Project Implementation Plan
 
+> **2026-10-19 B5 FINAL 단발 인수 완료:** [실행 결과](../../customer-account-b5-final-execution-results.md). SMTP TLS/AUTH, 실제 OTP1건 수신·로그인, 기존 G Google↔OTP 동일 UID PASS. 원본 SMTP·Account/OTP/JWT OFF·세션0·Function OFF/B6·CLOSED29 복원 및 신규 Key 폐기를 확인했다. 노출297.793초, 재생성4회, Pages28/29만 사용, Function0회다. **상시 운영 SMTP·출시 승인은 별도 RELEASE BLOCKER**이며 D1 timeout·과거 raw UNVERIFIED는 유지한다. 아래 초기 미실행/DEFERRED 기록은 보존된 과거 계획이다.
+
 > **최신 로컬 제품 개선:** [인증/주문 상태 분리](../../customer-account-auth-orders-separation.md). Account 인증과 주문 API 상태를 분리했고 Account OFF는 계속 인증을 차단한다. 서버 검증은 유지, metadata 17→5회 절감은 후속 설계이며 미구현이다. 전체 2,046 PASS/0 FAIL/기존 SKIP1, 실제 Google·MY ORDERS NOT RUN. 새 배포/실행/인증 창0·누적8/120·Pages7/9 불변. **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw UNVERIFIED 유지. 아래 기록을 자동 재실행하지 않는다.
 
 > **D1 timeout 후속 조사:** [읽기 전용 결과](../../customer-account-b7-d1-timeout-investigation.md), [미승인 계측 계획](2026-10-18-customer-account-b7-health-timing-diagnostic.md). Node soft timeout500 계층 확인, 정확한 DB 대기 단계/transport 원인은 UNVERIFIED. 회원 readiness17개 순차·과거17.46초/제품10초 제한을 별도 통합 차단 요소로 기록했다. 이번 새 배포/execution0·누적8/120·Pages7/9·OFF/B6/CLOSED 유지. 최소 추가 deployment1/Owner health1은 별도 승인 필요. B5 DEFERRED — RELEASE BLOCKER·과거 AU raw UNVERIFIED 유지.
@@ -34,16 +36,20 @@
 
 **Spec:** [최초 조사 및 A01–A11](../../customer-account-auth-test-environment.md), [제품 설계](../specs/2026-10-17-customer-account-design.md), [운영 적용/rollback](../../customer-account-rollout.md). 이 문서가 이전 A2 실행 계획을 대체한다.
 
-## B5 — DEFERRED — RELEASE BLOCKER
+## B5 단발 인수 PASS — 상시 운영 활성화는 RELEASE BLOCKER
 
-B5는 취소가 아니라 뒤로 미룬 필수 작업이다. B6 테스트 Function 성공은 B5 완료가 아니다. 아래 항목이 해소되기 전 native Email OTP는 OFF이며 Google+OTP 최종 출시 준비는 미완료다. Google-only 출시는 별도 제품 결정과 승인이 필요하다.
+기존 G의 [B5 FINAL 단발 인수](../../customer-account-b5-final-execution-results.md)는 완료했고
+SMTP/Account/native OTP는 다시 OFF다. 한시 위험 수용은 상시 운영/출시 승인이 아니다.
 
-- [ ] 기존 운영 4개 프로젝트와 Console의 공통 SMTP 영향 검토·승인
-- [ ] 테스트 OTP의 수신자 접근 제한과 남용 방지 입증
-- [ ] Gallery 설정 의미적 지문 전후 검증 및 B5 raw 지문 예외 검토
-- [ ] System SMTP 전용 Sending Key·발신자 확정 및 별도 발급 승인
-- [ ] 운영 보호 백업, 정식 root 인증, API/mail-worker 재생성·복구 승인 및 검증
-- [ ] 실제 6자리 이메일 OTP와 Google↔OTP 동일 UID 검증
+- [x] 운영4개/Console 영향·공유 quota·수신자 제한 부재에 대한 단발 실행 승인
+- [x] 새 의미적 지문 전후 일치 및 과거 Gallery/AU raw UNVERIFIED 보존
+- [x] 전용 Key·발신자·정식 root·원본 백업·재생성4회·전체 복구와 Key 폐기
+- [x] 실제6자리 OTP와 기존 G Google↔OTP 동일 UID
+- [ ] 상시 SMTP credential·남용/발송 감시·공유 quota 운영 정책과 적용 승인
+- [ ] 최종 production 활성화·배포·main 병합 승인
+
+G-only 제한은 입증하지 않았고 최종 제품 정책으로 요구하지 않는다. 새 OTP-first 가입과
+Google 연결 경로는 이번 기존 G 시험의 범위가 아니므로 미검증으로 유지한다.
 
 ## Global Constraints
 

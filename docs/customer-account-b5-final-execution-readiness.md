@@ -1,5 +1,10 @@
 # B5 FINAL execution — ready for a new operational approval
 
+> Execution completed under the subsequent fresh user approval:
+> [B5 FINAL results](customer-account-b5-final-execution-results.md).
+> Native OTP/Google existing UID PASS; SMTP and all test access restored, new Key revoked.
+> The preflight record and immutable manifest below are preserved.
+
 2026-10-19 KST. Branch `feat/customer-account`, prior result `dfd438a`.
 Run `b5-final-native-20261019`; prior approvals/journals/claims are not reused.
 

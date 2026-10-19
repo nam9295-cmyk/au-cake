@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **최신 B5 FINAL 단발 인수 PASS:** [실행 결과](customer-account-b5-final-execution-results.md). 실제 메일1건·6자리 OTP 로그인·기존 G Google↔OTP 동일 UID를 화면과 Owner API로 확인했다. SMTP TLS/AUTH PASS, 노출297.793초 뒤 원본 SMTP·Account/OTP/JWT OFF·세션0·Function OFF/B6·flags false·CLOSED29 및 운영4개/Console 불변을 검증했다. 신규 Key 폐기 완료. Pages2회(누적29), 재생성4회, Function0회. **B5 단발 검증 완료이며 상시 운영 SMTP/출시 승인은 별도**다. D1 timeout·과거 AU/Gallery raw UNVERIFIED는 유지한다. 아래 이전 중단/DEFERRED 기록은 역사적 증거다.
+
 > **최신 B5 실행 결과:** [단발 OTP 시도 및 원복 기록](customer-account-b5-one-shot-otp-results.md). 공통 SMTP를 임시 적용했으나 Python health403/curl200 검사 차이로 Account/OTP ON 전에 중단했다. 자동 복구가 API 검사에서 멈춰 남은 worker는 사용자 root 실행으로 복원했고, 원본 bytes/이미지·큐0/0/failed1·운영4개 지문·OFF403/B6/CLOSED27을 직접 검증했다. 신규 SMTP Key는 폐기, OTP 요청0·UID검증 NOT RUN, Pages27·기존 Function16/120 보존. **B5 — BLOCKED / DEFERRED — RELEASE BLOCKER**, D1 timeout·과거 AU/Gallery raw UNVERIFIED 유지. 아래 이전 기록은 역사적 증거다.
 
 > **최신 수동 장바구니 시험 종료:** [장바구니 분리·로그인 후 가져오기 검증 및 CLOSED19 기록](customer-cart-isolation-validation.md). 사용자 종료 요청으로 Account OFF/API403·test 세션0·Function OFF/B6/flags false·사이트 CLOSED19·감시 종료를 직접 확인했다. 사용자가 G/H 분리를 확인한 PASS는 보존하며, 새 가져오기/회원 장바구니 선택의 실제 결과는 명시 확인되지 않아 NOT RUN/unconfirmed다. 제품 로컬 전체2,136 PASS/0 FAIL/기존 SKIP1, TypeScript/lint/AU build PASS. 누적 Pages19·Function8/120, 추가 창/배포는 미승인. 프로필·실제 회원주문/MY ORDERS·권한 인수와 D1 timeout 후속 검증, **B5 — DEFERRED — RELEASE BLOCKER**, 과거 AU raw **UNVERIFIED**가 남아 있어 운영 활성화 완료로 분류하지 않는다. 아래는 보존된 이전 단계 기록이다.
@@ -40,16 +42,20 @@
 
 2026-10-18. 이 문서는 production 적용 전의 승인 절차다. 별도 승인 아래 [B1](customer-account-b1-validation.md), [B2 테스트 schema/조건부 migration](customer-account-b2-owner-execution.md), [B3 테스트 HTTPS·Google SDK 인증](customer-account-b3-google-validation.md), [B4 테스트 전용 Resend SMTP와 일반 sample 1건 수신](customer-account-b4-smtp-validation.md)을 완료했다. 테스트 Account와 신규 인증 진입은 OFF다. production migration/Function·사이트 배포/운영 Google·SMTP 변경/고객 데이터 접근·변경/main 병합은 실행하지 않았다. 공통 SMTP와 B5는 미실행이다. [B6 테스트 Function 구축·검증](customer-account-b6-function-validation.md)은 별도 승인 아래 완료했으며 공개 Function/Account는 차단 상태로 보존한다. 제품 고객 기능 frontend/server flag는 기본 OFF다. [검증 기록](customer-account-validation.md), [개인정보 절차](customer-account-privacy.md), [승인 설계](superpowers/specs/2026-10-17-customer-account-design.md)를 함께 검토한다.
 
-## B5 — DEFERRED — RELEASE BLOCKER
+## B5 단발 인수 PASS — 상시 운영 활성화는 RELEASE BLOCKER
 
-B5는 취소가 아니라 뒤로 미룬 필수 작업이다. B6 테스트 Function 성공은 B5 완료가 아니다. 아래 항목이 해소되기 전 native Email OTP는 OFF이며 Google+OTP 최종 출시 준비는 미완료다. Google-only 출시는 별도 제품 결정과 승인이 필요하다.
+[B5 FINAL 결과](customer-account-b5-final-execution-results.md)의 기존 G 단발 검증은 완료했다.
+공통 SMTP는 원복했고 native Email OTP/Account는 OFF다. 상시 운영과 최종 출시 승인은 포함하지 않는다.
 
-- [ ] 기존 운영 4개 프로젝트와 Console의 공통 SMTP 영향 검토·승인
-- [ ] 테스트 OTP의 수신자 접근 제한과 남용 방지 입증
-- [ ] Gallery 설정 의미적 지문 전후 검증 및 B5 raw 지문 예외 검토
-- [ ] System SMTP 전용 Sending Key·발신자 확정 및 별도 발급 승인
-- [ ] 운영 보호 백업, 정식 root 인증, API/mail-worker 재생성·복구 승인 및 검증
-- [ ] 실제 6자리 이메일 OTP와 Google↔OTP 동일 UID 검증
+- [x] 기존 운영4개/Console의 단발 SMTP 영향·공유 quota·수신자 제한 부재를 명시적으로 승인
+- [x] 이번 실행의 새 의미적 지문 전후 일치; 과거 Gallery/AU raw UNVERIFIED 보존
+- [x] 전용 Sending Key/발신자·정식 root·보호 백업·동일 이미지 재생성4회 및 원복 검증
+- [x] 실제6자리 OTP 수신·로그인·기존 G Google↔OTP 동일 UID 검증
+- [ ] 상시 SMTP credential·발송 감시·공유 quota/남용 위험 운영 정책과 적용 승인
+- [ ] 최종 production 자원·feature flag 활성화·배포·main 병합 승인
+
+G-only 수신자 제한이 입증된 것은 아니며 제품의 최종 수신자 정책으로 요구하지 않는다.
+이번에는 새 OTP-first 회원을 만들지 않았으므로 그 신규 가입/Google 연결 경로도 별도 미검증이다.
 
 ## 후속 안정화 배포 gate
 
