@@ -139,3 +139,11 @@ Account/OTP/JWT OFF, Function OFF/B6, approved sessions cleared. B5 remains
 not proven and root/backup/rollback prerequisites are not yet verified. No common
 SMTP changes, key issuance, recreation or email sends. Fresh operating semantic
 fingerprints matched before/after; historical Gallery/AU raw uncertainty remains.
+
+### Pending B5 one-shot operational approval
+
+[2026-10-19 V2 plan](superpowers/plans/2026-10-19-customer-account-b5-one-shot-otp.md)
+proposes a temporary common SMTP change, one native G OTP/UID check and restoration
+even on success. G-only is not a permanent product policy or a proven native
+allowlist. Shared-quota/public-auth residual risk requires explicit approval.
+B5 remains **BLOCKED — RELEASE BLOCKER**, CLOSED25 preserved; no execution performed.

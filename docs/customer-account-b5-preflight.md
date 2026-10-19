@@ -129,3 +129,12 @@ Gallery의 `updatedAt`과 `accessedAt`은 모두 **2026-10-18 01:08:10.315 KST**
 메일 큐0/0/1 보존 확인. G-only 수신자 제한은 입증되지 않아 공통 SMTP 적용 전
 중단했다. system Key·재생성·OTP 발송0회. B5는 **DEFERRED — RELEASE BLOCKER**.
 새 semantic 지문은 과거 Gallery/AU raw 차이의 소급 해소가 아니다.
+
+## 2026-10-19 단발 OTP 위험 수용 승인안
+
+사용자는 G-only 수신자 제한을 영구 제품 정책으로 요구하지 않으며, 기본 rate limit과
+quota/감시를 활용한 단1회 시험 계획을 요청했다. [새 V2 계획](superpowers/plans/2026-10-19-customer-account-b5-one-shot-otp.md)은
+별도 SMTP 중계 없이 공통 SMTP 임시 적용 → G OTP1건/동일UID → 성공해도 원복을 제안한다.
+이는 이전 수신자 제한이 구현됐다는 뜻이 아니다. 추가 외부 발송/공유 quota와 기존4+Console
+Auth gate 개방의 위험을 명시적으로 승인받기 전에는 **B5 BLOCKED/CLOSED25**를 유지한다.
+원본 manifest/과거 증거를 바꾸지 않았고 실제 root/Key/env/컨테이너/Pages 작업은 하지 않았다.
