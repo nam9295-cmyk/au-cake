@@ -15,9 +15,10 @@ export function GuestCartImport({language}:{language:'en'|'ko'}){
  const cart=useCart(),customer=useCustomerAccount(),ko=language==='ko'
  if(!customer.enabled||!cart.ready)return null
  const guest=customer.state.status==='guest'
- if(!guest&&!cart.canImportGuest&&!cart.storageError)return null
+ if(!guest&&!cart.canImportGuest&&!cart.guestAlreadyImported&&!cart.storageError)return null
  return <div className="customer-checkout-prompt">
   {guest&&<><p>{ko?'로그인하면 다음 주문에 정보를 자동입력할 수 있어요. 비회원으로도 계속 이용할 수 있습니다.':'Sign in to save your details for your next order. You can also continue as a guest.'}</p><button type="button" onClick={customer.openSignIn}>{ko?'로그인':'Sign in'}</button></>}
+  {cart.guestAlreadyImported&&<p>{ko?'비회원 상품은 이미 이 계정에 가져온 상태입니다. 회원 장바구니와 비회원 장바구니는 각각 따로 저장됩니다.':'Your guest items were already copied to this account. Your account bag and guest bag are saved separately.'}</p>}
   {cart.canImportGuest&&<ImportChoice key={cart.owner+'\n'+cart.guestSignature} cart={cart} language={language}/>}
   {cart.storageError&&<p role="alert">{ko?'장바구니를 저장하지 못했습니다. 기존 상품은 보존되어 있습니다.':'Your bag could not be saved. Existing items have been kept.'}</p>}
  </div>

@@ -20,7 +20,7 @@ export type CartAction=
 type SavedAction=Exclude<CartAction,{type:'import-guest'}>|{type:'import-guest';signature:string;legacy:string;renewal:RenewalSelection[]}
 type CartRecord={version:1;clock:number;id:string;action:SavedAction}
 type Contents={lines:CartLine[];renewalLines:RenewalSelection[];mochiReselectionRequired:boolean;imports:string[]}
-export type CustomerCartSnapshot=Contents&{owner:CartOwner|null;ready:boolean;epoch:number;canImportGuest:boolean;guestItemCount:number;guestSignature:string;storageError:boolean;changedInAnotherTab:boolean}
+export type CustomerCartSnapshot=Contents&{owner:CartOwner|null;ready:boolean;epoch:number;canImportGuest:boolean;guestAlreadyImported:boolean;guestItemCount:number;guestSignature:string;storageError:boolean;changedInAnotherTab:boolean}
 export type CartTicket={owner:CartOwner|null;epoch:number;notice:string|null}
 const empty=():Contents=>({lines:[],renewalLines:[],mochiReselectionRequired:false,imports:[]})
 const text=(storage:CartStorage,key:string)=>{try{return storage.getItem(key)}catch{return null}}
@@ -90,7 +90,7 @@ export function createCustomerCartStore({storage,owner:initialOwner,authFence=tr
  const snapshot=():CustomerCartSnapshot=>{
   const contents=owner?readCustomerCart(storage,owner,known):empty(),guest=owner?.startsWith('user:')?readCustomerCart(storage,'guest',known):empty()
   const signature=owner?.startsWith('user:')?guestSignature():''
-  return {...contents,owner,ready:owner!==null,epoch,storageError,changedInAnotherTab,guestSignature:signature,guestItemCount:guest.lines.reduce((n,l)=>n+l.selection.quantity,0)+guest.renewalLines.reduce((n,l)=>n+l.quantity,0),canImportGuest:!!owner?.startsWith('user:')&&(guest.lines.length+guest.renewalLines.length)>0&&!contents.imports.includes(signature)}
+  return {...contents,owner,ready:owner!==null,epoch,storageError,changedInAnotherTab,guestSignature:signature,guestItemCount:guest.lines.reduce((n,l)=>n+l.selection.quantity,0)+guest.renewalLines.reduce((n,l)=>n+l.quantity,0),guestAlreadyImported:!!owner?.startsWith('user:')&&(guest.lines.length+guest.renewalLines.length)>0&&contents.imports.includes(signature),canImportGuest:!!owner?.startsWith('user:')&&(guest.lines.length+guest.renewalLines.length)>0&&!contents.imports.includes(signature)}
  }
  let value=snapshot()
  const publish=()=>{const next=snapshot();if(JSON.stringify(next)!==JSON.stringify(value)){value=next;for(const fn of listeners)fn()}}

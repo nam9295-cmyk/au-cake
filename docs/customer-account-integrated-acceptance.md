@@ -288,3 +288,49 @@ Actual retry usage: one Function deployment, five of nine read executions
 G/H Function remain open under the independent monitor until user `종료` or a
 confirmed safety failure. No new order, payment, coupon, mail, user, schema or
 operational resource was created. B5 remains DEFERRED / RELEASE BLOCKER.
+
+## 2026-10-19 — Product cart clarity and final local regression
+
+The real order-read acceptance above remains PASS; no additional Function execution,
+health check, deployment or order creation was used for this change. The current
+retry monitor still reports `open`, `safe=true`, with five additional executions.
+
+The bag now identifies the signed-in account (login email) or Guest. When the
+current Guest contents have already been explicitly copied to the current account,
+EN/KO copy explains that history and that the bags remain separately saved. This
+uses existing import records; it does not infer history from matching product names,
+move/delete products, auto-import, or change cart storage and pricing policies.
+The live H import history has not been directly inspected, so its historical cause
+is not claimed as proven solely from matching quantities.
+
+A regression first failed because the prior-import explanation was absent, then
+passed after implementation. It covers explicit import, return/refresh, Guest
+preservation, no duplicate import, and a fresh other member's empty cart. The actual
+AU Bag test also checks that the displayed account is G rather than H.
+
+Validation:
+- Focused cart tests: 20 PASS / 0 FAIL.
+- Full `npm test`: 2,156 PASS / 0 FAIL / 1 SKIP (the existing KR-only static assertion
+  is conditional in the AU build run); exit 0.
+- ESLint and TypeScript: exit 0.
+- KR then AU builds: exit 0; existing chunk-size warnings remain.
+- Git whitespace validation: PASS. Changed source/diff reviewed for credentials;
+  none added. Runtime browser checks for these new labels remain NOT RUN until deployed.
+
+No new Pages deployment was made. OPEN23 remains current and CLOSED24 remains
+reserved for manual termination. A further OPEN deployment requires additional
+budget before publishing this local UI change. Existing Google/cart/order-read
+PASS results remain preserved. Profile save/phone autofill observations in this
+retry do not add a new manual PASS. Actual member order creation/JWT owner assignment
+remains outside this read-only acceptance.
+
+Diagnostic incident: a macOS `ps comm` inspection unexpectedly included a Penpot
+connection URL in a process title. It was not copied into files or repeated. The
+repository already provides `scripts/security/safe-process-inventory.mjs`; use that
+rather than process command/title columns. The earlier Penpot rotation evidence
+remains in `customer-account-b7-v3-readiness.md`; this incident did not perform a
+new credential validity test or access Penpot.
+
+B5 remains **DEFERRED — RELEASE BLOCKER**. D1 reservation health timeout and the
+historical AU raw configuration fingerprint difference remain unresolved/UNVERIFIED.
+Production, main, DB, ACL, coupons, payment and email were not changed.

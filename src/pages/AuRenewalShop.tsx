@@ -906,6 +906,7 @@ function Bag() {
   return (
     <main className="renewal-page renewal-cart">
       <h1>{t("Your bag", "장바구니")}</h1>
+      {customer.enabled && <p>{customer.state.status === "authenticated" ? `${t("Account bag", "회원 장바구니")} · ${customer.state.identity.loginEmail}` : t("Guest bag", "비회원 장바구니")}</p>}
       <GuestCartImport language={language}/>
       {resume.status==='owner-changed'&&<p role="status">{t('The saved checkout belongs to another account. Sign back in to that account to restore it.','저장된 주문서는 다른 회원의 주문서입니다. 해당 계정으로 다시 로그인하면 복원할 수 있습니다.')}</p>}
       <MochiReselectionNotice />

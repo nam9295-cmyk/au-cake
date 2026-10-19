@@ -48,3 +48,13 @@ test('declining keeps Guest goods, survives refresh, stays scoped to G and can b
  assert.equal(declined({getItem(){throw Error('blocked')}},'user:G',signature),false)
  assert.doesNotThrow(()=>decline({setItem(){throw Error('blocked')}},'user:G',signature))
 }))
+
+test('returning member sees prior Guest import explained without importing again or sharing with H',()=>harness(h=>{
+ h.render('G');h.cart().importGuest()
+ const html=h.render('G');assert.match(html,/already copied to this account/)
+ assert.doesNotMatch(html,/Import guest bag/);assert.equal(h.cart().itemCount,2)
+ assert.match(h.render('G','ko'),/이미 이 계정에 가져온/)
+ h.render(null);assert.equal(h.cart().itemCount,2)
+ assert.match(h.render('H'),/Import guest bag/);assert.equal(h.cart().itemCount,0)
+ assert.match(h.render('G'),/already copied to this account/);assert.equal(h.cart().itemCount,2)
+}))

@@ -33,6 +33,7 @@ test('actual AU Bag offers explicit Guest import to members without silently cop
  try{
   const html=renderToStaticMarkup(<CustomerAccountContext.Provider value={{...disabledCustomerAccount,enabled:true,state:{status:'authenticated',identity:identity('G')}}}><CartProvider><AuRenewalShop path="/cart"/></CartProvider></CustomerAccountContext.Provider>)
   assert.match(html,/Import guest bag/);assert.match(html,/Your bag is empty/)
+  assert.match(html,/Account bag/);assert.match(html,/G@example.test/);assert.doesNotMatch(html,/H@example.test/)
   assert.equal(data.size,1)
  }finally{globalThis.window=previous}
 })
