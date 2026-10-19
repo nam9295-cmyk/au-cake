@@ -20,7 +20,7 @@ B4 테스트 프로젝트 override는 별도 발신자/Key를 유지한다. B5 �
 - 이미지 pull/upgrade 없이 `appwrite-worker-mails` → `appwrite`만 `--no-deps --no-build --pull never --force-recreate --timeout 30`한다. 정확한 Compose 경로·서비스·image digest는 실행 직전 승인 manifest로 고정한다. 다른 컨테이너·DB·Function은 제외한다.
 - API 재생성 동안 일시적 API 중단이 생길 수 있다. 이전 단발 노출297.793초는 API 중단 시간 측정값이 아니다. 컨테이너별 시작/health 시간을 기록하고 API public curl200+내부 health가60초 이내 복원되지 않으면 원복한다.
 
-기존 단발 helper는480초에 무조건 복구하고600초 상한이 있다. **이 helper를 그대로 상시 적용용으로 실행하거나 타이머를 임의 해제하지 않는다.** 별도 운영 승인 후 기존 도구에 최소한의 유지 확정 계약을 추가해야 한다. 검증 전에는 server-side rollback이 독립적으로 작동하고, 모든 운영 gate PASS와 명시적 유지 확정 이후에만 예약 복구 해제를 허용한다. 이 전환은 아직 구현/실행하지 않았다.
+기존 단발 helper는480초에 무조건 복구하고600초 상한이 있다. **이 helper를 그대로 상시 적용용으로 실행하거나 타이머를 임의 해제하지 않는다.** 별도 운영 승인 후 기존 도구에 최소한의 유지 확정 계약을 추가해야 한다. 검증 전에는 server-side rollback이 독립적으로 작동하고, 모든 운영 gate PASS와 명시적 유지 확정 이후에만 예약 복구 해제를 허용한다. 이 전환은 `scripts/customer-account-system-smtp-production.py`에서 로컬 구현·17개 집중 테스트를 완료했다. [최종 운영 preflight](customer-account-production-final-preflight.md)를 따른다. 서버 staging/실행·SMTP 적용은 아직 하지 않았다.
 
 ## Quota·남용·중단 정책 제안
 

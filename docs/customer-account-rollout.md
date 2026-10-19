@@ -1,5 +1,7 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> 최종 운영 준비(2026-10-19): [Production preflight](customer-account-production-final-preflight.md). 운영 DB2/Collection22 ACL·GET-only migration을 확인했고 상시 SMTP 유지 확정 adapter와 OFF/ON 산출물을 로컬 준비했다. 운영 변경/배포/main 병합은 미실행이며, 상세 manifest의 새 일괄 승인을 기다린다.
+
 > 2026-10-19 최종 준비: [실제 G JWT 주문 생성·owner 저장·MY ORDERS PASS 및 CLOSED31 복구](customer-account-final-release-preparation.md). 기존 Google/OTP/cart/readiness PASS는 재시험하지 않았다. [상시 SMTP 운영 전환 준비](customer-account-always-on-smtp.md)는 미적용/운영 승인 대기다. B5 단발 PASS와 상시 운영 RELEASE BLOCKER를 구분한다.
 
 
