@@ -1,4 +1,5 @@
 import { parseCalendarProductionDetail } from './calendar-production'
+import {publishCustomerAuthChange} from './customer-account-config'
 import { AppwriteException, ExecutionMethod, ID, OAuthProvider, Query, type Models } from 'appwrite'
 import { isChocolateProductId } from '../../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { marketConfig } from './market'
@@ -85,10 +86,11 @@ function shouldUseReservationApi(scope: 'lookup' | 'all') {
   return appwriteConfig.reservationApiMode === 'lookup' || appwriteConfig.reservationApiMode === 'all'
 }
 
-export async function executeReservationApi<T>(action: string, data?: unknown, parseResult?: (value: unknown) => T): Promise<T> {
+export type CustomerOrderTransport = { customerAccount?: 'link' }
+export async function executeReservationApi<T>(action: string, data?: unknown, parseResult?: (value: unknown) => T, options?: CustomerOrderTransport): Promise<T> {
   const execution = await functions.createExecution({
     functionId: appwriteConfig.reservationApiFunctionId,
-    body: JSON.stringify({ action, data }),
+    body: JSON.stringify({ action, data, ...(action === 'create-cake' && options?.customerAccount === 'link' ? { customerAccount: 'link' } : {}) }),
     async: false,
     xpath: '/',
     method: ExecutionMethod.POST,
@@ -494,7 +496,7 @@ export async function getSettings(): Promise<StoreSettings> {
   }
 }
 
-export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrderReservation> {
+export async function createCakeOrder(input: CakeOrderRequest, options?: CustomerOrderTransport): Promise<CakeOrderReservation> {
   await requireChocolateOrderSupport(input.orderLines.map((line) => line.productId))
   if (!await supportsCakeOrderLines()) throw new Error(CAKE_ORDER_LINES_UNAVAILABLE_ERROR)
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
@@ -503,10 +505,11 @@ export async function createCakeOrder(input: CakeOrderRequest): Promise<CakeOrde
   if (!isPickupTimeAllowed(input.pickupDate, input.pickupTime)) {
     throw new Error(PICKUP_TIME_TOO_SOON_ERROR)
   }
+  if (options?.customerAccount === 'link') return executeReservationApi<CakeOrderReservation>('create-cake', buildCakeOrderRequest(input), parseCakeOrderResult, options)
   return executeReservationApi<CakeOrderReservation>('create-cake', buildCakeOrderRequest(input), parseCakeOrderResult)
 }
 
-export async function createReservation(input: ReservationInput): Promise<Reservation> {
+export async function createReservation(input: ReservationInput, options?: CustomerOrderTransport): Promise<Reservation> {
   await requireChocolateOrderSupport([input.productId])
   const customerEmail = normalizeCustomerEmail(input.customerEmail)
   if (!isCakePickupServiceTime(input.pickupDate, input.pickupTime)) {
@@ -517,10 +520,11 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
   }
 
   if (shouldUseReservationApi('all')) {
-    const reservation = await executeReservationApi<Reservation>('create-cake', buildCakeReservationRequest(input), parseCakeReservationResult)
+    const reservation = await executeReservationApi<Reservation>('create-cake', buildCakeReservationRequest(input), parseCakeReservationResult, options)
     return normalizeReservation(reservation)
   }
 
+  if (options?.customerAccount === 'link') throw new Error('CUSTOMER_ACCOUNT_DISABLED')
   if (normalizeReviewCouponCode(input.promoCode)) throw new Error('PROMO_CODE_SERVER_REQUIRED')
 
   const now = new Date().toISOString()
@@ -1009,6 +1013,10 @@ export async function updateClassReservation(
   return toClassReservation(saved as unknown as AppwriteClassReservationDocument)
 }
 
+async function existingAdminAccount() {
+  try { return await account.get() }
+  catch(error) { if((error as {code?:number})?.code===401)return null;throw new Error('ADMIN_AUTH_UNAVAILABLE',{cause:error}) }
+}
 export async function loginAdmin(email: string, password: string) {
   if (!isAllowedAdminEmail(email)) {
     throw new Error('허용된 관리자 이메일이 아닙니다.')
@@ -1019,36 +1027,49 @@ export async function loginAdmin(email: string, password: string) {
     return
   }
 
+  const current=await existingAdminAccount()
+  if(current) {
+    if(current.status===false||!isAllowedAdminEmail(current.email)||current.email.trim().toLowerCase()!==email.trim().toLowerCase())throw new Error('ACCOUNT_SWITCH_REQUIRED')
+    return
+  }
   await account.createEmailPasswordSession(email, password)
   const user = await account.get()
-  if (!isAllowedAdminEmail(user.email)) {
-    await account.deleteSession('current')
+  if (user.status===false||!isAllowedAdminEmail(user.email)) {
     throw new Error('허용된 관리자 이메일이 아닙니다.')
   }
+  publishCustomerAuthChange()
 }
 
-export function loginAdminWithGoogle() {
+export async function loginAdminWithGoogle():Promise<boolean> {
   if (!isAppwriteConfigured) {
     localStorage.setItem(LOCAL_ADMIN_KEY, appwriteConfig.adminEmails[0] || 'demo-admin')
     window.location.assign('/admin')
-    return
+    return false
   }
 
+  const current=await existingAdminAccount()
+  if(current) {
+    if(current.status===false||!isAllowedAdminEmail(current.email))throw new Error('ACCOUNT_SWITCH_REQUIRED')
+    return true
+  }
   const origin = window.location.origin
   account.createOAuth2Session({
     provider: OAuthProvider.Google,
     success: `${origin}/admin/login?oauth=success`,
     failure: `${origin}/admin/login?oauth=failed`,
   })
+  return false
 }
 
 export async function logoutAdmin() {
   if (!isAppwriteConfigured) {
     localStorage.removeItem(LOCAL_ADMIN_KEY)
+    publishCustomerAuthChange()
     return
   }
 
   await account.deleteSession('current')
+  publishCustomerAuthChange()
 }
 
 export async function isAdminLoggedIn() {
@@ -1056,8 +1077,7 @@ export async function isAdminLoggedIn() {
 
   try {
     const user = await account.get()
-    if (isAllowedAdminEmail(user.email)) return true
-    await account.deleteSession('current')
+    if (user.status!==false&&isAllowedAdminEmail(user.email)) return true
     return false
   } catch {
     return false

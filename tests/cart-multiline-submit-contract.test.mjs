@@ -9,6 +9,7 @@ const reservePage = readFileSync(new URL('../src/pages/ReservePage.tsx', import.
 const styles = readExpandedCssSync(new URL('../src/index.css', import.meta.url))
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const cartProvider = readFileSync(new URL('../src/CartProvider.tsx', import.meta.url), 'utf8')
+const scopedStorage = readFileSync(new URL('../src/lib/customer-cart-storage.ts', import.meta.url), 'utf8')
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
 function block(source, startText, endText) {
@@ -46,7 +47,8 @@ test('App snapshots exact cart lines and subtracts only that quantity after succ
   assert.match(app, /setReservationOrderLines\(snapshot\.length > 1 \? snapshot\.map\(\(line\) => \(\{ \.\.\.line\.selection \}\)\) : null\)/)
   assert.match(app, /cartOriginLinesRef\.current = snapshot/)
   assert.match(app, /removeSubmittedCartLines\(originLines\)/)
-  assert.match(cartProvider, /setLines\(\(current\) => subtractSubmittedCartLines\(current, submitted\)\)/)
+  assert.match(cartProvider, /commit\(\{type:'legacy-submitted',lines:submitted\}\)/)
+  assert.match(scopedStorage, /subtractSubmittedCartLines\(s\.lines,parseCartLines\(serializeCartLines\(action\.lines\)\)\)/)
   assert.match(app, /initialOrderLines=\{reservationOrderLines\}/)
 })
 

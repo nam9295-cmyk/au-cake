@@ -1,6 +1,10 @@
 import { AuRenewalShop } from './pages/AuRenewalShop'
+import { CustomerAuthCallback } from './components/CustomerAuthCallback'
+import {readCheckoutResume} from './lib/customer-checkout-draft'
+import {useCustomerAccount} from './lib/customer-account-context'
+import {GuestCartImport} from './components/GuestCartImport'
 import { renewalCardForPath } from '../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CakeDetailPage from './CakeDetailPage'
 import CakesPage from './CakesPage'
 import { AuRedesignFooter, AuRedesignHeader } from './components/AuRedesignChrome'
@@ -72,6 +76,7 @@ const ReadOnlyCalendarPage = lazy(() => import('./ReadOnlyCalendarPage'))
 const HogirlApp = lazy(() => import('./stories/hogirl/HogirlApp'))
 const KoreaCustomerStoriesPage = lazy(() => import('./pages/KoreaCustomerStoriesPage'))
 const AuBusinessServicePage = lazy(() => import('./pages/AuBusinessServicePage'))
+const AccountPage = lazy(() => import('./pages/AccountPage').then(({ AccountPage }) => ({ default: AccountPage })))
 
 function PrivateRouteFallback() {
   return <div role="status" aria-live="polite">Loading…</div>
@@ -86,6 +91,10 @@ function EditorialRouteFallback() {
 }
 
 function App() {
+  const customer = useCustomerAccount()
+  const preferredLanguageApplied = useRef(new Set<string>())
+  const explicitLanguage = useRef(false)
+  const cart=useCart()
   const {
     lines: cartLines,
     itemCount: cartItemCount,
@@ -93,7 +102,13 @@ function App() {
     update: updateCartLine,
     remove: removeCartLine,
     removeSubmitted: removeSubmittedCartLines,
-  } = useCart()
+  } = cart
+  const [reservationOwner,setReservationOwner]=useState(cart.checkoutOwner)
+  const legacyResume=useMemo(()=>readCheckoutResume('legacy',cart.checkoutOwner),[cart.checkoutOwner])
+  const legacyContext='draft' in legacyResume?legacyResume.draft.checkoutContext:null
+  const legacyOrigin=useMemo(()=>legacyResume.status==='cart-changed'?cartLines:Array.isArray(legacyContext?.cartOrigin)?legacyContext.cartOrigin as CartLine[]:[],[legacyResume.status,cartLines,legacyContext])
+  const legacySelection=legacyResume.status==='cart-changed'?legacyOrigin[0]?.selection:legacyContext?.initialSelection as CakeDetailSelection|null
+  const legacyOrderLines=legacyResume.status==='cart-changed'?legacyOrigin.map(line=>line.selection):legacyContext?.initialOrderLines as CakeDetailSelection[]|null
   const [pathname, setPathname] = useState(() => window.location.pathname)
   const page = getPageFromPath(pathname)
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
@@ -102,9 +117,13 @@ function App() {
   const [lookupRequestNumber, setLookupRequestNumber] = useState('')
 
   const [completedClassReservation, setCompletedClassReservation] = useState<ClassReservation | null>(null)
-  const [reservationProductId, setReservationProductId] = useState<ProductId>(DEFAULT_PRODUCT_ID)
-  const [reservationSelection, setReservationSelection] = useState<CakeDetailSelection | null>(null)
-  const [reservationOrderLines, setReservationOrderLines] = useState<CakeDetailSelection[] | null>(null)
+  const [reservationProductIdState, setReservationProductId] = useState<ProductId>(()=>legacySelection?.productId||(legacyContext?.initialProductId as ProductId)||DEFAULT_PRODUCT_ID)
+  const [reservationSelectionState, setReservationSelection] = useState<CakeDetailSelection | null>(legacySelection||null)
+  const [reservationOrderLinesState, setReservationOrderLines] = useState<CakeDetailSelection[] | null>(legacyOrderLines||null)
+  const sameReservationOwner=reservationOwner===cart.checkoutOwner
+  const reservationProductId=sameReservationOwner?reservationProductIdState:legacySelection?.productId||DEFAULT_PRODUCT_ID
+  const reservationSelection=sameReservationOwner?reservationSelectionState:legacySelection||null
+  const reservationOrderLines=sameReservationOwner?reservationOrderLinesState:legacyOrderLines||null
   const [cakeOrderLinesAvailable, setCakeOrderLinesAvailable] = useState<boolean | null>(null)
   const [chocolateOrderLinesAvailable, setChocolateOrderLinesAvailable] = useState<boolean | null>(null)
   const hasChocolate = cartLines.some((line) => isChocolateProductId(line.selection.productId))
@@ -114,11 +133,29 @@ function App() {
   const [language, setLanguageState] = useState<Language>(readStoredLanguage)
   const hasLoadedSettings = useRef(false)
   const cartOriginLinesRef = useRef<CartLine[]>([])
+  const [initialLegacyOrigin] = useState(() => legacyOrigin.map(line => ({...line, selection:{...line.selection}})))
+  useEffect(() => { cartOriginLinesRef.current = initialLegacyOrigin }, [initialLegacyOrigin])
+  useEffect(()=>{if('draft'in legacyResume)cartOriginLinesRef.current=legacyOrigin.map(line=>({...line,selection:{...line.selection}}))},[legacyResume,legacyOrigin])
 
   const setLanguage = useCallback((nextLanguage: Language) => {
+    explicitLanguage.current = true
+    try { sessionStorage.setItem('verygood-au-language-explicit', 'true') } catch { /* Current visit still takes precedence. */ }
     setLanguageState(nextLanguage)
     storeLanguage(nextLanguage)
   }, [])
+  useEffect(() => {
+    if (marketConfig.market !== 'AU' || !customer.enabled || customer.state.status !== 'authenticated') return
+    const identity = customer.state.identity
+    let cancelled = false
+    queueMicrotask(() => {
+      if (cancelled || preferredLanguageApplied.current.has(identity.userId)) return
+      preferredLanguageApplied.current.add(identity.userId)
+      let selected = explicitLanguage.current
+      try { selected ||= sessionStorage.getItem('verygood-au-language-explicit') === 'true' } catch { /* Respect the in-memory choice. */ }
+      if (!selected) { setLanguageState(identity.profile.language); try { storeLanguage(identity.profile.language) } catch { /* The in-memory language still applies. */ } }
+    })
+    return () => { cancelled = true }
+  }, [customer.enabled, customer.state])
 
   useEffect(() => {
     if (page === 'review' || page === 'hogirl') return
@@ -129,7 +166,7 @@ function App() {
   }, [language, page])
 
   useEffect(() => {
-    if (page === 'portfolio' || page === 'customer-stories' || page === 'business' || !shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
+    if (page === 'account' || page === 'account-auth-callback' || page === 'portfolio' || page === 'customer-stories' || page === 'business' || !shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
     hasLoadedSettings.current = true
     getSettings().then(setSettings)
   }, [page])
@@ -165,7 +202,7 @@ function App() {
   useEffect(() => {
     if (isHogirlPath(pathname)) return
     applySeo(pathname)
-    if (!pathname.startsWith('/admin') && page !== 'calendar' && page !== 'review') trackPageView(pathname)
+    if (!pathname.startsWith('/admin') && !pathname.startsWith('/account') && page !== 'calendar' && page !== 'review') trackPageView(pathname)
   }, [page, pathname])
 
   const pushPage = useCallback((nextPage: Page) => {
@@ -181,12 +218,13 @@ function App() {
     cartOriginLinesRef.current = []
     setReservationOrderLines(null)
     if (nextPage === 'reserve') {
+      setReservationOwner(cart.checkoutOwner)
       setReservationProductId(DEFAULT_PRODUCT_ID)
       setReservationSelection(null)
       setReservationSessionKey((current) => current + 1)
     }
     pushPage(nextPage)
-  }, [pushPage])
+  }, [pushPage,cart.checkoutOwner])
 
   const navigateToCake = useCallback((slug: string) => {
     cartOriginLinesRef.current = []
@@ -212,6 +250,8 @@ function App() {
   }, [pushPage])
 
   const continueCartOrder = useCallback(() => {
+    if(!cart.isCurrent())return
+    setReservationOwner(cart.checkoutOwner)
     const snapshot: CartLine[] = cartLines.map((line) => ({ lineKey: line.lineKey, selection: { ...line.selection } }))
     if (snapshot.length === 0 || (snapshot.length > 1 && cakeOrderLinesAvailable !== true) || (hasChocolate && chocolateOrderLinesAvailable !== true)) return
     const first = snapshot[0]
@@ -221,7 +261,7 @@ function App() {
     cartOriginLinesRef.current = snapshot
     setReservationSessionKey((current) => current + 1)
     pushPage('reserve')
-  }, [cakeOrderLinesAvailable, chocolateOrderLinesAvailable, hasChocolate, cartLines, pushPage])
+  }, [cakeOrderLinesAvailable, chocolateOrderLinesAvailable, hasChocolate, cartLines, pushPage,cart])
 
   const orderCakeFromReview = useCallback((couponCode: string, rewardPercent: 5 | 10) => {
     const normalized = normalizeReviewCouponCode(couponCode)
@@ -232,6 +272,7 @@ function App() {
   }, [navigate])
 
   const completeReservation = useCallback((reservation: Reservation) => {
+    if(!cart.isCurrent())return
     const originLines = cartOriginLinesRef.current
     removeSubmittedCartLines(originLines)
     cartOriginLinesRef.current = []
@@ -239,7 +280,7 @@ function App() {
     setPendingReviewCoupon('')
     setPendingReviewRewardPercent(null)
     setCompletedReservation(reservation)
-  }, [removeSubmittedCartLines])
+  }, [removeSubmittedCartLines,cart])
 
   const isAdminPage =
     page === 'admin-login' ||
@@ -248,11 +289,12 @@ function App() {
     page === 'admin-custom-cakes' ||
     page === 'admin-classes' ||
     page === 'admin-reviews'
-  const isPrivatePage = isAdminPage || page === 'calendar'
+  const isPrivatePage = isAdminPage || page === 'calendar' || page === 'account'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
   const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio', 'customer-stories', 'business'].includes(page)
 
   const renewalPath = pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/'
+  if (page === 'account-auth-callback') return <CustomerAuthCallback />
   const renewalRoute = marketConfig.market === 'AU' && (['/cakes','/chocolates','/celebrate','/custom-cakes','/business','/cart','/reserve'].includes(renewalPath) || !!renewalCardForPath(renewalPath, window.location.search) || page === 'cake-detail' || page === 'chocolate-detail')
   if (renewalRoute) return <AuLanguageProvider language={language} setLanguage={setLanguage}><div className="app-shell au-redesign-shell"><AuRedesignHeader cartItemCount={cartItemCount}/><AuRenewalShop path={renewalPath}/><AuRedesignFooter/><AnalyticsConsentBanner language={language}/></div></AuLanguageProvider>
 
@@ -261,7 +303,7 @@ function App() {
   return (
     <AuLanguageProvider language={language} setLanguage={setLanguage}>
       {page === 'home' && <HomeTigerBackground />}
-      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage ? ' au-redesign-shell' : ''}${isPrivatePage ? ' admin-shell' : ''}`}>
+      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage || page === 'account' ? ' au-redesign-shell' : ''}${isPrivatePage && page !== 'account' ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && page !== 'portfolio' && page !== 'customer-stories' && page !== 'business' && (
         <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}
@@ -318,6 +360,7 @@ function App() {
         <>
           <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
           <CartPage
+            guestCartNotice={<GuestCartImport language={language}/>}
             language={language}
             lines={cartLines}
             cakeOrderLinesAvailable={cakeOrderLinesAvailable}
@@ -358,9 +401,10 @@ function App() {
       )}
       {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
-      {page === 'reserve' && (
+      {page === 'reserve' && !sameReservationOwner&&!('draft'in legacyResume)&&<main role="status">{language==='ko'?'계정이 변경되었습니다. 장바구니에서 다시 시작해주세요.':'Your account changed. Continue from your bag.'}<a href="/cart">{language==='ko'?'장바구니':'Your bag'}</a></main>}
+      {page === 'reserve' && (sameReservationOwner||'draft'in legacyResume) && (
         <ReservePage
-          key={reservationSessionKey}
+          key={`${reservationSessionKey}:${cart.checkoutOwner}`}
           navigate={navigate}
           settings={settings}
           initialProductId={reservationProductId}
@@ -368,6 +412,7 @@ function App() {
           initialOrderLines={reservationOrderLines}
           initialPromoCode={pendingReviewCoupon}
           initialRewardPercent={pendingReviewRewardPercent}
+          captureCartOrigin={() => cartOriginLinesRef.current}
           onInitialPromoConsumed={() => setPendingReviewCoupon('')}
           reviewDemoMode={import.meta.env.DEV && import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
           onComplete={completeReservation}
@@ -391,6 +436,7 @@ function App() {
       )}
       {isPrivatePage && (
         <Suspense fallback={<PrivateRouteFallback />}>
+          {page === 'account' && <><AuRedesignHeader cartItemCount={cartItemCount}/><AccountPage language={language}/><AuRedesignFooter/></>}
           {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
           {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
           {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}

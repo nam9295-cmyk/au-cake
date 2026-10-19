@@ -1,3 +1,4 @@
+import { assertCustomerAccountTestTarget } from './customer-account-test-target.mjs'
 import { resolveAppwriteControlConfig } from './appwrite-control-endpoint.mjs'
 import { customCakeDeployment } from './custom-cake-deploy-config.mjs'
 const RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
@@ -13,6 +14,11 @@ export const FUNCTION_SCOPES = Object.freeze([
 ])
 
 const ID_VARIABLES = Object.freeze({
+  APPWRITE_REVIEW_INVITES_TABLE_ID: 'review_invites',
+  APPWRITE_REVIEWS_TABLE_ID: 'reviews',
+  APPWRITE_REVIEW_PHOTO_CLEANUP_TABLE_ID: 'review_photo_cleanup',
+  APPWRITE_EMAIL_DELIVERIES_TABLE_ID: 'email_deliveries',
+  APPWRITE_EMAIL_DELIVERY_RETRY_CLAIMS_TABLE_ID: 'email_delivery_retry_claims',
   APPWRITE_CAKE_RESERVATIONS_TABLE_ID: 'reservations',
   APPWRITE_SETTINGS_TABLE_ID: 'settings',
   APPWRITE_KIDS_RESERVATIONS_TABLE_ID: 'class_reservations',
@@ -54,7 +60,12 @@ function endpoint(env) {
   return value
 }
 
-function transactionCompatibleRuntime(env) {
+function transactionCompatibleRuntime(env, customerAccountTest) {
+  if (customerAccountTest) {
+    assertCustomerAccountTestTarget({endpoint:env.APPWRITE_ENDPOINT,projectId:env.APPWRITE_PROJECT_ID,resources:{databaseIds:[env.APPWRITE_CAKE_DATABASE_ID,env.APPWRITE_KIDS_DATABASE_ID],functionIds:[env.APPWRITE_RESERVATION_API_FUNCTION_ID]}})
+    if (env.APPWRITE_RESERVATION_API_RUNTIME !== 'node-22' || env.CUSTOMER_ACCOUNT_ENABLED === 'true' || Object.entries(env).some(([key,value]) => key.startsWith('CUSTOM_CAKE_') && key.endsWith('_ENABLED') && value === 'true')) throw new Error('Customer account test runtime/flags rejected.')
+    return 'node-22'
+  }
   const value = String(env.APPWRITE_RESERVATION_API_RUNTIME || 'node-16.0').trim()
   if (env.CUSTOM_CAKE_BACKEND_DEPLOY_ENABLED === 'true') {
     if (value !== 'node-22') throw new Error('APPWRITE_RESERVATION_API_RUNTIME must explicitly be node-22 for custom backend deployment.')
@@ -95,10 +106,10 @@ function couponHmacSecret(env) {
 }
 
 export function isSecretFunctionVariable(key) {
-  return key === 'CALENDAR_VIEW_PIN' || key === 'CALENDAR_TOKEN_SECRET' || key === 'REVIEW_COUPON_HMAC_SECRET' || key === 'CUSTOM_CAKE_PHOTO_TOKEN_HMAC_SECRET' || key === 'REVIEW_ADMIN_USER_IDS'
+  return key === 'CALENDAR_VIEW_PIN' || key === 'CALENDAR_TOKEN_SECRET' || key === 'REVIEW_COUPON_HMAC_SECRET' || key === 'CUSTOM_CAKE_PHOTO_TOKEN_HMAC_SECRET' || key === 'REVIEW_ADMIN_USER_IDS' || key === 'APPWRITE_ADMIN_USER_IDS'
 }
 
-export function resolveDeployConfig(env = {}) {
+export function resolveDeployConfig(env = {}, { customerAccountTest = false } = {}) {
   const publicEndpoint = endpoint(env)
   const control = resolveAppwriteControlConfig(env, publicEndpoint)
   const custom = customCakeDeployment(env, 'api', FUNCTION_SCOPES)
@@ -115,10 +126,12 @@ export function resolveDeployConfig(env = {}) {
     projectId: resourceId(env, 'APPWRITE_PROJECT_ID'),
     apiKey: required(env, 'APPWRITE_API_KEY'),
     functionId: resourceId(env, 'APPWRITE_RESERVATION_API_FUNCTION_ID', 'reservation-api'),
-    runtime: transactionCompatibleRuntime(env),
+    runtime: transactionCompatibleRuntime(env, customerAccountTest),
     ...(env.CUSTOM_CAKE_BACKEND_DEPLOY_ENABLED === 'true' ? { customCakeFunctionOptions: custom.functionOptions } : {}),
     runtimeVariables: {
       ...custom.runtimeVariables,
+      CUSTOMER_ACCOUNT_ENABLED: env.CUSTOMER_ACCOUNT_ENABLED === 'true' ? 'true' : 'false',
+      APPWRITE_ADMIN_USER_IDS: String(env.APPWRITE_ADMIN_USER_IDS || ''),
       MARKET: String(env.MARKET || 'AU').trim(),
       APPWRITE_CAKE_DATABASE_ID: cakeDatabaseId,
       APPWRITE_KIDS_DATABASE_ID: kidsDatabaseId,
@@ -191,6 +204,8 @@ export function buildDryRunPlan(env = {}) {
   const custom = customCakeDeployment(env, 'api', FUNCTION_SCOPES)
   const variableValues = {
     ...custom.runtimeVariables,
+      CUSTOMER_ACCOUNT_ENABLED: env.CUSTOMER_ACCOUNT_ENABLED === 'true' ? 'true' : 'false',
+      APPWRITE_ADMIN_USER_IDS: String(env.APPWRITE_ADMIN_USER_IDS || ''),
     MARKET: env.MARKET || 'AU',
     APPWRITE_CAKE_DATABASE_ID: env.APPWRITE_CAKE_DATABASE_ID,
     APPWRITE_KIDS_DATABASE_ID: env.APPWRITE_KIDS_DATABASE_ID,

@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import {mkdtemp,rm} from 'node:fs/promises'
+import {execFileSync} from 'node:child_process'
+import {resolve,join} from 'node:path'
+import {pathToFileURL} from 'node:url'
+import {createReservationApiArchive} from '../scripts/reservation-api-deploy-rollout.mjs'
 import { test } from 'node:test'
 import {
   FUNCTION_SCOPES,
@@ -31,6 +36,30 @@ const validEnv = {
   CALENDAR_VIEW_PIN: '123456',
   CALENDAR_TOKEN_SECRET: 'a-calendar-secret-that-is-at-least-32-characters',
 }
+
+test('customer flags default OFF and share existing APPWRITE_ADMIN_USER_IDS without changing scopes',()=>{
+  const base=resolveDeployConfig(validEnv)
+  assert.equal(base.runtimeVariables.CUSTOMER_ACCOUNT_ENABLED,'false')
+  const enabled=resolveDeployConfig({...validEnv,CUSTOMER_ACCOUNT_ENABLED:'true',APPWRITE_ADMIN_USER_IDS:'admin-1',APPWRITE_EMAIL_DELIVERIES_TABLE_ID:'private-email'})
+  assert.equal(enabled.runtimeVariables.APPWRITE_ADMIN_USER_IDS,'admin-1')
+  assert.equal(enabled.runtimeVariables.APPWRITE_EMAIL_DELIVERIES_TABLE_ID,'private-email')
+  const dry=buildDryRunPlan(validEnv)
+  assert.ok(dry.function.variableNames.includes('CUSTOMER_ACCOUNT_ENABLED'))
+  assert.ok(dry.function.variableNames.includes('APPWRITE_ADMIN_USER_IDS'))
+})
+test('checkpoint/full archives include importable customer auth and readiness modules without changing sales policy',async()=>{
+  for(const phase of ['checkpoint','full']) {
+    const archive=await createReservationApiArchive({phase})
+    const directory=await mkdtemp(resolve('.superpowers/customer-account-archive-'))
+    try {
+      execFileSync('tar',['-xzf',archive.path,'-C',directory])
+      const auth=await import(pathToFileURL(join(directory,'src/customer-identity.js')).href)
+      const ready=await import(pathToFileURL(join(directory,'src/customer-account-readiness.js')).href)
+      assert.equal(typeof auth.resolveCustomerIdentity,'function')
+      assert.deepEqual(await ready.checkCustomerAccountReadiness(undefined,{}),{enabled:false,ready:false})
+    } finally {await archive.cleanup();await rm(directory,{recursive:true,force:true})}
+  }
+})
 
 test('reservation deployment diagnostics redact overlapping secrets, bare values, carriage returns, and stay bounded', () => {
   const shortSecret = '123456'
@@ -299,4 +328,19 @@ test('dedicated cupcakeFinish migration leaves an available compatible attribute
 
   assert.equal(result.created, false)
   assert.equal(created, false)
+})
+
+// A test-only Node22 choice must not activate the separate Custom Cake deployment.
+test('isolated customer test target selects Node22 while preserving production runtime contracts', () => {
+ const env={...validEnv,APPWRITE_ENDPOINT:'https://api.verygood-chocolate.com/v1',APPWRITE_PROJECT_ID:'verygood-au-account-test',APPWRITE_RESERVATION_API_FUNCTION_ID:'ca-test-reservation-api',APPWRITE_CAKE_DATABASE_ID:'ca_test_cake_au',APPWRITE_KIDS_DATABASE_ID:'ca_test_kids_au',APPWRITE_RESERVATION_API_RUNTIME:'node-22',APPWRITE_ADMIN_USER_IDS:'ca-test-admin-m-20261017'}
+ const config=resolveDeployConfig(env,{customerAccountTest:true})
+ assert.equal(config.runtime,'node-22')
+ assert.equal(config.customCakeFunctionOptions,undefined)
+ assert.equal(config.runtimeVariables.CUSTOMER_ACCOUNT_ENABLED,'false')
+ assert.equal(config.runtimeVariables.CUSTOM_CAKE_PERSISTENCE_ENABLED,undefined)
+ assert.equal(resolveDeployConfig(validEnv).runtime,'node-16.0')
+ assert.throws(()=>resolveDeployConfig({...validEnv,APPWRITE_RESERVATION_API_RUNTIME:'node-22'}),/RUNTIME/)
+ for(const changed of [{APPWRITE_PROJECT_ID:'verygood-au'},{APPWRITE_ENDPOINT:'https://wrong.example/v1'},{APPWRITE_RESERVATION_API_FUNCTION_ID:'reservation-api'},{APPWRITE_CAKE_DATABASE_ID:'verygood_cake_au'},{CUSTOMER_ACCOUNT_ENABLED:'true'},{CUSTOM_CAKE_BACKEND_DEPLOY_ENABLED:'true'}]) {
+  assert.throws(()=>resolveDeployConfig({...env,...changed},{customerAccountTest:true}))
+ }
 })

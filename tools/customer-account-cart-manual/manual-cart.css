@@ -1,0 +1,4 @@
+/* Test-only exclusions. No cart styling or storage behavior changes. */
+.renewal-checkout,.customer-account-dialog form,.customer-account-guest{display:none!important}
+.manual-cart-nav{display:block}
+.manual-cart-nav nav{display:flex;flex-wrap:wrap;gap:1rem}

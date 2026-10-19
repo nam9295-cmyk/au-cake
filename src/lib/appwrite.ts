@@ -1,4 +1,5 @@
 import { Account, Client, Databases, Functions, Storage } from 'appwrite'
+import { resolveCustomerAccountConfig } from './customer-account-config'
 
 const configuredEndpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || import.meta.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || ''
 
@@ -69,6 +70,12 @@ export const appwriteConfig = {
   reservationApiFunctionId: import.meta.env.VITE_RESERVATION_API_FUNCTION_ID || 'reservation-api',
   reservationNotificationFunctionId: import.meta.env.VITE_RESERVATION_NOTIFY_FUNCTION_ID || '',
   reservationApiMode: normalizeReservationApiMode(import.meta.env.VITE_RESERVATION_API_MODE),
+  customerAccountEnabled: resolveCustomerAccountConfig({
+    market: import.meta.env.VITE_MARKET || '',
+    configured: Boolean(configuredEndpoint && (import.meta.env.VITE_APPWRITE_PROJECT_ID || import.meta.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID) && (import.meta.env.VITE_APPWRITE_CAKE_DATABASE_ID || import.meta.env.APPWRITE_CAKE_DATABASE_ID)),
+    frontendEnabled: import.meta.env.VITE_CUSTOMER_ACCOUNT_ENABLED,
+    reservationApiMode: normalizeReservationApiMode(import.meta.env.VITE_RESERVATION_API_MODE),
+  }).enabled,
   adminEmails: (import.meta.env.VITE_ADMIN_EMAILS || 'nam9295@gmail.com')
     .split(',')
     .map((email: string) => email.trim().toLowerCase())

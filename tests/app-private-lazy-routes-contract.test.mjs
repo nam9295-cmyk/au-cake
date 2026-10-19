@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
 
 const namedPrivatePages = [
+  ['AccountPage', './pages/AccountPage'],
   ['AdminLoginPage', './AdminLoginPage'],
   ['AdminDashboardPage', './AdminDashboardPage'],
   ['AdminReservationsPage', './AdminReservationsPage'],

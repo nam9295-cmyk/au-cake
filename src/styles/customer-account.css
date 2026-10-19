@@ -1,0 +1,38 @@
+/* Optional account controls use the existing AU type, buttons and colour tokens. */
+.customer-account-dialog { width: min(28rem, calc(100% - 2rem)); padding: 2rem; border: 1px solid var(--au-line, #dce5df); color: var(--au-text, #203d33); background: var(--au-cream, #fffdf7); }
+.customer-account-dialog::backdrop { background: rgb(0 0 0 / 35%); }
+.customer-account-dialog h2 { margin: 0 1rem 1rem 0; font-size: 1.35rem; }
+.customer-account-dialog p { line-height: 1.5; }
+.customer-account-dialog form, .customer-account-dialog label { display: grid; gap: .75rem; }
+.customer-account-dialog form { margin-top: 1.25rem; }
+.customer-account-dialog input { width: 100%; box-sizing: border-box; min-height: 44px; padding: .65rem; border: 1px solid var(--au-line, #dce5df); background: white; color: inherit; font: inherit; }
+.customer-account-dialog button { min-height: 44px; font: inherit; cursor: pointer; }
+.customer-account-dialog > .secondary-button { width: 100%; }
+.customer-account-dialog button:disabled { cursor: default; opacity: .55; }
+.customer-account-close { position: absolute; right: .5rem; top: .5rem; width: 44px; background: transparent; border: 0; font-size: 1.5rem !important; }
+.customer-account-inline { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; }
+.customer-account-inline button, .customer-account-guest { background: none; color: inherit; border: 0; text-decoration: underline; }
+.customer-account-guest { width: 100%; }
+.customer-account-dialog :focus-visible { outline: 2px solid var(--au-green, #205b49); outline-offset: 3px; }
+@media (max-width: 480px) { .customer-account-dialog { padding: 1.5rem; } }
+.customer-account-page { max-width: 64rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; color: var(--au-text, #203d33); }
+.customer-account-page a { color: inherit; text-underline-offset: .2em; }
+.customer-account-page button { min-height: 44px; font: inherit; cursor: pointer; }
+.customer-profile-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
+.customer-profile-form label { display: grid; gap: .5rem; }
+.customer-profile-form input, .customer-profile-form select { box-sizing: border-box; width: 100%; min-height: 44px; padding: .65rem; font: inherit; border: 1px solid var(--au-line, #dce5df); color: inherit; background: white; }
+.customer-profile-form input[readonly] { background: #f5f5f0; }
+.customer-account-nav { border: 0; padding: .5rem; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+@media (max-width: 1099px) { .au-v02-actions > .customer-account-nav { display: none; } }
+.customer-orders { padding: 0; list-style: none; }
+.customer-orders li { border-bottom: 1px solid var(--au-line, #dce5df); }
+.customer-orders button { display: flex; width: 100%; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; padding: 1rem 0; background: transparent; color: inherit; border: 0; text-align: left; font: inherit; cursor: pointer; }
+.customer-orders span { display: block; }
+.customer-order-detail { padding: 1.5rem 0; border-top: 1px solid var(--au-line, #dce5df); }
+.customer-order-detail dl > div { display: grid; grid-template-columns: minmax(6rem,1fr) 2fr; gap: 1rem; padding: .5rem 0; }
+.customer-order-detail dd { margin: 0; overflow-wrap: anywhere; }
+.customer-checkout-prompt { padding: 1rem 0; border-block: 1px solid var(--au-line, #dce5df); margin-bottom: 1rem; }
+.customer-checkout-prompt button { margin-right: 1rem; }
+.customer-cart-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.customer-cart-actions button { min-height: 44px; margin-right: 0; }
+@media (max-width: 600px) { .customer-profile-form { grid-template-columns: 1fr; } .customer-account-page { padding-inline: 1rem; } }

@@ -155,6 +155,10 @@ function cakePageConfig(cake, robots = 'index, follow') {
 }
 
 const privatePages = {
+  ...(isAuMarket ? {
+    '/account': {title:`My Account | ${brand}`,description:'Private customer account.',output:'directory',extensionlessAlias:true},
+    '/account/auth/callback': {title:`Sign in | ${brand}`,description:'Private authentication return.',output:'directory',extensionlessAlias:true},
+  } : {}),
   '/cart': {
     title: `Your Cart | ${brand}`,
     description: `Review your selected cakes before sending one cake request to ${brand} Sydney.`,

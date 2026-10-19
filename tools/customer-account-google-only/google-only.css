@@ -1,0 +1,2 @@
+/* This test has no email transport; server email methods must also remain OFF. */
+.customer-account-dialog form { display: none; }

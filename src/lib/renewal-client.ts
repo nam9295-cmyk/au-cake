@@ -1,5 +1,5 @@
 import { RENEWAL_PICKUP_POLICY_VERSION } from "../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js";
-import { executeReservationApi } from "./repository";
+import { executeReservationApi, type CustomerOrderTransport } from "./repository";
 import { parseRenewalProjection } from "../../appwrite-functions/reservation-api/src/au-renewal-reader.js";
 import { RENEWAL_CONTRACT } from "../../appwrite-functions/reservation-api/src/au-renewal.js";
 export async function renewalCapabilities() {
@@ -25,8 +25,8 @@ export async function renewalCapabilities() {
     },
   );
 }
-export async function createRenewalOrder(input: unknown) {
+export async function createRenewalOrder(input: unknown, options?: CustomerOrderTransport) {
   const caps = await renewalCapabilities();
   if (!caps.enabled) throw new Error("RENEWAL_UNAVAILABLE");
-  return executeReservationApi("create-cake", input, parseRenewalProjection);
+  return executeReservationApi("create-cake", input, parseRenewalProjection, options);
 }

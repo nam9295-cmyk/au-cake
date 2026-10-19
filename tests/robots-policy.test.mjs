@@ -5,6 +5,8 @@ import { readFile } from 'node:fs/promises'
 const robots = await readFile(new URL('../public/robots.txt', import.meta.url), 'utf8')
 const disallowed = [...robots.matchAll(/^Disallow:\s*(\S*)\s*$/gm)].map((match) => match[1])
 const noindexOperationalRoutes = [
+  '/account',
+  '/account/auth/callback',
   '/cart',
   '/reserve',
   '/complete',

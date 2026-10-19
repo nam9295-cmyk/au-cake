@@ -1,5 +1,11 @@
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {useCustomerAccount} from '../lib/customer-account-context'
+import {useOptionalCart} from '../CartProvider'
+import {customerCartOwner} from '../lib/customer-cart-storage'
+import {CheckoutAccountPrompt} from '../components/CheckoutAccountPrompt'
+import {readCheckoutResume,restoreCheckoutForm,acknowledgeCheckoutResume,checkoutCartSignature,fillUntouchedContact} from '../lib/customer-checkout-draft'
+import type {CartLine} from '../lib/cart'
 import { ArrowLeft } from 'lucide-react'
 import { PickupDatePicker } from '../components/WeekendDatePicker'
 import { BankAccountBox } from '../components/BankAccountBox'
@@ -142,6 +148,7 @@ export function ReservePage({
   language,
   setLanguage,
   cartItemCount,
+  captureCartOrigin,
 }: {
   navigate: (page: Page) => void
   settings: StoreSettings
@@ -156,14 +163,22 @@ export function ReservePage({
   language: Language
   setLanguage: (language: Language) => void
   cartItemCount: number
+  captureCartOrigin?: () => readonly CartLine[]
 }) {
+  const customer=useCustomerAccount()
+  const cart=useOptionalCart(),owner=cart?.checkoutOwner||customerCartOwner(customer.state,customer.enabled)||'guest'
+  const {registerCheckout}=customer
+  const [resume]=useState(()=>readCheckoutResume('legacy',owner))
+  const restored='draft' in resume?resume.draft:undefined
+  const [guest,setGuest]=useState(false),[cartChanged,setCartChanged]=useState(resume.status==='cart-changed')
+  const dirty=useRef(new Set(restored?.dirtyFields||[]))
   const orderSelections = initialOrderLines && initialOrderLines.length > 1 ? initialOrderLines : null
   const isMultiOrder = orderSelections !== null
-  const [requestId] = useState(generateRequestId)
+  const [requestId,setRequestId] = useState(()=>restored?.requestId||generateRequestId())
   const copy = cakeCopy(language)
   const initialFormProductId = initialSelection?.productId || initialProductId
   const initialFormCakeSize = initialSelection?.cakeSize || getCurrentWholeCakeSizeOptions(initialFormProductId)[0] || DEFAULT_CAKE_SIZE as CakeSize
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(()=>restoreCheckoutForm({
     productId: initialFormProductId,
     cacaoPercent: '기본' as CacaoPercent,
     cakeSize: initialFormCakeSize,
@@ -187,13 +202,27 @@ export function ReservePage({
     customerEmail: '',
     requestNote: '',
     promoCode: initialPromoCode,
-    privacy: false,
+    privacy: false as boolean,
     website: '',
-  })
-  const [reviewRewardHandoff] = useState(() => ({
+  }, restored && resume.status!=='cart-changed' ? restored : restored ? {...restored,form:Object.fromEntries(Object.entries(restored.form).filter(([key])=>['customerName','customerPhone','customerEmail','pickupDate','pickupTime','requestNote','promoCode','privacy'].includes(key)))} : undefined))
+  const [reviewRewardHandoff] = useState(() => {
+    const saved=restored?.checkoutContext.reviewRewardHandoff as {couponCode?:string;rewardPercent?:5|10|null}|undefined
+    if(saved && typeof saved.couponCode==='string' && [5,10,null].includes(saved.rewardPercent as null))return {couponCode:normalizeReviewCouponCode(saved.couponCode),rewardPercent:saved.rewardPercent??null}
+    return {
     couponCode: normalizeReviewCouponCode(initialPromoCode),
     rewardPercent: initialRewardPercent,
-  }))
+  }})
+  useEffect(()=>{if(restored&&!cartChanged&&(!cart||cart.ready))acknowledgeCheckoutResume(restored)},[restored,cartChanged,cart])
+  useEffect(()=>{
+    if(guest||customer.state.status!=='authenticated')return
+    const profile=customer.state.identity.profile
+    let cancelled=false
+    queueMicrotask(()=>{if(!cancelled)setForm(current=>fillUntouchedContact(current,[...dirty.current],profile))})
+    return ()=>{cancelled=true}
+  },[guest,customer.state])
+  useEffect(()=>registerCheckout(()=>{if(cart&&!cart.isCurrent())throw Error('AUTH_DRAFT_UNAVAILABLE');return {version:1,kind:'legacy',cartOwner:owner,flowId:crypto.randomUUID(),savedAt:Date.now(),returnTo:'/reserve',requestId,form:{...form},dirtyFields:[...dirty.current],
+    checkoutContext:{initialProductId,initialSelection,initialOrderLines,initialPromoCode,initialRewardPercent,reviewRewardHandoff,cartOrigin:[...(captureCartOrigin?.()||[])]},
+    cartSnapshot:[...(initialOrderLines||(initialSelection?[initialSelection]:[]))],cartSignature:checkoutCartSignature('legacy',owner)}},()=>setGuest(true)),[registerCheckout,requestId,form,initialProductId,initialSelection,initialOrderLines,initialPromoCode,initialRewardPercent,reviewRewardHandoff,captureCartOrigin,cart,owner])
   const currentReviewCoupon = normalizeReviewCouponCode(form.promoCode)
   const knownReviewRewardPercent = currentReviewCoupon && currentReviewCoupon === reviewRewardHandoff.couponCode
     ? reviewRewardHandoff.rewardPercent
@@ -214,6 +243,7 @@ export function ReservePage({
 
   async function submitReservation(event: React.FormEvent) {
     event.preventDefault()
+    if((cart&&!cart.isCurrent())||cartChanged||(customer.enabled&&!guest&&customer.state.status==='checking'))return
     setError('')
     const phone = normalizePhone(form.customerPhone)
     const customerEmail = form.customerEmail.trim().toLowerCase()
@@ -375,8 +405,8 @@ export function ReservePage({
                 individualPackaging: selection.individualPackaging,
                 quantity: selection.quantity,
               })),
-            })
-          : await createReservation(reservationInput)
+            },customer.enabled&&!guest&&customer.state.status==='authenticated'?{customerAccount:'link'}:undefined)
+          : await createReservation(reservationInput,customer.enabled&&!guest&&customer.state.status==='authenticated'?{customerAccount:'link'}:undefined)
       trackEvent('cake_booking_request', {
         product_id: form.productId,
         quantity: orderSelections?.reduce((sum, selection) => sum + selection.quantity, 0) || form.quantity,
@@ -384,6 +414,7 @@ export function ReservePage({
         currency: 'AUD',
       })
       setForm((current) => ({ ...current, promoCode: '' }))
+      if(cart&&!cart.isCurrent())return
       onComplete(reservation)
       navigate('complete')
     } catch (submitError) {
@@ -620,6 +651,7 @@ export function ReservePage({
     })
   }
 
+  if(cart&&!cart.ready)return <main role="status">{language==='ko'?'계정을 확인하고 있습니다…':'Checking your account…'}</main>
   return (
     <>
       <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
@@ -783,7 +815,9 @@ export function ReservePage({
             <p>{language === 'ko' ? copy.reservationCompleteText : settings.reservationNotice}</p>
           </aside>
 
-        <form className="reservation-form" onSubmit={submitReservation}>
+        <form className="reservation-form" onSubmit={submitReservation} onChangeCapture={event=>{const target=event.target;if(target instanceof HTMLInputElement&&target.name)dirty.current.add(target.name)}}>
+          <CheckoutAccountPrompt language={language} guest={guest} onGuest={setGuest}/>
+          {cartChanged&&<div role="status"><p>{language==='ko'?'다른 탭에서 변경된 현재 장바구니를 확인해 주세요.':'Review the current bag changed in another tab.'}</p><button type="button" onClick={()=>{setRequestId(generateRequestId());setCartChanged(false)}}>{language==='ko'?'현재 상품 확인 완료':'I have reviewed the current bag'}</button></div>}
           <label className="website-field" aria-hidden="true">
             Leave this field blank
             <input name="website" value={form.website} onChange={(event) => setForm({ ...form, website: event.target.value })} tabIndex={-1} autoComplete="off" />
@@ -1271,7 +1305,7 @@ export function ReservePage({
               <label>
                 {labels.customerName}
                 <input
-                  value={form.customerName}
+                  name="customerName" value={form.customerName}
                   onChange={(event) => setForm({ ...form, customerName: event.target.value })}
                   placeholder={copy.namePlaceholder}
                 />
@@ -1280,7 +1314,7 @@ export function ReservePage({
                 {labels.phone}
                 <input
                   inputMode="tel"
-                  value={form.customerPhone}
+                  name="customerPhone" value={form.customerPhone}
                   onChange={(event) => setForm({ ...form, customerPhone: event.target.value })}
                   placeholder={copy.phonePlaceholder}
                 />
@@ -1294,7 +1328,7 @@ export function ReservePage({
                 autoComplete="email"
                 maxLength={120}
                 required
-                value={form.customerEmail}
+                name="customerEmail" value={form.customerEmail}
                 onChange={(event) => setForm({ ...form, customerEmail: event.target.value })}
               />
               <span className="field-help">{labels.emailHelp}</span>

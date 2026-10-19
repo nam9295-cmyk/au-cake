@@ -41,6 +41,9 @@ import { createLegacyCakeGate } from './custom-cake-legacy-gate.js'
 import { createCustomCakeRepository, resolveCustomCakePersistenceConfig } from './custom-cake-persistence.js'
 import { scanCustomCakeSnapshots } from './custom-cake-list.js'
 import { resolveReservationAppwriteEndpoint } from './appwrite-endpoint.js'
+import { checkCustomerAccountReadiness, resolveCustomerAccountResources } from './customer-account-readiness.js'
+import { resolveCustomerIdentity, assertCustomerOrderReplayOwner } from './customer-identity.js'
+import { getCustomerOrder, listCustomerOrders, validateCustomerOrderRequest } from './customer-orders.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -219,6 +222,9 @@ function reviewCouponInput(value) {
 }
 
 const LOGGABLE_ACTIONS = new Set([
+  'customer-account-health',
+  'customer-orders',
+  'customer-order',
   'health',
   'create-cake',
   'create-class',
@@ -273,6 +279,7 @@ async function reconcileReviewCouponCommit(
   couponId,
   collectionId,
   expectedReviewCouponId,
+  verifiedCustomerUserId,
 ) {
   let reservation
   let currentCoupon
@@ -307,6 +314,7 @@ async function reconcileReviewCouponCommit(
     currentCoupon?.status === 'redeemed' &&
     currentCoupon.redeemedReservationId === documentId
   ) {
+    assertCustomerOrderReplayOwner(reservation, verifiedCustomerUserId)
     return cakeReservationResponse(reservation)
   }
   if (currentCoupon?.status === 'redeemed') throw new ReservationApiError('PROMO_CODE_INVALID')
@@ -323,6 +331,7 @@ export async function createCake(databases, input, {
   chocolateWritesEnabled = CHOCOLATE_WRITES_ENABLED,
   legacyGate,
   renewalPolicy = {},
+  verifiedCustomerUserId,
 } = {}) {
   const documentId = documentIdForInput(input)
   const customerPhone = normalizeAustralianMobile(input?.customerPhone)
@@ -337,6 +346,7 @@ export async function createCake(databases, input, {
   )
   let requestFingerprint
   if (existing) {
+    assertCustomerOrderReplayOwner(existing, verifiedCustomerUserId)
     if (Object.hasOwn(existing, 'requestFingerprint')) {
       requestFingerprint = cakeRequestFingerprint(input, runtimeConfig)
       assertMatchingRequestFingerprint(existing, requestFingerprint)
@@ -363,6 +373,7 @@ export async function createCake(databases, input, {
       cakeCatalogMode: runtimeConfig.cakeCatalogMode,
     }),
     requestFingerprint,
+    ...(verifiedCustomerUserId ? { customerUserId: verifiedCustomerUserId } : {}),
   }
   // Archive-specific write policies apply only to new orders. Stored orders and
   // idempotent replays stay readable across both rollout phases.
@@ -387,10 +398,17 @@ export async function createCake(databases, input, {
   )
 
   if (!normalizedReviewCode) {
-    if (sharedIdentity) return legacyGate.createPlain(sharedIdentity, async transactionId => {
-      const document = await databases.createDocument({ databaseId: runtimeConfig.cakeDatabaseId, collectionId: runtimeConfig.cakeReservationsId, documentId, data: { ...data, totalPrice: Math.round(data.totalPrice) }, transactionId })
-      return cakeReservationResponse(document)
-    })
+    if (sharedIdentity) {
+      const response = await legacyGate.createPlain(sharedIdentity, async transactionId => {
+        const document = await databases.createDocument({ databaseId: runtimeConfig.cakeDatabaseId, collectionId: runtimeConfig.cakeReservationsId, documentId, data: { ...data, totalPrice: Math.round(data.totalPrice) }, transactionId })
+        return cakeReservationResponse(document)
+      })
+      if (verifiedCustomerUserId) {
+        const final = await databases.getDocument({ databaseId: runtimeConfig.cakeDatabaseId, collectionId: runtimeConfig.cakeReservationsId, documentId })
+        assertCustomerOrderReplayOwner(final, verifiedCustomerUserId)
+      }
+      return response
+    }
     let document
     try {
       document = await databases.createDocument({
@@ -413,6 +431,7 @@ export async function createCake(databases, input, {
       assertRequiredMatchingRequestFingerprint(retryDocument, requestFingerprint)
       document = retryDocument
     }
+    assertCustomerOrderReplayOwner(document, verifiedCustomerUserId)
     return cakeReservationResponse(document)
   }
 
@@ -446,6 +465,7 @@ export async function createCake(databases, input, {
         cakeCatalogMode: runtimeConfig.cakeCatalogMode,
       }),
       requestFingerprint,
+      ...(verifiedCustomerUserId ? { customerUserId: verifiedCustomerUserId } : {}),
     }
     await databases.createDocument({
       databaseId: runtimeConfig.cakeDatabaseId,
@@ -490,6 +510,7 @@ export async function createCake(databases, input, {
         couponId,
         couponLedger.collectionId,
         expectedReviewCouponId,
+        verifiedCustomerUserId,
       )
     }
     if (commitAttempted || isConflict(error)) {
@@ -502,6 +523,7 @@ export async function createCake(databases, input, {
         couponId,
         couponLedger.collectionId,
         expectedReviewCouponId,
+        verifiedCustomerUserId,
       )
     }
     throw error
@@ -512,6 +534,7 @@ export async function createCake(databases, input, {
     collectionId: runtimeConfig.cakeReservationsId,
     documentId,
   })
+  assertCustomerOrderReplayOwner(document, verifiedCustomerUserId)
   return cakeReservationResponse(document)
 }
 
@@ -735,8 +758,45 @@ return async ({ req, res, log, error }) => {
   try {
     const body = requestBody(req)
     action = body.action
+    const memberCreate = action === 'create-cake' && Object.hasOwn(body, 'customerAccount')
+    if (memberCreate) {
+      if (body.customerAccount !== 'link' || !body.data || Object.hasOwn(body.data, 'customerUserId') || Object.hasOwn(body, 'customerUserId')) throw new ReservationApiError('INVALID_CUSTOMER_REQUEST', 400)
+      if (env.CUSTOMER_ACCOUNT_ENABLED !== 'true') throw new ReservationApiError('CUSTOMER_ACCOUNT_DISABLED', 503)
+      if (!body.data.requestId) throw new ReservationApiError('INVALID_REQUEST_ID', 400)
+      documentIdForInput(body.data)
+    }
+    if (action === 'customer-account-health') {
+      let result = { enabled: env.CUSTOMER_ACCOUNT_ENABLED === 'true', ready: false }
+      try {
+        const databases = result.enabled
+          ? (servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req, env))) : undefined
+        result = await checkCustomerAccountReadiness(databases, env)
+      } catch { /* Readiness never returns configuration details. */ }
+      return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
+    }
+    if (action === 'customer-orders' || action === 'customer-order') {
+      if (env.CUSTOMER_ACCOUNT_ENABLED !== 'true') throw new ReservationApiError('CUSTOMER_ACCOUNT_DISABLED', 503)
+      if (Object.keys(body).some(k => !['action', 'data'].includes(k))) throw new ReservationApiError('INVALID_CUSTOMER_REQUEST', 400)
+      const input = validateCustomerOrderRequest(action, body.data)
+      const services = servicesForRequest ? servicesForRequest(req) : { databases: new Databases(clientForRequest(req, env)) }
+      const health = await checkCustomerAccountReadiness(services.databases, env)
+      if (!health.ready) throw new ReservationApiError('CUSTOMER_ACCOUNT_NOT_READY', 503)
+      const { userId } = await resolveCustomerIdentity({ headers: req.headers, env, accountForJwt: services.accountForJwt })
+      const resources = resolveCustomerAccountResources(env)
+      const result = action === 'customer-orders'
+        ? await listCustomerOrders(services.databases, { ...input, userId }, resources)
+        : await getCustomerOrder(services.databases, { ...input, userId }, resources)
+      return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
+    }
     const runtimeConfig = resolveReservationConfig(env)
     const databases = servicesForRequest ? servicesForRequest(req).databases : new Databases(clientForRequest(req, env))
+    let verifiedCustomerUserId
+    if (memberCreate) {
+      const health = await checkCustomerAccountReadiness(databases, env)
+      if (!health.ready) throw new ReservationApiError('CUSTOMER_ACCOUNT_NOT_READY', 503)
+      const services = servicesForRequest ? servicesForRequest(req) : {}
+      verifiedCustomerUserId = (await resolveCustomerIdentity({ headers: req.headers, env, accountForJwt: services.accountForJwt })).userId
+    }
 
     let result
     if (action === 'renewal-health') result = { contractVersion: RENEWAL_CONTRACT, enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true', preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true', pickupPolicyVersion: RENEWAL_PICKUP_POLICY_VERSION, weekendApproved: true, mochiFlavours: MOCHI_FLAVOURS.map(({ id, priceCents }) => ({ id, priceCents })) }
@@ -744,7 +804,7 @@ return async ({ req, res, log, error }) => {
     else if (action === 'create-cake') {
       const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: new Storage(clientForRequest(req, env)) }
       const legacyGate = createLegacyCakeGate({ env, services })
-      result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, chocolateWritesEnabled, legacyGate, renewalPolicy: { enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true', preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true' } })
+      result = await createCake(databases, body.data, { runtimeConfig, now: now(), smoreWritesEnabled, chocolateWritesEnabled, legacyGate, verifiedCustomerUserId, renewalPolicy: { enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true', preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true' } })
     }
     else if (action === 'create-class') result = await createClass(databases, body.data)
     else if (action === 'lookup-cake') result = await lookupCake(databases, body.data || {})
@@ -757,6 +817,13 @@ return async ({ req, res, log, error }) => {
     if (action.startsWith('calendar-')) return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
     return res.json({ ok: true, result }, 200)
   } catch (caught) {
+    if (action === 'customer-orders' || action === 'customer-order') {
+      const allowed = new Set(['CUSTOMER_ACCOUNT_DISABLED', 'CUSTOMER_ACCOUNT_NOT_READY', 'CUSTOMER_UNAUTHORIZED', 'INVALID_CUSTOMER_REQUEST', 'CUSTOMER_ORDER_NOT_FOUND', 'CUSTOMER_ORDERS_UNAVAILABLE'])
+      const known = caught instanceof ReservationApiError && allowed.has(caught.code)
+      const code = known ? caught.code : 'CUSTOMER_ORDERS_UNAVAILABLE'
+      error(`reservation-api failed: ${safeReservationLogAction(action)} ${code}`)
+      return res.json({ ok: false, code }, known ? caught.status : 503, { 'Cache-Control': 'no-store' })
+    }
     const { code, status } = reservationFailureResponse(caught, action)
     const diagnostic = caught instanceof AppwriteException
       ? `appwrite=${caught.type || 'unknown'} http=${caught.code || 'unknown'}`

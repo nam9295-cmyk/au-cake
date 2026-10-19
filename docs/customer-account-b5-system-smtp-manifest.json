@@ -1,0 +1,53 @@
+{
+  "status": "proposed-not-applied",
+  "approvalRequired": true,
+  "hostname": "very-server",
+  "endpoint": "https://api.verygood-chocolate.com/v1",
+  "compose": {
+    "project": "appwrite",
+    "root": "/home/john/srv/appwrite/appwrite",
+    "file": "/home/john/srv/appwrite/appwrite/docker-compose.yml",
+    "envFile": "/home/john/srv/appwrite/appwrite/.env",
+    "expectedComposeSha256": "b25cfb1a690c41f796870b58b47504712dfbb3c3fff2d1f203f39ed18a3e1a7a",
+    "expectedEnvSha256": "4e049bec82fb598c6d64cbf3c272fae9ef154eea826c29baba9931c9f5c91256"
+  },
+  "services": ["appwrite", "appwrite-worker-mails"],
+  "applyOrder": ["appwrite-worker-mails", "appwrite"],
+  "rollbackOrder": ["appwrite", "appwrite-worker-mails"],
+  "imageTag": "appwrite/appwrite:1.8.1",
+  "imageId": "sha256:d6c8a343ef61ed16389b19664cfc30f0559aa5bfdb81965fcd2763d354f4964d",
+  "backupRoot": "/root/verygood-b5-backups",
+  "secretFileMode": "0600",
+  "backupDirectoryMode": "0700",
+  "systemKeyProposal": {
+    "name": "VERYGOOD Appwrite SYSTEM SMTP B5 20261018",
+    "permission": "sending_access",
+    "domain": "verygood-chocolate.com",
+    "domainId": "43b81ebb-788c-41ac-8f0b-2160249a1470",
+    "created": false,
+    "nativeExpiryConfigured": false,
+    "recipientAllowlistProven": false
+  },
+  "environmentChanges": {
+    "_APP_SMTP_HOST": {"before": "", "after": "smtp.resend.com"},
+    "_APP_SMTP_PORT": {"before": "", "after": "465"},
+    "_APP_SMTP_SECURE": {"before": "", "after": "ssl"},
+    "_APP_SMTP_USERNAME": {"before": "", "after": "resend"},
+    "_APP_SMTP_PASSWORD": {"before": "", "afterSecretSource": "new-system-only-protected-credential"},
+    "_APP_SYSTEM_EMAIL_NAME": {"before": "Appwrite", "after": "VERYGOOD%20Chocolate%20System"},
+    "_APP_SYSTEM_EMAIL_ADDRESS": {"before": "noreply@appwrite.io", "after": "appwrite-system@verygood-chocolate.com"}
+  },
+  "existingProjectIds": ["verygood-main", "verygood-au", "69cb27ef002b63e77c53", "69db3ae20026cdc0c7fe"],
+  "existingProjectBaseline": {"account": true, "emailOtp": true, "magicUrl": true, "emailPassword": true, "customSmtp": false, "sessionAlerts": false},
+  "preserveTestProject": {"id": "verygood-au-account-test", "account": false, "emailOtp": false, "googleEnabled": true, "customSmtp": true},
+  "queueBaseline": {"pending": 0, "processing": 0, "failed": 1, "retryAllowed": false, "deleteAllowed": false},
+  "smtpConnectionCheckOnly": true,
+  "emailSendAllowed": false,
+  "projectAuthWritesAllowed": false,
+  "schemaAclFunctionWritesAllowed": false,
+  "imagePullOrUpgradeAllowed": false,
+  "publicTestOtpAllowed": false,
+  "automaticNextStageAllowed": false,
+  "healthDeadlineSeconds": 60,
+  "containerStopTimeoutSeconds": 30
+}

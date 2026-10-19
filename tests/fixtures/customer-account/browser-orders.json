@@ -1,0 +1,217 @@
+{
+  "a": {
+    "orders": [
+      {
+        "id": "a-renewal",
+        "reservationNumber": "HISTORICAL-TEST",
+        "createdAt": "2026-10-17T01:00:00.000Z",
+        "pickupDate": "2026-10-23",
+        "pickupTime": "09:00",
+        "status": "예약신청",
+        "paymentStatus": "입금대기",
+        "totalPriceCents": 8200
+      },
+      {
+        "id": "a-legacy",
+        "reservationNumber": "VG-A-LEGACY",
+        "createdAt": "2026-10-17T00:00:00.000Z",
+        "pickupDate": "2099-11-01",
+        "pickupTime": "12:00",
+        "status": "예약신청",
+        "paymentStatus": "입금대기",
+        "totalPriceCents": 6500
+      }
+    ],
+    "nextCursor": "a-legacy"
+  },
+  "b": {
+    "orders": [
+      {
+        "id": "b-legacy",
+        "reservationNumber": "VG-B-LEGACY",
+        "createdAt": "2026-10-17T00:00:00.000Z",
+        "pickupDate": "2099-11-01",
+        "pickupTime": "12:00",
+        "status": "픽업완료",
+        "paymentStatus": "입금대기",
+        "totalPriceCents": 6500
+      }
+    ],
+    "nextCursor": null
+  },
+  "details": {
+    "a-renewal": {
+      "id": "a-renewal",
+      "reservationNumber": "HISTORICAL-TEST",
+      "createdAt": "2026-10-17T01:00:00.000Z",
+      "pickupDate": "2026-10-23",
+      "pickupTime": "09:00",
+      "status": "예약신청",
+      "paymentStatus": "입금대기",
+      "totalPriceCents": 8200,
+      "contact": {
+        "name": "Test Buyer",
+        "phone": "0412345678",
+        "email": "buyer@example.com"
+      },
+      "requestNote": "",
+      "view": {
+        "format": "renewal",
+        "contractVersion": "au-renewal.2026-10.v1",
+        "productId": "brownie-whole",
+        "quantity": 1,
+        "orderLines": [
+          {
+            "selection": {
+              "lineId": "a",
+              "offerId": "brownie-whole",
+              "quantity": 1,
+              "size": "6in",
+              "finish": "basic",
+              "individualPackaging": false
+            },
+            "productId": "brownie-whole",
+            "quantity": 1,
+            "productName": "Brownie Basque Whole Cake",
+            "unitPriceCents": 8200,
+            "subtotalCents": 8200,
+            "physicalQuantity": 1,
+            "flavourTotals": [],
+            "priceStatus": "confirmed",
+            "policyVersion": "au-renewal.2026-10.v1",
+            "individualPackaging": false,
+            "individualPackagingPieces": 0,
+            "packagingUnitCents": 0,
+            "packagingMode": "standard",
+            "giftBoxCount": 0,
+            "discountPercent": 0,
+            "discountCents": 0,
+            "individualPackagingFeeCents": 0,
+            "totalPriceCents": 8200
+          }
+        ],
+        "subtotalCents": 8200,
+        "discountCents": 0,
+        "discountBasisCents": 0,
+        "discountPercent": 0,
+        "totalPriceCents": 8200,
+        "individualPackagingPieces": 0,
+        "individualPackagingFeeCents": 0,
+        "orderLineCount": 1,
+        "orderItemCount": 1
+      }
+    },
+    "a-legacy": {
+      "id": "a-legacy",
+      "reservationNumber": "VG-A-LEGACY",
+      "createdAt": "2026-10-17T00:00:00.000Z",
+      "pickupDate": "2099-11-01",
+      "pickupTime": "12:00",
+      "status": "예약신청",
+      "paymentStatus": "입금대기",
+      "totalPriceCents": 6500,
+      "contact": {
+        "name": "Customer A",
+        "phone": "0412345678",
+        "email": "contact-a@example.test"
+      },
+      "requestNote": "",
+      "view": {
+        "format": "legacy",
+        "reservationNumber": "VG-A-LEGACY",
+        "productId": "pave-cake",
+        "cakeSize": "15cm",
+        "chocolateType": "dark",
+        "poundAddon": "none",
+        "chocolateIcingCount": 0,
+        "chocolateExtra": "none",
+        "vanillaCreamCount": 0,
+        "partyDecorationCount": 0,
+        "vanillaCakeSheet": "vanilla",
+        "vanillaCakeFlavor": "triple-berry",
+        "vanillaCakePointColor": "pink",
+        "quantity": 1,
+        "pickupDate": "2099-11-01",
+        "pickupTime": "12:00",
+        "cacaoPercent": "기본",
+        "status": "예약신청",
+        "paymentStatus": "입금대기",
+        "orderLines": [
+          {
+            "productId": "pave-cake",
+            "cakeSize": "15cm",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "chocolateIcingCount": 0,
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "chocolateExtra": "none",
+            "chocolateExtraCents": 0,
+            "quantity": 1
+          }
+        ],
+        "orderLineCount": 1,
+        "orderItemCount": 1
+      }
+    },
+    "b-legacy": {
+      "id": "b-legacy",
+      "reservationNumber": "VG-B-LEGACY",
+      "createdAt": "2026-10-17T00:00:00.000Z",
+      "pickupDate": "2099-11-01",
+      "pickupTime": "12:00",
+      "status": "픽업완료",
+      "paymentStatus": "입금대기",
+      "totalPriceCents": 6500,
+      "contact": {
+        "name": "Customer A",
+        "phone": "0412345678",
+        "email": "contact-a@example.test"
+      },
+      "requestNote": "",
+      "view": {
+        "format": "legacy",
+        "reservationNumber": "VG-B-LEGACY",
+        "productId": "pave-cake",
+        "cakeSize": "15cm",
+        "chocolateType": "dark",
+        "poundAddon": "none",
+        "chocolateIcingCount": 0,
+        "chocolateExtra": "none",
+        "vanillaCreamCount": 0,
+        "partyDecorationCount": 0,
+        "vanillaCakeSheet": "vanilla",
+        "vanillaCakeFlavor": "triple-berry",
+        "vanillaCakePointColor": "pink",
+        "quantity": 1,
+        "pickupDate": "2099-11-01",
+        "pickupTime": "12:00",
+        "cacaoPercent": "기본",
+        "status": "픽업완료",
+        "paymentStatus": "입금대기",
+        "orderLines": [
+          {
+            "productId": "pave-cake",
+            "cakeSize": "15cm",
+            "chocolateType": "dark",
+            "poundAddon": "none",
+            "chocolateIcingCount": 0,
+            "vanillaCreamCount": 0,
+            "partyDecorationCount": 0,
+            "vanillaCakeSheet": "vanilla",
+            "vanillaCakeFlavor": "triple-berry",
+            "vanillaCakePointColor": "pink",
+            "chocolateExtra": "none",
+            "chocolateExtraCents": 0,
+            "quantity": 1
+          }
+        ],
+        "orderLineCount": 1,
+        "orderItemCount": 1
+      }
+    }
+  }
+}

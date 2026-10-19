@@ -1,0 +1,308 @@
+{
+  "stage": "B7-PREPARATION-ONLY",
+  "executionApproved": false,
+  "runId": "20261018-b7-google-01",
+  "target": {
+    "endpoint": "https://api.verygood-chocolate.com/v1",
+    "projectId": "verygood-au-account-test",
+    "functionId": "ca-test-reservation-api",
+    "baseDeploymentId": "6ad41e576cb7a8f346af",
+    "runtime": "node-22",
+    "specification": "s-1vcpu-1gb",
+    "databaseIds": [
+      "ca_test_cake_au",
+      "ca_test_kids_au"
+    ],
+    "ownershipTarget": {
+      "databaseId": "ca_test_cake_au",
+      "collectionId": "reservations"
+    },
+    "siteOrigin": "https://au-account-test.verygood-chocolate.com",
+    "pagesProject": "au-cake-account-test",
+    "pagesDeploymentBranch": "b3-google-test"
+  },
+  "actors": {
+    "M": {
+      "uid": "ca-test-admin-m-20261017",
+      "role": "admin-baseline-no-login"
+    },
+    "G": {
+      "uid": "6ad38e4e0ffd5f810e23",
+      "emailSha256": "e64b180c8efad645583ca7c25d424d90145bf67f6456d0138b9389b81abc84ac",
+      "role": "customer"
+    },
+    "H": {
+      "uid": "ca-test-customer-h-20261018",
+      "emailSha256": "50ebf9b6d8c0602b81ae110385be0b3cb50ff0b71376164c8aad28cd0afddd5b",
+      "role": "customer-preallocate-with-account-off"
+    }
+  },
+  "window": {
+    "maxSeconds": 900,
+    "autoExtend": false,
+    "signatureMaxAgeSeconds": 30,
+    "maxClockSkewSeconds": 5,
+    "maxExecutions": 120,
+    "maxOutstandingRequests": 1,
+    "monitorIntervalSeconds": 5,
+    "unexpectedExecutionsStopCount": 1
+  },
+  "requiredBeforeOpen": {
+    "exactUsers": [
+      "ca-test-admin-m-20261017",
+      "6ad38e4e0ffd5f810e23",
+      "ca-test-customer-h-20261018"
+    ],
+    "authLimit": 3,
+    "accountOff": true,
+    "functionInitiallyEnabled": false,
+    "functionInitiallyExecute": [],
+    "expectedBaseDeployment": "6ad41e576cb7a8f346af",
+    "schemaAclUnchanged": true,
+    "hmacKeyPublicBundleAbsent": true,
+    "watchdogArmedAndTested": true,
+    "guardNegativeTestsGreen": true,
+    "allLocalTestsGreen": true,
+    "residualPublicInvocationRiskExplicitlyAccepted": true
+  },
+  "proposedTemporaryState": {
+    "account": true,
+    "authLimit": 3,
+    "google": true,
+    "authEmailOtp": false,
+    "authEmailPassword": false,
+    "authUsersAuthMagicURL": false,
+    "authPhone": false,
+    "authAnonymous": false,
+    "authInvites": false,
+    "authJWT": false,
+    "functionEnabled": true,
+    "functionExecute": [
+      "any"
+    ],
+    "functionEvents": [],
+    "functionSchedule": "",
+    "serverFlags": {
+      "CUSTOMER_ACCOUNT_ENABLED": "true",
+      "AU_RENEWAL_WRITES_ENABLED": "true",
+      "AU_RENEWAL_PREORDERS_ENABLED": "false"
+    },
+    "frontendFlags": {
+      "VITE_MARKET": "AU",
+      "VITE_CUSTOMER_ACCOUNT_ENABLED": "true",
+      "VITE_RESERVATION_API_MODE": "all",
+      "VITE_RESERVATION_API_FUNCTION_ID": "ca-test-reservation-api",
+      "VITE_RESERVATION_NOTIFY_FUNCTION_ID": "",
+      "VITE_ADMIN_EMAILS": "b7-admin-disabled@example.invalid"
+    },
+    "noCustomOrKidsMembership": true
+  },
+  "proposedWrites": {
+    "newAuthUsers": 1,
+    "newAuthUserId": "ca-test-customer-h-20261018",
+    "newAppwriteKeys": 0,
+    "newDatabasesCollectionsAttributesIndexesBucketsFunctions": 0,
+    "newGuardedDeployments": 1,
+    "functionVariablesAddedMax": 5,
+    "pagesDeploymentsMax": 3,
+    "newOrdersMax": 6,
+    "couponDocumentsMax": 2,
+    "accountPreferenceUpdatesMax": 4,
+    "googleTestAudienceAdditionsMax": 1,
+    "sessionCleanup": "only G/H sessions created in this run; preserve M and Console owner browser",
+    "testAuthLimitRestore": 2,
+    "newSyntheticSigningCredentials": 1
+  },
+  "newGuardVariableNames": [
+    "B7_TEST_RUN_ID",
+    "B7_TEST_STARTS_AT",
+    "B7_TEST_ENDS_AT",
+    "B7_TEST_HMAC_SECRET",
+    "B7_TEST_FIXTURE_MANIFEST_SHA256"
+  ],
+  "allowedBusinessActions": [
+    "health",
+    "renewal-health",
+    "customer-account-health",
+    "create-cake",
+    "lookup-cake",
+    "customer-orders",
+    "customer-order"
+  ],
+  "orders": [
+    {
+      "expectedOwnerUid": "6ad38e4e0ffd5f810e23",
+      "actor": "G",
+      "format": "renewal",
+      "productId": "pave-cake",
+      "quantity": 1,
+      "pickupDate": "2026-10-23",
+      "pickupTime": "10:00",
+      "couponFixture": null,
+      "requestIdSource": {
+        "mode": "capture-native-checkout-before-open",
+        "rewriteRequestId": false,
+        "freezeInPrivateRunManifest": true,
+        "onMissingOrChanged": "abort"
+      }
+    },
+    {
+      "expectedOwnerUid": "6ad38e4e0ffd5f810e23",
+      "actor": "G",
+      "format": "renewal",
+      "productId": "pave-chocolate-100g",
+      "quantity": 1,
+      "pickupDate": "2026-10-23",
+      "pickupTime": "10:00",
+      "couponFixture": null,
+      "requestIdSource": {
+        "mode": "capture-native-checkout-before-open",
+        "rewriteRequestId": false,
+        "freezeInPrivateRunManifest": true,
+        "onMissingOrChanged": "abort"
+      }
+    },
+    {
+      "requestId": "b7000003-0000-4000-8000-000000000003",
+      "expectedOwnerUid": "ca-test-customer-h-20261018",
+      "actor": "H",
+      "format": "legacy",
+      "productId": "pave-cake",
+      "quantity": 1,
+      "pickupDate": "2026-10-23",
+      "pickupTime": "10:00",
+      "couponFixture": "manual"
+    },
+    {
+      "requestId": "b7000004-0000-4000-8000-000000000004",
+      "expectedOwnerUid": "ca-test-customer-h-20261018",
+      "actor": "H",
+      "format": "legacy",
+      "productId": "pave-chocolate-100g",
+      "quantity": 1,
+      "pickupDate": "2026-10-23",
+      "pickupTime": "10:00",
+      "couponFixture": "review"
+    },
+    {
+      "requestId": "b7000005-0000-4000-8000-000000000005",
+      "expectedOwnerUid": null,
+      "actor": "guest",
+      "format": "renewal",
+      "productId": "pave-cake",
+      "quantity": 1,
+      "pickupDate": "2026-10-23",
+      "pickupTime": "10:00",
+      "couponFixture": null
+    },
+    {
+      "requestId": "b7000006-0000-4000-8000-000000000006",
+      "expectedOwnerUid": null,
+      "actor": "guest",
+      "format": "legacy",
+      "productId": "pave-chocolate-100g",
+      "quantity": 1,
+      "pickupDate": "2026-10-23",
+      "pickupTime": "10:00",
+      "couponFixture": null
+    }
+  ],
+  "couponFixtures": [
+    {
+      "collectionId": "manual_coupons",
+      "documentId": "b7-manual-20261018-01",
+      "scope": "cake",
+      "rewardPercent": 5,
+      "status": "active",
+      "codePattern": "^JENNIE[A-Z0-9]{5}$",
+      "rawCodeInGit": false,
+      "expiryPolicy": "30 Sydney calendar days from synthetic issuance"
+    },
+    {
+      "collectionId": "review_coupons",
+      "documentId": "b7-review-20261018-01",
+      "sourceReviewId": "b7-synthetic-review-reference",
+      "scope": "cake",
+      "rewardPercent": 10,
+      "status": "active",
+      "codePattern": "^FOXKIWI[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$",
+      "createReviewDocument": false,
+      "rawCodeInGit": false,
+      "expiryPolicy": "30 Sydney calendar days from synthetic issuance"
+    }
+  ],
+  "fixedBusinessPolicies": {
+    "allowProvisionalPrices": false,
+    "allowNewProducts": false,
+    "changeExistingSalesPricesOrDiscountPolicy": false,
+    "sendEmail": false,
+    "takePayment": false,
+    "changeSmtpOrOAuthClientSecret": false,
+    "changeSchemaAcl": false
+  },
+  "stopConditions": {
+    "memoryAvailableBytesBelow": 3221225472,
+    "diskAvailableBytesBelow": 32212254720,
+    "load1AtLeast": 4,
+    "loadSustainedSeconds": 300,
+    "newOomKills": 1,
+    "unexpectedUserOrOwnerOrDeployment": true,
+    "apiHealthFailure": true,
+    "emailEnqueueOrNotificationAttempt": true
+  },
+  "restoreState": {
+    "account": false,
+    "authEmailOtp": false,
+    "authJWT": false,
+    "functionEnabled": false,
+    "functionExecute": [],
+    "serverFlags": {
+      "CUSTOMER_ACCOUNT_ENABLED": "false",
+      "AU_RENEWAL_WRITES_ENABLED": "false",
+      "AU_RENEWAL_PREORDERS_ENABLED": "false"
+    },
+    "siteEntryEnabled": false,
+    "baseDeploymentId": "6ad41e576cb7a8f346af",
+    "keepHAndSyntheticFixtures": true,
+    "automaticDelete": false
+  },
+  "releaseBlocker": "B5 DEFERRED — RELEASE BLOCKER: common SMTP/recipient controls/Gallery review/system credential/backup-recreate-rollback/actual OTP and Google↔OTP UID remain pending",
+  "limitsAreNotProviderHardCaps": [
+    "maxExecutions",
+    "maxOutstandingRequests",
+    "unknown invocation rate"
+  ],
+  "providerHardBoundaries": [
+    "full test user count before Account ON",
+    "test DB private ACL unchanged",
+    "server guard rejects unapproved writes and after-deadline requests",
+    "at most six unique pre-frozen requestIds"
+  ],
+  "contactFixtures": {
+    "G": {
+      "name": "B7 TEST ONLY G",
+      "phone": "0400000001",
+      "email": "b7-g@example.invalid",
+      "language": "en"
+    },
+    "H": {
+      "name": "B7 TEST ONLY H",
+      "phone": "0400000002",
+      "email": "b7-h@example.invalid",
+      "language": "ko"
+    },
+    "GEdited": {
+      "name": "B7 TEST ONLY G EDITED",
+      "phone": "0400000011",
+      "email": "b7-g-edited@example.invalid",
+      "language": "ko"
+    },
+    "HEdited": {
+      "name": "B7 TEST ONLY H EDITED",
+      "phone": "0400000012",
+      "email": "b7-h-edited@example.invalid",
+      "language": "en"
+    },
+    "guestContact": "exact G fixture for anti-auto-link test"
+  }
+}

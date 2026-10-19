@@ -1,0 +1,45 @@
+{
+  "endpoint": "https://api.verygood-chocolate.com/v1",
+  "projectId": "verygood-au-account-test",
+  "domain": "auth-test.verygood-chocolate.com",
+  "domainId": "ebeb59b5-2944-4d93-97a1-ac485f812b2f",
+  "region": "ap-northeast-1",
+  "keyName": "VERYGOOD AU Account TEST SMTP B4 20261018",
+  "keyPermission": "sending_access",
+  "smtp": {
+    "enabled": true,
+    "senderName": "VERYGOOD AU Account TEST",
+    "senderEmail": "customer-test@auth-test.verygood-chocolate.com",
+    "replyTo": "customer-test@auth-test.verygood-chocolate.com",
+    "host": "smtp.resend.com",
+    "port": 465,
+    "username": "resend",
+    "secure": "ssl"
+  },
+  "recipientPolicy": "One exact owner-approved recipient supplied explicitly from a protected approval file; no CC/BCC or retry",
+  "messageLimit": 1,
+  "subject": "Custom SMTP email sample",
+  "dnsRecords": [
+    {
+      "type": "TXT",
+      "name": "resend._domainkey.auth-test.verygood-chocolate.com",
+      "content": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDxRKc+Y5QBD16dUIUxojVDH8PcQSLQNMSRhakaRFM0R6V8DZi/srMGSy9fAPrSn496KJYAgXvH1ZIjU6jpGiKajliWpFRmc9SWf+rlXyFh8sbwJQ/bewPdBRUlAzWVRTwmCO6cff2siNk10GPApXaD1PMOBxjXxna9Rb/VylZrEwIDAQAB",
+      "ttl": 1,
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "rsend.auth-test.verygood-chocolate.com",
+      "content": "rsend-apne1.forge.rmta.net",
+      "ttl": 1,
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "send.auth-test.verygood-chocolate.com",
+      "content": "send.forge.rmta.net",
+      "ttl": 1,
+      "proxied": false
+    }
+  ]
+}

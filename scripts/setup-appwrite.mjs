@@ -1,3 +1,4 @@
+import {customerAccountSetupDefinitions} from './customer-account-schema.mjs'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
@@ -186,7 +187,9 @@ const defaultSettingsByMarket = {
 
 const defaultSettings = defaultSettingsByMarket[market]
 
+const customerAccountSetup = customerAccountSetupDefinitions(process.env)
 const reservationAttributes = [
+  ...customerAccountSetup.attributes,
   { key: 'reservationNumber', type: 'string', size: 40, required: true },
   { key: 'customerName', type: 'string', size: 80, required: true },
   { key: 'customerPhone', type: 'string', size: 40, required: true },
@@ -301,6 +304,7 @@ const classBookedDateAttributes = [
 ]
 
 const reservationIndexes = [
+  ...customerAccountSetup.indexes,
   { key: 'reservationNumber_idx', attributes: ['reservationNumber'] },
   { key: 'pickupDate_idx', attributes: ['pickupDate'] },
   { key: 'status_idx', attributes: ['status'] },

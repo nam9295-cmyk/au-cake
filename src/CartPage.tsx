@@ -37,6 +37,7 @@ import { formatChocolateExtra, getChocolateExtraOption } from './lib/chocolate-e
 import { formatBrownieCreamOption, getBrownieCreamOption, isBrownieCheesecakeProduct } from './lib/brownie-cream'
 
 type CartPageProps = {
+  guestCartNotice?:import('react').ReactNode
   language: Language
   lines: readonly CartLine[]
   cakeOrderLinesAvailable: boolean | null
@@ -164,6 +165,7 @@ export default function CartPage({
   onRemove,
   onContinue,
   onBrowseCakes,
+  guestCartNotice,
 }: CartPageProps) {
   const hasChocolate = lines.some((line) => getChocolateProduct(line.selection.productId))
   const canContinue = (!hasChocolate || chocolateOrderLinesAvailable === true) && (lines.length === 1 || (lines.length > 1 && cakeOrderLinesAvailable === true))
@@ -213,6 +215,7 @@ export default function CartPage({
       <section className="cart-panel" aria-labelledby="cart-title">
         <p className="summary-kicker">Verygood Chocolate</p>
         <h1 id="cart-title">{copy.title}</h1>
+        {guestCartNotice}
 
         {lines.length === 0 ? (
           <div className="cart-empty">

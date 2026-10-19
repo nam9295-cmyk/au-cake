@@ -1,134 +1,65 @@
-import { marketConfig } from './lib/market'
-import { RENEWAL_CART_KEY, subtractRenewalSubmission, addRenewalLines, removeRenewalLine, inspectRenewalCart, replaceRenewalLines, MOCHI_RESELECTION_KEY } from './lib/renewal-cart'
-import { type RenewalSelection, priceRenewalOrder } from '../appwrite-functions/reservation-api/src/au-renewal.js'
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from 'react'
-import {
-  addCartLine,
-  getCartTotalQuantity,
-  loadCartLines,
-  removeCartLine,
-  saveCartLines,
-  subtractSubmittedCartLines,
-  updateCartLineQuantity,
-  type CartLine,
-  type StorageLike,
-} from './lib/cart'
-import type { CakeDetailSelection } from './lib/cake-detail'
+import {createContext,useCallback,useContext,useEffect,useLayoutEffect,useMemo,useState,useSyncExternalStore,type PropsWithChildren} from 'react'
+import {marketConfig} from './lib/market'
+import {getCartTotalQuantity,type CartLine} from './lib/cart'
+import type {CakeDetailSelection} from './lib/cake-detail'
+import type {RenewalSelection} from '../appwrite-functions/reservation-api/src/au-renewal.js'
+import {useCustomerAccount} from './lib/customer-account-context'
+import {CUSTOMER_AUTH_CHANGED_EVENT,CUSTOMER_AUTH_NOTICE_KEY} from './lib/customer-account-config'
+import {CART_EVENT_PREFIX,createCustomerCartStore,customerCartOwner,type CartOwner,type CartAction,type CartStorage} from './lib/customer-cart-storage'
 
-type CartContextValue = {
-  mochiReselectionRequired: boolean
-  acknowledgeMochiReselection: () => void
-  replaceRenewal: (id: string, lines: RenewalSelection[]) => void
-  renewalLines: readonly RenewalSelection[]
-  addRenewal: (lines: RenewalSelection[]) => void
-  removeRenewal: (id: string) => void
-  updateRenewal: (id: string, quantity: number) => void
-  removeRenewalSubmitted: (lines:readonly RenewalSelection[]) => void
-  clearRenewal: () => void
-  lines: readonly CartLine[]
-  itemCount: number
-  add: (selection: CakeDetailSelection) => void
-  update: (lineKey: string, quantity: number) => void
-  remove: (lineKey: string) => void
-  removeSubmitted: (submitted: readonly CartLine[]) => void
-  clear: () => void
+type CartContextValue={
+ owner:CartOwner|null;checkoutOwner:CartOwner;ready:boolean;isCurrent:()=>boolean;canImportGuest:boolean;guestAlreadyImported:boolean;guestItemCount:number;guestSignature:string;importGuest:()=>void;storageError:boolean;changedInAnotherTab:boolean
+ mochiReselectionRequired:boolean;acknowledgeMochiReselection:()=>void
+ replaceRenewal:(id:string,lines:RenewalSelection[])=>void;renewalLines:readonly RenewalSelection[]
+ addRenewal:(lines:RenewalSelection[])=>void;removeRenewal:(id:string)=>void;updateRenewal:(id:string,quantity:number)=>void
+ removeRenewalSubmitted:(lines:readonly RenewalSelection[])=>void;clearRenewal:()=>void
+ lines:readonly CartLine[];itemCount:number;add:(selection:CakeDetailSelection)=>void
+ update:(lineKey:string,quantity:number)=>void;remove:(lineKey:string)=>void;removeSubmitted:(lines:readonly CartLine[])=>void;clear:()=>void
 }
-
-const CartContext = createContext<CartContextValue | null>(null)
-
-function getBrowserStorage(): StorageLike | null {
-  if (typeof window === 'undefined') return null
-
-  try {
-    return window.localStorage
-  } catch {
-    return null
-  }
+const CartContext=createContext<CartContextValue|null>(null)
+function getBrowserStorage():CartStorage {
+ if(typeof window!=='undefined')try{return window.localStorage}catch{/* use a separate in-memory cart per owner for this page */}
+ const data=new Map<string,string>()
+ return {get length(){return data.size},key:i=>[...data.keys()][i]??null,getItem:k=>data.get(k)??null,setItem:(k,v)=>{data.set(k,v)}}
 }
-
-export function CartProvider({ children }: PropsWithChildren) {
-  const [initialRenewal] = useState(() => {
-    if (marketConfig.market !== 'AU') return { lines: [] as RenewalSelection[], retiredMochi: [] as unknown[], acknowledged: true }
-    try {
-      const storage = getBrowserStorage()
-      const inspected = inspectRenewalCart(storage?.getItem(RENEWAL_CART_KEY) || null)
-      let archived = null
-      try { archived = JSON.parse(storage?.getItem(MOCHI_RESELECTION_KEY) || 'null') } catch { /* invalid archive does not discard the active cart */ }
-      const retiredMochi = [...(Array.isArray(archived?.lines) ? archived.lines : []), ...inspected.retiredMochi]
-      return { ...inspected, retiredMochi, acknowledged: inspected.retiredMochi.length ? false : archived?.acknowledged === true }
-    } catch { return { lines: [] as RenewalSelection[], retiredMochi: [] as unknown[], acknowledged: true } }
-  })
-  const [renewalLines, setRenewalLines] = useState<RenewalSelection[]>(initialRenewal.lines)
-  const [mochiReselectionRequired, setMochiReselectionRequired] = useState(initialRenewal.retiredMochi.length > 0 && !initialRenewal.acknowledged)
-  const acknowledgeMochiReselection = useCallback(() => setMochiReselectionRequired(false), [])
-  useEffect(() => {
-    if (marketConfig.market !== 'AU') return
-    try {
-      const storage = getBrowserStorage()
-      // Archive retired local selections before replacing the active cart. No automatic conversion.
-      if (initialRenewal.retiredMochi.length) storage?.setItem(MOCHI_RESELECTION_KEY, JSON.stringify({version:1,lines:initialRenewal.retiredMochi,acknowledged:!mochiReselectionRequired}))
-      storage?.setItem(RENEWAL_CART_KEY, JSON.stringify({version:1,lines:renewalLines}))
-    } catch { /* retain the original storage if archiving is unavailable */ }
-  }, [renewalLines, initialRenewal, mochiReselectionRequired])
-  const replaceRenewal = useCallback((id: string, incoming: RenewalSelection[]) => setRenewalLines(current => replaceRenewalLines(current, id, incoming)), [])
-  const addRenewal = useCallback((incoming: RenewalSelection[]) => { setRenewalLines(current => addRenewalLines(current, incoming)) }, [])
-  const removeRenewal = useCallback((id: string) => setRenewalLines(current => removeRenewalLine(current,id)), [])
-  const updateRenewal = useCallback((id: string, quantity: number) => setRenewalLines(current => { const next=current.map(l=>l.lineId===id?{...l,quantity}:l);priceRenewalOrder(next,{localPreview:true});return next }), [])
-  const removeRenewalSubmitted = useCallback((submitted:readonly RenewalSelection[]) => setRenewalLines(current=>subtractRenewalSubmission(current,submitted)),[])
-  const clearRenewal = useCallback(() => setRenewalLines([]), [])
-  const [lines, setLines] = useState<CartLine[]>(() => {
-    const storage = getBrowserStorage()
-    return storage ? loadCartLines(storage) : []
-  })
-
-  useEffect(() => {
-    const storage = getBrowserStorage()
-    if (storage) saveCartLines(storage, lines)
-  }, [lines])
-
-  const add = useCallback((selection: CakeDetailSelection) => {
-    setLines((current) => addCartLine(current, selection))
-  }, [])
-
-  const update = useCallback((lineKey: string, quantity: number) => {
-    setLines((current) => updateCartLineQuantity(current, lineKey, quantity))
-  }, [])
-
-  const remove = useCallback((lineKey: string) => {
-    setLines((current) => removeCartLine(current, lineKey))
-  }, [])
-
-  const removeSubmitted = useCallback((submitted: readonly CartLine[]) => {
-    setLines((current) => subtractSubmittedCartLines(current, submitted))
-  }, [])
-
-  const clear = useCallback(() => setLines([]), [])
-  const itemCount = useMemo(() => getCartTotalQuantity(lines) + renewalLines.reduce((n,l)=>n+l.quantity,0), [lines, renewalLines])
-  const value = useMemo<CartContextValue>(() => ({
-    mochiReselectionRequired, acknowledgeMochiReselection, replaceRenewal, renewalLines, addRenewal, removeRenewal, updateRenewal, clearRenewal, removeRenewalSubmitted,
-    lines,
-    itemCount,
-    add,
-    update,
-    remove,
-    removeSubmitted,
-    clear,
-  }), [lines, itemCount, add, update, remove, removeSubmitted, clear, mochiReselectionRequired, acknowledgeMochiReselection, replaceRenewal, renewalLines, addRenewal, removeRenewal, updateRenewal, clearRenewal, removeRenewalSubmitted])
-
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
+export function CartProvider({children}:PropsWithChildren){
+ const customer=useCustomerAccount(),owner=customerCartOwner(customer.state,customer.enabled)
+ const [store]=useState(()=>createCustomerCartStore({storage:getBrowserStorage(),owner,authFence:customer.enabled}))
+ const snapshot=useSyncExternalStore(store.subscribe,store.getSnapshot,store.getSnapshot)
+ useLayoutEffect(()=>{store.selectOwner(owner,customer.enabled)},[store,owner,customer.enabled,customer.state])
+ useEffect(()=>{
+  const changed=()=>{if(customer.enabled)store.suspend()}
+  const stored=(event:StorageEvent)=>{if(event.key===CUSTOMER_AUTH_NOTICE_KEY)changed();else if(event.key===null||event.key.startsWith(CART_EVENT_PREFIX)||event.key.startsWith('verygood-au-'))store.refresh()}
+  window.addEventListener(CUSTOMER_AUTH_CHANGED_EVENT,changed);window.addEventListener('storage',stored)
+  return ()=>{window.removeEventListener(CUSTOMER_AUTH_CHANGED_EVENT,changed);window.removeEventListener('storage',stored)}
+ },[store,customer.enabled])
+ const ready=owner!==null&&snapshot.owner===owner&&snapshot.ready
+ const ticket=useMemo(()=>({notice:store.ticket().notice,owner:snapshot.owner,epoch:snapshot.epoch}),[store,snapshot.epoch,snapshot.owner])
+ const commit=useCallback((action:CartAction)=>{if(ready&&ticket.owner===owner)store.mutate(ticket,action)},[ready,ticket,owner,store])
+ const isCurrent=useCallback(()=>ready&&ticket.owner===owner&&store.isCurrent(ticket),[ready,ticket,owner,store])
+ const checkoutOwner=customer.state.status==='checking'&&customer.state.previousIdentity?customerCartOwner({status:'authenticated',identity:customer.state.previousIdentity},customer.enabled)||'guest':owner||'guest'
+ const lines=useMemo(()=>ready?snapshot.lines:[],[ready,snapshot.lines])
+ const renewalLines=useMemo(()=>ready&&marketConfig.market==='AU'?snapshot.renewalLines:[],[ready,snapshot.renewalLines])
+ const add=useCallback((selection:CakeDetailSelection)=>commit({type:'legacy-add',selection}),[commit])
+ const update=useCallback((key:string,quantity:number)=>commit({type:'legacy-update',key,quantity}),[commit])
+ const remove=useCallback((key:string)=>commit({type:'legacy-remove',key}),[commit])
+ const removeSubmitted=useCallback((submitted:readonly CartLine[])=>commit({type:'legacy-submitted',lines:submitted}),[commit])
+ const clear=useCallback(()=>commit({type:'legacy-clear'}),[commit])
+ const addRenewal=useCallback((incoming:RenewalSelection[])=>commit({type:'renewal-add',lines:incoming}),[commit])
+ const replaceRenewal=useCallback((id:string,incoming:RenewalSelection[])=>commit({type:'renewal-replace',id,lines:incoming}),[commit])
+ const removeRenewal=useCallback((id:string)=>commit({type:'renewal-remove',id}),[commit])
+ const updateRenewal=useCallback((id:string,quantity:number)=>commit({type:'renewal-update',id,quantity}),[commit])
+ const removeRenewalSubmitted=useCallback((submitted:readonly RenewalSelection[])=>commit({type:'renewal-submitted',lines:submitted}),[commit])
+ const clearRenewal=useCallback(()=>commit({type:'renewal-clear'}),[commit])
+ const acknowledgeMochiReselection=useCallback(()=>commit({type:'acknowledge-mochi'}),[commit])
+ const importGuest=useCallback(()=>commit({type:'import-guest'}),[commit])
+ const itemCount=getCartTotalQuantity(lines)+renewalLines.reduce((n,l)=>n+l.quantity,0)
+ const value=useMemo<CartContextValue>(()=>({owner:ready?owner:null,checkoutOwner,ready,isCurrent,canImportGuest:ready&&snapshot.canImportGuest,guestAlreadyImported:ready&&snapshot.guestAlreadyImported,guestItemCount:ready?snapshot.guestItemCount:0,guestSignature:ready?snapshot.guestSignature:'',importGuest,storageError:snapshot.storageError,changedInAnotherTab:snapshot.changedInAnotherTab,
+  mochiReselectionRequired:ready&&snapshot.mochiReselectionRequired,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,
+  lines,itemCount,add,update,remove,removeSubmitted,clear}),[ready,owner,checkoutOwner,isCurrent,snapshot.canImportGuest,snapshot.guestAlreadyImported,snapshot.guestItemCount,snapshot.guestSignature,snapshot.storageError,snapshot.changedInAnotherTab,snapshot.mochiReselectionRequired,importGuest,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,lines,itemCount,add,update,remove,removeSubmitted,clear])
+ return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
-
 // eslint-disable-next-line react-refresh/only-export-components
-export function useCart() {
-  const context = useContext(CartContext)
-  if (!context) throw new Error('useCart must be used within CartProvider')
-  return context
-}
+export function useCart(){const context=useContext(CartContext);if(!context)throw Error('useCart must be used within CartProvider');return context}
+// eslint-disable-next-line react-refresh/only-export-components
+export function useOptionalCart(){return useContext(CartContext)}

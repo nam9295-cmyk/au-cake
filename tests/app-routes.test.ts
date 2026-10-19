@@ -1,6 +1,14 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { getCakeSlugFromPath, getPageFromPath, pathForCake, pathForPage } from '../src/lib/app-routes.js'
+
+test('AU private account routes and callback are exact and do not admit provider-controlled redirect paths',()=>{
+  assert.equal(getPageFromPath('/account'),'account')
+  assert.equal(getPageFromPath('/account/auth/callback'),'account-auth-callback')
+  assert.equal(pathForPage('account'),'/account')
+  assert.equal(getPageFromPath('/account/other'),'not-found')
+  assert.equal(getPageFromPath('//external.test/account'),'not-found')
+})
 import { getHogirlRouteFromPath } from '../src/stories/hogirl/routes.js'
 
 test('cake routes support catalogue, direct detail URLs and safe slug extraction', () => {
