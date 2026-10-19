@@ -225,3 +225,18 @@ without a separate approval proof and reserves CLOSED24 for restoration.
 Protected local artifacts:
 `.superpowers/sdd/2026-10-19-customer-account-integrated-retry/`.
 **B5 — DEFERRED / RELEASE BLOCKER** and other unresolved findings persist.
+
+The user subsequently approved the retry scope. Its separate protected approval
+binds the scope/archive hashes, test project/Function, one deployment,
+OPEN23/CLOSED24 and nine remaining read executions. The original proof and closed
+run were preserved. Actual pre-OPEN inventory was 20 Function executions and 25
+Cloudflare deployments (three B3 plus 22 logical test deployments).
+
+New test deployment `6ad56315a98353b9a89a` was created on Node 22 after freezing
+the fresh runtime key/window and existing eight variable values. OPEN23 and
+temporary test Account/JWT ON are confirmed; read-only execution roles remain
+G/H only and Renewal writes/preorders false. The independent manual-termination
+monitor completed its real startup checks. No Function execution or new order
+was used to open the retry; actual MY ORDERS acceptance awaits user Chrome
+actions. CLOSED24 remains reserved for manual/emergency restoration. No health
+test, SMTP/Google change, additional user, order, coupon or schema write occurred.
