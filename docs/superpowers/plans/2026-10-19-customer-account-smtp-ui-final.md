@@ -1,6 +1,6 @@
 # Customer Account — final SMTP and UI-only scope
 
-2026-10-19. Mac Codex alone, existing feature worktree. **PREPARATION COMPLETE / AWAITING NEW EXPLICIT OPERATING APPROVAL.** No production mutation is authorized by this document.
+2026-10-19. Mac Codex alone, existing feature worktree. **APPROVED / EXECUTED: SMTP COMMITTED and UI ON.** [Final result](../../customer-account-smtp-ui-release-results.md). Actual user production login acceptance remains NOT RUN. The proposal/checklist below preserves its original approval scope.
 
 Manifest: `docs/customer-account-production-release-manifest.json`, version4, SHA **`6a498278d9cef1cfc5b4aa1a937fac101db0387a7a5b41dd484a04914bb9725d`**. `executionApproved=false` and operator acceptance remain false in the immutable proposal. Run `ca-release-smtp-ui-20261019`; fresh root stage `/home/john/.verygood-account-smtp-ui-final`. New protected workspace `.superpowers/sdd/2026-10-19-customer-account-smtp-ui-final/`. Never reuse a previous proof, Key, apply request or root backup.
 

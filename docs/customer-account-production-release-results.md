@@ -2,11 +2,15 @@
 
 2026-10-19. **PR25/26 integration and the customer-OFF production deployment are complete.** This document supersedes the operational instructions in the [first stopped release report](customer-account-production-release-results-v1-stopped.md); that evidence remains unchanged. No completed merge, OFF deployment or functional acceptance is repeated.
 
-## New SMTP/UI-only proposal — awaiting approval
+## Latest production release — UI ON / SMTP COMMITTED
+
+**Release verified:** [SMTP/UI final result](customer-account-smtp-ui-release-results.md). Approved v4 SHA6a498278…; new run ca-release-smtp-ui-20261019 completed SMTP keep in118.667sec, activated existing member6ad5cea0… and deployed **d64ba5b3-8790-473b-a7d6-932f0108d92e** once. AU/au-stage homepage/account200 and exact ON assets/MIME/CSP PASS. Operating4/native Auth/37 existing vars/Renewal/Console/non7 environment and queue0/0/failed1 preserved. This run key1/apply2/member1/UION1, rollback0; new migration/Function deployment/readiness/order/payment/mail tests0. Resend5/day,87/month unchanged. Prior stopped evidence/counters remain intact. Actual user production Google/OTP/MYORDERS acceptance is NOT RUN; direct user confirmation remains.
+
+## Historical SMTP/UI-only proposal — approved and executed
 
 V4 manifest SHA **`6a498278d9cef1cfc5b4aa1a937fac101db0387a7a5b41dd484a04914bb9725d`**, run `ca-release-smtp-ui-20261019`. [Minimal execution plan](superpowers/plans/2026-10-19-customer-account-smtp-ui-final.md). Preparation only: official Wrangler refresh/Cloudflare GET200 and Owner policy GET passed; current reader/customerfalse, member ready and OFF65a7ccae unchanged. The corrected versioned apply entry is connected to fresh local helpers;20 targeted tests PASS, failed auth/policy/claim→root requests0. Old run/claims/journals, used Keys2 and container actions4 are preserved. New scope proposes key1/SMTP apply2/UI1/member-reactivation1 with Pages recovery1/container recovery2; schema/deployment/readiness0. No executable approval or new operating mutation. Fresh root backup/timer/quota checks remain mandatory after explicit approval. No earlier PASS is repeated.
 
-## Latest execution after amended approval — SMTP restored, UI still OFF
+## Historical V3 execution — SMTP restored, UI stayed OFF
 
 The user approved amended SHA `0fd7a7c99681f6c236679a29c84e1d084c861c5d6cd65ca4d61e93653682acc3`. A fresh proof was created and counters2 schema writes/2 Function deployments/1 readiness were preserved. Legitimate root preflight and independent timer probe passed using the new SHA and a new immutable root backup. The user created the single Sending access root-domain system Key and captured it into protected storage. The validated existing member deployment was reactivated without deployment/execution.
 
@@ -76,24 +80,24 @@ The user stopped the root preparation process with Ctrl+C. No key/apply/keep req
 | Item | Verified state |
 | --- | --- |
 | Production main | `08799b739f6d8047154c0ea699aab81837196ce2` |
-| Pages project / active customer-OFF checkpoint | `au-cake-next` / `65a7ccae-422a-4d79-9262-fccea9b51c7f` |
+| Pages project / active customer-ON deployment | `au-cake-next` / `d64ba5b3-8790-473b-a7d6-932f0108d92e`; OFF65a7ccae retained as rollback |
 | Domains | AU and au-stage share that deployment |
 | Prior immutable Pages deployment | `0af308ee-ad99-4345-838e-649c5a60111a`, historical fallback only; the new OFF checkpoint is used for the remaining release rollback |
 | Actual Cloudflare build | Node22.16.0/npm10.9.2; npm ci, TypeScript/Vite/SEO PASS. This existing PASS is cited, not rerun remotely |
-| Current customer UI | OFF; frontend flag absent, native operating Account/OTP/JWT settings preserved |
-| Current reservation Function | Compatible false reader `6ad5ce82a6ae17a3830a` active; member `6ad5cea0eb161f62de24` retained inactive. Original options and37 variables preserved; two approved variables added, total39; customer flagfalse |
+| Current customer UI | ON; frontend flagtrue; native operating Account/OTP/JWT settings preserved |
+| Current reservation Function | Existing member `6ad5cea0eb161f62de24` active; false reader6ad5ce82a6ae17a3830a retained for recovery. Original options and37 variables preserved; two approved additions, total39; customer flagtrue |
 | Renewal / Custom Cake / guest | Renewal writes/preorders=true/true; existing Custom Cake/admin/guest configuration preserved |
 | Schema / ACL | DB2/Collection22,private19/public-read-only3; optional customerUserId and customerUser_created_idx available; no ACL, backfill or document writes |
 | Operating4 project policy | Current Auth/SMTP/OAuth/service semantic fingerprints match; historical AU/Gallery raw equivalence remains UNVERIFIED |
-| Shared server | API/mail worker running, original1.8.1 image and full runtime hashes unchanged; common SMTP host empty; queue0/processing0/failed1 |
-| Resource sample after restoration | Available RAM8.24GiB, disk79.69GiB; a sample, not continuous monitoring |
-| Resend official observation after cleanup | Daily5/100,monthly87/3000; new system Key revoked, original two keys retained |
+| Shared server | API/mail worker running, same1.8.1 image; approved common SMTP ON; non7 runtime environment/Console unchanged; queue0/processing0/failed1 |
+| Resource sample after current release | Available RAM8.39GiB, disk79.25GiB/load1≈1.69; a sample, not continuous monitoring |
+| Resend official observation after current release | Daily5/100,monthly87/3000; prior2 system Keys revoked, current R3 system Key active; original order/B4 Keys retained |
 
-The latest attempt retained additive schema and two compatible Function deployments, used one readiness execution, and applied then restored shared SMTP. Four container recreations were used (apply2/restore2). No Pages deployment or customer data writes occurred. Current policy matches the baseline except the explicitly approved additive schema/Function configuration. The new system Key is revoked and all execution authority is stopped.
+The current V4 completion reused accepted schema/Function/readiness, kept shared SMTP and deployed ON Pages once. Cumulative container recreations are6 (prior4 + this apply2), with no new recovery used. Current policy matches the baseline except explicitly approved schema/Function/customer UI/shared SMTP changes. R3 system Key remains active. The historical V3 attempt below was stopped; its evidence/claims remain preserved.
 
 Recovery GET at `2026-10-19T08:25:57.751Z` confirmed main/OFF deployment, all four current semantic hashes, native Auth/Renewal policy and the false reader/customerOFF state. AU and au-stage returned HTTP200. Original API/worker environment hashes, Console policy and queue0/processing0/failed1 matched after restoration. The sole readiness PASS above is preserved without another execution.
 
-## Preserved usage and remaining limits
+## Historical V3 usage and stopped limits
 
 | Action | Already consumed | New approval maximum |
 | --- | --- | --- |

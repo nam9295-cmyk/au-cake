@@ -1,6 +1,6 @@
-# 상시 SMTP 운영 전환 준비 — 적용 승인 전
+# 상시 SMTP 운영 상태 및 복구
 
-> **Pending new scope:** [SMTP/UI-only execution plan](superpowers/plans/2026-10-19-customer-account-smtp-ui-final.md), SHA `6a498278d9cef1cfc5b4aa1a937fac101db0387a7a5b41dd484a04914bb9725d`. Versioned fail-closed entry verified; explicit new operating approval and fresh root backup/timer required.
+> **Current: SMTP COMMITTED / production UI ON.** [Final release result](customer-account-smtp-ui-release-results.md). New v4 scope approved and executed once; root durable keep118.667sec, independent timer disarmed, non7 environment/Console/queue preserved. Sending KeyR3 remains active and protected; earlier Keys are revoked. Prior stopped/preparation text below is historical. Fallback actual delivery and named-operator quota/abuse monitoring risks remain as accepted.
 
 > Current resume: common SMTP remains OFF. The first production preparation issued/revoked its unused Key and stopped before SMTP apply; PR25/26 and OFF Pages are complete. Use only [the new run/manifest and current rollback checkpoint](customer-account-production-release-results.md). Schema1+1, Function2 and readiness1513ms are now complete and may not be repeated. The shortened Key label amendment was approved. The single SMTP application passed TLS/AUTH but was restored after the executor failed to propagate a Cloudflare401 preflight and local counter error. Common SMTP remains OFF, no UI deployment occurred, and apply2/restore2 container actions are consumed. The new Key was revoked by the user and absence verified in Resend; original keys and quota5/day,87/month are unchanged. No new attempt is authorized. Completed merge/OFF/provider tests are not repeated.
 
