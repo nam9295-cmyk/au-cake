@@ -240,3 +240,51 @@ monitor completed its real startup checks. No Function execution or new order
 was used to open the retry; actual MY ORDERS acceptance awaits user Chrome
 actions. CLOSED24 remains reserved for manual/emergency restoration. No health
 test, SMTP/Google change, additional user, order, coupon or schema write occurred.
+
+## Retry real read acceptance — PASS, still OPEN pending manual stop
+
+The first G list attempt completed server-side with one owned order, HTTP 200
+in 4.027 s, but the browser recorded a connection failure at 2.450 s. Two early
+H detail attempts received relay busy 409 without Function execution. These
+failed attempts remain preserved; the exact browser disconnect cause is
+UNVERIFIED. It was not a measured ten-second deadline expiry. A network-isolated
+workerd cancellation probe did not reproduce a permanently stuck busy state;
+no speculative lock removal or deployment was performed.
+
+The user then explicitly authorized computer-use inspection of this test site.
+H's list and foreign detail were checked sequentially on the same Chrome tab.
+H was signed out for an unmodified Guest cart comparison; the user personally
+completed G Google login, and G's list/detail were then inspected without
+navigating away during the requests. No additional deployment was used.
+
+| Real Chrome / original server check | Result | Browser total | Function runtime |
+| --- | --- | --- | --- |
+| G own list: one cancelled fixture displayed | PASS / 200 | 5.026 s | 3.391 s |
+| G own fixture detail and cancelled state displayed | PASS / 200 | 4.788 s | 3.071 s |
+| H list: zero orders displayed | PASS / 200 | 4.863 s | 3.450 s |
+| H requesting G fixture: original owner check | PASS / 404 | 4.441 s | 3.097 s |
+
+All four successful browser observations are within the original ten-second
+frontend limit. Runtime diagnostics confirm allowed platform UID, empty
+Appwrite-generated JWT, signed forwarded customer JWT present, original handler
+invocation and original 200/404 responses. This confirms the test JWT transport
+correction with actual user authentication. Guest relay 401 remains the prior
+PASS; it was not rerun or represented as original unauthenticated Function 401.
+Order creation/JWT owner assignment remains NOT RUN.
+
+Unmodified cart UI comparison on that same tab: G two items, H four, Guest four.
+G explicitly displays that Guest items are saved separately; H's import prompt
+is absent. The store/conditional UI logic is consistent with H retaining a prior
+Guest-import operation for that Guest signature; operation history itself was
+not directly inspected. Similar H/Guest contents alone do not prove new automatic
+merging. No items were imported, added, removed or changed during inspection.
+G/H current phone inputs are blank; this read-only retry does not establish a new
+profile-save/phone-autofill acceptance result. Earlier user-reported cart and
+profile-separation evidence is preserved separately.
+
+Actual retry usage: one Function deployment, five of nine read executions
+(including the first server-success/browser-failed G request), B7 cumulative
+15/120; OPEN23 used and CLOSED24 still reserved. Account/JWT and the read-only
+G/H Function remain open under the independent monitor until user `종료` or a
+confirmed safety failure. No new order, payment, coupon, mail, user, schema or
+operational resource was created. B5 remains DEFERRED / RELEASE BLOCKER.
