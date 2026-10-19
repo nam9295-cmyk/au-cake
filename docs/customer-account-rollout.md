@@ -1,5 +1,8 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> 2026-10-19 최종 준비: [실제 G JWT 주문 생성·owner 저장·MY ORDERS PASS 및 CLOSED31 복구](customer-account-final-release-preparation.md). 기존 Google/OTP/cart/readiness PASS는 재시험하지 않았다. [상시 SMTP 운영 전환 준비](customer-account-always-on-smtp.md)는 미적용/운영 승인 대기다. B5 단발 PASS와 상시 운영 RELEASE BLOCKER를 구분한다.
+
+
 > **최신 B5 FINAL 단발 인수 PASS:** [실행 결과](customer-account-b5-final-execution-results.md). 실제 메일1건·6자리 OTP 로그인·기존 G Google↔OTP 동일 UID를 화면과 Owner API로 확인했다. SMTP TLS/AUTH PASS, 노출297.793초 뒤 원본 SMTP·Account/OTP/JWT OFF·세션0·Function OFF/B6·flags false·CLOSED29 및 운영4개/Console 불변을 검증했다. 신규 Key 폐기 완료. Pages2회(누적29), 재생성4회, Function0회. **B5 단발 검증 완료이며 상시 운영 SMTP/출시 승인은 별도**다. D1 timeout·과거 AU/Gallery raw UNVERIFIED는 유지한다. 아래 이전 중단/DEFERRED 기록은 역사적 증거다.
 
 > **최신 B5 실행 결과:** [단발 OTP 시도 및 원복 기록](customer-account-b5-one-shot-otp-results.md). 공통 SMTP를 임시 적용했으나 Python health403/curl200 검사 차이로 Account/OTP ON 전에 중단했다. 자동 복구가 API 검사에서 멈춰 남은 worker는 사용자 root 실행으로 복원했고, 원본 bytes/이미지·큐0/0/failed1·운영4개 지문·OFF403/B6/CLOSED27을 직접 검증했다. 신규 SMTP Key는 폐기, OTP 요청0·UID검증 NOT RUN, Pages27·기존 Function16/120 보존. **B5 — BLOCKED / DEFERRED — RELEASE BLOCKER**, D1 timeout·과거 AU/Gallery raw UNVERIFIED 유지. 아래 이전 기록은 역사적 증거다.
