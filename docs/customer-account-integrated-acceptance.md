@@ -118,3 +118,51 @@ test Pages deployments. CLOSED22 is reserved and unused. No Function deployment,
 variable change, order creation or additional Function execution occurred for
 this correction. G own-list/detail and H empty-list/foreign-detail provider
 results are pending the user's manual Chrome actions; none is yet marked PASS.
+
+## OPEN21 safety stop and CLOSED22 restoration
+
+The user reported G login succeeded, then the test closed when opening orders.
+The first actual read execution, `6ad55f14822b9fa08642`, is `customer-orders`
+on the approved integrated deployment. It completed with HTTP 403 in 0.722 s;
+its only guard diagnostic is `REJECTED / IDENTITY`. It did not reach runtime
+HMAC verification or the original order handler. Its request metadata matches
+the approved body hash and server-side signature; that is not proof of runtime
+JWT/header delivery. No list/detail success or order-query performance is
+established by this rejected execution.
+
+The monitor rejected the guard failure and automatically closed the session.
+The generic monitor reason is `POLICY_OR_EXECUTION_MISMATCH`; the execution log
+narrows this incident to the guard's identity check, which requires both an
+allowed platform UID and a nonempty platform JWT. The specific failing field
+was not logged and remains **UNVERIFIED**. Persisted execution request headers
+are an allowlist-filtered view and cannot establish that either runtime header
+was absent. This is not evidence of an unexpected external execution.
+
+The Appwrite 1.8.1 source exposes a concrete compatibility concern: JWT-only
+authentication validates the JWT/session and resolves the user without
+populating the cookie/session-secret store. Execution creation generates its
+`x-appwrite-user-jwt` only after matching that store secret to an active session.
+The test relay sends the short-lived JWT without a session credential. An empty
+generated platform JWT is therefore the leading source-supported explanation;
+the runtime log has insufficient per-field diagnostics to prove it for this
+execution. Sources: [user authentication resource](https://github.com/appwrite/appwrite/blob/1.8.1/app/init/resources.php#L236-L355),
+[execution creation](https://github.com/appwrite/appwrite/blob/1.8.1/src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php#L186-L216).
+The product ownership checks and runtime guard have not been relaxed or changed.
+Further runtime/deployment work requires a separate authorized scope.
+
+Actual automatic restoration and subsequent Owner/public GET checks confirm:
+Account OFF / public 403, JWT issuance OFF, Function disabled / execute empty,
+all three customer/Renewal flags false, signing key invalidated, B6 active,
+this run's G/H sessions removed, and custom HTTPS site CLOSED22. Closure also
+verified the four production semantic fingerprints unchanged. The user must
+not attempt to log in while Account is intentionally OFF.
+
+Final usage: one new Function deployment for this integrated session (none for
+the relay fix); one of ten approved read executions used; B7 cumulative 10/120;
+Pages OPEN20, corrected OPEN21 and CLOSED22 consumed, cumulative 22 logical
+test deployments. No orders, coupons, users, schema or payment/mail writes were
+created. G/H cart and profile separation PASS remains preserved. G list is
+FAIL (403 identity rejection); own detail, H empty list and H foreign-order 404
+are NOT RUN. Guest relay 401 is PASS, distinct from original Function 401.
+**B5 — DEFERRED / RELEASE BLOCKER**, original D1 timeout and historical AU raw
+configuration UNVERIFIED remain unchanged.
