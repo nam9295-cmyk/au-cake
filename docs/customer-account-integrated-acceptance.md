@@ -99,5 +99,22 @@ The native workerd result is a local mock result, not provider acceptance.
 No Function or DB change is needed. Applying the correction requires one more
 OPEN Pages deployment beyond OPEN20, while preserving a final CLOSED deployment;
 that extra deployment is not authorized by the original OPEN20/CLOSED21 limit.
-Until separately approved, the deployed relay is unchanged and no additional
-Pages deployment or Function execution is performed for this correction.
+Before that separate approval, the deployed relay was unchanged and no additional
+Pages deployment or Function execution was performed for this correction.
+
+The user subsequently authorized corrected OPEN21 and final CLOSED22, preserving
+OPEN20 and all existing execution/resource limits. The signed scope and original
+journal are unchanged; a separate protected continuation approval records the
+new Pages slots. The replacement independent monitor completed two real checks
+while the previous monitor remained active, then took over with CLOSED22 as its
+single closure target. There is no automatic time expiry.
+
+Corrected OPEN21 deployment `add6e093-e8f4-466f-b681-f7c80dc5c17a` has source
+`19f1046`, on the existing isolated Pages project/branch. Its custom HTTPS domain
+returns Account page 200, enabled integrated-read mode, private Worker-source
+route 404 and unauthenticated relay 401 (460 ms, zero Function executions).
+Cloudflare inventory is now 24: three initial B3 deployments plus the 21 logical
+test Pages deployments. CLOSED22 is reserved and unused. No Function deployment,
+variable change, order creation or additional Function execution occurred for
+this correction. G own-list/detail and H empty-list/foreign-detail provider
+results are pending the user's manual Chrome actions; none is yet marked PASS.
