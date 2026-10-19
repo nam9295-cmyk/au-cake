@@ -1,6 +1,6 @@
 # 상시 SMTP 운영 전환 준비 — 적용 승인 전
 
-> Current resume: common SMTP remains OFF. The first production preparation issued/revoked its unused Key and stopped before SMTP apply; PR25/26 and OFF Pages are complete. Use only [the new run/manifest and current rollback checkpoint](customer-account-production-release-results.md). New scope includes permanent SMTP plus the remaining schema/Function/UION sequence; no completed merge or OFF build. New operating approval and named-operator acceptance are pending.
+> Current resume: common SMTP remains OFF. The first production preparation issued/revoked its unused Key and stopped before SMTP apply; PR25/26 and OFF Pages are complete. Use only [the new run/manifest and current rollback checkpoint](customer-account-production-release-results.md). Schema1+1, Function2 and readiness1513ms are now complete and may not be repeated. The pending manifest amendment only shortens the Resend Key display label and carries completed usage forward. Remaining operations are existing member snapshot reactivation, permanent SMTP and UION; no completed merge/OFF/provider test. New SHA approval is pending; SMTP and Key are still absent.
 
 2026-10-19. B5 단발 인수 결과는 [기존 결과](customer-account-b5-final-execution-results.md)를 그대로 인용한다. 이번 작업은 SMTP, root 설정, 컨테이너, Resend Key를 변경하거나 이메일을 발송하지 않는다. 단발 시험 Key는 폐기됐으며 재사용하지 않는다.
 

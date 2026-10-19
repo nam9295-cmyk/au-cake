@@ -16,7 +16,7 @@ import time
 
 STAGE = Path('/home/john/.verygood-account-smtp-production-resume')
 RUN_ID = 'ca-release-resume-20261019'
-EXPECTED_MANIFEST_SHA256 = "9972124a53e9a1bb8c9962e4165c5b1bf7c9dc1e427a4ec45e7b4dd1caf2fc4f"
+EXPECTED_MANIFEST_SHA256 = "0fd7a7c99681f6c236679a29c84e1d084c861c5d6cd65ca4d61e93653682acc3"
 GATES = ('operatingSemanticUnchanged','consoleUnchanged','quotaAccepted','onCallAssigned')
 PROJECTS = ['verygood-main','verygood-au','69cb27ef002b63e77c53','69db3ae20026cdc0c7fe']
 SMTP_KEYS = ('_APP_SMTP_HOST','_APP_SMTP_PORT','_APP_SMTP_SECURE','_APP_SMTP_USERNAME','_APP_SMTP_PASSWORD','_APP_SYSTEM_EMAIL_NAME','_APP_SYSTEM_EMAIL_ADDRESS')

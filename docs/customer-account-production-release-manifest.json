@@ -19,7 +19,7 @@
   "smtpVariableCount": 7,
   "originalManifestSha256": "73d658c275a6eda772e13dd899e7c55a73bf41dc5cf1525199a220ffb6d89155",
   "systemCredential": {
-    "name": "VERYGOOD Appwrite SYSTEM SMTP PRODUCTION RESUME 20261019",
+    "name": "VERYGOOD Appwrite SYSTEM SMTP PROD R2 20261019",
     "permission": "sending_access",
     "domainId": "43b81ebb-788c-41ac-8f0b-2160249a1470",
     "domain": "verygood-chocolate.com",
@@ -69,7 +69,7 @@
     "customerFlag": "CUSTOMER_ACCOUNT_ENABLED",
     "runtime": "node-22",
     "preserveFunctionDeployment": "6ad33cd2615e4096f7bf",
-    "functionDeploymentsMax": 2,
+    "functionDeploymentsMax": 0,
     "pagesNormalDeploymentsMax": 1,
     "pagesRollbackDeploymentsMax": 1,
     "preserveRenewalFlags": {
@@ -111,7 +111,7 @@
       ],
       "logging": true
     },
-    "functionExecutionsMax": 1,
+    "functionExecutionsMax": 0,
     "readOnlyRuntimeProbe": "customer-account-health",
     "nativeAuthProjectSettingsChanges": 0,
     "frontendProductionEnvAdd": {
@@ -134,9 +134,9 @@
       "automaticOffBuildsRemainingMax": 0,
       "remergeOrHistoryRewriteAllowed": false
     },
-    "functionVariablesBefore": 37,
+    "functionVariablesBefore": 39,
     "functionVariablesAfter": 39,
-    "functionVariablesAddedMax": 2,
+    "functionVariablesAddedMax": 0,
     "googlePublishingState": "Testing",
     "googleDefaultScopesOnly": true,
     "googlePublishingChangeIncluded": false,
@@ -146,7 +146,7 @@
       "readyMustBeTrue": true,
       "httpStatus": 200,
       "clientElapsedMsMustBeLessThan": 8000,
-      "attemptsMax": 1,
+      "attemptsMax": 0,
       "automaticRetry": false,
       "generalHealthNotUsed": true,
       "transportNote": "Official Functions execution transport may use POST; action is read-only customer-account-health; no DB documents are created or changed."
@@ -184,7 +184,27 @@
       "publicSecretAndTestResourceScan": "PASS",
       "sourceFilesVerified": 1973
     },
-    "productionEnvSecretVariableCount": 0
+    "productionEnvSecretVariableCount": 0,
+    "migrationApplyAllowed": false,
+    "currentSafeReaderDeployment": "6ad5ce82a6ae17a3830a",
+    "existingMemberDeploymentToReactivate": "6ad5cea0eb161f62de24",
+    "existingMemberDeploymentReactivationsMax": 1,
+    "readinessEvidence": {
+      "accepted": true,
+      "httpStatus": 200,
+      "enabled": true,
+      "ready": true,
+      "clientElapsedMs": 1513,
+      "executionId": "6ad5ceade17ea3ec5c60",
+      "deploymentId": "6ad5cea0eb161f62de24",
+      "mayBeRepeated": false
+    },
+    "completedSchema": {
+      "attribute": "customerUserId",
+      "index": "customerUser_created_idx",
+      "status": "available",
+      "existingDocumentsAndAclChanged": false
+    }
   },
   "approvalRequired": {
     "remainingProductionRelease": true,
@@ -209,9 +229,9 @@
     "freshCheckRequiredBeforeApply": true,
     "at": "2026-10-19T07:13:30.244949+00:00"
   },
-  "manifestVersion": 2,
-  "supersedesManifestSha256": "ef000413dab463a916e7fe6df821e390750f7d25f14ff44b0600f36a1b1e9fb2",
-  "priorManifestArchive": "docs/customer-account-production-release-manifest-v1.json",
+  "manifestVersion": 3,
+  "supersedesManifestSha256": "9972124a53e9a1bb8c9962e4165c5b1bf7c9dc1e427a4ec45e7b4dd1caf2fc4f",
+  "priorManifestArchive": "docs/customer-account-production-release-manifest-v2-approved.json",
   "stagePath": "/home/john/.verygood-account-smtp-production-resume",
   "semanticObservedAt": "2026-10-19T07:09:04.724Z",
   "historicalRawFingerprintEquivalence": "UNVERIFIED; not reclassified by current semantic agreement",
@@ -226,25 +246,26 @@
     "productionPagesFailed": 1,
     "productionPagesSuccessfulOff": 1,
     "productionPagesRollback": 0,
-    "productionFunctionDeployments": 0,
-    "productionReadinessExecutions": 0,
-    "productionOwnerAttributesCreated": 0,
-    "productionOwnerIndexesCreated": 0,
+    "productionFunctionDeployments": 2,
+    "productionReadinessExecutions": 1,
+    "productionOwnerAttributesCreated": 1,
+    "productionOwnerIndexesCreated": 1,
     "productionKeyIssuedThenRevoked": 1,
     "productionSmtpApplyContainerRecreations": 0,
     "productionSmtpRollbackContainerRecreations": 0,
     "isolatedTestLogicalPages": 31,
     "isolatedB7Executions": 19,
-    "isolatedB7ExecutionBudget": 120
+    "isolatedB7ExecutionBudget": 120,
+    "productionFunctionVariablesAdded": 2
   },
   "remainingBudget": {
     "mainMerges": 0,
     "offPagesDeployments": 0,
-    "ownerAttributes": 1,
-    "ownerIndexes": 1,
-    "compatibleReaderDeployments": 1,
-    "memberWritesDeployments": 1,
-    "customerReadinessExecutions": 1,
+    "ownerAttributes": 0,
+    "ownerIndexes": 0,
+    "compatibleReaderDeployments": 0,
+    "memberWritesDeployments": 0,
+    "customerReadinessExecutions": 0,
     "newSystemSendingKeys": 1,
     "smtpVariablesExactly": 7,
     "smtpApplyContainerRecreations": 2,
@@ -252,8 +273,9 @@
     "pagesRollbackDeployments": 1,
     "smtpRollbackContainerRecreations": 2,
     "actualOrdersPaymentsCouponsEmailsAndUsers": 0,
-    "functionVariablesAdded": 2,
-    "frontendEnvironmentKeysAdded": 1
+    "functionVariablesAdded": 0,
+    "frontendEnvironmentKeysAdded": 1,
+    "existingMemberDeploymentReactivation": 1
   },
   "cumulativeCeilingsAfterThisApproval": {
     "productionPagesNormalBuildAttempts": 3,
@@ -352,5 +374,13 @@
     "newPrivateJournalAndApplyClaim": true,
     "priorApprovalOrKeyReuseForbidden": true,
     "noAutomaticRetryOrBudgetExtension": true
+  },
+  "credentialLabelAmendment": {
+    "originalUiRejected": true,
+    "originalLabelLength": 56,
+    "newUiAccepted": true,
+    "newLabelLength": 46,
+    "credentialsActuallyCreated": 0,
+    "scopeDomainAndRisksUnchanged": true
   }
 }

@@ -1,0 +1,356 @@
+{
+  "mode": "production-always-on",
+  "executionApproved": false,
+  "runId": "ca-release-resume-20261019",
+  "host": "very-server",
+  "projectIds": [
+    "verygood-main",
+    "verygood-au",
+    "69cb27ef002b63e77c53",
+    "69db3ae20026cdc0c7fe"
+  ],
+  "rollbackSeconds": 480,
+  "hardDeadlineSeconds": 600,
+  "confirmationMaxAgeSeconds": 30,
+  "services": [
+    "appwrite-worker-mails",
+    "appwrite"
+  ],
+  "smtpVariableCount": 7,
+  "originalManifestSha256": "73d658c275a6eda772e13dd899e7c55a73bf41dc5cf1525199a220ffb6d89155",
+  "systemCredential": {
+    "name": "VERYGOOD Appwrite SYSTEM SMTP PRODUCTION RESUME 20261019",
+    "permission": "sending_access",
+    "domainId": "43b81ebb-788c-41ac-8f0b-2160249a1470",
+    "domain": "verygood-chocolate.com",
+    "newKeysMax": 1,
+    "created": false,
+    "previousProductionKeyRevoked": true
+  },
+  "semanticBaseline": {
+    "verygood-main": "7f1cdfdb1140e258298481525731d25c0d228518bbc4d3a0f58560e55d83e573",
+    "verygood-au": "c9cbb38e2208ede894a93c8e5e78c9252d231029f5f170bccdc10e70216f4de1",
+    "69cb27ef002b63e77c53": "b8db9e5fe576907648466f4a87f44d3f51ea3e5790342903835c267668e8150a",
+    "69db3ae20026cdc0c7fe": "b8db9e5fe576907648466f4a87f44d3f51ea3e5790342903835c267668e8150a"
+  },
+  "productionRelease": {
+    "projectId": "verygood-au",
+    "endpoint": "https://api.verygood-chocolate.com/v1",
+    "migration": [
+      {
+        "kind": "attribute",
+        "key": "customerUserId",
+        "type": "string",
+        "size": 36,
+        "required": false
+      },
+      {
+        "kind": "index",
+        "key": "customerUser_created_idx",
+        "type": "key",
+        "attributes": [
+          "customerUserId",
+          "$createdAt"
+        ],
+        "orders": [
+          "ASC",
+          "DESC"
+        ]
+      }
+    ],
+    "ownershipTarget": {
+      "databaseId": "verygood_cake_au",
+      "collectionId": "reservations"
+    },
+    "adminAuditIds": [
+      "6a3785f5000b3e6adfc6"
+    ],
+    "adminAuditVariable": "APPWRITE_ADMIN_USER_IDS",
+    "customerFlag": "CUSTOMER_ACCOUNT_ENABLED",
+    "runtime": "node-22",
+    "preserveFunctionDeployment": "6ad33cd2615e4096f7bf",
+    "functionDeploymentsMax": 2,
+    "pagesNormalDeploymentsMax": 1,
+    "pagesRollbackDeploymentsMax": 1,
+    "preserveRenewalFlags": {
+      "writes": true,
+      "preorders": true
+    },
+    "preserveAccountJwtOtpAndAdminAuth": true,
+    "googleCallback": "https://api.verygood-chocolate.com/v1/account/sessions/oauth2/callback/google/verygood-au",
+    "successAndFailurePath": "/account/auth/callback",
+    "googleCloudRedirectGetVerified": true,
+    "pagesProject": "au-cake-next",
+    "productionBranch": "main",
+    "domains": [
+      "au.verygood-chocolate.com",
+      "au-stage.verygood-chocolate.com"
+    ],
+    "priorPagesDeployment": "65a7ccae-422a-4d79-9262-fccea9b51c7f",
+    "functionOptionsPreserved": {
+      "runtime": "node-22",
+      "execute": [
+        "any"
+      ],
+      "events": [],
+      "schedule": "0 * * * *",
+      "timeout": 60,
+      "specification": "s-8vcpu-8gb",
+      "scopes": [
+        "databases.read",
+        "databases.write",
+        "collections.read",
+        "attributes.read",
+        "indexes.read",
+        "documents.read",
+        "documents.write",
+        "functions.read",
+        "buckets.read",
+        "files.read",
+        "files.write"
+      ],
+      "logging": true
+    },
+    "functionExecutionsMax": 1,
+    "readOnlyRuntimeProbe": "customer-account-health",
+    "nativeAuthProjectSettingsChanges": 0,
+    "frontendProductionEnvAdd": {
+      "VITE_CUSTOMER_ACCOUNT_ENABLED": "true"
+    },
+    "readerBuildCommand": "npm ci --omit=dev --include=optional && node scripts/native-smoke.mjs --linux-node22",
+    "agentInitiatedOrdersPaymentsEmailsMax": 0,
+    "preparedArtifactHashes": {
+      "frontend-on": "5934c9ef52e6f1f2404f9eeac21e211e3b10501f9e645d1fc245d65095a94964",
+      "function": "4854bfbd7be3a538b8cfa02cff38a61d43159957696867473d6738fd72d5d617"
+    },
+    "mainIntegration": {
+      "status": "completed",
+      "completedPRs": [
+        25,
+        26
+      ],
+      "currentOriginMain": "08799b739f6d8047154c0ea699aab81837196ce2",
+      "remainingMergesMax": 0,
+      "automaticOffBuildsRemainingMax": 0,
+      "remergeOrHistoryRewriteAllowed": false
+    },
+    "functionVariablesBefore": 37,
+    "functionVariablesAfter": 39,
+    "functionVariablesAddedMax": 2,
+    "googlePublishingState": "Testing",
+    "googleDefaultScopesOnly": true,
+    "googlePublishingChangeIncluded": false,
+    "sourceCommit": "08799b739f6d8047154c0ea699aab81837196ce2",
+    "frontendOffCheckpointAlreadyLive": true,
+    "readinessGate": {
+      "readyMustBeTrue": true,
+      "httpStatus": 200,
+      "clientElapsedMsMustBeLessThan": 8000,
+      "attemptsMax": 1,
+      "automaticRetry": false,
+      "generalHealthNotUsed": true,
+      "transportNote": "Official Functions execution transport may use POST; action is read-only customer-account-health; no DB documents are created or changed."
+    },
+    "functionEnvironmentChanges": [
+      {
+        "key": "APPWRITE_ADMIN_USER_IDS",
+        "value": "6a3785f5000b3e6adfc6",
+        "secret": true,
+        "purpose": "existing collection ACL admin UID audit only; preserve REVIEW_ADMIN_USER_IDS"
+      },
+      {
+        "key": "CUSTOMER_ACCOUNT_ENABLED",
+        "secret": false,
+        "reader": "false",
+        "memberWrites": "true",
+        "rollback": "false"
+      }
+    ],
+    "freezeVariablesBeforeEachDeployment": true,
+    "rollbackReaderDeployment": "create once in reader step; preserve its false runtime snapshot; reactivate without a new deployment",
+    "preserveFunctionVariablesExisting": 37,
+    "preserveCustomCakeAndGuestPolicies": true,
+    "productionPagesConfigBaselineSha256": "95544bcdf2ea664dc0f68a3e9c8ad74588f52c6e3b93f296b9e7e5ff8c298526",
+    "agentNewUsersCouponsOrCustomerDataEditsMax": 0,
+    "frontendArtifact": {
+      "sourceMain": "08799b739f6d8047154c0ea699aab81837196ce2",
+      "node": "22.16.0",
+      "npm": "10.9.2",
+      "platform": "linux x64",
+      "customerEnabled": true,
+      "files": 1062,
+      "artifactSha256": "5934c9ef52e6f1f2404f9eeac21e211e3b10501f9e645d1fc245d65095a94964",
+      "hashAlgorithm": "sha256(sorted relative path + NUL + file sha256 + newline)",
+      "publicSecretAndTestResourceScan": "PASS",
+      "sourceFilesVerified": 1973
+    },
+    "productionEnvSecretVariableCount": 0
+  },
+  "approvalRequired": {
+    "remainingProductionRelease": true,
+    "rootSevenVariablesAndBriefApiDowntime": true,
+    "keepSmtpAfterAllGates": true,
+    "sharedQuotaAndUnrestrictedRecipientsRisk": true,
+    "commonFallbackDeliveryGap": true,
+    "quotaMonitoringAndEmergencyRecoveryByNamedOperator": true,
+    "previousApprovalReusable": false,
+    "mainMergeIncluded": false
+  },
+  "responsibleOperator": "nam9295",
+  "responsibleOperatorAcceptanceRequired": true,
+  "latestReadOnlyResendObservation": {
+    "dailyUsed": 5,
+    "dailyLimit": 100,
+    "monthlyUsed": 87,
+    "monthlyLimit": 3000,
+    "ratePerSecond": 10,
+    "rootDomainVerified": true,
+    "testDomainVerified": true,
+    "freshCheckRequiredBeforeApply": true,
+    "at": "2026-10-19T07:13:30.244949+00:00"
+  },
+  "manifestVersion": 2,
+  "supersedesManifestSha256": "ef000413dab463a916e7fe6df821e390750f7d25f14ff44b0600f36a1b1e9fb2",
+  "priorManifestArchive": "docs/customer-account-production-release-manifest-v1.json",
+  "stagePath": "/home/john/.verygood-account-smtp-production-resume",
+  "semanticObservedAt": "2026-10-19T07:09:04.724Z",
+  "historicalRawFingerprintEquivalence": "UNVERIFIED; not reclassified by current semantic agreement",
+  "completedUsage": {
+    "scope": "customer production release; earlier isolated acceptance records are retained separately",
+    "normalMainMerges": 2,
+    "completedPRs": [
+      25,
+      26
+    ],
+    "productionPagesBuildAttempts": 2,
+    "productionPagesFailed": 1,
+    "productionPagesSuccessfulOff": 1,
+    "productionPagesRollback": 0,
+    "productionFunctionDeployments": 0,
+    "productionReadinessExecutions": 0,
+    "productionOwnerAttributesCreated": 0,
+    "productionOwnerIndexesCreated": 0,
+    "productionKeyIssuedThenRevoked": 1,
+    "productionSmtpApplyContainerRecreations": 0,
+    "productionSmtpRollbackContainerRecreations": 0,
+    "isolatedTestLogicalPages": 31,
+    "isolatedB7Executions": 19,
+    "isolatedB7ExecutionBudget": 120
+  },
+  "remainingBudget": {
+    "mainMerges": 0,
+    "offPagesDeployments": 0,
+    "ownerAttributes": 1,
+    "ownerIndexes": 1,
+    "compatibleReaderDeployments": 1,
+    "memberWritesDeployments": 1,
+    "customerReadinessExecutions": 1,
+    "newSystemSendingKeys": 1,
+    "smtpVariablesExactly": 7,
+    "smtpApplyContainerRecreations": 2,
+    "uiOnPagesDeployments": 1,
+    "pagesRollbackDeployments": 1,
+    "smtpRollbackContainerRecreations": 2,
+    "actualOrdersPaymentsCouponsEmailsAndUsers": 0,
+    "functionVariablesAdded": 2,
+    "frontendEnvironmentKeysAdded": 1
+  },
+  "cumulativeCeilingsAfterThisApproval": {
+    "productionPagesNormalBuildAttempts": 3,
+    "productionPagesIncludingReservedRollback": 4,
+    "productionFunctionDeployments": 2,
+    "productionReadinessExecutions": 1,
+    "productionSystemKeysIssuedIncludingPreviouslyRevoked": 2,
+    "productionContainerRecreationsIncludingRollback": 4
+  },
+  "smtpProtection": {
+    "expectedImageTag": "appwrite/appwrite:1.8.1",
+    "expectedImageId": "sha256:d6c8a343ef61ed16389b19664cfc30f0559aa5bfdb81965fcd2763d354f4964d",
+    "expectedComposeSha256": "b25cfb1a690c41f796870b58b47504712dfbb3c3fff2d1f203f39ed18a3e1a7a",
+    "expectedOriginalEnvSha256": "4e049bec82fb598c6d64cbf3c272fae9ef154eea826c29baba9931c9f5c91256",
+    "changes": {
+      "_APP_SMTP_HOST": {
+        "before": "",
+        "after": "smtp.resend.com"
+      },
+      "_APP_SMTP_PORT": {
+        "before": "",
+        "after": "465"
+      },
+      "_APP_SMTP_SECURE": {
+        "before": "",
+        "after": "ssl"
+      },
+      "_APP_SMTP_USERNAME": {
+        "before": "",
+        "after": "resend"
+      },
+      "_APP_SMTP_PASSWORD": {
+        "before": "",
+        "afterSecretSource": "new-system-only-protected-credential"
+      },
+      "_APP_SYSTEM_EMAIL_NAME": {
+        "before": "Appwrite",
+        "after": "VERYGOOD%20Chocolate%20System"
+      },
+      "_APP_SYSTEM_EMAIL_ADDRESS": {
+        "before": "noreply@appwrite.io",
+        "after": "appwrite-system@verygood-chocolate.com"
+      }
+    },
+    "applyOrder": [
+      "appwrite-worker-mails",
+      "appwrite"
+    ],
+    "rollbackOrder": [
+      "appwrite",
+      "appwrite-worker-mails"
+    ],
+    "independentTimerSeconds": 480,
+    "keepMustCompleteBeforeSeconds": 480,
+    "hardDeadlineSeconds": 600,
+    "publicHealthMaxSeconds": 60,
+    "timerOrRollbackCannotBeBypassed": true,
+    "freshRootAndBackupsRequiredBeforeAnyReleaseWrite": true,
+    "originalConfigurationImageQueueAndUnrelatedContainersMustBePreserved": true,
+    "queueBaseline": {
+      "queue": 0,
+      "processing": 0,
+      "failed": 1
+    },
+    "failedMailRetryDeleteOrBodyReadAllowed": false,
+    "commonFallbackActualDelivery": "NOT VERIFIED; existing B5 OTP delivered via the test project override",
+    "gOnlyRecipientRestrictionProven": false,
+    "agentEmailTests": 0
+  },
+  "quotaPolicy": {
+    "provider": "Resend shared team quota",
+    "dailyLimit": 100,
+    "monthlyLimit": 3000,
+    "requestsPerSecond": 10,
+    "startAndKeepMinimumDailyRemaining": 50,
+    "startAndKeepMinimumMonthlyRemaining": 1000,
+    "stopOrEscalateAtDailyUsed": 50,
+    "stopOrEscalateAtMonthlyUsagePercent": 80,
+    "unexpectedIncreaseWithin5MinutesMax": 10,
+    "stopOn": [
+      "unexpected system sends",
+      "429",
+      "SMTP AUTH/TLS failure",
+      "queue or failed count increase",
+      "new operating semantic/configuration drift"
+    ],
+    "recipientOrKeySpecificQuotaGuarantee": false,
+    "nativeAccountApiCanBypassFrontendUi": true,
+    "persistentMonitoring": "named operator and provider monitoring; no claim of a new automatic abuse monitoring system"
+  },
+  "currentRunOperatorAcceptance": false,
+  "previousAcceptanceDoesNotAuthorizeThisRun": true,
+  "approvalProofPolicy": {
+    "immutableManifestExecutionApprovedStaysFalse": true,
+    "proofMustBindThisShaAndRun": true,
+    "newPrivateJournalAndApplyClaim": true,
+    "priorApprovalOrKeyReuseForbidden": true,
+    "noAutomaticRetryOrBudgetExtension": true
+  }
+}

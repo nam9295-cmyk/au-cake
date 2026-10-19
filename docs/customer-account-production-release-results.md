@@ -2,7 +2,26 @@
 
 2026-10-19. **PR25/26 integration and the customer-OFF production deployment are complete.** This document supersedes the operational instructions in the [first stopped release report](customer-account-production-release-results-v1-stopped.md); that evidence remains unchanged. No completed merge, OFF deployment or functional acceptance is repeated.
 
-## Approved resume — stopped before the first resource write
+## Latest approved retry — backend complete, credential label amendment pending
+
+The user authorized one fresh retry after `60386f4`, retaining manifest/run identity where safe. An independent attempt2 proof/journal/claims was created in the protected `production-resume-retry` directory; the stopped attempt1 evidence and root backup remain untouched. Fresh Owner metadata still matched main08799b7/OFF65a7ccae and operating4 policy. The corrected optional-default adapter was verified in the actual execution path using a fully intercepted local transport.
+
+- Optional customerUserId Attribute1 and customerUser_created_idx Index1: **available**. Existing documents/ACL unchanged.
+- Compatible reader deployment: **6ad5ce82a6ae17a3830a**, active with customer flagfalse as the present safe checkpoint.
+- Member writes deployment: **6ad5cea0eb161f62de24**, built/activated successfully and retained for reactivation without another deployment.
+- Both builds: Linux x64/Node22.23.2/sharp0.35.5 native JPEG/PNG/WebP and invalid image checks PASS. Original37 variables/options, Renewal true/true and admin/Custom Cake/guest policies preserved; only the two approved variables added, total39.
+- Sole production customer readiness execution **6ad5ceade17ea3ec5c60**: **HTTP200 / enabled=true / ready=true / client1513ms**. This PASS will not be repeated.
+- New system Key0, SMTP changes0/container recreations0, UI Pages0. Official Resend observation remained daily5/100,monthly87/3000.
+
+The approved credential display name `VERYGOOD Appwrite SYSTEM SMTP PRODUCTION RESUME 20261019` (56 characters) is rejected by the official Resend create form. The shorter proposed `VERYGOOD Appwrite SYSTEM SMTP PROD R2 20261019` is accepted by that form with the same **Sending access / verygood-chocolate.com** restriction. Add was never clicked; no key exists. The exact maximum length was not independently asserted.
+
+Because the credential name is manifest-bound, it was not silently substituted. Pending manifestv3 SHA **`0fd7a7c99681f6c236679a29c84e1d084c861c5d6cd65ca4d61e93653682acc3`** changes that label and carries all completed usage forward. Its remaining schema/Function-deployment/readiness budgets are0; it permits only reactivation of the already validated member snapshot, key1, SMTP7/two apply containers/480s keep gate, UI Pages1, and existing recovery reserves. No main merge/OFF build/provider test/full suite is repeated. The immutable [approved v2 manifest](customer-account-production-release-manifest-v2-approved.json) retains SHA9972124a…; no previous approval is executable for v3.
+
+During this approval pause, the customer metadata flag was setfalse and the already deployed false reader restored; native operating Account/OTP/JWT and all normal sales flags remain unchanged. The user stopped the waiting root process. Both root backups/status records and the used v2 approval are archived, with no key/apply/keep request. Existing OFF Pages65a7ccae remains live. Root preparation for v3 must use its own fresh proof and backup; no old approval reuse or new Function/readiness attempt is permitted.
+
+Only the new manifest binding was changed in the existing SMTP adapter. Focused local binding/rollback tests: **18PASS/0FAIL/0SKIP**; no accepted product suite or provider test repeated. Approval of the pending SHA is required before continuing the remaining SMTP/UI work.
+
+## Historical first approved resume — stopped before the first resource write
 
 The user explicitly approved SHA `9972124a53e9a1bb8c9962e4165c5b1bf7c9dc1e427a4ec45e7b4dd1caf2fc4f`, run `ca-release-resume-20261019`, and nam9295's monitoring/recovery responsibility. A new protected approval/journal was created; no prior approval, key or usage was reused.
 

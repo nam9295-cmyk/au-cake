@@ -10,7 +10,9 @@
 
 **Spec:** `docs/customer-account-production-release-manifest.json` (version2, executionApproved=false), `docs/customer-account-production-release-results.md`, approved original customer-account design.
 
-**Execution status:** The new SHA and operator responsibility were approved. Fresh metadata/root/timer preflight and exact-two-item migration dry-run passed. Execution stopped before the first create request because the local adapter incorrectly required explicitly serialized optional defaults. Local regression/fix completed without a network retry; resource mutations0. Root preparation stopped, OFF checkpoint and original services preserved. The stopped approval/journal/claim remain archived; no continuation is automatic.
+**Latest execution status:** Fresh attempt2 completed owner Attribute/Index, reader/member deployments and the sole readiness (HTTP200/readytrue/1513ms). Existing false reader6ad5ce82a6ae17a3830a is restored while the exact credential display name is amended to one accepted by Resend. Member6ad5cea0eb161f62de24 remains reusable; no new deployment/readiness is permitted. Pending v3 SHA `0fd7a7c99681f6c236679a29c84e1d084c861c5d6cd65ca4d61e93653682acc3` requires approval. Function deployments2/readiness1/schema1+1 are consumed, not reset. Key/SMTP/UI remain0. The original first-attempt stop and all evidence remain in the results and protected ledgers.
+
+**Remaining approved-amendment path:** new SHA acceptance → fresh root proof/backup/timer → new domain-limited Sending Key with the accepted shorter display label → restore metadata customertrue and reactivate existing validated member snapshot (no deployment/execution) → original SMTP apply/keep gates → prepared UI ON Pages1. Recovery reserves remain Pages1/containers2. The numbered original tasks below are historical execution instructions; Tasks2–4 may not be run again.
 
 ## Global constraints and counters
 
