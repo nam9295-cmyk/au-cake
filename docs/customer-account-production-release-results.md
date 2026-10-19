@@ -2,6 +2,26 @@
 
 2026-10-19. **PR25/26 integration and the customer-OFF production deployment are complete.** This document supersedes the operational instructions in the [first stopped release report](customer-account-production-release-results-v1-stopped.md); that evidence remains unchanged. No completed merge, OFF deployment or functional acceptance is repeated.
 
+## Approved resume — stopped before the first resource write
+
+The user explicitly approved SHA `9972124a53e9a1bb8c9962e4165c5b1bf7c9dc1e427a4ec45e7b4dd1caf2fc4f`, run `ca-release-resume-20261019`, and nam9295's monitoring/recovery responsibility. A new protected approval/journal was created; no prior approval, key or usage was reused.
+
+Fresh Owner metadata at `2026-10-19T07:45:39.852Z` matched the approved checkpoint. Legitimate root preflight passed at `07:46:54Z`: current env/Compose bytes, protected original/image backup, public curl/internal health and actual independent systemd probe. Available RAM7.79GiB/disk80.79GiB, established public80/443 connections0; queue0/processing0/failed1; Resend5/100 daily and87/3000 monthly.
+
+The fresh migration dry-run passed with exactly the two approved owner schema additions. **The newly bound local execution adapter then rejected the attribute payload before `fetch`**: it required explicit `default:null,array:false`, while the existing migration definition correctly sends only `key,size,required` and relies on those safe Appwrite defaults. This is an adapter validation defect introduced during the resume, not an Appwrite rejection or a production schema failure.
+
+| Remaining release action | Actual result |
+| --- | --- |
+| owner Attribute / Index creation | NOT RUN / NOT RUN; both still absent404 |
+| compatible reader / member writes deployment | NOT RUN / NOT RUN; original deployment remains active |
+| production customer readiness | NOT RUN; allowance not consumed |
+| new Sending Key / SMTP changes / container recreation |0 /0 /0; common SMTP still OFF |
+| customer UI ON / Pages recovery | NOT RUN / NOT NEEDED; current OFF65a7ccae retained |
+
+No automatic retry occurred. The attribute's pre-dispatch claim and the failure remain in the journal; actual schema create requests are0 and no counters/evidence were erased. The defect was reproduced locally, then corrected only in the protected execution adapter by normalizing omitted safe defaults before strict equality. A transport-stubbed regression accepts the two equivalent safe payloads and rejects four unsafe payloads; actual network writes0. The migration was **not rerun**.
+
+The user stopped the root preparation process with Ctrl+C. No key/apply/keep request existed; approval proofs were archived as stopped and are not executable authority. Final Owner GET at `07:49:51.833Z` confirmed current main/OFF deployment, Function37 variables, both owner items missing, DB2/Collection22 ACL and unchanged operating4 semantic fingerprints. API/mail-worker complete environment hashes, Console policy, image and queue were also compared to the pre-run baseline and remained unchanged. Root backup evidence is retained. Further release actions require explicit user direction; this attempt is stopped.
+
 ## Current checkpoint
 
 | Item | Verified state |
@@ -20,7 +40,7 @@
 | Resource sample | Available RAM≈7.9GiB, disk≈81.6GiB,load1≈0.45; recheck before writes |
 | Resend official observation | Daily5/100,monthly87/3000; root and test domains Verified; existing keys unchanged |
 
-No operating resources/configuration, Function execution, key issuance, SMTP or site activation was changed in this preparation.
+No operating resource/configuration, Function execution, key issuance, SMTP or site activation was changed by either preparation or this stopped attempt. The approved root backup and harmless timer probe ran; production containers were not recreated.
 
 Final GET-only recheck at `2026-10-19T07:27:50.053Z` again confirmed main/OFF deployment, all four current semantic hashes and the registry's exact `node-22` runtime. This new read-only observer does not import an old approval or carry mutation capability; prior execution helpers correctly reject the superseded manifest SHA. No customer documents or Function executions were read or created.
 
@@ -44,12 +64,12 @@ Function additions are exactly APPWRITE_ADMIN_USER_IDS (same existing ACL UID,se
 
 - New immutable manifest: [customer-account-production-release-manifest.json](customer-account-production-release-manifest.json), version2,executionApproved=false.
 - New SHA-256: `9972124a53e9a1bb8c9962e4165c5b1bf7c9dc1e427a4ec45e7b4dd1caf2fc4f`.
-- New run/stage: `ca-release-resume-20261019` / `/home/john/.verygood-account-smtp-production-resume`. New proof/journal/root backup/global apply claim required; old approval is rejected. No executable approval proof or new secret exists yet.
+- New run/stage: `ca-release-resume-20261019` / `/home/john/.verygood-account-smtp-production-resume`. This attempt's proof/journal/root backup are preserved; the approval is archived as stopped, with no executable proof or new system secret remaining. Old approval is rejected.
 - The [v1 manifest](customer-account-production-release-manifest-v1.json) retains SHA `ef000413dab463a916e7fe6df821e390750f7d25f14ff44b0600f36a1b1e9fb2`; it is historical authority only and cannot authorize this run.
 - New frontendON artifact:1062 files, latest main1973 source files matched; locally built on Linux x64/Node22.16.0/npm10.9.2 with exact production public configuration and explicittrue flag. **Prepared only, not deployed.** SHA `5934c9ef52e6f1f2404f9eeac21e211e3b10501f9e645d1fc245d65095a94964` over sorted path/NUL/content-hash records. Public secret/test-resource scan PASS.
 - New deterministic Function archive SHA `4854bfbd7be3a538b8cfa02cff38a61d43159957696867473d6738fd72d5d617`:56 source/lock files match latest main and accepted implementation. Nonexecutable Mac AppleDouble sidecars were omitted; code/dependency/policy changes0. Each actual approved deployment still requires Linux native smoke in its build.
 - Existing SMTP byte/rollback/keep implementation reused; only fresh binding and explicit named-operator acceptance gate updated. Local RED→GREEN verifies historical proof rejection, current checkpoint/budget and operator refusal. **18PASS/0FAIL/0SKIP** focused tests. No full accepted feature suite/provider test repeated.
-- Root original env/Compose byte hashes are expected immutable values. Current container env/image equality is observed, but **fresh on-disk root validation/backups/timer probe for this run remain NOT RUN** and must pass before any release write. No root upload or timer was started.
+- Fresh on-disk root validation, protected configuration/image backups and the harmless independent timer probe **passed for this attempt**. The root stage was uploaded and verified, then the user stopped its waiting process after the local adapter rejection. No SMTP rollback timer was armed because apply never began. A future execution must revalidate current state and may not reuse this stopped approval.
 
 ## One remaining execution sequence, after a new approval
 
@@ -65,6 +85,6 @@ Common SMTP enables shared email-auth transport for all existing4 operating proj
 
 Resend Free quota100/day,3000/month and10req/s is shared with operating notifications. Domain restriction does not restrict recipients or reserve notification capacity. Native Appwrite limits are not a global sending cap; direct Account API requests bypass frontend UI gating. No G-only guarantee or new automatic monitoring system is claimed. Start/keep requires daily remaining≥50/monthly≥1000; daily used50,monthly80%,unexpected+10 in5min,429/Auth/TLS or queue/failed increases require the named operator to stop new customer entry/escalate and if necessary roll back shared SMTP/revoke this key.
 
-**nam9295 must accept this new SHA's rollout monitoring and emergency root/Pages/credential recovery responsibility, including ongoing quota/error checks after Codex's execution ends.** Earlier acceptance remains evidence but does not authorize this new run. A final operating approval covers the shared blast radius, risk limits, root changes/new key and permanent SMTP keep. Legitimate root/login/secret entry handoffs are still required and are not additional operating approvals.
+**nam9295 explicitly accepted this SHA's rollout monitoring and emergency root/Pages/credential recovery responsibility.** That approval authorized this one stopped attempt; its evidence is preserved, not automatically reused for another attempt. The shared blast radius, risk limits, root changes/new key and permanent SMTP keep still require valid execution authority. Legitimate root/login/secret entry handoffs are not additional operating approvals.
 
 Common fallback actual email delivery is **NOT VERIFIED**: accepted B5 OTP used the test project override. This proposal sends0 test emails and requires explicit acceptance of that gap. Actual Google/OTP/sameUID/cart/profile/MYORDERS/real JWT member creation PASS is preserved. D1 legacy health timeout, review-api sharp issue and historical raw fingerprint uncertainty remain separately unresolved. Persistent SMTP and final UI activation are still **RELEASE BLOCKERS until approved and successfully applied**.

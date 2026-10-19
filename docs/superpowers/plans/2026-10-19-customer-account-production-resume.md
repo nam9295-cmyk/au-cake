@@ -10,6 +10,8 @@
 
 **Spec:** `docs/customer-account-production-release-manifest.json` (version2, executionApproved=false), `docs/customer-account-production-release-results.md`, approved original customer-account design.
 
+**Execution status:** The new SHA and operator responsibility were approved. Fresh metadata/root/timer preflight and exact-two-item migration dry-run passed. Execution stopped before the first create request because the local adapter incorrectly required explicitly serialized optional defaults. Local regression/fix completed without a network retry; resource mutations0. Root preparation stopped, OFF checkpoint and original services preserved. The stopped approval/journal/claim remain archived; no continuation is automatic.
+
 ## Global constraints and counters
 
 - Existing PR25/26 normal merges and OFF automatic deployment are complete. Remaining main merges/OFF deployments:0. Do not push main, merge documentation into main, change automatic-build settings, or reuse earlier approval proofs.
@@ -38,7 +40,7 @@
 - [x] Finalize new ON artifact/hash from current main and new deterministic Function archive. No earlier frontend artifact or approval is executable authority.
 - [x] Bind the existing operator to run `ca-release-resume-20261019`, stage `/home/john/.verygood-account-smtp-production-resume` and the final new SHA; focused RED→GREEN tests only. Do not modify the preserved one-shot operator.
 - [x] Preserve original `executionApproved=false`; create no executable approval proof before user approval.
-- [ ] Obtain one explicit approval covering remaining budget, common SMTP impact, fallback delivery gap, shared quota/recipient risk, new key/root changes and nam9295 monitoring/emergency recovery responsibility.
+- [x] Obtain one explicit approval covering remaining budget, common SMTP impact, fallback delivery gap, shared quota/recipient risk, new key/root changes and nam9295 monitoring/emergency recovery responsibility. This attempt subsequently stopped; approval evidence is retained and cannot silently authorize another attempt.
 
 ## Task 1 — Fresh pre-apply gate after approval, before resource writes
 
