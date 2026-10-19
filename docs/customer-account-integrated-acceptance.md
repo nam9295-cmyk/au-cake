@@ -368,3 +368,18 @@ it was not rerun to publish a bag label. Remaining release blockers are unchange
 B5 **DEFERRED — RELEASE BLOCKER**, actual Email OTP/Google↔OTP UID verification
 NOT RUN, actual member order creation/JWT owner assignment NOT RUN, D1 original
 health timeout unresolved, and historical AU raw settings difference UNVERIFIED.
+
+### User acceptance after OPEN24
+
+The user reported `HTTP 404 확인` and confirmed that the accounts appear correctly
+separated. The existing monitored Function evidence contains the new completed 404
+read (4.053 seconds runtime). This is the user's manual confirmation of the real
+cross-customer denial, preserved as PASS. No additional query was run by Codex to
+repeat it. Retry executions now total 6/9, cumulative B7 16/120. Pages remains
+OPEN24 used / CLOSED25 reserved. The live monitor remains safe/open pending the
+user's explicit termination; no B5 work or activation approval is inferred.
+
+Google authentication/session, scoped carts and read-only MY ORDERS acceptance may
+be treated as completed for the tested scenarios. This does not complete native
+Email OTP, Google↔OTP same-UID linking, actual authenticated order creation/owner
+assignment, or production release approval. B5 remains the next release blocker.
