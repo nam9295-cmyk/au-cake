@@ -383,3 +383,11 @@ Google authentication/session, scoped carts and read-only MY ORDERS acceptance m
 be treated as completed for the tested scenarios. This does not complete native
 Email OTP, Google↔OTP same-UID linking, actual authenticated order creation/owner
 assignment, or production release approval. B5 remains the next release blocker.
+
+### B5 handover: CLOSED25 verified
+
+The user's B5 request explicitly ended the integration session. The approved
+`manage-open24.mjs close` verified all restoration steps through CLOSED25, including
+Account403, JWT OFF, Function OFF/B6, flags false and G/H session cleanup. Normal
+manual completion is now closed. Pages25 used, B7 Function16/120 preserved. B5
+then stopped before SMTP apply; see [controlled result](customer-account-b5-final-results.md).

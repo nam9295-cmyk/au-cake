@@ -121,3 +121,11 @@ Gallery의 `updatedAt`과 `accessedAt`은 모두 **2026-10-18 01:08:10.315 KST**
 - [조회 시 접근 활동 저장](https://github.com/appwrite/appwrite/blob/1.8.1/app/controllers/shared/api.php#L403), [암호화 filter의 무작위 IV](https://github.com/appwrite/appwrite/blob/1.8.1/app/init/database/filters.php#L265). 이 source만으로 과거 지문 전체의 의미적 동일성이 증명되지는 않는다.
 - [Resend SMTP](https://resend.com/docs/send-with-smtp), [Key/domain 제한](https://resend.com/docs/dashboard/api-keys/introduction), [계정 한도](https://resend.com/docs/knowledge-base/account-quotas-and-limits).
 - [Docker compose up](https://docs.docker.com/reference/cli/docker/compose/up/), [restart의 env 반영 제한](https://docs.docker.com/reference/cli/docker/compose/restart/).
+
+## 2026-10-19 통합 실행 시도
+
+[최종 통제 작업 결과](customer-account-b5-final-results.md): CLOSED25 복원 PASS.
+공식 Owner GET 새 semantic baseline 전후 일치, 공통 SMTP/이미지/원본 설정과
+메일 큐0/0/1 보존 확인. G-only 수신자 제한은 입증되지 않아 공통 SMTP 적용 전
+중단했다. system Key·재생성·OTP 발송0회. B5는 **DEFERRED — RELEASE BLOCKER**.
+새 semantic 지문은 과거 Gallery/AU raw 차이의 소급 해소가 아니다.

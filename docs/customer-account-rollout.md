@@ -130,3 +130,12 @@ node scripts/migrate-customer-account-schema.mjs --dry-run
 5. guest 생성과 예약번호+전화번호 조회, 관리자 권한, 카트·폼 보존을 확인한다. 쿠폰/결제/메일 등 실제 거래·알림을 일으키는 smoke는 승인된 범위에서만 수행한다. 인증만 장애인 경우 guest 경로는 account readiness와 독립적이다. Appwrite/DB 전체 장애를 우회하는 새 저장소는 없으며 기존 오류 안내와 카트/requestId를 유지한다.
 
 계정 삭제는 rollback과 별개이며 [개인정보 처리 절차](customer-account-privacy.md)를 따른다. 로그인 고객에게 기존 비회원 주문을 자동 연결하거나, 이메일 일치로 이전 소유권을 복구하지 않는다.
+
+### 2026-10-19 B5 final controlled attempt
+
+[Result](customer-account-b5-final-results.md): integration CLOSED25 restore PASS;
+Account/OTP/JWT OFF, Function OFF/B6, approved sessions cleared. B5 remains
+**DEFERRED — RELEASE BLOCKER** because G-only native OTP recipient restriction is
+not proven and root/backup/rollback prerequisites are not yet verified. No common
+SMTP changes, key issuance, recreation or email sends. Fresh operating semantic
+fingerprints matched before/after; historical Gallery/AU raw uncertainty remains.

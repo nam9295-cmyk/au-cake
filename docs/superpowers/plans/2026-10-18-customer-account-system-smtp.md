@@ -185,3 +185,10 @@ python3 "$B5_BACKUP_DIR/tools/customer-account-system-smtp-env.py" rollback --ma
 ## 현재 계획 검증과 미완료
 
 이 계획의 root backup/Key/env apply/recreate/AUTH-check/rollback 명령은 실행하지 않았다. 현재 root 인증·system credential·실제 적용 권한이 없고, TO 제한도 입증하지 못했다. 공통 env/컨테이너는 그대로지만 Gallery raw config 지문 1개는 조회 활동·재암호화와 일치하는 변동이 관찰돼 완전 불변을 확정하지 않았다. 이 예외를 해소/검토하기 전 실제 적용하지 않는다. 예상 API 공백 30–120초, 유지보수 창15분은 실측 SLA가 아니다. 실행 직전 baseline이 바뀌면 중단하고 계획을 갱신한다.
+
+## 2026-10-19 실행 기록
+
+사용자의 최신 일괄 요청으로 기존 통합 시험을 CLOSED25까지 종료했다.
+[실행 결과](../../customer-account-b5-final-results.md)의 수신자 제한 gate에서
+중단했으며 SMTP apply/Key 발급/서비스 재생성/OTP는 실행하지 않았다.
+기존 명세와 SHA, 과거 raw 불확실성을 유지한다. B5는 **DEFERRED — RELEASE BLOCKER**.
