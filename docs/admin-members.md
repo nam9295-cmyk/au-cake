@@ -16,7 +16,7 @@
 
 ## 인증·개인정보 보호
 
-기존 reservation-api의 `list-admin-members` 동작을 사용한다. 플랫폼 UID/JWT를 기존 `resolveCustomerIdentity()`의 실제 Account.get()으로 검증하고, 기존 `REVIEW_ADMIN_USER_IDS` allowlist와 비교한 뒤에만 Users.list()를 호출한다. 기존 audit 변수 `APPWRITE_ADMIN_USER_IDS`가 있으면 동일 UID 집합이어야 한다. 이메일/클라이언트 role만으로 권한을 부여하지 않는다.
+기존 reservation-api의 `list-admin-members` 동작을 사용한다. 플랫폼 UID/JWT를 기존 `resolveCustomerIdentity()`의 실제 Account.get()으로 검증하고, 기존 `REVIEW_ADMIN_USER_IDS` allowlist와 비교한 뒤에만 Users.list()를 호출한다. 기존 audit 변수 `APPWRITE_ADMIN_USER_IDS`가 있으면 그 DB 관리자 UID만 회원 명단을 조회할 수 있으며, 모두 기존 `REVIEW_ADMIN_USER_IDS`에도 포함돼야 한다. 리뷰 전용 추가 UID는 회원 명단 권한을 얻지 않는다. 이메일/클라이언트 role만으로 권한을 부여하지 않는다.
 
 새 경로는 주문 readiness나 DB metadata 검사를 호출하지 않는다. 요청당 신원 확인1 + Users.list1이며 per-user Preferences 추가 조회가 없다. 응답은 명시적으로 선택한 9개 필드만 포함한다. raw prefs, password/hash, token, JWT, session, identity, MFA 등은 반환하지 않는다. no-store 응답과 비민감 오류 코드만 사용하고, UI에는 일반 오류 문구를 표시한다. 키/회원 데이터를 localStorage에 보관하지 않는다. 로그아웃·인증 알림·다른 탭 변경·focus 재확인 시 이전 명단을 먼저 지우고 지연 응답을 무시한다. 조회는 10초 후 실패하며 자동 재시도하지 않는다.
 
@@ -38,3 +38,12 @@
 배포 순서는 기존 운영 체크포인트 확인 → scope 최소 추가 및 새 서버 코드 배포 → frontend 통합/배포 → 관리자가 직접 로그인해 명단 확인이다. scopes 변경·Function/Pages 배포·main 통합은 이번 로컬 구현에서 실행하지 않았다. 권한이 없는 현재 운영 Function에 새 기능을 요청해 우회하지 않는다.
 
 실패 복구 기준은 현재 Pages `d64ba5b3-8790-473b-a7d6-932f0108d92e`, 기존 member deployment `6ad5cea0eb161f62de24`와 원래 Function scopes다. 새 회원 명단만 되돌리고 기존 고객 로그인·상시 SMTP·주문 기능은 유지한다. 운영 담당자가 승인한 배포/복구 횟수 안에서만 실행해야 한다.
+
+
+## 초기 운영 배포와 관리자 목록 차이 수정
+
+PR #27과 main `2a0deb4`로 초기 운영 배포했다. Function `6ad72567db667a3cfd21`, Pages `e569f2cc-313a-4fcf-bfd0-c2854ed234e1`의 배포 및 공개 자산은 확인했으나, 실제 관리자 회원 목록은 503으로 실패했다. 배포 완료와 인증된 목록 인수 성공은 구분한다.
+
+읽기 전용 runtime 환경 확인에서 기존 리뷰 관리자 UID는 2개, DB 관리자 UID는 1개이며 DB 관리자 집합이 리뷰 관리자 집합에 포함됨을 확인했다. 코드의 전체 집합 동등성 요구가 실패 원인이었다. 운영 allowlist·변수·DB ACL은 수정하지 않고, audit DB 관리자 집합이 리뷰 관리자 집합의 부분집합인지 검증한 뒤 DB 관리자 집합만 회원 조회에 사용한다. 누락·빈 값·잘못된 ID·포함되지 않는 audit UID는 계속 차단한다. audit 변수가 없는 기존 fallback은 유지한다.
+
+신규 회귀는 이 실제 2:1 구성에서 DB 관리자 200 및 리뷰 전용 관리자 403을 확인한다. 기존 타인·미인증·위조·설정 오류·비밀 필드 제외 검증도 유지한다. 로컬 집중 테스트 21개 및 전체 테스트 2,199 PASS / 0 FAIL / 기존 조건부 1 SKIP, TypeScript와 변경 UI lint 통과. 실제 운영 인증 인수 결과는 수정 배포 후 별도 실행 증거로 남긴다.

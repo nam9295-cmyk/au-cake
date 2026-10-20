@@ -11,7 +11,10 @@ function adminIds(env) {
   if(!ids.length||ids.some(id=>!identifier.test(id)))unavailable()
   if(env.APPWRITE_ADMIN_USER_IDS!==undefined) {
     const audit=[...new Set(String(env.APPWRITE_ADMIN_USER_IDS).split(',').map(v=>v.trim()).filter(Boolean))].sort()
-    if(JSON.stringify(audit)!==JSON.stringify(ids))unavailable()
+    // Review administration can include additional legacy IDs. Member access
+    // stays limited to existing DB administrators who are also review admins.
+    if(!audit.length||audit.some(id=>!identifier.test(id)||!ids.includes(id)))unavailable()
+    return new Set(audit)
   }
   return new Set(ids)
 }
