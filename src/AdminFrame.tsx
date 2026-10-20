@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { LogOut } from 'lucide-react'
 import type { Page } from './lib/app-routes'
 import { logoutAdmin } from './lib/repository'
+import { marketConfig } from './lib/market'
 
 export default function AdminFrame({ navigate, children }: { navigate: (page: Page) => void; children: ReactNode }) {
   async function logout() {
@@ -18,6 +19,7 @@ export default function AdminFrame({ navigate, children }: { navigate: (page: Pa
         <button type="button" onClick={() => navigate('admin-custom-cakes')}>커스텀 케이크</button>
         <button type="button" onClick={() => navigate('admin-classes')}>클래스 예약</button>
         <button type="button" onClick={() => navigate('admin-reviews')}>리뷰 관리</button>
+        {marketConfig.market === 'AU' && <button type="button" onClick={() => navigate('admin-members')}>회원 명단</button>}
         <button type="button" onClick={logout}><LogOut size={16} /> 로그아웃</button>
       </aside>
       <main className="admin-main">{children}</main>

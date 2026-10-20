@@ -13,6 +13,7 @@ const namedPrivatePages = [
 ]
 
 const defaultPrivatePages = [
+  ['AdminMembersPage', './AdminMembersPage'],
   ['AdminReviewsPage', './AdminReviewsPage'],
   ['ReadOnlyCalendarPage', './ReadOnlyCalendarPage'],
 ]

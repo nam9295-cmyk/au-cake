@@ -20,6 +20,7 @@ const noindexOperationalRoutes = [
   '/admin/reservations',
   '/admin/classes',
   '/admin/reviews',
+  '/admin/members',
 ]
 
 function isDisallowed(pathname) {
