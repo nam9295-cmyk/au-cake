@@ -33,6 +33,23 @@ test('missing or inconsistent admin configuration fails closed without granting 
     const r=await call({settings});assert.equal(r.status,503);assert.equal(r.calls.length,0)
   }
 })
+test('a narrower DB admin allowlist works with existing additional review administrators',async()=>{
+  const settings={REVIEW_ADMIN_USER_IDS:'admin-1,review-only',APPWRITE_ADMIN_USER_IDS:'admin-1'}
+  const r=await call({settings,rows:[user('admin-1'),user('review-only'),user()]})
+  assert.equal(r.status,200)
+  assert.equal(r.body.result.total,3)
+  assert.equal(r.body.result.members[0].role,'admin')
+  assert.equal(r.body.result.members[1].role,'customer')
+})
+test('review-only administrators cannot read members when absent from the DB admin allowlist',async()=>{
+  const r=await call({
+    settings:{REVIEW_ADMIN_USER_IDS:'admin-1,review-only',APPWRITE_ADMIN_USER_IDS:'admin-1'},
+    headers:{'x-appwrite-user-id':'review-only','x-appwrite-user-jwt':'valid'},
+    identity:{$id:'review-only',status:true},
+  })
+  assert.equal(r.status,403)
+  assert.equal(r.calls.length,0)
+})
 test('server bounds queries and rejects arbitrary identities, scopes, fields and cursors',async()=>{
   for(const data of [{userId:'admin-1'},{limit:1000},{cursor:'../all'},{search:'a'.repeat(101)},{search:'bad\nquery'},{projectId:'other'}]){
     const r=await call({data});assert.equal(r.status,400);assert.equal(r.calls.length,0)
