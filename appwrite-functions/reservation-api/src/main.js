@@ -1,7 +1,7 @@
 import { RENEWAL_PICKUP_POLICY_VERSION } from './au-renewal-pickup-policy.js'
 import { RENEWAL_CONTRACT, isRenewalContract, MOCHI_FLAVOURS } from './au-renewal.js'
 import { canonicalRenewalRequest, buildRenewalOrderData } from './au-renewal-storage.js'
-import { AppwriteException, Client, Databases, ID, Query, Storage } from 'node-appwrite'
+import { AppwriteException, Client, Databases, ID, Query, Storage, Users } from 'node-appwrite'
 import {
   ReservationApiError,
   REVIEW_COUPON_ANIMALS,
@@ -44,6 +44,7 @@ import { resolveReservationAppwriteEndpoint } from './appwrite-endpoint.js'
 import { checkCustomerAccountReadiness, resolveCustomerAccountResources } from './customer-account-readiness.js'
 import { resolveCustomerIdentity, assertCustomerOrderReplayOwner } from './customer-identity.js'
 import { getCustomerOrder, listCustomerOrders, validateCustomerOrderRequest } from './customer-orders.js'
+import { listAdminMembers } from './admin-members.js'
 
 function reservationResourceConfig(env = process.env) {
   const cakeDatabaseId = env.APPWRITE_CAKE_DATABASE_ID || 'verygood_cake_au'
@@ -222,6 +223,7 @@ function reviewCouponInput(value) {
 }
 
 const LOGGABLE_ACTIONS = new Set([
+  'list-admin-members',
   'customer-account-health',
   'customer-orders',
   'customer-order',
@@ -758,6 +760,12 @@ return async ({ req, res, log, error }) => {
   try {
     const body = requestBody(req)
     action = body.action
+    if (action === 'list-admin-members') {
+      if (Object.keys(body).some(key => !['action', 'data'].includes(key))) throw new ReservationApiError('INVALID_ADMIN_MEMBERS_REQUEST', 400)
+      const services = servicesForRequest ? servicesForRequest(req) : { users: new Users(clientForRequest(req, env)) }
+      const result = await listAdminMembers({ headers: req.headers, env, users: services.users, accountForJwt: services.accountForJwt, data: body.data })
+      return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
+    }
     const memberCreate = action === 'create-cake' && Object.hasOwn(body, 'customerAccount')
     if (memberCreate) {
       if (body.customerAccount !== 'link' || !body.data || Object.hasOwn(body.data, 'customerUserId') || Object.hasOwn(body, 'customerUserId')) throw new ReservationApiError('INVALID_CUSTOMER_REQUEST', 400)
@@ -817,6 +825,13 @@ return async ({ req, res, log, error }) => {
     if (action.startsWith('calendar-')) return res.json({ ok: true, result }, 200, { 'Cache-Control': 'no-store' })
     return res.json({ ok: true, result }, 200)
   } catch (caught) {
+    if (action === 'list-admin-members') {
+      const allowed = new Set(['CUSTOMER_UNAUTHORIZED', 'ADMIN_MEMBERS_FORBIDDEN', 'INVALID_ADMIN_MEMBERS_REQUEST', 'ADMIN_MEMBERS_UNAVAILABLE'])
+      const known = caught instanceof ReservationApiError && allowed.has(caught.code)
+      const code = known ? caught.code : 'ADMIN_MEMBERS_UNAVAILABLE'
+      error(`reservation-api failed: list-admin-members ${code}`)
+      return res.json({ ok: false, code }, known ? caught.status : 503, { 'Cache-Control': 'no-store' })
+    }
     if (action === 'customer-orders' || action === 'customer-order') {
       const allowed = new Set(['CUSTOMER_ACCOUNT_DISABLED', 'CUSTOMER_ACCOUNT_NOT_READY', 'CUSTOMER_UNAUTHORIZED', 'INVALID_CUSTOMER_REQUEST', 'CUSTOMER_ORDER_NOT_FOUND', 'CUSTOMER_ORDERS_UNAVAILABLE'])
       const known = caught instanceof ReservationApiError && allowed.has(caught.code)

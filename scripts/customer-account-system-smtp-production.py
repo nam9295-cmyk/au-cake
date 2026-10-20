@@ -14,9 +14,9 @@ import socket
 import sys
 import time
 
-STAGE = Path('/home/john/.verygood-account-smtp-production')
-RUN_ID = 'ca-smtp-production-20261019'
-EXPECTED_MANIFEST_SHA256 = "ef000413dab463a916e7fe6df821e390750f7d25f14ff44b0600f36a1b1e9fb2"
+STAGE = Path('/home/john/.verygood-account-smtp-ui-final')
+RUN_ID = 'ca-release-smtp-ui-20261019'
+EXPECTED_MANIFEST_SHA256 = "6a498278d9cef1cfc5b4aa1a937fac101db0387a7a5b41dd484a04914bb9725d"
 GATES = ('operatingSemanticUnchanged','consoleUnchanged','quotaAccepted','onCallAssigned')
 PROJECTS = ['verygood-main','verygood-au','69cb27ef002b63e77c53','69db3ae20026cdc0c7fe']
 SMTP_KEYS = ('_APP_SMTP_HOST','_APP_SMTP_PORT','_APP_SMTP_SECURE','_APP_SMTP_USERNAME','_APP_SMTP_PASSWORD','_APP_SYSTEM_EMAIL_NAME','_APP_SYSTEM_EMAIL_ADDRESS')
@@ -36,8 +36,8 @@ def validate_manifest(m):
 
 
 def validate_operating_approval(proof,sha):
-    expected={'executionApproved':True,'runId':RUN_ID,'manifestSha256':sha,'alwaysOnApproved':True,'operatingChangeApproved':True}
-    if any(proof.get(k)!=v for k,v in expected.items()) or any(proof.get(k) is not True for k in ('executionApproved','alwaysOnApproved','operatingChangeApproved')):fail('NEW_OPERATING_APPROVAL_REQUIRED')
+    expected={'executionApproved':True,'runId':RUN_ID,'manifestSha256':sha,'alwaysOnApproved':True,'operatingChangeApproved':True,'responsibleOperator':'nam9295','operatorAcceptance':True}
+    if any(proof.get(k)!=v for k,v in expected.items()) or any(proof.get(k) is not True for k in ('executionApproved','alwaysOnApproved','operatingChangeApproved','operatorAcceptance')):fail('NEW_OPERATING_APPROVAL_REQUIRED')
 
 
 def claim_apply_once(backups,sha,backup):

@@ -156,6 +156,7 @@ function cakePageConfig(cake, robots = 'index, follow') {
 
 const privatePages = {
   ...(isAuMarket ? {
+    '/admin/members': {title:`Members Admin | ${brand}`,description:'Private member administration.',output:'directory',extensionlessAlias:true},
     '/account': {title:`My Account | ${brand}`,description:'Private customer account.',output:'directory',extensionlessAlias:true},
     '/account/auth/callback': {title:`Sign in | ${brand}`,description:'Private authentication return.',output:'directory',extensionlessAlias:true},
   } : {}),

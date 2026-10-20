@@ -72,6 +72,7 @@ const AdminDashboardPage = lazy(() => import('./AdminDashboardPage').then(({ Adm
 const AdminReservationsPage = lazy(() => import('./AdminReservationsPage').then(({ AdminReservationsPage }) => ({ default: AdminReservationsPage })))
 const AdminClassesPage = lazy(() => import('./AdminClassesPage').then(({ AdminClassesPage }) => ({ default: AdminClassesPage })))
 const AdminReviewsPage = lazy(() => import('./AdminReviewsPage'))
+const AdminMembersPage = lazy(() => import('./AdminMembersPage'))
 const ReadOnlyCalendarPage = lazy(() => import('./ReadOnlyCalendarPage'))
 const HogirlApp = lazy(() => import('./stories/hogirl/HogirlApp'))
 const KoreaCustomerStoriesPage = lazy(() => import('./pages/KoreaCustomerStoriesPage'))
@@ -288,7 +289,8 @@ function App() {
     page === 'admin-reservations' ||
     page === 'admin-custom-cakes' ||
     page === 'admin-classes' ||
-    page === 'admin-reviews'
+    page === 'admin-reviews' ||
+    page === 'admin-members'
   const isPrivatePage = isAdminPage || page === 'calendar' || page === 'account'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
   const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio', 'customer-stories', 'business'].includes(page)
@@ -439,6 +441,7 @@ function App() {
           {page === 'account' && <><AuRedesignHeader cartItemCount={cartItemCount}/><AccountPage language={language}/><AuRedesignFooter/></>}
           {page === 'admin-login' && <AdminLoginPage navigate={navigate} />}
           {page === 'admin' && <AdminDashboardPage navigate={navigate} />}
+          {page === 'admin-members' && <AdminMembersPage navigate={navigate} />}
           {page === 'admin-reservations' && <AdminReservationsPage navigate={navigate} />}
           {page === 'admin-custom-cakes' && <AdminReservationsPage navigate={navigate} />}
           {page === 'admin-classes' && <AdminClassesPage navigate={navigate} />}

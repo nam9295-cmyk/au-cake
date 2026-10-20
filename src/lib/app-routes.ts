@@ -36,6 +36,7 @@ export type Page =
   | 'admin-custom-cakes'
   | 'admin-classes'
   | 'admin-reviews'
+  | 'admin-members'
   | 'calendar'
 
 export function getCakeSlugFromPath(path: string): string | null {
@@ -84,6 +85,7 @@ export function getPageFromPath(path: string): Page {
   if (path === '/admin/custom-cakes') return 'admin-custom-cakes'
   if (path === '/admin/classes') return 'admin-classes'
   if (path === '/admin/reviews') return 'admin-reviews'
+  if (marketConfig.market === 'AU' && /^\/admin\/members\/?$/.test(path)) return 'admin-members'
   if (path === '/admin') return 'admin'
   return 'not-found'
 }
@@ -119,6 +121,7 @@ export function pathForPage(page: Page): string {
     'admin-custom-cakes': '/admin/custom-cakes',
     'admin-classes': '/admin/classes',
     'admin-reviews': '/admin/reviews',
+    'admin-members': '/admin/members',
     calendar: '/calendar',
   }
   return paths[page]

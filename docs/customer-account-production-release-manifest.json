@@ -1,7 +1,7 @@
 {
   "mode": "production-always-on",
   "executionApproved": false,
-  "runId": "ca-smtp-production-20261019",
+  "runId": "ca-release-smtp-ui-20261019",
   "host": "very-server",
   "projectIds": [
     "verygood-main",
@@ -17,13 +17,15 @@
     "appwrite"
   ],
   "smtpVariableCount": 7,
-  "originalManifestSha256": "6516ad5400b40955f6e6604eca2161560c5e5cb10305a6638af4b9377f1539ce",
+  "originalManifestSha256": "73d658c275a6eda772e13dd899e7c55a73bf41dc5cf1525199a220ffb6d89155",
   "systemCredential": {
-    "name": "VERYGOOD Appwrite SYSTEM SMTP PRODUCTION 20261019",
+    "name": "VERYGOOD Appwrite SMTP FINAL R3 20261019",
     "permission": "sending_access",
     "domainId": "43b81ebb-788c-41ac-8f0b-2160249a1470",
     "domain": "verygood-chocolate.com",
-    "newKeysMax": 1
+    "newKeysMax": 1,
+    "created": false,
+    "previousProductionKeyRevoked": true
   },
   "semanticBaseline": {
     "verygood-main": "7f1cdfdb1140e258298481525731d25c0d228518bbc4d3a0f58560e55d83e573",
@@ -34,28 +36,7 @@
   "productionRelease": {
     "projectId": "verygood-au",
     "endpoint": "https://api.verygood-chocolate.com/v1",
-    "migration": [
-      {
-        "kind": "attribute",
-        "key": "customerUserId",
-        "type": "string",
-        "size": 36,
-        "required": false
-      },
-      {
-        "kind": "index",
-        "key": "customerUser_created_idx",
-        "type": "key",
-        "attributes": [
-          "customerUserId",
-          "$createdAt"
-        ],
-        "orders": [
-          "ASC",
-          "DESC"
-        ]
-      }
-    ],
+    "migration": [],
     "ownershipTarget": {
       "databaseId": "verygood_cake_au",
       "collectionId": "reservations"
@@ -67,8 +48,8 @@
     "customerFlag": "CUSTOMER_ACCOUNT_ENABLED",
     "runtime": "node-22",
     "preserveFunctionDeployment": "6ad33cd2615e4096f7bf",
-    "functionDeploymentsMax": 2,
-    "pagesNormalDeploymentsMax": 2,
+    "functionDeploymentsMax": 0,
+    "pagesNormalDeploymentsMax": 1,
     "pagesRollbackDeploymentsMax": 1,
     "preserveRenewalFlags": {
       "writes": true,
@@ -84,7 +65,7 @@
       "au.verygood-chocolate.com",
       "au-stage.verygood-chocolate.com"
     ],
-    "priorPagesDeployment": "0af308ee-ad99-4345-838e-649c5a60111a",
+    "priorPagesDeployment": "65a7ccae-422a-4d79-9262-fccea9b51c7f",
     "functionOptionsPreserved": {
       "runtime": "node-22",
       "execute": [
@@ -109,7 +90,7 @@
       ],
       "logging": true
     },
-    "functionExecutionsMax": 1,
+    "functionExecutionsMax": 0,
     "readOnlyRuntimeProbe": "customer-account-health",
     "nativeAuthProjectSettingsChanges": 0,
     "frontendProductionEnvAdd": {
@@ -118,32 +99,96 @@
     "readerBuildCommand": "npm ci --omit=dev --include=optional && node scripts/native-smoke.mjs --linux-node22",
     "agentInitiatedOrdersPaymentsEmailsMax": 0,
     "preparedArtifactHashes": {
-      "frontend-off": "2929b7ed8f747d919b46b35565def58e13c97a2996c9a0e8ee71209cd787f379",
-      "frontend-on": "a2f5c4d1c3886b4a5c0ccd2dfb53a97d129003fd298defc5e13e60bc561b9f9d",
-      "function": "2b8000e09c9255145c84282e0762aca09da16ab72cc8f89021afc21b54962b32"
+      "frontend-on": "5934c9ef52e6f1f2404f9eeac21e211e3b10501f9e645d1fc245d65095a94964",
+      "function": "4854bfbd7be3a538b8cfa02cff38a61d43159957696867473d6738fd72d5d617"
     },
     "mainIntegration": {
-      "requiresExplicitApproval": true,
-      "currentOriginMain": "34ba1072f475ba8458b25a8ffd7a9e5467293dbe",
-      "mode": "normal merge with required checks; no history rewrite",
-      "triggersFirstCustomerOffPagesDeployment": true,
-      "otherAuCakeAutomaticBuilds": false
+      "status": "completed",
+      "completedPRs": [
+        25,
+        26
+      ],
+      "currentOriginMain": "08799b739f6d8047154c0ea699aab81837196ce2",
+      "remainingMergesMax": 0,
+      "automaticOffBuildsRemainingMax": 0,
+      "remergeOrHistoryRewriteAllowed": false
     },
-    "functionVariablesBefore": 37,
+    "functionVariablesBefore": 39,
     "functionVariablesAfter": 39,
-    "functionVariablesAddedMax": 2,
+    "functionVariablesAddedMax": 0,
     "googlePublishingState": "Testing",
     "googleDefaultScopesOnly": true,
-    "googlePublishingChangeIncluded": false
+    "googlePublishingChangeIncluded": false,
+    "sourceCommit": "08799b739f6d8047154c0ea699aab81837196ce2",
+    "frontendOffCheckpointAlreadyLive": true,
+    "readinessGate": {
+      "readyMustBeTrue": true,
+      "httpStatus": 200,
+      "clientElapsedMsMustBeLessThan": 8000,
+      "attemptsMax": 0,
+      "automaticRetry": false,
+      "generalHealthNotUsed": true,
+      "transportNote": "Official Functions execution transport may use POST; action is read-only customer-account-health; no DB documents are created or changed."
+    },
+    "functionEnvironmentChanges": [
+      {
+        "key": "CUSTOMER_ACCOUNT_ENABLED",
+        "secret": false,
+        "before": "false",
+        "activateExistingMember": "true",
+        "rollback": "false"
+      }
+    ],
+    "freezeVariablesBeforeEachDeployment": false,
+    "rollbackReaderDeployment": "6ad5ce82a6ae17a3830a",
+    "preserveFunctionVariablesExisting": 37,
+    "preserveCustomCakeAndGuestPolicies": true,
+    "productionPagesConfigBaselineSha256": "95544bcdf2ea664dc0f68a3e9c8ad74588f52c6e3b93f296b9e7e5ff8c298526",
+    "agentNewUsersCouponsOrCustomerDataEditsMax": 0,
+    "frontendArtifact": {
+      "sourceMain": "08799b739f6d8047154c0ea699aab81837196ce2",
+      "node": "22.16.0",
+      "npm": "10.9.2",
+      "platform": "linux x64",
+      "customerEnabled": true,
+      "files": 1062,
+      "artifactSha256": "5934c9ef52e6f1f2404f9eeac21e211e3b10501f9e645d1fc245d65095a94964",
+      "hashAlgorithm": "sha256(sorted relative path + NUL + file sha256 + newline)",
+      "publicSecretAndTestResourceScan": "PASS",
+      "sourceFilesVerified": 1973
+    },
+    "productionEnvSecretVariableCount": 0,
+    "migrationApplyAllowed": false,
+    "currentSafeReaderDeployment": "6ad5ce82a6ae17a3830a",
+    "existingMemberDeploymentToReactivate": "6ad5cea0eb161f62de24",
+    "existingMemberDeploymentReactivationsMax": 1,
+    "readinessEvidence": {
+      "accepted": true,
+      "httpStatus": 200,
+      "enabled": true,
+      "ready": true,
+      "clientElapsedMs": 1513,
+      "executionId": "6ad5ceade17ea3ec5c60",
+      "deploymentId": "6ad5cea0eb161f62de24",
+      "mayBeRepeated": false
+    },
+    "completedSchema": {
+      "attribute": "customerUserId",
+      "index": "customerUser_created_idx",
+      "status": "available",
+      "existingDocumentsAndAclChanged": false
+    },
+    "deploymentCreationAllowed": false
   },
   "approvalRequired": {
-    "operatingImpact": true,
-    "rootAndSevenVariables": true,
-    "keepSmtpAfterGates": true,
-    "rollbackMaximumFourContainerRecreations": true,
-    "quotaPolicyAndNamedOnCall": true,
-    "migrationAndFunctionPagesRelease": true,
-    "mainMerge": true
+    "remainingProductionRelease": true,
+    "rootSevenVariablesAndBriefApiDowntime": true,
+    "keepSmtpAfterAllGates": true,
+    "sharedQuotaAndUnrestrictedRecipientsRisk": true,
+    "commonFallbackDeliveryGap": true,
+    "quotaMonitoringAndEmergencyRecoveryByNamedOperator": true,
+    "previousApprovalReusable": false,
+    "mainMergeIncluded": false
   },
   "responsibleOperator": "nam9295",
   "responsibleOperatorAcceptanceRequired": true,
@@ -155,6 +200,182 @@
     "ratePerSecond": 10,
     "rootDomainVerified": true,
     "testDomainVerified": true,
-    "freshCheckRequiredBeforeApply": true
+    "freshCheckRequiredBeforeApply": true,
+    "at": "2026-10-19T08:36:02.149835+00:00"
+  },
+  "manifestVersion": 4,
+  "supersedesManifestSha256": "0fd7a7c99681f6c236679a29c84e1d084c861c5d6cd65ca4d61e93653682acc3",
+  "priorManifestArchive": "docs/customer-account-production-release-manifest-v3-stopped.json",
+  "stagePath": "/home/john/.verygood-account-smtp-ui-final",
+  "semanticObservedAt": "2026-10-19T08:25:57.751Z",
+  "historicalRawFingerprintEquivalence": "UNVERIFIED; not reclassified by current semantic agreement",
+  "completedUsage": {
+    "scope": "customer production release; earlier isolated acceptance records are retained separately",
+    "normalMainMerges": 2,
+    "completedPRs": [
+      25,
+      26
+    ],
+    "productionPagesBuildAttempts": 2,
+    "productionPagesFailed": 1,
+    "productionPagesSuccessfulOff": 1,
+    "productionPagesRollback": 0,
+    "productionFunctionDeployments": 2,
+    "productionReadinessExecutions": 1,
+    "productionOwnerAttributesCreated": 1,
+    "productionOwnerIndexesCreated": 1,
+    "productionKeyIssuedThenRevoked": 2,
+    "productionSmtpApplyContainerRecreations": 2,
+    "productionSmtpRollbackContainerRecreations": 2,
+    "isolatedTestLogicalPages": 31,
+    "isolatedB7Executions": 19,
+    "isolatedB7ExecutionBudget": 120,
+    "productionFunctionVariablesAdded": 2,
+    "previousSmtpExposureSeconds": 84.021,
+    "previousExistingMemberReactivations": 1
+  },
+  "remainingBudget": {
+    "mainMerges": 0,
+    "offPagesDeployments": 0,
+    "ownerAttributes": 0,
+    "ownerIndexes": 0,
+    "compatibleReaderDeployments": 0,
+    "memberWritesDeployments": 0,
+    "customerReadinessExecutions": 0,
+    "newSystemSendingKeys": 1,
+    "smtpVariablesExactly": 7,
+    "smtpApplyContainerRecreations": 2,
+    "uiOnPagesDeployments": 1,
+    "pagesRollbackDeployments": 1,
+    "smtpRollbackContainerRecreations": 2,
+    "actualOrdersPaymentsCouponsEmailsAndUsers": 0,
+    "functionVariablesAdded": 0,
+    "frontendEnvironmentKeysAdded": 1,
+    "existingMemberDeploymentReactivation": 1
+  },
+  "cumulativeCeilingsAfterThisApproval": {
+    "productionPagesNormalBuildAttempts": 3,
+    "productionPagesIncludingReservedRollback": 4,
+    "productionFunctionDeployments": 2,
+    "productionReadinessExecutions": 1,
+    "productionSystemKeysIssuedIncludingPreviouslyRevoked": 3,
+    "productionContainerRecreationsIncludingRollback": 8
+  },
+  "smtpProtection": {
+    "expectedImageTag": "appwrite/appwrite:1.8.1",
+    "expectedImageId": "sha256:d6c8a343ef61ed16389b19664cfc30f0559aa5bfdb81965fcd2763d354f4964d",
+    "expectedComposeSha256": "b25cfb1a690c41f796870b58b47504712dfbb3c3fff2d1f203f39ed18a3e1a7a",
+    "expectedOriginalEnvSha256": "4e049bec82fb598c6d64cbf3c272fae9ef154eea826c29baba9931c9f5c91256",
+    "changes": {
+      "_APP_SMTP_HOST": {
+        "before": "",
+        "after": "smtp.resend.com"
+      },
+      "_APP_SMTP_PORT": {
+        "before": "",
+        "after": "465"
+      },
+      "_APP_SMTP_SECURE": {
+        "before": "",
+        "after": "ssl"
+      },
+      "_APP_SMTP_USERNAME": {
+        "before": "",
+        "after": "resend"
+      },
+      "_APP_SMTP_PASSWORD": {
+        "before": "",
+        "afterSecretSource": "new-system-only-protected-credential"
+      },
+      "_APP_SYSTEM_EMAIL_NAME": {
+        "before": "Appwrite",
+        "after": "VERYGOOD%20Chocolate%20System"
+      },
+      "_APP_SYSTEM_EMAIL_ADDRESS": {
+        "before": "noreply@appwrite.io",
+        "after": "appwrite-system@verygood-chocolate.com"
+      }
+    },
+    "applyOrder": [
+      "appwrite-worker-mails",
+      "appwrite"
+    ],
+    "rollbackOrder": [
+      "appwrite",
+      "appwrite-worker-mails"
+    ],
+    "independentTimerSeconds": 480,
+    "keepMustCompleteBeforeSeconds": 480,
+    "hardDeadlineSeconds": 600,
+    "publicHealthMaxSeconds": 60,
+    "timerOrRollbackCannotBeBypassed": true,
+    "freshRootAndBackupsRequiredBeforeAnyReleaseWrite": true,
+    "originalConfigurationImageQueueAndUnrelatedContainersMustBePreserved": true,
+    "queueBaseline": {
+      "queue": 0,
+      "processing": 0,
+      "failed": 1
+    },
+    "failedMailRetryDeleteOrBodyReadAllowed": false,
+    "commonFallbackActualDelivery": "NOT VERIFIED; existing B5 OTP delivered via the test project override",
+    "gOnlyRecipientRestrictionProven": false,
+    "agentEmailTests": 0
+  },
+  "quotaPolicy": {
+    "provider": "Resend shared team quota",
+    "dailyLimit": 100,
+    "monthlyLimit": 3000,
+    "requestsPerSecond": 10,
+    "startAndKeepMinimumDailyRemaining": 50,
+    "startAndKeepMinimumMonthlyRemaining": 1000,
+    "stopOrEscalateAtDailyUsed": 50,
+    "stopOrEscalateAtMonthlyUsagePercent": 80,
+    "unexpectedIncreaseWithin5MinutesMax": 10,
+    "stopOn": [
+      "unexpected system sends",
+      "429",
+      "SMTP AUTH/TLS failure",
+      "queue or failed count increase",
+      "new operating semantic/configuration drift"
+    ],
+    "recipientOrKeySpecificQuotaGuarantee": false,
+    "nativeAccountApiCanBypassFrontendUi": true,
+    "persistentMonitoring": "named operator and provider monitoring; no claim of a new automatic abuse monitoring system"
+  },
+  "currentRunOperatorAcceptance": false,
+  "previousAcceptanceDoesNotAuthorizeThisRun": true,
+  "approvalProofPolicy": {
+    "immutableManifestExecutionApprovedStaysFalse": true,
+    "proofMustBindThisShaAndRun": true,
+    "newPrivateJournalAndApplyClaim": true,
+    "priorApprovalOrKeyReuseForbidden": true,
+    "noAutomaticRetryOrBudgetExtension": true
+  },
+  "executionSequence": [
+    "fresh approval and root backup/timer; exact OFF/current-policy gates",
+    "single corrected fail-closed SMTP entry; worker then API",
+    "post-SMTP GET policy, Console, queue, quota and root TLS/health gates; durable keep before480s",
+    "set existing CUSTOMER_ACCOUNT_ENABLED=true and activate existing validated member deployment; GET metadata only; accepted readiness evidence reused",
+    "UI ON Pages once using prepared current-main artifact; AU/au-stage HTTP/assets/CSP verification; final user login acceptance remains NOT RUN until user confirms"
+  ],
+  "executionEntry": {
+    "path": "scripts/customer-account-production-smtp-apply.command",
+    "automaticRetry": false,
+    "shellErrorMode": "set -Eeuo pipefail",
+    "stages": [
+      "official Wrangler whoami refresh",
+      "Cloudflare and Owner before-SMTP GET gates in false-reader state",
+      "fresh proof and initialized zero attempt counter; exclusive local claim",
+      "exact new root stage prepared/timer/candidate check; exclusive apply request"
+    ],
+    "anyFailedPreconditionRootApplyRequests": 0
+  },
+  "previousExecutionEvidence": {
+    "worktreeCommit": "dfc5c920f660476343cfbbc6268026703ef92555",
+    "stoppedRunId": "ca-release-resume-20261019",
+    "stoppedRootClaimMustBeRetained": "/root/verygood-b5-backups/ca-release-resume-20261019.apply.claim",
+    "previousLocalJournal": ".superpowers/sdd/2026-10-19-customer-account-production-resume-retry/journal.safe.json",
+    "countersMayBeReset": false,
+    "oldApprovalsAndRevokedKeysReusable": false
   }
 }

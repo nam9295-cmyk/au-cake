@@ -1,4 +1,8 @@
-# 상시 SMTP 운영 전환 준비 — 적용 승인 전
+# 상시 SMTP 운영 상태 및 복구
+
+> **Current: SMTP COMMITTED / production UI ON.** [Final release result](customer-account-smtp-ui-release-results.md). New v4 scope approved and executed once; root durable keep118.667sec, independent timer disarmed, non7 environment/Console/queue preserved. Sending KeyR3 remains active and protected; earlier Keys are revoked. Prior stopped/preparation text below is historical. Fallback actual delivery and named-operator quota/abuse monitoring risks remain as accepted.
+
+> Current resume: common SMTP remains OFF. The first production preparation issued/revoked its unused Key and stopped before SMTP apply; PR25/26 and OFF Pages are complete. Use only [the new run/manifest and current rollback checkpoint](customer-account-production-release-results.md). Schema1+1, Function2 and readiness1513ms are now complete and may not be repeated. The shortened Key label amendment was approved. The single SMTP application passed TLS/AUTH but was restored after the executor failed to propagate a Cloudflare401 preflight and local counter error. Common SMTP remains OFF, no UI deployment occurred, and apply2/restore2 container actions are consumed. The new Key was revoked by the user and absence verified in Resend; original keys and quota5/day,87/month are unchanged. No new attempt is authorized. Completed merge/OFF/provider tests are not repeated.
 
 2026-10-19. B5 단발 인수 결과는 [기존 결과](customer-account-b5-final-execution-results.md)를 그대로 인용한다. 이번 작업은 SMTP, root 설정, 컨테이너, Resend Key를 변경하거나 이메일을 발송하지 않는다. 단발 시험 Key는 폐기됐으며 재사용하지 않는다.
 
@@ -8,7 +12,7 @@
 
 B4 테스트 프로젝트 override는 별도 발신자/Key를 유지한다. B5 실제 OTP는 이 override로 전달됐으므로, 공통 fallback의 실제 배달까지 시험한 것으로 해석하지 않는다. 공통 SMTP TLS/AUTH는 두 컨테이너에서 PASS했다. 상시 적용 시 fallback 배달 확인 필요 여부와 실제 수신자/발송 1건은 별도 운영 승인에 포함해야 하며, 이번에는 보내지 않는다.
 
-새 승인에는 다음을 한 번에 명시한다: 운영 영향 수용, 정식 root/sudo, `verygood-chocolate.com` 제한 system Sending Key 1개, SMTP 7개 변수, 동일 Appwrite1.8.1 이미지의 worker/API 각1회 재생성, 실패 시 각1회 복구, SMTP 유지 확정 조건, 발송/장애 담당자, 공통 fallback 배달 시험 여부. main 병합·사이트 배포·고객 기능 ON은 별도다.
+새 승인에는 다음을 한 번에 명시한다: 운영 영향 수용, 정식 root/sudo, `verygood-chocolate.com` 제한 system Sending Key 1개, SMTP 7개 변수, 동일 Appwrite1.8.1 이미지의 worker/API 각1회 재생성, 실패 시 각1회 복구, SMTP 유지 확정 조건, 발송/장애 담당자, 공통 fallback 배달 시험 여부. main 병합·OFF 배포는 완료됐으며, 새 잔여-release 승인에 SMTP와 별도 한도의 Function/UION·복구를 함께 명시한다. 과거 승인과 Key는 재사용하지 않는다.
 
 ## Credential 및 재생성
 
@@ -20,7 +24,7 @@ B4 테스트 프로젝트 override는 별도 발신자/Key를 유지한다. B5 �
 - 이미지 pull/upgrade 없이 `appwrite-worker-mails` → `appwrite`만 `--no-deps --no-build --pull never --force-recreate --timeout 30`한다. 정확한 Compose 경로·서비스·image digest는 실행 직전 승인 manifest로 고정한다. 다른 컨테이너·DB·Function은 제외한다.
 - API 재생성 동안 일시적 API 중단이 생길 수 있다. 이전 단발 노출297.793초는 API 중단 시간 측정값이 아니다. 컨테이너별 시작/health 시간을 기록하고 API public curl200+내부 health가60초 이내 복원되지 않으면 원복한다.
 
-기존 단발 helper는480초에 무조건 복구하고600초 상한이 있다. **이 helper를 그대로 상시 적용용으로 실행하거나 타이머를 임의 해제하지 않는다.** 별도 운영 승인 후 기존 도구에 최소한의 유지 확정 계약을 추가해야 한다. 검증 전에는 server-side rollback이 독립적으로 작동하고, 모든 운영 gate PASS와 명시적 유지 확정 이후에만 예약 복구 해제를 허용한다. 이 전환은 `scripts/customer-account-system-smtp-production.py`에서 로컬 구현·17개 집중 테스트를 완료했다. [최종 운영 preflight](customer-account-production-final-preflight.md)를 따른다. 서버 staging/실행·SMTP 적용은 아직 하지 않았다.
+기존 단발 helper는480초에 무조건 복구하고600초 상한이 있다. **이 helper를 그대로 상시 적용용으로 실행하거나 타이머를 임의 해제하지 않는다.** 별도 운영 승인 후 기존 도구에 최소한의 유지 확정 계약을 추가해야 한다. 검증 전에는 server-side rollback이 독립적으로 작동하고, 모든 운영 gate PASS와 명시적 유지 확정 이후에만 예약 복구 해제를 허용한다. 이 전환은 `scripts/customer-account-system-smtp-production.py`에서 로컬 구현·17개 집중 테스트를 완료했다. [최종 운영 preflight](customer-account-production-final-preflight.md)를 따른다. v1 root staging/preflight는 수행했으나 apply 없이 not-applied로 종료했고 신규 Key는 폐기했다. 새 run의 root staging/preflight·SMTP 적용은 미실행이다.
 
 ## Quota·남용·중단 정책 제안
 
@@ -41,4 +45,4 @@ Appwrite1.8.1 `_APP_OPTIONS_ABUSE=enabled`와 route별 email/IP/user 기준 제�
 
 원본 바이트를 원자적으로 복구하고 API·mail worker 모두 원래 환경과 동일 image로 복원한 뒤 최종 public curl200·내부 health를 확인한다. 큐/processing/failed는 건수만 비교하며 failed1 재시도·삭제·내용 열람을 하지 않는다. 운영4개+Console의 현재 semantic baseline, 무관 컨테이너 ID/start time, G/H 및 운영 고객 권한 불변을 확인한다. 과거 AU/Gallery raw 차이는 UNVERIFIED로 보존한다.
 
-상시 적용은 아직 승인·실행하지 않았다. 새 Key 발급, 유지 확정 도구 변경, 실제 fallback 발송, root/서비스 변경이 이번 준비 결과에 포함됐다고 보고하지 않는다.
+상시 SMTP는 아직 미적용이다. 새 실행의 Key 발급·root/서비스 변경·실제 fallback 발송은 이번 준비에서0이다. 기존 유지 확정 도구는 새 SHA/run/stage와 명시적 담당자 수락에 연결해 로컬 검증했으며, 새로운 운영 승인 전에는 실행하지 않는다.

@@ -235,6 +235,7 @@ function getCakeDetailSeo(pathname: string): SeoConfig | null {
 }
 
 const privateSeo: Record<string, SeoConfig> = {
+  '/admin/members': {title:`Members Admin | ${brand}`,description:'Private member administration.',noindex:true},
   '/account': {title:`My Account | ${brand}`,description:'Private customer account.',noindex:true},
   '/account/auth/callback': {title:`Sign in | ${brand}`,description:'Private authentication return.',noindex:true},
   '/cart': {

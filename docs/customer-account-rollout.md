@@ -1,5 +1,9 @@
 # VERYGOOD AU Customer Account — 배포 및 복구 절차
 
+> **Current production release: UI ON / SMTP COMMITTED.** [Final result](customer-account-smtp-ui-release-results.md), Pagesd64ba5b3-8790-473b-a7d6-932f0108d92e, existing member6ad5cea0eb161f62de24 active, root keep118.667sec. AU/au-stage account/home200 and ON assets verified. Current run key1/apply2/UI1/recovery0; existing DB/Function/readiness PASS not repeated. Operatornam9295 retains monitoring/recovery responsibility. Actual production login acceptance awaits the user. The stopped/pending statements below are historical records, not current state.
+
+> **Current production checkpoint (2026-10-19):** PR25/26 and customer-OFF Pages deployment completed. Main `08799b739f6d8047154c0ea699aab81837196ce2`, rollback Pages `65a7ccae-422a-4d79-9262-fccea9b51c7f`; production Pages attempts2 preserved. [Current results and remaining approval](customer-account-production-release-results.md), [remaining-release plan](superpowers/plans/2026-10-19-customer-account-production-resume.md), amended manifest SHA `0fd7a7c99681f6c236679a29c84e1d084c861c5d6cd65ca4d61e93653682acc3`, executionApproved=false. Owner schema1+1, Function2 and readiness200/readytrue1513ms completed; no repetition. Current false reader6ad5ce82a6ae17a3830a preserves customerOFF; validated member6ad5cea0eb161f62de24 is retained. Remaining main merges/OFF builds/schema/deployment/readiness0. Amended SHA was approved; the single SMTP apply was restored after executor preflight error propagation failed. Apply2/restore2 container actions are consumed; SMTP remains OFF and UION remains0. Current authorization is stopped, global root apply claim consumed; the user revoked the new Key and official Console confirmed absence. Original keys and quota daily5/100,monthly87/3000 are unchanged. Existing accepted tests are not repeated; historical entries below preserve their original chronology.
+
 > 최종 운영 준비(2026-10-19): [Production preflight](customer-account-production-final-preflight.md). 운영 DB2/Collection22 ACL·GET-only migration을 확인했고 상시 SMTP 유지 확정 adapter와 OFF/ON 산출물을 로컬 준비했다. 운영 변경/배포/main 병합은 미실행이며, 상세 manifest의 새 일괄 승인을 기다린다.
 
 > 2026-10-19 최종 준비: [실제 G JWT 주문 생성·owner 저장·MY ORDERS PASS 및 CLOSED31 복구](customer-account-final-release-preparation.md). 기존 Google/OTP/cart/readiness PASS는 재시험하지 않았다. [상시 SMTP 운영 전환 준비](customer-account-always-on-smtp.md)는 미적용/운영 승인 대기다. B5 단발 PASS와 상시 운영 RELEASE BLOCKER를 구분한다.
@@ -57,7 +61,8 @@
 - [x] 전용 Sending Key/발신자·정식 root·보호 백업·동일 이미지 재생성4회 및 원복 검증
 - [x] 실제6자리 OTP 수신·로그인·기존 G Google↔OTP 동일 UID 검증
 - [ ] 상시 SMTP credential·발송 감시·공유 quota/남용 위험 운영 정책과 적용 승인
-- [ ] 최종 production 자원·feature flag 활성화·배포·main 병합 승인
+- [x] PR25/26 정상 main 통합 및 customer-OFF production 배포 (누적 시도2)
+- [ ] 새 SHA의 잔여 owner schema/Function/상시 SMTP/UION·복구 범위 최종 승인 및 적용
 
 G-only 수신자 제한이 입증된 것은 아니며 제품의 최종 수신자 정책으로 요구하지 않는다.
 이번에는 새 OTP-first 회원을 만들지 않았으므로 그 신규 가입/Google 연결 경로도 별도 미검증이다.
