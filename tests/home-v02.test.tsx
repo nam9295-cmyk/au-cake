@@ -25,16 +25,16 @@ const home = () =>
     />,
   )
 
-test('home renders video before the single new headline, Best, stories, collection and separate custom entry', () => {
+test('home renders video before the single new headline, Best, collection, stories and separate custom entry', () => {
   const html = home()
   assert.match(html, /<h1[^>]*>CHOCOLATE, CAKES &amp; CELEBRATIONS\.<\/h1>/)
   const markers = [
     'rd-hero-photo-wrap',
     '<h1',
     'id="best"',
-    'au-stories-home',
-    'au-v02-craft',
     'id="au-collection"',
+    'au-v02-craft',
+    'au-stories-home',
     'id="custom-cakes"',
     'id="business"',
     'id="story"',
@@ -46,6 +46,8 @@ test('home renders video before the single new headline, Best, stories, collecti
     position = next
   }
   assert.equal((html.match(/<h1\b/g) || []).length, 1)
+  assert.match(html, /SIGNATURE FAVOURITES · BEST \[4\]/)
+  assert.equal((html.match(/class="au-v02-best-card"/g) || []).length, 4)
   assert.match(html, /href="\/#au-collection"[^>]*>EXPLORE THE MENU/)
   assert.match(html, /href="\/#business"[^>]*>BUSINESS ENQUIRIES/)
 })
@@ -98,7 +100,13 @@ test('AU home SEO description agrees with the visible hero without altering exis
 test('Home membership agrees with the five/four/three renewal catalogue',()=>{
  const groups=getAuHomeCollections('en');assert.deepEqual(groups.map(g=>g.products.length),[5,4,3])
  assert.equal(groups[1].products[0].id,'mochi');assert.equal(groups[1].products[0].price,'From AUD 8.00 each');assert.equal(getAuHomeCollections('ko')[1].products[0].price,'개당 AUD 8.00부터')
- assert.deepEqual(getAuHomeBest('en').map(p=>p.id),['pave','gateau-loaf','brownie-whole'])
+ assert.deepEqual(getAuHomeBest('en').map(p=>p.id),['pave','gateau-loaf','brownie-whole','mochi'])
+ for (const language of ['en', 'ko'] as const) {
+  const best = getAuHomeBest(language)
+  const mochi = getAuHomeCollections(language)[1].products.find(product => product.id === 'mochi')
+  assert.deepEqual(best.at(-1), mochi)
+  assert.equal(best.at(-1)?.href, '/chocolates/chocolate-mochi')
+ }
  const products=groups.flatMap(g=>g.products)
  for(const [id,amount]of [['pave','75'],['brownie-whole','82'],['brownie-loaf','58'],['smore','25']])assert.ok(products.find(p=>p.id===id)?.price.includes(amount))
 })

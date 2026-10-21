@@ -78,11 +78,12 @@ function CollectionCard({ product }: { product: HomeProduct }) {
 function visibleBestIndex(track: HTMLDivElement) {
   const maximum = track.scrollWidth - track.clientWidth
   if (maximum <= 2) return 0
-  if (track.scrollLeft >= maximum - 2) return 2
+  const lastIndex = track.children.length - 1
+  if (track.scrollLeft >= maximum - 2) return lastIndex
   const first = track.children[0] as HTMLElement
   const second = track.children[1] as HTMLElement
   return Math.min(
-    2,
+    lastIndex,
     Math.round(track.scrollLeft / (second.offsetLeft - first.offsetLeft)),
   )
 }
@@ -199,15 +200,15 @@ function AuHomePage({
       >
         <div className="au-v02-section-heading">
           <p className="au-v02-eyebrow">
-            {t('SIGNATURE FAVOURITES · BEST [3]', '시그니처 베스트 · BEST [3]')}
+            {t(`SIGNATURE FAVOURITES · BEST [${best.length}]`, `시그니처 베스트 · BEST [${best.length}]`)}
           </p>
           <h2 id="au-best-title">
-            {t('OUR MOST REQUESTED CREATIONS', '가장 사랑받는 케이크')}
+            {t('OUR MOST REQUESTED CREATIONS', '가장 사랑받는 디저트')}
           </h2>
           <p>
             {t(
-              'Three iconic atelier cakes that define the Verygood chocolate craft.',
-              '베리굿의 초콜릿 작업을 대표하는 세 가지 케이크.',
+              'Cakes and chocolate favourites from our Sydney atelier.',
+              '베리굿에서 사랑받는 케이크와 초콜릿.',
             )}
           </p>
         </div>
@@ -215,7 +216,7 @@ function AuHomePage({
           className="au-v02-best-track"
           ref={bestTrack}
           role="region"
-          aria-label={t('Best cakes', '베스트 케이크')}
+          aria-label={t('Best cakes and chocolate', '베스트 케이크와 초콜릿')}
           tabIndex={0}
           onKeyDown={(event) => {
             if (
@@ -228,7 +229,7 @@ function AuHomePage({
               Math.max(
                 0,
                 Math.min(
-                  2,
+                  best.length - 1,
                   visibleBestIndex(event.currentTarget) +
                     (event.key === 'ArrowRight' ? 1 : -1),
                 ),
@@ -240,7 +241,7 @@ function AuHomePage({
           }}
         >
           {best.map((product, index) => (
-            <article className="au-v02-best-card" key={product.id}>
+            <article className="au-v02-best-card" key={product.id} data-best-product={product.id}>
               <a
                 className="au-v02-best-image"
                 href={product.href!}
@@ -275,7 +276,7 @@ function AuHomePage({
         </div>
         <div
           className="au-v02-best-indicators"
-          aria-label={t('Best cake position', '베스트 카드 위치')}
+          aria-label={t('Best product position', '베스트 카드 위치')}
         >
           {best.map((product, index) => (
             <button
@@ -289,26 +290,6 @@ function AuHomePage({
             </button>
           ))}
         </div>
-      </section>
-      <HomeCustomerStories />
-      <section
-        className="au-v02-craft"
-        aria-label={t(
-          'Chocolate cake craftsmanship',
-          '초콜릿 케이크 제작 과정',
-        )}
-      >
-        <img
-          src="/redesign/3906.jpg"
-          alt={t(
-            'Chocolate cake layers being assembled by hand',
-            '손으로 초콜릿 케이크를 만드는 과정',
-          )}
-          width={1920}
-          height={1080}
-          loading="lazy"
-          decoding="async"
-        />
       </section>
       <section
         id="au-collection"
@@ -415,6 +396,26 @@ function AuHomePage({
           </div>
         </div>
       </section>
+      <section
+        className="au-v02-craft"
+        aria-label={t(
+          'Chocolate cake craftsmanship',
+          '초콜릿 케이크 제작 과정',
+        )}
+      >
+        <img
+          src="/redesign/3906.jpg"
+          alt={t(
+            'Chocolate cake layers being assembled by hand',
+            '손으로 초콜릿 케이크를 만드는 과정',
+          )}
+          width={1920}
+          height={1080}
+          loading="lazy"
+          decoding="async"
+        />
+      </section>
+      <HomeCustomerStories />
       <section
         id="custom-cakes"
         className="au-v02-custom"

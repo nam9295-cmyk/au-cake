@@ -113,7 +113,7 @@
 }
 .au-home-shell .au-home-v02 .au-v02-best-track {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
 }
 .au-home-shell .au-home-v02 .au-v02-best-card {
@@ -133,6 +133,9 @@
   height: 100%;
   object-fit: contain;
   transform: translateY(30px);
+}
+.au-home-shell .au-home-v02 .au-v02-best-card[data-best-product="mochi"] .au-v02-best-image img {
+  transform: none;
 }
 .au-home-shell .au-home-v02 .au-v02-best-body {
   padding: 20px;
@@ -509,6 +512,9 @@
   font-size: 11px;
 }
 @media (min-width: 768px) and (max-width: 1199px) {
+  .au-home-shell .au-home-v02 .au-v02-best-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .au-home-shell .au-home-v02 .rd-hero {
     padding: 40px 24px;
   }
