@@ -22,10 +22,10 @@ test("AU public copy and common notice match the approved calendar in both langu
       html = renderToStaticMarkup(
         <AuPickupNotice language={language} driver />,
       );
-    assert.ok(html.includes("09:00–16:00"));
+    assert.ok(html.includes("09:00–20:00"));
     assert.ok(html.includes("09:00–13:00"));
     assert.equal(cakeCopy(language).pickupHours[0], copy.hours);
-    assert.doesNotMatch(html, /08:00|18:00|20:00/);
+    assert.doesNotMatch(html, /08:00|09:00–16:00|09:00–18:00/);
   }
 });
 test("new order detail rendering retains actual product and size without altering a stored pickup appointment", () => {

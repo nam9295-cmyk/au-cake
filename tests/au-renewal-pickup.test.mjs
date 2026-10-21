@@ -13,8 +13,8 @@ const cake = [{ offerId: "pave-cake" }],
   open = { preordersEnabled: true };
 const now = new Date("2026-10-18T23:00:00Z"); // Monday10:00 Sydney
 for (const [date, close, count] of [
-  ["2026-10-21", "16:00", 29],
-  ["2026-10-23", "16:00", 29],
+  ["2026-10-21", "20:00", 45],
+  ["2026-10-23", "20:00", 45],
   ["2026-10-24", "13:00", 17],
   ["2026-10-25", "13:00", 17],
 ]) {
@@ -28,8 +28,8 @@ for (const [date, close, count] of [
     for (const time of [
       "08:45",
       "09:01",
-      close === "16:00" ? "16:15" : "13:15",
-      "20:00",
+      close === "20:00" ? "20:15" : "13:15",
+      "20:01",
     ])
       assert.throws(
         () => validateRenewalPickup(cake, date, time, now),
@@ -184,9 +184,9 @@ test("public copy and service slots derive from the same approved week", () => {
     korean = p.renewalPickupCopy("ko");
   assert.match(
     english.hours,
-    /Wednesday.*Friday.*09:00–16:00.*Saturday.*Sunday.*09:00–13:00/,
+    /Wednesday.*Friday.*09:00–20:00.*Saturday.*Sunday.*09:00–13:00/,
   );
-  assert.match(korean.hours, /수·금.*09:00–16:00.*토·일.*09:00–13:00/);
+  assert.match(korean.hours, /수·금.*09:00–20:00.*토·일.*09:00–13:00/);
   assert.match(english.driver, /prior.*approval|approval.*prior/i);
   for (let day = 0; day < 7; day++) {
     const date = `2026-10-${String(25 + day).padStart(2, "0")}`;
@@ -214,4 +214,17 @@ test("weekend extension admits the final hour but keeps 15-minute customer slots
     for (const time of ["12:40", "13:01", "13:15"])
       assert.throws(() => validateRenewalPickup(mochi, date, time, now, open), /PICKUP_TIME_UNAVAILABLE/);
   }
+});
+
+// Extending Wednesday/Friday must still respect operator closures and preparation time.
+test("evening weekday slots respect closures and Mochi's 24-hour lead time", () => {
+  for (const date of ["2026-10-21", "2026-10-23"]) {
+    const policy = { ...open, closedIntervals: { [date]: [{ start: "19:00", end: "20:00" }] } };
+    assert.doesNotThrow(() => validateRenewalPickup(mochi, date, "20:00", now, policy));
+    assert.throws(() => validateRenewalPickup(mochi, date, "19:45", now, policy), /PICKUP_TIME_UNAVAILABLE/);
+    assert.deepEqual(renewalPickupSlots(cake, date, now, { closedDates: [date] }), []);
+  }
+  const exactly24HoursBefore = new Date("2026-10-20T09:00:00Z");
+  assert.doesNotThrow(() => validateRenewalPickup(mochi, "2026-10-21", "20:00", exactly24HoursBefore, open));
+  assert.throws(() => validateRenewalPickup(mochi, "2026-10-21", "20:00", new Date(exactly24HoursBefore.getTime() + 1), open), /PICKUP_TIME_TOO_SOON/);
 });

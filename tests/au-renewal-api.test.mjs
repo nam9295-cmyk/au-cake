@@ -47,3 +47,16 @@ test('server accepts approved weekend close, rejects after-hours and replays pri
  await assert.rejects(createCake(database(),{...input,pickupTime:'13:15'},{...options,renewalPolicy:{enabled:true}}),/PICKUP_TIME_UNAVAILABLE/)
  await assert.rejects(createCake(database(),{...input,pickupDate:'2026-10-26'},{...options,renewalPolicy:{enabled:true}}),/PICKUP_TIME_UNAVAILABLE/)
 })
+
+
+test('server accepts Wednesday and Friday pickup through 20:00 without changing price or replay', async () => {
+ for (const pickupDate of ['2026-10-21', '2026-10-23']) {
+  const db=database(),input={...request,pickupDate,pickupTime:'20:00'}
+  const first=await createCake(db,input,{...options,renewalPolicy:{enabled:true}})
+  assert.equal(first.pickupTime,'20:00')
+  assert.equal(first.totalPriceCents,10700)
+  const replay=await createCake(db,input,options)
+  assert.deepEqual(replay,first)
+  await assert.rejects(createCake(database(),{...input,pickupTime:'20:15'},{...options,renewalPolicy:{enabled:true}}),/PICKUP_TIME_UNAVAILABLE/)
+ }
+})
