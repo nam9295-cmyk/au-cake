@@ -140,6 +140,21 @@ test('photo normalization accepts actual webp, strips metadata, rotates, and bou
   assert.ok(output.length <= MAX_REVIEW_PHOTO_BYTES)
 })
 
+test('photo normalization accepts real JPEG and PNG originals through the bounded opaque fallback', async () => {
+  const sources = [
+    await sharp({ create: { width: 640, height: 480, channels: 3, background: '#385a7c' } }).jpeg().toBuffer(),
+    await sharp({ create: { width: 480, height: 640, channels: 4, background: '#f0a040' } }).png().toBuffer(),
+  ]
+  for (const source of sources) {
+    const output = await normalizeReviewPhoto(source, 'application/octet-stream')
+    const metadata = await sharp(output).metadata()
+    assert.equal(metadata.format, 'webp')
+    assert.ok(metadata.width > 0 && metadata.width <= 1600)
+    assert.ok(metadata.height > 0 && metadata.height <= 1600)
+    assert.ok(output.length <= MAX_REVIEW_PHOTO_BYTES)
+  }
+})
+
 test('photo normalization accepts an AVIF original and outputs bounded metadata-free webp', async () => {
   const source = await sharp({ create: { width: 1200, height: 900, channels: 3, background: '#d94f70' } }).avif().toBuffer()
   const output = await normalizeReviewPhoto(source, 'image/avif')

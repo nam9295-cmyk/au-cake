@@ -191,10 +191,14 @@ test('review deployment targets exact node-22 without a Node 16 or Node 20 fallb
   assert.equal(buildDryRunPlan(validEnv).function.runtime, 'node-22')
 })
 
-test('review archive declares the Node 22 and fixed sharp production contract', async () => {
+test('review archive declares the Node 22 and patched sharp production contract', async () => {
   const manifest = JSON.parse(await readFile(new URL('../appwrite-functions/review-api/package.json', import.meta.url), 'utf8'))
+  const lock = JSON.parse(await readFile(new URL('../appwrite-functions/review-api/package-lock.json', import.meta.url), 'utf8'))
   assert.deepEqual(manifest.engines, { node: '>=22 <23' })
-  assert.equal(manifest.dependencies.sharp, '0.35.4')
+  assert.equal(manifest.dependencies.sharp, '0.35.5')
+  assert.equal(lock.packages[''].dependencies.sharp, '0.35.5')
+  assert.equal(lock.packages['node_modules/sharp'].version, '0.35.5')
+  assert.equal(lock.packages['node_modules/@img/sharp-linux-x64'].version, '0.35.5')
 })
 
 test('dynamic function key scopes cover only required database/document and file operations', () => {
