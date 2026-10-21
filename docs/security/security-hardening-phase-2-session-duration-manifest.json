@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "runId": "security-phase2-session-duration-20261021",
+  "executionApproved": false,
+  "requiresSeparateApproval": true,
+  "target": {
+    "endpoint": "https://api.verygood-chocolate.com/v1",
+    "projectId": "verygood-au",
+    "appwriteVersion": "1.8.1"
+  },
+  "evidence": {
+    "capturedAt": "2026-10-21T09:08:48.780Z",
+    "projectUpdatedAt": "2026-10-21T01:00:00.990+00:00",
+    "safeBaselineSha256": "f46a571dbdaa6eade54a9da6ae6d4bd5480855940f6aafd103c59a8741429115"
+  },
+  "operation": {
+    "route": "PATCH /v1/projects/verygood-au/auth/duration",
+    "body": {
+      "duration": 2592000
+    },
+    "rollbackBody": {
+      "duration": 31536000
+    }
+  },
+  "requiredBaseline": {
+    "durationSeconds": 31536000,
+    "sessionsLimit": 10,
+    "userLimit": 0,
+    "invalidateSessions": true
+  },
+  "mustPreserve": {
+    "accountService": true,
+    "emailPassword": true,
+    "emailOtp": true,
+    "googleOAuth": true,
+    "jwt": true,
+    "sessionsLimit": 10,
+    "userLimit": 0
+  },
+  "expectedEffect": {
+    "existingSessions": "stored expiry is not bulk rewritten; existing sessions keep their recorded expiry unless extended or replaced",
+    "newSessions": "30-day expiry",
+    "explicitlyExtendedSessions": "expiry reset using the current 30-day project duration",
+    "maxSessions": "remains 10; excess sessions are trimmed oldest-first when session creation crosses the limit"
+  },
+  "budgets": {
+    "applyWritesMax": 1,
+    "rollbackWritesMax": 1,
+    "authMethodWritesMax": 0,
+    "platformWritesMax": 0,
+    "serviceRestartsMax": 0
+  },
+  "rollbackTriggers": [
+    "new session expiry is not 30 days within clock tolerance",
+    "existing customer or administrator session unexpectedly becomes invalid",
+    "any protected auth or platform setting drifts"
+  ],
+  "explicitlyExcluded": [
+    "force logout",
+    "existing session deletion",
+    "max session change",
+    "auth method change",
+    "platform deletion",
+    "API key change",
+    "Function/SMTP/Pages/DB changes"
+  ]
+}

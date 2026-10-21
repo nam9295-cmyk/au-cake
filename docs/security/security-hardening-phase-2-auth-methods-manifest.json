@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "runId": "security-phase2-auth-methods-20261021",
+  "executionApproved": false,
+  "target": {
+    "endpoint": "https://api.verygood-chocolate.com/v1",
+    "projectId": "verygood-au",
+    "appwriteVersion": "1.8.1"
+  },
+  "evidence": {
+    "capturedAt": "2026-10-21T09:08:48.780Z",
+    "projectUpdatedAt": "2026-10-21T01:00:00.990+00:00",
+    "safeBaselineSha256": "f46a571dbdaa6eade54a9da6ae6d4bd5480855940f6aafd103c59a8741429115",
+    "sourceHead": "16d3510c5f5cd14c1ad11b2e3e5294ae67ff87ce"
+  },
+  "requiredBaseline": {
+    "accountService": true,
+    "emailPassword": true,
+    "emailOtp": true,
+    "googleOAuth": true,
+    "anonymous": true,
+    "magicUrl": true,
+    "phone": true,
+    "invites": true,
+    "jwt": true,
+    "durationSeconds": 31536000,
+    "sessionsLimit": 10,
+    "userLimit": 0,
+    "invalidateSessions": true
+  },
+  "operations": [
+    {
+      "order": 1,
+      "method": "phone",
+      "route": "PATCH /v1/projects/verygood-au/auth/phone",
+      "body": {
+        "status": false
+      },
+      "rollbackBody": {
+        "status": true
+      }
+    },
+    {
+      "order": 2,
+      "method": "magic-url",
+      "route": "PATCH /v1/projects/verygood-au/auth/magic-url",
+      "body": {
+        "status": false
+      },
+      "rollbackBody": {
+        "status": true
+      }
+    },
+    {
+      "order": 3,
+      "method": "anonymous",
+      "route": "PATCH /v1/projects/verygood-au/auth/anonymous",
+      "body": {
+        "status": false
+      },
+      "rollbackBody": {
+        "status": true
+      }
+    }
+  ],
+  "budgets": {
+    "applyWritesMax": 3,
+    "rollbackWritesMax": 3,
+    "projectTargetsMax": 1,
+    "serviceRestartsMax": 0,
+    "sessionWritesMax": 0,
+    "platformWritesMax": 0
+  },
+  "gates": [
+    "official Console Owner membership and target project ID verified",
+    "fresh 0600 raw backup and semantic baseline captured before any write",
+    "fresh baseline matches requiredBaseline and all seven Web platforms are unchanged",
+    "production source and public bundle contain no invoked Anonymous, Magic URL, or Phone flow",
+    "after each write an Owner GET shows only the intended auth method changed",
+    "required Google, Email OTP, Email/password, JWT, Account, session, and user-limit fields remain unchanged"
+  ],
+  "postChangeChecks": [
+    "existing customer Account.get and MY ORDERS remain available without creating an order",
+    "existing administrator session and allowlist-protected admin page remain available",
+    "Google and Email OTP UI remain present; no OTP email is sent for this rollout",
+    "guest catalogue, cart, checkout UI, and lookup remain available without submitting an order",
+    "all seven Web platforms remain registered"
+  ],
+  "rollback": {
+    "trigger": "any unexpected semantic drift or customer/admin/guest regression",
+    "order": [
+      "anonymous",
+      "magic-url",
+      "phone"
+    ],
+    "verify": "all requiredBaseline values restored by Owner GET; no session, user, platform, Function, DB, SMTP, or Pages mutation"
+  },
+  "explicitlyExcluded": [
+    "session duration change",
+    "session limit change",
+    "Web platform deletion",
+    "API key change",
+    "Function deployment",
+    "SMTP change",
+    "Pages deployment",
+    "DB or customer/order data mutation",
+    "main merge",
+    "Appwrite upgrade"
+  ]
+}
