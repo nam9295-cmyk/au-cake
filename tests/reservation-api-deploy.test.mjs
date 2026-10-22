@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import {mkdtemp,rm} from 'node:fs/promises'
+import {mkdtemp,rm,symlink} from 'node:fs/promises'
+import {tmpdir} from 'node:os'
 import {execFileSync} from 'node:child_process'
 import {resolve,join} from 'node:path'
 import {pathToFileURL} from 'node:url'
@@ -50,9 +51,10 @@ test('customer flags default OFF and share existing APPWRITE_ADMIN_USER_IDS with
 test('checkpoint/full archives include importable customer auth and readiness modules without changing sales policy',async()=>{
   for(const phase of ['checkpoint','full']) {
     const archive=await createReservationApiArchive({phase})
-    const directory=await mkdtemp(resolve('.superpowers/customer-account-archive-'))
+    const directory=await mkdtemp(join(tmpdir(),'customer-account-archive-'))
     try {
       execFileSync('tar',['-xzf',archive.path,'-C',directory])
+      await symlink(resolve('node_modules'),join(directory,'node_modules'),'dir')
       const auth=await import(pathToFileURL(join(directory,'src/customer-identity.js')).href)
       const ready=await import(pathToFileURL(join(directory,'src/customer-account-readiness.js')).href)
       assert.equal(typeof auth.resolveCustomerIdentity,'function')
