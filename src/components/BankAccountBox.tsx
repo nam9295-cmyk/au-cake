@@ -10,11 +10,18 @@ export function BankAccountBox({ settings, totalPrice, language = 'en' }: { sett
   const bankAccount = settings.bankAccount
   const accountHolder = settings.accountHolder
   const [copied, setCopied] = useState(false)
+  const [copyFailed, setCopyFailed] = useState(false)
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(`${bankName} ${bankAccount}`)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopyFailed(false)
+    try {
+      await navigator.clipboard.writeText(`${bankName} ${bankAccount}`)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+      setCopyFailed(true)
+    }
   }
 
   return (
@@ -42,6 +49,13 @@ export function BankAccountBox({ settings, totalPrice, language = 'en' }: { sett
           {copied ? copy.copiedButton : copy.copyButton}
         </button>
       </div>
+      {copyFailed && (
+        <p role="status" className="bank-copy-status">
+          {language === 'ko'
+            ? '복사하지 못했습니다. 위 계좌 정보를 직접 복사해 주세요.'
+            : 'Could not copy. Please copy the account details manually above.'}
+        </p>
+      )}
     </div>
   )
 }

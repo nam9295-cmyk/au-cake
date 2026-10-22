@@ -164,6 +164,47 @@
   display: grid;
   gap: 24px;
 }
+.renewal-pickup-date { min-width: 0; display: grid; gap: 8px; }
+.renewal-pickup-date .weekend-date-picker { width: 100%; }
+.renewal-pickup-date .weekend-date-trigger {
+  width: 100%;
+  background: #fff;
+  color: #203d33;
+  border-color: #aebcb4;
+  text-align: left;
+}
+.renewal-pickup-date .weekend-calendar-popover {
+  position: relative;
+  top: auto;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border-color: #aebcb4;
+  border-radius: 0;
+  box-shadow: none;
+}
+.renewal-pickup-date .weekend-calendar-header { grid-template-columns: 44px 1fr 44px; }
+.renewal-pickup-date .weekend-calendar-header strong { font-size: 15px; color: #203d33; }
+.renewal-pickup-date .weekend-calendar-nav {
+  width: 44px;
+  padding: 0;
+  background: #fff;
+  border-color: transparent;
+  color: #203d33;
+  font-size: 24px;
+}
+.renewal-pickup-date .weekend-calendar-day {
+  padding: 0;
+  min-height: 44px;
+  background: #eef4f0;
+  border: 1px solid #ccdcd2;
+  color: #205b49;
+  font-size: 14px;
+}
+.renewal-pickup-date .weekend-calendar-day.selected:not(:disabled) { background: #205b49; color: #fff; }
+.renewal-pickup-date .weekend-calendar-day:disabled { background: #fff; color: #8a928c; border-color: transparent; opacity: 1; }
+.renewal-pickup-date .weekend-calendar-weekdays span { font-size: 12px; color: #52665b; }
+.renewal-pickup-date .weekend-calendar-note { font-size: 13px; line-height: 1.5; color: #52665b; }
 .renewal-page [role="alert"] {
   color: #8d2929;
 }

@@ -156,11 +156,13 @@ export function AuNavigation({
             </a>
             <p>
               {t(
-                'Taking a short break. Planned to return next school holidays; dates to be confirmed.',
-                '잠시 쉬어갑니다. 다음 방학에 재개할 예정이며 날짜는 추후 안내합니다.',
+                'Currently paused. Next school holiday dates will be announced once confirmed.',
+                '현재 휴강 중입니다. 다음 방학 일정은 확정 후 안내합니다.',
               )}
             </p>
-            <nav aria-label="More navigation"><a href="/#story">{t('Our Story', '브랜드 이야기')}</a>
+            <nav aria-label="More navigation">
+              <a href="/classes" onClick={() => setOpen(false)}>{t('View class archive', '클래스 아카이브 보기')}</a>
+              <a href="/#story">{t('Our Story', '브랜드 이야기')}</a>
               <a href="/reviews" onClick={() => setOpen(false)}>
                 {t('Reviews', '후기')}
               </a>

@@ -30,6 +30,7 @@ const WEEKDAY_LABELS = {
 } as const
 
 function formatSelectedDate(value: string, locale: 'en-AU' | 'ko-KR') {
+  if (!value) return locale === 'ko-KR' ? '날짜 선택' : 'Select date'
   const [year, month, day] = value.split('-').map(Number)
   const date = new Date(Date.UTC(year, month - 1, day))
   return new Intl.DateTimeFormat(locale, {
@@ -58,11 +59,12 @@ function BookingDatePicker({
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
-  const [visibleMonth, setVisibleMonth] = useState(initialVisibleMonth || value.slice(0, 7) || minDate.slice(0, 7))
+  const [requestedMonth, setVisibleMonth] = useState(initialVisibleMonth || value.slice(0, 7) || minDate.slice(0, 7))
+  const minimumMonth = minDate.slice(0, 7)
+  const visibleMonth = requestedMonth < minimumMonth ? minimumMonth : requestedMonth
   const days = getBookingCalendarMonthDays(visibleMonth, minDate, weekendsOnly)
   const previousMonth = shiftClassCalendarMonth(visibleMonth, -1)
   const nextMonth = shiftClassCalendarMonth(visibleMonth, 1)
-  const minimumMonth = minDate.slice(0, 7)
   const maximumMonth = maxDate?.slice(0, 7)
   const previousLabel = locale === 'ko-KR' ? '이전 달' : 'Previous month'
   const nextLabel = locale === 'ko-KR' ? '다음 달' : 'Next month'
@@ -106,7 +108,9 @@ function BookingDatePicker({
           setOpen((current) => !current)
         }}
       >
-        <span>{formatSelectedDate(value, locale)}</span>
+        {value
+          ? <time dateTime={value}>{formatSelectedDate(value, locale)}</time>
+          : <span>{formatSelectedDate(value, locale)}</span>}
         <span className="weekend-date-trigger-icon" aria-hidden="true">▾</span>
       </button>
 

@@ -1,0 +1,64 @@
+.renewal-payment-notice {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  color: var(--forest-deep);
+  text-align: left;
+}
+
+.renewal-payment-notice p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.renewal-payment-notice .bank-account-card {
+  margin: 0;
+  padding: 16px;
+  border-radius: 0;
+  background: var(--surface);
+}
+
+.renewal-payment-notice .bank-account-body {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.renewal-payment-notice .bank-info {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.renewal-payment-notice .bank-number {
+  font-size: 1rem;
+  color: var(--forest-deep);
+}
+
+.renewal-payment-notice .bank-number,
+.renewal-payment-notice .bank-holder,
+.renewal-transfer-reference {
+  overflow-wrap: anywhere;
+}
+
+.renewal-payment-notice .copy-button {
+  flex-shrink: 0;
+  border: 1px solid var(--forest);
+  border-radius: 0;
+  padding: 10px 16px;
+  background: var(--surface);
+  color: var(--forest);
+}
+
+.renewal-payment-notice .copy-button:hover {
+  background: var(--cream-teal);
+}
+
+.renewal-transfer-reference span {
+  display: block;
+}
+
+.renewal-payment-notice .bank-copy-status {
+  margin-top: 12px;
+  font-size: 0.875rem;
+}

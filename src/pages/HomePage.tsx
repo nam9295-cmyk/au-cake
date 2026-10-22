@@ -542,14 +542,14 @@ function AuHomePage({
             </a>
             <p>
               {t(
-                'Taking a short break. Back next school holidays; dates to be confirmed.',
-                '잠시 쉬어갑니다. 다음 방학 재개 예정이며 날짜는 추후 안내합니다.',
+                'Currently paused. Next school holiday dates will be announced once confirmed.',
+                '현재 휴강 중입니다. 다음 방학 일정은 확정 후 안내합니다.',
               )}
             </p>
           </div>
           <nav aria-label="Footer navigation">
             {RENEWAL_NAV.map(item=><a key={item.href} href={item.href}>{item.en}</a>)}
-            <a href="/classes">{t('VIEW ARCHIVE', '클래스 보기')}</a>
+            <a href="/classes">{t('VIEW CLASS ARCHIVE', '클래스 아카이브 보기')}</a>
             <a href="/reviews">{t('REVIEWS', '후기')}</a>
             <a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a>
           </nav>

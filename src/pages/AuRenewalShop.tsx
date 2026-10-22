@@ -30,6 +30,12 @@ import {
   MochiReselectionNotice,
 } from "../components/MochiBuilder";
 import { AuPickupNotice } from "../components/AuPickupNotice";
+import { RenewalPickupDatePicker } from "../components/RenewalPickupDatePicker";
+import { RenewalPaymentNotice } from "../components/RenewalPaymentNotice";
+import { AuServiceLandingPage } from './AuServiceLandingPage';
+import { DEFAULT_SETTINGS } from '../lib/constants';
+import { isAppwriteConfigured } from '../lib/appwrite';
+import type { StoreSettings } from '../lib/types';
 import { getCakeEditorialBySlug } from "../lib/cake-editorial";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "../CartProvider";
@@ -779,9 +785,11 @@ function MochiProduct({ card }: { card: RenewalCard }) {
     </main>
   );
 }
-function Bag() {
+function Bag({ settings }: { settings: StoreSettings }) {
   const customer = useCustomerAccount();
   const cart = useCart();
+  const localPickupPreview = !isAppwriteConfigured && typeof window !== 'undefined' &&
+    ['localhost', '127.0.0.1', '[::1]'].includes(window.location?.hostname ?? '');
   const {registerCheckout} = customer;
   const [resume] = useState(() => readCheckoutResume('renewal',cart.checkoutOwner));
   const restored = 'draft' in resume ? resume.draft : undefined;
@@ -802,6 +810,13 @@ function Bag() {
     preordersEnabled: false,
     weekendApproved: true,
   });
+  const [pickupNow, setPickupNow] = useState(() => new Date());
+  useEffect(() => {
+    const refresh = () => setPickupNow(new Date());
+    const timer = window.setInterval(refresh, 30_000);
+    window.addEventListener('focus', refresh);
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh); };
+  }, []);
   const lock = useRef(false),
     requestId = useRef<string>(restored?.requestId || crypto.randomUUID());
   const observedCart=useRef<string|null>(null);
@@ -828,11 +843,12 @@ function Bag() {
     if (!formElement.current || lock.current || !cart.isCurrent()) throw Error('AUTH_DRAFT_UNAVAILABLE');
     const values = new FormData(formElement.current);
     return {version:1,kind:'renewal',cartOwner:cart.owner||'guest',flowId:crypto.randomUUID(),savedAt:Date.now(),returnTo:window.location.pathname === '/reserve' ? '/reserve' : '/cart',requestId:requestId.current,
-      form:{name:String(values.get('name')||''),phone:String(values.get('phone')||''),email:String(values.get('email')||''),date,time,note:String(values.get('note')||''),promo:String(values.get('promo')||''),privacy:values.get('privacy')==='on'},
+      form:{name:String(values.get('name')||''),phone:String(values.get('phone')||''),email:String(values.get('email')||''),date,time:renewalPickupSlots([...cart.renewalLines],date,new Date(),caps).includes(time)?time:'',note:String(values.get('note')||''),promo:String(values.get('promo')||''),privacy:values.get('privacy')==='on'},
       dirtyFields:[...dirty.current],checkoutContext:{},cartSnapshot:[...cart.renewalLines],cartSignature:checkoutCartSignature('renewal',cart.owner||'guest')};
     }, () => setGuest(true));
-  }, [registerCheckout, cart, date, time, result]);
+  }, [registerCheckout, cart, date, time, result, caps]);
   useEffect(() => {
+    if (!isAppwriteConfigured) return;
     renewalCapabilities()
       .then(setCaps)
       .catch(() => {});
@@ -844,12 +860,24 @@ function Bag() {
   } catch {
     /* keep invalid cart visible for correction */
   }
-  const slots = renewalPickupSlots(lines, date, new Date(), caps);
+  // A disconnected loopback preview can demonstrate the existing pickup rules,
+  // but never grants reservation capability or reaches the submission transport.
+  const pickupPolicy = localPickupPreview
+    ? { ...caps, enabled: true, preordersEnabled: true }
+    : caps;
+  const slots = renewalPickupSlots(lines, date, pickupNow, pickupPolicy);
+  const selectedTime = slots.includes(time) ? time : '';
   const provisional = quote?.lines.some((l) => l.priceStatus === "provisional");
   const newProducts = lines.some((l) => RENEWAL_OFFERS[l.offerId].newProduct);
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (localPickupPreview) return;
     if (!cart.isCurrent() || lock.current || editingMochi !== null || cartChanged || (customer.enabled && !guest && customer.state.status === 'checking')) return;
+    if (!caps.enabled || !renewalPickupSlots(lines, date, new Date(), caps).includes(time)) {
+      setPickupNow(new Date());
+      setError(t('Please select an available pickup date and time.', '픽업 가능한 날짜와 시간을 선택해주세요.'));
+      return;
+    }
     lock.current = true;
     setBusy(true);
     setError("");
@@ -894,12 +922,7 @@ function Bag() {
         <p>{result}</p>
         <p>{resultPickup}</p>
         <AuPickupNotice language={language} />
-        <p>
-          {t(
-            "We will confirm availability and send payment details. Your order is confirmed after payment is checked.",
-            "가능 여부를 확인한 후 결제 안내를 드립니다. 입금 확인 후 예약이 확정됩니다.",
-          )}
-        </p>
+        <RenewalPaymentNotice settings={settings} language={language} reservationNumber={result} />
         <a href="/lookup">{t("Order lookup", "주문 조회")}</a>
       </main>
     );
@@ -1035,23 +1058,26 @@ function Bag() {
                 {t("Email", "이메일")}
                 <input name="email" type="email" required maxLength={120} value={contact.customerEmail} onChange={event => setContact(current => ({...current,customerEmail:event.target.value}))} />
               </label>
-              <label>
-                {t("Pickup date", "픽업 날짜")}
-                <input
-                  type="date"
-                  required
-                  value={date}
-                  onChange={(e) => {
-                    setDate(e.target.value);
-                    setTime("");
-                  }}
-                />
-              </label>
+              <RenewalPickupDatePicker
+                value={date}
+                lines={lines}
+                policy={pickupPolicy}
+                language={language}
+                now={pickupNow}
+                onChange={(nextDate) => {
+                  if (lock.current || !cart.isCurrent() || nextDate === date) return;
+                  setDate(nextDate);
+                  setTime('');
+                  dirty.current.add('date');
+                  requestId.current = crypto.randomUUID();
+                  setError('');
+                }}
+              />
               <label>
                 {t("Pickup time", "픽업 시간")}
                 <select
                   required
-                  value={time}
+                  value={selectedTime}
                   onChange={(e) => setTime(e.target.value)}
                 >
                   <option value="">{t("Select time", "시간 선택")}</option>
@@ -1092,7 +1118,12 @@ function Bag() {
                   "예약 처리를 위한 개인정보 이용에 동의합니다.",
                 )}
               </label>
-              {(!caps.enabled ||
+              {localPickupPreview ? (
+                <p role="status">{t(
+                  'Local preview: you can select a pickup date and time. Reservations cannot be sent.',
+                  '미리보기에서는 날짜와 시간만 선택할 수 있으며, 예약은 전송되지 않습니다.',
+                )}</p>
+              ) : (!caps.enabled ||
                 (newProducts && !caps.preordersEnabled) ||
                 provisional) && (
                 <p role="status">
@@ -1103,9 +1134,10 @@ function Bag() {
                 </p>
               )}
             </fieldset>
+            <RenewalPaymentNotice settings={settings} language={language} />
             <button
               disabled={
-                busy ||
+                localPickupPreview || busy ||
                 cartChanged ||
                 (customer.enabled && !guest && customer.state.status === 'checking') ||
                 !caps.enabled ||
@@ -1127,46 +1159,16 @@ function Bag() {
     </main>
   );
 }
-function ScopedBag(){const cart=useCart();return <Bag key={cart.checkoutOwner}/>}
-export function AuRenewalShop({ path }: { path: string }) {
+function ScopedBag({settings}:{settings:StoreSettings}){const cart=useCart();return <Bag key={cart.checkoutOwner} settings={settings}/>}
+export function AuRenewalShop({ path, settings = DEFAULT_SETTINGS }: { path: string; settings?: StoreSettings }) {
   path = path.replace(/\/+$/, "") || "/";
   const { t } = useAuLanguage();
-  if (path === "/cart" || path === "/reserve") return <ScopedBag />;
+  if (path === "/cart" || path === "/reserve") return <ScopedBag settings={settings} />;
   const category = path.slice(1) as keyof typeof RENEWAL_CARDS;
   if (Object.hasOwn(RENEWAL_CARDS, category))
     return <RenewalCollection category={category} />;
-  if (path === "/business")
-    return (
-      <main className="renewal-page">
-        <h1>Business</h1>
-        <nav className="renewal-service-links">
-          <a href="/business/cafe-supply">{t("Café supply", "납품")}</a>
-          <a href="/business/events">
-            {t("Events, pop-ups & collaboration", "행사·팝업·협업")}
-          </a>
-          <a href="/business/consulting">
-            {t("Menu consulting", "메뉴 컨설팅")}
-          </a>
-        </nav>
-      </main>
-    );
-  if (path === "/custom-cakes")
-    return (
-      <main className="renewal-page">
-        <h1>Custom Cake</h1>
-        <nav className="renewal-service-links">
-          <a href="/cakes/custom-cake">
-            {t("Custom cake enquiry", "맞춤 케이크 주문")}
-          </a>
-          <a href="/classes">
-            {t("Basic · one-tier class", "Basic · 1단 클래스")}
-          </a>
-          <a href="/classes">
-            {t("Advanced · two-tier class", "Advanced · 2단 클래스")}
-          </a>
-        </nav>
-      </main>
-    );
+  if (path === '/business' || path === '/custom-cakes')
+    return <AuServiceLandingPage kind={path === '/business' ? 'business' : 'custom-cakes'} />;
   const card = renewalCardForPath(path, window.location.search);
   if (card?.id === "mochi") return <MochiProduct card={card} />;
   return card ? (
