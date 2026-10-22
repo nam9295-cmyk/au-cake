@@ -1,7 +1,7 @@
 export function renewalSeoPages(
   siteUrl: string,
   content?: {
-    site: { socialProfiles: string[] };
+    site: { socialProfiles: string[]; organizationDescription?: string };
     home: {
       title: string;
       description: string;

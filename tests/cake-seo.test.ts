@@ -8,6 +8,21 @@ import { getPageFromPath } from '../src/lib/app-routes.js'
 const SITE_URL = 'https://au.verygood-chocolate.com'
 const publicContent = getAuPublicContent()
 
+test('service landing runtime metadata matches paused classes and enquiry-only wholesale', () => {
+  for (const suffix of ['', '/', '.html']) {
+    const custom = getSeoConfig(`/custom-cakes${suffix}`)
+    assert.equal(custom.title, 'Custom Cake Enquiries Sydney | verygood chocolate')
+    assert.match(custom.description, /classes are currently paused/i)
+    assert.equal(custom.canonical, `${SITE_URL}/custom-cakes`)
+    assert.notEqual(custom.noindex, true)
+    const business = getSeoConfig(`/business${suffix}`)
+    assert.equal(business.title, 'Corporate Cakes & Chocolate Gifts Sydney | verygood chocolate')
+    assert.match(business.description, /wholesale is coming soon/i)
+    assert.equal(business.canonical, `${SITE_URL}/business`)
+    assert.notEqual(business.noindex, true)
+  }
+})
+
 test('Custom Cake runtime SEO stays indexable without becoming a catalogue product', () => {
   const config = getSeoConfig('/cakes/custom-cake')
   assert.equal(config.title, 'Custom Cake Sydney | Bespoke Celebration Cakes | verygood chocolate')

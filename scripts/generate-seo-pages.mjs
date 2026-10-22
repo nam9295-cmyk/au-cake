@@ -457,7 +457,8 @@ const portfolioPages = isAuMarket ? { '/portfolio': await getPortfolioSeoDefinit
 const servicePages = isAuMarket ? await getServiceSeoDefinitions(siteUrl) : {}
 const renewedPages = isAuMarket ? renewalSeoPages(siteUrl, auPublicPages) : {}
 if (isAuMarket) pages['/classes'] = classArchiveSeo(siteUrl)
-const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages, ...servicePages, ...renewedPages }
+// Service hubs use the same rendered components and metadata as the live UI.
+const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages, ...renewedPages, ...servicePages }
 if (isAuMarket) for (const path of Object.keys(allPages)) {
  if (/^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(path)) allPages[path] = { title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', noindex: true, fallbackHtml: '<main><h1>Explore our current menu</h1><a href="/cakes">Cake &amp; Bake</a></main>' }
 }
@@ -498,7 +499,12 @@ try {
   if (error?.code !== 'ENOENT') throw error
 }
 
-const llms = isAuMarket ? renderRenewalLlms(siteUrl, hogirlSeo.llmsEntries) : renderAuLlms(auPublicPages, hogirlSeo.llmsEntries)
+const serviceLlmsEntries = Object.entries(servicePages).map(([path, page]) =>
+  `- ${page.title.split('|')[0].trim()}: ${page.description} ${siteUrl}${path}`,
+)
+const llms = isAuMarket
+  ? renderRenewalLlms(siteUrl, ['', '## Services & enquiries', ...serviceLlmsEntries, ...hogirlSeo.llmsEntries])
+  : renderAuLlms(auPublicPages, hogirlSeo.llmsEntries)
 await writeFile(join(distDir, 'llms.txt'), llms)
 try {
   await writeFile(join(process.cwd(), 'public', 'llms.txt'), llms)

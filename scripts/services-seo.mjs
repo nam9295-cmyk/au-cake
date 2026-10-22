@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { rolldown } from 'rolldown'
 import routes from '../src/content/au-service-routes.json' with { type: 'json' }
+import landings from '../src/content/au-service-landings-seo.json' with { type: 'json' }
 
 export async function getServiceSeoDefinitions(siteUrl) {
   const directory = await mkdtemp(join(tmpdir(), 'au-services-render-'))
@@ -29,7 +30,7 @@ export async function getServiceSeoDefinitions(siteUrl) {
     }
     const { renderServicePage } = await import(pathToFileURL(file).href)
     return Object.fromEntries(
-      routes.map((route) => [
+      [...landings, ...routes].map((route) => [
         route.path,
         {
           title: route.title,

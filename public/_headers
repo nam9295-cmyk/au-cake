@@ -2,3 +2,13 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
+
+# Keep alternate AU hosts out of search without blocking the production domain.
+https://au-stage.verygood-chocolate.com/*
+  X-Robots-Tag: noindex
+
+https://au-cake-next.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:deployment.au-cake-next.pages.dev/*
+  X-Robots-Tag: noindex

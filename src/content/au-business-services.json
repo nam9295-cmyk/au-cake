@@ -173,7 +173,7 @@
           "cards": [
             {
               "title": "Whole Sharing Cakes",
-              "body": "Pavé Chocolate Cake, Brownie Cheesecake, Lemon Cake and Strawberry Vanilla Cream Cake.",
+              "body": "Pavé Chocolate Cake, Signature Gâteau Loaf and Brownie Basque Cheesecake.",
               "image": "sharing",
               "href": "/cakes"
             },
@@ -329,9 +329,9 @@
               "href": "/cakes/signature-gateau-au-chocolat"
             },
             {
-              "title": "Lemon Cake",
-              "body": "Explore the current lemon cake collection and available formats.",
-              "href": "/cakes/lemon-cake"
+              "title": "Chocolate Mochi",
+              "body": "Explore six Chocolate Mochi flavours as singles or a four-piece gift box.",
+              "href": "/chocolates/chocolate-mochi"
             },
             {
               "title": "Chocolate & S’more",

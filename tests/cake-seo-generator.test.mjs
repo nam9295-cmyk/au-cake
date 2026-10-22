@@ -69,6 +69,63 @@ test('SEO generator writes renewal categories, details and current sitemap',asyn
  assert.doesNotMatch(sitemap, /cakes\/lemon-cake|cakes\/fresh-strawberry-vanilla-cream-cake/)
 })
 
+test('service landing HTML contains the visible enquiry content and paused class status before JavaScript', async () => {
+  const { dist } = await generate()
+  const custom = await readFile(join(dist, 'custom-cakes/index.html'), 'utf8')
+  assert.match(custom, /<meta name="description" content="[^"]*classes are currently paused/i)
+  assert.match(custom, /<h1[^>]*>Custom Cakes<\/h1>/)
+  assert.match(custom, /<img[^>]*src="\/products\/custom-cake\.webp"/)
+  assert.match(custom, /Final pricing and availability are confirmed after reviewing your request/)
+  assert.match(custom, /Currently paused\. Next school holiday dates will be announced once confirmed/)
+  assert.match(custom, /href="\/classes"[^>]*>View class archive/)
+  assert.doesNotMatch(custom, /href="\/class-reserve"|"@type":"Course"|"@type":"Offer"/)
+
+  const business = await readFile(join(dist, 'business/index.html'), 'utf8')
+  assert.match(business, /<title>Corporate Cakes &amp; Chocolate Gifts Sydney \| verygood chocolate<\/title>/)
+  assert.equal((business.match(/<article\b/g) || []).length, 3)
+  assert.match(business, /Our wholesale service is coming soon/)
+  assert.match(business, /office milestones, weddings, birthdays and gatherings/)
+  for (const slug of ['events', 'cafe-supply', 'consulting']) assert.ok(business.includes(`href="/business/${slug}"`))
+
+  for (const [path, html] of [['custom-cakes', custom], ['business', business]]) {
+    assert.equal((html.match(/<h1\b/g) || []).length, 1)
+    assert.match(html, /name="robots" content="index, follow"/)
+    assert.ok(html.includes(`rel="canonical" href="${site}/${path}"`))
+    assert.equal(await readFile(join(dist, `${path}.html`), 'utf8'), html)
+  }
+})
+
+test('home entity markup identifies the same public business without inventing ratings or an address', async () => {
+  const { dist } = await generate()
+  const data = jsonLd(await readFile(join(dist, 'index.html'), 'utf8'))
+  const organization = data.find(item => item['@type'] === 'Organization')
+  const website = data.find(item => item['@type'] === 'WebSite')
+  assert.equal(organization['@id'], `${site}/#organization`)
+  assert.equal(organization.logo, `${site}/favicon.png`)
+  assert.deepEqual(organization.areaServed, { '@type': 'City', name: 'Sydney' })
+  assert.deepEqual(website.publisher, { '@id': `${site}/#organization` })
+  assert.doesNotMatch(JSON.stringify(data), /LocalBusiness|streetAddress|aggregateRating/)
+})
+
+test('AI-readable service information states what is paused or coming soon and links to each public service', async () => {
+  const { dist } = await generate()
+  const llms = await readFile(join(dist, 'llms.txt'), 'utf8')
+  assert.match(llms, /classes are currently paused/i)
+  assert.match(llms, /wholesale service is coming soon/i)
+  assert.match(llms, /Next school holiday dates and prices are not yet confirmed/)
+  for (const path of ['/custom-cakes', '/business/events', '/business/cafe-supply', '/business/consulting']) {
+    assert.ok(llms.includes(`${site}${path}`), path)
+  }
+  assert.doesNotMatch(llms, /\/account|\/admin|\/reserve|\/cart|\/lookup/)
+})
+
+test('event introduction recommends current cakes without advertising retired products', async () => {
+  const { dist } = await generate()
+  const html = await readFile(join(dist, 'business/events/index.html'), 'utf8')
+  assert.match(html, /Pavé Chocolate Cake, Signature Gâteau Loaf and Brownie Basque Cheesecake/)
+  assert.doesNotMatch(html, /Lemon Cake|Strawberry Vanilla Cream Cake/)
+})
+
 test('Custom Cake has a standalone directory entry with app assets for direct loads and refreshes', async () => {
   const { dist } = await generate()
   const entry = join(dist, 'cakes/custom-cake/index.html')
@@ -245,7 +302,9 @@ test('normal operational routes are generated noindex pages while unknown guides
 test('llms text exposes current public menu, confirmed prices and archived classes', async () => {
  const {dist}=await generate()
  const llms=await readFile(join(dist,'llms.txt'),'utf8')
- assert.equal(llms,renderRenewalLlms(site));assert.equal(llms,await readFile(llmsPath,'utf8'))
+ // Service summaries extend the existing catalogue; its product and price text stays intact.
+ assert.ok(llms.startsWith(renderRenewalLlms(site)))
+ assert.equal(llms,await readFile(llmsPath,'utf8'))
  assert.match(llms,/Cake & Bake/);assert.match(llms,/Chocolate Mochi/);assert.match(llms,/Brownie Basque/)
  assert.match(llms,/75.00/);assert.match(llms,/82.00/);assert.match(llms,/Class archive/)
  assert.doesNotMatch(llms,/79.00|85.00|115.00|155.00|lemon-cake|18:00/)
