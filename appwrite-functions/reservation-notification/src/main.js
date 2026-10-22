@@ -888,6 +888,7 @@ function customerEmailCopy(reservation) {
       },
     }
   }
+  const isRenewal = readStoredCakeLines(reservation)?.some(line => isRenewalContract(line.policyVersion)) === true
   return {
     subject: '[Verygood] 케이크 예약 요청이 접수됐어요 | Cake booking request received',
     korean: {
@@ -895,7 +896,9 @@ function customerEmailCopy(reservation) {
       heading: '케이크 예약 요청이 접수되었습니다',
       intro: '베리굿 초콜릿 시드니에 예약해주셔서 감사합니다. 예약 요청이 정상적으로 접수되었습니다.',
       detailsHeading: '예약 내역',
-      followUp: '현재는 “예약 요청 접수” 상태입니다. 주문 내용을 확인한 뒤 최종 예약 확정 안내를 다시 보내드릴게요.',
+      followUp: isRenewal
+        ? '지금은 결제되지 않습니다. 예약 가능 여부를 확인한 뒤 결제 방법을 안내해 드립니다. 안내를 받으신 후 입금해 주세요. 입금 확인 후 예약이 확정됩니다.'
+        : '현재는 “예약 요청 접수” 상태입니다. 주문 내용을 확인한 뒤 최종 예약 확정 안내를 다시 보내드릴게요.',
       signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
     },
     english: {
@@ -903,7 +906,9 @@ function customerEmailCopy(reservation) {
       heading: 'Your booking request has been received',
       intro: 'Thank you for booking with Verygood Chocolate Sydney. We’ve received your booking request.',
       detailsHeading: 'Booking details',
-      followUp: 'Your booking is currently awaiting final confirmation. We’ll review the details and send you a final confirmation shortly.',
+      followUp: isRenewal
+        ? 'No payment is taken now. We’ll check availability and send payment instructions. Please wait for our instructions before transferring. Your booking is confirmed once payment is received.'
+        : 'Your booking is currently awaiting final confirmation. We’ll review the details and send you a final confirmation shortly.',
       signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
     },
   }

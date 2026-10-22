@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { buildRenewalOrderData } from '../appwrite-functions/reservation-api/src/au-renewal-storage.js'
 
 import {
   buildBookingDeliveryPayload,
@@ -178,6 +179,37 @@ test('class customer booking receipt uses the parent email and includes both pac
   assert.ok(customer.html.indexOf('[한국어]') < customer.html.indexOf('[English]'))
   assert.equal(customer.text.split('VG-KC-AU-20260826-123456789').length - 1, 2)
   assert.equal(customer.text.split('AUD 285.10').length - 1, 2)
+})
+
+test('renewal customer receipts explain payment timing in both languages without changing legacy receipt contracts', () => {
+  const reservation = buildRenewalOrderData({
+    contractVersion: 'au-renewal.2026-10.v2',
+    customerName: 'Alice Customer', customerEmail: 'alice@example.com', customerPhone: '0412345678',
+    pickupDate: '2026-10-23', pickupTime: '09:00', privacyConsent: true,
+    orderLines: [{ lineId: 'cake', offerId: 'pave-cake', size: '6in', quantity: 1 }],
+  }, { now: new Date('2026-10-20T00:00:00Z'), reservationNumber: 'VG-C-AU-RENEWAL' })
+  reservation.$id = 'cake-123'
+  const renewal = message(reservation, 'customer')
+  for (const content of [renewal.text, renewal.html]) {
+    assert.match(content, /No payment is taken now/)
+    assert.match(content, /check availability and send payment instructions/)
+    assert.match(content, /wait for our instructions before transferring/)
+    assert.match(content, /confirmed once payment is received/)
+    assert.match(content, /지금은 결제되지 않습니다/)
+    assert.match(content, /예약 가능 여부를 확인한 뒤 결제 방법/)
+    assert.match(content, /안내를 받으신 후 입금/)
+    assert.match(content, /입금 확인 후 예약이 확정/)
+    assert.doesNotMatch(content, /012263|324999682|PayID/)
+  }
+  const legacy = message(cakeReservation(), 'customer')
+  assert.equal(renewal.templateVersion, legacy.templateVersion)
+  assert.equal(renewal.eventKey, legacy.eventKey)
+  assert.equal(renewal.idempotencyKey, legacy.idempotencyKey)
+  assert.equal(renewal.recipientHash, legacy.recipientHash)
+  assert.match(legacy.text, /We’ll review the details and send you a final confirmation shortly/)
+  for (const payload of [legacy, message(classReservation(), 'customer'), message(reservation, 'operator')]) {
+    assert.doesNotMatch(payload.text, /No payment is taken now|지금은 결제되지 않습니다/)
+  }
 })
 
 test('customer booking receipts are allowlisted and sanitize dynamic HTML and text values', () => {
