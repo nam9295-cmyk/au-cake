@@ -34,6 +34,7 @@ export async function createBookingReminderArchive({ repositoryRoot = process.cw
   try {
     await mkdir(stagingDir, { recursive: true })
     for (const entry of FUNCTION_ARCHIVE_ENTRIES) await cp(join(functionDir, entry), join(stagingDir, entry), { recursive: true })
+    await cp(resolve(repositoryRoot, 'appwrite-functions/shared/customer-email-contact.js'), join(stagingDir, 'shared/customer-email-contact.js'))
     const parserTarget = join(stagingDir, 'shared/reservation-api')
     await mkdir(parserTarget, { recursive: true })
     for (const sourcePath of PARSER_SOURCE_PATHS) {

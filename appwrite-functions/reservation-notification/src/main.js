@@ -1,4 +1,5 @@
 import { renewalLineSummary, isRenewalContract } from '../shared/reservation-api/au-renewal.js'
+import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
 import { Client, Databases } from 'node-appwrite'
 import { resolveNotificationAppwriteEndpoint } from './appwrite-endpoint.js'
 import {
@@ -811,7 +812,7 @@ function bilingualGreeting(section) {
   return section.language === '한국어' ? `안녕하세요, ${name}님.` : `Hi ${name},`
 }
 
-function bilingualTextSection(section) {
+function bilingualTextSection(section, includeContact) {
   return [
     `[${section.language}]`,
     bilingualGreeting(section),
@@ -826,6 +827,7 @@ function bilingualTextSection(section) {
     plainTextCell(section.followUp),
     '',
     ...section.signOff.map(plainTextCell),
+    ...(includeContact ? [customerEmailContactText(section.language === '한국어' ? 'ko' : 'en')] : []),
   ].join('\n')
 }
 
@@ -837,7 +839,7 @@ function bilingualHtmlRows(rows) {
     </tr>`).join('')
 }
 
-function bilingualHtmlSection(section) {
+function bilingualHtmlSection(section, includeContact) {
   return `
     <section>
       <p style="margin: 0 0 8px; color: #6b4b3e; font-size: 13px; font-weight: 700;">[${escapeHtml(section.language)}]</p>
@@ -850,19 +852,20 @@ function bilingualHtmlSection(section) {
       </div>
       <p style="margin: 0 0 16px;">${escapeHtml(plainTextCell(section.followUp))}</p>
       <p style="margin: 0;">${section.signOff.map((line) => escapeHtml(plainTextCell(line))).join('<br />')}</p>
+      ${includeContact ? customerEmailContactHtml(section.language === '한국어' ? 'ko' : 'en') : ''}
     </section>`
 }
 
-function buildBilingualEmailText(korean, english) {
-  return [bilingualTextSection(korean), '', '--------------------', '', bilingualTextSection(english)].join('\n')
+function buildBilingualEmailText(korean, english, includeContact) {
+  return [bilingualTextSection(korean, includeContact), '', '--------------------', '', bilingualTextSection(english, includeContact)].join('\n')
 }
 
-function buildBilingualEmailHtml(korean, english) {
+function buildBilingualEmailHtml(korean, english, includeContact) {
   return `
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55; max-width: 640px; margin: 0 auto;">
-      ${bilingualHtmlSection(korean)}
+      ${bilingualHtmlSection(korean, includeContact)}
       <div style="border-top: 1px solid #e8ded5; margin: 28px 0;"></div>
-      ${bilingualHtmlSection(english)}
+      ${bilingualHtmlSection(english, includeContact)}
     </div>`
 }
 
@@ -922,6 +925,7 @@ function buildCustomerReceiptText(reservation, config) {
   return buildBilingualEmailText(
     { ...copy.korean, rows: customerEmailKoreanRows(rows) },
     { ...copy.english, rows },
+    config.currency === 'AUD',
   )
 }
 
@@ -933,6 +937,7 @@ function buildCustomerReceiptHtml(reservation, config) {
   return buildBilingualEmailHtml(
     { ...copy.korean, rows: customerEmailKoreanRows(rows) },
     { ...copy.english, rows },
+    config.currency === 'AUD',
   )
 }
 
@@ -1077,6 +1082,7 @@ function buildBookingConfirmationText(reservation, sourceType, config) {
   return buildBilingualEmailText(
     { ...copy.korean, rows: customerEmailKoreanRows(rows) },
     { ...copy.english, rows },
+    config.currency === 'AUD',
   )
 }
 
@@ -1086,6 +1092,7 @@ function buildBookingConfirmationHtml(reservation, sourceType, config) {
   return buildBilingualEmailHtml(
     { ...copy.korean, rows: customerEmailKoreanRows(rows) },
     { ...copy.english, rows },
+    config.currency === 'AUD',
   )
 }
 

@@ -35,6 +35,7 @@ export async function createReviewApiArchive({ repositoryRoot = process.cwd(), f
     for (const entry of FUNCTION_ARCHIVE_ENTRIES) {
       await cp(join(sourceDirectory, entry), join(stagingDirectory, entry), { recursive: true })
     }
+    await cp(resolve(root, 'appwrite-functions/shared/customer-email-contact.js'), join(stagingDirectory, 'shared/customer-email-contact.js'))
     const sharedTargetDirectory = join(stagingDirectory, 'shared/email-delivery')
     await mkdir(sharedTargetDirectory, { recursive: true })
     for (const sourcePath of ARCHIVE_SHARED_SOURCE_PATHS) {
