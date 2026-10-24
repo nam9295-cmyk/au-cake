@@ -16,6 +16,9 @@ import { decideEmailDelivery, resendIdempotencyKeyForEvent } from '../appwrite-f
 const FROM='Very Good Chocolate <mail@example.invalid>'
 const KO='문의: Jenny · 0421 567 776'
 const EN='Contact: Jenny · +61 421 567 776'
+const KO_NOTICE='본 메일은 발송 전용으로 회신을 확인하지 않습니다. 변경사항이나 문의는 아래 연락처 또는 인스타그램으로 부탁드립니다.'
+const EN_NOTICE='This is a send-only email address; replies are not monitored. For changes or enquiries, please use the phone number or Instagram below.'
+const INSTAGRAM_URL='https://www.instagram.com/verygood_syd/'
 const cake={ $id:'cake-contact',reservationNumber:'VG-C-AU-20261024-123456789',customerName:'Contact Customer',customerEmail:'customer@example.invalid',customerPhone:'0412345678',productId:'pave-cake',cakeSize:'6in',chocolateType:'dark',poundAddon:'none',quantity:1,pickupDate:'2026-10-28',pickupTime:'10:00',totalPriceCents:7500,status:'예약확정',paymentStatus:'입금대기',requestNote:'' }
 const klass={ $id:'class-contact',reservationNumber:'VG-KC-AU-20261024-123456789',classType:'school-holiday-private-cake-class',coursePlan:'basic',classDate:'2026-10-31',classTime:'10:00',durationMinutes:90,extensionMinutes:0,bookingType:'1-child',parentName:'Contact Parent',parentEmail:'parent@example.invalid',parentPhone:'0412345678',childName:'Child',totalPriceCents:9900,status:'Confirmed' }
 const review={ $id:'review-contact',sourceType:'cake',sourceReservationId:cake.$id,couponId:'coupon-contact',rewardPercent:5 }
@@ -47,6 +50,13 @@ for(const[label,build]of rows)test(`${label} has Jenny contact in each existing 
  assert.ok(payload.html.includes('+61 421 567 776'))
  assert.equal(payload.idempotencyKey,resendIdempotencyKeyForEvent(payload.eventKey))
  assert.equal(payload.to.length,1)
+ for(const notice of [KO_NOTICE,EN_NOTICE]){
+  assert.equal(payload.text.split(notice).length-1,1,`${label}: send-only notice missing or duplicated`)
+  assert.equal(payload.html.split(notice).length-1,1)
+ }
+ assert.equal(payload.text.split('@verygood_syd').length-1,2)
+ assert.equal(payload.html.split(`href="${INSTAGRAM_URL}"`).length-1,2)
+ for(const body of [payload.text,payload.html])assert.doesNotMatch(body,/Reply to this email|이 이메일 또는 기존 안내된 연락 방법/)
 })
 
 function customEvent(type){
@@ -60,6 +70,10 @@ for(const type of ['custom-cake.received','custom-cake.quoted','custom-cake.conf
  const payload=buildCustomCakeEmailPayload({...customEvent(type),from:FROM})
  assert.ok(payload.text.includes(EN))
  assert.ok(!payload.text.includes(KO))
+ assert.ok(payload.text.includes(EN_NOTICE))
+ assert.ok(!payload.text.includes(KO_NOTICE))
+ assert.equal(payload.text.split('@verygood_syd').length-1,1)
+ assert.equal(payload.html.split(`href="${INSTAGRAM_URL}"`).length-1,1)
  assert.equal((payload.html.match(/href="tel:\+61421567776"/g)||[]).length,1)
 })
 
@@ -70,7 +84,7 @@ test('Jenny AU contact is not added to KR receipts or internal operator notifica
   buildBookingDeliveryPayload({reservation:cake,role:'operator',from:FROM,operatorRecipients:['operator@example.invalid']}),
   buildCustomCakeEmailPayload({...customEvent('custom-cake.received'),from:FROM,role:'operator',operatorRecipients:['operator@example.invalid']}),
  ]
- for(const p of payloads){assert.ok(!p.text.includes(KO)&&!p.text.includes(EN));assert.ok(!p.html.includes('tel:+61421567776'))}
+ for(const p of payloads){assert.ok(!p.text.includes(KO)&&!p.text.includes(EN));assert.ok(!p.html.includes('tel:+61421567776'));for(const body of [p.text,p.html]){assert.ok(!body.includes('@verygood_syd'));assert.ok(!body.includes('replies are not monitored'));assert.ok(!body.includes('발송 전용'))}}
 })
 
 test('adding a contact footer never reopens an existing customer delivery for another provider send',async()=>{
