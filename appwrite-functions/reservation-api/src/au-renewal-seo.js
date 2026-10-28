@@ -13,7 +13,7 @@ export function seoRobots(config) {
   return config.robots || 'index, follow';
 }
 const summaries = {
-  'halloween-meringue': 'Halloween 2026 Meringue Pops: packs of 3, 6, 12 or 24. Sydney pickup Wednesday, Friday, Saturday and Sunday, ending 1 November 2026. Order at least 24 hours ahead; final orders 31 October at 1pm (Sydney).',
+  'halloween-meringue': 'Halloween 2026 Meringue Pops: packs of 3, 6, 12 or 24. Melrose Park, Sydney pickup Wednesday, Friday, Saturday and Sunday, ending 1 November 2026. Order at least 24 hours ahead; final orders 31 October at 1pm (Sydney).',
   pave: 'Pavé chocolate whole cake in three sizes with dark or milk chocolate. Made to order for celebrations in Sydney.',
   'gateau-loaf': 'Signature Gâteau chocolate loaf with Basic, Extra Chocolate or Vanilla Fresh Cream finishes. Pickup in Melrose Park, Sydney.',
   'brownie-whole': 'Brownie Basque cheesecake in whole cake and loaf forms, with optional Vanilla Fresh Cream. Made to order in Sydney.',
@@ -82,7 +82,7 @@ export function renewalSeoPages(siteUrl, content) {
     const name=siblings.length>1?'Brownie Basque Cheesecake · Whole & Loaf':item.en;
     const desc=product?description(item):categoryDescriptions[path];
     const canonical=siteUrl+(path==='/'?'':path);
-    const page={title:`${name} | verygood chocolate`,description:desc,canonical,robots:'index, follow',noindex:false,output:'directory',extensionlessAlias:path!=='/',...imageConfig(siteUrl,product?item:null),structuredData:[],fallbackHtml:''};
+    const page={title:`${name}${item.id==='halloween-meringue'?' in Sydney':''} | verygood chocolate`,description:desc,canonical,robots:'index, follow',noindex:false,output:'directory',extensionlessAlias:path!=='/',...imageConfig(siteUrl,product?item:null),structuredData:[],fallbackHtml:''};
     if(product){
       const choices=siblings.flatMap(selections);
       page.ogType=choices.length?'product':'website';

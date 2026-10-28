@@ -24,8 +24,8 @@ async (page) => {
     await page.evaluate(() => document.fonts.ready)
     const cards = page.locator('.au-v02-best-card')
     check(await cards.count() === 4, `${width}: 4 Best cards`)
-    check(await cards.last().locator('.au-v02-best-action').getAttribute('href') === '/chocolates/chocolate-mochi', `${width}: Mochi product link`)
-    check((await cards.last().textContent()).includes('From AUD 8.00 each'), `${width}: existing Mochi price`)
+    check(await cards.first().locator('.au-v02-best-action').getAttribute('href') === '/chocolates/chocolate-mochi', `${width}: Mochi leads Best with its product link`)
+    check((await cards.first().textContent()).includes('From AUD 8.00 each'), `${width}: existing Mochi price`)
     const order = await page.evaluate(() => {
       const nodes = ['#best', '#au-collection', '.au-v02-craft', '.au-stories-home', '#custom-cakes'].map(selector => document.querySelector(selector))
       return nodes.every((node, index) => node && (!index || Boolean(nodes[index - 1].compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)))
@@ -37,7 +37,7 @@ async (page) => {
       await img.scrollIntoViewIfNeeded()
       await img.evaluate(async image => { await image.decode() })
     }
-    check(await cards.last().evaluate(el => el.querySelector("img").getBoundingClientRect().bottom <= el.querySelector(".au-v02-best-rank").getBoundingClientRect().top), `${width}: Mochi image does not overlap rank`)
+    check(await cards.first().evaluate(el => el.querySelector("img").getBoundingClientRect().bottom <= el.querySelector(".au-v02-best-rank").getBoundingClientRect().top), `${width}: Mochi image does not overlap rank`)
     if (width < 768) {
       await track.evaluate(el => el.scrollTo({ left: 0, behavior: 'instant' }))
       await track.focus()
@@ -68,7 +68,7 @@ async (page) => {
   await page.evaluate(() => localStorage.setItem('au-cake-language', 'ko'))
   await page.goto('http://127.0.0.1:4173/')
   await page.locator('#best').waitFor()
-  check((await page.locator('.au-v02-best-card').last().textContent()).includes('개당 AUD 8.00부터'), 'Korean Mochi price')
+  check((await page.locator('.au-v02-best-card').first().textContent()).includes('개당 AUD 8.00부터'), 'Korean Mochi price')
   check((await page.locator('#best').textContent()).includes('BEST [4]'), 'Korean Best count')
   check(errors.length === 0, `browser errors: ${errors.join('; ')}`)
   return { results, korean: 'PASS', browserErrors: errors, productionWrites: 0 }

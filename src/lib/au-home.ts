@@ -46,5 +46,5 @@ export function getAuHomeCollections(language: Language) {
 export function getAuHomeBest(language: Language) {
   const collections = getAuHomeCollections(language);
   const mochi = collections[1].products.find((product) => product.id === "mochi")!;
-  return [...collections[0].products.slice(0, 3), mochi];
+  return [mochi, ...collections[0].products.slice(0, 3)];
 }
