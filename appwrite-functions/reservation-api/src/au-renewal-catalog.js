@@ -48,12 +48,12 @@ export const RENEWAL_CARDS = Object.freeze({
       "/products/renewal-photos/cheese-pound-hero.webp",
     ),
     card(
-      "cookies",
-      "Levain Cookies · Six",
-      "르뱅쿠키 6개 세트",
-      "/cakes/levain-cookies",
-      ["cookie-six"],
-      "/products/renewal-photos/cookies-hero_v2.webp",
+      "lemon",
+      "Lemon Cake",
+      "레몬 케이크",
+      "/cakes/lemon-cake",
+      ["fresh-lemon-cupcakes-6", "fresh-lemon-cupcakes-8", "fresh-lemon-cupcakes-12", "fresh-lemon-cupcakes-16"],
+      "/products/details/lemon/hero-1080.webp",
     ),
   ],
   chocolates: [

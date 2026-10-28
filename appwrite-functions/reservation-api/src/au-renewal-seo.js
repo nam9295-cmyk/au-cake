@@ -7,12 +7,13 @@ const money = cents => (cents / 100).toFixed(2);
 const finishName = key => ({basic:'Basic','extra-chocolate':'Extra Chocolate','vanilla-fresh-cream':'Vanilla Fresh Cream','chocolate-buttercream':'Chocolate Buttercream'}[key] || key);
 const cards = Object.values(RENEWAL_CARDS).flat();
 // Measured from the existing public assets; tests verify against decoded files.
-const imageDimensions = {'halloween-meringue':[1080,1440],pave:[1080,1012],'gateau-loaf':[1080,1012],'brownie-whole':[1080,1012],'brownie-loaf':[1024,1024],cookies:[1216,864],mochi:[1080,1012],almond:[1080,1012],'pave-chocolate':[1080,1012],eiffel:[1080,1012],'gateau-cupcakes':[480,313],'brownie-cupcakes':[912,1152],smore:[480,320]};
+const imageDimensions = {lemon:[1080,1012],'halloween-meringue':[1080,1440],pave:[1080,1012],'gateau-loaf':[1080,1012],'brownie-whole':[1080,1012],'brownie-loaf':[1024,1024],cookies:[1216,864],mochi:[1080,1012],almond:[1080,1012],'pave-chocolate':[1080,1012],eiffel:[1080,1012],'gateau-cupcakes':[480,313],'brownie-cupcakes':[912,1152],smore:[480,320]};
 export function seoRobots(config) {
   if (config.noindex) return 'noindex, nofollow';
   return config.robots || 'index, follow';
 }
 const summaries = {
+  lemon: "Fresh Lemon Cake in boxes of 6, 8, 12 or 16. Fresh lemon glaze with optional dark chocolate finishing for AUD 0.50 per piece. Pickup in Melrose Park, Sydney.",
   'halloween-meringue': 'Halloween 2026 Meringue Pops: packs of 3, 6, 12 or 24. Melrose Park, Sydney pickup Wednesday, Friday, Saturday and Sunday, ending 1 November 2026. Order at least 24 hours ahead; final orders 31 October at 1pm (Sydney).',
   pave: 'Pavé chocolate whole cake in three sizes with dark or milk chocolate. Made to order for celebrations in Sydney.',
   'gateau-loaf': 'Signature Gâteau chocolate loaf with Basic, Extra Chocolate or Vanilla Fresh Cream finishes. Pickup in Melrose Park, Sydney.',

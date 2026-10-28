@@ -192,6 +192,8 @@ function Product({ card }: { card: RenewalCard }) {
     [finish, setFinish] = useState(params.get("finish") || "basic"),
     [chocolateType, setChocolate] = useState("dark");
   const [quantity, setQuantity] = useState(1);
+  const [chocolateIcingCount, setChocolateIcingCount] = useState(0);
+  const [lemonPackaging, setLemonPackaging] = useState(false);
   const [packs, setPacks] = useState<
     Record<string, { quantity: number; finish: string; packaging: boolean }>
   >(() =>
@@ -236,7 +238,8 @@ function Product({ card }: { card: RenewalCard }) {
         offerId,
         quantity,
         finish,
-        individualPackaging: false,
+        individualPackaging: p.family === "lemon" && lemonPackaging,
+        ...(p.family === "lemon" ? { chocolateIcingCount } : {}),
         ...(p.sizes ? { size } : {}),
         ...(p.chocolate ||
         (offerId === "pound-cake" && finish === "extra-chocolate")
@@ -408,12 +411,13 @@ function Product({ card }: { card: RenewalCard }) {
                     onClick={() => {
                       setOffer(id);
                       setFinish("basic");
+                      setChocolateIcingCount(0);
                     }}
                   >
                     {seasonal ? null : ["almond-chocoball-6pack", "pave-six-plus-one", "eiffel-six-plus-one"].includes(id) ? (
                       <SixPackPhoto src={card.image} label={packLabel(id)} />
                     ) : (
-                      <ProductPhoto option src={id === "almond-chocoball-black-tub-2x80g" ? renewalPhoto("almond-black-tub") : id === card.offers[0] || id === "smore-12" ? card.image : undefined} label={packLabel(id)} />
+                      <ProductPhoto option src={id === "almond-chocoball-black-tub-2x80g" ? renewalPhoto("almond-black-tub") : p.family === "lemon" || id === card.offers[0] || id === "smore-12" ? card.image : undefined} label={packLabel(id)} />
                     )}
                     <strong>{packLabel(id)}</strong>
                     <span className="au-pave-option-price">
@@ -531,6 +535,16 @@ function Product({ card }: { card: RenewalCard }) {
             })
           ) : (
             <>
+              {p.family === "lemon" && <fieldset className="au-pave-fieldset">
+                <legend>{t("Choose your finish", "마감 선택")}</legend>
+                <p>{t("Fresh lemon zest icing included. Dark couverture chocolate: +AUD 0.50 per piece.", "생레몬 제스트 아이싱 기본 포함 · 다크 커버춰 초콜릿 개당 AUD 0.50 추가")}</p>
+                <QuantityStepper label={t("Dark chocolate pieces per box", "박스당 초콜릿 마감 개수")} value={chocolateIcingCount} min={0} max={p.pieces} onChange={setChocolateIcingCount} />
+                <p>{t("Lemon icing", "레몬 아이싱")} {p.pieces-chocolateIcingCount} · {t("Dark chocolate", "다크 초콜릿")} {chocolateIcingCount}</p>
+                <OptionButton active={lemonPackaging} onClick={()=>setLemonPackaging(!lemonPackaging)}>
+                  <strong>{t("Individual packaging", "개별포장")}</strong>
+                  <span>{t("AUD 0.50 per piece · Free from AUD 100 of individually packaged cupcakes and lemon cakes", "개당 AUD 0.50 · 개별포장 컵케이크·레몬케이크 상품금액 AUD 100 이상 무료")}</span>
+                </OptionButton>
+              </fieldset>}
               {(p.finishes || p.cream) && (
                 <fieldset className="au-pave-fieldset">
                   <legend>{t("Choose your finish", "토핑 선택")}</legend>

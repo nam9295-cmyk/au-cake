@@ -11,6 +11,7 @@ export interface RenewalSelection {
   individualPackaging?: boolean;
   mode?: string;
   flavourCounts?: MochiCounts;
+  chocolateIcingCount?: number;
   parentLineId?: string;
 }
 export interface RenewalOffer {

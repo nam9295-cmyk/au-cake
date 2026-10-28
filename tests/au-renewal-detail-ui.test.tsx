@@ -58,7 +58,8 @@ test("cupcake finish cards are product specific and unavailable prices cannot be
     /Chocolate Buttercream/,
   );
   const cookie = render("/cakes/levain-cookies");
-  assert.match(cookie, /disabled=""/);
+  assert.match(cookie, /no longer available for new orders/);
+  assert.doesNotMatch(cookie, /Add to bag/);
   assert.doesNotMatch(cookie, /AUD 0\.00/);
 });
 
@@ -84,7 +85,7 @@ test("Oct16 product information distinguishes missing photos from unavailable of
  assert.match(korean,/80g/);
  assert.match(korean,/최대 3일/);
  const cookies=render('/cakes/levain-cookies');
- assert.match(cookies,/sale price is approved/);
+ assert.match(cookies,/no longer available for new orders/);
  assert.doesNotMatch(cookies,/19 October 2026/);
 });
 
@@ -111,7 +112,7 @@ test("restored stories use the current menu and do not revive discontinued brown
       const html = render(card.href, language);
       const related = html.slice(html.indexOf('class="au-pave-related"'));
       assert.match(related, /AUD 75\.00|AUD 45\.00|AUD 82\.00/);
-      assert.doesNotMatch(related, /fresh-strawberry|lemon-cake|buttercream-cake|AUD 79\.00|AUD 109\.00/);
+      assert.doesNotMatch(related, /fresh-strawberry|buttercream-cake|AUD 79\.00|AUD 109\.00/);
       assert.doesNotMatch(html, /src="\/products\/details\/(?:signature-gateau|brownie-cheesecake)\/packaging-/, "Pavé packaging reference must not substitute for another product");
       assert.doesNotMatch(html, /Atelier packaging reference, shown with a Pavé cake/);
     }

@@ -460,7 +460,7 @@ if (isAuMarket) pages['/classes'] = classArchiveSeo(siteUrl)
 // Service hubs use the same rendered components and metadata as the live UI.
 const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages, ...renewedPages, ...servicePages }
 if (isAuMarket) for (const path of Object.keys(allPages)) {
- if (/^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(path)) allPages[path] = { title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', noindex: true, fallbackHtml: '<main><h1>Explore our current menu</h1><a href="/cakes">Cake &amp; Bake</a></main>' }
+ if (/^\/cakes\/(levain-cookies|fresh-strawberry-vanilla-cream-cake)$/.test(path)) allPages[path] = { title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', noindex: true, fallbackHtml: '<main><h1>Explore our current menu</h1><a href="/cakes">Cake &amp; Bake</a></main>' }
 }
 for (const [path, config] of Object.entries(allPages)) {
   const outputPath = path === '/' ? join(distDir, 'index.html')

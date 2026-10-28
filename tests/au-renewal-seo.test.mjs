@@ -7,7 +7,7 @@ test('renewal machine-readable content uses current menu and never historical or
  const content=seo.renderRenewalLlms('https://example.test',['- HOGIRL preserved'])
  for(const card of Object.values(RENEWAL_CARDS).flat())assert.ok(content.includes(card.href))
  assert.match(content,/75.00/);assert.match(content,/82.00/);assert.match(content,/Wednesday.*Friday.*09:00–20:00.*Saturday.*Sunday.*09:00–13:00/)
- assert.doesNotMatch(content,/79.00|85.00|115.00|155.00|4.50 \/ stick|lemon-cake|18:00/)
+ assert.doesNotMatch(content,/79.00|115.00|155.00|4.50 \/ stick|18:00/)
  assert.match(content,/HOGIRL preserved/)
 })
 
@@ -24,7 +24,7 @@ test('SEO-02: Mochi initial content contains six current flavours, prices, real 
  assert.doesNotMatch(p.fallbackHtml,/Amande|signature.*35|Cookie reservations/i)
 })
 test('SEO-03: confirmed offers use correct units and Celebrate breadcrumbs; blocked products have no offers',()=>{
- for(const path of ['/cakes/levain-cookies','/cakes/brownie-cupcakes'])assert.doesNotMatch(JSON.stringify(pages[path].structuredData),/"offers"|InStock/)
+ for(const path of ['/cakes/brownie-cupcakes'])assert.doesNotMatch(JSON.stringify(pages[path].structuredData),/"offers"|InStock/)
  const p=pages['/cakes/smore-stick'];const product=p.structuredData.find(x=>x['@type']==='Product');assert.ok(product)
  assert.deepEqual(product.offers.map(o=>o.price),['25.00','45.00'])
  assert.equal(p.structuredData.find(x=>x['@type']==='BreadcrumbList').itemListElement[1].name,'Celebrate')
@@ -55,3 +55,9 @@ test('SEO-08: shared Brownie canonical describes whole and loaf with their curre
 test('SEO-02 static product images fit narrow screens without JavaScript',()=>{
  assert.match(pages['/chocolates/chocolate-mochi'].fallbackHtml,/<img[^>]*style="[^"]*max-width:100%;height:auto/)
 })
+
+test('restored lemon SEO has exactly the approved September pack prices; cookies are no longer marketed',()=>{
+ assert.equal(pages['/cakes/levain-cookies'],undefined);
+ const p=pages['/cakes/lemon-cake'];assert.match(p.description,/0.50/);
+ assert.deepEqual(p.structuredData.find(s=>s['@type']==='Product').offers.map(o=>o.price),['36.00','45.00','65.00','85.00']);
+});

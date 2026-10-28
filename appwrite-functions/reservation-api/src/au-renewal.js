@@ -19,6 +19,11 @@ const sum = (values) =>
 const offer = (name, price, pieces = 1, extra = {}) =>
   Object.freeze({ name, price, pieces, ...extra });
 export const RENEWAL_OFFERS = Object.freeze({
+  "fresh-lemon-cupcakes-6": offer("Lemon Cake · 6", 3600, 6, { family: "lemon" }),
+  "fresh-lemon-cupcakes-8": offer("Lemon Cake · 8", 4500, 8, { family: "lemon" }),
+  "fresh-lemon-cupcakes-12": offer("Lemon Cake · 12", 6500, 12, { family: "lemon" }),
+  "fresh-lemon-cupcakes-16": offer("Lemon Cake · 16", 8500, 16, { family: "lemon" }),
+
   "halloween-meringue-3": offer("Halloween Meringue Pops · 3", 1200, 3, { family: "cookie" }),
   "halloween-meringue-6": offer("Halloween Meringue Pops · 6", 2300, 6, { family: "cookie" }),
   "halloween-meringue-12": offer("Halloween Meringue Pops · 12", 4500, 12, { family: "cookie" }),
@@ -163,6 +168,7 @@ const allowedFields = new Set([
   "individualPackaging",
   "mode",
   "flavourCounts",
+  "chocolateIcingCount",
   "parentLineId",
 ]);
 export function normalizeRenewalLines(value, { storedOnly = false } = {}) {
@@ -231,6 +237,11 @@ export function normalizeRenewalLines(value, { storedOnly = false } = {}) {
     )
       fail("INVALID_FINISH");
     line.finish = finish;
+    if (p.family === "lemon") {
+      const count = input.chocolateIcingCount === undefined ? 0 : input.chocolateIcingCount;
+      if (!Number.isSafeInteger(count) || count < 0 || count > p.pieces) fail("INVALID_FINISH");
+      line.chocolateIcingCount = count;
+    } else if (input.chocolateIcingCount !== undefined) fail("INVALID_FINISH");
     if (
       input.chocolateType !== undefined &&
       (!["dark", "milk"].includes(input.chocolateType) ||
@@ -271,7 +282,7 @@ export function normalizeRenewalLines(value, { storedOnly = false } = {}) {
         fail("INVALID_PACKAGING");
     } else if (input.mode !== undefined || input.flavourCounts !== undefined)
       fail("INVALID_MOCHI_MODE");
-    if (line.individualPackaging && !["mochi", "cupcake"].includes(p.family))
+    if (line.individualPackaging && !["mochi", "cupcake", "lemon"].includes(p.family))
       fail("INVALID_PACKAGING");
     if (p.addon) {
       const parent = value.find((l) => l.lineId === input.parentLineId);
@@ -310,6 +321,7 @@ export function priceRenewalOrder(
         : p.price;
     if (p.cream && selection.finish === "vanilla-fresh-cream")
       unitPriceCents += 1000;
+    if (p.family === "lemon") unitPriceCents += selection.chocolateIcingCount * 50;
     let physicalQuantity = safeAmount(p.pieces * selection.quantity);
     let flavourTotals = [];
     if (p.family === "mochi") {
@@ -358,7 +370,7 @@ export function priceRenewalOrder(
       .filter(
         (l) =>
           l.individualPackaging &&
-          RENEWAL_OFFERS[l.productId].family === "cupcake",
+          ["cupcake", "lemon"].includes(RENEWAL_OFFERS[l.productId].family),
       )
       .map((l) => l.subtotalCents),
   );
@@ -400,7 +412,7 @@ export function priceRenewalOrder(
     const p = RENEWAL_OFFERS[l.productId];
     l.individualPackagingFeeCents =
       l.individualPackaging &&
-      !(p.family === "cupcake" && eligibleSubtotal >= 10000)
+      !(["cupcake", "lemon"].includes(p.family) && eligibleSubtotal >= 10000)
         ? safeAmount(l.physicalQuantity * 50)
         : 0;
     l.totalPriceCents = safeAmount(
@@ -437,6 +449,7 @@ function offerForLine(line) {
 // Read-only presentation: never serialize these labels back into order snapshots.
 export function renewalLineSummary(line, { lines = [], language = "en" } = {}) {
   const s = line.selection;
+  const p = RENEWAL_OFFERS[s.offerId];
   const ko = language === "ko";
   const money = cents => `AUD ${(cents / 100).toFixed(2)}`;
   const details = [renewalProductName(line, language)];
@@ -451,6 +464,9 @@ export function renewalLineSummary(line, { lines = [], language = "en" } = {}) {
       .join(" / ");
     details.push((gift && line.quantity > 1 ? (ko ? "박스당: " : "Each box: ") : "") + composition);
   } else {
+    if (p.family === "lemon") details.push(ko
+      ? `레몬 아이싱 ${p.pieces - s.chocolateIcingCount}개 / 다크 초콜릿 ${s.chocolateIcingCount}개 (박스당)`
+      : `Lemon icing ${p.pieces - s.chocolateIcingCount} / Dark chocolate ${s.chocolateIcingCount} per box`);
     const finishes = {"vanilla-fresh-cream":"Vanilla Fresh Cream","chocolate-buttercream":"Chocolate Buttercream","extra-chocolate":"Extra Chocolate"};
     details.push(s.size, s.finish === "basic" ? null : finishes[s.finish] || s.finish, s.chocolateType,
       `×${line.quantity}`, line.physicalQuantity > line.quantity ? `${line.physicalQuantity} pieces` : null);

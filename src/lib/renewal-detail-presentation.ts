@@ -3,7 +3,7 @@ import { getAuDetailPresentation } from './au-detail-presentation'
 
 // Presentation only: leave the historical catalog and its order contracts intact.
 export function renewalDetailPresentation(card: RenewalCard) {
-  if (!['gateau-loaf', 'brownie-whole', 'gateau-cupcakes', 'almond', 'smore'].includes(card.id)) return null
+  if (!['lemon', 'gateau-loaf', 'brownie-whole', 'gateau-cupcakes', 'almond', 'smore'].includes(card.id)) return null
   const original = getAuDetailPresentation(card.href.split('?')[0].split('/').at(-1)!)
   if (!original) return null
   if (card.id === 'brownie-whole') return {
