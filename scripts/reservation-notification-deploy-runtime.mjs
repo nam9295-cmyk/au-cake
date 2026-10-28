@@ -46,6 +46,7 @@ export async function createNotificationArchive({ repositoryRoot = process.cwd()
     for (const entry of FUNCTION_ARCHIVE_ENTRIES) {
       await cp(join(functionDir, entry), join(stagingDir, entry), { recursive: true })
     }
+    await cp(resolve(repositoryRoot, 'appwrite-functions/shared/customer-email-contact.js'), join(stagingDir, 'shared/customer-email-contact.js'))
     const parserTargetDir = join(stagingDir, 'shared/reservation-api')
     await mkdir(parserTargetDir, { recursive: true })
     for (const sourcePath of PARSER_SOURCE_PATHS) {

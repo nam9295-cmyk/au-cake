@@ -4,6 +4,7 @@ import { customCakeDocumentId } from '../shared/reservation-api/custom-cake-pers
 import { buildEmailDeliveryEventKey, buildPendingEmailDelivery, decideEmailDelivery, CUSTOM_CAKE_EMAIL_IDENTITY_POLICY, normalizeRecipientEmail, normalizeRecipientEmailSet, payloadHashForEmail, recipientHashForEmail, recipientHashForEmailSet, resendIdempotencyKeyForEvent, EMAIL_DELIVERY_PENDING_LEASE_MS } from '../shared/email-delivery/email-delivery.js'
 import { deliverEmail } from '../shared/email-delivery/email-delivery-sender.js'
 import { retryEmail } from '../shared/email-delivery/email-delivery-retry.js'
+import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
 
 const policy = Object.freeze({ identityPolicy: CUSTOM_CAKE_EMAIL_IDENTITY_POLICY })
 const variants = Object.freeze({ 'custom-cake.received': 'requested', 'custom-cake.quoted': 'quoted', 'custom-cake.confirmed': 'confirmed', 'cake-order-v2.received': '예약신청' })
@@ -86,8 +87,8 @@ export function buildCustomCakeEmailPayload({ id, event, from, replyTo = null, r
   if (event.eventType !== 'custom-cake.confirmed') details.push('This request is not a confirmed booking. Receipt or a quote does not guarantee production or pickup, and does not authorize payment.')
   const template = event.eventType, sourceType = q ? 'custom-cake' : 'cake-order-v2', sourceId = id
   const eventKey = buildEmailDeliveryEventKey({ template, sourceType, sourceId, occurrence: role }, policy)
-  const text = details.join('\n')
-  const payload = { eventKey, template, templateVersion: 'v1', sourceType, sourceId, occurrence: role, from: from.trim(), replyTo, ...(role === 'operator' ? { recipientEmails: recipients } : { recipientEmail }), to: recipients, subject: `[Very Good Chocolate] ${title} · ${event.requestNumber}`, text, html: `<div>${details.map(line => `<p>${escape(line)}</p>`).join('')}</div>`, recipientHash: role === 'operator' ? recipientHashForEmailSet(recipients) : recipientHashForEmail(recipientEmail), idempotencyKey: resendIdempotencyKeyForEvent(eventKey) }
+  const text = [...details, ...(role === 'customer' ? [customerEmailContactText('en')] : [])].join('\n')
+  const payload = { eventKey, template, templateVersion: 'v1', sourceType, sourceId, occurrence: role, from: from.trim(), replyTo, ...(role === 'operator' ? { recipientEmails: recipients } : { recipientEmail }), to: recipients, subject: `[Very Good Chocolate] ${title} · ${event.requestNumber}`, text, html: `<div>${details.map(line => `<p>${escape(line)}</p>`).join('')}${role === 'customer' ? customerEmailContactHtml('en') : ''}</div>`, recipientHash: role === 'operator' ? recipientHashForEmailSet(recipients) : recipientHashForEmail(recipientEmail), idempotencyKey: resendIdempotencyKeyForEvent(eventKey) }
   return { ...payload, payloadHash: payloadHashForEmail(payload, policy) }
 }
 function validatePayload(id, event, payload, role) {

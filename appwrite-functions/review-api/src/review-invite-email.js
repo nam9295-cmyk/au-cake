@@ -6,6 +6,8 @@ import {
   resendIdempotencyKeyForEvent,
 } from '../shared/email-delivery/email-delivery.js'
 
+import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
+
 const APPWRITE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const REVIEW_TOKEN = /^[A-Za-z0-9_-]{43}$/
 const TEMPLATE = 'review-invite-customer'
@@ -70,6 +72,7 @@ function templateCopy(name, url) {
     '',
     '감사합니다.',
     'Verygood Chocolate Sydney',
+    customerEmailContactText('ko'),
   ]
   const english = [
     '[English]',
@@ -93,6 +96,7 @@ function templateCopy(name, url) {
     '',
     'Thank you,',
     'Verygood Chocolate Sydney',
+    customerEmailContactText('en'),
   ]
   return { korean, english, text: [...korean, '', '--------------------', '', ...english].join('\n') }
 }
@@ -114,6 +118,7 @@ function buildHtml(name, url) {
       <p style="margin:0 0 8px;">개인 후기 링크는 발급일로부터 30일 동안 유효합니다.</p>
       <p style="margin:0 0 8px;">후기 작성 후 발급되는 리워드 쿠폰도 발급일로부터 30일 동안 사용할 수 있습니다.</p>
       <p style="margin:0;">쿠폰은 다음 케이크 주문에 1회 사용할 수 있습니다.</p>
+      ${customerEmailContactHtml('ko')}
       <hr style="border:0;border-top:1px solid #e8ded5;margin:28px 0;">
       <h1 style="font-size:22px;line-height:1.3;margin:0 0 16px;">We’d love your review</h1>
       <p style="margin:0 0 14px;">Hi ${safeName},</p>
@@ -128,6 +133,7 @@ function buildHtml(name, url) {
       <p style="margin:0 0 8px;">After you submit your review, your reward coupon will be valid for 30 days from the date it is issued.</p>
       <p style="margin:0;">The coupon can be used once on your next cake order.</p>
       <p style="margin:22px 0 0;">Thank you,<br>Verygood Chocolate Sydney</p>
+      ${customerEmailContactHtml('en')}
     </div>
   `
 }

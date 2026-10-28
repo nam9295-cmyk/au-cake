@@ -7,6 +7,7 @@ import {
   resendIdempotencyKeyForEvent,
 } from '../shared/email-delivery/email-delivery.js'
 import { deliverEmail } from '../shared/email-delivery/email-delivery-sender.js'
+import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
 
 const APPWRITE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/
 const TEMPLATE = 'review-reward-customer'
@@ -105,6 +106,7 @@ function templateCopy({ name, percent, code, issued, expiry, cakeOrderUrl }) {
     '',
     '소중한 의견 감사합니다.',
     'Verygood Chocolate Sydney',
+    customerEmailContactText('ko'),
   ]
   const english = [
     '[English]',
@@ -124,6 +126,7 @@ function templateCopy({ name, percent, code, issued, expiry, cakeOrderUrl }) {
     '',
     'Thank you,',
     'Verygood Chocolate Sydney',
+    customerEmailContactText('en'),
   ]
   return { korean, english, text: [...korean, '', '--------------------', '', ...english].join('\n') }
 }
@@ -152,6 +155,7 @@ function buildHtml({ name, percent, code, issued, expiry, cakeOrderUrl }) {
       </div>
       <p style="margin:0 0 18px;">이 쿠폰은 발급일로부터 30일 동안 유효하며, 다음 케이크 주문에 1회 사용할 수 있습니다.</p>
       <p style="margin:0 0 18px;"><a href="${safeOrderUrl}" style="display:inline-block;background:#5b2417;color:#ffffff;padding:12px 16px;border-radius:6px;text-decoration:none;font-weight:700;">케이크 주문하기</a></p>
+      ${customerEmailContactHtml('ko')}
       <hr style="border:0;border-top:1px solid #e8ded5;margin:28px 0;">
       <h1 style="font-size:22px;line-height:1.3;margin:0 0 16px;">Your review reward is ready</h1>
       <p style="margin:0 0 14px;">Hi ${safeEnglishName},</p>
@@ -166,6 +170,7 @@ function buildHtml({ name, percent, code, issued, expiry, cakeOrderUrl }) {
       <p style="margin:0 0 18px;">Your coupon is valid for 30 days from the date it was issued and can be used once on your next cake order.</p>
       <p style="margin:0 0 18px;"><a href="${safeOrderUrl}" style="display:inline-block;background:#5b2417;color:#ffffff;padding:12px 16px;border-radius:6px;text-decoration:none;font-weight:700;">Order a cake</a></p>
       <p style="margin:22px 0 0;">Thank you,<br>Verygood Chocolate Sydney</p>
+      ${customerEmailContactHtml('en')}
     </div>
   `
 }

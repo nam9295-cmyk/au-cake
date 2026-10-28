@@ -1,4 +1,5 @@
 import { renewalLineSummary, isRenewalContract } from '../shared/reservation-api/au-renewal.js'
+import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
 import {
   buildEmailDeliveryEventKey,
   normalizeRecipientEmail,
@@ -142,7 +143,7 @@ function sessionProjection(reservation, sessionKind) {
 }
 
 function bilingualText({ korean, english }) {
-  return [`[한국어]`, ...korean, '', '--------------------', '', '[English]', ...english].join('\n')
+  return [`[한국어]`, ...korean, customerEmailContactText('ko'), '', '--------------------', '', '[English]', ...english, customerEmailContactText('en')].join('\n')
 }
 
 function rowText(rows) {
@@ -168,6 +169,7 @@ function bilingualSectionHtml({ language, greeting, heading, intro, rows, follow
       ${mapUrl ? `<p style="margin:0 0 16px;"><a href="${escapeHtml(mapUrl)}" style="color:#5b2417;">${escapeHtml(mapLabel)}</a></p>` : ''}
       <p style="margin:0 0 16px;">${escapeHtml(followUp)}</p>
       <p style="margin:0;">${signOff.map((line) => escapeHtml(plainTextCell(line))).join('<br />')}</p>
+      ${customerEmailContactHtml(language === '한국어' ? 'ko' : 'en')}
     </section>`
 }
 

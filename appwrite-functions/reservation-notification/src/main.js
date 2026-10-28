@@ -1,4 +1,5 @@
 import { renewalLineSummary, isRenewalContract } from '../shared/reservation-api/au-renewal.js'
+import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
 import { Client, Databases } from 'node-appwrite'
 import { resolveNotificationAppwriteEndpoint } from './appwrite-endpoint.js'
 import {
@@ -811,7 +812,7 @@ function bilingualGreeting(section) {
   return section.language === '한국어' ? `안녕하세요, ${name}님.` : `Hi ${name},`
 }
 
-function bilingualTextSection(section) {
+function bilingualTextSection(section, includeContact) {
   return [
     `[${section.language}]`,
     bilingualGreeting(section),
@@ -826,6 +827,7 @@ function bilingualTextSection(section) {
     plainTextCell(section.followUp),
     '',
     ...section.signOff.map(plainTextCell),
+    ...(includeContact ? [customerEmailContactText(section.language === '한국어' ? 'ko' : 'en')] : []),
   ].join('\n')
 }
 
@@ -837,7 +839,7 @@ function bilingualHtmlRows(rows) {
     </tr>`).join('')
 }
 
-function bilingualHtmlSection(section) {
+function bilingualHtmlSection(section, includeContact) {
   return `
     <section>
       <p style="margin: 0 0 8px; color: #6b4b3e; font-size: 13px; font-weight: 700;">[${escapeHtml(section.language)}]</p>
@@ -848,21 +850,22 @@ function bilingualHtmlSection(section) {
         <div style="padding: 12px; background: #5b2417; color: #ffffff; font-weight: 700;">${escapeHtml(plainTextCell(section.detailsHeading))}</div>
         <table style="border-collapse: collapse; width: 100%;"><tbody>${bilingualHtmlRows(section.rows)}</tbody></table>
       </div>
-      <p style="margin: 0 0 16px;">${escapeHtml(plainTextCell(section.followUp))}</p>
+      ${section.followUp ? `<p style="margin: 0 0 16px;">${escapeHtml(plainTextCell(section.followUp))}</p>` : ''}
       <p style="margin: 0;">${section.signOff.map((line) => escapeHtml(plainTextCell(line))).join('<br />')}</p>
+      ${includeContact ? customerEmailContactHtml(section.language === '한국어' ? 'ko' : 'en') : ''}
     </section>`
 }
 
-function buildBilingualEmailText(korean, english) {
-  return [bilingualTextSection(korean), '', '--------------------', '', bilingualTextSection(english)].join('\n')
+function buildBilingualEmailText(korean, english, includeContact) {
+  return [bilingualTextSection(korean, includeContact), '', '--------------------', '', bilingualTextSection(english, includeContact)].join('\n')
 }
 
-function buildBilingualEmailHtml(korean, english) {
+function buildBilingualEmailHtml(korean, english, includeContact) {
   return `
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #2a1710; line-height: 1.55; max-width: 640px; margin: 0 auto;">
-      ${bilingualHtmlSection(korean)}
+      ${bilingualHtmlSection(korean, includeContact)}
       <div style="border-top: 1px solid #e8ded5; margin: 28px 0;"></div>
-      ${bilingualHtmlSection(english)}
+      ${bilingualHtmlSection(english, includeContact)}
     </div>`
 }
 
@@ -922,6 +925,7 @@ function buildCustomerReceiptText(reservation, config) {
   return buildBilingualEmailText(
     { ...copy.korean, rows: customerEmailKoreanRows(rows) },
     { ...copy.english, rows },
+    config.currency === 'AUD',
   )
 }
 
@@ -933,6 +937,7 @@ function buildCustomerReceiptHtml(reservation, config) {
   return buildBilingualEmailHtml(
     { ...copy.korean, rows: customerEmailKoreanRows(rows) },
     { ...copy.english, rows },
+    config.currency === 'AUD',
   )
 }
 
@@ -1022,7 +1027,7 @@ function confirmationClassRows(reservation, config) {
   ]
 }
 
-function confirmationEmailCopy(reservation, sourceType) {
+function confirmationEmailCopy(reservation, sourceType, config) {
   if (sourceType === 'class') {
     return {
       subject: '[Verygood] 키즈 클래스 예약이 확정됐어요 | Your class booking is confirmed',
@@ -1031,7 +1036,7 @@ function confirmationEmailCopy(reservation, sourceType) {
         heading: '키즈 클래스 예약이 최종 확정되었습니다',
         intro: `${plainTextCell(reservation.childName)}님의 베리굿 키즈 클래스 예약이 최종 확정되었습니다. 수업 전 준비사항과 알러지 정보에 변경이 있으면 알려주세요.`,
         detailsHeading: '예약 내역',
-        followUp: '수업 전 궁금한 점이 있으면 이 이메일 또는 기존 안내된 연락 방법으로 문의해주세요.',
+        followUp: config.currency === 'AUD' ? '' : '수업 전 궁금한 점이 있으면 이 이메일 또는 기존 안내된 연락 방법으로 문의해주세요.',
         signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
       },
       english: {
@@ -1039,7 +1044,7 @@ function confirmationEmailCopy(reservation, sourceType) {
         heading: 'Your kids class booking is CONFIRMED',
         intro: 'Your Verygood Kids Class booking is confirmed. Please arrive ready for the session and let us know promptly if allergy information changes.',
         detailsHeading: 'Booking details',
-        followUp: 'Reply to this email if you have a question before the class.',
+        followUp: config.currency === 'AUD' ? '' : 'Reply to this email if you have a question before the class.',
         signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
       },
     }
@@ -1051,7 +1056,7 @@ function confirmationEmailCopy(reservation, sourceType) {
       heading: '예약이 최종 확정되었습니다',
       intro: '베리굿 초콜릿 예약이 최종 확정되었습니다. 픽업 때 뵙겠습니다.',
       detailsHeading: '예약 내역',
-      followUp: '변경사항이나 문의가 있으시면 이 이메일 또는 기존 안내된 연락 방법으로 연락해주세요.',
+      followUp: config.currency === 'AUD' ? '' : '변경사항이나 문의가 있으시면 이 이메일 또는 기존 안내된 연락 방법으로 연락해주세요.',
       signOff: ['감사합니다.', 'Verygood Chocolate Sydney'],
     },
     english: {
@@ -1059,7 +1064,7 @@ function confirmationEmailCopy(reservation, sourceType) {
       heading: 'Your booking is CONFIRMED',
       intro: 'Your Verygood Chocolate booking is confirmed. We look forward to seeing you at collection.',
       detailsHeading: 'Booking details',
-      followUp: 'Reply to this email if you have a question about your booking.',
+      followUp: config.currency === 'AUD' ? '' : 'Reply to this email if you have a question about your booking.',
       signOff: ['Thank you,', 'Verygood Chocolate Sydney'],
     },
   }
@@ -1072,20 +1077,22 @@ function confirmationRows(reservation, sourceType, config) {
 }
 
 function buildBookingConfirmationText(reservation, sourceType, config) {
-  const copy = confirmationEmailCopy(reservation, sourceType)
+  const copy = confirmationEmailCopy(reservation, sourceType, config)
   const rows = confirmationRows(reservation, sourceType, config)
   return buildBilingualEmailText(
     { ...copy.korean, rows: customerEmailKoreanRows(rows) },
     { ...copy.english, rows },
+    config.currency === 'AUD',
   )
 }
 
 function buildBookingConfirmationHtml(reservation, sourceType, config) {
-  const copy = confirmationEmailCopy(reservation, sourceType)
+  const copy = confirmationEmailCopy(reservation, sourceType, config)
   const rows = confirmationRows(reservation, sourceType, config)
   return buildBilingualEmailHtml(
     { ...copy.korean, rows: customerEmailKoreanRows(rows) },
     { ...copy.english, rows },
+    config.currency === 'AUD',
   )
 }
 
@@ -1096,7 +1103,7 @@ export function buildBookingConfirmationPayload({ reservation, sourceType, from,
   const sourceId = sourceIdForReservation(reservation)
   const recipient = normalizeRecipientEmail(sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)
   const config = getConfig(reservation)
-  const copy = confirmationEmailCopy(reservation, sourceType)
+  const copy = confirmationEmailCopy(reservation, sourceType, config)
   const normalizedFrom = safeHeaderValue(from, 'RESEND_FROM_EMAIL')
   const normalizedReplyTo = replyTo === null || replyTo === undefined || !String(replyTo).trim()
     ? null
