@@ -1,3 +1,4 @@
+import { HalloweenMeringueSection } from '../components/HalloweenMeringueSection'
 import { MochiLaunchNotice } from "../components/MochiLaunchNotice"
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
 import { RENEWAL_NAV } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
@@ -193,6 +194,7 @@ function AuHomePage({
           </div>
         </div>
       </section>
+      <HalloweenMeringueSection language={language} />
       <section
         id="best"
         className="au-v02-best"

@@ -4,6 +4,7 @@ export const mochiPhotos: Record<string, string> = {
   banana: 'mochi-banana', butter_redbean: 'mochi-butter', nama_chocolate: 'mochi-chocolate',
 }
 export function renewalPhotos(id: string) {
+  if (id === "halloween-meringue") return ["/products/halloween-meringue/1.webp", "/products/halloween-meringue/2.webp"]
   if (id === 'pave-chocolate') return ['pave-heart-cutout', '/products/chocolates/pave-heart-100g.png']
   if (id === 'cookies') return ['cookies-hero_v2', 'cookies-lineup1', 'cookies-lineup2']
   if (id === 'brownie-loaf') return ['cheese-pound-hero', 'cheese-pound-cross-section-01', 'cheese-pound-cheese-pound-in-vanilla']

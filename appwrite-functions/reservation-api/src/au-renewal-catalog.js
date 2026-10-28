@@ -121,12 +121,28 @@ export const RENEWAL_CARDS = Object.freeze({
     ),
   ],
 });
+// Retained after expiry so stored carts and order descriptions remain readable.
+export const HALLOWEEN_MERINGUE_CARD = Object.freeze(card(
+  "halloween-meringue", "Halloween Meringue Pops", "할로윈 머랭쿠키",
+  "/cakes/halloween-meringue",
+  ["halloween-meringue-3", "halloween-meringue-6", "halloween-meringue-12", "halloween-meringue-24"],
+  "/products/halloween-meringue/1.webp",
+));
+export const HALLOWEEN_LAST_PICKUP = "2026-11-01";
+// Final Sunday slot is 13:00 Sydney (UTC+11); exactly 24 hours before it.
+export const HALLOWEEN_ORDER_DEADLINE = "2026-10-31T13:00:00+11:00";
+export function halloweenMeringueAvailable(now = new Date()) {
+  const timestamp = new Date(now).getTime();
+  return Number.isFinite(timestamp) && timestamp <= Date.parse(HALLOWEEN_ORDER_DEADLINE);
+}
+export function isHalloweenMeringue(offerId) {
+  return HALLOWEEN_MERINGUE_CARD.offers.includes(offerId);
+}
 export function renewalCardForPath(path, search = "") {
   path = path.replace(/\/+$/, "") || "/";
   const form = new URLSearchParams(search).get("form");
   return (
-    Object.values(RENEWAL_CARDS)
-      .flat()
+    [...Object.values(RENEWAL_CARDS).flat(), HALLOWEEN_MERINGUE_CARD]
       .find(
         (c) =>
           c.href.split("?")[0] === path &&

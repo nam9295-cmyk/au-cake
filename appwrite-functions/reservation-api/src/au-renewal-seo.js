@@ -1,18 +1,19 @@
 // Public presentation only: consumed by the AU frontend and static generator, never order validation.
 import { renewalPickupCopy } from "./au-renewal-pickup-policy.js";
 import { RENEWAL_OFFERS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName } from "./au-renewal.js";
-import { RENEWAL_NAV, RENEWAL_CARDS } from "./au-renewal-catalog.js";
+import { RENEWAL_NAV, RENEWAL_CARDS, HALLOWEEN_MERINGUE_CARD, HALLOWEEN_ORDER_DEADLINE } from "./au-renewal-catalog.js";
 const escape = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = cents => (cents / 100).toFixed(2);
 const finishName = key => ({basic:'Basic','extra-chocolate':'Extra Chocolate','vanilla-fresh-cream':'Vanilla Fresh Cream','chocolate-buttercream':'Chocolate Buttercream'}[key] || key);
 const cards = Object.values(RENEWAL_CARDS).flat();
 // Measured from the existing public assets; tests verify against decoded files.
-const imageDimensions = {pave:[1080,1012],'gateau-loaf':[1080,1012],'brownie-whole':[1080,1012],'brownie-loaf':[1024,1024],cookies:[1216,864],mochi:[1080,1012],almond:[1080,1012],'pave-chocolate':[1080,1012],eiffel:[1080,1012],'gateau-cupcakes':[480,313],'brownie-cupcakes':[912,1152],smore:[480,320]};
+const imageDimensions = {'halloween-meringue':[1080,1440],pave:[1080,1012],'gateau-loaf':[1080,1012],'brownie-whole':[1080,1012],'brownie-loaf':[1024,1024],cookies:[1216,864],mochi:[1080,1012],almond:[1080,1012],'pave-chocolate':[1080,1012],eiffel:[1080,1012],'gateau-cupcakes':[480,313],'brownie-cupcakes':[912,1152],smore:[480,320]};
 export function seoRobots(config) {
   if (config.noindex) return 'noindex, nofollow';
   return config.robots || 'index, follow';
 }
 const summaries = {
+  'halloween-meringue': 'Halloween 2026 Meringue Pops: packs of 3, 6, 12 or 24. Sydney pickup Wednesday, Friday, Saturday and Sunday, ending 1 November 2026. Order at least 24 hours ahead; final orders 31 October at 1pm (Sydney).',
   pave: 'Pavé chocolate whole cake in three sizes with dark or milk chocolate. Made to order for celebrations in Sydney.',
   'gateau-loaf': 'Signature Gâteau chocolate loaf with Basic, Extra Chocolate or Vanilla Fresh Cream finishes. Pickup in Melrose Park, Sydney.',
   'brownie-whole': 'Brownie Basque cheesecake in whole cake and loaf forms, with optional Vanilla Fresh Cream. Made to order in Sydney.',
@@ -73,9 +74,9 @@ export function renewalSeoPages(siteUrl, content) {
     '/custom-cakes':'Explore bespoke celebration cakes and Basic one-tier or Advanced two-tier class enquiries in Sydney. Share your design, date and servings.',
     '/business':'Cakes and chocolate gifts for corporate events, café supply enquiries and menu consulting in Sydney. Explore VERYGOOD business services.',
   };
-  for(const item of [{href:'/',en:'VERYGOOD Sydney'},...RENEWAL_NAV,...cards]) {
+  for(const item of [{href:'/',en:'VERYGOOD Sydney'},...RENEWAL_NAV,...cards,HALLOWEEN_MERINGUE_CARD]) {
     const path=item.href.split('?')[0];if(pages[path])continue;
-    const siblings=cards.filter(c=>c.href.split('?')[0]===path);
+    const siblings=[...cards,HALLOWEEN_MERINGUE_CARD].filter(c=>c.href.split('?')[0]===path);
     const list=RENEWAL_CARDS[path.slice(1)] || (path==='/'?cards:[]);
     const product=siblings.length>0;
     const name=siblings.length>1?'Brownie Basque Cheesecake · Whole & Loaf':item.en;
@@ -85,8 +86,8 @@ export function renewalSeoPages(siteUrl, content) {
     if(product){
       const choices=siblings.flatMap(selections);
       page.ogType=choices.length?'product':'website';
-      page.structuredData.push({'@type':choices.length?'Product':'WebPage',name,description:desc,url:canonical,image:siblings.map(c=>siteUrl+c.image),...(choices.length?{brand:{'@type':'Brand',name:'verygood chocolate'},offers:choices.map(c=>({'@type':'Offer',name:c.name,price:money(c.price),priceCurrency:'AUD',url:siteUrl+c.url}))}:{})});
-      const parent=RENEWAL_NAV.find(n=>(RENEWAL_CARDS[n.href.slice(1)]||[]).includes(item));
+      page.structuredData.push({'@type':choices.length?'Product':'WebPage',name,description:desc,url:canonical,image:siblings.map(c=>siteUrl+c.image),...(choices.length?{brand:{'@type':'Brand',name:'verygood chocolate'},offers:choices.map(c=>({'@type':'Offer',name:c.name,price:money(c.price),priceCurrency:'AUD',url:siteUrl+c.url,...(item.id==='halloween-meringue'?{validThrough:HALLOWEEN_ORDER_DEADLINE,priceValidUntil:'2026-10-31'}:{})}))}:{})});
+      const parent=RENEWAL_NAV.find(n=>item.id==='halloween-meringue'?n.href==='/cakes':(RENEWAL_CARDS[n.href.slice(1)]||[]).includes(item));
       page.structuredData.push({'@type':'BreadcrumbList',itemListElement:[{name:'Home',item:siteUrl},{name:parent.en,item:siteUrl+parent.href},{name,item:canonical}].map((v,i)=>({'@type':'ListItem',position:i+1,...v}))});
     }else{
       page.structuredData.push({'@type':list.length?'CollectionPage':'WebPage',name,url:canonical,...(list.length?{mainEntity:{'@type':'ItemList',itemListElement:list.map((c,i)=>({'@type':'ListItem',position:i+1,name:c.en,url:siteUrl+c.href}))}}:{})});

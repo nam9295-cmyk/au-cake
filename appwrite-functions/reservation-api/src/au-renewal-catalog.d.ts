@@ -14,3 +14,9 @@ export function renewalCardForPath(
   path: string,
   search?: string,
 ): RenewalCard | null;
+
+export const HALLOWEEN_MERINGUE_CARD: RenewalCard;
+export const HALLOWEEN_LAST_PICKUP: string;
+export const HALLOWEEN_ORDER_DEADLINE: string;
+export function halloweenMeringueAvailable(now?: Date | string | number): boolean;
+export function isHalloweenMeringue(offerId: string): boolean;

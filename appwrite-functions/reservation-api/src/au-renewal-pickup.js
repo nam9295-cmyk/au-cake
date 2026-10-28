@@ -1,3 +1,4 @@
+import { isHalloweenMeringue, halloweenMeringueAvailable, HALLOWEEN_LAST_PICKUP } from "./au-renewal-catalog.js";
 import {
   isRenewalServiceTime,
   renewalServiceSlots,
@@ -29,6 +30,10 @@ export function validateRenewalPickup(
     timestamp = new Date(now).getTime();
   if (instant === null || !Number.isFinite(timestamp))
     fail("INVALID_PICKUP_DATE");
+  const seasonal = lines.some((l) => isHalloweenMeringue(l.offerId));
+  if (seasonal && (!halloweenMeringueAvailable(now) || date > HALLOWEEN_LAST_PICKUP))
+    fail("SEASONAL_PRODUCT_ENDED");
+  if (seasonal && instant - timestamp < 86400000) fail("PICKUP_TIME_TOO_SOON");
   const fresh = lines.some((l) => ["mochi", "cookie-six"].includes(l.offerId));
   if (
     fresh &&
@@ -37,7 +42,7 @@ export function validateRenewalPickup(
     fail("PREORDER_NOT_OPEN");
   if (fresh && instant - timestamp < 86400000) fail("PICKUP_TIME_TOO_SOON");
   const existing = lines.some(
-    (l) => !["mochi", "cookie-six"].includes(l.offerId),
+    (l) => !["mochi", "cookie-six"].includes(l.offerId) && !isHalloweenMeringue(l.offerId),
   );
   if (existing) {
     const today = sydneyDateValue(now);

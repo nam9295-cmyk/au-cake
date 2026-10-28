@@ -1,3 +1,4 @@
+import { useHalloweenAvailability } from '../lib/use-halloween-availability';
 import { MOCHI_PUBLIC_INFORMATION } from '../../appwrite-functions/reservation-api/src/au-renewal-seo.js';
 import { useCustomerAccount } from '../lib/customer-account-context';
 import { CheckoutAccountPrompt } from '../components/CheckoutAccountPrompt';
@@ -42,6 +43,9 @@ import { useCart } from "../CartProvider";
 import { useAuLanguage } from "../lib/au-language";
 import {
   RENEWAL_CARDS,
+  HALLOWEEN_MERINGUE_CARD,
+  halloweenMeringueAvailable,
+  isHalloweenMeringue,
   RENEWAL_NAV,
   renewalCardForPath,
   type RenewalCard,
@@ -64,8 +68,7 @@ function displaySummary(
   lines: ReturnType<typeof priceRenewalOrder>["lines"],
   ko: boolean,
 ) {
-  const card = Object.values(RENEWAL_CARDS)
-    .flat()
+  const card = [...Object.values(RENEWAL_CARDS).flat(), HALLOWEEN_MERINGUE_CARD]
     .find((c) => c.offers.includes(line.productId));
   const parent = lines.find(
     (l) => l.selection.lineId === line.selection.parentLineId,
@@ -132,11 +135,14 @@ export function RenewalCollection({
   category: keyof typeof RENEWAL_CARDS;
 }) {
   const { language, t } = useAuLanguage();
+  const seasonalAvailable = useHalloweenAvailability();
+  const cards = category === "cakes" && seasonalAvailable
+    ? [HALLOWEEN_MERINGUE_CARD, ...RENEWAL_CARDS[category]] : RENEWAL_CARDS[category];
   return (
     <main className="renewal-page renewal-collection">
       <h1>{RENEWAL_NAV.find((n) => n.href === `/${category}`)?.en}</h1>
       <div className="renewal-grid">
-        {RENEWAL_CARDS[category].map((card) => (
+        {cards.map((card) => (
           <article key={card.id} data-au-product={card.id}>
             <a href={card.href}>
               {card.image ? (
@@ -151,6 +157,7 @@ export function RenewalCollection({
               )}
               <h2>{language === "ko" ? card.ko : card.en}</h2>
               <p className="au-mobile-price">{cardPrice(card, language === "ko")}</p>
+              {card.id === "halloween-meringue" && <p className="renewal-card-note">{t("Halloween special · Final pickup 1 November · 24 hours notice", "할로윈 한정 · 11월 1일까지 픽업 · 최소 24시간 전 주문")}</p>}
               {card.id === "brownie-cupcakes" && <p className="renewal-card-note">{t("Reservations awaiting price approval", "가격 승인 후 예약 안내")}</p>}
               {["mochi", "cookies"].includes(card.id) && (
                 <p className="renewal-card-note">
@@ -170,6 +177,9 @@ export function RenewalCollection({
 function Product({ card }: { card: RenewalCard }) {
   const { language, t } = useAuLanguage(),
     ko = language === "ko";
+  const seasonalAvailable = useHalloweenAvailability();
+  const seasonal = card.id === "halloween-meringue";
+  const seasonalClosed = seasonal && !seasonalAvailable;
   const cart = useCart(),
     [error, setError] = useState(""),
     [addedSelection, setAddedSelection] = useState("");
@@ -302,6 +312,7 @@ function Product({ card }: { card: RenewalCard }) {
   ];
   const packLabel = (id: string) => {
     const o = RENEWAL_OFFERS[id];
+    if (isHalloweenMeringue(id)) return ({3: t("Taster · 3 pieces", "맛보기 · 3개"), 6: t("Half dozen · 6 pieces", "하프더즌 · 6개"), 12: t("Dozen · 12 pieces", "더즌 · 12개"), 24: t("Double dozen · 24 pieces", "더블더즌 · 24개")} as Record<number, string>)[o.pieces];
     if (o.bundle) return t("5 + 1 packs", "5 + 1팩");
     if (id.includes("black-tub"))
       return t("Black tub · 2 × 80g", "블랙 통 · 80g × 2");
@@ -310,6 +321,10 @@ function Product({ card }: { card: RenewalCard }) {
     return `${o.pieces}${t(" pieces", "개")}`;
   };
   function add() {
+    if (seasonal && !halloweenMeringueAvailable()) {
+      setError(t("Seasonal orders have closed. Existing reservations are unchanged.", "시즌 주문이 마감되었습니다. 기존 예약은 유지됩니다."));
+      return;
+    }
     try {
       const ids = new Map(
         selection.map((l) => [l.lineId, crypto.randomUUID()]),
@@ -368,6 +383,10 @@ function Product({ card }: { card: RenewalCard }) {
               )}
             </p>
           </header>
+          {seasonal && <div className="renewal-seasonal-note" role="status">
+            <p>{seasonalClosed ? t("Seasonal orders have closed. Existing reservations are unchanged.", "시즌 주문이 마감되었습니다. 기존 예약은 유지됩니다.") : t("Halloween special · Final pickup Sunday 1 November 2026", "할로윈 한정 · 마지막 픽업 2026년 11월 1일 일요일")}</p>
+            <p>{t("Order at least 24 hours before pickup. Final orders: Saturday 31 October, 1pm (Sydney).", "픽업 최소 24시간 전에 주문해주세요. 최종 마감: 10월 31일 토요일 오후 1시 (시드니).")}</p>
+          </div>}
           {card.id.startsWith("brownie-") && p.family === "cake" && (
             <nav className="renewal-inline">
               <a href="/cakes/brownie-cheesecake?form=whole">
@@ -381,7 +400,7 @@ function Product({ card }: { card: RenewalCard }) {
           {!isCup && card.offers.length > 1 && (
             <fieldset className="au-pave-fieldset">
               <legend>{t("Choose your pack", "구성 선택")}</legend>
-              <div className="renewal-option-grid">
+              <div className={`renewal-option-grid${seasonal ? " renewal-meringue-options" : ""}`}>
                 {card.offers.map((id) => (
                   <OptionButton
                     key={id}
@@ -391,7 +410,7 @@ function Product({ card }: { card: RenewalCard }) {
                       setFinish("basic");
                     }}
                   >
-                    {["almond-chocoball-6pack", "pave-six-plus-one", "eiffel-six-plus-one"].includes(id) ? (
+                    {seasonal ? null : ["almond-chocoball-6pack", "pave-six-plus-one", "eiffel-six-plus-one"].includes(id) ? (
                       <SixPackPhoto src={card.image} label={packLabel(id)} />
                     ) : (
                       <ProductPhoto option src={id === "almond-chocoball-black-tub-2x80g" ? renewalPhoto("almond-black-tub") : id === card.offers[0] || id === "smore-12" ? card.image : undefined} label={packLabel(id)} />
@@ -400,6 +419,7 @@ function Product({ card }: { card: RenewalCard }) {
                     <span className="au-pave-option-price">
                       {money(RENEWAL_OFFERS[id].price!)}
                     </span>
+                    {seasonal && <span className="renewal-per-piece">{money(RENEWAL_OFFERS[id].price! / RENEWAL_OFFERS[id].pieces)}{t(" each", " / 개")}</span>}
                   </OptionButton>
                 ))}
               </div>
@@ -686,7 +706,7 @@ function Product({ card }: { card: RenewalCard }) {
           <button
             className="au-pave-order-button"
             type="button"
-            disabled={!quote}
+            disabled={!quote || seasonalClosed}
             onClick={add}
           >
             {t("Add to bag", "장바구니에 담기")}
@@ -725,7 +745,7 @@ function Product({ card }: { card: RenewalCard }) {
         total={
           quote ? money(quote.totalPriceCents) : t("Enquire", "문의해주세요")
         }
-        disabled={!quote}
+        disabled={!quote || seasonalClosed}
         onAdd={add}
         added={added}
       />
@@ -866,6 +886,7 @@ function Bag({ settings }: { settings: StoreSettings }) {
     ? { ...caps, enabled: true, preordersEnabled: true }
     : caps;
   const slots = renewalPickupSlots(lines, date, pickupNow, pickupPolicy);
+  const seasonalClosed = lines.some(l => isHalloweenMeringue(l.offerId)) && !halloweenMeringueAvailable(pickupNow);
   const selectedTime = slots.includes(time) ? time : '';
   const provisional = quote?.lines.some((l) => l.priceStatus === "provisional");
   const newProducts = lines.some((l) => RENEWAL_OFFERS[l.offerId].newProduct);
@@ -933,6 +954,7 @@ function Bag({ settings }: { settings: StoreSettings }) {
       <GuestCartImport language={language}/>
       {resume.status==='owner-changed'&&<p role="status">{t('The saved checkout belongs to another account. Sign back in to that account to restore it.','저장된 주문서는 다른 회원의 주문서입니다. 해당 계정으로 다시 로그인하면 복원할 수 있습니다.')}</p>}
       <MochiReselectionNotice />
+      {seasonalClosed && <p className="renewal-seasonal-note" role="alert">{t("Halloween orders have closed. Your selections are saved; remove the meringue packs to order other products. Existing reservations are unchanged.", "할로윈 주문이 마감되었습니다. 담긴 상품은 보존되어 있습니다. 다른 상품을 주문하려면 머랭쿠키를 삭제해주세요. 기존 예약은 유지됩니다.")}</p>}
       {cart.lines.length > 0 && (
         <p role="status">
           {t(

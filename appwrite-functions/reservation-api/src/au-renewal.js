@@ -19,6 +19,11 @@ const sum = (values) =>
 const offer = (name, price, pieces = 1, extra = {}) =>
   Object.freeze({ name, price, pieces, ...extra });
 export const RENEWAL_OFFERS = Object.freeze({
+  "halloween-meringue-3": offer("Halloween Meringue Pops · 3", 1200, 3, { family: "cookie" }),
+  "halloween-meringue-6": offer("Halloween Meringue Pops · 6", 2300, 6, { family: "cookie" }),
+  "halloween-meringue-12": offer("Halloween Meringue Pops · 12", 4500, 12, { family: "cookie" }),
+  "halloween-meringue-24": offer("Halloween Meringue Pops · 24", 8500, 24, { family: "cookie" }),
+
   "pave-cake": offer("Pavé Whole Cake", 7500, 1, {
     family: "cake",
     sizes: { "6in": 7500, "8in": 10700, "10in": 15900 },

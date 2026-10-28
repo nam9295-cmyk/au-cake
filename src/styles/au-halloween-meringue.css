@@ -1,0 +1,31 @@
+/* Seasonal merchandising only; existing purchase controls and brand type stay intact. */
+.au-home-shell .au-home-v02 .au-meringue-season {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(28px, 5vw, 76px);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 80px) 6%;
+}
+.au-meringue-season-photo { display: block; overflow: hidden; }
+.au-meringue-season-photo img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
+.au-home-shell .au-home-v02 .au-meringue-season-copy { display: grid; gap: 20px; }
+.au-home-shell .au-home-v02 .au-meringue-season h2 { font-size: clamp(28px, 3.6vw, 48px); line-height: 1.12; letter-spacing: -1px; }
+.au-meringue-season-copy > p { line-height: 1.65; }
+.au-meringue-season-prices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; margin: 4px 0; padding: 18px 0; border-block: 1px solid #352f3130; gap: 12px; }
+.au-meringue-season-prices li { display: grid; gap: 6px; }
+.au-meringue-season-prices span { font-size: 13px; }
+.au-meringue-season-prices strong { font-size: 22px; font-weight: 600; }
+.au-meringue-season-dates { font-weight: 600; font-size: 14px; }
+.au-meringue-season-deadline { font-size: 13px; color: #655e59; }
+.au-meringue-season-copy > a { justify-self: start; }
+.renewal-seasonal-note { margin: 18px 0; padding: 16px 0; border-block: 1px solid #352f3130; line-height: 1.6; }
+.renewal-seasonal-note p { margin: 6px 0; }
+.renewal-meringue-options .cake-detail-option { align-items: flex-start; text-align: left; padding: 18px; gap: 6px; }
+.renewal-meringue-options .renewal-per-piece { font-size: 12px; font-weight: 400; }
+@media (max-width: 767px) {
+  .au-home-shell .au-home-v02 .au-meringue-season { grid-template-columns: 1fr; gap: 24px; padding: 36px 20px; }
+  .au-meringue-season-photo img { aspect-ratio: 4 / 3; }
+  .au-home-shell .au-home-v02 .au-meringue-season-copy { gap: 16px; }
+}
