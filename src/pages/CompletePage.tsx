@@ -1,10 +1,12 @@
 import { AuPickupNotice } from '../components/AuPickupNotice'
 import { Check } from 'lucide-react'
 import { BankAccountBox } from '../components/BankAccountBox'
+import { RenewalPaymentNotice } from '../components/RenewalPaymentNotice'
 import { OrderDetailRows } from '../components/ProductDetailRows'
 import { SiteHeader } from '../components/SiteChrome'
 import { type Page } from '../lib/app-routes'
 import { cakeCopy, type Language } from '../lib/i18n'
+import { marketConfig } from '../lib/market'
 import { getReservationPricingAudit } from '../lib/review-coupon-client'
 import type { Reservation, StoreSettings } from '../lib/types'
 import { formatCurrency, maskPhone } from '../lib/utils'
@@ -25,6 +27,7 @@ export function CompletePage({
   cartItemCount: number
 }) {
   const copy = cakeCopy(language)
+  const showAuPaymentInstructions = marketConfig.market === 'AU' && reservation && reservation.id !== 'demo-reservation'
   const pricingAudit = reservation ? getReservationPricingAudit(reservation) : null
   const usedReviewReward = reservation?.promotionKind === 'review-reward'
   const authoritativeTotalPrice = reservation?.totalPriceCents === undefined
@@ -42,7 +45,7 @@ export function CompletePage({
           {reservation?.id === 'demo-reservation' && (
             <p className="notice-line" role="status">DEMO · This order was not saved or sent.</p>
           )}
-          <p>{copy.reservationCompleteText}</p>
+          {!showAuPaymentInstructions && <p>{copy.reservationCompleteText}</p>}
           {reservation && 'contractVersion' in reservation && <AuPickupNotice language={language} />}
 
           {reservation ? (
@@ -100,8 +103,14 @@ export function CompletePage({
           )}
 
           <div className="complete-bank-section">
-            <BankAccountBox settings={settings} totalPrice={authoritativeTotalPrice} language={language} />
-            <p>{copy.paymentConfirmText}</p>
+            {showAuPaymentInstructions ? (
+              <RenewalPaymentNotice settings={settings} language={language} customerName={reservation.customerName} />
+            ) : (
+              <>
+                <BankAccountBox settings={settings} totalPrice={authoritativeTotalPrice} language={language} />
+                <p>{copy.paymentConfirmText}</p>
+              </>
+            )}
           </div>
 
           <div className="button-row">

@@ -138,19 +138,19 @@ test('cake operator and customer booking receipts are distinct, ledger-backed me
   assert.notEqual(operator.idempotencyKey, customer.idempotencyKey)
   assert.equal(operator.subject, '[Verygood Chocolate AU] New cake request VG-C-AU-20260826-123456789')
   assert.equal(operator.templateVersion, 'v1')
-  assert.equal(customer.subject, '[Verygood] 케이크 예약 요청이 접수됐어요 | Cake booking request received')
+  assert.equal(customer.subject, '[Verygood] Order Received: Payment Required 🍫 | 주문이 접수되었습니다! 결제를 진행해 주세요')
   assert.equal(customer.templateVersion, 'booking-received-customer-cake-v2')
   assert.equal(customer.idempotencyKey, 'verygood:5652b38474772c2515ea1770e387c8d70d46aa8d7ad7509bdb68cf8a894e429b')
   assert.match(customer.text, /\[한국어\]/)
-  assert.match(customer.text, /예약 요청이 정상적으로 접수되었습니다/)
+  assert.match(customer.text, /주문이 정상적으로 접수되었습니다/)
   assert.match(customer.text, /\[English\]/)
-  assert.match(customer.text, /We’ve received your booking request/)
-  assert.ok(customer.text.indexOf('[한국어]') < customer.text.indexOf('[English]'))
-  assert.ok(customer.html.indexOf('[한국어]') < customer.html.indexOf('[English]'))
-  assert.match(customer.text, /final confirmation/i)
+  assert.match(customer.text, /Please complete your payment below to confirm your booking/)
+  assert.ok(customer.text.indexOf('[English]') < customer.text.indexOf('[한국어]'))
+  assert.ok(customer.html.indexOf('[English]') < customer.html.indexOf('[한국어]'))
+  assert.match(customer.text, /Booking Confirmed email/)
   assert.match(customer.text, /Pave Chocolate Cake/)
   assert.match(customer.text, /7\.5&quot;|7\.5" \| serves 14/)
-  assert.match(customer.text, /Pick-up location: Melrose Park, Sydney/)
+  assert.match(customer.text, /Pickup location: 1 Bundil Blvd, Melrose Park/)
   assert.equal(customer.text.split('VG-C-AU-20260826-123456789').length - 1, 2)
   assert.equal(customer.text.split('AUD 150.00').length - 1, 2)
 })
@@ -181,7 +181,7 @@ test('class customer booking receipt uses the parent email and includes both pac
   assert.equal(customer.text.split('AUD 285.10').length - 1, 2)
 })
 
-test('renewal customer receipts explain payment timing in both languages without changing legacy receipt contracts', () => {
+test('renewal and legacy AU customer receipts give payment instructions without changing delivery identities', () => {
   const reservation = buildRenewalOrderData({
     contractVersion: 'au-renewal.2026-10.v2',
     customerName: 'Alice Customer', customerEmail: 'alice@example.com', customerPhone: '0412345678',
@@ -191,22 +191,22 @@ test('renewal customer receipts explain payment timing in both languages without
   reservation.$id = 'cake-123'
   const renewal = message(reservation, 'customer')
   for (const content of [renewal.text, renewal.html]) {
-    assert.match(content, /No payment is taken now/)
-    assert.match(content, /check availability and send payment instructions/)
-    assert.match(content, /wait for our instructions before transferring/)
-    assert.match(content, /confirmed once payment is received/)
-    assert.match(content, /지금은 결제되지 않습니다/)
-    assert.match(content, /예약 가능 여부를 확인한 뒤 결제 방법/)
-    assert.match(content, /안내를 받으신 후 입금/)
-    assert.match(content, /입금 확인 후 예약이 확정/)
-    assert.doesNotMatch(content, /012263|324999682|PayID/)
+    assert.match(content, /Please complete your payment below to confirm your booking/)
+    assert.match(content, /Once your payment has been checked/)
+    assert.match(content, /Booking Confirmed email/)
+    assert.match(content, /최종 예약 확정을 위해 아래 방법으로 결제해 주세요/)
+    assert.match(content, /입금 확인 후/)
+    assert.match(content, /012263/)
+    assert.match(content, /324999682/)
+    assert.match(content, /PayID/)
+    assert.doesNotMatch(content, /No payment is taken now|wait for our instructions/)
   }
   const legacy = message(cakeReservation(), 'customer')
   assert.equal(renewal.templateVersion, legacy.templateVersion)
   assert.equal(renewal.eventKey, legacy.eventKey)
   assert.equal(renewal.idempotencyKey, legacy.idempotencyKey)
   assert.equal(renewal.recipientHash, legacy.recipientHash)
-  assert.match(legacy.text, /We’ll review the details and send you a final confirmation shortly/)
+  assert.match(legacy.text, /Please complete your payment below to confirm your booking/)
   for (const payload of [legacy, message(classReservation(), 'customer'), message(reservation, 'operator')]) {
     assert.doesNotMatch(payload.text, /No payment is taken now|지금은 결제되지 않습니다/)
   }

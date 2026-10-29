@@ -20,7 +20,7 @@ function renderCheckout(language: 'en' | 'ko', path = '/reserve', origin = 'http
   } finally { Object.assign(globalThis, previous) }
 }
 
-test('active AU cart and reserve show configured payment details and wait-for-instructions guidance before submission', () => {
+test('active AU cart and reserve show configured bank, PayID and order-received-email payment guidance before submission', () => {
   for (const path of ['/cart', '/reserve']) {
     const html = renderCheckout('en', path)
     assert.match(html, /BSB 000111/)
@@ -28,7 +28,11 @@ test('active AU cart and reserve show configured payment details and wait-for-in
     assert.match(html, /TEST STORE/)
     assert.match(html, /No payment is taken now/)
     assert.ok(html.indexOf('BSB 000111') < html.indexOf('Send request'))
-    assert.doesNotMatch(html, /Payment amount|입금 금액|PayID/)
+    assert.match(html, /order-received email.*payment instructions/)
+    assert.match(html, /PayID.*0421 567 776/)
+    assert.match(html, /[Pp]ay once/)
+    assert.match(html, /name on the booking/)
+    assert.doesNotMatch(html, /Payment amount|입금 금액|check availability|wait for our instructions/)
   }
 })
 

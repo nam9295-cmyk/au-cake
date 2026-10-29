@@ -281,10 +281,10 @@ test('AU Home filters chocolates inline while standalone category navigation rem
   const homeRail = home.match(/<div[^>]*role="tablist"[^>]*>([\s\S]*?)<\/div>/)[1]
   const homeHeader = home.match(/<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
   assert.match(homeRail, /<button[^>]*aria-selected="false"[^>]*>Chocolate<span>\[4\]<\/span><\/button>/)
-  assert.match(homeRail, /Celebrate<span>\[3\]<\/span>/)
+  assert.match(homeRail, /Small Bites<span>\[4\]<\/span>/)
   assert.doesNotMatch(homeRail, /GATHER/)
   assert.doesNotMatch(homeRail, /href="\/chocolates"/)
-  assert.match(homeRail, /aria-selected="true"[^>]*>Cake &amp; Bake<span>\[5\]<\/span>/)
+  assert.match(homeRail, /aria-selected="true"[^>]*>Cake &amp; Bake<span>\[4\]<\/span>/)
   assert.doesNotMatch(homeRail, /ALL PRODUCTS/)
   assert.match(homeHeader, /href="\/cakes">Cake &amp; Bake<\/a>/)
   for (const category of [cakes, chocolates]) {

@@ -315,6 +315,7 @@ export function ReservationDrawer({
           sourceType="cake"
           reservationId={reservation.id}
           status={reservation.status}
+          paymentStatus={reservation.paymentStatus}
           recipientEmail={reservation.customerEmail}
         />
         <div className="button-row">

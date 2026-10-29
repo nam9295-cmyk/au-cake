@@ -25,7 +25,7 @@ function cake(overrides = {}) {
     customerPhone: '0400000000', productId: 'pave-cake', cakeSize: '19cm',
     chocolateType: 'dark', poundAddon: 'none', quantity: 2,
     pickupDate: '2026-09-12', pickupTime: '10:30', totalPriceCents: 15000,
-    requestNote: 'Please add a short note.', status: '예약확정',
+    requestNote: 'Please add a short note.', status: '예약확정', paymentStatus: '입금확인',
     adminMemo: 'INTERNAL ADMIN NOTE', emergencyContact: 'PRIVATE EMERGENCY CONTACT',
     $databaseId: 'private_database_id',
     ...overrides,
@@ -119,23 +119,23 @@ test('confirmation payloads are separate, customer-safe final confirmations', ()
   assert.notEqual(cakePayload.idempotencyKey, classPayload.idempotencyKey)
   assert.equal(cakePayload.idempotencyKey, 'verygood:3df81cd0b76352599b43c9ecdec6c19e8f5c3dcc0736bc616559601accc79478')
   assert.equal(classPayload.idempotencyKey, 'verygood:54e7dda3681e8d0e1275bce907d134cd5dee8f9131266e079f4f2b2a2ada397a')
-  assert.equal(cakePayload.subject, '[Verygood] 케이크 예약이 확정됐어요 | Your cake booking is confirmed')
+  assert.equal(cakePayload.subject, '[Verygood] Payment Received: Booking Confirmed 🍫 | 결제가 확인되었습니다! 예약이 최종 확정되었습니다')
   assert.equal(classPayload.subject, '[Verygood] 키즈 클래스 예약이 확정됐어요 | Your class booking is confirmed')
   assert.equal(cakePayload.templateVersion, 'booking-confirmed-customer-cake-v2')
   assert.equal(classPayload.templateVersion, 'booking-confirmed-customer-class-v2')
   assert.match(cakePayload.text, /\[한국어\]/)
   assert.match(cakePayload.text, /예약이 최종 확정되었습니다/)
   assert.match(cakePayload.text, /\[English\]/)
-  assert.match(cakePayload.text, /Your Verygood Chocolate booking is confirmed/)
+  assert.match(cakePayload.text, /Your payment has been received and checked, and your booking is now confirmed/)
   assert.match(classPayload.text, /\[한국어\]/)
   assert.match(classPayload.text, /키즈 클래스 예약이 최종 확정되었습니다/)
   assert.match(classPayload.text, /\[English\]/)
   assert.match(classPayload.text, /Your Verygood Kids Class booking is confirmed/)
-  assert.ok(cakePayload.text.indexOf('[한국어]') < cakePayload.text.indexOf('[English]'))
+  assert.ok(cakePayload.text.indexOf('[English]') < cakePayload.text.indexOf('[한국어]'))
   assert.ok(classPayload.text.indexOf('[한국어]') < classPayload.text.indexOf('[English]'))
-  assert.ok(cakePayload.html.indexOf('[한국어]') < cakePayload.html.indexOf('[English]'))
+  assert.ok(cakePayload.html.indexOf('[English]') < cakePayload.html.indexOf('[한국어]'))
   assert.ok(classPayload.html.indexOf('[한국어]') < classPayload.html.indexOf('[English]'))
-  assert.match(cakePayload.text, /CONFIRMED/)
+  assert.match(cakePayload.text, /Booking confirmed/)
   assert.match(cakePayload.text, /https:\/\/maps\.app\.goo\.gl\/bSVbF8M5BCdxJeDRA/)
   assert.match(classPayload.text, /1 Bundil Blvd, Melrose Park, Sydney/)
   assert.match(classPayload.text, /Advanced session: 2026-09-19 13:00/)
@@ -339,6 +339,52 @@ test('admin confirmation re-reads the authoritative reservation and ignores spoo
   assert.match(sent.text, /AUD 321\.00/)
   assert.match(sent.text, /2026-10-14/)
   assert.doesNotMatch(sent.text, /attacker@example\.com/)
+})
+
+for (const action of ['send-booking-confirmation', 'retry-booking-email']) {
+  test(`${action} rejects AU ordinary orders unless the live stored payment is confirmed`, async () => {
+    for (const paymentStatus of [undefined, '', '입금대기', '환불필요', '환불완료', '현장결제', 'Pending', 'Refunded', 'Pay on pickup']) {
+      let sends = 0
+      const subject = handler({
+        reservations: { 'cake:cake-123': cake({ paymentStatus }) },
+        env: { ...ENV, MARKET: 'AU' },
+        send: async () => { sends++; return { kind: 'accepted', providerMessageId: 'unexpected' } },
+      })
+      const req = request(action, 'cake', 'cake-123', undefined, 'booking-confirmed-customer')
+      req.bodyJson.data.paymentStatus = '입금확인'
+      req.bodyJson.reservation = cake()
+      const result = await subject.handle({ req, res: response() })
+      assert.deepEqual(result, { ok: false, code: 'BOOKING_CONFIRMATION_STATUS_INVALID' }, `${action}: ${paymentStatus}`)
+      assert.deepEqual(subject.reads, [{ sourceType: 'cake', reservationId: 'cake-123' }])
+      assert.equal(sends, 0)
+      assert.equal(subject.ledger.records.size, 0)
+    }
+  })
+}
+
+test('paid-only gate uses configured market and leaves KR cake and AU class confirmation unchanged', async () => {
+  for (const [market, sourceType, stored, expected] of [
+    ['AU', 'cake', cake({ reservationNumber: 'VG-C-KR-123', paymentStatus: '입금대기' }), false],
+    ['KR', 'cake', cake({ paymentStatus: '입금대기' }), true],
+    ['AU', 'class', classReservation({ paymentStatus: 'Pending' }), true],
+    ['AU', 'cake', cake({ status: '예약신청' }), false],
+    ['AU', 'cake', cake(), true],
+  ]) {
+    const subject = handler({ reservations: { [`${sourceType}:${stored.$id}`]: stored }, env: { ...ENV, MARKET: market } })
+    const result = await subject.handle({ req: request('send-booking-confirmation', sourceType, stored.$id), res: response() })
+    assert.equal(result.ok, expected, `${market} ${sourceType} ${stored.status} ${stored.paymentStatus}`)
+    if (expected) assert.equal(result.result.status, 'sent')
+  }
+})
+
+test('status-only event updates never automatically send a confirmation', async () => {
+  const kinds = []
+  const subject = handler({ send: async payload => { kinds.push(payload.template); return { kind: 'accepted', providerMessageId: 'receipt-only' } } })
+  await subject.handle({
+    req: { bodyJson: cake(), headers: { 'x-appwrite-event': 'databases.db.collections.reservations.documents.cake-123.update' } },
+    res: response(),
+  })
+  assert.ok(!kinds.includes('booking-confirmed-customer'))
 })
 
 test('only actual confirmed statuses with valid stored recipients can send', async () => {

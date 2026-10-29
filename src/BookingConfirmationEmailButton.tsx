@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ExecutionMethod } from 'appwrite'
 import { appwriteConfig, functions } from './lib/appwrite'
+import { marketConfig } from './lib/market'
 import {
   BookingConfirmationEmailError,
   bookingConfirmationRecipientAvailable,
@@ -18,6 +19,7 @@ type Props = {
   sourceType: BookingConfirmationSourceType
   reservationId: string
   status: string
+  paymentStatus?: string
   recipientEmail?: string
 }
 
@@ -52,7 +54,7 @@ function executor() {
   }
 }
 
-export function BookingConfirmationEmailButton({ sourceType, reservationId, status, recipientEmail }: Props) {
+export function BookingConfirmationEmailButton({ sourceType, reservationId, status, paymentStatus, recipientEmail }: Props) {
   const [receipt, setReceipt] = useState<BookingEmailDeliveryResult | null>(null)
   const [confirmation, setConfirmation] = useState<BookingEmailDeliveryResult | null>(null)
   const [loading, setLoading] = useState(Boolean(appwriteConfig.reservationNotificationFunctionId))
@@ -61,7 +63,9 @@ export function BookingConfirmationEmailButton({ sourceType, reservationId, stat
   const [requestError, setRequestError] = useState<string | null>(null)
   const functionId = appwriteConfig.reservationNotificationFunctionId
   const recipientAvailable = bookingConfirmationRecipientAvailable(recipientEmail)
-  const statusAllowed = isConfirmationStatus(sourceType, status)
+  const requiresPayment = marketConfig.market === 'AU' && sourceType === 'cake'
+  const statusAllowed = isConfirmationStatus(sourceType, status) && (!requiresPayment || paymentStatus === '입금확인')
+  const confirmationLabel = requiresPayment ? 'Payment confirmation' : 'Confirmation'
 
   const load = useCallback(async () => {
     if (!functionId) return null
@@ -115,6 +119,7 @@ export function BookingConfirmationEmailButton({ sourceType, reservationId, stat
 
   async function retry(emailKind: BookingEmailKind) {
     if (!functionId || retrying || !recipientAvailable) return
+    if (emailKind === 'booking-confirmed-customer' && requiresPayment && !statusAllowed) return
     setRetrying(emailKind)
     setRequestError(null)
     try {
@@ -129,20 +134,22 @@ export function BookingConfirmationEmailButton({ sourceType, reservationId, stat
 
   const notice = requestError ||
     (!recipientAvailable ? 'Email address is missing' : null) ||
-    (!statusAllowed ? 'Save the final confirmation status before sending email.' : null)
+    (!statusAllowed ? requiresPayment
+      ? 'Save payment received and confirmed status before sending email.'
+      : 'Save the final confirmation status before sending email.' : null)
 
   return (
     <div className="booking-confirmation-email">
       <button className="primary-button" type="button" disabled={disabled} onClick={send}>
-        {sending ? 'Sending…' : confirmation?.status === 'sent' ? 'Confirmation email sent' : 'Send confirmation email'}
+        {sending ? 'Sending…' : confirmation?.status === 'sent' ? `${confirmationLabel} email sent` : requiresPayment ? 'Send payment confirmation email' : 'Send confirmation email'}
       </button>
       <div className="booking-email-delivery-status" aria-live="polite">
         <p>{deliveryCopy('Booking receipt', receipt)}</p>
         {receipt?.retry === 'eligible' && <button className="secondary-button" type="button" disabled={Boolean(retrying)} onClick={() => void retry('booking-received-customer')}>
           {retrying === 'booking-received-customer' ? 'Retrying…' : 'Retry email'}
         </button>}
-        <p>{deliveryCopy('Confirmation', confirmation)}</p>
-        {confirmation?.retry === 'eligible' && <button className="secondary-button" type="button" disabled={Boolean(retrying)} onClick={() => void retry('booking-confirmed-customer')}>
+        <p>{deliveryCopy(confirmationLabel, confirmation)}</p>
+        {confirmation?.retry === 'eligible' && <button className="secondary-button" type="button" disabled={Boolean(retrying) || (requiresPayment && !statusAllowed)} onClick={() => void retry('booking-confirmed-customer')}>
           {retrying === 'booking-confirmed-customer' ? 'Retrying…' : 'Retry email'}
         </button>}
       </div>

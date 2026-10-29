@@ -39,7 +39,8 @@ for(const[label,build]of rows)test(`${label} has Jenny contact in each existing 
  assert.ok(payload.text.includes(EN),`${label}: English contact missing`)
  assert.equal(payload.text.split(KO).length-1,1)
  assert.equal(payload.text.split(EN).length-1,1)
- assert.ok(payload.text.indexOf(KO)<payload.text.indexOf('[English]'))
+ const paymentFlow = label === 'cake receipt' || label === 'cake confirmation'
+ assert.ok(paymentFlow ? payload.text.indexOf(EN)<payload.text.indexOf('[한국어]') : payload.text.indexOf(KO)<payload.text.indexOf('[English]'))
  assert.ok(payload.text.indexOf('[English]')<payload.text.indexOf(EN))
  assert.equal((payload.html.match(/href="tel:\+61421567776"/g)||[]).length,2)
  assert.ok(payload.html.includes('문의: Jenny'))
@@ -50,7 +51,7 @@ for(const[label,build]of rows)test(`${label} has Jenny contact in each existing 
  assert.ok(payload.html.includes('+61 421 567 776'))
  assert.equal(payload.idempotencyKey,resendIdempotencyKeyForEvent(payload.eventKey))
  assert.equal(payload.to.length,1)
- for(const notice of [KO_NOTICE,EN_NOTICE]){
+ for(const notice of paymentFlow ? ['본 메일은 발송 전용으로 회신을 확인하지 않습니다. 변경사항이나 문의는 제니에게 전화·문자 또는 인스타그램으로 부탁드립니다.', 'This is a send-only email; replies are not monitored. For changes or enquiries, please contact Jenny by phone or Instagram.'] : [KO_NOTICE,EN_NOTICE]){
   assert.equal(payload.text.split(notice).length-1,1,`${label}: send-only notice missing or duplicated`)
   assert.equal(payload.html.split(notice).length-1,1)
  }
@@ -100,7 +101,10 @@ test('standalone Function copies and deployment archives use the canonical conta
  for(const[name,build]of [['reservation-notification',createNotificationArchive],['booking-reminder',createBookingReminderArchive],['review-api',createReviewApiArchive]]){
   assert.equal(readFileSync(new URL(`../appwrite-functions/${name}/shared/customer-email-contact.js`,import.meta.url),'utf8'),canonical)
   const archive=await build({repositoryRoot:process.cwd()})
-  try{assert.equal(execFileSync('tar',['-xOf',archive.path,'./shared/customer-email-contact.js'],{encoding:'utf8'}),canonical)}finally{await archive.cleanup()}
+  try{
+   assert.equal(execFileSync('tar',['-xOf',archive.path,'./shared/customer-email-contact.js'],{encoding:'utf8'}),canonical)
+   if(name==='reservation-notification') assert.equal(execFileSync('tar',['-xOf',archive.path,'./src/au-order-payment-email.js'],{encoding:'utf8'}),readFileSync(new URL('../appwrite-functions/reservation-notification/src/au-order-payment-email.js',import.meta.url),'utf8'))
+  }finally{await archive.cleanup()}
  }
  const scripts=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).scripts
  assert.ok(scripts.test.includes('npm run test:email-delivery'))

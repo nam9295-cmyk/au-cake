@@ -53,7 +53,7 @@ test('renewal menu and current detail routes use AU self canonicals', () => {
  for(const path of ['/', '/cakes','/chocolates','/celebrate',...Object.values(RENEWAL_CARDS).flat().map(c=>c.href.split('?')[0])]) {
   const config=getSeoConfig(path);assert.notEqual(config.noindex,true);assert.equal(config.canonical,`${SITE_URL}${path==='/'?'':path}`)
  }
- for(const path of ['/cakes/lemon-cake','/cakes/fresh-strawberry-vanilla-cream-cake'])assert.equal(getSeoConfig(path).noindex,true)
+ for(const path of ['/cakes/buttercream-cake','/cakes/fresh-strawberry-vanilla-cream-cake'])assert.equal(getSeoConfig(path).noindex,true)
 })
 
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
@@ -128,8 +128,10 @@ test('renewal metadata preserves supplied product images and does not invent mis
  }
 })
 
-test('renewal metadata does not publish a purchasable offer while launch and provisional prices await approval',()=>{
- for(const card of [RENEWAL_CARDS.cakes[4],RENEWAL_CARDS.celebrate[1]])assert.doesNotMatch(JSON.stringify(getSeoConfig(card.href.split('?')[0])), /"offers"|InStock|115.00|155.00/)
+test('provisional Brownie Cupcakes metadata does not publish a purchasable offer before price approval',()=>{
+ const card=RENEWAL_CARDS.celebrate.find(card=>card.id==='brownie-cupcakes')
+ if (!card) throw new Error('the price-pending product remains in Small Bites')
+ assert.doesNotMatch(JSON.stringify(getSeoConfig(card.href.split('?')[0])), /"offers"|InStock|115.00|155.00/)
 })
 
 test('legacy grouped and Basque pages are noindex WebPage compatibility views', () => {
@@ -147,7 +149,7 @@ test('legacy grouped and Basque pages are noindex WebPage compatibility views', 
   }
 })
 
-test('renewal catalogue exposes five cards including separate whole and loaf links',()=>{
+test('renewal catalogue exposes current cards including separate whole and loaf links',()=>{
  const page=getSeoConfig('/cakes').structuredData?.[0]
  const items=(page?.mainEntity as {itemListElement:Array<{url:string}>}).itemListElement
  assert.deepEqual(items.map(i=>i.url),RENEWAL_CARDS.cakes.map(c=>SITE_URL+c.href))
@@ -201,10 +203,14 @@ test('all noindex operational routes remain directly loadable metadata pages', (
 
 test('SEO-04 retired slash and html aliases preserve the retirement page and canonical',()=>{
  for(const suffix of ['', '/', '.html']){
-  const path='/cakes/lemon-cake'+suffix
+  const path='/cakes/fresh-strawberry-vanilla-cream-cake'+suffix
   assert.equal(getPageFromPath(path),'cake-detail')
-  assert.equal(getSeoConfig(path).canonical,SITE_URL+'/cakes/lemon-cake')
+  assert.equal(getSeoConfig(path).canonical,SITE_URL+'/cakes/fresh-strawberry-vanilla-cream-cake')
   assert.equal(getSeoConfig(path).noindex,true)
+  const restored='/cakes/lemon-cake'+suffix
+  assert.equal(getPageFromPath(restored),'cake-detail')
+  assert.equal(getSeoConfig(restored).canonical,SITE_URL+'/cakes/lemon-cake')
+  assert.equal(getSeoConfig(restored).noindex,false)
  }
 })
 

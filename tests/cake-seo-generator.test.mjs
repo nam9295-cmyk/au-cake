@@ -63,10 +63,10 @@ async function generate() {
 test('SEO generator writes renewal categories, details and current sitemap',async()=>{
  const {dist}=await generate()
  const sitemap=await readFile(join(dist,'sitemap.xml'),'utf8')
- for(const path of ['cakes','chocolates','celebrate','custom-cakes','business','cakes/levain-cookies','cakes/brownie-cupcakes','chocolates/chocolate-mochi']) {
+ for(const path of ['cakes','chocolates','celebrate','custom-cakes','business','cakes/lemon-cake','cakes/brownie-cupcakes','chocolates/chocolate-mochi']) {
   const html=await readFile(join(dist,path+'.html'),'utf8');assert.equal((html.match(/<h1/g)||[]).length,1);assert.ok(sitemap.includes(site+'/'+path))
  }
- assert.doesNotMatch(sitemap, /cakes\/lemon-cake|cakes\/fresh-strawberry-vanilla-cream-cake/)
+ assert.doesNotMatch(sitemap, /cakes\/levain-cookies|cakes\/fresh-strawberry-vanilla-cream-cake/)
 })
 
 test('service landing HTML contains the visible enquiry content and paused class status before JavaScript', async () => {
@@ -307,13 +307,16 @@ test('llms text exposes current public menu, confirmed prices and archived class
  assert.equal(llms,await readFile(llmsPath,'utf8'))
  assert.match(llms,/Cake & Bake/);assert.match(llms,/Chocolate Mochi/);assert.match(llms,/Brownie Basque/)
  assert.match(llms,/75.00/);assert.match(llms,/82.00/);assert.match(llms,/Class archive/)
- assert.doesNotMatch(llms,/79.00|85.00|115.00|155.00|lemon-cake|18:00/)
+ assert.match(llms,/Small Bites/);assert.match(llms,/Lemon Cake/);assert.match(llms,/cakes\/lemon-cake/)
+ assert.match(llms,/Lemon Cake · 16 · Basic: AUD 85\.00/)
+ assert.doesNotMatch(llms,/Brownie Basque Whole Cake · 6in · Basic: AUD 85\.00/)
+ assert.doesNotMatch(llms,/79\.00|115\.00|155\.00|levain-cookies|18:00/)
  assert.match(llms,/Official Instagram:/);assert.doesNotMatch(llms,/\/admin|customer name|mobile number/i)
 })
 
 test('SEO-01/04: static retired/private/public robots are explicit and retired pages keep their routes',async()=>{
  const {dist}=await generate()
- for(const [path,robots] of [['cakes/lemon-cake','noindex, nofollow'],['cakes/fresh-strawberry-vanilla-cream-cake','noindex, nofollow'],['cart','noindex, nofollow'],['chocolates/chocolate-mochi','index, follow']]){
+ for(const [path,robots] of [['cakes/lemon-cake','index, follow'],['cakes/fresh-strawberry-vanilla-cream-cake','noindex, nofollow'],['cart','noindex, nofollow'],['chocolates/chocolate-mochi','index, follow']]){
   const html=await readFile(join(dist,path+'.html'),'utf8');assert.ok(html.includes(`name="robots" content="${robots}"`),path)
   assert.doesNotMatch(html, /content="(?:undefined|null|)"/)
  }
@@ -343,5 +346,5 @@ test('SEO-01/04 all emitted documents have valid robots; sitemap contains only i
   assert.ok(html.includes('name="robots" content="index, follow"'),url)
   assert.ok(html.includes(`rel="canonical" href="${url}"`),url)
  }
- assert.doesNotMatch(urls.join("\n"),/\?|\/admin|\/cart|lemon-cake|bento-cake/)
+ assert.doesNotMatch(urls.join("\n"),/\?|\/admin|\/cart|levain-cookies|bento-cake/)
 })

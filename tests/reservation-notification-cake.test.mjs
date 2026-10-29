@@ -183,7 +183,7 @@ test('AU booking emails render selected Chocolate Extras separately from the cak
   })
   for (const payload of [receipt, confirmation]) {
     assert.match(payload.text, /Chocolate extra: Chocolate Extra Set · AUD 20\.00/)
-    assert.match(payload.text, /Total: AUD 178\.00/)
+    assert.match(payload.text, payload === receipt ? /Amount due: AUD 178\.00/ : /Payment received: AUD 178\.00/)
   }
 })
 

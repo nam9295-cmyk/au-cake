@@ -2,6 +2,7 @@ import { renewalLineSummary, isRenewalContract } from '../shared/reservation-api
 import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
 import { Client, Databases } from 'node-appwrite'
 import { resolveNotificationAppwriteEndpoint } from './appwrite-endpoint.js'
+import { buildAuOrderPaymentEmail } from './au-order-payment-email.js'
 import {
   buildEmailDeliveryEventKey,
   evaluateEmailDeliveryRetry,
@@ -270,15 +271,15 @@ function parseRecipients(value = '') {
     .filter(Boolean)
 }
 
-function detectMarket(reservation) {
-  const envMarket = String(process.env.MARKET || process.env.VITE_MARKET || '').toUpperCase()
+function detectMarket(reservation, env = process.env) {
+  const envMarket = String(env.MARKET || env.VITE_MARKET || '').toUpperCase()
   if (envMarket === 'AU' || envMarket === 'KR') return envMarket
   if (String(reservation?.reservationNumber || '').includes('-AU-')) return 'AU'
   return 'KR'
 }
 
-function getConfig(reservation) {
-  return MARKET_CONFIG[detectMarket(reservation)] || MARKET_CONFIG.KR
+function getConfig(reservation, env = process.env) {
+  return MARKET_CONFIG[detectMarket(reservation, env)] || MARKET_CONFIG.KR
 }
 
 function getProductName(reservation, config) {
@@ -751,6 +752,31 @@ function customerCakeRows(reservation, config) {
   ]
 }
 
+function auOrderPaymentEmail(reservation, config, confirmed = false) {
+  const lines = readStoredCakeLines(reservation) || [reservation]
+  const details = (language) => lines.flatMap((line, index) => {
+    const suffix = lines.length > 1 ? ` ${index + 1}` : ''
+    if (isRenewalContract(line.policyVersion)) return [[
+      `${language === 'ko' ? '주문 내역' : 'Order item'}${suffix}`,
+      renewalLineSummary(line, { lines, language }),
+    ]]
+    const rows = cakeDetailRows(lines.length === 1 ? { ...reservation, ...line } : line, config, suffix, lines)
+    return language === 'ko' ? customerEmailKoreanRows(rows) : rows
+  })
+  const audit = (ko) => Number(reservation.discountCents) > 0 ? [
+    ...(Number.isSafeInteger(reservation.subtotalCents) ? [[ko ? '소계' : 'Subtotal', formatCurrency(reservation.subtotalCents / 100, config)]] : []),
+    [ko ? '할인' : 'Discount', `${Number(reservation.discountPercent) > 0 ? `${reservation.discountPercent}% ` : ''}(-${formatCurrency(reservation.discountCents / 100, config)})`],
+  ] : []
+  const note = plainTextCell(reservation.requestNote)
+  return buildAuOrderPaymentEmail({
+    reservation,
+    amount: formatCurrency(getReservationTotal(reservation), config),
+    detailRows: [...details('en'), ...audit(false), ...(note ? [['Your request', note]] : [])],
+    koreanDetailRows: [...details('ko'), ...audit(true), ...(note ? [['요청사항', note]] : [])],
+    confirmed,
+  })
+}
+
 function customerClassRows(reservation, config) {
   const pricing = getClassPricingAudit(reservation, config)
   const hasAdvancedSession = Boolean(reservation.advancedClassDate && reservation.advancedClassTime)
@@ -963,6 +989,7 @@ export function buildBookingDeliveryPayload({
   from,
   operatorRecipients,
   replyTo = null,
+  env = process.env,
 } = {}) {
   if (!reservation || (role !== 'operator' && role !== 'customer')) throw new Error('INVALID_BOOKING_DELIVERY_PAYLOAD')
   const sourceType = sourceTypeForReservation(reservation)
@@ -974,10 +1001,12 @@ export function buildBookingDeliveryPayload({
   const to = role === 'operator'
     ? normalizeRecipientEmailSet(operatorRecipients)
     : [normalizeRecipientEmail(sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)]
-  const config = getConfig(reservation)
-  const subject = role === 'operator' ? getSubject(reservation, config) : customerEmailCopy(reservation).subject
-  const text = role === 'operator' ? buildText(reservation, config) : buildCustomerReceiptText(reservation, config)
-  const html = role === 'operator' ? buildHtml(reservation, config) : buildCustomerReceiptHtml(reservation, config)
+  const config = getConfig(reservation, env)
+  const paymentEmail = role === 'customer' && sourceType === 'cake' && config.currency === 'AUD'
+    ? auOrderPaymentEmail(reservation, config) : null
+  const subject = paymentEmail?.subject ?? (role === 'operator' ? getSubject(reservation, config) : customerEmailCopy(reservation).subject)
+  const text = paymentEmail?.text ?? (role === 'operator' ? buildText(reservation, config) : buildCustomerReceiptText(reservation, config))
+  const html = paymentEmail?.html ?? (role === 'operator' ? buildHtml(reservation, config) : buildCustomerReceiptHtml(reservation, config))
   const normalizedFrom = safeHeaderValue(from, 'RESEND_FROM_EMAIL')
   const normalizedReplyTo = replyTo === null || replyTo === undefined || !String(replyTo).trim()
     ? null
@@ -1096,22 +1125,23 @@ function buildBookingConfirmationHtml(reservation, sourceType, config) {
   )
 }
 
-export function buildBookingConfirmationPayload({ reservation, sourceType, from, replyTo = null } = {}) {
+export function buildBookingConfirmationPayload({ reservation, sourceType, from, replyTo = null, env = process.env } = {}) {
   if (!reservation || !['cake', 'class'].includes(sourceType) || sourceTypeForReservation(reservation) !== sourceType) {
     throw new Error('INVALID_BOOKING_CONFIRMATION_PAYLOAD')
   }
   const sourceId = sourceIdForReservation(reservation)
   const recipient = normalizeRecipientEmail(sourceType === 'cake' ? reservation.customerEmail : reservation.parentEmail)
-  const config = getConfig(reservation)
-  const copy = confirmationEmailCopy(reservation, sourceType, config)
+  const config = getConfig(reservation, env)
+  const paymentEmail = sourceType === 'cake' && config.currency === 'AUD' ? auOrderPaymentEmail(reservation, config, true) : null
+  const copy = paymentEmail ?? confirmationEmailCopy(reservation, sourceType, config)
   const normalizedFrom = safeHeaderValue(from, 'RESEND_FROM_EMAIL')
   const normalizedReplyTo = replyTo === null || replyTo === undefined || !String(replyTo).trim()
     ? null
     : normalizeRecipientEmail(replyTo)
   const templateVersion = `${BOOKING_CONFIRMATION_TEMPLATE}-${sourceType}-${BOOKING_CONFIRMATION_TEMPLATE_VERSION}`
   const eventKey = buildEmailDeliveryEventKey({ template: BOOKING_CONFIRMATION_TEMPLATE, sourceType, sourceId })
-  const text = buildBookingConfirmationText(reservation, sourceType, config)
-  const html = buildBookingConfirmationHtml(reservation, sourceType, config)
+  const text = paymentEmail?.text ?? buildBookingConfirmationText(reservation, sourceType, config)
+  const html = paymentEmail?.html ?? buildBookingConfirmationHtml(reservation, sourceType, config)
   return {
     from: normalizedFrom,
     to: [recipient],
@@ -1251,7 +1281,8 @@ function bookingEmailActionInput(body, { requireEmailKind = false } = {}) {
   return { sourceType, reservationId, ...(requireEmailKind ? { emailKind } : {}) }
 }
 
-function isReservationConfirmed(reservation, sourceType) {
+function isReservationConfirmed(reservation, sourceType, env) {
+  if (sourceType === 'cake' && detectMarket(reservation, env) === 'AU' && reservation?.paymentStatus !== '입금확인') return false
   return reservation?.status === BOOKING_CONFIRMATION_ALLOWED_STATUSES[sourceType]
 }
 
@@ -1289,7 +1320,7 @@ function confirmationStatusResult(delivery, recipientMasked) {
 function bookingEmailPayload({ reservation, sourceType, emailKind, env }) {
   if (emailKind === BOOKING_CONFIRMATION_TEMPLATE) {
     return buildBookingConfirmationPayload({
-      reservation, sourceType, from: env.RESEND_FROM_EMAIL, replyTo: env.RESEND_REPLY_TO_EMAIL || null,
+      reservation, sourceType, from: env.RESEND_FROM_EMAIL, replyTo: env.RESEND_REPLY_TO_EMAIL || null, env,
     })
   }
   return buildBookingDeliveryPayload({
@@ -1298,6 +1329,7 @@ function bookingEmailPayload({ reservation, sourceType, emailKind, env }) {
     from: env.RESEND_FROM_EMAIL,
     operatorRecipients: parseRecipients(env.RESEND_TO_EMAILS),
     replyTo: env.RESEND_REPLY_TO_EMAIL || null,
+    env,
   })
 }
 
@@ -1389,7 +1421,7 @@ async function handleBookingEmailAction({
 
   if ((body.action === 'send-booking-confirmation' ||
        (body.action === 'retry-booking-email' && emailKind === BOOKING_CONFIRMATION_TEMPLATE)) &&
-      !isReservationConfirmed(reservation, input.sourceType)) {
+      !isReservationConfirmed(reservation, input.sourceType, env)) {
     return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_STATUS_INVALID' })
   }
 
@@ -1490,7 +1522,7 @@ export function createReservationNotificationHandler({
 
     let operatorPayload
     try {
-      operatorPayload = buildBookingDeliveryPayload({ reservation, role: 'operator', from, operatorRecipients, replyTo })
+      operatorPayload = buildBookingDeliveryPayload({ reservation, role: 'operator', from, operatorRecipients, replyTo, env })
     } catch {
       error(`예약 알림 메일 발송 실패: ${plainTextCell(reservation.reservationNumber)}의 운영자 발송 구성이 유효하지 않습니다.`)
       return res.json({ ok: false, reason: 'invalid_operator_delivery', reservationNumber: reservation.reservationNumber })
@@ -1498,7 +1530,7 @@ export function createReservationNotificationHandler({
 
     let customerPayload = null
     try {
-      customerPayload = buildBookingDeliveryPayload({ reservation, role: 'customer', from, operatorRecipients, replyTo })
+      customerPayload = buildBookingDeliveryPayload({ reservation, role: 'customer', from, operatorRecipients, replyTo, env })
     } catch {
       error(`예약 고객 이메일을 발송하지 않았습니다: ${plainTextCell(reservation.reservationNumber)}의 고객 이메일이 없습니다 또는 유효하지 않습니다.`)
     }
