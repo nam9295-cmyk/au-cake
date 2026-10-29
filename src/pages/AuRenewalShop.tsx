@@ -368,7 +368,7 @@ function Product({ card }: { card: RenewalCard }) {
         <section className="renewal-options au-pave-purchase">
           <a
             href={
-              p.family === "cupcake" || p.family === "smore"
+              p.family === "cupcake" || p.family === "smore" || p.family === "lemon"
                 ? "/celebrate"
                 : !p.family
                   ? "/chocolates"

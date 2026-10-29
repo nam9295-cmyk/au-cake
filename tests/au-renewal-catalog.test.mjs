@@ -1,11 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 const c=await import('../appwrite-functions/reservation-api/src/au-renewal-catalog.js').catch(()=>({}))
-test('public cards are exactly 5/4/3, mochi first and only once',()=>{
+test('public cards are exactly 4/4/4, mochi first and only once',()=>{
  assert.ok(c.RENEWAL_CARDS)
- assert.deepEqual(Object.values(c.RENEWAL_CARDS).map(a=>a.length),[5,4,3])
+ assert.deepEqual(Object.values(c.RENEWAL_CARDS).map(a=>a.length),[4,4,4])
  assert.equal(c.RENEWAL_CARDS.chocolates[0].id,'mochi')
- assert.deepEqual(c.RENEWAL_CARDS.celebrate.map(c=>c.id),['gateau-cupcakes','brownie-cupcakes','smore'])
+ assert.deepEqual(c.RENEWAL_CARDS.celebrate.map(c=>c.id),['lemon','gateau-cupcakes','brownie-cupcakes','smore'])
  assert.notEqual(c.RENEWAL_CARDS.cakes[2].href,c.RENEWAL_CARDS.cakes[3].href)
 })
 test('directory URLs resolve to the same renewal product after hydration',()=>{

@@ -24,7 +24,7 @@ export function getAuHomeCollections(language: Language) {
     label: {
       cakes: "Cake & Bake",
       chocolates: "Chocolate",
-      celebrate: "Celebrate",
+      celebrate: "Small Bites",
     }[category],
     products: RENEWAL_CARDS[category].map((card) => ({
       id: card.id,

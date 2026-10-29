@@ -64,7 +64,7 @@ test("cupcake finish cards are product specific and unavailable prices cannot be
 });
 
 test("pack choices reserve a separate photo area for each sales configuration", () => {
-  for (const card of [...RENEWAL_CARDS.chocolates.filter(c => c.id !== 'mochi'), RENEWAL_CARDS.celebrate[2]]) {
+  for (const card of [...RENEWAL_CARDS.chocolates.filter(c => c.id !== 'mochi'), RENEWAL_CARDS.celebrate.find(c => c.id === "smore")!]) {
     const html = render(card.href);
     assert.equal((html.match(/class="renewal-option-photo(?: [^"]*)?"/g) || []).length, card.offers.length, card.id);
   }

@@ -371,7 +371,7 @@ function AuHomePage({
                 activeCategory === 'whole'
                   ? 'Cake & Bake'
                   : activeCategory === 'sharing'
-                    ? 'Celebrate'
+                    ? 'Small Bites'
                     : 'Chocolate',
                 active.label,
               )}
@@ -390,7 +390,7 @@ function AuHomePage({
               {t('ALL CAKES', '케이크 전체 보기')}
               <ArrowUpRight size={14} aria-hidden="true" />
             </a>
-            <a href="/celebrate">{t('CELEBRATE','Celebrate 전체 보기')}</a>
+            <a href="/celebrate">{t('SMALL BITES','Small Bites 전체 보기')}</a>
             <a href="/chocolates">
               {t('ALL CHOCOLATES', '초콜릿 전체 보기')}
               <ArrowUpRight size={14} aria-hidden="true" />

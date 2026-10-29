@@ -27,7 +27,7 @@ test('SEO-03: confirmed offers use correct units and Celebrate breadcrumbs; bloc
  for(const path of ['/cakes/brownie-cupcakes'])assert.doesNotMatch(JSON.stringify(pages[path].structuredData),/"offers"|InStock/)
  const p=pages['/cakes/smore-stick'];const product=p.structuredData.find(x=>x['@type']==='Product');assert.ok(product)
  assert.deepEqual(product.offers.map(o=>o.price),['25.00','45.00'])
- assert.equal(p.structuredData.find(x=>x['@type']==='BreadcrumbList').itemListElement[1].name,'Celebrate')
+ assert.equal(p.structuredData.find(x=>x['@type']==='BreadcrumbList').itemListElement[1].name,'Small Bites')
  const mochi=pages['/chocolates/chocolate-mochi'].structuredData.find(x=>x['@type']==='Product');assert.ok(mochi)
  assert.equal(mochi.offers.length,6);assert.ok(mochi.offers.every(o=>/single|1 piece/i.test(o.name)))
 })

@@ -17,7 +17,7 @@ test('invalid finish counts and price injection fail closed',()=>{
  assert.throws(()=>priceRenewalOrder([{lineId:'x',offerId:'pave-cake',size:'6in',quantity:1,chocolateIcingCount:1}]));
 });
 test('lemon replaces cookie discovery; Renewal snapshot preserves mixed finishing',()=>{
- assert.equal(RENEWAL_CARDS.cakes.at(-1).id,'lemon');assert.ok(!RENEWAL_CARDS.cakes.some(c=>c.id==='cookies'));
+ assert.equal(RENEWAL_CARDS.celebrate[0].id,'lemon');assert.ok(!RENEWAL_CARDS.cakes.some(c=>c.id==='cookies'));
  const doc=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Local Test',customerPhone:'0412345678',customerEmail:'local@example.com',pickupDate:'2026-10-30',pickupTime:'12:00',privacyConsent:true,requestId:'local-lemon',website:'',orderLines:[line(6,3)]},{now:new Date('2026-10-28T00:00:00Z'),reservationNumber:'LOCAL',renewalPolicy:{preordersEnabled:true}});
  const stored=parseStoredOrderLines(doc);assert.equal(stored.totalPriceCents,3750);assert.equal(stored.lines[0].productId,'fresh-lemon-cupcakes-6');
 });

@@ -5,7 +5,7 @@ Made-to-order cakes and treats with chocolatier-grade couverture chocolate. Pick
 You may arrange an Uber, DiDi or another driver to collect your order. Please contact us in advance to agree on the handover time. Handover outside general pickup hours requires prior operator approval and cannot be selected online. You arrange and pay for the driver.
 - Cake & Bake: https://au.verygood-chocolate.com/cakes
 - Chocolate: https://au.verygood-chocolate.com/chocolates
-- Celebrate: https://au.verygood-chocolate.com/celebrate
+- Small Bites: https://au.verygood-chocolate.com/celebrate
 - Custom Cake: https://au.verygood-chocolate.com/custom-cakes
 - Business: https://au.verygood-chocolate.com/business
 
@@ -26,11 +26,6 @@ You may arrange an Uber, DiDi or another driver to collect your order. Please co
 - Brownie Basque Loaf: Brownie Basque cheesecake loaf with optional Vanilla Fresh Cream. Pickup in Melrose Park, Sydney. https://au.verygood-chocolate.com/cakes/brownie-cheesecake?form=loaf
   - Brownie Basque Loaf · Basic: AUD 58.00.
   Optional Vanilla Fresh Cream +AUD 10.00.
-- Lemon Cake: Fresh Lemon Cake in boxes of 6, 8, 12 or 16. Fresh lemon glaze with optional dark chocolate finishing for AUD 0.50 per piece. Pickup in Melrose Park, Sydney. https://au.verygood-chocolate.com/cakes/lemon-cake
-  - Lemon Cake · 6 · Basic: AUD 36.00.
-  - Lemon Cake · 8 · Basic: AUD 45.00.
-  - Lemon Cake · 12 · Basic: AUD 65.00.
-  - Lemon Cake · 16 · Basic: AUD 85.00.
 
 ## Chocolate
 - Chocolate Mochi: Six Chocolate Mochi flavours in Sydney: choose singles or build a four-piece gift box with free box packaging. Pickup in Melrose Park. https://au.verygood-chocolate.com/chocolates/chocolate-mochi
@@ -56,7 +51,12 @@ Contains milk and soy. Made in a facility that also handles almonds, wheat, eggs
   - Eiffel Tower Chocolate · 6 pieces · Basic: AUD 10.00.
   - Eiffel Tower Chocolate · 6 packs / 36 pieces (5+1) · Basic: AUD 50.00.
 
-## Celebrate
+## Small Bites
+- Lemon Cake: Fresh Lemon Cake in boxes of 6, 8, 12 or 16. Fresh lemon glaze with optional dark chocolate finishing for AUD 0.50 per piece. Pickup in Melrose Park, Sydney. https://au.verygood-chocolate.com/cakes/lemon-cake
+  - Lemon Cake · 6 · Basic: AUD 36.00.
+  - Lemon Cake · 8 · Basic: AUD 45.00.
+  - Lemon Cake · 12 · Basic: AUD 65.00.
+  - Lemon Cake · 16 · Basic: AUD 85.00.
 - Gâteau Cupcakes: Gâteau Cupcakes in six or twelve, with Basic, Vanilla Fresh Cream or Chocolate Buttercream finishes. Made for Sydney celebrations. https://au.verygood-chocolate.com/cakes/chocolate-cupcakes
   - Gâteau Cupcakes · 6 · Basic: AUD 31.00.
   - Gâteau Cupcakes · 6 · Vanilla Fresh Cream: AUD 36.00.

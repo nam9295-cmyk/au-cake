@@ -9,7 +9,7 @@ const card = (id, en, ko, href, offers, image = "") => ({
 export const RENEWAL_NAV = Object.freeze([
   { en: "Cake & Bake", ko: "Cake & Bake", href: "/cakes" },
   { en: "Chocolate", ko: "Chocolate", href: "/chocolates" },
-  { en: "Celebrate", ko: "Celebrate", href: "/celebrate" },
+  { en: "Small Bites", ko: "Small Bites", href: "/celebrate" },
   { en: "Custom Cake", ko: "Custom Cake", href: "/custom-cakes" },
   { en: "Business", ko: "Business", href: "/business" },
 ]);
@@ -46,14 +46,6 @@ export const RENEWAL_CARDS = Object.freeze({
       "/cakes/brownie-cheesecake?form=loaf",
       ["brownie-loaf"],
       "/products/renewal-photos/cheese-pound-hero.webp",
-    ),
-    card(
-      "lemon",
-      "Lemon Cake",
-      "레몬 케이크",
-      "/cakes/lemon-cake",
-      ["fresh-lemon-cupcakes-6", "fresh-lemon-cupcakes-8", "fresh-lemon-cupcakes-12", "fresh-lemon-cupcakes-16"],
-      "/products/details/lemon/hero-1080.webp",
     ),
   ],
   chocolates: [
@@ -95,6 +87,14 @@ export const RENEWAL_CARDS = Object.freeze({
     ),
   ],
   celebrate: [
+    card(
+      "lemon",
+      "Lemon Cake",
+      "레몬 케이크",
+      "/cakes/lemon-cake",
+      ["fresh-lemon-cupcakes-6", "fresh-lemon-cupcakes-8", "fresh-lemon-cupcakes-12", "fresh-lemon-cupcakes-16"],
+      "/products/details/lemon/hero-1080.webp",
+    ),
     card(
       "gateau-cupcakes",
       "Gâteau Cupcakes",

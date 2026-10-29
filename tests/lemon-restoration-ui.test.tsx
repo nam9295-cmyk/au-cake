@@ -19,5 +19,6 @@ test('restored lemon detail displays four approved packs, finish count and exist
   assert.match(html,/lemon\/hero-1080.webp/);assert.match(html,/lemon\/inside-1440.webp/);
   assert.match(html,/Dark chocolate pieces per box|박스당 초콜릿 마감 개수/);
  }
- const collection=render('/cakes');assert.match(collection,/href="\/cakes\/lemon-cake"/);assert.doesNotMatch(collection,/href="\/cakes\/levain-cookies"/);
+ assert.doesNotMatch(render('/cakes'),/href="\/cakes\/lemon-cake"/);
+ const collection=render('/celebrate');assert.match(collection,/Small Bites/);assert.match(collection,/href="\/cakes\/lemon-cake"/);assert.doesNotMatch(collection,/href="\/cakes\/levain-cookies"/);
 });

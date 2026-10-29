@@ -71,7 +71,7 @@ export function renewalSeoPages(siteUrl, content) {
     '/':'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.',
     '/cakes':'Explore Pavé whole cake, Gâteau loaf, Brownie Basque whole cake and loaf, and Levain Cookies. Cake & Bake in Melrose Park, Sydney.',
     '/chocolates':'Explore six-flavour Chocolate Mochi, Almond Chocolate, Pavé heart tins and Eiffel Tower Chocolate. Gift selections in Melrose Park, Sydney.',
-    '/celebrate':'Gâteau Cupcakes, Brownie Basque Cupcakes and S’more Sticks for celebrations in Sydney. Explore pack sizes and current reservation availability.',
+    '/celebrate':'Small Bites: Lemon Cakes, Gâteau Cupcakes, Brownie Basque Cupcakes and S’more Sticks for sharing in Sydney. Explore pack sizes and current reservation availability.',
     '/custom-cakes':'Explore bespoke celebration cakes and Basic one-tier or Advanced two-tier class enquiries in Sydney. Share your design, date and servings.',
     '/business':'Cakes and chocolate gifts for corporate events, café supply enquiries and menu consulting in Sydney. Explore VERYGOOD business services.',
   };

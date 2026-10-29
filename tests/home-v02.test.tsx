@@ -55,11 +55,11 @@ test('home renders video before the single new headline, Best, collection, stori
 test('Whole Cakes defaults to four catalogue products; Custom and Coming Soon are not falsely orderable', () => {
   const html = home()
   assert.match(html, /role="tab"[^>]*aria-selected="true"[^>]*>Cake &amp; Bake/)
-  assert.equal((html.match(/data-home-product=/g) || []).length, 5)
+  assert.equal((html.match(/data-home-product=/g) || []).length, 4)
   for (const slug of [
     'pave-chocolate-cake',
     'signature-gateau-au-chocolat',
-    'levain-cookies',
+    'brownie-cheesecake\\?form=loaf',
     'brownie-cheesecake\\?form=whole',
   ]) {
     assert.match(html, new RegExp(`href="/cakes/${slug}"`))
@@ -97,8 +97,8 @@ test('AU home SEO description agrees with the visible hero without altering exis
   )
 })
 
-test('Home membership agrees with the five/four/three renewal catalogue',()=>{
- const groups=getAuHomeCollections('en');assert.deepEqual(groups.map(g=>g.products.length),[5,4,3])
+test('Home membership agrees with the four/four/four renewal catalogue',()=>{
+ const groups=getAuHomeCollections('en');assert.deepEqual(groups.map(g=>g.products.length),[4,4,4])
  assert.equal(groups[1].products[0].id,'mochi');assert.equal(groups[1].products[0].price,'From AUD 8.00 each');assert.equal(getAuHomeCollections('ko')[1].products[0].price,'개당 AUD 8.00부터')
  assert.deepEqual(getAuHomeBest('en').map(p=>p.id),['mochi','pave','gateau-loaf','brownie-whole'])
  for (const language of ['en', 'ko'] as const) {
