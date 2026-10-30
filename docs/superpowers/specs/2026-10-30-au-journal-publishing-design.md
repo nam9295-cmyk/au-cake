@@ -1,5 +1,7 @@
 # **verygood** AU Journal — 디자인 페이지 발행 설계 제안
 
+> **2026-10-30 update:** Pencil is confirmed as the authoring tool. The latest **static-first / no-Appwrite-MVP** recommendation is documented in [Pencil static-first architecture](./2026-10-30-au-journal-static-first-architecture.md). Older references below to per-article React components are an earlier candidate, **not a mandatory requirement**. Favor whole exported HTML+CSS article packages with a batch asset importer and shared static shell unless an actual Pencil export shows this is insufficient.
+
 - 작성일: 2026-10-30, Asia/Seoul
 - 상태: 조사 완료 / 추천 설계 초안. 사용자 확정안이나 구현 완료본이 아니다.
 - 대상: nam9295-cmyk/au-cake
