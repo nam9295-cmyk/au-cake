@@ -37,4 +37,6 @@ A second independent review of the native adapter found non-bijective variant ma
 
 Read-only Cloudflare API verification confirmed existing `au-cake-next`, GitHub `au-cake`, production `main`, `npm run build` → `dist`, `VITE_MARKET=AU`, `VITE_CUSTOMER_ACCOUNT_ENABLED=true`. This release retains all current settings. R2/new billing is excluded by owner preference. Other authoring servers were not changed or awakened.
 
-Release commit, deployment ID and public HTTP checks will be appended after the actual successful deployment.
+The first Git-triggered attempt (`a8025c4`, deployment `530f0bec`) failed before the build because the macOS/npm 11 lockfile omitted two optional WASM dependencies required by npm 10 clean-install validation. Reproduced with npm 10.9.9 and Linux/x64 selection, regenerated the lock in an empty directory, and verified no existing locked versions changed. A clean Node 22.23.4/npm 10.9.9 install and AU build with the customer-account flag enabled then passed. This failure left the previous production deployment live.
+
+Actual release commit, deployment ID and public HTTP evidence are stored locally in `.journal-workspace/figcraft-review/release-verification.json` and reported to the owner after successful deployment.
