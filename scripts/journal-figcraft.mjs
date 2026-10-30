@@ -11,7 +11,7 @@ const clean = value => String(value || '').replace(/\s+/g,' ').trim()
 const decorative = node => /^(?:mobile\s+)?(?:locale tag|category kicker|cta eyebrow|editorial meta|mobile kicker)$/i.test(node.name)
 const attr = (node,name) => node.attrs.find(a=>a.name===name)?.value
 function setAttr(node,name,value) { const a=node.attrs.find(a=>a.name===name); if(a)a.value=String(value);else node.attrs.push({name,value:String(value)}) }
-function textContent(node) { return node.nodeName==='#text' ? node.value : (node.childNodes||[]).map(textContent).join('') }
+function textContent(node) { return node.nodeName==='#text' ? node.value : node.tagName==='br' ? '\n' : (node.childNodes||[]).map(textContent).join('') }
 function nodes(root) { const result=[];function walk(n){if(n.tagName)result.push(n);for(const child of n.childNodes||[])walk(child)}walk(root);return result }
 function treeNodes(root) { const result=[];function walk(n){if(n.visible===false)return;result.push(n);for(const c of n.children||[])walk(c)}walk(root);return result }
 function imageFill(node) { return (node.fills||[]).find(f=>f.type?.toLowerCase()==='image'&&f.visible!==false) }
@@ -25,7 +25,9 @@ function makeFrame(frame) {
   const fragment=parseFragment(frame.code)
   const root=fragment.childNodes.find(n=>n.tagName&&n.tagName!=='style')
   if(!root)fail('HTML export has no root')
-  const els=nodes(root),layers=treeNodes(frame.tree)
+  const markup=nodes(root),layers=treeNodes(frame.tree)
+  if(markup.some(el=>el.tagName==='br'&&el.parentNode?.tagName!=='p'))fail('Line breaks must belong to native text layers')
+  const els=markup.filter(el=>el.tagName!=='br')
   if(els.length!==layers.length)fail('Export/layer structure mismatch; rich/vector content needs a reviewed adapter')
   const cssText=fragment.childNodes.filter(n=>n.tagName==='style').map(textContent).join('\n')
   const css=postcss.parse(cssText),styles=new Map()
@@ -82,7 +84,12 @@ function matchFrame(main,other) {
   matches.set(main.records[0],other.records[0]);used.add(other.records[0])
   for(const r of main.records.slice(1)) {
     if(matches.has(r))continue
-    const candidates=other.records.filter(s=>!used.has(s)&&s.kind===r.kind&&(r.kind==='text'?clean(s.node.characters)===clean(r.node.characters):r.tokens.length?JSON.stringify(s.tokens)===JSON.stringify(r.tokens):decorative(r.node)&&s.node.name===r.node.name))
+    const candidates=other.records.filter(s=>{
+      if(used.has(s)||s.kind!==r.kind)return false
+      if(r.kind==='text')return clean(s.node.characters)===clean(r.node.characters)
+      if(r.tokens.length)return JSON.stringify(s.tokens)===JSON.stringify(r.tokens)
+      return s.node.name===r.node.name&&(decorative(r.node)||(!(r.node.children||[]).length&&!(s.node.children||[]).length))
+    })
     if(candidates.length>1)fail(`Ambiguous responsive layer mapping for ${r.node.id}`)
     if(candidates.length){matches.set(r,candidates[0]);used.add(candidates[0])}
     else if(r.kind==='container'&&!neutralWrapper(r))fail(`Unmatched styled container ${r.node.id}; export needs a reviewed adapter`)
@@ -92,17 +99,25 @@ function matchFrame(main,other) {
   return matches
 }
 function tag(node,name) { node.nodeName=node.tagName=name }
-function addLinks(el,sourceIds) {
+function trimUrl(value) {
+  let url=value.replace(/[.,;!?]+$/,'')
+  // Keep legitimate balanced URL parentheses, excluding surrounding prose punctuation.
+  while(url.endsWith(')')&&(url.match(/\)/g)||[]).length>(url.match(/\(/g)||[]).length)url=url.slice(0,-1)
+  return url.replace(/[.,;!?]+$/,'')
+}
+function addLinks(el,sourceIds,definitions=new Set()) {
   for(const child of [...(el.childNodes||[])]) {
     if(child.nodeName!=='#text')continue
     const text=child.value,parts=[],pattern=/https:\/\/[^\s]+|\[(\d+)\]/g
     let cursor=0
     for(const match of text.matchAll(pattern)) {
-      const href=match[1]?(sourceIds.has(match[1])?`#source-${match[1]}`:null):match[0]
+      const label=match[1]?match[0]:trimUrl(match[0])
+      const href=match[1]?(sourceIds.has(match[1])?`#source-${match[1]}`:null):label
       if(!href)continue
       if(match.index>cursor)parts.push({nodeName:'#text',value:text.slice(cursor,match.index),parentNode:el})
       const a={nodeName:'a',tagName:'a',namespaceURI:'http://www.w3.org/1999/xhtml',attrs:[{name:'href',value:href}],childNodes:[],parentNode:el}
-      a.childNodes=[{nodeName:'#text',value:match[0],parentNode:a}];parts.push(a);cursor=match.index+match[0].length
+      if(match[1]&&definitions.has(match[1])&&/(?:^|\n)[ \t]*$/.test(text.slice(0,match.index)))setAttr(a,'id',`source-${match[1]}`)
+      a.childNodes=[{nodeName:'#text',value:label,parentNode:a}];parts.push(a);cursor=match.index+label.length
     }
     if(cursor){if(cursor<text.length)parts.push({nodeName:'#text',value:text.slice(cursor),parentNode:el});el.childNodes.splice(el.childNodes.indexOf(child),1,...parts)}
   }
@@ -113,10 +128,15 @@ export function normalizeFigcraftExports({entry,desktop,variants=[],images,versi
   const main=makeFrame(desktop),others=variants.map(v=>makeFrame(v))
   const mappings=new Map(others.map(other=>[other,matchFrame(main,other)]))
   const rootSelector=main.records[0].selector
-  const sheet=postcss.root(),files=new Map(),sources=new Set()
+  const sheet=postcss.root(),files=new Map(),sources=new Set(),sourceLists=new Map()
   for(const r of main.records)if(r.kind==='text') {
     const source=r.node.name.match(/source\s*\[(\d+)\]/i)
     if(source){sources.add(source[1]);setAttr(r.el,'id',`source-${source[1]}`)}
+    else if(/^(?:sources|references) list$/i.test(r.node.name)) {
+      const definitions=new Set([...r.node.characters.matchAll(/^\s*\[(\d+)\]/gm)].map(m=>m[1]))
+      for(const id of definitions)sources.add(id)
+      sourceLists.set(r,definitions)
+    }
   }
   let h1=0
   for(const r of main.records) {
@@ -129,7 +149,7 @@ export function normalizeFigcraftExports({entry,desktop,variants=[],images,versi
         const a={nodeName:'a',tagName:'a',namespaceURI:'http://www.w3.org/1999/xhtml',attrs:[{name:'href',value:href}],childNodes:r.el.childNodes,parentNode:r.el}
         for(const child of a.childNodes)child.parentNode=a
         r.el.childNodes=[a]
-      } else addLinks(r.el,sources)
+      } else addLinks(r.el,sources,sourceLists.get(r))
     }
     if(r.kind==='image') {
       const hash=r.fill.image

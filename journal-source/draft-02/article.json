@@ -1,0 +1,41 @@
+{
+  "id": "draft-02",
+  "slug": "why-does-chocolate-taste-waxy-instead-of-creamy",
+  "title": "Why does chocolate taste waxy instead of creamy?",
+  "seoTitle": "Why does chocolate taste waxy? | Very Good",
+  "excerpt": "Explore how ingredients, refining, serving temperature and piece thickness affect chocolate’s melt, mouthfeel and finish.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/4f36d9da4147cc90389b256f3f4f36f263043fe786e19538695bc5d74b5e9475.webp",
+    "alt": "Broken pieces of dark chocolate resting on foil on a kitchen bench."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 164,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 83,
+          "maxWidth": 600
+        },
+        {
+          "frame": 245,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-10-30T15:26:03.221Z",
+  "updatedAt": "2026-10-30T15:26:03.221Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-10-30T15:26:03.221Z"
+  }
+}

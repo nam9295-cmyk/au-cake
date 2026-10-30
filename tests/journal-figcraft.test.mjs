@@ -121,3 +121,52 @@ test('an added responsive layout wrapper cannot be silently discarded', () => {
   b.variants[0].code=b.variants[0].code.replace('<div class="mobile-photo">','<div class="new-layout"><div class="mobile-photo">').replace('<p class="mobile-source">','</div><p class="mobile-source">').replace('</style>','.new-layout{display:flex;flex-direction:column;gap:5px;padding:0}</style>')
   assert.throws(()=>normalizeFigcraftExports(b),/unmatched layout container/i)
 })
+
+test('uniquely named empty divider layers preserve responsive styles and reject ambiguous matches', () => {
+  const a=input()
+  for(const [i,f] of [a.desktop,...a.variants].entries()) {
+    f.tree.children.push({id:80+i,type:'FRAME',name:'Header Rule'})
+    f.code=f.code.replace('</div><style>',`<div class="divider-${i}"></div></div><style>`).replace('</style>',`.divider-${i}{height:${i+1}px;background:#ddd}</style>`)
+  }
+  const out=normalizeFigcraftExports(a)
+  assert.match(out.css,/@media[\s\S]*\.fc-80\s*\{[^}]*height:\s*2px/)
+  a.variants[0].tree.children.push({id:90,type:'FRAME',name:'Header Rule'})
+  a.variants[0].code=a.variants[0].code.replace('</div><style>','<div class="duplicate-divider"></div></div><style>')
+  assert.throws(()=>normalizeFigcraftExports(a),/ambiguous/i)
+})
+
+test('multiline source lists receive citation targets and parenthesized URLs retain only balanced URL parentheses', () => {
+  const a=input(),source='[1] Example (https://example.com/Chocolate_(food))\n[2] Other (https://example.com/two)'
+  for(const f of [a.desktop,...a.variants]) {
+    f.tree.children.at(-1).name='Sources List';f.tree.children.at(-1).characters=source
+    f.code=f.code.replace('[1] https://example.com/source — Source',source)
+  }
+  const out=normalizeFigcraftExports(a)
+  assert.match(out.html,/id="source-1"/)
+  assert.match(out.html,/id="source-2"/)
+  assert.match(out.html,/href="#source-1"/)
+  assert.match(out.html,/href="https:\/\/example.com\/Chocolate_\(food\)"/)
+  assert.match(out.html,/href="https:\/\/example.com\/two"/)
+  const sourceEl=elements(out.html).find(n=>n.attrs.some(a=>a.name==='class'&&a.value==='fc-7'))
+  const text=n=>n.nodeName==='#text'?n.value:(n.childNodes||[]).map(text).join('')
+  assert.equal(text(sourceEl),source)
+})
+
+test('native line-break markup in a multiline text layer preserves its manuscript and line breaks', () => {
+  const a=input(),source='First line\nSecond line'
+  for(const f of [a.desktop,...a.variants]) {
+    f.tree.children.at(-1).characters=source
+    f.code=f.code.replace('[1] https://example.com/source — Source','First line<br/>Second line')
+  }
+  const out=normalizeFigcraftExports(a)
+  assert.match(out.html,/First line<br>Second line/)
+})
+
+test('a source URL wrapped in prose parentheses followed by a full stop keeps the full stop outside its link', () => {
+  const a=input()
+  for(const f of [a.desktop,...a.variants]) {
+    f.tree.children.at(-1).characters='[1] Example (https://example.com/two).'
+    f.code=f.code.replace('[1] https://example.com/source — Source','[1] Example (https://example.com/two).')
+  }
+  assert.match(normalizeFigcraftExports(a).html,/href="https:\/\/example.com\/two">https:\/\/example.com\/two<\/a>\)\./)
+})

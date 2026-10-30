@@ -2,6 +2,31 @@
 
 The Journal uses static HTML/CSS/photo packages on the existing AU Cloudflare Pages project. The first owner-approved article was exported from the real FigCraft 0.12.1 document, with desktop, tablet, mobile and compact frames. Native Pencil compatibility remains **unverified**; generic package tests do not establish support for a particular design tool export.
 
+## Start in a new session
+
+Open this repository/worktree in the new session. The owner can send:
+
+```text
+AU Journal에 아래 FigCraft 글을 발행해줘.
+AGENTS.md와 docs/journal-publishing.md를 읽고 기존 발행 절차를 사용해줘.
+파일: /이 컴퓨터에서 접근 가능한 경로/story.figcraft
+대상 글 제목 또는 프레임: [발행할 글]
+PC·모바일·사진·링크·SEO 검증 후 실제 발행하고 공개 주소를 알려줘.
+```
+
+A request naming the file and article is sufficient when this project and its entry instructions are available. Do not require the previous conversation transcript. On another computer, this repository's guidance, official FigCraft CLI, native file/photos and existing Git/Cloudflare access must be available there. A Mac-local path is not automatically accessible on Very/rice; a share link must yield an accessible native file for the CLI. If the target article is ambiguous, inspect the document and ask only for the missing identity.
+
+Agent checklist:
+
+1. Check Git status/worktrees and current remote main; use an isolated Journal checkout and preserve existing changes. Read this guide and the existing approved package as the format reference. Reverify the live Pages target/settings before release.
+2. Inspect the supplied native file, select this article's actual desktop/mobile/tablet frames, heading layers, cover and photo alts, and explicit links. Build a new private metadata profile from the identified content. Do not depend on `.journal-workspace/figcraft-review/article-input.json` existing, copy article01 IDs, or assume that “2편” means draft02 in the original pack. New articles need their own unique stable ID/slug; edits preserve the existing ID/slug and first publication date.
+3. Export privately with `journal:figcraft`, check/prepare using the actual current local revision (zero only for a new local entry), and compare the web render with the source. Preserve manuscript, photo crops and design; review unsupported conversion cases instead of silently changing them.
+4. Apply the implemented title/description/canonical/OG/BlogPosting/sitemap/RSS and image checks. Do not invent authors, reviewers or factual claims. Additional author displays, content summaries, Search Console submissions and other suggested GEO enhancements are not implemented merely because they were discussed.
+5. On an explicit publish request, prepare only that approved public package. Run Journal tests and an AU build, plus checks appropriate to code/dependency changes. Run AU/KR builds and the full suite sequentially if needed; clean-install dependency validation should match the current Pages Node/npm toolchain. Confirm the Git diff excludes private native source, other drafts and credentials.
+6. Use the existing Git → Pages release, without new billing services. Verify the exact deployment commit/status, public article/list, photos, metadata, sitemap and `/journal/feed.xml`. Report the live URL and actual validation results. `journal:publish` and save-triggered publication do not exist.
+
+These entry instructions and this guide are versioned with the Journal. On another clone/computer, sync the repository as well as the native source file; local-only preparation state and credentials do not travel with Git.
+
 ## Where files live
 
 - Google Drive: original manuscript/design/photo archive. Never use Drive image links on the public site.
@@ -66,7 +91,7 @@ The private metadata profile contains normal article fields, `cover.layer` (desk
 }
 ```
 
-IDs above are examples from the first reference design; select actual frame/photo/link IDs for each document. All content images require their own alt text. Name text layers with H1/H2–H6 to preserve heading semantics. Source layers named `Source [1]` provide citation targets. Normal HTTPS source URLs and manuscript citations become real links. Explicit link metadata keeps product destinations reviewable.
+IDs above are examples from the first reference design; select actual frame/photo/link IDs for each document. All content images require their own alt text. Name text layers with H1/H2–H6 to preserve heading semantics. Source layers named `Source [1]` or a multiline `Sources List` / `References List` provide citation targets. Native text line breaks are retained; surrounding prose parentheses stay outside source URLs. Normal HTTPS source URLs and manuscript citations become real links. Uniquely named empty leaf frames (for example dividers) map by exact name across viewports; ambiguous names fail for review. Explicit link metadata keeps product destinations reviewable.
 
 Raw FigCraft 0.12.1 HTML has generic paragraphs, fixed widths and repeated placeholder image URLs. The adapter resolves native embedded photos, converts named headings, merges supplied viewport styles into one DOM and emits honest `source.tool: "figcraft"` provenance. Responsive frames must contain the same ordered manuscript and image sequence, including repeated content. Decorative locale/kicker omissions are allowed; reordered/different content, ambiguous matching, added layout wrappers, crop/filter adjustments, native CSS conditions and unsupported vectors fail for review. Removed responsive properties reset rather than leaking desktop styles. Article CSS never becomes a new hand-written React route.
 
