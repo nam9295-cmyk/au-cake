@@ -1,9 +1,99 @@
 import { test } from 'node:test'
+import { buildRenewalOrderData } from '../appwrite-functions/reservation-api/src/au-renewal-storage.js'
 import * as assert from 'node:assert/strict'
 import { buildCakeReservation } from '../appwrite-functions/reservation-api/src/business.js'
 import { buildAdminReservationUpdate } from '../src/lib/admin-reservation-edit.js'
 import { databases } from '../src/lib/appwrite.js'
 import { toReservation, updateReservation } from '../src/lib/repository.js'
+
+const optionalCounts = ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount'] as const
+
+for (const lineCount of [1, 2]) {
+  for (const coupon of [false, true]) {
+    test(`Renewal ${lineCount}-line coupon=${coupon}: operational drawer updates survive repository rehydration`, async (t) => {
+      t.mock.method(globalThis, 'fetch', async () => { throw new Error('NETWORK_FORBIDDEN') })
+      const stored = {
+        $id: 'synthetic-renewal',
+        ...buildRenewalOrderData({
+          contractVersion: 'au-renewal.2026-10.v2',
+          customerName: 'Synthetic Buyer', customerPhone: '0412345678', customerEmail: 'test@example.com',
+          pickupDate: '2026-10-24', pickupTime: '12:00', privacyConsent: true,
+          orderLines: [
+            { lineId: 'a', offerId: 'pave-cake', size: '6in', quantity: 1 },
+            ...(lineCount === 2 ? [{ lineId: 'b', offerId: 'brownie-whole', size: '6in', quantity: 1 }] : []),
+          ],
+        }, {
+          now: new Date('2026-10-20T00:00:00Z'), reservationNumber: 'SYNTHETIC-RENEWAL',
+          ...(coupon ? { reviewCoupon: { id: 'synthetic-coupon', rewardPercent: 10, codeLast4: 'TEST' } } : {}),
+        }),
+      }
+      const original = structuredClone(stored)
+      const reservation = toReservation(stored as never)
+      for (const key of optionalCounts) assert.equal(reservation[key], undefined)
+      let writes = 0
+      let payload: Record<string, unknown> = {}
+      t.mock.method(databases, 'getDocument', async () => structuredClone(stored))
+      t.mock.method(databases, 'updateDocument', async (_db, _collection, _id, data) => {
+        writes += 1
+        payload = data as Record<string, unknown>
+        return { ...stored, ...payload }
+      })
+      const changes = [
+        { pickupDate: '2026-10-25' }, { pickupTime: '13:00' },
+        { status: '예약확정' as const }, { paymentStatus: '입금확인' as const },
+        { adminMemo: 'Synthetic operational edit' },
+        { pickupDate: '2026-10-25', pickupTime: '13:00', status: '예약확정' as const,
+          paymentStatus: '입금확인' as const, adminMemo: '' },
+      ]
+      for (const change of changes) {
+        const update = buildAdminReservationUpdate(reservation, change)
+        const result = await updateReservation(stored.$id, update)
+        for (const key of optionalCounts) {
+          assert.equal(Object.hasOwn(update, key), false, key)
+          assert.equal(Object.hasOwn(payload, key), false, key)
+        }
+        for (const [key, value] of Object.entries(change)) {
+          assert.equal(payload[key], value)
+          assert.equal(result[key as keyof typeof result], value)
+        }
+        for (const key of ['totalPrice', 'totalPriceCents', 'orderLinesJson', 'subtotalCents',
+          'discountBasisCents', 'discountPercent', 'discountCents', 'appliedPromoCodeLast4', 'reviewCouponId']) {
+          assert.equal(Object.hasOwn(payload, key), false, key)
+        }
+        assert.deepEqual(result.orderLines, reservation.orderLines)
+        for (const key of ['totalPrice', 'totalPriceCents', 'subtotalCents', 'discountBasisCents',
+          'discountPercent', 'discountCents', 'reviewCouponId', 'appliedPromoCodeLast4'] as const) {
+          assert.equal(result[key], reservation[key], key)
+        }
+      }
+      assert.equal(writes, changes.length)
+      const rejected = [{ quantity: 2 }, { totalPrice: 1 }, { totalPriceCents: 1 },
+        ...optionalCounts.map(key => ({ [key]: 0 }))]
+      const guardError = coupon ? /일회용 쿠폰/ : /MULTI_LINE_EDIT_UNAVAILABLE/
+      for (const change of rejected) {
+        assert.throws(() => buildAdminReservationUpdate(reservation, change), guardError)
+        await assert.rejects(updateReservation(stored.$id, change), guardError)
+      }
+      assert.equal(writes, changes.length)
+      assert.deepEqual(stored, original)
+    })
+  }
+}
+
+test('versioned operational builder preserves explicit zero and nonzero optional counts', () => {
+  const stored = { $id: 'synthetic-present-counts', ...buildCakeReservation({
+    ...baseInput, orderLines: [{ productId: 'pave-cake', cakeSize: '6in', quantity: 1 }],
+  }, { now, reservationNumber: 'SYNTHETIC-COUNTS' }) }
+  const reservation = toReservation(stored as never)
+  for (const value of [0, 2]) {
+    const withCounts = { ...reservation, chocolateIcingCount: value, vanillaCreamCount: value, partyDecorationCount: value }
+    const update = buildAdminReservationUpdate(withCounts, { pickupDate: '2099-07-12' })
+    for (const key of optionalCounts) {
+      assert.equal(Object.hasOwn(update, key), true)
+      assert.equal(update[key], value)
+    }
+  }
+})
 
 const now = new Date('2099-07-01T00:00:00.000Z')
 const baseInput = {
