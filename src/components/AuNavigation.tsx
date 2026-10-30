@@ -1,11 +1,11 @@
-import { RENEWAL_NAV } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
+import { AU_PUBLIC_NAV } from '../lib/au-public-navigation'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 import { AuLanguageToggle } from './AuLanguage'
 import { useAuLanguage } from '../lib/au-language'
 import { useCustomerAccount } from '../lib/customer-account-context'
 
-const primary = RENEWAL_NAV
+const primary = AU_PUBLIC_NAV
 
 export function AuNavigation({
   cartItemCount,

@@ -41,6 +41,9 @@ docs/renewal-20261013/KakaoTalk_Photo_2026-10-14-14-00-35.jpeg
 .playwright-cli/
 output/playwright/
 
+# Local Journal previews contain unapproved editorial content.
+.journal-workspace/
+
 # Only reviewed renewal development documents may enter public Git.
 docs/renewal-20261013/*
 !docs/renewal-20261013/README.md

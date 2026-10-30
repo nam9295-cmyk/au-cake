@@ -1,0 +1,1862 @@
+.fc-3,.fc-3 *{box-sizing:border-box}
+.fc-3 :is(p,h1,h2,h3,h4,h5,h6,figure){margin:0}
+.fc-3 a{color:inherit;font:inherit;text-underline-offset:.2em}
+.fc-3{
+  position: relative;
+  width: min(100%, 1440px);
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  padding: 72px 180px 96px 180px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #FFFFFF;
+  min-width:0}
+.fc-4{
+  align-self: stretch;
+  width: min(100%, 1080px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 0px 36px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-bottom: 1px solid #E8E4E5;
+  min-width:0}
+.fc-5{
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: center;
+  min-width:0}
+.fc-6{display:block;
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  min-width:0}
+.fc-7{display:block;
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  min-width:0}
+.fc-8{display:block;
+  width: min(100%, 820px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 115%;
+  letter-spacing: -0.8px;
+  min-width:0}
+.fc-9{
+  align-self: stretch;
+  width: min(100%, 1080px);
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-10{
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-11{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 160%;
+  min-width:0}
+.fc-12{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-13{
+  align-self: stretch;
+  width: min(100%, 1080px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-14{
+  align-self: stretch;
+  width: min(100%, 1080px);
+  height: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-22{display:block;
+  align-self: stretch;
+  width: min(100%, 1080px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 150%;
+  min-width:0}
+.fc-23{
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-24{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-25{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 175%;
+  min-width:0}
+.fc-26{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-27{
+  align-self: stretch;
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 24px 20px 24px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #F8F7F4;
+  border-left: 1px solid #1F5A46;
+  min-width:0}
+.fc-28{display:block;
+  align-self: stretch;
+  width: min(100%, 711px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-29{
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-30{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-31{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-32{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-33{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-34{
+  align-self: stretch;
+  width: min(100%, 1080px);
+  display: flex;
+  flex-direction: row;
+  gap: 56px;
+  padding: 40px 0px 40px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  border-bottom: 1px solid #E8E4E5;
+  min-width:0}
+.fc-35{
+  flex: 1 1 0;
+  width: min(100%, 544px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-36{display:block;
+  align-self: stretch;
+  width: min(100%, 544px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-37{display:block;
+  align-self: stretch;
+  width: min(100%, 544px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-38{display:block;
+  align-self: stretch;
+  width: min(100%, 544px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 175%;
+  min-width:0}
+.fc-39{
+  width: min(100%, 480px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-40{
+  align-self: stretch;
+  width: min(100%, 480px);
+  height: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-48{display:block;
+  align-self: stretch;
+  width: min(100%, 480px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 150%;
+  min-width:0}
+.fc-49{
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-50{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-51{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-52{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-53{
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-54{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-55{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-56{
+  align-self: stretch;
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-57{
+  align-self: stretch;
+  width: min(100%, 760px);
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-65{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-66{
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 32px 28px 32px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #F8F7F4;
+  border: 1px solid #E8E4E5;
+  min-width:0}
+.fc-67{display:block;
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-width:0}
+.fc-68{display:block;
+  align-self: stretch;
+  width: min(100%, 694px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 17px;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 160%;
+  min-width:0}
+.fc-69{
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-70{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  min-width:0}
+.fc-71{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 160%;
+  min-width:0}
+.fc-72{display:block;
+  align-self: stretch;
+  width: min(100%, 760px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 160%;
+  min-width:0}
+@media (max-width: 1100px){
+.fc-3{
+  position: relative;
+  width: min(100%, 768px);
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+  padding: 56px 48px 72px 48px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #FFFFFF;
+  min-width:0}
+.fc-4{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 0px 36px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-bottom: 1px solid #E8E4E5;
+  min-width:0}
+.fc-5{
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: center;
+  min-width:0}
+.fc-6{display:block;align-self:unset;width:unset;
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  min-width:0}
+.fc-7{display:block;
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  min-width:0}
+.fc-8{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 115%;
+  letter-spacing: -0.8px;
+  min-width:0}
+.fc-9{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-10{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-11{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 160%;
+  min-width:0}
+.fc-12{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-13{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-14{
+  align-self: stretch;
+  width: min(100%, 672px);
+  height: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-22{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 150%;
+  min-width:0}
+.fc-23{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-24{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-25{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 175%;
+  min-width:0}
+.fc-26{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-27{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 24px 20px 24px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #F8F7F4;
+  border-left: 1px solid #1F5A46;
+  min-width:0}
+.fc-28{display:block;
+  align-self: stretch;
+  width: min(100%, 623px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-29{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-30{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-31{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-32{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-33{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-34{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  padding: 40px 0px 40px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  border-bottom: 1px solid #E8E4E5;
+  min-width:0}
+.fc-35{
+  flex: 1 1 0;
+  width: min(100%, 340px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-36{display:block;
+  align-self: stretch;
+  width: min(100%, 340px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-37{display:block;
+  align-self: stretch;
+  width: min(100%, 340px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-38{display:block;
+  align-self: stretch;
+  width: min(100%, 340px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 175%;
+  min-width:0}
+.fc-39{align-self:unset;
+  width: min(100%, 300px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-40{
+  align-self: stretch;
+  width: min(100%, 300px);
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-48{display:block;
+  align-self: stretch;
+  width: min(100%, 300px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 150%;
+  min-width:0}
+.fc-49{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-50{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-51{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-52{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-53{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-54{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 125%;
+  letter-spacing: -0.4px;
+  min-width:0}
+.fc-55{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-56{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-57{
+  align-self: stretch;
+  width: min(100%, 672px);
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-65{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-66{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 32px 28px 32px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #F8F7F4;
+  border: 1px solid #E8E4E5;
+  min-width:0}
+.fc-67{display:block;
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-width:0}
+.fc-68{display:block;
+  align-self: stretch;
+  width: min(100%, 606px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 17px;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 160%;
+  min-width:0}
+.fc-69{
+  align-self: stretch;
+  width: min(100%, 672px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-70{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  min-width:0}
+.fc-71{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 160%;
+  min-width:0}
+.fc-72{display:block;
+  align-self: stretch;
+  width: min(100%, 672px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 160%;
+  min-width:0}}
+@media (max-width: 600px){
+.fc-3{
+  position: relative;
+  width: min(100%, 390px);
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  padding: 36px 20px 56px 20px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #FFFFFF;
+  min-width:0}
+.fc-4{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0px 0px 24px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-bottom: 1px solid #E8E4E5;
+  min-width:0}
+.fc-5{display:contents}
+.fc-6{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-width:0}
+.fc-7{display:none}
+.fc-8{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 118%;
+  letter-spacing: -0.5px;
+  min-width:0}
+.fc-9{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-10{display:contents}
+.fc-11{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 165%;
+  min-width:0}
+.fc-12{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-13{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-14{
+  align-self: stretch;
+  width: min(100%, 350px);
+  height: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-22{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 150%;
+  min-width:0}
+.fc-23{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-24{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-25{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 170%;
+  min-width:0}
+.fc-26{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-27{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 16px 18px 16px 18px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #F8F7F4;
+  border-left: 1px solid #1F5A46;
+  min-width:0}
+.fc-28{display:block;
+  align-self: stretch;
+  width: min(100%, 313px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 170%;
+  min-width:0}
+.fc-29{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-30{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-31{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-32{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-33{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-34{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px 0px 28px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  border-bottom: 1px solid #E8E4E5;
+  min-width:0}
+.fc-35{display:contents}
+.fc-36{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-37{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-38{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 170%;
+  min-width:0}
+.fc-39{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-40{
+  align-self: stretch;
+  width: min(100%, 350px);
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-48{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 150%;
+  min-width:0}
+.fc-49{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-50{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-51{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-52{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-53{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-54{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-55{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-56{display:contents}
+.fc-57{
+  align-self: stretch;
+  width: min(100%, 350px);
+  height: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-65{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-66{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 20px 20px 20px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #F8F7F4;
+  border: 1px solid #E8E4E5;
+  min-width:0}
+.fc-67{display:block;
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-width:0}
+.fc-68{display:block;
+  align-self: stretch;
+  width: min(100%, 308px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 15px;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 160%;
+  min-width:0}
+.fc-69{
+  align-self: stretch;
+  width: min(100%, 350px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-70{display:block;letter-spacing:unset;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 700;
+  min-width:0}
+.fc-71{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 155%;
+  min-width:0}
+.fc-72{display:block;
+  align-self: stretch;
+  width: min(100%, 350px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 155%;
+  min-width:0}}
+@media (max-width: 360px){
+.fc-3{
+  position: relative;
+  width: min(100%, 320px);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 28px 16px 48px 16px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #FFFFFF;
+  min-width:0}
+.fc-4{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0px 0px 24px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-bottom: 1px solid #E8E4E5;
+  min-width:0}
+.fc-5{display:contents}
+.fc-6{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-width:0}
+.fc-7{display:none}
+.fc-8{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 118%;
+  letter-spacing: -0.5px;
+  min-width:0}
+.fc-9{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-10{display:contents}
+.fc-11{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 165%;
+  min-width:0}
+.fc-12{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-13{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-14{
+  align-self: stretch;
+  width: min(100%, 288px);
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-22{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 150%;
+  min-width:0}
+.fc-23{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-24{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-25{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 170%;
+  min-width:0}
+.fc-26{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-27{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 16px 18px 16px 18px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #F8F7F4;
+  border-left: 1px solid #1F5A46;
+  min-width:0}
+.fc-28{display:block;
+  align-self: stretch;
+  width: min(100%, 251px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 170%;
+  min-width:0}
+.fc-29{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-30{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-31{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-32{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-33{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-34{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px 0px 28px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  border-bottom: 1px solid #E8E4E5;
+  min-width:0}
+.fc-35{display:contents}
+.fc-36{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-37{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-38{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 170%;
+  min-width:0}
+.fc-39{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-40{
+  align-self: stretch;
+  width: min(100%, 288px);
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-48{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 150%;
+  min-width:0}
+.fc-49{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width:0}
+.fc-50{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-51{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-52{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-53{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-54{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 128%;
+  letter-spacing: -0.3px;
+  min-width:0}
+.fc-55{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-56{display:contents}
+.fc-57{
+  align-self: stretch;
+  width: min(100%, 288px);
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 0px 0px 0px 0px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #F8F7F4;
+  min-width:0;
+  display:block;
+  object-fit:cover;
+  object-position:center}
+.fc-65{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 175%;
+  min-width:0}
+.fc-66{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 20px 20px 20px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background: #F8F7F4;
+  border: 1px solid #E8E4E5;
+  min-width:0}
+.fc-67{display:block;
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-width:0}
+.fc-68{display:block;
+  align-self: stretch;
+  width: min(100%, 246px);
+  color: #1F5A46;
+  font-family: "Work Sans";
+  font-size: 15px;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 160%;
+  min-width:0}
+.fc-69{
+  align-self: stretch;
+  width: min(100%, 288px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 0px 0px 0px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  border-top: 1px solid #E8E4E5;
+  min-width:0}
+.fc-70{display:block;letter-spacing:unset;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #352F31;
+  font-family: "Work Sans";
+  font-size: 16px;
+  font-weight: 700;
+  min-width:0}
+.fc-71{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 155%;
+  min-width:0}
+.fc-72{display:block;
+  align-self: stretch;
+  width: min(100%, 288px);
+  color: #655F61;
+  font-family: "Work Sans";
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 155%;
+  min-width:0}}

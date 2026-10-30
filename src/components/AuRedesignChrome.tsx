@@ -1,5 +1,5 @@
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
-import { RENEWAL_NAV } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
+import { AU_PUBLIC_NAV } from '../lib/au-public-navigation'
 import { type MouseEvent, type ReactNode } from 'react'
 import { AuNavigation } from './AuNavigation'
 import { useAuLanguage } from '../lib/au-language'
@@ -13,7 +13,7 @@ export function AuRedesignFooter() {
   const pickup = renewalPickupCopy('en')
   return <footer className="au-redesign-footer">
     <a className="au-redesign-wordmark" href="/">VERYGOOD / AU-CAKE</a>
-    <nav aria-label="Footer navigation">{RENEWAL_NAV.map(link => <a key={link.href} href={link.href}>{t(link.en,link.ko)}</a>)}<a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a><a href="/reviews">{t('REVIEWS', '후기')}</a><a href="/classes">{t('CLASSES', '클래스')}</a></nav>
+    <nav aria-label="Footer navigation">{AU_PUBLIC_NAV.map(link => <a key={link.href} href={link.href}>{t(link.en,link.ko)}</a>)}<a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a><a href="/reviews">{t('REVIEWS', '후기')}</a><a href="/classes">{t('CLASSES', '클래스')}</a></nav>
     <small className="au-footer-pickup">{t(pickup.hours,renewalPickupCopy('ko').hours)}</small>
     <small>© 2026 VERYGOOD. Sydney, Australia.</small>
   </footer>

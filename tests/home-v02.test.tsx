@@ -68,14 +68,14 @@ test('Whole Cakes defaults to four catalogue products; Custom and Coming Soon ar
   assert.match(html, /href="\/cakes\/custom-cake"/)
 })
 
-test('shared AU header has the same four primary destinations and paused classes stay auxiliary', () => {
+test('shared AU header includes Journal alongside existing destinations and paused classes stay auxiliary', () => {
   const html = render(<AuRedesignHeader cartItemCount={2} />)
   const nav = html.match(
     /<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/,
   )![1]
   assert.deepEqual(
     [...nav.matchAll(/href="([^"]+)"/g)].map((x) => x[1]),
-    ['/cakes','/chocolates','/celebrate','/custom-cakes','/business'],
+    ['/cakes','/chocolates','/celebrate','/custom-cakes','/business','/journal'],
   )
   assert.doesNotMatch(nav, /\/classes/)
   assert.match(html, /Temporarily Paused/)

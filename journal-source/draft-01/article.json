@@ -1,0 +1,41 @@
+{
+  "id": "draft-01",
+  "slug": "should-you-keep-chocolate-in-the-fridge",
+  "title": "Should you keep chocolate in the fridge? An Australian summer guide",
+  "seoTitle": "Should you keep chocolate in the fridge? | Very Good",
+  "excerpt": "Fridge or pantry? Learn how to store plain chocolate in warm weather, avoid moisture and odours, and treat cream-filled desserts differently.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/f613311cb3f1c7b1df9a7c03a26c165c3da6a46bd4b6053dc8055c8ba47663f0.webp",
+    "alt": "Plain chocolate beside an empty glass storage container on a kitchen bench."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 3,
+      "variants": [
+        {
+          "frame": 125,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 73,
+          "maxWidth": 600
+        },
+        {
+          "frame": 195,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-10-30T10:03:01.441Z",
+  "updatedAt": "2026-10-30T10:03:01.441Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-10-30T10:03:01.441Z"
+  }
+}
