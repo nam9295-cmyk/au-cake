@@ -1,5 +1,7 @@
 # **verygood** AU Journal Publishing — Implementation Plan
 
+> **2026-10-30 update:** Pencil is confirmed as the authoring tool. The latest **static-first / no-Appwrite-MVP** recommendation is documented in [Pencil static-first architecture](../specs/2026-10-30-au-journal-static-first-architecture.md). Older references below to per-article React components are an earlier candidate, **not a mandatory requirement**. Favor whole exported HTML+CSS article packages with a batch asset importer and shared static shell unless an actual Pencil export shows this is insufficient.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox syntax for tracking. This is a proposed plan; do not treat proposed product decisions or absent design exports as already confirmed.
 
 **Goal:** Pencil/Penpot에서 완성한 글과 사진을 한 번에 가져와 AU Journal에서 미리보기·발행·갱신한다.
