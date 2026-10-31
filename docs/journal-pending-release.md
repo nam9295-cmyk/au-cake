@@ -1,14 +1,15 @@
-# Pending Journal release
+# Journal release state
 
-## Article02 hero replacement — included in article03 release candidate
+No pending Journal releases are recorded.
 
-The owner requested replacing article02's hero with the supplied `01-v2.png` and deploying the change together with article03. The owner has now supplied completed article03 and requested its folder photographs in the ongoing publishing workflow. This candidate includes both changes; release completion still requires a successful deployment and live verification.
+## Completed 2026-10-31 — article03 and article02 hero
 
-- Article: `draft-02`, `/journal/why-does-chocolate-taste-waxy-instead-of-creamy`.
-- The same replacement is applied to the native FigCraft desktop, tablet, mobile, compact and executive-summary image layers. Native text, layout, other photographs and original image files remain unchanged. A pre-edit native backup is retained privately in `.journal-workspace/article-02/hero-replacement/before.figcraft`.
-- The public-source package uses `assets/f82c1e691144b48ea5c230e613d858bb0f8b61787ea1a48f51d199c9e05228da.webp` for its first content image and cover, with matching descriptive alt text. Index and Open Graph images follow the cover automatically.
-- Preserve the existing article ID, URL and first `publishedAt`; only its update/approval timestamp advances. Its `published` status describes an existing article, not whether this replacement has been deployed.
-- Do not push these changes to production `main` or deploy separately. When the owner explicitly requests article03 publication, include this pending article02 package in the same validated Git/Pages release. Saving or finding an article03 design is not a release request.
-- After the combined deployment succeeds, verify both articles and their cover images, then replace this hold with a short completed-release record.
+- Published article03 at `/journal/what-does-70-percent-cocoa-mean` with the three owner-specified folder photographs. The actual native FigCraft desktop/tablet/mobile/compact and executive-summary image fills were synchronized to those files under a private backup; manuscript and layout were preserved.
+- Released article02’s held hero replacement in the same deployment. Its body image, index cover and Open Graph image now use the supplied chocolate-block/shavings photograph. The existing URL and first `publishedAt` remain unchanged. The prior article03 deployment hold is fulfilled.
+- Release code commit: `8c2fcce2675c6fd1c5bd41b6106e3679315b6795`. Cloudflare production deployment: `ebc70487-38cc-4679-99fb-9c404e7b71a1`, status `success`.
+- Verified three public articles, article03 native text layers and H1 line break, all nine article03 responsive photo assets, article02 body/cover/OG consistency, feed/sitemap/catalog, existing entry routes and hard404 behavior. Journal51 tests, full npm test, lint and AU/KR builds passed. Independent review reported no Critical/Important findings.
+- Browser UI verification was unavailable because the browser host and native Chrome window lookup failed. Four native design renders, generated HTML/assets and live HTTP responses were checked; do not describe this as a completed live-browser visual audit.
 
-Private preparation/preview records are under `.journal-workspace/article-02/hero-replacement/`; do not add that directory or native design files to public Git.
+Native designs, original photo files, backups, source checks and detailed verification reports stay private under `.journal-workspace/`. No order/payment/auth/Appwrite data, hosting flags or other services were changed. No new billing service was added.
+
+This record is updated after deployment with a documentation-only skip-CI commit; the production code SHA above remains the deployed version. Verify actual Git and Pages state before any future release.

@@ -2,7 +2,7 @@
 
 For AU Journal / FigCraft publishing requests, read [docs/journal-publishing.md](docs/journal-publishing.md) first, including its new-session checklist. Use the existing static importer and Cloudflare Pages Git integration; each article is an HTML/CSS/photo package, not a new React page.
 
-Check [docs/journal-pending-release.md](docs/journal-pending-release.md) before a release. The owner is holding article02's replacement hero until article03 is explicitly requested for publication; do not deploy this pending change separately.
+Check [docs/journal-pending-release.md](docs/journal-pending-release.md) before a release. Carry any recorded pending changes into their authorized release, and respect any current owner-imposed deployment hold.
 
 An explicit request to publish the identified article authorizes its release after validation. A question about publishing or a saved design alone is not a release instruction. Identify the requested article and responsive frames from the supplied native file; never reuse the first article's layer IDs or private local revision counters blindly.
 
