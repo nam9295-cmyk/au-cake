@@ -28,6 +28,15 @@ test('batch import rewrites HTML and CSS paths, scopes styles and generates real
   assert.equal(result.report.externalLinks[0], 'https://example.com/source')
 })
 
+test('a designed heading line break preserves the HTML and matches the plain metadata title', async t => {
+  const f = await fixture(t)
+  const html = await readFile(join(f.inputDirectory, 'index.html'), 'utf8')
+  await writeFile(join(f.inputDirectory, 'index.html'), html.replace('Sample story</h1>', 'Sample<br>story</h1>'))
+  const result = await inspectPackage(f)
+  assert.match(result.html, /Sample<br>story<\/h1>/)
+  assert.deepEqual(result.report.headings[0], { level: 1, text: 'Sample story' })
+})
+
 test('failed/stale updates preserve the active revision; rollback preserves a monotonic revision counter', async t => {
   const f = await fixture(t)
   const first = await prepareImport({ ...f, expectedRevision: 0 })

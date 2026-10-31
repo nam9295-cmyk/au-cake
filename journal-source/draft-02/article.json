@@ -7,8 +7,8 @@
   "locale": "en-AU",
   "status": "published",
   "cover": {
-    "src": "assets/4f36d9da4147cc90389b256f3f4f36f263043fe786e19538695bc5d74b5e9475.webp",
-    "alt": "Broken pieces of dark chocolate resting on foil on a kitchen bench."
+    "src": "assets/f82c1e691144b48ea5c230e613d858bb0f8b61787ea1a48f51d199c9e05228da.webp",
+    "alt": "A dark chocolate block, thin shavings, a palette knife and melted chocolate on a slate board."
   },
   "source": {
     "tool": "figcraft",
@@ -32,10 +32,10 @@
     }
   },
   "publishedAt": "2026-10-30T15:26:03.221Z",
-  "updatedAt": "2026-10-30T15:26:03.221Z",
+  "updatedAt": "2026-10-31T07:08:30.452Z",
   "publication": {
     "approved": true,
     "approvedBy": "Site owner",
-    "approvedAt": "2026-10-30T15:26:03.221Z"
+    "approvedAt": "2026-10-31T07:08:30.452Z"
   }
 }

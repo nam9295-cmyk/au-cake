@@ -1,0 +1,41 @@
+{
+  "id": "draft-03",
+  "slug": "what-does-70-percent-cocoa-mean",
+  "title": "What does 70% cocoa mean? It is not a quality score",
+  "seoTitle": "What does 70% cocoa mean? | Very Good",
+  "excerpt": "Learn what cocoa percentage tells you about chocolate, why it is not a quality score, and how to compare sugar, ingredients and allergen labels.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/e631ae3ec3f41545c2c5f6b99384a18ff90996f888c772ac65b0e258e59ea02b.webp",
+    "alt": "Three chocolate bars labelled 55%, 70% and 85% arranged on a pale stone board."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 220,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 111,
+          "maxWidth": 600
+        },
+        {
+          "frame": 329,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-10-31T08:43:06.673Z",
+  "updatedAt": "2026-10-31T08:43:06.673Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-10-31T08:43:06.673Z"
+  }
+}

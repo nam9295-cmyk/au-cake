@@ -23,7 +23,7 @@ function walk(node, fn) {
   fn(node)
   for (const child of node.childNodes || []) walk(child, fn)
 }
-function textContent(node) { return node.nodeName === '#text' ? node.value : (node.childNodes || []).map(textContent).join('') }
+function textContent(node) { return node.nodeName === '#text' ? node.value : node.tagName === 'br' ? '\n' : (node.childNodes || []).map(textContent).join('') }
 const normalized = text => text.replace(/\s+/g, ' ').trim()
 
 export async function packageFile(directory, reference, baseDirectory = directory) {
