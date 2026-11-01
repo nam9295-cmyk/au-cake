@@ -1,0 +1,41 @@
+{
+  "id": "draft-04",
+  "slug": "what-makes-dubai-chocolate-crunchy",
+  "title": "What makes Dubai chocolate crunchy? Meet kataifi",
+  "seoTitle": "What makes Dubai chocolate crunchy? | Very Good",
+  "excerpt": "Discover how toasted kataifi, pistachio, tahini and the chocolate shell shape Dubai-style chocolate, and what to check on the label before buying.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/769a61d2dee5641c8bf79b9a32e23acddfe80137c4688f729f3e8872ccf6955b.webp",
+    "alt": "Hands holding a split chocolate bar with a green, shredded-pastry filling."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 196,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 99,
+          "maxWidth": 600
+        },
+        {
+          "frame": 293,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-01T07:45:34.063Z",
+  "updatedAt": "2026-11-01T07:45:34.063Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-01T07:45:34.063Z"
+  }
+}

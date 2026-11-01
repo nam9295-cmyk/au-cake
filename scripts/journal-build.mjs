@@ -72,6 +72,11 @@ function cover(entry) {
   const c = entry.cover
   return `<img src="${escape(c.src)}" srcset="${c.variants.map(v => `${escape(v.src)} ${v.width}w`).join(', ')}" sizes="(max-width: 600px) 100vw, 560px" width="${c.width}" height="${c.height}" alt="${escape(c.alt)}" loading="lazy" decoding="async">`
 }
+function publicationDate(entry, article = false) {
+  if (!entry.publishedAt) return ''
+  const date = new Date(entry.publishedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' })
+  return `<p class="journal-publication${article ? ' journal-article-publication' : ''}">${entry.locale === 'ko' ? '발행일' : 'Published'} <time datetime="${escape(entry.publishedAt)}">${escape(date)}</time></p>`
+}
 function documentHtml({ entry, title, description, body, shell, shellCss, articleCss, siteUrl, preview, isArticle }) {
   const path = isArticle ? `/journal/${entry.slug}` : '/journal'
   const canonical = `${siteUrl}${path}`
@@ -134,14 +139,14 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
   }
   try {
     await put(cssPath, css)
-    const indexBody = `<main id="journal-main" class="journal-index"><h1>Journal</h1>${entries.length ? `<div class="journal-list">${entries.map(entry => `<article class="journal-card"><a href="/journal/${entry.slug}">${cover(entry)}<h2>${escape(entry.title)}</h2><p>${escape(entry.excerpt)}</p>${entry.publishedAt ? `<time datetime="${escape(entry.publishedAt)}">${escape(new Date(entry.publishedAt).toLocaleDateString('en-AU', { day:'numeric',month:'long',year:'numeric', timeZone:'Australia/Sydney' }))}</time>` : ''}</a></article>`).join('')}</div>` : '<p class="journal-empty">Stories from verygood are on their way.</p><a href="/cakes">Explore our cakes</a>'}</main>`
+    const indexBody = `<main id="journal-main" class="journal-index"><h1>Journal</h1>${entries.length ? `<div class="journal-list">${entries.map(entry => `<article class="journal-card"><a href="/journal/${entry.slug}">${cover(entry)}<h2>${escape(entry.title)}</h2>${publicationDate(entry)}<p>${escape(entry.excerpt)}</p></a></article>`).join('')}</div>` : '<p class="journal-empty">Stories from verygood are on their way.</p><a href="/cakes">Explore our cakes</a>'}</main>`
     await page('/journal', documentHtml({ title: 'Journal | verygood chocolate', description: 'Stories about chocolate, cake and gatherings from verygood in Sydney.', body: indexBody, shell: renderChrome('en-AU'), shellCss: cssPath, siteUrl, preview, isArticle: false }))
     for (const pkg of packages) {
       const { entry } = pkg
       for (const file of pkg.files) await put(file.path, file.data)
       const articleCss = `/journal-assets/${entry.id}/article-${createHash('sha256').update(pkg.css).digest('hex').slice(0,12)}.css`
       await put(articleCss, pkg.css)
-      const body = `<nav class="journal-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/journal">Journal</a></nav><main id="journal-main">${pkg.html}</main><nav class="journal-back" aria-label="Back to Journal"><a href="/journal">← ${entry.locale === 'ko' ? '저널로 돌아가기' : 'Back to Journal'}</a></nav>`
+      const body = `<nav class="journal-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/journal">Journal</a></nav><main id="journal-main">${publicationDate(entry, true)}${pkg.html}</main><nav class="journal-back" aria-label="Back to Journal"><a href="/journal">← ${entry.locale === 'ko' ? '저널로 돌아가기' : 'Back to Journal'}</a></nav>`
       await page(`/journal/${entry.slug}`, documentHtml({ entry, title: entry.seoTitle || `${entry.title} | verygood chocolate`, description: entry.excerpt, body, shell: renderChrome(entry.locale), shellCss: cssPath, articleCss, siteUrl, preview, isArticle: true }))
     }
     const publicEntries = preview ? [] : entries

@@ -155,6 +155,8 @@ npm run journal:serve
 
 The production build emits `/journal.html`, `/journal/index.html`, `/journal/{slug}.html`, `/journal/{slug}/index.html`, catalog, RSS and sitemap. Slash aliases use the same extensionless canonical URL. Existing hard 404 behavior remains; no global SPA rewrite is added. Only published packages generate public assets and metadata. KR builds emit no Journal files.
 
+The list and article top show `Published` with the first `publishedAt` date in `Australia/Sydney`, matching the AU site's editorial calendar. The `<time datetime>`, BlogPosting `datePublished` and RSS retain the original timezone-aware timestamp. A later photo or content update changes `updatedAt`, not the first publication date. Do not replace old publication dates with the current date to suggest freshness.
+
 The existing project was checked read-only through Cloudflare: `au-cake-next`, GitHub `au-cake`, production branch `main`, `npm run build` → `dist`, `VITE_MARKET=AU` and `VITE_CUSTOMER_ACCOUNT_ENABLED=true`. Preserve all existing environment flags and Appwrite settings. Publish approved Journal changes with an ordinary fast-forward Git update; the existing Pages integration performs its production build. Check the resulting deployment commit/status and public article, cover assets, sitemap and RSS before reporting success. Build/test commands must run sequentially because existing SEO scripts write shared generated files.
 
 For recovery, use a new Git revert commit for the specific released change, or restore the known-good Pages deployment through the existing project. Do not force-push, delete worktrees or operate on order data. Preserve import reports and immutable private revisions for diagnosis.

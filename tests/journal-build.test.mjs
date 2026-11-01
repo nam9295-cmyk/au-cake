@@ -3,11 +3,41 @@ import assert from 'node:assert/strict'
 import { readFile, writeFile, mkdir, cp, readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import postcss from 'postcss'
+import { parse } from 'parse5'
 import { fixture } from './helpers/journal-fixture.mjs'
 import { prepareImport } from '../scripts/journal-import.mjs'
 import { buildJournal } from '../scripts/journal-build.mjs'
 
 const approval = { approved: true, approvedBy: 'Test fixture only', approvedAt: '2026-01-01T00:00:00Z' }
+
+test('visible dates use first publication in Sydney, matching the original timestamp in SEO and RSS', async t => {
+  const publishedAt = '2026-10-30T15:26:03.221Z', updatedAt = '2026-11-01T07:00:00Z'
+  const f = await fixture(t, { status: 'published', publishedAt, updatedAt, publication: approval })
+  const outputDirectory = join(f.root, 'output'), sourceDirectory = join(f.root, 'source')
+  await mkdir(sourceDirectory)
+  await cp(f.inputDirectory, join(sourceDirectory, 'one'), { recursive: true })
+  await buildJournal({ outputDirectory, sourceDirectory, market: 'AU', siteUrl: 'https://example.com' })
+  function times(html) {
+    const found = []
+    function walk(node) {
+      if (node.tagName === 'time') found.push(node)
+      for (const child of node.childNodes || []) walk(child)
+    }
+    walk(parse(html)); return found
+  }
+  const text = node => node.nodeName === '#text' ? node.value : (node.childNodes || []).map(text).join('')
+  const article = await readFile(join(outputDirectory, 'journal/sample-story.html'), 'utf8')
+  for (const html of [article, await readFile(join(outputDirectory, 'journal.html'), 'utf8')]) {
+    const dates = times(html)
+    assert.equal(dates.length, 1, 'readers can see the publication date on both views')
+    assert.equal(dates[0].attrs.find(a => a.name === 'datetime').value, publishedAt)
+    assert.equal(text(dates[0].parentNode).trim(), 'Published 31 October 2026')
+  }
+  assert.match(article, /"datePublished":"2026-10-30T15:26:03.221Z"/)
+  assert.match(article, /"dateModified":"2026-11-01T07:00:00Z"/)
+  assert.match(await readFile(join(outputDirectory, 'journal/feed.xml'), 'utf8'), /<pubDate>Fri, 30 Oct 2026 15:26:03 GMT<\/pubDate>/)
+  assert.equal(JSON.parse(await readFile(join(sourceDirectory, 'one/article.json'), 'utf8')).publishedAt, publishedAt)
+})
 
 test('production build emits complete article HTML, index, responsive cover, SEO, RSS and sitemap', async t => {
   const f = await fixture(t, { status: 'published', publishedAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-02T00:00:00Z', publication: approval })
