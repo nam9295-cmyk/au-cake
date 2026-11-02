@@ -1,13 +1,15 @@
 # Journal release state
 
-## Pending 2026-11-02 — approved article06
+No pending Journal releases are recorded.
 
-- The owner confirmed the supplied photos are actual photographs and instructed removing the reference-image wording, then deploying. The approved caption is `A closer look at the rice-cake layer and chocolate centre.` It is applied to the four native responsive frames under a private backup and to the regenerated public package, `journal-source/draft-06/`. All other manuscript, source URLs, photographs and layout inputs are preserved.
-- Article URL: `/journal/is-mochi-always-ice-cream`; Sydney publication date: 2 November 2026. All 52 public text layers match the approved native source. The three public WebPs derive from the hash-verified `pic-06` originals. Original article01–05 packages and timestamps remain unchanged.
-- Journal52 tests, public-package validation, AU account-enabled build, local HTTP/date/metadata/image/feed/sitemap/CTA checks and independent review passed, with no Critical/Important findings. The Git → Pages release and live verification are next. No app/importer/protected-system or hosting-flag change is included.
-- Private source, original backup, approved native/export, profile and verification are under `.journal-workspace/article-06/`. Local draft06 is now revision2; use the actual current revision for any later import.
-- All seven source pages were checked. JNTO's English article is available through the official web index, while direct HTTP from this Korean environment redirects to its Korean homepage; adding a slash does not fix that regional redirect. Original source URLs are retained. Browser visual QA remains unavailable; native renders and compiled HTML/assets were checked.
-- Production remains the five-article release below until the new deployment is verified. No other release is pending.
+## Completed 2026-11-02 — article06
+
+- Published article06 at `/journal/is-mochi-always-ice-cream`, with `Published 2 November 2026` on the list and article top. The owner confirmed the three supplied photos are actual photographs. The hero caption is `A closer look at the rice-cake layer and chocolate centre.` Internal production instructions and reference-image wording are removed.
+- The approved caption is synchronized to all four native responsive frames under a private original backup and regenerated into the public package. All 52 public text layers match the approved native manuscript. Other copy, source URLs, photographs and layout inputs are preserved. Public WebP copies match the supplied `pic-06` originals; original article01–05 packages/timestamps remain unchanged.
+- Release code commit: `22b0fb9fc2f10283749ccf22e9f5104a45fdc7d0`. Cloudflare production deployment: `5561c2b4-3ccf-4d47-94d5-56263feabd2e`, status `success`.
+- Journal52 tests, public-package validation, the AU account-enabled build and independent review passed without Critical/Important findings. Verified six public articles and dates, all nine article06 responsive photo assets, corrected caption, native text, source/product links, cover/OG, canonical/BlogPosting, feed/sitemap/catalog, existing entry routes and hard404 through live HTTP. No app/importer/protected-system or hosting-flag change is included.
+- Browser visual QA remains unavailable. Four native renders at 1440/768/390/320px, compiled HTML/assets and live HTTP responses were checked; do not describe this as completed browser visual QA. Private backups, approved native/export/profile and verification remain under `.journal-workspace/article-06/`. Local draft06 is revision2; inspect the actual revision before later imports.
+- Source URLs remain as authored. JNTO's English article is available through the official web index; direct HTTP from this Korean environment can redirect to its Korean homepage. This regional external-site behavior was not changed or described as fixed.
 
 ## Completed 2026-11-02 — article05
 
