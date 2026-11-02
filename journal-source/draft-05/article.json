@@ -1,0 +1,41 @@
+{
+  "id": "draft-05",
+  "slug": "tiramisu-cups-vs-tray",
+  "title": "Tiramisu cups or a tray: which works better for your gathering?",
+  "seoTitle": "Tiramisu cups vs tray for gatherings | Very Good",
+  "excerpt": "Compare individual tiramisu cups with a sharing tray, and plan portions, fridge space, transport and serving for your next gathering.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/5233523682cb237723c6b0615c80f2e3c01d8c04f4f60a374518ffc62201603d.webp",
+    "alt": "Three individual tiramisu cups in front of a ceramic sharing tray on a dining table."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 212,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 107,
+          "maxWidth": 600
+        },
+        {
+          "frame": 317,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-02T05:08:09.548Z",
+  "updatedAt": "2026-11-02T05:08:09.548Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-02T05:08:09.548Z"
+  }
+}
