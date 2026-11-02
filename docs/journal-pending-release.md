@@ -1,11 +1,14 @@
 # Journal release state
 
-## Pending 2026-11-02 — approved article05
+No pending Journal releases are recorded.
 
-- The owner requested publication of the completed tiramisu cups/tray FigCraft article. Approved public package: `journal-source/draft-05/`; URL: `/journal/tiramisu-cups-vs-tray`; Sydney publication date: 2 November 2026.
-- The three embedded photos exactly match `pic-05/01.png`, `02.png` and `03.png`. Native source and original photos remain unchanged. All 62 text layers match the native manuscript across four responsive frames. Only public WebP copies, HTML/CSS and metadata are included in the package.
-- Journal52 tests, the AU account-enabled build, local HTTP/metadata/date/image/feed/sitemap/CTA checks and independent review passed, with no Critical/Important findings. Existing article01–04 packages and timestamps are unchanged. No importer/app/protected-system or hosting-flag change is included. Release is approved; production deployment and live verification are next.
-- Browser visual QA remains unavailable because the browser host is unavailable. Native 1440/768/390/320px renders and generated HTML/assets were checked. Private profile, source checks and verification reports stay in `.journal-workspace/article-05/`.
+## Completed 2026-11-02 — article05
+
+- Published article05 at `/journal/tiramisu-cups-vs-tray`, showing `Published 2 November 2026` in the list and article top. The three embedded photos exactly match the supplied folder's `pic-05/01.png`, `02.png` and `03.png`; only optimized WebP copies were published. Native source, original photographs, manuscript and layout remain unchanged.
+- All 62 text layers match the native manuscript across four responsive frames. Original article01–04 packages and publication timestamps are unchanged. This release adds one static article package and changes no app/importer code, protected system or hosting flag.
+- Release code commit: `b112a1ffefbcc837548d5a13cbb92223f3fc171d`. Cloudflare production deployment: `15207b1f-38b1-4735-a4a7-8225c746bdbf`, status `success`.
+- Journal52 tests, the AU account-enabled build, fresh public-package validation and independent review passed without Critical/Important findings. Verified five public articles and dates, all nine article05 responsive photo variants, cover/OG, native text, source/product links, feed/sitemap/catalog, existing entry routes and hard404 behavior through live HTTP. Cited FSANZ temperature/allergen pages were checked against the manuscript.
+- Browser visual QA remains unavailable because the browser access host is unavailable. Native renders at 1440/768/390/320px and generated HTML/assets were checked; do not describe this as a completed live-browser visual audit. Private source/profile and verification evidence remain under `.journal-workspace/article-05/`.
 
 ## Completed 2026-11-01 — article04 and visible publication dates
 
