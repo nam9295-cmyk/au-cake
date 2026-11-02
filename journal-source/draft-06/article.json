@@ -1,0 +1,41 @@
+{
+  "id": "draft-06",
+  "slug": "is-mochi-always-ice-cream",
+  "title": "Is mochi always ice cream? A guide to chocolate-filled mochi",
+  "seoTitle": "Is mochi always ice cream? | Very Good",
+  "excerpt": "Learn about mochi, Korean chapssaltteok and mochi ice cream, and compare chocolate ganache, bean paste and frozen fillings before choosing.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/416e8021047b71ce7c475fe15fd45edb1b163450e50a2f6a4ac856ad5b34f57a.webp",
+    "alt": "A cut chocolate-filled rice cake and a whole cocoa-dusted rice cake on a ceramic plate."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 172,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 87,
+          "maxWidth": 600
+        },
+        {
+          "frame": 257,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-02T10:38:53.270Z",
+  "updatedAt": "2026-11-02T10:38:53.270Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-02T10:38:53.270Z"
+  }
+}

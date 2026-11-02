@@ -1,6 +1,13 @@
 # Journal release state
 
-No pending Journal releases are recorded.
+## Pending 2026-11-02 — approved article06
+
+- The owner confirmed the supplied photos are actual photographs and instructed removing the reference-image wording, then deploying. The approved caption is `A closer look at the rice-cake layer and chocolate centre.` It is applied to the four native responsive frames under a private backup and to the regenerated public package, `journal-source/draft-06/`. All other manuscript, source URLs, photographs and layout inputs are preserved.
+- Article URL: `/journal/is-mochi-always-ice-cream`; Sydney publication date: 2 November 2026. All 52 public text layers match the approved native source. The three public WebPs derive from the hash-verified `pic-06` originals. Original article01–05 packages and timestamps remain unchanged.
+- Journal52 tests, public-package validation, AU account-enabled build, local HTTP/date/metadata/image/feed/sitemap/CTA checks and independent review passed, with no Critical/Important findings. The Git → Pages release and live verification are next. No app/importer/protected-system or hosting-flag change is included.
+- Private source, original backup, approved native/export, profile and verification are under `.journal-workspace/article-06/`. Local draft06 is now revision2; use the actual current revision for any later import.
+- All seven source pages were checked. JNTO's English article is available through the official web index, while direct HTTP from this Korean environment redirects to its Korean homepage; adding a slash does not fix that regional redirect. Original source URLs are retained. Browser visual QA remains unavailable; native renders and compiled HTML/assets were checked.
+- Production remains the five-article release below until the new deployment is verified. No other release is pending.
 
 ## Completed 2026-11-02 — article05
 
