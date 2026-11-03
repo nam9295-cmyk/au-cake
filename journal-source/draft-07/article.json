@@ -1,0 +1,41 @@
+{
+  "id": "draft-07",
+  "slug": "how-to-transport-a-cake-in-warm-weather",
+  "title": "How to transport a cake in warm weather",
+  "seoTitle": "How to transport a cake in warm weather | Very Good",
+  "excerpt": "Plan cake transport in warm weather with cake-specific care instructions, suitable cooling, a level car position and refrigeration ready on arrival.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/3903797ee2d458e8716c1b306b6819ca13e8f5b52ee3715ea51cf08e67920f2c.webp",
+    "alt": "A boxed fruit-topped cake beside an insulated bag and ice bricks on a kitchen counter."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 198,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 100,
+          "maxWidth": 600
+        },
+        {
+          "frame": 296,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-03T09:20:51.318Z",
+  "updatedAt": "2026-11-03T09:20:51.318Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-03T09:20:51.318Z"
+  }
+}
