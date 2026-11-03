@@ -2,6 +2,15 @@
 
 No pending Journal releases are recorded.
 
+## Completed 2026-11-03 — article07
+
+- Published article07 at `/journal/how-to-transport-a-cake-in-warm-weather`, with `Published 3 November 2026` on the list and article top. The three owner-supplied `pic-07` photos replace the previous image fills in the private working design's actual desktop, tablet, mobile, compact and summary frames. Only optimized WebP copies are public; the supplied native original and original photographs remain unchanged.
+- All 63 public text layers match the original manuscript. Invisible native layer names supply the heading hierarchy and citation targets [7]–[10]; manuscript, layout and image cropping inputs are preserved. Original article01–06 packages and publication timestamps remain unchanged.
+- Release code commit: `d9c8f99fb0e9429fee5ee90dc1806185e01f66da`. Cloudflare production deployment: `49ef3563-397a-4934-b015-cbdd0ec41230`, status `success`.
+- Journal52 tests, public-package validation, the AU account-enabled build and independent review passed without Critical/Important findings. Verified all seven public articles and dates, article07's nine responsive photo assets, native text, source/product links, cover/OG, canonical/BlogPosting, feed/sitemap/catalog, existing entry routes and hard404 through live HTTP. All four authored external source URLs returned HTTP200.
+- Browser QA is available for this release: Chromium preview and live checks at 1440/768/390/320px passed, with loaded photos, no horizontal overflow, native render comparison, mobile menu, citation navigation, list return, back/forward, direct visit, refresh and no-JavaScript reading. Actual browser 200% zoom was verified with a separate private browser profile (`outerWidth` 1440, `innerWidth` 720, `devicePixelRatio` 2, no horizontal overflow), including a live viewport screenshot. Private original backup, approved working native/export/profile and verification remain under `.journal-workspace/article-07/`; local draft07 is revision2.
+- This release adds one static article package and changes no app/importer code, protected system or hosting flag.
+
 ## Completed 2026-11-02 — article06
 
 - Published article06 at `/journal/is-mochi-always-ice-cream`, with `Published 2 November 2026` on the list and article top. The owner confirmed the three supplied photos are actual photographs. The hero caption is `A closer look at the rice-cake layer and chocolate centre.` Internal production instructions and reference-image wording are removed.
