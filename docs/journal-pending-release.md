@@ -2,6 +2,14 @@
 
 No pending Journal releases are recorded.
 
+## Completed 2026-11-04 — article08
+
+- Published article08 at `/journal/brownie-cheesecake-texture-guide`, with `Published 4 November 2026` on the list and article top. The three owner-approved `pic-08` photos match the reference cheesecake visuals in `image/cake/cheesecake/`. Only optimized WebP copies are public; the supplied native original and photographs remain unchanged.
+- All 54 public text layers match the original manuscript. Native layer names supply the heading hierarchy (H1, H2, H3) and citation targets [11]–[14]; manuscript, layout, and image cropping inputs are preserved. Original article01–07 packages and publication timestamps remain unchanged.
+- Release code commit: `c963e945c79be1fe668dc75c92c97a552e411f56`.
+- Journal52 tests, public-package validation, the AU build and independent review passed without findings. Verified all eight public articles and dates, article08's responsive photo assets, native text, source/product links, cover/OG, canonical/BlogPosting, feed/sitemap/catalog, existing entry routes and hard404 through live HTTP.
+- This release adds one static article package and changes no app/importer code, protected system or hosting flag.
+
 ## Completed 2026-11-03 — article07
 
 - Published article07 at `/journal/how-to-transport-a-cake-in-warm-weather`, with `Published 3 November 2026` on the list and article top. The three owner-supplied `pic-07` photos replace the previous image fills in the private working design's actual desktop, tablet, mobile, compact and summary frames. Only optimized WebP copies are public; the supplied native original and original photographs remain unchanged.
