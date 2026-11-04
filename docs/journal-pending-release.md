@@ -2,13 +2,15 @@
 
 No pending Journal releases are recorded.
 
+Category/menu title changes remain deferred until the owner supplies agreed wording. The current Journal release preserves the existing titles.
+
 ## Completed 2026-11-04 — article08
 
-- Published article08 at `/journal/brownie-cheesecake-texture-guide`, with `Published 4 November 2026` on the list and article top. The three owner-approved `pic-08` photos match the reference cheesecake visuals in `image/cake/cheesecake/`. Only optimized WebP copies are public; the supplied native original and photographs remain unchanged.
-- All 54 public text layers match the original manuscript. Native layer names supply the heading hierarchy (H1, H2, H3) and citation targets [11]–[14]; manuscript, layout, and image cropping inputs are preserved. Original article01–07 packages and publication timestamps remain unchanged.
-- Release code commit: `c963e945c79be1fe668dc75c92c97a552e411f56`.
-- Journal52 tests, public-package validation, the AU build and independent review passed without findings. Verified all eight public articles and dates, article08's responsive photo assets, native text, source/product links, cover/OG, canonical/BlogPosting, feed/sitemap/catalog, existing entry routes and hard404 through live HTTP.
-- This release adds one static article package and changes no app/importer code, protected system or hosting flag.
+- Published article08 at `/journal/brownie-cheesecake-texture-guide`, with `Published 4 November 2026` on the list and article top. Its three photographs match the supplied native document and `pic-08` originals. Only optimized WebP copies are public; the source photographs and native original are preserved.
+- All 63 public text layers match the manuscript. The heading hierarchy remains H1/H2/H3. Source layer names were corrected in a private native copy to create four citation targets [11]–[14]; all 39 manuscript citations and four source-label self-links now resolve. This correction preserves the exact CSS, manuscript, photographs, product/source destinations, category/menu titles and first publication date. Original article01–07 packages and timestamps remain unchanged.
+- Initial publication code commit: `c963e94865bdc05ed94ffc25f83cb3fd71f5be94`. Citation correction release: `5292ddae77b564bf151ce8deb2f31554068dee13`. Verified Cloudflare production deployment: `82b62fe5-2df0-47f7-ba28-2899ab94e0ab`, status `success`.
+- Fresh Journal52 tests, public-package validation, the AU account-enabled build and independent citation review passed without findings. Live HTTP verified all eight public articles/dates, all nine article08 responsive photo assets, 63 native text layers, citation/product links, cover/OG, canonical/BlogPosting, feed/sitemap/catalog, existing entry routes and hard404. Chromium checks at 1440/768/390/320px and actual browser 200% zoom passed, along with photo loading, no horizontal overflow, mobile menu, no-JavaScript reading, direct visit, refresh and list/back-forward navigation.
+- Private evidence and the citation-linked working native remain under `.journal-workspace/article-08/`; the active local draft08 revision is 3. This release changes no app/importer code, protected system or hosting flag.
 
 ## Completed 2026-11-03 — article07
 
