@@ -4,6 +4,15 @@ No pending Journal releases are recorded.
 
 Category/menu title changes remain deferred until the owner supplies agreed wording. The current Journal release preserves the existing titles.
 
+## Completed 2026-11-04 — Journal measurement and discovery
+
+- Static production Journal pages now reuse the existing AU GA4 property (`G-B7S2L88TQF`) and `vg-analytics-consent` choice through a small deferred client. Tracking starts only after permission; refused consent, storage failures, private previews and alternate hostnames stay untracked. The React app and protected systems are not initialized by this client.
+- Journal sitemap `lastmod` values now use the stored publication/update metadata. Existing article packages, first-publication dates, photographs and deferred category/menu wording remain unchanged.
+- Release code commit: `5da09c2f6e95ac4c42642baa0e5fc2906b7edb96`. Verified Cloudflare production deployment: `66ad7408-b7d1-41d9-bf3b-857e1c929f62`, status `success`; existing AU and customer-account hosting flags preserved.
+- Full `npm test`, 59 Journal tests, lint and sequential KR/AU account-enabled builds passed. Independent review found no Critical/Important issues. Live HTTP checked all eight articles and dates, article08 assets/text/citations, the exact deployed analytics asset, sitemap/feed/catalog, existing entry routes and hard404. Native Chrome incognito verified the public consent banner and dismissal; GA4 Realtime pages then showed `/journal/brownie-cheesecake-texture-guide` with one active user and one view. The temporary test window was closed; user browser privacy settings were not changed.
+- Search Console sitemap re-submission succeeded on 4 November; last read was 4 November and discovered URLs increased from 26 to 35. The Journal index and article03–05 were already indexed. All eight article URLs were inspected; article01–02 and 06–08 were discovered but not yet indexed. Indexing/re-crawl requests for the Journal index and all eight articles (nine URLs) were individually accepted into the priority crawl queue. An accepted request only places a URL in the crawl queue and does not prove indexing.
+- Private setup, consent-runtime tests, deployment/HTTP evidence and Google verification records remain under `.journal-workspace/analytics-setup/`. GA4 known-bot exclusion means crawler activity must be assessed separately through Search Console or server logs.
+
 ## Completed 2026-11-04 — article08
 
 - Published article08 at `/journal/brownie-cheesecake-texture-guide`, with `Published 4 November 2026` on the list and article top. Its three photographs match the supplied native document and `pic-08` originals. Only optimized WebP copies are public; the source photographs and native original are preserved.
