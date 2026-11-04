@@ -1,0 +1,41 @@
+{
+  "id": "draft-08",
+  "slug": "brownie-cheesecake-texture-guide",
+  "title": "Brownie cheesecake: what makes the two textures work together?",
+  "seoTitle": "Brownie cheesecake texture guide | Very Good",
+  "excerpt": "Compare fudgy, chewy and cakey brownie textures with creamy cheesecake, then use the slice photo and maker’s description to choose the balance you enjoy.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/3068c150fa0732d2d309e33328ad1940b6a189519c6692cfbbae46bbc1e7673d.webp",
+    "alt": "A brownie cheesecake slice with a dark base and golden top on a plate, with a forkful in front."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 200,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 101,
+          "maxWidth": 600
+        },
+        {
+          "frame": 299,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-04T06:07:18.612Z",
+  "updatedAt": "2026-11-04T06:07:18.612Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-04T06:07:18.612Z"
+  }
+}
