@@ -46,3 +46,11 @@ body { margin: 0; overflow-x: visible; background: #fff; }
   .journal-header .au-v02-wordmark span { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .journal-article *, .journal-article *::before, .journal-article *::after { animation: none !important; transition: none !important; } }
+.journal-analytics-consent[hidden] { display: none; }
+.journal-analytics-consent { position: fixed; right: 24px; bottom: 24px; left: 24px; z-index: 2000; display: grid; gap: 16px; max-width: 640px; margin-left: auto; padding: 18px; border: 1px solid var(--forest); background: #fff; color: var(--forest); }
+.journal-analytics-consent strong { font-size: 16px; }
+.journal-analytics-consent p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.journal-analytics-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.journal-analytics-actions button { flex: 1 1 150px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--forest); background: #fff; color: var(--forest); font: inherit; cursor: pointer; }
+.journal-analytics-actions [data-analytics-choice="granted"] { background: var(--forest); color: #fff; }
+@media (max-width: 600px) { .journal-analytics-consent { right: 16px; bottom: 16px; left: 16px; } }

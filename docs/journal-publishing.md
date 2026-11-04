@@ -113,6 +113,10 @@ npm run journal:preview
 
 Check 320, 390, 768 and 1440px, 200% zoom, no-JavaScript reading, single h1, alt text, source/product links, images, menu, direct visit, refresh, list return and back/forward navigation. Mobile Journal navigation uses a native `details` control, so it works without hydration. Article language is explicit; no translation toggle is shown for a single-language article. The static header links to the existing cart/account flows and does not initialize customer state or display a fabricated cart count.
 
+Production Journal pages include a small deferred analytics client, without starting the React app. It reuses the site's `VITE_GA_MEASUREMENT_ID` configuration, existing Google Analytics fallback property and `vg-analytics-consent` choice. New readers get the existing Essential only / Allow analytics choices. Google tags load only after permission; a stored refusal, unavailable consent storage, private preview or alternate hostname never enables tracking. Page views use the canonical Journal path once per document, without copying query strings or citation fragments into the event. No author-imported JavaScript is allowed by this addition.
+
+Verify consent and actual collection as well as HTML/SEO: public output has its JSON-LD plus one local deferred analytics script, while private previews have no analytics client or consent prompt. GA4 excludes known bots and cannot establish crawler activity; use Search Console and server-side logs for that. Journal sitemap `lastmod` values come from the stored article `updatedAt`/`publishedAt` metadata, not the build date. A Search Console indexing request is not proof that Google has indexed a URL.
+
 ## Re-import and recovery
 
 Re-export from the same design, preserving `id` and `slug`:

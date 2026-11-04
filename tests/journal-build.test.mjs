@@ -80,7 +80,7 @@ test('default production ignores private workspace and draft assets; unapproved 
   await cp(f.inputDirectory, join(sourceDirectory, 'draft'), { recursive: true })
   await buildJournal({ outputDirectory, sourceDirectory, workspace: f.workspace, market: 'AU', siteUrl: 'https://example.com' })
   assert.doesNotMatch(await readFile(join(outputDirectory, 'journal.html'), 'utf8'), /Sample story/)
-  assert.ok((await readdir(join(outputDirectory, 'journal-assets'))).every(name => /^shell-.*\.css$/.test(name)))
+  assert.ok((await readdir(join(outputDirectory, 'journal-assets'))).every(name => /^(?:shell-[a-f0-9]{12}\.css|analytics-[a-f0-9]{12}\.js)$/.test(name)))
   const before = await readFile(join(outputDirectory, 'journal.html'))
   await writeFile(join(sourceDirectory, 'draft/article.json'), JSON.stringify({ ...f.entry, status: 'published', publishedAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' }))
   await assert.rejects(buildJournal({ outputDirectory, sourceDirectory, market: 'AU', siteUrl: 'https://example.com' }), /approv/i)

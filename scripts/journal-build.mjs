@@ -5,12 +5,30 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createHash } from 'node:crypto'
 import { rolldown } from 'rolldown'
 import postcss from 'postcss'
+import { loadEnv } from 'vite'
 import { inspectPackage, readPrepared, packageFile } from './journal-import.mjs'
 import content from '../src/content/au-public-pages.json' with { type: 'json' }
 
 const project = fileURLToPath(new URL('../', import.meta.url))
 const escape = text => String(text ?? '').replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll("'",'&#39;')
 let chromePromise
+const analyticsPromises = new Map()
+async function analyticsAsset() {
+  const measurementId = loadEnv('production', project, 'VITE_GA_').VITE_GA_MEASUREMENT_ID || ''
+  if (!analyticsPromises.has(measurementId)) analyticsPromises.set(measurementId, (async () => {
+    const bundle = await rolldown({
+      input: join(project, 'src/journal/analytics.ts'),
+      platform: 'browser',
+      transform: { define: { 'import.meta.env.VITE_GA_MEASUREMENT_ID': JSON.stringify(measurementId) } },
+    })
+    try {
+      const { output } = await bundle.generate({ format: 'iife', codeSplitting: false })
+      if (output.length !== 1 || output[0].type !== 'chunk') throw new Error('Unexpected Journal analytics bundle')
+      return output[0].code
+    } finally { await bundle.close() }
+  })())
+  return analyticsPromises.get(measurementId)
+}
 async function chromeRenderer() {
   if (!chromePromise) chromePromise = (async () => {
     const directory = await mkdtemp(join(tmpdir(), 'au-journal-shell-'))
@@ -77,7 +95,11 @@ function publicationDate(entry, article = false) {
   const date = new Date(entry.publishedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Sydney' })
   return `<p class="journal-publication${article ? ' journal-article-publication' : ''}">${entry.locale === 'ko' ? '발행일' : 'Published'} <time datetime="${escape(entry.publishedAt)}">${escape(date)}</time></p>`
 }
-function documentHtml({ entry, title, description, body, shell, shellCss, articleCss, siteUrl, preview, isArticle }) {
+function analyticsConsent(locale) {
+  const ko = locale === 'ko'
+  return `<aside hidden class="journal-analytics-consent" data-journal-analytics-consent aria-label="${ko ? '분석 쿠키 설정' : 'Analytics preferences'}"><div><strong>${ko ? '사이트 이용 분석' : 'Help us improve the website'}</strong><p>${ko ? '동의하면 Google Analytics로 페이지 방문과 예약 완료 여부만 측정합니다. 이름, 전화번호, 이메일은 전송하지 않습니다.' : 'With your permission, Google Analytics measures page visits and booking completions. We do not send names, phone numbers, or email addresses.'}</p></div><div class="journal-analytics-actions"><button type="button" data-analytics-choice="denied">${ko ? '필수 기능만' : 'Essential only'}</button><button type="button" data-analytics-choice="granted">${ko ? '분석 허용' : 'Allow analytics'}</button></div></aside>`
+}
+function documentHtml({ entry, title, description, body, shell, shellCss, articleCss, analyticsPath, siteUrl, preview, isArticle }) {
   const path = isArticle ? `/journal/${entry.slug}` : '/journal'
   const canonical = `${siteUrl}${path}`
   const image = entry?.cover ? `${siteUrl}${entry.cover.src}` : null
@@ -97,11 +119,12 @@ ${image ? `<meta property="og:image" content="${escape(image)}"><meta property="
 <link rel="alternate" type="application/rss+xml" title="verygood Journal" href="${escape(siteUrl)}/journal/feed.xml">
 <link rel="stylesheet" href="${shellCss}">${articleCss ? `<link rel="stylesheet" href="${articleCss}">` : ''}
 <script type="application/ld+json">${JSON.stringify(schema).replaceAll('<','\\u003c')}</script>
+${analyticsPath ? `<script defer src="${analyticsPath}"></script>` : ''}
 </head><body class="journal-site"><div class="app-shell au-redesign-shell">
 ${shell.header}
 ${preview ? `<aside class="journal-preview-notice" aria-label="Preview status"><strong>${entry?.source.tool === 'content-review' ? 'Content review' : 'Publication preview'}</strong><p>Local preview. ${entry?.source.tool === 'content-review' ? 'Design, photographs and publication require review. Pencil export compatibility has not been verified.' : 'Source design and web publication are checked separately.'}</p></aside>` : ''}
 ${body}
-${shell.footer}</div></body></html>`
+${shell.footer}${analyticsPath ? analyticsConsent(entry?.locale) : ''}</div></body></html>`
 }
 
 /** Production never reads private workspace. Validate everything before writing output. */
@@ -129,6 +152,8 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
   const renderChrome = await chromeRenderer()
   const css = await shellStyles()
   const cssPath = `/journal-assets/shell-${createHash('sha256').update(css).digest('hex').slice(0,12)}.css`
+  const analytics = preview ? null : await analyticsAsset()
+  const analyticsPath = analytics ? `/journal-assets/analytics-${createHash('sha256').update(analytics).digest('hex').slice(0,12)}.js` : null
   await mkdir(dirname(resolve(outputDirectory)), { recursive: true })
   const stage = await mkdtemp(join(dirname(resolve(outputDirectory)), '.au-journal-build-'))
   let retainStage = false
@@ -139,15 +164,16 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
   }
   try {
     await put(cssPath, css)
+    if (analyticsPath) await put(analyticsPath, analytics)
     const indexBody = `<main id="journal-main" class="journal-index"><h1>Journal</h1>${entries.length ? `<div class="journal-list">${entries.map(entry => `<article class="journal-card"><a href="/journal/${entry.slug}">${cover(entry)}<h2>${escape(entry.title)}</h2>${publicationDate(entry)}<p>${escape(entry.excerpt)}</p></a></article>`).join('')}</div>` : '<p class="journal-empty">Stories from verygood are on their way.</p><a href="/cakes">Explore our cakes</a>'}</main>`
-    await page('/journal', documentHtml({ title: 'Journal | verygood chocolate', description: 'Stories about chocolate, cake and gatherings from verygood in Sydney.', body: indexBody, shell: renderChrome('en-AU'), shellCss: cssPath, siteUrl, preview, isArticle: false }))
+    await page('/journal', documentHtml({ title: 'Journal | verygood chocolate', description: 'Stories about chocolate, cake and gatherings from verygood in Sydney.', body: indexBody, shell: renderChrome('en-AU'), shellCss: cssPath, analyticsPath, siteUrl, preview, isArticle: false }))
     for (const pkg of packages) {
       const { entry } = pkg
       for (const file of pkg.files) await put(file.path, file.data)
       const articleCss = `/journal-assets/${entry.id}/article-${createHash('sha256').update(pkg.css).digest('hex').slice(0,12)}.css`
       await put(articleCss, pkg.css)
       const body = `<nav class="journal-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/journal">Journal</a></nav><main id="journal-main">${publicationDate(entry, true)}${pkg.html}</main><nav class="journal-back" aria-label="Back to Journal"><a href="/journal">← ${entry.locale === 'ko' ? '저널로 돌아가기' : 'Back to Journal'}</a></nav>`
-      await page(`/journal/${entry.slug}`, documentHtml({ entry, title: entry.seoTitle || `${entry.title} | verygood chocolate`, description: entry.excerpt, body, shell: renderChrome(entry.locale), shellCss: cssPath, articleCss, siteUrl, preview, isArticle: true }))
+      await page(`/journal/${entry.slug}`, documentHtml({ entry, title: entry.seoTitle || `${entry.title} | verygood chocolate`, description: entry.excerpt, body, shell: renderChrome(entry.locale), shellCss: cssPath, articleCss, analyticsPath, siteUrl, preview, isArticle: true }))
     }
     const publicEntries = preview ? [] : entries
     await put('/journal/catalog.json', JSON.stringify(publicEntries.map(publicEntry), null, 2))
@@ -155,7 +181,9 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
     let sitemap
     try { sitemap = await readFile(join(outputDirectory, 'sitemap.xml'), 'utf8') } catch (error) { if (error.code !== 'ENOENT') throw error; sitemap = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>' }
     sitemap = sitemap.replace(/\s*<url>\s*<loc>[^<]*\/journal(?:\/[^<]*)?<\/loc>[\s\S]*?<\/url>/g, '')
-    await put('/sitemap.xml', sitemap.replace('</urlset>', `${preview ? '' : [`${siteUrl}/journal`, ...publicEntries.map(e => `${siteUrl}/journal/${e.slug}`)].map(url => `<url><loc>${escape(url)}</loc></url>`).join('')}</urlset>`))
+    const indexModified = publicEntries.reduce((latest, entry) => Date.parse(entry.updatedAt || entry.publishedAt) > (Date.parse(latest) || 0) ? entry.updatedAt || entry.publishedAt : latest, '')
+    const journalUrls = [{ url: `${siteUrl}/journal`, modified: indexModified }, ...publicEntries.map(entry => ({ url: `${siteUrl}/journal/${entry.slug}`, modified: entry.updatedAt || entry.publishedAt }))]
+    await put('/sitemap.xml', sitemap.replace('</urlset>', `${preview ? '' : journalUrls.map(({url,modified}) => `<url><loc>${escape(url)}</loc>${modified ? `<lastmod>${escape(modified)}</lastmod>` : ''}</url>`).join('')}</urlset>`))
     await commitOutput(stage, outputDirectory)
     return { entries: entries.map(publicEntry), preview }
   } catch (error) { retainStage = Boolean(error.recoveryPath); throw error }
