@@ -4,6 +4,14 @@ No pending Journal releases are recorded.
 
 Category/menu title changes remain deferred until the owner supplies agreed wording. The current Journal release preserves the existing titles.
 
+## Completed 2026-11-05 — article09
+
+- Published article09 at `/journal/coffee-or-dessert-portions-how-much-cake`, showing `Published 5 November 2026` on the list and article top. All 65 manuscript text layers match the supplied native document across its actual desktop/tablet/mobile/compact frames (2/204/103/305). The three embedded photographs are preserved as optimized public WebP copies; original native/source files remain private and unchanged.
+- Only invisible semantic layer names were adjusted in a private working copy: heading hierarchy and four citation targets [12], [15]–[17]. All 30 citation/self-links and the authored cake CTA resolve. Original article01–08 packages/timestamps, category/menu titles and app/protected systems remain unchanged.
+- Release code commit: `14827d1ff32e79b96b887fb7a3eb881f842f433d`. Verified Cloudflare production deployment: `2b445d7c-e1df-4dbc-a2e6-ed6d5638f88b`, status `success`; existing hosting flags preserved.
+- Journal59 tests, public-package checks, the AU account-enabled build and independent review passed without Critical/Important findings. Live HTTP verified all nine articles/dates, all nine article09 photo variants, native text, canonical/OG/BlogPosting, citations, product link, deferred analytics asset, sitemap/RSS/catalog, existing entry routes and hard404. Sitemap discovery and existing consented GA4 measurement apply automatically; no manual Search Console submission was performed for this release.
+- Native renders at 1440/768/390/320px and generated responsive CSS were checked. Local native Chrome verified the top of the 390px and320px article; this is a partial browser check. Browser host unavailability and concurrent native Chrome use prevented completion of a full responsive/navigation/no-JavaScript/actual200% zoom audit; do not describe those checks as passed. The agent's temporary incognito window and local server were closed. Private evidence stays under `.journal-workspace/article-09/`; active local draft09 revision is2. The explicit owner publication request authorizes this release; no deployment hold remains.
+
 ## Completed 2026-11-04 — Journal measurement and discovery
 
 - Static production Journal pages now reuse the existing AU GA4 property (`G-B7S2L88TQF`) and `vg-analytics-consent` choice through a small deferred client. Tracking starts only after permission; refused consent, storage failures, private previews and alternate hostnames stay untracked. The React app and protected systems are not initialized by this client.
