@@ -1,0 +1,41 @@
+{
+  "id": "draft-09",
+  "slug": "coffee-or-dessert-portions-how-much-cake",
+  "title": "Coffee portions or dessert portions: how much cake do you need?",
+  "seoTitle": "Coffee or dessert portions: how much cake? | Very Good",
+  "excerpt": "Why a high-density chocolate sheet serves very differently from a light genoise sponge—and how to plan slices across 6-inch, 8-inch and 10-inch cakes.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/074ea37fb948046d4e7bf37df34cc7455f4e9c2cf78fd9579500cfd78965c2b7.webp",
+    "alt": "A light sponge cake slice beside a dense chocolate cake slice with ganache layers."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 204,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 103,
+          "maxWidth": 600
+        },
+        {
+          "frame": 305,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-05T05:57:16.707Z",
+  "updatedAt": "2026-11-05T05:57:16.707Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-05T05:57:16.707Z"
+  }
+}
