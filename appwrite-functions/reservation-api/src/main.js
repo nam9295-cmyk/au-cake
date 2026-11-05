@@ -1,4 +1,5 @@
 import { RENEWAL_PICKUP_POLICY_VERSION } from './au-renewal-pickup-policy.js'
+import { assertNotManualOrder } from './manual-order.js'
 import { RENEWAL_CONTRACT, isRenewalContract, MOCHI_FLAVOURS } from './au-renewal.js'
 import { canonicalRenewalRequest, buildRenewalOrderData } from './au-renewal-storage.js'
 import { AppwriteException, Client, Databases, ID, Query, Storage, Users } from 'node-appwrite'
@@ -335,6 +336,8 @@ export async function createCake(databases, input, {
   renewalPolicy = {},
   verifiedCustomerUserId,
 } = {}) {
+  assertNotManualOrder(input)
+  if (input && Object.hasOwn(input, 'orderLinesJson')) throw new ReservationApiError('MANUAL_ORDER_ADMIN_ONLY', 403)
   const documentId = documentIdForInput(input)
   const customerPhone = normalizeAustralianMobile(input?.customerPhone)
   if (!/^04\d{8}$/.test(customerPhone)) throw new ReservationApiError('INVALID_PHONE')

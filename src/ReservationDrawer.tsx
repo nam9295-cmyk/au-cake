@@ -68,6 +68,7 @@ export function ReservationDrawer({
   const [status, setStatus] = useState(reservation.status)
   const [paymentStatus, setPaymentStatus] = useState(reservation.paymentStatus)
   const [memo, setMemo] = useState(reservation.adminMemo)
+  const isManualOrder = Boolean(reservation.manualOrder)
   const hasOneTimeCoupon = Boolean(reservation.reviewCouponId)
   const isVersionedOrder = Array.isArray(reservation.orderLines)
   const isLegacyCupcake = reservation.productId === 'cupcake-dozen' && reservation.cupcakeFinish === undefined
@@ -99,7 +100,7 @@ export function ReservationDrawer({
     adminMemo: memo,
   })
   const draftReservation: Reservation = { ...reservation, ...draftUpdate }
-  const selectedProduct = getProductById(draftUpdate.productId)
+  const selectedProduct = getProductById(draftReservation.productId)
   const isRenewalOrder = 'contractVersion' in reservation && isRenewalContract(reservation.contractVersion)
   const timeOptions = isRenewalOrder ? renewalServiceSlots(pickupDate) : timeOptionsForDate(pickupDate, settings)
   const displayedTimeOptions = timeOptions.includes(pickupTime) ? timeOptions : [pickupTime, ...timeOptions].filter(Boolean)
@@ -186,13 +187,13 @@ export function ReservationDrawer({
           <h3>예약 내용 수정</h3>
           {(hasOneTimeCoupon || isVersionedOrder) && (
             <p className="notice-line" role="status">
-              {isVersionedOrder
+              {isManualOrder ? '관리자 수동 예약 · 고정 총액. 픽업·상태·입금·메모만 변경하세요. 자동 메시지와 리뷰 보상은 사용하지 않습니다.' : isVersionedOrder
                 ? '서버 산출 주문은 제품·옵션·수량을 수정할 수 없습니다. 픽업·상태·입금·메모만 변경하세요.'
                 : '일회용 쿠폰 예약은 서버 재가격 계산 기능이 준비될 때까지 제품·옵션·수량·카카오·금액을 수정할 수 없습니다.'}
             </p>
           )}
           <div className="admin-edit-grid">
-            <fieldset disabled={hasOneTimeCoupon || isVersionedOrder} className="admin-repricing-fields">
+            {!isManualOrder && <fieldset disabled={hasOneTimeCoupon || isVersionedOrder} className="admin-repricing-fields">
             <label>
               제품
               <select value={productId} onChange={(event) => setProductId(event.target.value as ProductId)}>
@@ -219,7 +220,7 @@ export function ReservationDrawer({
                 </select>
               </label>
             )}
-            {usesReservationChocolateType(draftUpdate.productId, draftUpdate.poundAddon) && (
+            {usesReservationChocolateType(draftReservation.productId, draftUpdate.poundAddon) && (
               <label>
                 초콜릿
                 <select value={chocolateType} onChange={(event) => setChocolateType(event.target.value as ChocolateType)}>
@@ -235,19 +236,19 @@ export function ReservationDrawer({
                 </select>
               </label>
             )}
-            {isFreshLemonCupcakeProduct(draftUpdate.productId) && (
+            {isFreshLemonCupcakeProduct(draftReservation.productId) && (
               <label>
                 다크 커버춰 초콜릿 개수
                 <input
                   type="number"
                   min="0"
-                  max={getFreshLemonCupcakePackSize(draftUpdate.productId) || 0}
+                  max={getFreshLemonCupcakePackSize(draftReservation.productId) || 0}
                   value={draftUpdate.chocolateIcingCount}
                   onChange={(event) => setChocolateIcingCount(Number(event.target.value || 0))}
                 />
               </label>
             )}
-            {isCupcakeProduct(draftUpdate.productId) && !isLegacyCupcake && (
+            {isCupcakeProduct(draftReservation.productId) && !isLegacyCupcake && (
               <label>
                 컵케이크 마감
                 <select value={cupcakeFinish} onChange={(event) => setCupcakeFinish(event.target.value as CupcakeFinish)}>
@@ -255,7 +256,7 @@ export function ReservationDrawer({
                 </select>
               </label>
             )}
-            {draftUpdate.productId === 'cupcake-dozen' && isLegacyCupcake && (
+            {draftReservation.productId === 'cupcake-dozen' && isLegacyCupcake && (
               <>
                 <label>
                   바닐라 크림 개수 (+AUD 0.50)
@@ -267,13 +268,13 @@ export function ReservationDrawer({
                 </label>
               </>
             )}
-            {!isFreshLemonCupcakeProduct(draftUpdate.productId) && (
+            {!isFreshLemonCupcakeProduct(draftReservation.productId) && (
               <label>
                 수량
                 <input type="number" min="1" max={MAX_RESERVATION_QUANTITY} value={quantity} onChange={(event) => setQuantity(Number(event.target.value || 1))} />
               </label>
             )}
-            </fieldset>
+            </fieldset>}
             <label>
               픽업 날짜
               {isRenewalOrder && <AuPickupNotice language="ko" driver />}
@@ -309,26 +310,26 @@ export function ReservationDrawer({
           <textarea value={memo} onChange={(event) => setMemo(event.target.value)} />
         </label>
 
-        <ReviewInviteButton key={`cake-review-invite-${reservation.id}`} sourceType="cake" sourceReservationId={reservation.id} status={reservation.status} />
-        <BookingConfirmationEmailButton
+        {!isManualOrder && <ReviewInviteButton key={`cake-review-invite-${reservation.id}`} sourceType="cake" sourceReservationId={reservation.id} status={reservation.status} />}
+        {!isManualOrder && <BookingConfirmationEmailButton
           key={`cake-confirmation-${reservation.id}`}
           sourceType="cake"
           reservationId={reservation.id}
           status={reservation.status}
           paymentStatus={reservation.paymentStatus}
           recipientEmail={reservation.customerEmail}
-        />
+        />}
         <div className="button-row">
-          <button className="secondary-button" type="button" onClick={() => onCopy(draftReservation)}>
+          {!isManualOrder && <button className="secondary-button" type="button" onClick={() => onCopy(draftReservation)}>
             <Clipboard size={16} /> 확정 문자 복사
-          </button>
+          </button>}
           <button className="primary-button" type="button" onClick={saveAll}>
             예약 수정 저장
           </button>
         </div>
-        <div className="sms-preview">
+        {!isManualOrder && <div className="sms-preview">
           <pre>{buildSmsMessage(draftReservation, settings)}</pre>
-        </div>
+        </div>}
       </aside>
     </div>
   )

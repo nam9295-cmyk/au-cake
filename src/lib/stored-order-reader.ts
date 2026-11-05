@@ -1,3 +1,4 @@
+import { isManualOrderDocument, manualReservationProjection, assertNotManualOrder } from '../../appwrite-functions/reservation-api/src/manual-order.js'
 import { isRenewalDocument, renewalReservationProjection, parseRenewalProjection } from '../../appwrite-functions/reservation-api/src/au-renewal-reader.js'
 // Browser compatibility projection. No Appwrite writes or new-order submission.
 import { isStoredCakeOrderProductId, getStoredChocolateProduct, isStoredProductCouponEligible } from './stored-order-policy'
@@ -299,6 +300,7 @@ function validateOrderPricing(
 }
 
 export function toPublicReservation(reservation: PublicReservation): PublicReservation {
+  assertNotManualOrder(reservation)
   if ('contractVersion' in reservation) return parseRenewalProjection(reservation) as unknown as PublicReservation
   const payload = reservation as PublicReservationPayload
   const product = getProductById(reservation.productId)
@@ -676,6 +678,7 @@ export function normalizeLocalStoredReservation(reservation: Reservation): Reser
 }
 
 export function toReservation(document: AppwriteReservationDocument): Reservation {
+  if (isManualOrderDocument(document)) return manualReservationProjection(document) as unknown as Reservation
   if (isRenewalDocument(document)) return renewalReservationProjection(document, { privateFields: true }) as unknown as Reservation
   const reservation: Reservation = {
     id: document.$id,

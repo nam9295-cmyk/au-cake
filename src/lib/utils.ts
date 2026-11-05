@@ -1,3 +1,4 @@
+import { manualOrderSummary, isManualOrderDocument } from '../../appwrite-functions/reservation-api/src/manual-order.js'
 import {
   CUPCAKE_PACK_SIZE,
   formatCacaoLabel,
@@ -324,6 +325,7 @@ function formatAuCreamCakeDetails(reservation: Reservation) {
 }
 
 export function buildSmsMessage(reservation: Reservation, settings: StoreSettings = marketConfig.defaultSettings) {
+  if (isManualOrderDocument(reservation)) throw new Error('MANUAL_ORDER_MESSAGES_DISABLED')
   const product = getProductById(reservation.productId)
   const labels = marketConfig.smsLabels
   const orderLines = getReservationOrderLines(reservation)
@@ -393,11 +395,11 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.customerName,
     reservation.customerPhone,
     reservation.customerEmail || '',
-    (marketConfig.market === 'AU' && getChocolateProduct(reservation.productId)?.name) || getProductById(reservation.productId).name,
-    marketConfig.market === 'AU' && getChocolateProduct(reservation.productId) ? '-' : (getProductById(reservation.productId).usesSizeOptions || isCheesecakeProduct(reservation.productId)) ? formatStoredCakeSizeLabel(reservation.productId, reservation.cakeSize) : '-',
-    marketConfig.market === 'AU' && getChocolateProduct(reservation.productId) ? '-' : getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
-    marketConfig.market === 'AU' && getChocolateProduct(reservation.productId) ? '-' : usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
-    marketConfig.market === 'AU' && getChocolateProduct(reservation.productId) ? '-' : getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',
+    reservation.manualOrder ? 'Manual booking' : (marketConfig.market === 'AU' && getChocolateProduct(reservation.productId)?.name) || getProductById(reservation.productId).name,
+    reservation.manualOrder || (marketConfig.market === 'AU' && getChocolateProduct(reservation.productId)) ? '-' : (getProductById(reservation.productId).usesSizeOptions || isCheesecakeProduct(reservation.productId)) ? formatStoredCakeSizeLabel(reservation.productId, reservation.cakeSize) : '-',
+    reservation.manualOrder || (marketConfig.market === 'AU' && getChocolateProduct(reservation.productId)) ? '-' : getProductById(reservation.productId).usesCacaoOptions ? formatCacaoLabel(reservation.cacaoPercent) : '-',
+    reservation.manualOrder || (marketConfig.market === 'AU' && getChocolateProduct(reservation.productId)) ? '-' : usesReservationChocolateType(getProductById(reservation.productId).id, reservation.poundAddon) ? formatChocolateTypeLabel(reservation.chocolateType) : '-',
+    reservation.manualOrder || (marketConfig.market === 'AU' && getChocolateProduct(reservation.productId)) ? '-' : getProductById(reservation.productId).usesPoundAddonOptions ? formatPoundAddonLabel(reservation.poundAddon) : '-',
     isFreshLemonCupcakeProduct(reservation.productId)
       ? `Fresh lemon zest icing ${getLemonIcingCount(reservation.productId, reservation.chocolateIcingCount)} / Dark couverture chocolate ${normalizeChocolateIcingCount(reservation.productId, reservation.chocolateIcingCount)}`
       : isCupcakeProduct(reservation.productId)
@@ -413,7 +415,7 @@ export function reservationsToCsv(reservations: Reservation[]) {
     reservation.adminMemo,
     String(getReservationLineCount(reservation)),
     String(getReservationItemCount(reservation)),
-    getReservationOrderLines(reservation).map((line, index, lines) => `${'policyVersion' in line ? `${index + 1}. ` : ''}${formatOrderLineSummary(line, lines)}`).join(' | '),
+    reservation.manualOrder ? manualOrderSummary(reservation.manualOrder) : getReservationOrderLines(reservation).map((line, index, lines) => `${'policyVersion' in line ? `${index + 1}. ` : ''}${formatOrderLineSummary(line, lines)}`).join(' | '),
   ])
   return [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\n')
 }

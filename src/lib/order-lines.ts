@@ -1,3 +1,4 @@
+import { manualLineSummary } from '../../appwrite-functions/reservation-api/src/manual-order.js'
 import { renewalLineSummary, isRenewalContract, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import {
   CUPCAKE_PACK_SIZE,
@@ -96,6 +97,7 @@ function formatHistoricalVanillaSheet(value: ReservationOrderLine['vanillaCakeSh
 }
 
 export function formatOrderLineSummary(line: ReservationOrderLine, lines?: ReservationOrderLine[]) {
+  if ('manualLine' in line) return manualLineSummary(line.manualLine)
   if ('policyVersion' in line && isRenewalContract(line.policyVersion)) return renewalLineSummary(line as unknown as RenewalLine, { lines: lines as unknown as RenewalLine[] | undefined })
   const chocolate = marketConfig.market === 'AU' ? getChocolateProduct(line.productId) : undefined
   if (chocolate) return [chocolate.name, chocolate.saleUnit, `x${line.quantity}`,

@@ -1,3 +1,4 @@
+import { manualOrderSummary } from '../../appwrite-functions/reservation-api/src/manual-order.js'
 import { isRenewalContract, renewalProductName, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import { getCupcakePackSize, getProductById, isCupcakeProduct } from './constants.js'
 import { formatCupcakeFinishText } from './i18n.js'
@@ -109,6 +110,11 @@ function shortProductName(productId: Reservation['productId']) {
 }
 
 function mapCakeReservation(reservation: Reservation): RegularCakeDashboardEvent {
+  if (reservation.manualOrder) return {
+    kind: 'cake', id: reservation.id, date: reservation.pickupDate, time: reservation.pickupTime,
+    title: `${reservation.customerName} · Manual booking`, subtitle: manualOrderSummary(reservation.manualOrder),
+    isCancelled: reservation.status === '취소', itemCount: reservation.orderItemCount!, isCustomCake: false, reservation,
+  }
   const product = getProductById(reservation.productId)
   const orderLines = getReservationOrderLines(reservation)
   if (orderLines.length && 'policyVersion' in orderLines[0] && isRenewalContract(orderLines[0].policyVersion)) {

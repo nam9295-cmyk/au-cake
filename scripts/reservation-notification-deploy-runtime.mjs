@@ -11,6 +11,10 @@ const execFileAsync = promisify(execFile)
 const PARSER_SOURCE_PATHS = Object.freeze([
   'appwrite-functions/reservation-api/src/au-renewal.js',
   'appwrite-functions/reservation-api/src/au-renewal-reader.js',
+  'appwrite-functions/reservation-api/src/manual-order.js',
+  'appwrite-functions/reservation-api/src/au-renewal-catalog.js',
+  'appwrite-functions/reservation-api/src/au-renewal-seo.js',
+  'appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js',
   'appwrite-functions/reservation-api/src/custom-cake-discount.js',
   'appwrite-functions/reservation-api/src/custom-cake-persistence.js',
   'appwrite-functions/reservation-api/src/custom-cake-readiness.js',

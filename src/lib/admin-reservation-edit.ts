@@ -1,3 +1,4 @@
+import { isManualOrderDocument, assertManualOrderEditAllowed } from '../../appwrite-functions/reservation-api/src/manual-order.js'
 import {
   DEFAULT_CAKE_SIZE,
   DEFAULT_CHOCOLATE_TYPE,
@@ -48,7 +49,7 @@ export type AdminReservationEditInput = Partial<Pick<Reservation,
   | 'adminMemo'
 >>
 
-export type AdminReservationUpdate = Pick<Reservation,
+export type AdminReservationUpdate = Partial<Pick<Reservation,
   | 'productId'
   | 'cakeSize'
   | 'chocolateType'
@@ -64,7 +65,7 @@ export type AdminReservationUpdate = Pick<Reservation,
   | 'status'
   | 'paymentStatus'
   | 'adminMemo'
-> & Partial<Pick<Reservation, 'totalPrice' | 'totalPriceCents'>>
+>> & Partial<Pick<Reservation, 'totalPrice' | 'totalPriceCents'>>
 
 const REVIEW_COUPON_PRICE_FIELDS = [
   'productId',
@@ -99,6 +100,7 @@ export function assertReservationRepricingAllowed(
   reservation: Reservation,
   edits: Partial<Reservation>,
 ): void {
+  if (isManualOrderDocument(reservation)) return assertManualOrderEditAllowed(edits)
   assertReviewCouponRepricingAllowed(reservation, edits)
   const hasVersionedOrder = Array.isArray(reservation.orderLines)
   if (!hasVersionedOrder && Number(reservation.orderLineCount || 1) <= 1) return
@@ -185,6 +187,7 @@ export function buildAdminReservationUpdate(
   edits: AdminReservationEditInput,
 ): AdminReservationUpdate {
   assertReservationRepricingAllowed(reservation, edits)
+  if (isManualOrderDocument(reservation)) return { ...edits }
   const orderLineCount = Number((reservation as Reservation & { orderLineCount?: number }).orderLineCount || 1)
   const hasVersionedOrder = Array.isArray(reservation.orderLines)
   if (hasVersionedOrder || orderLineCount > 1) {

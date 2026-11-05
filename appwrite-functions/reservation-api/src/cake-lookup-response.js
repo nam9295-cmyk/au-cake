@@ -1,3 +1,4 @@
+import { assertNotManualOrder } from './manual-order.js'
 import { isRenewalDocument, renewalReservationProjection } from './au-renewal-reader.js'
 function sanitizedOrderLine(line, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS) {
   return {
@@ -24,6 +25,7 @@ function sanitizedOrderLine(line, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS) {
 }
 
 export function projectPublicCakeReservation(document, parseStoredOrderLines, BROWNIE_CREAM_ELIGIBLE_PRODUCT_IDS) {
+  assertNotManualOrder(document)
   if (isRenewalDocument(document)) return renewalReservationProjection(document)
   const stored = parseStoredOrderLines(document)
   const legacyLine = {

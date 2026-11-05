@@ -1,3 +1,4 @@
+import { isManualOrderDocument } from '../shared/reservation-api/manual-order.js'
 import { renewalLineSummary, isRenewalContract } from '../shared/reservation-api/au-renewal.js'
 import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
 import { Client, Databases } from 'node-appwrite'
@@ -991,6 +992,7 @@ export function buildBookingDeliveryPayload({
   replyTo = null,
   env = process.env,
 } = {}) {
+  if (isManualOrderDocument(reservation)) throw new Error('MANUAL_ORDER_MESSAGES_DISABLED')
   if (!reservation || (role !== 'operator' && role !== 'customer')) throw new Error('INVALID_BOOKING_DELIVERY_PAYLOAD')
   const sourceType = sourceTypeForReservation(reservation)
   const sourceId = sourceIdForReservation(reservation)
@@ -1126,6 +1128,7 @@ function buildBookingConfirmationHtml(reservation, sourceType, config) {
 }
 
 export function buildBookingConfirmationPayload({ reservation, sourceType, from, replyTo = null, env = process.env } = {}) {
+  if (isManualOrderDocument(reservation)) throw new Error('MANUAL_ORDER_MESSAGES_DISABLED')
   if (!reservation || !['cake', 'class'].includes(sourceType) || sourceTypeForReservation(reservation) !== sourceType) {
     throw new Error('INVALID_BOOKING_CONFIRMATION_PAYLOAD')
   }
@@ -1397,6 +1400,7 @@ async function handleBookingEmailAction({
   } catch {
     return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_RESERVATION_UNAVAILABLE' })
   }
+  if (isManualOrderDocument(reservation)) return res.json({ ok: false, code: 'MANUAL_ORDER_MESSAGES_DISABLED' })
   if (!reservation || sourceTypeForReservation(reservation) !== input.sourceType) {
     return res.json({ ok: false, code: 'BOOKING_CONFIRMATION_NOT_FOUND' })
   }
@@ -1506,6 +1510,7 @@ export function createReservationNotificationHandler({
       })
     }
     const reservation = readReservation(req)
+    if (isManualOrderDocument(reservation)) return res.json({ ok: true, skipped: 'manual_order' })
     const apiKey = env.RESEND_API_KEY
     const from = env.RESEND_FROM_EMAIL
     const operatorRecipients = parseRecipients(env.RESEND_TO_EMAILS)

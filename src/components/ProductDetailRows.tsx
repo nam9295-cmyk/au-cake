@@ -1,3 +1,4 @@
+import { manualOrderSummary } from '../../appwrite-functions/reservation-api/src/manual-order.js'
 import { RENEWAL_CONTRACT, mochiFlavourName, renewalProductName, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import { RENEWAL_CARDS } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import {
@@ -206,6 +207,7 @@ export function OrderDetailRows({ reservation, language = 'ko' }: {
   reservation: Reservation | PublicReservation
   language?: Language
 }) {
+  if ('manualOrder' in reservation && reservation.manualOrder) return <div><dt>Manual booking · fixed total</dt><dd>{manualOrderSummary(reservation.manualOrder)}</dd></div>
   const orderReservation = reservation as OrderAwareReservation
   const lines = orderReservation.orderLines?.length ? orderReservation.orderLines : [reservation]
   return lines.map((line, index) => {

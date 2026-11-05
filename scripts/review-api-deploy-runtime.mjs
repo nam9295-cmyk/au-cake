@@ -36,6 +36,11 @@ export async function createReviewApiArchive({ repositoryRoot = process.cwd(), f
       await cp(join(sourceDirectory, entry), join(stagingDirectory, entry), { recursive: true })
     }
     await cp(resolve(root, 'appwrite-functions/shared/customer-email-contact.js'), join(stagingDirectory, 'shared/customer-email-contact.js'))
+    const manualTargetDirectory = join(stagingDirectory, 'shared/reservation-api')
+    await mkdir(manualTargetDirectory, { recursive: true })
+    for (const file of ['manual-order.js', 'reservation-error.js']) {
+      await cp(join(root, 'appwrite-functions/reservation-api/src', file), join(manualTargetDirectory, file))
+    }
     const sharedTargetDirectory = join(stagingDirectory, 'shared/email-delivery')
     await mkdir(sharedTargetDirectory, { recursive: true })
     for (const sourcePath of ARCHIVE_SHARED_SOURCE_PATHS) {

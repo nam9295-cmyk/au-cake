@@ -1,3 +1,4 @@
+import { isManualOrderDocument, readManualOrder, manualOrderSummary } from './manual-order.js'
 import { renewalLineSummary, isRenewalContract } from './au-renewal.js'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { formatCakeSizeLabel, parseStoredOrderLines } from './business.js'
@@ -128,6 +129,7 @@ function cakeLineLabel(document, lines = []) {
 }
 
 function cakeLabel(document) {
+  if (isManualOrderDocument(document)) return manualOrderSummary(readManualOrder(document))
   try {
     const stored = parseStoredOrderLines(document)
     const lines = stored?.lines || [document]

@@ -1,3 +1,4 @@
+import { assertNotManualOrder } from './manual-order.js'
 import {Query} from 'node-appwrite'
 import {ReservationApiError} from './reservation-error.js'
 import {publicCakeReservation,parseStoredOrderLines} from './business.js'
@@ -20,6 +21,7 @@ function stored(document) {
   catch { unavailable() }
 }
 export function customerOrderSummary(document) {
+  assertNotManualOrder(document)
   const quote=stored(document)
   const total=quote?.totalPriceCents??document.totalPriceCents??(typeof document.totalPrice==='number'?Math.round(document.totalPrice*100):null)
   const createdAt=document.$createdAt||document.createdAt

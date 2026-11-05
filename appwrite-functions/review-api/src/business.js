@@ -1,3 +1,4 @@
+import { isManualOrderDocument } from '../shared/reservation-api/manual-order.js'
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { digestReviewCouponCode, resolveReviewCouponHmacSecret } from './coupon-digest.js'
 import { decryptReviewCouponCode, encryptReviewCouponCode, resolveReviewCouponEncryptionKey } from './coupon-envelope.js'
@@ -208,6 +209,7 @@ function validateSourceType(value) {
 }
 
 function sourceIsCompleted(sourceType, source) {
+  if (isManualOrderDocument(source)) return false
   return sourceType === 'cake' ? source?.status === '픽업완료' : source?.status === 'Completed'
 }
 

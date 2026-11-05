@@ -1,7 +1,9 @@
+import { assertNotManualOrder } from './manual-order.js'
 import { isRenewalDocument, renewalReservationProjection } from './au-renewal-reader.js'
 import { parseStoredOrderLines } from './business.js'
 
 export function cakeReservationResponse(document) {
+  assertNotManualOrder(document)
   if (isRenewalDocument(document)) return renewalReservationProjection(document, { privateFields: true })
   const discountCents = Number(document.discountCents || 0)
   const storedOrder = Object.hasOwn(document, 'orderLinesJson') ? parseStoredOrderLines(document) : null

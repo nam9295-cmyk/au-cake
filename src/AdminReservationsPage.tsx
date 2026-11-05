@@ -1,3 +1,4 @@
+import { manualOrderSummary } from '../appwrite-functions/reservation-api/src/manual-order.js'
 import { useEffect, useState } from 'react'
 import {
   CalendarDays,
@@ -254,7 +255,7 @@ export function AdminReservationsPage({
                 <td>{reservation.customerPhone}</td>
                 <td>{reservation.customerEmail || '-'}</td>
                 <td>
-                  {reservation.orderLines?.length ? (
+                  {reservation.manualOrder ? manualOrderSummary(reservation.manualOrder) : reservation.orderLines?.length ? (
                     <ul className="admin-order-lines">
                       {reservation.orderLines?.map((line, index) => (
                         <li key={`${line.productId}-${index}`}>{index + 1}. {formatOrderLineSummary(line, reservation.orderLines)}</li>
@@ -302,9 +303,9 @@ export function AdminReservationsPage({
                 </td>
                 <td>
                   <div className="table-actions">
-                    <button type="button" onClick={() => copySms(reservation)} title="문자 복사">
+                    {!reservation.manualOrder && <button type="button" onClick={() => copySms(reservation)} title="문자 복사">
                       <Clipboard size={16} />
-                    </button>
+                    </button>}
                     <button type="button" onClick={() => setSelected(reservation)}>
                       상세
                     </button>

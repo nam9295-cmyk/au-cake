@@ -6,7 +6,39 @@ import { buildAdminReservationUpdate } from '../src/lib/admin-reservation-edit.j
 import { databases } from '../src/lib/appwrite.js'
 import { toReservation, updateReservation } from '../src/lib/repository.js'
 
+import { buildManualOrderData } from '../appwrite-functions/reservation-api/src/manual-order.js'
+
 const optionalCounts = ['chocolateIcingCount', 'vanillaCreamCount', 'partyDecorationCount'] as const
+
+test('manual hydration → operational builder → real repository preserves amount and blocks repricing before SDK write', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => { throw new Error('NETWORK_FORBIDDEN') })
+  const stored = { $id: 'synthetic-manual', reservationNumber: 'SYNTHETIC-MANUAL',
+    customerName: 'Synthetic Buyer', customerPhone: '0412345678', pickupDate: '2099-07-11', pickupTime: '10:00',
+    status: '예약확정', paymentStatus: '입금대기', requestNote: '', adminMemo: '',
+    createdAt: '2099-07-01T00:00:00.000Z', updatedAt: '2099-07-01T00:00:00.000Z',
+    ...buildManualOrderData({ version: 'manual-order.v1', source: 'admin', currency: 'AUD', reason: 'owner-approved-off-menu',
+      audit: { operatorId: 'synthetic-admin', reference: 'synthetic-approval', createdAt: '2099-07-01T00:00:00.000Z' },
+      lines: [{ item: 'gateau-cupcake-basic', quantity: 5 }, { item: 'smore-stick', quantity: 5 }], totalPriceCents: 5000 }),
+  }
+  let writes = 0
+  let payload: Record<string, unknown> = {}
+  t.mock.method(databases, 'getDocument', async () => structuredClone(stored))
+  t.mock.method(databases, 'updateDocument', async (_db: unknown, _collection: unknown, _id: unknown, data: unknown) => {
+    writes++; payload = data as Record<string, unknown>; return { ...stored, ...payload }
+  })
+  const hydrated = toReservation(stored as never)
+  const change = { pickupDate: '2099-07-12', pickupTime: '11:00', status: '픽업완료' as const,
+    paymentStatus: '입금확인' as const, adminMemo: 'Synthetic operational edit' }
+  const updated = await updateReservation(stored.$id, buildAdminReservationUpdate(hydrated, change))
+  assert.deepEqual(Object.keys(payload).sort(), [...Object.keys(change), 'updatedAt'].sort())
+  assert.equal(updated.totalPriceCents, 5000)
+  assert.deepEqual(updated.manualOrder, hydrated.manualOrder)
+  assert.equal(updated.customerEmail, '')
+  for (const invalid of [{ quantity: 1 }, { totalPrice: 0 }, { totalPriceCents: 0 }, { chocolateIcingCount: 0 }]) {
+    await assert.rejects(updateReservation(stored.$id, invalid), /MANUAL_ORDER_EDIT_UNAVAILABLE/)
+  }
+  assert.equal(writes, 1)
+})
 
 for (const lineCount of [1, 2]) {
   for (const coupon of [false, true]) {

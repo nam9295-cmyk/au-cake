@@ -1,3 +1,4 @@
+import type { ManualOrder } from '../../appwrite-functions/reservation-api/src/manual-order.js'
 export type CacaoPercent = '기본' | '70' | '80.5' | '100'
 
 export type CakeSize = 'mini' | 'size-1' | '6in' | '8in' | '10in' | '15cm' | '17cm' | '19cm' | '22cm'
@@ -52,6 +53,7 @@ export type ReservationStatus = '예약신청' | '예약확정' | '픽업완료'
 export type PaymentStatus = '입금대기' | '입금확인' | '현장결제' | '환불필요'
 
 export type Reservation = {
+  manualOrder?: ManualOrder
   id: string
   reservationNumber: string
   customerName: string

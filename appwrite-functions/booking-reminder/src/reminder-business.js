@@ -1,3 +1,4 @@
+import { isManualOrderDocument } from '../shared/reservation-api/manual-order.js'
 import { renewalLineSummary, isRenewalContract } from '../shared/reservation-api/au-renewal.js'
 import { customerEmailContactText, customerEmailContactHtml } from '../shared/customer-email-contact.js'
 import {
@@ -211,6 +212,7 @@ function completePayload({ sourceType, sourceId, occurrence, recipient, from, re
 }
 
 export function buildCakeReminderPayload({ reservation, from, replyTo = null } = {}) {
+  if (isManualOrderDocument(reservation)) return null
   const sourceId = sourceIdForReservation(reservation)
   const name = plainTextCell(reservation?.customerName)
   const rows = [
