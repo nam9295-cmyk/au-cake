@@ -1,0 +1,41 @@
+{
+  "id": "draft-10",
+  "slug": "ganache-praline-caramel-filled-chocolate-guide",
+  "title": "Ganache, praline or caramel? What’s inside a filled chocolate?",
+  "seoTitle": "Ganache, praline or caramel: filled chocolate guide | Very Good",
+  "excerpt": "Read the centre as well as the shell. Ganache, praliné and caramel are useful starting points, but one filled chocolate can bring more than one together.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/dcfc76ae8b811eb7600682ee9512f523b49588f609a91f838508790f70bc665b.webp",
+    "alt": "Hypothetical illustration of a whole dark chocolate and a cut piece showing its filling, not an actual product."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 206,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 104,
+          "maxWidth": 600
+        },
+        {
+          "frame": 308,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-06T07:17:51.419Z",
+  "updatedAt": "2026-11-06T07:17:51.419Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-06T07:17:51.419Z"
+  }
+}
