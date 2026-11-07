@@ -198,7 +198,7 @@ export function CustomCakePage({
         pickupTime,
       },
       requestNote: requestNote.trim(),
-      promoCode,
+      promoCode: isAuRedesign ? '' : promoCode,
       privacyConsent: true,
       lines: [
         {
@@ -547,7 +547,7 @@ export function CustomCakePage({
               </div>
             </fieldset>
 
-            <fieldset disabled={locked} className="custom-cake-fieldset">
+            {!isAuRedesign && <fieldset disabled={locked} className="custom-cake-fieldset">
               <legend className="custom-cake-legend">
                 <span className="legend-number">02</span>
                 <span>{language === 'ko' ? '9월 선주문 프로모션' : 'September Pre-order Offer'}</span>
@@ -570,12 +570,12 @@ export function CustomCakePage({
                   onChange={(e) => setPromoCode(e.target.value)}
                 />
               </div>
-            </fieldset>
+            </fieldset>}
 
             {/* 02. Design & Figurine */}
             <fieldset disabled={locked} className="custom-cake-fieldset">
               <legend className="custom-cake-legend">
-                <span className="legend-number">03</span>
+                <span className="legend-number">{isAuRedesign ? '02' : '03'}</span>
                 <span>{language === 'ko' ? '디자인 및 피규어 협의' : 'Design & Figurine Details'}</span>
               </legend>
               <div className="custom-cake-field">
@@ -643,7 +643,7 @@ export function CustomCakePage({
             {/* 03. Reference Images */}
             <fieldset disabled={locked} className="custom-cake-fieldset">
               <legend className="custom-cake-legend">
-                <span className="legend-number">04</span>
+                <span className="legend-number">{isAuRedesign ? '03' : '04'}</span>
                 <span>{language === 'ko' ? '참고 이미지' : 'Reference Images'}</span>
               </legend>
               <p className="custom-cake-field-note">
@@ -656,7 +656,7 @@ export function CustomCakePage({
             {/* 04. Customer Contact Details */}
             <fieldset disabled={locked} className="custom-cake-fieldset">
               <legend className="custom-cake-legend">
-                <span className="legend-number">05</span>
+                <span className="legend-number">{isAuRedesign ? '04' : '05'}</span>
                 <span>{language === 'ko' ? '주문자 연락처 정보' : 'Contact Information'}</span>
               </legend>
               <div className="custom-cake-grid-2col">
@@ -781,7 +781,7 @@ export function CustomCakePage({
                   : 'You may provide your own figurines or ask Verygood to source them. Handoff details and timing for customer-provided figurines will be arranged during order confirmation.'}
               </p>
             </details>
-            <details>
+            {!isAuRedesign && <details>
               <summary>{language === 'ko' ? '9월 선주문 프로모션' : 'September Pre-order Offer'}</summary>
               <p>
                 {language === 'ko' ? '인스타그램 ' : 'Find the promo code on our Instagram '}
@@ -794,7 +794,7 @@ export function CustomCakePage({
                     ? ' for 10% off the Custom Cake base price. Eligibility is confirmed from the server-recorded receipt time and pickup date. Order from 12–30 September for September, October, or November pickup. Additional S’more sticks remain AUD $3.15 each.'
                     : ' for 10% off the Custom Cake base price. Eligibility is confirmed from the server-recorded receipt time and pickup date. Order from 12–30 September for September, October, or November pickup. S’more Stick add-ons are separately priced at AUD $31.50 per 10-stick set, 10% off the regular AUD $35.00, and can be added in multiples of 10.'}
               </p>
-            </details>
+            </details>}
           </div>
         </section>
       </main>

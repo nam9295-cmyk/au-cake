@@ -199,7 +199,7 @@ test('actual request UI explains promo code and date rejection in both languages
     flavourButton(page, 'Triple Berry').props.onClick(); page.render()
     for (const [suffix, value] of [
       ['-name', 'Original Customer'], ['-phone', '+61 412 345 678'],
-      ['-email', 'example@example.com'], ['-pickup-date', '2026-12-01'], ['-promo-code', 'VERYGOOD CUSTOM'],
+      ['-email', 'example@example.com'], ['-pickup-date', '2026-12-01'],
     ]) {
       page.find(node => node.type === 'input' && node.props.id?.endsWith(suffix)).props.onChange({ target: { value } })
       page.render()
@@ -240,26 +240,9 @@ test('customer-facing promotion, response-time, and pickup copy stays conditiona
   assert.match(english, /AUD \$3\.15 each \(Reg\. AUD \$4\.50\)/)
   assert.doesNotMatch(english, /10-stick set \(10% off\)/)
 
-  assert.match(english, /September Pre-order Offer/)
-  assert.match(english, /10% off the Custom Cake base price/)
-  assert.match(english, /Promo code/)
-  assert.doesNotMatch(english, /VERYGOOD CUSTOM/)
-  assert.doesNotMatch(korean, /VERYGOOD CUSTOM/)
-  assert.match(english, /placeholder="Enter promo code"[^>]*value=""/)
-  assert.match(korean, /placeholder="프로모션 코드를 입력하세요"[^>]*value=""/)
-  for (const html of [english, korean]) {
-    assert.match(html, /href="https:\/\/www\.instagram\.com\/verygood_syd\/" target="_blank" rel="noopener noreferrer">@verygood_syd<\/a>/)
-  }
-  assert.match(english, /Check our Instagram /)
-  assert.match(english, /for the September offer and promo code, then enter it below\./)
-  assert.match(korean, /에서 9월 프로모션과 코드를 확인한 후 아래에 입력해 주세요\./)
-  assert.match(english, /Order from 12–30 September for September, October, or November pickup\./)
-  assert.match(korean, /9월 선주문 프로모션/)
-  assert.match(korean, /커스텀 케이크 기본가에 10% 할인/)
-  assert.match(korean, /프로모션 코드/)
-  assert.match(korean, /9월 12일~30일 주문 시 9월·10월·11월 픽업 예약에 적용됩니다\./)
-  assert.doesNotMatch(english, /13–30 September/)
-  assert.doesNotMatch(korean, /9월 13일~30일/)
+  assert.doesNotMatch(english, /September Pre-order Offer|promo-code|Check our Instagram|VERYGOOD CUSTOM/)
+  assert.doesNotMatch(korean, /9월 선주문|promo-code|VERYGOOD CUSTOM/)
+  assert.match(english, /Design &amp; Figurine Details/)
   assert.doesNotMatch(english, /September Opening Offer|2 complimentary S.more|5% off the custom cake/i)
   assert.doesNotMatch(korean, /9월 오픈 프로모션|5% 할인과 케이크 1개당 스모어/)
   assert.match(english, /review your request and get back to you after checking the design and availability/)
@@ -329,7 +312,6 @@ test('actual submit handler freezes UUID line IDs, contact and options across ti
   flavourButton(page, 'Triple Berry').props.onClick(); page.render()
   const change = (suffix, value) => { page.find(node => node.type === 'input' && node.props.id?.endsWith(suffix)).props.onChange({ target: { value } }); page.render() }
   change('-name', 'Original Customer'); change('-phone', '+61 412 345 678'); change('-email', 'EXAMPLE@EXAMPLE.COM'); change('-pickup-date', '2026-10-05')
-  change('-promo-code', ' VeryGood Custom ')
   page.find(node => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } }); page.render()
   await page.find(node => node.type === 'form').props.onSubmit({ preventDefault() {} }); page.render()
   assert.equal(page.find(node => node.type === 'fieldset').props.disabled, true)
@@ -339,7 +321,7 @@ test('actual submit handler freezes UUID line IDs, contact and options across ti
   assert.deepEqual(sent[1], sent[0])
   assert.equal(sent[0].data.customer.customerPhone, '0412345678')
   assert.equal(sent[0].data.customer.customerEmail, 'example@example.com')
-  assert.equal(sent[0].data.promoCode, ' VeryGood Custom ')
+  assert.equal(sent[0].data.promoCode, '')
   assert.deepEqual(sent[0].data.lines[0].photoRefs, [])
   assert.match(sent[0].data.lines[0].lineId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
   assert.equal(completed.requestId, sent[0].data.requestId)

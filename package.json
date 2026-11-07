@@ -9,7 +9,7 @@
     "test:custom-cake-actions": "node --test tests/custom-cake-cutover.test.mjs tests/custom-cake-workflow.test.mjs tests/custom-cake-security.test.mjs tests/custom-cake-readiness.test.mjs",
     "test:custom-cake-photos": "node --test tests/custom-cake-photo-codec.test.mjs tests/custom-cake-photo-service.test.mjs tests/custom-cake-photo-storage.test.mjs tests/custom-cake-photo-artifacts.test.mjs",
     "test:custom-cake-persistence": "node --test tests/custom-cake-persistence.test.mjs tests/custom-cake-schema.test.mjs tests/custom-cake-persistence-artifacts.test.mjs",
-    "test:custom-cake-order-core": "node --test tests/custom-cake-order-core.test.mjs tests/custom-cake-manual-discount.test.mjs",
+    "test:custom-cake-order-core": "node --test tests/custom-cake-order-core.test.mjs tests/custom-cake-manual-discount.test.mjs tests/au-cake-promotion-retirement.test.mjs",
     "test:custom-cake-contract": "node --test tests/custom-cake-contract.test.mjs",
     "test:custom-cake-frontend": "VITE_MARKET=AU node scripts/run-bundled-tests.mjs tests/custom-cake-frontend.test.ts",
     "dev": "vite",
