@@ -19,6 +19,15 @@ export function AuServiceLandingPage({ kind }: { kind: 'custom-cakes' | 'busines
     window.addEventListener('popstate', sync)
     return () => window.removeEventListener('popstate', sync)
   }, [])
+  useEffect(() => {
+    if (kind !== 'custom-cakes' || new URLSearchParams(search).get('service') !== 'private-class') return
+    // The native fragment jump can happen before React creates this conditional section.
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById('private-class-enquiry')?.scrollIntoView({ block: 'start' })
+      document.getElementById('private-class-title')?.focus({ preventScroll: true })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [kind, search])
   const selectedClass = CUSTOM_CAKE_MENU.find(menu => menu.kind === 'private-class' && menu.tier === getCustomCakeInitialTier(search))!
   const className = language === 'ko' ? selectedClass.nameKo : selectedClass.nameEn
   const enquiryText = t(`Hello, I'd like to enquire about ${selectedClass.nameEn}.`, `${selectedClass.nameKo} 수업을 문의하고 싶습니다.`)
@@ -59,7 +68,7 @@ export function AuServiceLandingPage({ kind }: { kind: 'custom-cakes' | 'busines
           </section>
           <CustomCakeMenuCards />
           {new URLSearchParams(search).get('service') === 'private-class' && <section id="private-class-enquiry" className="au-private-class-enquiry" aria-labelledby="private-class-title">
-            <h2 id="private-class-title">{className}</h2>
+            <h2 id="private-class-title" tabIndex={-1}>{className}</h2>
             <p>{t('Enquire for pricing', '수업료 문의')}</p>
             <p>{t('Contact us to discuss class details and availability.', '수업 내용과 가능 일정은 문의 후 안내합니다.')}</p>
             <p>{enquiryText}</p>
