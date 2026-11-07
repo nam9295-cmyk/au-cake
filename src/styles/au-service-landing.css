@@ -286,3 +286,24 @@
     margin-top: 32px;
   }
 }
+
+.au-custom-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  margin-top: 48px;
+}
+.au-custom-menu-grid article { min-width: 0; border: 1px solid #e8e4e5; }
+.au-custom-menu-grid img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+.au-custom-menu-grid article > div { padding: 24px; }
+.au-custom-menu-grid h2 { font-size: 24px; }
+.au-custom-menu-grid p { margin-top: 12px; }
+.au-private-class-enquiry { margin-top: 40px; padding: 24px; border: 1px solid #1f5a46; scroll-margin-top: 100px; }
+.au-private-class-enquiry p { margin-top: 12px; }
+.au-private-class-enquiry a { margin-left: 20px; }
+.au-service-landing button:focus-visible { outline: 2px solid #1f5a46; outline-offset: 4px; }
+@media (max-width: 767px) {
+  .au-custom-menu-grid { grid-template-columns: 1fr; gap: 24px; margin-top: 32px; }
+  .au-custom-menu-grid h2 { font-size: 22px; }
+  .au-private-class-enquiry a { margin-left: 0; display: flex; }
+}

@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react'
+import { CustomCakeMenuCards } from '../components/CustomCakeMenuCards'
+import { CUSTOM_CAKE_MENU, getCustomCakeInitialTier } from '../lib/custom-cake-menu'
 import { ArrowUpRight } from 'lucide-react'
 import services from '../content/au-business-services.json'
 import assets from '../content/au-service-assets.json'
@@ -9,6 +12,16 @@ const instagram = publicContent.site.socialProfiles.find((url) => url.startsWith
 
 export function AuServiceLandingPage({ kind }: { kind: 'custom-cakes' | 'business' }) {
   const { language, t } = useAuLanguage()
+  const [search, setSearch] = useState(() => typeof window === 'undefined' ? '' : window.location.search)
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    const sync = () => { setSearch(window.location.search); setCopied(false) }
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
+  }, [])
+  const selectedClass = CUSTOM_CAKE_MENU.find(menu => menu.kind === 'private-class' && menu.tier === getCustomCakeInitialTier(search))!
+  const className = language === 'ko' ? selectedClass.nameKo : selectedClass.nameEn
+  const enquiryText = t(`Hello, I'd like to enquire about ${selectedClass.nameEn}.`, `${selectedClass.nameKo} 수업을 문의하고 싶습니다.`)
   const copy = (text: string) => language === 'ko' ? (koreanCopy as Record<string, string>)[text] || text : text
   const paused = t(
     'Currently paused. Next school holiday dates will be announced once confirmed.',
@@ -44,6 +57,18 @@ export function AuServiceLandingPage({ kind }: { kind: 'custom-cakes' | 'busines
             <img src="/products/custom-cake.webp" alt={t('Colourful custom celebration cakes', '다채로운 커스텀 케이크')}
               width={1080} height={1012} fetchPriority="high" decoding="async" />
           </section>
+          <CustomCakeMenuCards />
+          {new URLSearchParams(search).get('service') === 'private-class' && <section id="private-class-enquiry" className="au-private-class-enquiry" aria-labelledby="private-class-title">
+            <h2 id="private-class-title">{className}</h2>
+            <p>{t('Enquire for pricing', '수업료 문의')}</p>
+            <p>{t('Contact us to discuss class details and availability.', '수업 내용과 가능 일정은 문의 후 안내합니다.')}</p>
+            <p>{enquiryText}</p>
+            <button className="au-service-button" type="button" onClick={async () => {
+              try { await navigator.clipboard.writeText(enquiryText); setCopied(true) } catch { setCopied(false) }
+            }}>{t('Copy enquiry text', '문의 문구 복사')}</button>
+            <span role="status">{copied ? t('Copied', '복사했습니다') : ''}</span>
+            <a className="au-service-text-link" href={instagram} target="_blank" rel="noreferrer">{t('Enquire on Instagram', '인스타그램으로 문의')}</a>
+          </section>}
           <section className="au-service-classes" aria-labelledby="service-classes-title">
             <div className="au-service-class-heading">
               <h2 id="service-classes-title">{t('Kids Classes', '키즈 클래스')}</h2>

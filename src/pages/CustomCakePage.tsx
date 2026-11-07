@@ -1,3 +1,4 @@
+import { getCustomCakeInitialTier } from '../lib/custom-cake-menu'
 import { useState, useId, useEffect, type FormEvent, type ReactNode } from 'react'
 import { ArrowLeft, Minus, Plus } from 'lucide-react'
 import { SiteHeader } from '../components/SiteChrome.js'
@@ -72,7 +73,20 @@ export function CustomCakePage({
     }).catch(() => { if (active) setReady(false) })
     return () => { active = false }
   }, [])
-  const [tier, setTier] = useState<'single' | 'double'>('single')
+  const [tier, setTier] = useState<'single' | 'double'>(() => getCustomCakeInitialTier(typeof window === 'undefined' ? '' : window.location.search))
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const sync = () => setTier(getCustomCakeInitialTier(window.location.search))
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
+  }, [])
+  const selectTier = (next: 'single' | 'double') => {
+    setTier(next)
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    url.searchParams.set('tier', next)
+    window.history.replaceState(null, '', url)
+  }
   const [singleSize, setSingleSize] = useState<SingleTierSize>('6in')
   const [doubleSize, setDoubleSize] = useState<DoubleTierSize>('4in+6in')
   const [flavour, setFlavour] = useState<CustomCakeFlavour | null>(null)
@@ -304,11 +318,11 @@ export function CustomCakePage({
               <fieldset disabled={locked} className="cake-detail-fieldset">
                 <legend>{language === 'ko' ? '단수 선택' : 'Choose cake tier'}</legend>
                 <div className="cake-detail-options">
-                  <OptionButton active={tier === 'single'} onClick={() => setTier('single')}>
+                  <OptionButton active={tier === 'single'} onClick={() => selectTier('single')}>
                     <strong>Single Tier</strong>
                     <span>{language === 'ko' ? '1단' : '1 Tier'}</span>
                   </OptionButton>
-                  <OptionButton active={tier === 'double'} onClick={() => setTier('double')}>
+                  <OptionButton active={tier === 'double'} onClick={() => selectTier('double')}>
                     <strong>Double Tier</strong>
                     <span>{language === 'ko' ? '2단' : '2 Tiers'}</span>
                   </OptionButton>
