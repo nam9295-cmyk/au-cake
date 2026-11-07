@@ -265,6 +265,11 @@ function AuHomePage({
           { href: '/celebrate', label: t('SMALL BITES', 'Small Bites 전체 보기'), arrow: false },
           { href: '/chocolates', label: t('ALL CHOCOLATES', '초콜릿 전체 보기') },
         ]} />
+      <HomeCollectionSection id="custom-cakes" categories={customCollections} language={language}
+        className="au-v02-custom-collection"
+        label={t('Custom cakes and private classes', '커스텀 케이크와 프라이빗 클래스')}
+        note={t('Choose a cake or a private class. Final pricing and availability are confirmed after your enquiry.', '케이크 또는 프라이빗 클래스를 선택하세요. 최종 가격과 가능 일정은 문의 후 안내합니다.')}
+        links={[{ href: '/custom-cakes', label: t('EXPLORE CUSTOM CAKES & CLASSES', '커스텀 케이크·클래스 전체 보기') }]} />
       <section
         className="au-v02-craft"
         aria-label={t(
@@ -285,11 +290,6 @@ function AuHomePage({
         />
       </section>
       <HomeCustomerStories />
-      <HomeCollectionSection id="custom-cakes" categories={customCollections} language={language}
-        className="au-v02-custom-collection"
-        label={t('Custom cakes and private classes', '커스텀 케이크와 프라이빗 클래스')}
-        note={t('Choose a cake or a private class. Final pricing and availability are confirmed after your enquiry.', '케이크 또는 프라이빗 클래스를 선택하세요. 최종 가격과 가능 일정은 문의 후 안내합니다.')}
-        links={[{ href: '/custom-cakes', label: t('EXPLORE CUSTOM CAKES & CLASSES', '커스텀 케이크·클래스 전체 보기') }]} />
       <section
         id="business"
         className="au-v02-business"

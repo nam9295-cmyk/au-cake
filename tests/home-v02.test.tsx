@@ -25,7 +25,7 @@ const home = () =>
     />,
   )
 
-test('home renders video before the single new headline, Best, collection, stories and separate custom entry', () => {
+test('home places custom cake and private class menus directly after the product collection', () => {
   const html = home()
   assert.match(html, /<h1[^>]*>CHOCOLATE, CAKES &amp; CELEBRATIONS\.<\/h1>/)
   const markers = [
@@ -33,9 +33,9 @@ test('home renders video before the single new headline, Best, collection, stori
     '<h1',
     'id="best"',
     'id="au-collection"',
+    'id="custom-cakes"',
     'au-v02-craft',
     'au-stories-home',
-    'id="custom-cakes"',
     'id="business"',
     'id="story"',
   ]

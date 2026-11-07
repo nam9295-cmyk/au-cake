@@ -73,3 +73,5 @@ Replaced the homepage Custom Cake banner with a second collection section using 
 The homepage and hub share the same menu presentation data (names, prices, images and destinations). Both homepage collections use `HomeCollectionSection`; the former banner CSS was removed.
 
 Follow-up validation: `test:home-v02` 8 passed (new assertions first failed against the old banner), `test:renewal` passed, `test:cake` passed, Home/Phase 1 market plus static hub checks 22 passed, lint passed, and sequential KR / account-enabled AU builds passed. Browser checks at 390/768/1440px confirmed layout, both categories, keyboard arrows/Home, language retention, and actual two-tier form/enquiry navigation. No new production deployment or external order/email action.
+
+Homepage position follow-up: moved the custom cake/private class collection directly below `au-collection`, ahead of the craftsmanship image and customer reviews. Existing menus and destinations are unchanged. Updated the existing section-order regression (RED→GREEN); Home tests 8 passed, market boundary tests 21 passed, scoped ESLint and AU account-enabled build passed. Local preview remains port 4198; no deployment.
