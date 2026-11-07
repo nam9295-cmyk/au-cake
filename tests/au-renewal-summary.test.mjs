@@ -16,7 +16,7 @@ test('identical boxes distinguish per-box contents from total, singles retain pa
 test('extras identify the numbered parent and size, not its internal ID',()=>{
  const q=priceRenewalOrder([{lineId:'parent-a',offerId:'pave-cake',size:'6in',quantity:1},{lineId:'parent-b',offerId:'pave-cake',size:'8in',quantity:1},{lineId:'extra',offerId:'addon-cream',parentLineId:'parent-b',quantity:1}])
  const s=renewalLineSummary(q.lines[2],{lines:q.lines})
- assert.match(s,/For item 2: Pavé Whole Cake, 8in/)
+ assert.match(s,/For item 2: Pavé Whole Cake, 8 inch/)
  assert.doesNotMatch(s,/parent-b|extra/)
 })
 

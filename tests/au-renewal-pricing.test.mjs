@@ -11,7 +11,7 @@ test('all whole cake sizes use confirmed prices outside local preview', () => {
     const quote = price([line(offerId,1,{size})],{})
     assert.equal(quote.totalPriceCents, expected)
     assert.equal(quote.lines[0].priceStatus,'confirmed')
-    if(offerId==='brownie-whole') assert.equal(price([line(offerId,2,{size,finish:'vanilla-fresh-cream'})],{}).totalPriceCents,2*(expected+1000))
+    if(offerId==='brownie-whole') assert.equal(price([line(offerId,2,{size,finish:'vanilla-fresh-cream'})],{}).totalPriceCents,2*(expected+({'6in':1000,'8in':1500,'10in':2000}[size])))
   }
   assert.equal(price([line('brownie-loaf',2,{finish:'vanilla-fresh-cream'})]).totalPriceCents,13600)
   assert.throws(() => price([line('brownie-cupcakes-6')],{}), /PROVISIONAL_PRICE/)
@@ -34,7 +34,7 @@ test('six-flavour gift boxes and singles keep compositions and charge only selec
   assert.equal(q.totalPriceCents,expected);assert.equal(q.lines[0].giftBoxCount,1);assert.equal(q.lines[0].physicalQuantity,4);assert.equal(q.individualPackagingFeeCents,0)
  }
  const mixed=price([mochi('a','gift-four',{strawberry:1,green_grape:1,banana:1,nama_chocolate:1},2),mochi('b','gift-four',{mandarin:2,butter_redbean:2}),mochi('c','singles',{nama_chocolate:3},1,true)],{})
- assert.equal(mixed.policyVersion,'au-renewal.2026-10.v2');assert.equal(mixed.totalPriceCents,13350)
+ assert.equal(mixed.policyVersion,'au-renewal.2026-11.v3');assert.equal(mixed.totalPriceCents,13350)
  assert.deepEqual(mixed.lines.map(l=>l.giftBoxCount),[2,1,0]);assert.deepEqual(mixed.lines.map(l=>l.physicalQuantity),[8,4,3])
  assert.deepEqual(mixed.lines[0].flavourTotals,[2,2,0,2,0,2]);assert.equal(mixed.individualPackagingFeeCents,150)
  for(const n of [4,8,200]){
@@ -69,9 +69,9 @@ test('updated document fixtures are executable confirmed or local-only contracts
  const fixture=JSON.parse(await readFile('docs/renewal-20261013/qa-price-fixtures-v0.7.json','utf8'))
  for(const c of fixture.renewal_contract_cases){
   const selections=[{lineId:c.id,...c.selection}]
-  assert.equal(price(selections).totalPriceCents,c.total_cents,c.id)
+  assert.equal(price(selections,{localPreview:true,contractVersion:"au-renewal.2026-10.v2"}).totalPriceCents,c.total_cents,c.id)
   if(c.scope==='LOCAL_PREVIEW_ONLY')assert.throws(()=>price(selections,{}),/PROVISIONAL_PRICE/)
-  else assert.equal(price(selections,{}).totalPriceCents,c.total_cents,c.id)
+  else assert.equal(price(selections,{contractVersion:"au-renewal.2026-10.v2"}).totalPriceCents,c.total_cents,c.id)
  }
 })
 test('packaging exemption is before coupons and excludes unpacked cupcakes and all other goods',()=>{
@@ -94,7 +94,7 @@ test('string field coercion cannot bypass provisional or preorder policy boundar
 test('deployed almond snapshots retain exact prices, names and contents but cannot be ordered anew',async()=>{
  const {readFile}=await import('node:fs/promises')
  const old=JSON.parse(await readFile('tests/fixtures/au-renewal-amande-quote.json','utf8'))
- assert.deepEqual(core.priceRenewalOrder(old.lines.map(l=>l.selection),{storedOnly:true}),old)
+ assert.deepEqual(core.priceRenewalOrder(old.lines.map(l=>l.selection),{storedOnly:true,contractVersion:old.policyVersion}),old)
  assert.throws(()=>price(old.lines.map(l=>l.selection)),/INVALID_MOCHI_COUNTS/)
  assert.match(core.renewalLineSummary(old.lines[0]),/Each box:.*Amande Chocolat ×1/)
  assert.doesNotMatch(core.renewalLineSummary(old.lines[0]),/Banana/)

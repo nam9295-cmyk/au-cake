@@ -1,9 +1,10 @@
-// AU October pricing contracts. V1 and September snapshots remain immutable.
+// Current AU pricing; historical contracts keep their original sizes, options and prices.
 import { ReservationApiError } from "./reservation-error.js";
-export const RENEWAL_CONTRACT = "au-renewal.2026-10.v2";
+export const RENEWAL_CONTRACT = "au-renewal.2026-11.v3";
+const OCTOBER_CONTRACT = "au-renewal.2026-10.v2";
 const HISTORICAL_CONTRACT = "au-renewal.2026-10.v1";
 export function isRenewalContract(value) {
-  return value === RENEWAL_CONTRACT || value === HISTORICAL_CONTRACT;
+  return value === RENEWAL_CONTRACT || value === OCTOBER_CONTRACT || value === HISTORICAL_CONTRACT;
 }
 export const RENEWAL_MAX_BYTES = 60000;
 const fail = (code) => {
@@ -29,9 +30,9 @@ export const RENEWAL_OFFERS = Object.freeze({
   "halloween-meringue-12": offer("Halloween Meringue Pops · 12", 4500, 12, { family: "cookie" }),
   "halloween-meringue-24": offer("Halloween Meringue Pops · 24", 8500, 24, { family: "cookie" }),
 
-  "pave-cake": offer("Pavé Whole Cake", 7500, 1, {
+  "pave-cake": offer("Pavé Whole Cake", 4500, 1, {
     family: "cake",
-    sizes: { "6in": 7500, "8in": 10700, "10in": 15900 },
+    sizes: { "4in": 4500, "6in": 7500, "8in": 10700, "10in": 15900 },
     chocolate: true,
   }),
   "pound-cake": offer("Signature Gâteau Loaf", 4500, 1, {
@@ -42,9 +43,9 @@ export const RENEWAL_OFFERS = Object.freeze({
       "vanilla-fresh-cream": 5500,
     },
   }),
-  "brownie-whole": offer("Brownie Basque Whole Cake", 8200, 1, {
+  "brownie-whole": offer("Brownie Basque Whole Cake", 4900, 1, {
     family: "cake",
-    sizes: { "6in": 8200, "8in": 11700, "10in": 16800 },
+    sizes: { "4in": 4900, "6in": 8200, "8in": 11700, "10in": 16800 },
     cream: true,
   }),
   "brownie-loaf": offer("Brownie Basque Loaf", 5800, 1, {
@@ -122,6 +123,53 @@ export const RENEWAL_OFFERS = Object.freeze({
     addon: true,
   }),
 });
+// Separate immutable whole-cake facts: never derive historical prices from active tables.
+const HISTORICAL_WHOLE_SIZES = Object.freeze({
+  "pave-cake": Object.freeze({ "6in": 7500, "8in": 10700, "10in": 15900 }),
+  "brownie-whole": Object.freeze({ "6in": 8200, "8in": 11700, "10in": 16800 }),
+});
+function offerForPolicy(offerId, contractVersion) {
+  const current = RENEWAL_OFFERS[offerId];
+  if (contractVersion === RENEWAL_CONTRACT || !HISTORICAL_WHOLE_SIZES[offerId]) return current;
+  return {
+    ...current,
+    sizes: contractVersion === HISTORICAL_CONTRACT && offerId === "brownie-whole"
+      ? { "6in": 8200, "8in": 11500, "10in": 15500 } : HISTORICAL_WHOLE_SIZES[offerId],
+    ...(contractVersion === HISTORICAL_CONTRACT && offerId === "brownie-whole" ? { provisionalSizes: ["8in", "10in"] } : {}),
+  };
+}
+const WHOLE_TOPPINGS = Object.freeze({
+  "pave-cake": Object.freeze({
+    basic: Object.freeze({"4in":0,"6in":0,"8in":0,"10in":0}),
+    "fresh-strawberries": Object.freeze({"4in":1000,"6in":1800,"8in":3000,"10in":4500}),
+  }),
+  "brownie-whole": Object.freeze({
+    basic: Object.freeze({"4in":0,"6in":0,"8in":0,"10in":0}),
+    "vanilla-fresh-cream": Object.freeze({"4in":500,"6in":1000,"8in":1500,"10in":2000}),
+    "vanilla-fresh-cream-strawberries": Object.freeze({"4in":1500,"6in":2500,"8in":4000,"10in":6000}),
+  }),
+});
+export function wholeCakeToppingSurchargeCents(offerId, size, finish) {
+  if (!Object.hasOwn(WHOLE_TOPPINGS, offerId) || !Object.hasOwn(WHOLE_TOPPINGS[offerId], finish)) fail("INVALID_FINISH");
+  const prices = WHOLE_TOPPINGS[offerId][finish];
+  if (!Object.hasOwn(prices, size)) fail("INVALID_SIZE");
+  return prices[size];
+}
+export function renewalFinishName(finish, language = "en") {
+  const names = {
+    basic: ["Basic", "기본"],
+    "fresh-strawberries": ["Fresh Strawberries", "딸기 추가"],
+    "vanilla-fresh-cream": ["Vanilla Fresh Cream", "바닐라 생크림"],
+    "vanilla-fresh-cream-strawberries": ["Vanilla Fresh Cream + Strawberries", "바닐라 생크림 + 딸기"],
+    "chocolate-buttercream": ["Chocolate Buttercream", "초콜릿 버터크림"],
+    "extra-chocolate": ["Extra Chocolate", "초콜릿 추가"],
+  };
+  return names[finish]?.[language === "ko" ? 1 : 0] || finish;
+}
+export function renewalSizeName(size, language = "en") {
+  if (size === "4in") return language === "ko" ? "미니 4인치 (약 10cm)" : "Mini 4 inch (approx. 10cm)";
+  return size?.endsWith("in") ? `${size.slice(0,-2)}${language === "ko" ? "인치" : " inch"}` : size;
+}
 const HISTORICAL_MOCHI_FLAVOURS = Object.freeze([
   { id: "strawberry", en: "Strawberry", ko: "딸기", priceCents: 1000 },
   { id: "green_grape", en: "Green Grape", ko: "청포도", priceCents: 950 },
@@ -171,7 +219,8 @@ const allowedFields = new Set([
   "chocolateIcingCount",
   "parentLineId",
 ]);
-export function normalizeRenewalLines(value, { storedOnly = false } = {}) {
+export function normalizeRenewalLines(value, { storedOnly = false, contractVersion = RENEWAL_CONTRACT } = {}) {
+  if (!isRenewalContract(contractVersion)) fail("UNSUPPORTED_CONTRACT");
   if (
     !Array.isArray(value) ||
     !value.length ||
@@ -207,7 +256,7 @@ export function normalizeRenewalLines(value, { storedOnly = false } = {}) {
     if (!idPattern.test(input.lineId || "") || ids.has(input.lineId))
       fail("INVALID_LINE_ID");
     ids.add(input.lineId);
-    const p = RENEWAL_OFFERS[input.offerId];
+    const p = offerForPolicy(input.offerId, contractVersion);
     if (!Object.hasOwn(RENEWAL_OFFERS, input.offerId) || !p)
       fail("INVALID_PRODUCT");
     if (!Number.isSafeInteger(input.quantity) || input.quantity < 1)
@@ -228,7 +277,9 @@ export function normalizeRenewalLines(value, { storedOnly = false } = {}) {
       line.size = input.size;
     } else if (input.size !== undefined) fail("INVALID_SIZE");
     const finish = input.finish ?? "basic";
-    if (
+    if (contractVersion === RENEWAL_CONTRACT && Object.hasOwn(WHOLE_TOPPINGS, input.offerId)) {
+      wholeCakeToppingSurchargeCents(input.offerId, input.size, finish);
+    } else if (
       p.finishes
         ? !Object.hasOwn(p.finishes, finish)
         : p.cream
@@ -242,6 +293,7 @@ export function normalizeRenewalLines(value, { storedOnly = false } = {}) {
       if (!Number.isSafeInteger(count) || count < 0 || count > p.pieces) fail("INVALID_FINISH");
       line.chocolateIcingCount = count;
     } else if (input.chocolateIcingCount !== undefined) fail("INVALID_FINISH");
+    if (contractVersion === RENEWAL_CONTRACT && input.offerId === "pave-cake" && input.chocolateType === "milk") fail("INVALID_CHOCOLATE_TYPE");
     if (
       input.chocolateType !== undefined &&
       (!["dark", "milk"].includes(input.chocolateType) ||
@@ -298,18 +350,9 @@ export function priceRenewalOrder(
   { localPreview = false, reviewCoupon, contractVersion = RENEWAL_CONTRACT, storedOnly = false } = {},
 ) {
   if (!isRenewalContract(contractVersion)) fail("UNSUPPORTED_CONTRACT");
-  const normalized = normalizeRenewalLines(value, { storedOnly });
+  const normalized = normalizeRenewalLines(value, { storedOnly, contractVersion });
   const base = normalized.map((selection) => {
-    // V1 snapshots retain their original amounts and approval status forever.
-    const current = RENEWAL_OFFERS[selection.offerId];
-    const p =
-      contractVersion === HISTORICAL_CONTRACT && selection.offerId === "brownie-whole"
-        ? {
-            ...current,
-            sizes: { "6in": 8200, "8in": 11500, "10in": 15500 },
-            provisionalSizes: ["8in", "10in"],
-          }
-        : current;
+    const p = offerForPolicy(selection.offerId, contractVersion);
     const provisional =
       p.provisional === true ||
       p.provisionalSizes?.includes(selection.size) === true;
@@ -319,7 +362,9 @@ export function priceRenewalOrder(
       : p.finishes
         ? p.finishes[selection.finish]
         : p.price;
-    if (p.cream && selection.finish === "vanilla-fresh-cream")
+    if (contractVersion === RENEWAL_CONTRACT && Object.hasOwn(WHOLE_TOPPINGS, selection.offerId))
+      unitPriceCents += wholeCakeToppingSurchargeCents(selection.offerId, selection.size, selection.finish);
+    else if (p.cream && selection.finish === "vanilla-fresh-cream")
       unitPriceCents += 1000;
     if (p.family === "lemon") unitPriceCents += selection.chocolateIcingCount * 50;
     let physicalQuantity = safeAmount(p.pieces * selection.quantity);
@@ -467,14 +512,14 @@ export function renewalLineSummary(line, { lines = [], language = "en" } = {}) {
     if (p.family === "lemon") details.push(ko
       ? `레몬 아이싱 ${p.pieces - s.chocolateIcingCount}개 / 다크 초콜릿 ${s.chocolateIcingCount}개 (박스당)`
       : `Lemon icing ${p.pieces - s.chocolateIcingCount} / Dark chocolate ${s.chocolateIcingCount} per box`);
-    const finishes = {"vanilla-fresh-cream":"Vanilla Fresh Cream","chocolate-buttercream":"Chocolate Buttercream","extra-chocolate":"Extra Chocolate"};
-    details.push(s.size, s.finish === "basic" ? null : finishes[s.finish] || s.finish, s.chocolateType,
+    details.push(renewalSizeName(s.size, language), s.finish === "basic" ? null : renewalFinishName(s.finish, language),
+      s.chocolateType ? (s.chocolateType === "milk" ? (ko ? "밀크" : "Milk") : (ko ? "다크" : "Dark")) : null,
       `×${line.quantity}`, line.physicalQuantity > line.quantity ? `${line.physicalQuantity} pieces` : null);
   }
   if (s.parentLineId) {
     const index = lines.findIndex(parent => parent.selection?.lineId === s.parentLineId);
     const parent = lines[index];
-    details.push(parent ? `${ko ? "연결 상품" : "For item"} ${index + 1}: ${renewalProductName(parent, language)}${parent.selection.size ? `, ${parent.selection.size}` : ""}` : (ko ? "케이크 추가상품" : "Cake add-on"));
+    details.push(parent ? `${ko ? "연결 상품" : "For item"} ${index + 1}: ${renewalProductName(parent, language)}${parent.selection.size ? `, ${renewalSizeName(parent.selection.size, language)}` : ""}` : (ko ? "케이크 추가상품" : "Cake add-on"));
   }
   if (line.individualPackaging) details.push(
     `${ko ? "개별포장" : "Individual packaging"}: ${line.individualPackagingPieces}${ko ? "개" : " pieces"} (${line.individualPackagingFeeCents === 0 ? (ko ? "무료" : "FREE") : money(line.individualPackagingFeeCents)})`,

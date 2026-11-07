@@ -1,4 +1,4 @@
-export const RENEWAL_CONTRACT: "au-renewal.2026-10.v2";
+export const RENEWAL_CONTRACT: "au-renewal.2026-11.v3";
 export function isRenewalContract(value: unknown): boolean;
 export const RENEWAL_MAX_BYTES: number;
 export interface RenewalSelection {
@@ -69,11 +69,12 @@ export type MochiCounts = Record<MochiFlavourId, number>;
 export const MOCHI_FLAVOURS: readonly Readonly<{ id: MochiFlavourId; en: string; ko: string; priceCents: number }>[];
 export const MOCHI_NAMES: readonly string[];
 export function safeAmount(n: number): number;
-export function normalizeRenewalLines(value: unknown): RenewalSelection[];
+export function normalizeRenewalLines(value: unknown, options?: { storedOnly?: boolean; contractVersion?: string }): RenewalSelection[];
 export function priceRenewalOrder(
   value: unknown,
   options?: {
     localPreview?: boolean;
+    storedOnly?: boolean;
     reviewCoupon?: { rewardPercent: number };
     contractVersion?: string;
   },
@@ -83,3 +84,7 @@ export function renewalLineSummary(line: RenewalLine, options?: { lines?: Renewa
 export const MOCHI_DISPLAY_FLAVOURS: typeof MOCHI_FLAVOURS;
 export function mochiFlavourName(id: string, language?: string): string;
 export function renewalProductName(line: { productId: string; productName: string }, language?: string): string;
+
+export function wholeCakeToppingSurchargeCents(offerId: string, size: string, finish: string): number;
+export function renewalFinishName(finish: string, language?: string): string;
+export function renewalSizeName(size: string | undefined, language?: string): string | undefined;

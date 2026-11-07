@@ -18,7 +18,7 @@ test('invalid finish counts and price injection fail closed',()=>{
 });
 test('lemon replaces cookie discovery; Renewal snapshot preserves mixed finishing',()=>{
  assert.equal(RENEWAL_CARDS.celebrate[0].id,'lemon');assert.ok(!RENEWAL_CARDS.cakes.some(c=>c.id==='cookies'));
- const doc=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Local Test',customerPhone:'0412345678',customerEmail:'local@example.com',pickupDate:'2026-10-30',pickupTime:'12:00',privacyConsent:true,requestId:'local-lemon',website:'',orderLines:[line(6,3)]},{now:new Date('2026-10-28T00:00:00Z'),reservationNumber:'LOCAL',renewalPolicy:{preordersEnabled:true}});
+ const doc=buildRenewalOrderData({contractVersion:'au-renewal.2026-11.v3',customerName:'Local Test',customerPhone:'0412345678',customerEmail:'local@example.com',pickupDate:'2026-10-30',pickupTime:'12:00',privacyConsent:true,requestId:'local-lemon',website:'',orderLines:[line(6,3)]},{now:new Date('2026-10-28T00:00:00Z'),reservationNumber:'LOCAL',renewalPolicy:{preordersEnabled:true}});
  const stored=parseStoredOrderLines(doc);assert.equal(stored.totalPriceCents,3750);assert.equal(stored.lines[0].productId,'fresh-lemon-cupcakes-6');
 });
 
@@ -31,7 +31,7 @@ test('packaging threshold, coupon math, and email display retain selected lemon 
 test('real create path stores lemon finish and enforces request idempotency locally',async()=>{
  const {createCake}=await import('../appwrite-functions/reservation-api/src/main.js');
  const {AppwriteException}=await import('./reservation-sdk.mjs');
- const input={contractVersion:'au-renewal.2026-10.v2',customerName:'Local Test',customerPhone:'0412345678',customerEmail:'local@example.com',pickupDate:'2026-10-30',pickupTime:'12:00',privacyConsent:true,requestId:'11111111-1111-4111-8111-111111111111',website:'',orderLines:[line(6,3)]};
+ const input={contractVersion:'au-renewal.2026-11.v3',customerName:'Local Test',customerPhone:'0412345678',customerEmail:'local@example.com',pickupDate:'2026-10-30',pickupTime:'12:00',privacyConsent:true,requestId:'11111111-1111-4111-8111-111111111111',website:'',orderLines:[line(6,3)]};
  let saved,writes=0;
  const db={getDocument:async()=>{if(saved)return saved;throw new AppwriteException('missing',404)},listDocuments:async()=>({documents:[]}),createDocument:async({data,documentId})=>{writes++;return saved={...data,$id:documentId}}};
  const options={now:new Date('2026-10-28T00:00:00Z'),runtimeConfig:{cakeDatabaseId:'local-test',cakeReservationsId:'local-test',reviewCouponHmacSecret:Buffer.alloc(32,1).toString('base64url')},renewalPolicy:{enabled:true,preordersEnabled:true}};
@@ -42,7 +42,7 @@ test('real create path stores lemon finish and enforces request idempotency loca
 test('notification and reminder render mixed lemon finishing from the same stored snapshot',async()=>{
  const {buildBookingConfirmationPayload}=await import('../appwrite-functions/reservation-notification/src/main.js');
  const {buildCakeReminderPayload}=await import('../appwrite-functions/booking-reminder/src/reminder-business.js');
- const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Local Test',customerPhone:'0412345678',customerEmail:'local@example.com',pickupDate:'2026-10-30',pickupTime:'12:00',privacyConsent:true,requestId:'local-lemon',website:'',orderLines:[line(6,3)]},{now:new Date('2026-10-28T00:00:00Z'),reservationNumber:'LOCAL',renewalPolicy:{preordersEnabled:true}});
+ const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-11.v3',customerName:'Local Test',customerPhone:'0412345678',customerEmail:'local@example.com',pickupDate:'2026-10-30',pickupTime:'12:00',privacyConsent:true,requestId:'local-lemon',website:'',orderLines:[line(6,3)]},{now:new Date('2026-10-28T00:00:00Z'),reservationNumber:'LOCAL',renewalPolicy:{preordersEnabled:true}});
  row.$id="local-lemon";
  for(const payload of [buildBookingConfirmationPayload({reservation:row,sourceType:'cake',from:'local@example.com'}),buildCakeReminderPayload({reservation:row,from:'local@example.com'})]){
   assert.match(payload.text,/Lemon icing 3 \/ Dark chocolate 3 per box/);assert.match(payload.text,/37.50/);

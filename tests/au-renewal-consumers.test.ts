@@ -7,7 +7,7 @@ import { reservationsToCsv, buildSmsMessage } from '../src/lib/utils.js'
 import { renewalReservationProjection } from '../appwrite-functions/reservation-api/src/au-renewal-reader.js'
 
 test('renewal admin, public lookup, CSV and local SMS renderer preserve snapshot facts',()=>{
- const doc={...buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'a',offerId:'brownie-whole',size:'6in',quantity:1,finish:'vanilla-fresh-cream'}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST'}),$id:'test'}
+ const doc={...buildRenewalOrderData({contractVersion:'au-renewal.2026-11.v3',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'a',offerId:'brownie-whole',size:'6in',quantity:1,finish:'vanilla-fresh-cream'}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST'}),$id:'test'}
  const reservation=toReservation(doc as never)
  const publicOrder=toPublicReservation(renewalReservationProjection(doc) as never)
  assert.equal(reservation.totalPriceCents,9200);assert.equal(publicOrder.totalPriceCents,9200)
@@ -22,7 +22,7 @@ test('renewal admin, public lookup, CSV and local SMS renderer preserve snapshot
 import { buildAdminCalendarEvents } from '../src/lib/admin-calendar.js'
 import { formatOrderLineSummary } from '../src/lib/order-lines.js'
 test('admin calendar, CSV and SMS show readable Mochi contents without UUID or empty flavours',()=>{
- const doc={...buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'test-internal-id',offerId:'mochi',mode:'gift-four',quantity:1,flavourCounts:{strawberry:2,green_grape:0,mandarin:0,banana:0,butter_redbean:0,nama_chocolate:2}}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}}),$id:'test'}
+ const doc={...buildRenewalOrderData({contractVersion:'au-renewal.2026-11.v3',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'test-internal-id',offerId:'mochi',mode:'gift-four',quantity:1,flavourCounts:{strawberry:2,green_grape:0,mandarin:0,banana:0,butter_redbean:0,nama_chocolate:2}}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}}),$id:'test'}
  const before=JSON.stringify(doc), reservation=toReservation(doc as never)
  const event=buildAdminCalendarEvents([reservation],[])[0]
  assert.match(event.title,/Chocolate Mochi/)

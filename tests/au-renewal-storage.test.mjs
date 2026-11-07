@@ -4,7 +4,7 @@ import {parseStoredOrderLines} from '../appwrite-functions/reservation-api/src/s
 import {readFileSync} from 'node:fs'
 import {parseRenewalProjection,renewalReservationProjection} from '../appwrite-functions/reservation-api/src/au-renewal-reader.js'
 const storage=await import('../appwrite-functions/reservation-api/src/au-renewal-storage.js').catch(()=>({}))
-export const request={contractVersion:'au-renewal.2026-10.v2',customerName:'Test Customer',customerPhone:'0412345678',customerEmail:'test@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',requestNote:'',promoCode:'',privacyConsent:true,requestId:'renewal-test',website:'',orderLines:[{lineId:'a',offerId:'pave-cake',size:'8in',quantity:1}]}
+export const request={contractVersion:'au-renewal.2026-11.v3',customerName:'Test Customer',customerPhone:'0412345678',customerEmail:'test@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',requestNote:'',promoCode:'',privacyConsent:true,requestId:'renewal-test',website:'',orderLines:[{lineId:'a',offerId:'pave-cake',size:'8in',quantity:1}]}
 test('new snapshot round-trips through the existing server reader without changing legacy version',()=>{
  assert.equal(typeof storage.buildRenewalOrderData,'function')
  const doc=storage.buildRenewalOrderData(request,{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'TEST'})
@@ -34,10 +34,10 @@ test('confirmed brownie prices are stored under v2 while frozen v1 orders keep t
   assert.equal(JSON.stringify(document),original)
   const fresh=storage.buildRenewalOrderData({...request,orderLines:[{lineId:'a',offerId:'brownie-whole',size,quantity:1}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'TEST'})
   assert.equal(fresh.totalPriceCents,[8200,11700,16800][index])
-  assert.equal(parseStoredOrderLines(fresh).policyVersion,'au-renewal.2026-10.v2')
+  assert.equal(parseStoredOrderLines(fresh).policyVersion,'au-renewal.2026-11.v3')
  }
  const tampered=structuredClone(history.orders[1]),payload=JSON.parse(tampered.orderLinesJson)
- payload.policyVersion='au-renewal.2026-10.v2'
+ payload.policyVersion='au-renewal.2026-11.v3'
  tampered.orderLinesJson=JSON.stringify(payload)
  assert.throws(()=>parseStoredOrderLines(tampered),/INVALID_STORED_ORDER/)
 })

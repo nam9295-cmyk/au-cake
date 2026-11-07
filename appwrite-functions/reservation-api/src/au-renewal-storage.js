@@ -58,7 +58,7 @@ export function canonicalRenewalRequest(input, { allowHistorical = false } = {})
       code: "REQUEST_NOTE_TOO_LONG",
     }),
     promoCode,
-    orderLines: normalizeRenewalLines(input.orderLines, { storedOnly: allowHistorical }).sort((a, b) =>
+    orderLines: normalizeRenewalLines(input.orderLines, { storedOnly: allowHistorical, contractVersion: input.contractVersion }).sort((a, b) =>
       a.lineId.localeCompare(b.lineId),
     ),
   };
