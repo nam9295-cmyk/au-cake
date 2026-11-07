@@ -1,10 +1,10 @@
 // Public presentation only: consumed by the AU frontend and static generator, never order validation.
 import { renewalPickupCopy } from "./au-renewal-pickup-policy.js";
-import { RENEWAL_OFFERS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName } from "./au-renewal.js";
+import { RENEWAL_OFFERS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName, priceRenewalOrder, renewalFinishName, renewalSizeName } from "./au-renewal.js";
 import { RENEWAL_NAV, RENEWAL_CARDS, HALLOWEEN_MERINGUE_CARD, HALLOWEEN_ORDER_DEADLINE } from "./au-renewal-catalog.js";
 const escape = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = cents => (cents / 100).toFixed(2);
-const finishName = key => ({basic:'Basic','extra-chocolate':'Extra Chocolate','vanilla-fresh-cream':'Vanilla Fresh Cream','chocolate-buttercream':'Chocolate Buttercream'}[key] || key);
+
 const cards = Object.values(RENEWAL_CARDS).flat();
 // Measured from the existing public assets; tests verify against decoded files.
 const imageDimensions = {lemon:[1080,1012],'halloween-meringue':[1080,1440],pave:[1080,1012],'gateau-loaf':[1080,1012],'brownie-whole':[1080,1012],'brownie-loaf':[1024,1024],cookies:[1216,864],mochi:[1080,1012],almond:[1080,1012],'pave-chocolate':[1080,1012],eiffel:[1080,1012],'gateau-cupcakes':[480,313],'brownie-cupcakes':[912,1152],smore:[480,320]};
@@ -15,9 +15,9 @@ export function seoRobots(config) {
 const summaries = {
   lemon: "Fresh Lemon Cake in boxes of 6, 8, 12 or 16. Fresh lemon glaze with optional dark chocolate finishing for AUD 0.50 per piece. Pickup in Melrose Park, Sydney.",
   'halloween-meringue': 'Halloween 2026 Meringue Pops: packs of 3, 6, 12 or 24. Melrose Park, Sydney pickup Wednesday, Friday, Saturday and Sunday, ending 1 November 2026. Order at least 24 hours ahead; final orders 31 October at 1pm (Sydney).',
-  pave: 'Pavé chocolate whole cake in three sizes with dark or milk chocolate. Made to order for celebrations in Sydney.',
+  pave: 'Dark chocolate Pavé whole cake in mini 4-inch, 6-inch, 8-inch and 10-inch sizes, with optional fresh strawberries. Made to order in Sydney.',
   'gateau-loaf': 'Signature Gâteau chocolate loaf with Basic, Extra Chocolate or Vanilla Fresh Cream finishes. Pickup in Melrose Park, Sydney.',
-  'brownie-whole': 'Brownie Basque cheesecake in whole cake and loaf forms, with optional Vanilla Fresh Cream. Made to order in Sydney.',
+  'brownie-whole': 'Brownie Basque whole cake from mini 4-inch to 10-inch, with Vanilla Fresh Cream or Vanilla Fresh Cream + Strawberries; also available as a loaf. Made to order in Sydney.',
   'brownie-loaf': 'Brownie Basque cheesecake loaf with optional Vanilla Fresh Cream. Pickup in Melrose Park, Sydney.',
   cookies: 'A six-cookie set: three Chocolate Chip and three Double Chocolate. Photos and product introduction; reservations await price approval.',
   mochi: 'Six Chocolate Mochi flavours in Sydney: choose singles or build a four-piece gift box with free box packaging. Pickup in Melrose Park.',
@@ -45,8 +45,18 @@ function selections(card) {
   return card.offers.flatMap(id=>{
     const p=RENEWAL_OFFERS[id];
     if(p.price===null || p.provisional) return [];
-    return Object.entries(p.sizes || {'':p.price}).flatMap(([size,base])=>
-      Object.entries(p.finishes || {basic:base}).map(([finish,price])=>({name:[p.name,size,finishName(finish)].filter(Boolean).join(' · '),price,url:card.href})));
+    const finishes = id === 'pave-cake' ? ['basic','fresh-strawberries'] : id === 'brownie-whole' ? ['basic','vanilla-fresh-cream','vanilla-fresh-cream-strawberries'] : Object.keys(p.finishes || (p.cream ? {basic:0,'vanilla-fresh-cream':0} : {basic:0}));
+    return Object.keys(p.sizes || {'':0}).flatMap(size => finishes.map(finish => {
+      const selection = {lineId:'seo',offerId:id,quantity:1,finish,...(size?{size}:{})};
+      const price = priceRenewalOrder([selection]).totalPriceCents;
+      const url = new URL(card.href, 'https://local.invalid');
+      if (p.sizes || p.finishes || p.cream) {
+        url.searchParams.set('offer',id);
+        if(size) url.searchParams.set('size',size);
+        url.searchParams.set('finish',finish);
+      }
+      return {name:[p.name,renewalSizeName(size),renewalFinishName(finish)].filter(Boolean).join(' · '),price,url:url.pathname+url.search};
+    }));
   });
 }
 function description(card) {
@@ -61,7 +71,7 @@ function imageHtml(card) {
 }
 function cardFacts(card) {
   const choices=selections(card);
-  return `${imageHtml(card)}<h2><a href="${card.href}">${escape(card.en)}</a></h2><p>${escape(description(card))}</p>${choices.length?`<ul>${choices.map(c=>`<li>${escape(c.name)} — AUD ${money(c.price)}</li>`).join('')}</ul>`:'<p>Reservations are not available until the sale price is approved.</p>'}${card.id==='mochi'?`<p>${mochiTerms}</p><p>Please allow at least 24 hours before pickup.</p>${MOCHI_PUBLIC_INFORMATION.en.map(s=>`<p>${escape(s)}</p>`).join('')}`:''}${card.offers.some(id=>RENEWAL_OFFERS[id].cream)?'<p>Optional Vanilla Fresh Cream +AUD 10.00.</p>':''}${card.id.includes('cupcakes')?'<p>Optional individual packaging AUD 0.50 per cupcake, waived when the eligible cupcake subtotal reaches AUD 100.</p>':''}`;
+  return `${imageHtml(card)}<h2><a href="${card.href}">${escape(card.en)}</a></h2><p>${escape(description(card))}</p>${choices.length?`<ul>${choices.map(c=>`<li>${escape(c.name)} — AUD ${money(c.price)}</li>`).join('')}</ul>`:'<p>Reservations are not available until the sale price is approved.</p>'}${card.id==='mochi'?`<p>${mochiTerms}</p><p>Please allow at least 24 hours before pickup.</p>${MOCHI_PUBLIC_INFORMATION.en.map(s=>`<p>${escape(s)}</p>`).join('')}`:''}${card.id==='brownie-loaf'?'<p>Loaf: Vanilla Fresh Cream +AUD 10.00.</p>':''}${card.id.includes('cupcakes')?'<p>Optional individual packaging AUD 0.50 per cupcake, waived when the eligible cupcake subtotal reaches AUD 100.</p>':''}`;
 }
 export function renewalSeoPages(siteUrl, content) {
   const pages={};
@@ -72,7 +82,7 @@ export function renewalSeoPages(siteUrl, content) {
     '/cakes':'Explore Pavé whole cake, Gâteau loaf, Brownie Basque whole cake and loaf, and Levain Cookies. Cake & Bake in Melrose Park, Sydney.',
     '/chocolates':'Explore six-flavour Chocolate Mochi, Almond Chocolate, Pavé heart tins and Eiffel Tower Chocolate. Gift selections in Melrose Park, Sydney.',
     '/celebrate':'Small Bites: Lemon Cakes, Gâteau Cupcakes, Brownie Basque Cupcakes and S’more Sticks for sharing in Sydney. Explore pack sizes and current reservation availability.',
-    '/custom-cakes':'Explore bespoke celebration cakes and Basic one-tier or Advanced two-tier class enquiries in Sydney. Share your design, date and servings.',
+    '/custom-cakes':'Explore single-tier and two-tier custom cakes and private cake class enquiries in Sydney. Class pricing and availability by enquiry.',
     '/business':'Cakes and chocolate gifts for corporate events, café supply enquiries and menu consulting in Sydney. Explore VERYGOOD business services.',
   };
   for(const item of [{href:'/',en:'VERYGOOD Sydney'},...RENEWAL_NAV,...cards,HALLOWEEN_MERINGUE_CARD]) {
@@ -93,7 +103,7 @@ export function renewalSeoPages(siteUrl, content) {
     }else{
       page.structuredData.push({'@type':list.length?'CollectionPage':'WebPage',name,url:canonical,...(list.length?{mainEntity:{'@type':'ItemList',itemListElement:list.map((c,i)=>({'@type':'ListItem',position:i+1,name:c.en,url:siteUrl+c.href}))}}:{})});
     }
-    const services=path==='/custom-cakes'?'<p><a href="/cakes/custom-cake">Bespoke cake enquiries</a> · <a href="/classes">Class archive and enquiries</a></p>':path==='/business'?'<p><a href="/business/events">Corporate &amp; Events</a> · <a href="/business/cafe-supply">Café Supply / Wholesale · Coming Soon</a> · <a href="/business/consulting">Consulting</a></p>':'';
+    const services=path==='/custom-cakes'?['single','double'].map(tier=>`<section><h2>Custom Cake · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><a href="/cakes/custom-cake?tier=${tier}">Request a cake</a><h2>Private Cake Class · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><p>Enquire for pricing. Details and availability confirmed by enquiry.</p><a href="/custom-cakes?service=private-class&amp;tier=${tier}#private-class-enquiry">Enquire about this class</a></section>`).join('')+'<p><a href="/classes">Past kids class archive</a></p>':path==='/business'?'<p><a href="/business/events">Corporate &amp; Events</a> · <a href="/business/cafe-supply">Café Supply / Wholesale · Coming Soon</a> · <a href="/business/consulting">Consulting</a></p>':'';
     page.fallbackHtml=`<main><nav>${nav}</nav><h1>${escape(name)}</h1><p>${escape(desc)}</p>${(product?siblings:list).map(cardFacts).join('')}${services}<p>${escape(pickup.hours)}</p><p>${escape(pickup.driver)}</p><p>Reservation requests are confirmed by our team after availability and payment checks. Choose an available pickup date when ordering.</p></main>`;
     pages[path]=page;
   }
@@ -106,5 +116,5 @@ export function renewalSeoPages(siteUrl, content) {
 }
 export function renderRenewalLlms(siteUrl, additionalEntries=[]) {
   const pickup=renewalPickupCopy('en');
-  return ['# verygood chocolate Sydney','','Official Instagram: https://www.instagram.com/verygood_syd/',`Made-to-order cakes and treats with chocolatier-grade couverture chocolate. Pickup in Melrose Park, Sydney. ${pickup.hours} Requests are confirmed by our team after availability and payment checks.`,pickup.driver,...RENEWAL_NAV.map(n=>`- ${n.en}: ${siteUrl}${n.href}`),...Object.entries(RENEWAL_CARDS).flatMap(([category,list])=>['',`## ${RENEWAL_NAV.find(n=>n.href===`/${category}`).en}`,...list.flatMap(c=>[`- ${c.en}: ${description(c)} ${siteUrl}${c.href}`,...selections(c).map(o=>`  - ${o.name}: AUD ${money(o.price)}.`),...(!selections(c).length?['  Reservations await price approval.']:[]),...(c.id==='mochi'?[mochiTerms,'Minimum 24 hours preparation.',...MOCHI_PUBLIC_INFORMATION.en]:[]),...(c.offers.some(id=>RENEWAL_OFFERS[id].cream)?['  Optional Vanilla Fresh Cream +AUD 10.00.']:[])])]),'',`Class archive and enquiries: ${siteUrl}/classes`,CLASS_ARCHIVE_COPY.en.intro,CLASS_ARCHIVE_COPY.en.courses,...additionalEntries,''].join('\n');
+  return ['# verygood chocolate Sydney','','Official Instagram: https://www.instagram.com/verygood_syd/',`Made-to-order cakes and treats with chocolatier-grade couverture chocolate. Pickup in Melrose Park, Sydney. ${pickup.hours} Requests are confirmed by our team after availability and payment checks.`,pickup.driver,...RENEWAL_NAV.map(n=>`- ${n.en}: ${siteUrl}${n.href}`),...Object.entries(RENEWAL_CARDS).flatMap(([category,list])=>['',`## ${RENEWAL_NAV.find(n=>n.href===`/${category}`).en}`,...list.flatMap(c=>[`- ${c.en}: ${description(c)} ${siteUrl}${c.href}`,...selections(c).map(o=>`  - ${o.name}: AUD ${money(o.price)}.`),...(!selections(c).length?['  Reservations await price approval.']:[]),...(c.id==='mochi'?[mochiTerms,'Minimum 24 hours preparation.',...MOCHI_PUBLIC_INFORMATION.en]:[]),...(c.id==='brownie-loaf'?['  Loaf: Vanilla Fresh Cream +AUD 10.00.']:[])])]),'',`Class archive and enquiries: ${siteUrl}/classes`,CLASS_ARCHIVE_COPY.en.intro,CLASS_ARCHIVE_COPY.en.courses,...additionalEntries,''].join('\n');
 }

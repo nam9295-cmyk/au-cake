@@ -7,7 +7,7 @@ import {AppwriteException} from './reservation-sdk.mjs'
 import {accountEnv,metadataDb} from './fixtures/customer-account/metadata.mjs'
 
 const now=new Date('2026-10-20T00:00:00Z')
-const request={contractVersion:'au-renewal.2026-10.v2',customerName:'Order Contact',customerPhone:'0412345678',customerEmail:'contact@example.test',pickupDate:'2026-10-23',pickupTime:'09:00',requestNote:'Keep snapshot',promoCode:'',privacyConsent:true,requestId:'11111111-1111-4111-8111-111111111111',website:'',orderLines:[{lineId:'line-a',offerId:'pave-cake',size:'8in',quantity:1}]}
+const request={contractVersion:'au-renewal.2026-11.v3',customerName:'Order Contact',customerPhone:'0412345678',customerEmail:'contact@example.test',pickupDate:'2026-10-23',pickupTime:'09:00',requestNote:'Keep snapshot',promoCode:'',privacyConsent:true,requestId:'11111111-1111-4111-8111-111111111111',website:'',orderLines:[{lineId:'line-a',offerId:'pave-cake',size:'8in',quantity:1}]}
 const env={...accountEnv,AU_RENEWAL_WRITES_ENABLED:'true',REVIEW_COUPON_HMAC_SECRET:Buffer.alloc(32,1).toString('base64url')}
 const runtimeConfig={cakeDatabaseId:'cake-db',cakeReservationsId:'reservations',reviewCouponsId:'review_coupons',reviewCouponHmacSecret:env.REVIEW_COUPON_HMAC_SECRET}
 function database({coupon=false,ambiguous=false}={}) {

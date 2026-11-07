@@ -97,3 +97,11 @@ export function restoreCheckoutForm<T extends Record<string,string|number|boolea
   if(draft)for(const k of Object.keys(defaults))if(typeof draft.form[k]===typeof defaults[k])next[k as keyof T]=draft.form[k] as T[keyof T]
   return next
 }
+
+/** Preserve the original submission identity and form before refreshing a changed menu. */
+export function saveCheckoutForRefresh(storage:DraftStorage,draft:CustomerCheckoutDraft,href:string):string|null {
+  if(!saveCheckoutDraft(storage,draft).ok)return null
+  const url=new URL(href)
+  url.searchParams.set('customerResume',draft.flowId)
+  return url.pathname+url.search+url.hash
+}

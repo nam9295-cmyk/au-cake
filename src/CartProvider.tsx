@@ -9,6 +9,7 @@ import {CART_EVENT_PREFIX,createCustomerCartStore,customerCartOwner,type CartOwn
 
 type CartContextValue={
  owner:CartOwner|null;checkoutOwner:CartOwner;ready:boolean;isCurrent:()=>boolean;canImportGuest:boolean;guestAlreadyImported:boolean;guestItemCount:number;guestSignature:string;importGuest:()=>void;storageError:boolean;changedInAnotherTab:boolean
+ paveReselectionLines:readonly RenewalSelection[];acknowledgePaveReselection:()=>void
  mochiReselectionRequired:boolean;acknowledgeMochiReselection:()=>void
  replaceRenewal:(id:string,lines:RenewalSelection[])=>void;renewalLines:readonly RenewalSelection[]
  addRenewal:(lines:RenewalSelection[])=>void;removeRenewal:(id:string)=>void;updateRenewal:(id:string,quantity:number)=>void
@@ -51,12 +52,13 @@ export function CartProvider({children}:PropsWithChildren){
  const updateRenewal=useCallback((id:string,quantity:number)=>commit({type:'renewal-update',id,quantity}),[commit])
  const removeRenewalSubmitted=useCallback((submitted:readonly RenewalSelection[])=>commit({type:'renewal-submitted',lines:submitted}),[commit])
  const clearRenewal=useCallback(()=>commit({type:'renewal-clear'}),[commit])
+ const acknowledgePaveReselection=useCallback(()=>commit({type:'acknowledge-pave'}),[commit])
  const acknowledgeMochiReselection=useCallback(()=>commit({type:'acknowledge-mochi'}),[commit])
  const importGuest=useCallback(()=>commit({type:'import-guest'}),[commit])
  const itemCount=getCartTotalQuantity(lines)+renewalLines.reduce((n,l)=>n+l.quantity,0)
  const value=useMemo<CartContextValue>(()=>({owner:ready?owner:null,checkoutOwner,ready,isCurrent,canImportGuest:ready&&snapshot.canImportGuest,guestAlreadyImported:ready&&snapshot.guestAlreadyImported,guestItemCount:ready?snapshot.guestItemCount:0,guestSignature:ready?snapshot.guestSignature:'',importGuest,storageError:snapshot.storageError,changedInAnotherTab:snapshot.changedInAnotherTab,
-  mochiReselectionRequired:ready&&snapshot.mochiReselectionRequired,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,
-  lines,itemCount,add,update,remove,removeSubmitted,clear}),[ready,owner,checkoutOwner,isCurrent,snapshot.canImportGuest,snapshot.guestAlreadyImported,snapshot.guestItemCount,snapshot.guestSignature,snapshot.storageError,snapshot.changedInAnotherTab,snapshot.mochiReselectionRequired,importGuest,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,lines,itemCount,add,update,remove,removeSubmitted,clear])
+  paveReselectionLines:ready?snapshot.paveReselectionLines:[],acknowledgePaveReselection,mochiReselectionRequired:ready&&snapshot.mochiReselectionRequired,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,
+  lines,itemCount,add,update,remove,removeSubmitted,clear}),[ready,owner,checkoutOwner,isCurrent,snapshot.canImportGuest,snapshot.guestAlreadyImported,snapshot.guestItemCount,snapshot.guestSignature,snapshot.storageError,snapshot.changedInAnotherTab,snapshot.mochiReselectionRequired,snapshot.paveReselectionLines,acknowledgePaveReselection,importGuest,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,lines,itemCount,add,update,remove,removeSubmitted,clear])
  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
 // eslint-disable-next-line react-refresh/only-export-components

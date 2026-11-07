@@ -94,11 +94,13 @@ export function PurchaseBar({
   disabled,
   onAdd,
   added = false,
+  label,
 }: {
   total: string;
   disabled: boolean;
   onAdd: () => void;
   added?: boolean;
+  label?: string;
 }) {
   const { t } = useAuLanguage();
   return (
@@ -113,7 +115,7 @@ export function PurchaseBar({
         disabled={disabled}
         onClick={onAdd}
       >
-        {t("Add to bag", "장바구니에 담기")}
+        {label || t("Add to bag", "장바구니에 담기")}
       </button>
       {added && (
         <a className="au-pave-view-order" href="/cart">

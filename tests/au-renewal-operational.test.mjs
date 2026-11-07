@@ -51,3 +51,16 @@ test('six-flavour mixed boxes round-trip through v2 and all operational outputs 
  }
  assert.equal(JSON.stringify(row),saved)
 })
+test('v3 strawberry cakes keep exact options and totals in lookup, calendar, confirmation and reminder',async()=>{
+ const {renewalReservationProjection}=await import('../appwrite-functions/reservation-api/src/au-renewal-reader.js')
+ for(const [offerId,size,finish,total,label] of [['pave-cake','6in','fresh-strawberries',18600,'Fresh Strawberries'],['brownie-whole','8in','vanilla-fresh-cream-strawberries',31400,'Vanilla Fresh Cream + Strawberries']]) {
+  const row=buildRenewalOrderData({contractVersion:'au-renewal.2026-11.v3',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-11-13',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'cake',offerId,size,finish,quantity:2}]},{now:new Date('2026-11-07T00:00:00Z'),reservationNumber:'V3-TEST'})
+  row.$id='v3-test'
+  assert.equal(renewalReservationProjection(row).totalPriceCents,total)
+  assert.equal(renewalReservationProjection(row).orderLines[0].selection.finish,finish)
+  for(const text of [buildNotificationText(row),buildBookingConfirmationPayload({reservation:row,sourceType:'cake',from:'test@example.com'}).text,buildCakeReminderPayload({reservation:row,from:'test@example.com'}).text,sanitizeCakeCalendarEvent(row).label]) {
+   assert.ok(text.includes(label),label)
+   assert.ok(text.includes((total/100).toFixed(2)))
+  }
+ }
+})

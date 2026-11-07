@@ -16,13 +16,13 @@ export function scopedCartKey(base:string,owner:CartOwner){return owner==='guest
 export type CartAction=
  |{type:'legacy-add';selection:CakeDetailSelection}|{type:'legacy-update';key:string;quantity:number}|{type:'legacy-remove';key:string}|{type:'legacy-submitted';lines:readonly CartLine[]}|{type:'legacy-clear'}
  |{type:'renewal-add';lines:RenewalSelection[]}|{type:'renewal-replace';id:string;lines:RenewalSelection[]}|{type:'renewal-update';id:string;quantity:number}|{type:'renewal-remove';id:string}|{type:'renewal-submitted';lines:readonly RenewalSelection[]}|{type:'renewal-clear'}
- |{type:'acknowledge-mochi'}|{type:'import-guest'}
+ |{type:'acknowledge-pave'}|{type:'acknowledge-mochi'}|{type:'import-guest'}
 type SavedAction=Exclude<CartAction,{type:'import-guest'}>|{type:'import-guest';signature:string;legacy:string;renewal:RenewalSelection[]}
 type CartRecord={version:1;clock:number;id:string;action:SavedAction}
-type Contents={lines:CartLine[];renewalLines:RenewalSelection[];mochiReselectionRequired:boolean;imports:string[]}
+type Contents={lines:CartLine[];renewalLines:RenewalSelection[];mochiReselectionRequired:boolean;paveReselectionLines:RenewalSelection[];imports:string[]}
 export type CustomerCartSnapshot=Contents&{owner:CartOwner|null;ready:boolean;epoch:number;canImportGuest:boolean;guestAlreadyImported:boolean;guestItemCount:number;guestSignature:string;storageError:boolean;changedInAnotherTab:boolean}
 export type CartTicket={owner:CartOwner|null;epoch:number;notice:string|null}
-const empty=():Contents=>({lines:[],renewalLines:[],mochiReselectionRequired:false,imports:[]})
+const empty=():Contents=>({lines:[],renewalLines:[],mochiReselectionRequired:false,paveReselectionLines:[],imports:[]})
 const text=(storage:CartStorage,key:string)=>{try{return storage.getItem(key)}catch{return null}}
 const guestChoiceKey=(owner:CartOwner)=>'verygood-au-cart-import-choice-v1:'+owner
 export function hasDeclinedGuestImport(storage:Pick<Storage,'getItem'>|undefined,owner:CartOwner,signature:string):boolean {
@@ -41,7 +41,7 @@ function baseContents(storage:CartStorage,owner:CartOwner):Contents {
  const inspected=inspectRenewalCart(text(storage,scopedCartKey(RENEWAL_CART_KEY,owner)))
  let archived:{lines?:unknown[];acknowledged?:boolean}={}
  try{archived=JSON.parse(text(storage,scopedCartKey(MOCHI_RESELECTION_KEY,owner))||'{}')}catch{/* keep active selections */}
- return {lines:parseCartLines(text(storage,scopedCartKey(CART_STORAGE_KEY,owner))),renewalLines:inspected.lines,mochiReselectionRequired:inspected.retiredMochi.length>0||(Array.isArray(archived?.lines)&&archived.lines.length>0&&archived.acknowledged!==true),imports:[]}
+ return {lines:parseCartLines(text(storage,scopedCartKey(CART_STORAGE_KEY,owner))),renewalLines:inspected.lines,paveReselectionLines:inspected.retiredPave,mochiReselectionRequired:inspected.retiredMochi.length>0||(Array.isArray(archived?.lines)&&archived.lines.length>0&&archived.acknowledged!==true),imports:[]}
 }
 function uniqueIncoming(current:readonly RenewalSelection[],incoming:RenewalSelection[],id:string){
  const aliases=new Map(incoming.filter(l=>current.some(c=>c.lineId===l.lineId)).map((l,i)=>[l.lineId,`${id.slice(0,24)}-${i}`]))
@@ -65,6 +65,7 @@ function apply(current:Contents,action:SavedAction,id:string):Contents {
   case 'renewal-remove':s.renewalLines=removeRenewalLine(s.renewalLines,action.id);break
   case 'renewal-submitted':s.renewalLines=subtractRenewalSubmission(s.renewalLines,action.lines);break
   case 'renewal-clear':s.renewalLines=[];break
+  case 'acknowledge-pave':s.paveReselectionLines=[];break
   case 'acknowledge-mochi':s.mochiReselectionRequired=false;break
   case 'import-guest':if(!s.imports.includes(action.signature)){s.lines=parseCartLines(serializeCartLines([...s.lines,...parseCartLines(action.legacy)]));if(action.renewal.length)s.renewalLines=addRenewalLines(s.renewalLines,uniqueIncoming(s.renewalLines,action.renewal,id));s.imports=[...s.imports,action.signature]}break
   default:throw Error('INVALID_CART_ACTION')
@@ -73,7 +74,21 @@ function apply(current:Contents,action:SavedAction,id:string):Contents {
 }
 export function readCustomerCart(storage:CartStorage,owner:CartOwner,known:Iterable<string>=[]):Contents {
  let current=baseContents(storage,owner)
- for(const r of records(storage,owner,known))try{current=apply(current,r.action,r.id)}catch{/* retain valid selections when an entry is corrupt */}
+ for(const r of records(storage,owner,known))try{
+  let action=r.action
+  // Old event records are immutable drafts. Quarantine retired Milk while replaying
+  // the remaining products; new mutations still reject Milk before persistence.
+  if(action.type==='renewal-add'||action.type==='renewal-replace'||action.type==='import-guest'){
+   const saved=action.type==='import-guest'?action.renewal:action.lines
+   if(saved.some(line=>line?.offerId==='pave-cake'&&line.chocolateType==='milk')){
+    const inspected=inspectRenewalCart(JSON.stringify({version:1,lines:saved}))
+    current={...current,paveReselectionLines:[...current.paveReselectionLines,...inspected.retiredPave]}
+    action=action.type==='import-guest'?{...action,renewal:inspected.lines}:{...action,lines:inspected.lines}
+    if(!inspected.lines.length&&action.type!=='import-guest')continue
+   }
+  }
+  current=apply(current,action,r.id)
+ }catch{/* retain valid selections when an entry is corrupt */}
  return current
 }
 export function scopedCartSignature(storage:CartStorage,kind:'legacy'|'renewal',owner:CartOwner):string {

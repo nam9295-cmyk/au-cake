@@ -5,6 +5,7 @@ import { SiteHeader } from '../components/SiteChrome.js'
 import type { Page } from '../lib/app-routes.js'
 import type { Language } from '../lib/i18n.js'
 import {
+  CUSTOM_CAKE_BASE_PRICES,
   formatExtraCents,
   formatCents,
 } from '../lib/custom-cake-ui.js'
@@ -481,7 +482,7 @@ export function CustomCakePage({
                   </div>
                   <div className="custom-cake-summary-right">
                     <span>{language === 'ko' ? '기본 카탈로그 가격' : 'Catalogue base price'}</span>
-                    <strong>From AUD $159</strong>
+                    <strong>{isAuRedesign ? `From ${formatCents(tier === 'single' ? CUSTOM_CAKE_BASE_PRICES.single[singleSize] : CUSTOM_CAKE_BASE_PRICES.double[doubleSize])}` : 'From AUD $159'}</strong>
                   </div>
                 </div>
 

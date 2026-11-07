@@ -2,7 +2,7 @@ import { useHalloweenAvailability } from '../lib/use-halloween-availability';
 import { MOCHI_PUBLIC_INFORMATION } from '../../appwrite-functions/reservation-api/src/au-renewal-seo.js';
 import { useCustomerAccount } from '../lib/customer-account-context';
 import { CheckoutAccountPrompt } from '../components/CheckoutAccountPrompt';
-import { readCheckoutResume, acknowledgeCheckoutResume, checkoutCartSignature, fillUntouchedContact } from '../lib/customer-checkout-draft';
+import { readCheckoutResume, acknowledgeCheckoutResume, saveCheckoutForRefresh, checkoutCartSignature, fillUntouchedContact } from '../lib/customer-checkout-draft';
 import {GuestCartImport} from '../components/GuestCartImport';
 import { renewalPhoto, renewalPhotos } from "../lib/renewal-photos";
 import { RenewalPhotoGallery, SixPackPhoto } from "../components/RenewalPhotoStory";
@@ -57,12 +57,15 @@ import {
   MOCHI_DISPLAY_FLAVOURS,
   mochiFlavourName,
   renewalProductName,
+  renewalFinishName,
+  renewalSizeName,
+  wholeCakeToppingSurchargeCents,
   priceRenewalOrder,
   type RenewalSelection,
 } from "../../appwrite-functions/reservation-api/src/au-renewal.js";
 import { renewalPickupSlots } from "../../appwrite-functions/reservation-api/src/au-renewal-pickup.js";
 import { createRenewalOrder, renewalCapabilities } from "../lib/renewal-client";
-import { addRenewalLines } from "../lib/renewal-cart";
+import { addRenewalLines, renewalSelectionHref } from "../lib/renewal-cart";
 function displaySummary(
   line: ReturnType<typeof priceRenewalOrder>["lines"][number],
   lines: ReturnType<typeof priceRenewalOrder>["lines"],
@@ -75,7 +78,8 @@ function displaySummary(
   );
   return [
     ko ? card?.ko || renewalProductName(line, "ko") : renewalProductName(line),
-    line.selection.size,
+    renewalSizeName(line.selection.size, ko ? "ko" : "en"),
+    line.selection.chocolateType ? (line.selection.chocolateType === "milk" ? (ko ? "밀크" : "Milk") : (ko ? "다크" : "Dark")) : null,
     labelFinish(line.selection.finish || "basic", ko),
     `${line.quantity}${ko ? "팩" : " pack(s)"} / ${line.physicalQuantity}${ko ? "개" : " pieces"}`,
     line.selection.mode
@@ -114,20 +118,14 @@ function displaySummary(
 }
 const money = (n: number) => `AUD ${(n / 100).toFixed(2)}`;
 const localPreview = import.meta.env.DEV;
-const labelFinish = (f: string, ko: boolean) =>
-  ({
-    basic: ko ? "기본" : "Basic",
-    "vanilla-fresh-cream": ko ? "바닐라 생크림" : "Vanilla Fresh Cream",
-    "chocolate-buttercream": ko ? "초코 버터크림" : "Chocolate Buttercream",
-    "extra-chocolate": ko ? "초콜릿 추가" : "Extra Chocolate",
-  })[f] || f;
+const labelFinish = (f: string, ko: boolean) => renewalFinishName(f, ko ? "ko" : "en");
 function cardPrice(card: RenewalCard, ko = false) {
   if (card.id === "mochi")
     return ko ? "개당 AUD 8.00부터" : "From AUD 8.00 each";
   const p = RENEWAL_OFFERS[card.offers[0]];
   return p.price === null || (p.provisional && !localPreview)
     ? ""
-    : money(p.price);
+    : `${p.sizes ? (ko ? "기본가 " : "From ") : ""}${money(p.price)}`;
 }
 export function RenewalCollection({
   category,
@@ -184,14 +182,16 @@ function Product({ card }: { card: RenewalCard }) {
     [error, setError] = useState(""),
     [addedSelection, setAddedSelection] = useState("");
   const params = new URLSearchParams(window.location.search);
-  const initialOffer = card.offers.includes(params.get("offer") || "")
+  const editId = params.get("edit");
+  const editLine = cart.renewalLines.find(line => line.lineId === editId && card.offers.includes(line.offerId));
+  const initialOffer = editLine?.offerId || (card.offers.includes(params.get("offer") || "")
     ? params.get("offer")!
-    : card.offers[0];
+    : card.offers[0]);
   const [offerId, setOffer] = useState(initialOffer),
-    [size, setSize] = useState(params.get("size") || "6in"),
-    [finish, setFinish] = useState(params.get("finish") || "basic"),
-    [chocolateType, setChocolate] = useState("dark");
-  const [quantity, setQuantity] = useState(1);
+    [size, setSize] = useState(params.get("size") || editLine?.size || (RENEWAL_OFFERS[initialOffer].sizes ? Object.keys(RENEWAL_OFFERS[initialOffer].sizes!)[0] : "6in")),
+    [finish, setFinish] = useState(params.get("finish") || editLine?.finish || "basic"),
+    [chocolateType, setChocolate] = useState(params.get("chocolateType") || editLine?.chocolateType || "dark");
+  const [quantity, setQuantity] = useState(() => { const n = Number(params.get("quantity") || editLine?.quantity || 1); return Number.isSafeInteger(n) && n > 0 && n <= 5 ? n : 1; });
   const [chocolateIcingCount, setChocolateIcingCount] = useState(0);
   const [lemonPackaging, setLemonPackaging] = useState(false);
   const [packs, setPacks] = useState<
@@ -204,7 +204,7 @@ function Product({ card }: { card: RenewalCard }) {
       ]),
     ),
   );
-  const [addons, setAddons] = useState<Record<string, number>>({});
+  const [addons, setAddons] = useState<Record<string, number>>(() => Object.fromEntries(cart.renewalLines.filter(line => line.parentLineId === editId).map(line => [line.offerId, line.quantity])));
   const editorial = getCakeEditorialBySlug(
     card.href.split("?")[0].split("/").at(-1)!,
     language,
@@ -212,14 +212,33 @@ function Product({ card }: { card: RenewalCard }) {
   const presentation = renewalDetailPresentation(card);
   const p = RENEWAL_OFFERS[offerId],
     isCup = p.family === "cupcake";
+  const wholeCake = ["pave-cake", "brownie-whole"].includes(offerId);
   useEffect(() => {
     const url = new URL(window.location.href);
     url.searchParams.set("offer", offerId);
     if (p.sizes) url.searchParams.set("size", size);
     else url.searchParams.delete("size");
     url.searchParams.set("finish", finish);
+    if (p.chocolate || (offerId === "pound-cake" && finish === "extra-chocolate")) url.searchParams.set("chocolateType", chocolateType);
+    else url.searchParams.delete("chocolateType");
+    url.searchParams.set("quantity", String(quantity));
     window.history.replaceState(window.history.state, "", url);
-  }, [offerId, size, finish, p.sizes]);
+  }, [offerId, size, finish, p.sizes, p.chocolate, chocolateType, quantity]);
+  useEffect(() => {
+    const restore = () => {
+      const query = new URLSearchParams(window.location.search);
+      const requested = query.get("offer") || initialOffer;
+      const id = card.offers.includes(requested) ? requested : card.offers[0];
+      setOffer(id);
+      setSize(query.get("size") || Object.keys(RENEWAL_OFFERS[id].sizes || {})[0] || "6in");
+      setFinish(query.get("finish") || "basic");
+      setChocolate(query.get("chocolateType") || "dark");
+      const n = Number(query.get("quantity") || 1);
+      setQuantity(Number.isSafeInteger(n) && n > 0 && n <= 5 ? n : 1);
+    };
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, [card, initialOffer]);
   let selection: RenewalSelection[] = [];
   if (isCup)
     selection = card.offers
@@ -338,8 +357,13 @@ function Product({ card }: { card: RenewalCard }) {
         ...(l.parentLineId ? { parentLineId: ids.get(l.parentLineId)! } : {}),
       }));
       priceRenewalOrder(next, { localPreview });
-      addRenewalLines(cart.renewalLines, next);
-      cart.addRenewal(next);
+      if (editId) {
+        if (!editLine) throw new Error("CART_ITEM_CHANGED");
+        cart.replaceRenewal(editId, next);
+      } else {
+        addRenewalLines(cart.renewalLines, next);
+        cart.addRenewal(next);
+      }
       setAddedSelection(selectionKey);
       setError("");
     } catch {
@@ -446,7 +470,7 @@ function Product({ card }: { card: RenewalCard }) {
                       active={size === s}
                       onClick={() => setSize(s)}
                     >
-                      <strong>{s.replace("in", "″")}</strong>
+                      <strong>{renewalSizeName(s, language)}</strong>
                       {serving && (
                         <span>
                           {ko
@@ -545,14 +569,14 @@ function Product({ card }: { card: RenewalCard }) {
                   <span>{t("AUD 0.50 per piece · Free from AUD 100 of individually packaged cupcakes and lemon cakes", "개당 AUD 0.50 · 개별포장 컵케이크·레몬케이크 상품금액 AUD 100 이상 무료")}</span>
                 </OptionButton>
               </fieldset>}
-              {(p.finishes || p.cream) && (
+              {(wholeCake || p.finishes || p.cream) && (
                 <fieldset className="au-pave-fieldset">
                   <legend>{t("Choose your finish", "토핑 선택")}</legend>
                   <div className="renewal-option-grid">
                     {Object.keys(
-                      p.finishes || { basic: 0, "vanilla-fresh-cream": 1000 },
+                      wholeCake ? (offerId === "pave-cake" ? { basic: 0, "fresh-strawberries": 0 } : { basic: 0, "vanilla-fresh-cream": 0, "vanilla-fresh-cream-strawberries": 0 }) : p.finishes || { basic: 0, "vanilla-fresh-cream": 1000 },
                     ).map((f) => {
-                      const delta = p.cream
+                      const delta = wholeCake ? wholeCakeToppingSurchargeCents(offerId, Object.hasOwn(p.sizes!, size) ? size : "4in", f) : p.cream
                         ? f === "basic"
                           ? 0
                           : 1000
@@ -563,15 +587,15 @@ function Product({ card }: { card: RenewalCard }) {
                           active={finish === f}
                           onClick={() => setFinish(f)}
                         >
-                          <ProductPhoto
+                          {!wholeCake && <ProductPhoto
                             option
                             src={finishImage(offerId, f)}
                             label={labelFinish(f, ko)}
-                          />
+                          />}
                           <strong>{labelFinish(f, ko)}</strong>
                           <span className="au-pave-option-price">
                             {delta
-                              ? `+ ${money(delta)}`
+                              ? `+ ${money(delta)}${wholeCake ? t(" per cake", " / 케이크 1개") : ""}`
                               : t("Included", "기본 구성")}
                           </span>
                         </OptionButton>
@@ -580,7 +604,14 @@ function Product({ card }: { card: RenewalCard }) {
                   </div>
                 </fieldset>
               )}
-              {(p.chocolate ||
+              {offerId === "pave-cake" && <div className="renewal-dark-chocolate-note">
+                <p>{t("Made with dark chocolate.", "다크 초콜릿으로 만듭니다.")}</p>
+                {chocolateType === "milk" && <>
+                  <p role="alert">{t("Milk chocolate is no longer available. Choose Dark to confirm a new selection.", "밀크 초콜릿 판매가 종료되었습니다. 다크를 직접 선택해 새 구성을 확인해주세요.")}</p>
+                  <button type="button" onClick={() => setChocolate("dark")}>{t("Choose Dark", "다크 선택")}</button>
+                </>}
+              </div>}
+              {((p.chocolate && offerId !== "pave-cake") ||
                 (offerId === "pound-cake" && finish === "extra-chocolate")) && (
                 <fieldset className="au-pave-fieldset">
                   <legend>{t("Chocolate", "초콜릿")}</legend>
@@ -723,7 +754,7 @@ function Product({ card }: { card: RenewalCard }) {
             disabled={!quote || seasonalClosed}
             onClick={add}
           >
-            {t("Add to bag", "장바구니에 담기")}
+            {editId ? t("Update bag", "장바구니 수정") : t("Add to bag", "장바구니에 담기")}
           </button>
           {added && (
             <p role="status">
@@ -756,6 +787,7 @@ function Product({ card }: { card: RenewalCard }) {
         </section>
       </div>
       <PurchaseBar
+        label={editId ? t("Update bag", "장바구니 수정") : undefined}
         total={
           quote ? money(quote.totalPriceCents) : t("Enquire", "문의해주세요")
         }
@@ -939,10 +971,22 @@ function Bag({ settings }: { settings: StoreSettings }) {
       );
       cart.removeRenewalSubmitted(lines);
     } catch (e) {
+      if (e instanceof Error && /UNSUPPORTED_CONTRACT|RENEWAL_UNAVAILABLE/.test(e.message)) {
+        try {
+          const href = saveCheckoutForRefresh(sessionStorage, {
+            version: 1, kind: 'renewal', cartOwner: cart.owner || 'guest', flowId: crypto.randomUUID(), savedAt: new Date().getTime(),
+            returnTo: window.location.pathname === '/reserve' ? '/reserve' : '/cart', requestId: requestId.current,
+            form: { name: contact.customerName, phone: contact.customerPhone, email: contact.customerEmail, date, time,
+              note: extras.note, promo: extras.promo, privacy: extras.privacy }, dirtyFields: [...dirty.current],
+            checkoutContext: {}, cartSnapshot: lines, cartSignature: checkoutCartSignature('renewal', cart.owner || 'guest'),
+          }, window.location.href);
+          if (href) window.history.replaceState(null, '', href);
+        } catch { /* Form entries remain on this page when session storage is unavailable. */ }
+      }
       setError(
-        e instanceof Error
-          ? e.message
-          : t("Please try again.", "다시 시도해주세요."),
+        e instanceof Error && /UNSUPPORTED_CONTRACT|RENEWAL_UNAVAILABLE/.test(e.message)
+          ? t("The menu has been updated. Your bag is saved and your entries are kept on this page. Review the current options and refresh before trying again.", "메뉴가 업데이트되었습니다. 장바구니는 보관되며 입력 내용은 이 화면에 유지됩니다. 현재 구성을 확인하고 새로고침 후 다시 시도해주세요.")
+          : e instanceof Error ? e.message : t("Please try again.", "다시 시도해주세요."),
       );
     } finally {
       lock.current = false;
@@ -968,6 +1012,11 @@ function Bag({ settings }: { settings: StoreSettings }) {
       <GuestCartImport language={language}/>
       {resume.status==='owner-changed'&&<p role="status">{t('The saved checkout belongs to another account. Sign back in to that account to restore it.','저장된 주문서는 다른 회원의 주문서입니다. 해당 계정으로 다시 로그인하면 복원할 수 있습니다.')}</p>}
       <MochiReselectionNotice />
+      {cart.paveReselectionLines.length > 0 && <section className="renewal-seasonal-note" aria-label={t("Saved Milk selections", "보관된 밀크 선택")}>
+        <p role="alert">{t("Milk chocolate Pavé is no longer available. These selections are saved separately; re-select or remove them. Other items in your bag are kept.", "파베 밀크 초콜릿 판매가 종료되었습니다. 해당 선택은 별도 보관되어 있으니 다시 선택하거나 삭제해주세요. 다른 장바구니 상품은 유지됩니다.")}</p>
+        {cart.paveReselectionLines.map((line, index) => <p key={index}><span>{renewalSizeName(line.size, language)} · {t("Milk", "밀크")} ×{line.quantity} </span><a href={renewalSelectionHref(line) || "/cakes/pave-chocolate-cake"}>{t("Re-select Pavé", "파베 다시 선택")}</a></p>)}
+        <button type="button" onClick={cart.acknowledgePaveReselection}>{t("Remove saved Milk selections", "보관된 밀크 선택 삭제")}</button>
+      </section>}
       {seasonalClosed && <p className="renewal-seasonal-note" role="alert">{t("Halloween orders have closed. Your selections are saved; remove the meringue packs to order other products. Existing reservations are unchanged.", "할로윈 주문이 마감되었습니다. 담긴 상품은 보존되어 있습니다. 다른 상품을 주문하려면 머랭쿠키를 삭제해주세요. 기존 예약은 유지됩니다.")}</p>}
       {cart.lines.length > 0 && (
         <p role="status">
@@ -1027,6 +1076,7 @@ function Bag({ settings }: { settings: StoreSettings }) {
                     }}
                   />
                 )}
+                {["pave-cake", "brownie-whole", "brownie-loaf", "pound-cake"].includes(line.offerId) && <a href={renewalSelectionHref(line, line.lineId)!}>{t("Edit cake selection", "케이크 구성 수정")}</a>}
                 {line.offerId === "mochi" &&
                   (editingMochi === line.lineId ? (
                     <MochiBuilder

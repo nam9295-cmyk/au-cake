@@ -32,7 +32,7 @@ test('all collection ACLs exclude customer grants; function-only ledgers stay cl
 test('baseline accepts the real Renewal cake/chocolate storage contract and preserves request fingerprint fields',()=>{
   const p=build(), c=p.creates.collections.find(c=>c.collectionId==='reservations')
   for(const orderLines of [[{lineId:'cake',offerId:'pave-cake',size:'8in',quantity:1}],[{lineId:'choc',offerId:'almond-chocoball-80g',quantity:1}]]){
-    const document=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'CA Test',customerPhone:'0491570006',customerEmail:'ca@example.invalid',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,website:'',orderLines},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'CA-TEST'})
+    const document=buildRenewalOrderData({contractVersion:'au-renewal.2026-11.v3',customerName:'CA Test',customerPhone:'0491570006',customerEmail:'ca@example.invalid',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,website:'',orderLines},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'CA-TEST'})
     for(const [key,value] of Object.entries(document)){
       const attribute=c.attributes.find(a=>a.key===key)
       assert.ok(attribute,`missing ${key}`)

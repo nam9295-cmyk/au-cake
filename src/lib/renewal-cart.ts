@@ -1,3 +1,4 @@
+import { RENEWAL_CARDS } from "../../appwrite-functions/reservation-api/src/au-renewal-catalog.js";
 import {
   normalizeRenewalLines,
   MOCHI_FLAVOURS,
@@ -48,25 +49,32 @@ export function removeRenewalLine(
 }
 export const MOCHI_RESELECTION_KEY = "verygood-au-mochi-reselection";
 export function inspectRenewalCart(raw: string | null): {
-  lines: RenewalSelection[]; retiredMochi: unknown[];
+  lines: RenewalSelection[]; retiredMochi: unknown[]; retiredPave: RenewalSelection[];
 } {
+  const empty = { lines: [], retiredMochi: [], retiredPave: [] };
   try {
     const value = JSON.parse(raw || "null");
-    if (value?.version !== 1 || !Array.isArray(value.lines)) return { lines: [], retiredMochi: [] };
+    if (value?.version !== 1 || !Array.isArray(value.lines)) return empty;
     const retiredMochi = value.lines.filter((line: RenewalSelection) =>
       line?.offerId === "mochi" && (!["gift-four", "singles"].includes(line.mode || "") || "counts" in line || Object.hasOwn(line.flavourCounts || {}, "amande")));
-    const lines = normalizeRenewalLines(value.lines.filter((line: unknown) => !retiredMochi.includes(line)));
-    priceRenewalOrder(lines, { localPreview: true });
-    return { lines, retiredMochi };
-  } catch {
-    // Preserve even an all-retired cart for an explicit re-selection notice.
-    try {
-      const value = JSON.parse(raw || "null");
-      if (value?.version === 1 && Array.isArray(value.lines) && value.lines.every((l: RenewalSelection) => l?.offerId === "mochi"))
-        return { lines: [], retiredMochi: value.lines };
-    } catch { /* malformed storage is not an order */ }
-    return { lines: [], retiredMochi: [] };
-  }
+    const retiredPave = value.lines.filter((line: RenewalSelection) => line?.offerId === "pave-cake" && line.chocolateType === "milk");
+    const retiredIds = new Set(retiredPave.map((line: RenewalSelection) => line.lineId));
+    const available = value.lines.filter((line: RenewalSelection) => !retiredMochi.includes(line) && !retiredPave.includes(line) && !retiredIds.has(line?.parentLineId));
+    const lines = available.length ? normalizeRenewalLines(available) : [];
+    if (lines.length) priceRenewalOrder(lines, { localPreview: true });
+    return { lines, retiredMochi, retiredPave };
+  } catch { return empty; }
+}
+// Re-selection links restore options for review at current prices; they never submit an order.
+export function renewalSelectionHref(line: RenewalSelection, editId?: string): string | null {
+  const card = Object.values(RENEWAL_CARDS).flat().find(card => card.offers.includes(line.offerId));
+  if (!card || line.offerId === "mochi") return null;
+  const url = new URL(card.href, "https://local.invalid");
+  url.searchParams.set("offer", line.offerId);
+  for (const key of ["size", "finish", "chocolateType"] as const) if (line[key]) url.searchParams.set(key, line[key]);
+  url.searchParams.set("quantity", String(line.quantity));
+  if (editId) url.searchParams.set("edit", editId);
+  return url.pathname + url.search;
 }
 export function parseRenewalCart(raw: string | null): RenewalSelection[] {
   return inspectRenewalCart(raw).lines;

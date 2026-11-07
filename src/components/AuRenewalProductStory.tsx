@@ -25,7 +25,9 @@ function renewalEditorial(card: RenewalCard, language: Language): CompactCakeEdi
     ...editorial,
     details: { ...editorial.details, items: [
       ...editorial.details.items.slice(0, 4),
-      language === 'ko' ? '바닐라 생크림 — AUD 10을 추가해 선택할 수 있습니다.' : 'Vanilla Fresh Cream — Available for an additional AUD 10.',
+      card.id === 'brownie-whole'
+        ? language === 'ko' ? '바닐라 생크림 또는 생크림 + 딸기 — 사이즈별 추가금은 위 옵션에서 확인해주세요.' : 'Vanilla Fresh Cream or Cream + Strawberries — See the options above for the surcharge for your cake size.'
+        : language === 'ko' ? '바닐라 생크림 — AUD 10을 추가해 선택할 수 있습니다.' : 'Vanilla Fresh Cream — Available for an additional AUD 10.',
     ] },
   }
   return editorial

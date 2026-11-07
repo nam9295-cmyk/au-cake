@@ -9,9 +9,9 @@ export function renewalDetailPresentation(card: RenewalCard) {
   if (card.id === 'brownie-whole') return {
     ...original,
     title: card.en,
-    editionTitle: 'Basic Or Vanilla Fresh Cream',
+    editionTitle: 'Basic, Vanilla Fresh Cream Or Cream + Strawberries',
     editions: original.editions?.slice(0, 2).map((edition, index) => index === 1
-      ? { ...edition, title: 'Vanilla Fresh Cream', body: 'Add vanilla fresh cream for AUD 10 using the options above.' }
+      ? { ...edition, title: 'Vanilla Fresh Cream', body: 'Choose vanilla fresh cream or cream + strawberries using the options above. The surcharge depends on cake size.' }
       : edition),
     packagingNote: 'Your cake is prepared for pre-arranged collection in Melrose Park, Sydney.',
   }

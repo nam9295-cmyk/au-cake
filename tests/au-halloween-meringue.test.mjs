@@ -33,7 +33,7 @@ test('24 hours exact, expired and mixed carts; closures preserved',()=>{
  assert.throws(()=>validateRenewalPickup(lines,'2026-10-30','10:00',new Date('2026-10-29T23:00:01Z'),policy),/PICKUP_TIME_TOO_SOON/);
 });
 test('real writer rejects after season; snapshot reader stays valid independently of clock',()=>{
- const request={contractVersion:'au-renewal.2026-10.v2',customerName:'Test Meringue',customerPhone:'0412345678',customerEmail:'synthetic@example.com',pickupDate:'2026-11-01',pickupTime:'13:00',privacyConsent:true,requestId:'seasonal-test',website:'',orderLines:lines};
+ const request={contractVersion:'au-renewal.2026-11.v3',customerName:'Test Meringue',customerPhone:'0412345678',customerEmail:'synthetic@example.com',pickupDate:'2026-11-01',pickupTime:'13:00',privacyConsent:true,requestId:'seasonal-test',website:'',orderLines:lines};
  const doc=buildRenewalOrderData(request,{now,reservationNumber:'LOCAL',renewalPolicy:policy});
  assert.equal(parseStoredOrderLines(doc).totalPriceCents,1200);
  assert.throws(()=>buildRenewalOrderData(request,{now:new Date('2026-11-02T00:00:00Z'),reservationNumber:'LOCAL',renewalPolicy:policy}),/SEASONAL_PRODUCT_ENDED/);
@@ -55,7 +55,7 @@ test('static seasonal detail has dated price offers and an explicit final pickup
 test('create API enforces seasonal expiry with zero writes and preserves an existing request retry after expiry',async()=>{
  const {createCake}=await import('../appwrite-functions/reservation-api/src/main.js');
  const {AppwriteException}=await import('./reservation-sdk.mjs');
- const input={contractVersion:'au-renewal.2026-10.v2',customerName:'Test Meringue',customerPhone:'0412345678',customerEmail:'synthetic@example.com',pickupDate:'2026-11-01',pickupTime:'13:00',privacyConsent:true,requestId:'11111111-1111-4111-8111-111111111111',website:'',orderLines:lines};
+ const input={contractVersion:'au-renewal.2026-11.v3',customerName:'Test Meringue',customerPhone:'0412345678',customerEmail:'synthetic@example.com',pickupDate:'2026-11-01',pickupTime:'13:00',privacyConsent:true,requestId:'11111111-1111-4111-8111-111111111111',website:'',orderLines:lines};
  let saved, writes=0;
  const db={getDocument:async()=>{if(saved)return saved;throw new AppwriteException('missing',404)},listDocuments:async()=>({documents:[]}),createDocument:async({data,documentId})=>{writes++;return saved={...data,$id:documentId}}};
  const options={now,runtimeConfig:{cakeDatabaseId:'local-test',cakeReservationsId:'local-test',reviewCouponHmacSecret:Buffer.alloc(32,1).toString('base64url')},renewalPolicy:{enabled:true,...policy}};

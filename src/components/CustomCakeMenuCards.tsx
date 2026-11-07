@@ -1,8 +1,8 @@
 import { CUSTOM_CAKE_MENU } from '../lib/custom-cake-menu'
 import { CUSTOM_CAKE_BASE_PRICES, formatCents } from '../lib/custom-cake-ui'
 import { useAuLanguage } from '../lib/au-language'
-import classProcess from '../assets/kids-class-process.webp'
-import classFinished from '../assets/kids-class-finished.webp'
+const classProcess = '/services/private-class-process.webp'
+const classFinished = '/services/private-class-finished.webp'
 
 export function CustomCakeMenuCards() {
   const { language, t } = useAuLanguage()

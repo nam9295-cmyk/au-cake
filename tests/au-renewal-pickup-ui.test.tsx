@@ -31,7 +31,7 @@ test("AU public copy and common notice match the approved calendar in both langu
 test("new order detail rendering retains actual product and size without altering a stored pickup appointment", () => {
   const doc = buildRenewalOrderData(
     {
-      contractVersion: "au-renewal.2026-10.v2",
+      contractVersion: "au-renewal.2026-11.v3",
       customerName: "Test Buyer",
       customerPhone: "0412345678",
       customerEmail: "buyer@example.com",
@@ -66,7 +66,7 @@ test("new order detail rendering retains actual product and size without alterin
   assert.match(drawer, /18:30/);
   assert.match(drawer, /09:00–13:00/);
   assert.match(html, /Brownie Basque Whole Cake/);
-  assert.match(html, /6in/);
+  assert.match(html, /6 inch/);
   assert.doesNotMatch(html, /Pave Chocolate Cake/);
   assert.equal(reservation.pickupDate, "2026-10-26");
   assert.equal(reservation.pickupTime, "18:30");
@@ -80,7 +80,7 @@ test("frontend refuses capabilities from a server with a different pickup policy
       responseBody: JSON.stringify({
         ok: true,
         result: {
-          contractVersion: "au-renewal.2026-10.v2",
+          contractVersion: "au-renewal.2026-11.v3",
           enabled: true,
           preordersEnabled: false,
           weekendApproved: true,
@@ -93,7 +93,7 @@ test("frontend refuses capabilities from a server with a different pickup policy
       responseBody: JSON.stringify({
         ok: true,
         result: {
-          contractVersion: "au-renewal.2026-10.v2",
+          contractVersion: "au-renewal.2026-11.v3",
           pickupPolicyVersion: RENEWAL_PICKUP_POLICY_VERSION,
           enabled: false,
           preordersEnabled: false,
@@ -108,7 +108,7 @@ test("frontend refuses capabilities from a server with a different pickup policy
 });
 
 test('Mochi lookup details show per-box contents separately from total pieces without irrelevant finish', () => {
- const doc=buildRenewalOrderData({contractVersion:'au-renewal.2026-10.v2',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'private-line-id',offerId:'mochi',mode:'gift-four',quantity:2,flavourCounts:{strawberry:2,green_grape:0,mandarin:0,banana:0,butter_redbean:0,nama_chocolate:2}}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}})
+ const doc=buildRenewalOrderData({contractVersion:'au-renewal.2026-11.v3',customerName:'Test Buyer',customerPhone:'0412345678',customerEmail:'buyer@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',privacyConsent:true,orderLines:[{lineId:'private-line-id',offerId:'mochi',mode:'gift-four',quantity:2,flavourCounts:{strawberry:2,green_grape:0,mandarin:0,banana:0,butter_redbean:0,nama_chocolate:2}}]},{now:new Date('2026-10-20T00:00:00Z'),reservationNumber:'VG-TEST',renewalPolicy:{preordersEnabled:true}})
  const reservation=toReservation({...doc,$id:'fixture'} as never)
  const html=renderToStaticMarkup(<OrderDetailRows reservation={reservation} language="en" />)
  assert.match(html,/Each box/);assert.match(html,/Strawberry ×2, Original ×2/)
@@ -119,7 +119,7 @@ test('Mochi lookup details show per-box contents separately from total pieces wi
 
 test("admin retains an approved 12:40 appointment alongside weekend slots through 13:00", () => {
   const doc = buildRenewalOrderData({
-    contractVersion: "au-renewal.2026-10.v2", customerName: "Test Buyer",
+    contractVersion: "au-renewal.2026-11.v3", customerName: "Test Buyer",
     customerPhone: "0412345678", customerEmail: "buyer@example.com",
     pickupDate: "2026-10-24", pickupTime: "12:00", privacyConsent: true,
     orderLines: [{ lineId: "fixture", offerId: "brownie-whole", size: "6in", quantity: 1 }],

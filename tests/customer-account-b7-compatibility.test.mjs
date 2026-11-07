@@ -16,7 +16,7 @@ const options={now,runtimeConfig,renewalPolicy:{enabled:true,preordersEnabled:fa
 const codes={manual:'JENNIETEST7',review:'FOXKIWI7Q2MK'} // Synthetic local-only codes, never used remotely.
 function request(f,i){
  const c=manifest.contactFixtures[f.actor==='guest'?'G':f.actor]
- return {contractVersion:f.contractVersion,requestId:f.requestId||`b710000${i+1}-0000-4000-8000-000000000001`,customerName:c.name,customerPhone:c.phone,customerEmail:c.email,
+ return {contractVersion:'au-renewal.2026-11.v3',requestId:f.requestId||`b710000${i+1}-0000-4000-8000-000000000001`,customerName:c.name,customerPhone:c.phone,customerEmail:c.email,
  pickupDate:f.pickupDate,pickupTime:f.pickupTime,privacyConsent:true,requestNote:'',website:'',promoCode:codes[f.couponFixture]||'',
  orderLines:[{lineId:'b7-line',offerId:f.productId,quantity:f.quantity,...(f.productId==='pave-cake'?{size:'6in',chocolateType:'dark'}:{})}]}
 }
@@ -50,7 +50,7 @@ const totals=[7500,1200,7125,1080,7500,1200]
 for(const [i,f] of manifest.orders.entries())test(`v2 fixture ${i+1} ${f.actor}: create, snapshot owner and exact retry`,async()=>{
  const db=database(f.couponFixture),input=request(f,i),opts={...options,verifiedCustomerUserId:f.expectedOwnerUid||undefined}
  const result=await createCake(db,input,opts)
- assert.equal(result.contractVersion,'au-renewal.2026-10.v2');assert.equal(result.totalPriceCents,totals[i])
+ assert.equal(result.contractVersion,'au-renewal.2026-11.v3');assert.equal(result.totalPriceCents,totals[i])
  assert.equal(db.rows.get(input.requestId).customerUserId,f.expectedOwnerUid||undefined)
  assert.deepEqual(await createCake(db,input,opts),result)
  assert.equal(db.rows.size,1);assert.equal(db.stats.creates,1);assert.equal(db.stats.claims,f.couponFixture?1:0)
