@@ -27,10 +27,10 @@ async (page) => {
     check(await cards.first().locator('.au-v02-best-action').getAttribute('href') === '/chocolates/chocolate-mochi', `${width}: Mochi leads Best with its product link`)
     check((await cards.first().textContent()).includes('From AUD 8.00 each'), `${width}: existing Mochi price`)
     const order = await page.evaluate(() => {
-      const nodes = ['#best', '#au-collection', '.au-v02-craft', '.au-stories-home', '#custom-cakes'].map(selector => document.querySelector(selector))
+      const nodes = ['#best', '#au-collection', '#custom-cakes', '.au-v02-craft', '.au-stories-home'].map(selector => document.querySelector(selector))
       return nodes.every((node, index) => node && (!index || Boolean(nodes[index - 1].compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)))
     })
-    check(order, `${width}: Best → collection → craft → reviews → custom`)
+    check(order, `${width}: Best → collection → custom → craft → reviews`)
     const track = page.locator('.au-v02-best-track')
     await track.scrollIntoViewIfNeeded()
     for (const img of await cards.locator('img').all()) {
