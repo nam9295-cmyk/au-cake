@@ -1,3 +1,4 @@
+import { getCustomCakeMenuCards } from './custom-cake-menu';
 import { RENEWAL_CARDS } from "../../appwrite-functions/reservation-api/src/au-renewal-catalog.js";
 import { RENEWAL_OFFERS } from "../../appwrite-functions/reservation-api/src/au-renewal.js";
 import type { Language } from "./i18n";
@@ -47,4 +48,15 @@ export function getAuHomeBest(language: Language) {
   const collections = getAuHomeCollections(language);
   const mochi = collections[1].products.find((product) => product.id === "mochi")!;
   return [mochi, ...collections[0].products.slice(0, 3)];
+}
+
+export function getAuHomeCustomCollections(language: Language) {
+  const products = getCustomCakeMenuCards(language);
+  return (["custom-cake", "private-class"] as const).map(kind => ({
+    id: kind,
+    label: kind === "custom-cake"
+      ? language === "ko" ? "커스텀 케이크" : "Custom Cakes"
+      : language === "ko" ? "프라이빗 클래스" : "Private Classes",
+    products: products.filter(product => product.kind === kind),
+  }));
 }

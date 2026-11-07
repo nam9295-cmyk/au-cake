@@ -64,3 +64,12 @@ Local feature commits before the final review/verification follow-up:
 A separately authorized release will require the matching reservation-api, reservation-notification and booking-reminder packages and the AU frontend. The existing runtime builders stage the canonical parsers and their dependencies; no new schema, environment setting or hosting flag is required by this implementation. Deployment order/cutover should retain the existing version capability gate. No deployment was performed.
 
 Unverified externally: deployed Appwrite runtime and identity sessions, real coupon redemption/email delivery/payment, provider configuration and a live Cloudflare deployment. These were exercised with local adapters/fixtures and staging archives only. New mini physical height, weight, servings, strawberry photographs and private class operating details remain unconfirmed and are not promised in the UI. Local Node is 24; Appwrite package engine targets Node 22, so the exact deployed Node 22 runtime was not exercised here. Build retains existing large-chunk warnings.
+
+
+## Homepage follow-up — 2026-11-07
+
+Replaced the homepage Custom Cake banner with a second collection section using the same tabs, cards, typography, spacing and responsive layout as `au-collection`. The two categories are Custom Cakes and Private Classes; each shows its single/two-tier cards. The general browse action leads to `/custom-cakes`, cake cards lead to the tier-selected request form, and class cards lead to their selected enquiry. Existing form URLs continue working.
+
+The homepage and hub share the same menu presentation data (names, prices, images and destinations). Both homepage collections use `HomeCollectionSection`; the former banner CSS was removed.
+
+Follow-up validation: `test:home-v02` 8 passed (new assertions first failed against the old banner), `test:renewal` passed, `test:cake` passed, Home/Phase 1 market plus static hub checks 22 passed, lint passed, and sequential KR / account-enabled AU builds passed. Browser checks at 390/768/1440px confirmed layout, both categories, keyboard arrows/Home, language retention, and actual two-tier form/enquiry navigation. No new production deployment or external order/email action.

@@ -20,7 +20,7 @@
   outline: 2px solid #1f5a46;
   outline-offset: 4px;
 }
-.au-home-shell .au-home-v02 :is(#au-collection, #business, #story) {
+.au-home-shell .au-home-v02 :is(#au-collection, #custom-cakes, #business, #story) {
   scroll-margin-top: 92px;
 }
 .au-home-shell .au-home-v02 .au-v02-eyebrow {
@@ -339,43 +339,8 @@
   color: #1f5a46;
   text-decoration: none;
 }
-.au-home-shell .au-home-v02 .au-v02-custom {
-  padding: 80px 48px;
-  box-sizing: border-box;
-}
-.au-home-shell .au-home-v02 .au-v02-custom-banner {
-  display: grid;
-  grid-template-columns: 44% minmax(0, 1fr);
-  background: #faf7f5;
-  border: 1px solid #e8e4e5;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.au-home-shell .au-home-v02 .au-v02-custom-banner > img {
-  width: 100%;
-  height: 400px;
-  object-fit: cover;
-}
-.au-home-shell .au-home-v02 .au-v02-custom-banner > div {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 48px;
-  gap: 16px;
-}
-.au-home-shell .au-home-v02 .au-v02-custom h2 {
-  font-size: 32px;
-  line-height: 1.2;
-}
-.au-home-shell
-  .au-home-v02
-  .au-v02-custom-banner
-  > div
-  > p:not(.au-v02-eyebrow) {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #7a7274;
+.au-home-shell .au-home-v02 .au-v02-custom-collection .au-v02-product-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .au-home-shell .au-home-v02 .au-v02-business-grid {
   display: grid;
@@ -526,7 +491,7 @@
   }
   .au-home-shell
     .au-home-v02
-    :is(.au-v02-best, .au-v02-business, .au-v02-custom, .au-v02-story) {
+    :is(.au-v02-best, .au-v02-business, .au-v02-story) {
     padding: 60px 24px;
   }
   .au-home-shell .au-home-v02 .au-v02-collection {
@@ -545,18 +510,12 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-  .au-home-shell .au-home-v02 .au-v02-custom-banner > div {
-    padding: 24px;
-  }
-  .au-home-shell .au-home-v02 .au-v02-custom h2 {
-    font-size: 26px;
-  }
   .au-home-shell .au-home-v02 .au-v02-business-grid {
     gap: 16px;
   }
 }
 @media (max-width: 767px) {
-  .au-home-shell .au-home-v02 :is(#au-collection, #business, #story) {
+  .au-home-shell .au-home-v02 :is(#au-collection, #custom-cakes, #business, #story) {
     scroll-margin-top: 76px;
   }
   .au-home-shell .au-home-v02 .rd-hero {
@@ -722,30 +681,6 @@
   .au-home-shell .au-home-v02 .au-v02-product img {
     height: 120px;
     margin: 6px 0;
-  }
-  .au-home-shell .au-home-v02 .au-v02-custom {
-    padding: 32px 16px;
-  }
-  .au-home-shell .au-home-v02 .au-v02-custom-banner {
-    display: flex;
-    flex-direction: column;
-  }
-  .au-home-shell .au-home-v02 .au-v02-custom-banner > img {
-    height: 220px;
-  }
-  .au-home-shell .au-home-v02 .au-v02-custom-banner > div {
-    padding: 20px 16px;
-    gap: 12px;
-  }
-  .au-home-shell .au-home-v02 .au-v02-custom h2 {
-    font-size: 22px;
-  }
-  .au-home-shell
-    .au-home-v02
-    .au-v02-custom-banner
-    > div
-    > p:not(.au-v02-eyebrow) {
-    font-size: 14px;
   }
   .au-home-shell .au-home-v02 .au-v02-business-grid {
     grid-template-columns: 1fr;

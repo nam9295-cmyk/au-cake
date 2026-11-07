@@ -55,7 +55,7 @@ test('home renders video before the single new headline, Best, collection, stori
 test('Whole Cakes defaults to four catalogue products; Custom and Coming Soon are not falsely orderable', () => {
   const html = home()
   assert.match(html, /role="tab"[^>]*aria-selected="true"[^>]*>Cake &amp; Bake/)
-  assert.equal((html.match(/data-home-product=/g) || []).length, 4)
+  assert.equal((html.match(/<section[^>]*id="au-collection"[\s\S]*?<\/section>/)?.[0].match(/data-home-product=/g) || []).length, 4)
   for (const slug of [
     'pave-chocolate-cake',
     'signature-gateau-au-chocolat',
@@ -65,7 +65,8 @@ test('Whole Cakes defaults to four catalogue products; Custom and Coming Soon ar
     assert.match(html, new RegExp(`href="/cakes/${slug}"`))
   }
   assert.doesNotMatch(html, /href="\/cakes\/bento-cake"/)
-  assert.match(html, /href="\/cakes\/custom-cake"/)
+  assert.match(html, /href="\/custom-cakes"/)
+  assert.doesNotMatch(html, /href="\/cakes\/custom-cake"/)
 })
 
 test('shared AU header includes Journal alongside existing destinations and paused classes stay auxiliary', () => {
@@ -145,4 +146,21 @@ test('Chocolate Mochi modal is bilingual and respects session and Sydney-day dis
     if (originalStorage) Object.defineProperty(globalThis, 'sessionStorage', originalStorage)
     else Reflect.deleteProperty(globalThis, 'sessionStorage')
   }
+})
+
+for (const language of ['en', 'ko'] as const) test(`home custom menus use collection categories and tier-specific destinations (${language})`, () => {
+ const html=renderToStaticMarkup(<AuLanguageProvider language={language} setLanguage={()=>{}}><HomePage language={language} setLanguage={()=>{}} navigate={()=>{}} navigateToCake={()=>{}} cartItemCount={0}/></AuLanguageProvider>)
+ const section=html.match(/<section[^>]*id="custom-cakes"[\s\S]*?<\/section>/)?.[0]
+ assert.ok(section)
+ assert.match(section,/class="[^"]*au-v02-collection[^"]*"/)
+ assert.equal((section.match(/role="tab"/g)||[]).length,2)
+ assert.match(section,language==='en'?/Private Classes/:/프라이빗 클래스/)
+ assert.match(section,/href="\/cakes\/custom-cake\?tier=single"/)
+ assert.match(section,/href="\/cakes\/custom-cake\?tier=double"/)
+ assert.match(section,/href="\/custom-cakes"/)
+ assert.match(section,/159\.00/)
+ assert.match(section,/239\.00/)
+ assert.doesNotMatch(html,/href="\/cakes\/custom-cake"/)
+ const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1])
+ assert.equal(new Set(ids).size,ids.length,'collection tabs and panels have unique IDs')
 })

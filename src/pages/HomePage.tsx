@@ -1,3 +1,4 @@
+import { HomeCollectionSection } from '../components/HomeCollectionSection'
 import { HalloweenMeringueSection } from '../components/HalloweenMeringueSection'
 import { MochiLaunchNotice } from "../components/MochiLaunchNotice"
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
@@ -13,8 +14,7 @@ import homeCopy from '../content/au-home-v02.json'
 import {
   getAuHomeBest,
   getAuHomeCollections,
-  type HomeCollectionId,
-  type HomeProduct,
+  getAuHomeCustomCollections,
 } from '../lib/au-home'
 import { marketConfig } from '../lib/market'
 
@@ -42,40 +42,6 @@ function ServicePhoto({ asset }: { asset: keyof typeof serviceAssets }) {
   )
 }
 
-function CollectionCard({ product }: { product: HomeProduct }) {
-  const body = (
-    <>
-      <div className="au-v02-product-heading">
-        <h3>{product.name}</h3>
-        <p>{product.description}</p>
-      </div>
-      {product.image && <img
-        src={product.image}
-        alt={product.imageAlt}
-        width={1080}
-        height={1012}
-        loading="lazy"
-        decoding="async"
-      />
-      }<div className="au-v02-product-price">
-        <strong>
-          {product.comingSoon ? product.description : product.price}
-        </strong>
-        {product.href && <ArrowUpRight size={16} aria-hidden="true" />}
-      </div>
-    </>
-  )
-  return (
-    <article className="au-v02-product" data-home-product={product.id}>
-      {product.href ? (
-        <a href={product.href}>{body}</a>
-      ) : (
-        <div className="au-v02-coming-soon">{body}</div>
-      )}
-    </article>
-  )
-}
-
 function visibleBestIndex(track: HTMLDivElement) {
   const maximum = track.scrollWidth - track.clientWidth
   if (maximum <= 2) return 0
@@ -95,9 +61,7 @@ function AuHomePage({
 }: Parameters<typeof LegacyHomePage>[0]) {
   const t = (en: string, ko: string) => (language === 'ko' ? ko : en)
   const collections = getAuHomeCollections(language)
-  const [activeCategory, setActiveCategory] =
-    useState<HomeCollectionId>('whole')
-  const active = collections.find((category) => category.id === activeCategory)!
+  const customCollections = getAuHomeCustomCollections(language)
   const best = getAuHomeBest(language)
   const bestTrack = useRef<HTMLDivElement>(null)
   const [bestIndex, setBestIndex] = useState(0)
@@ -107,7 +71,7 @@ function AuHomePage({
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         const id = window.location.hash.slice(1)
-        if (['story', 'au-collection', 'business'].includes(id))
+        if (['story', 'au-collection', 'custom-cakes', 'business'].includes(id))
           document.getElementById(id)?.scrollIntoView({ block: 'start' })
       })
     }
@@ -293,111 +257,14 @@ function AuHomePage({
           ))}
         </div>
       </section>
-      <section
-        id="au-collection"
-        className="rd-collection-section au-v02-collection"
-        aria-label={t('The AU collection', 'AU 컬렉션')}
-      >
-        <aside className="au-v02-collection-sidebar">
-          <p className="au-v02-collection-brand">VERYGOOD</p>
-          <div
-            className="au-v02-tabs"
-            role="tablist"
-            aria-label={t('Collection categories', '상품 카테고리')}
-          >
-            {collections.map((category, index) => (
-              <button
-                key={category.id}
-                id={`home-tab-${category.id}`}
-                type="button"
-                role="tab"
-                aria-selected={activeCategory === category.id}
-                aria-controls="home-collection-panel"
-                tabIndex={activeCategory === category.id ? 0 : -1}
-                onClick={() => setActiveCategory(category.id)}
-                onKeyDown={(event) => {
-                  if (
-                    ![
-                      'ArrowRight',
-                      'ArrowDown',
-                      'ArrowLeft',
-                      'ArrowUp',
-                      'Home',
-                      'End',
-                    ].includes(event.key)
-                  )
-                    return
-                  event.preventDefault()
-                  const next =
-                    event.key === 'Home'
-                      ? 0
-                      : event.key === 'End'
-                        ? 2
-                        : (index +
-                            (['ArrowRight', 'ArrowDown'].includes(event.key)
-                              ? 1
-                              : 2)) %
-                          3
-                  setActiveCategory(collections[next].id)
-                  document
-                    .getElementById(`home-tab-${collections[next].id}`)
-                    ?.focus()
-                }}
-              >
-                {category.label}
-                <span>[{category.products.length}]</span>
-              </button>
-            ))}
-          </div>
-          <div className="au-v02-atelier-note">
-            <p className="au-v02-eyebrow">MELROSE PARK ATELIER</p>
-            <p>
-              {t(
-                'Made to order with thoughtful ingredients and chocolatier-grade couverture.',
-                '쇼콜라티에급 커버춰와 정성껏 고른 재료로 주문 제작합니다.',
-              )}
-            </p>
-          </div>
-        </aside>
-        <div
-          id="home-collection-panel"
-          className="au-v02-collection-main"
-          role="tabpanel"
-          aria-labelledby={`home-tab-${activeCategory}`}
-        >
-          <div className="au-v02-collection-heading">
-            <h2>
-              {t(
-                activeCategory === 'whole'
-                  ? 'Cake & Bake'
-                  : activeCategory === 'sharing'
-                    ? 'Small Bites'
-                    : 'Chocolate',
-                active.label,
-              )}
-            </h2>
-            <span>
-              {active.products.length} {t('ATELIER CREATIONS', '개의 상품')}
-            </span>
-          </div>
-          <div className="au-v02-product-grid">
-            {active.products.map((product) => (
-              <CollectionCard key={product.id} product={product} />
-            ))}
-          </div>
-          <div className="au-v02-collection-links">
-            <a href="/cakes">
-              {t('ALL CAKES', '케이크 전체 보기')}
-              <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-            <a href="/celebrate">{t('SMALL BITES','Small Bites 전체 보기')}</a>
-            <a href="/chocolates">
-              {t('ALL CHOCOLATES', '초콜릿 전체 보기')}
-              <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </section>
+      <HomeCollectionSection id="au-collection" categories={collections} language={language}
+        label={t('The AU collection', 'AU 컬렉션')}
+        note={t('Made to order with thoughtful ingredients and chocolatier-grade couverture.', '쇼콜라티에급 커버춰와 정성껏 고른 재료로 주문 제작합니다.')}
+        links={[
+          { href: '/cakes', label: t('ALL CAKES', '케이크 전체 보기') },
+          { href: '/celebrate', label: t('SMALL BITES', 'Small Bites 전체 보기'), arrow: false },
+          { href: '/chocolates', label: t('ALL CHOCOLATES', '초콜릿 전체 보기') },
+        ]} />
       <section
         className="au-v02-craft"
         aria-label={t(
@@ -418,46 +285,11 @@ function AuHomePage({
         />
       </section>
       <HomeCustomerStories />
-      <section
-        id="custom-cakes"
-        className="au-v02-custom"
-        aria-labelledby="au-custom-title"
-      >
-        <div className="au-v02-custom-banner">
-          <img
-            src="/products/custom-cake.webp"
-            alt={t(
-              'Colourful custom celebration cakes',
-              '다채로운 커스텀 케이크',
-            )}
-            width={1080}
-            height={1012}
-            loading="lazy"
-            decoding="async"
-          />
-          <div>
-            <p className="au-v02-eyebrow">
-              {t('BESPOKE CELEBRATION PIECES', '특별한 날을 위한 맞춤 제작')}
-            </p>
-            <h2 id="au-custom-title">
-              {t(
-                'A CAKE MADE FOR YOUR OCCASION.',
-                '당신의 특별한 날을 위한 케이크.',
-              )}
-            </h2>
-            <p>
-              {t(
-                'Share your date, servings, design ideas and budget. Explore our custom cake portfolio and discuss a cake made for your occasion.',
-                '날짜, 인원, 디자인 아이디어와 예산을 알려주세요. 특별한 날을 위한 케이크를 문의하세요.',
-              )}
-            </p>
-            <a className="au-v02-button" href="/cakes/custom-cake">
-              {t('EXPLORE CUSTOM CAKES', '커스텀 케이크 둘러보기')}
-              <ArrowUpRight size={15} aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </section>
+      <HomeCollectionSection id="custom-cakes" categories={customCollections} language={language}
+        className="au-v02-custom-collection"
+        label={t('Custom cakes and private classes', '커스텀 케이크와 프라이빗 클래스')}
+        note={t('Choose a cake or a private class. Final pricing and availability are confirmed after your enquiry.', '케이크 또는 프라이빗 클래스를 선택하세요. 최종 가격과 가능 일정은 문의 후 안내합니다.')}
+        links={[{ href: '/custom-cakes', label: t('EXPLORE CUSTOM CAKES & CLASSES', '커스텀 케이크·클래스 전체 보기') }]} />
       <section
         id="business"
         className="au-v02-business"
