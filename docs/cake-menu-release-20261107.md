@@ -15,7 +15,7 @@ The user explicitly authorized production deployment after reviewing the local c
 
 Packages are produced by the repository's canonical archive builders. Function configuration and all existing variable values/secret classifications are fingerprinted and checked before upload/activation. Only deployment creation and activation are used; no schema, permissions, Auth/SMTP, schedule, environment or account flag mutation is included.
 
-| Function | Previous active deployment | Prepared deployment | Runtime smoke |
+| Function | Previous active deployment | New active deployment | Runtime smoke |
 |---|---|---|---|
 | reservation-api | `6aec83734afcdcd31894` | `6aeeeb2c1cfd4657d083` | Linux Node 22.23.4; entry import, all 20 literal prices, new Milk rejection, historical Milk preservation, sharp PNG generation |
 | reservation-notification | `6aec83720254dfeac718` | `6aeeeacc574a7bac74d9` | Linux Node 22.23.4; entry import, mini combo price and Milk rejection |
@@ -27,6 +27,17 @@ Activation order is notification → reminder → API, followed immediately by t
 
 ## Production result
 
-Pending activation and the frontend production build. This section will be completed with live verification evidence after release.
+Released successfully through the existing integration:
+
+- Product release commit: `6131105e870297cca63ee48be3e8c6e03a1e8862`, pushed to `main` by ordinary fast-forward from `1d888a4`. No force push, deletion or checkout change in another worktree.
+- Cloudflare production deployment: `481a46c0-c46b-4798-a8ed-a9285e71a288`, deploy stage **success**, completed `2026-11-07T09:14:31.134268Z` (18:14 KST). Immutable preview: <https://481a46c0.au-cake-next.pages.dev>. Production: <https://au.verygood-chocolate.com>.
+- All three Function deployments in the table are active. Public API `health` returned HTTP 200 / `ready`; `renewal-health` returned HTTP 200, `au-renewal.2026-11.v3`, writes/preorders enabled, unchanged pickup policy and Mochi prices.
+- Post-activation function configuration and all 39/27/9 variables matched their pre-release fingerprints. Project Auth/SMTP/service settings and Cloudflare source/build/deployment/environment/domain configuration also matched. Existing account flags remain enabled; the older Pages project remains disabled.
+- Live homepage, hub, Pavé, Basque, account, sitemap and latest Journal article return HTTP 200 with appropriate HTML/XML MIME types. Account HTML retains `noindex`; sitemap retains ten Journal article URLs. Stage and immutable deployment hub URLs also return 200.
+- Public structured offers match every approved whole-cake price: eight Pavé combinations and twelve Basque whole-cake combinations, plus the two unchanged Basque loaf offers, all AUD.
+- Actual browser checks: homepage order is collection → custom menus → craft → reviews, with two categories and tier-specific links. Desktop two-tier and 390px single-tier class clicks land at the selected enquiry around 100px below the viewport top and focus its heading on the first click. The 2-tier custom link selects Double Tier / 4+6 inch; the expired public campaign is absent. No horizontal overflow in checked flows.
+- Live option totals: Pavé mini strawberries AUD 55 / 6-inch strawberries AUD 93, no Milk button; Basque mini cream+strawberries AUD 64 / 8-inch cream+strawberries AUD 157. Option inspection did not add to or edit the existing member cart and did not submit a reservation.
+
+The original local-only implementation report describes the pre-release stage; this record is the subsequent authorized production result. This evidence-only update uses `[skip ci]` so it does not rebuild the already verified product deployment.
 
 No agent-created production order, payment, coupon redemption, customer-account session or email send is part of validation. Actual customer checkout submission and delivery remain external acceptance checks; class fees/schedules and mini servings/weight remain intentionally unspecified.
