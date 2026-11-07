@@ -183,7 +183,7 @@ test('class customer booking receipt uses the parent email and includes both pac
 
 test('renewal and legacy AU customer receipts give payment instructions without changing delivery identities', () => {
   const reservation = buildRenewalOrderData({
-    contractVersion: 'au-renewal.2026-10.v2',
+    contractVersion: 'au-renewal.2026-11.v3',
     customerName: 'Alice Customer', customerEmail: 'alice@example.com', customerPhone: '0412345678',
     pickupDate: '2026-10-23', pickupTime: '09:00', privacyConsent: true,
     orderLines: [{ lineId: 'cake', offerId: 'pave-cake', size: '6in', quantity: 1 }],

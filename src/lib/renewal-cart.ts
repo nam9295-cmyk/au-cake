@@ -68,7 +68,7 @@ export function inspectRenewalCart(raw: string | null): {
 // Re-selection links restore options for review at current prices; they never submit an order.
 export function renewalSelectionHref(line: RenewalSelection, editId?: string): string | null {
   const card = Object.values(RENEWAL_CARDS).flat().find(card => card.offers.includes(line.offerId));
-  if (!card || line.offerId === "mochi") return null;
+  if (!card || !["pave-cake", "brownie-whole", "brownie-loaf", "pound-cake"].includes(line.offerId)) return null;
   const url = new URL(card.href, "https://local.invalid");
   url.searchParams.set("offer", line.offerId);
   for (const key of ["size", "finish", "chocolateType"] as const) if (line[key]) url.searchParams.set(key, line[key]);

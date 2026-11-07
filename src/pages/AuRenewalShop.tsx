@@ -360,6 +360,8 @@ function Product({ card }: { card: RenewalCard }) {
       if (editId) {
         if (!editLine) throw new Error("CART_ITEM_CHANGED");
         cart.replaceRenewal(editId, next);
+        window.location.replace("/cart");
+        return;
       } else {
         addRenewalLines(cart.renewalLines, next);
         cart.addRenewal(next);
@@ -1245,6 +1247,12 @@ function Bag({ settings }: { settings: StoreSettings }) {
     </main>
   );
 }
+function ScopedProduct({card}:{card:RenewalCard}) {
+  const cart=useCart(),{t}=useAuLanguage();
+  const editId=new URLSearchParams(window.location.search).get('edit');
+  if(editId&&!cart.ready)return <main className="renewal-page" role="status">{t('Checking your account…','계정을 확인하고 있습니다…')}</main>;
+  return <Product key={editId?`${cart.owner}:${card.id}:${editId}`:card.id} card={card}/>;
+}
 function ScopedBag({settings}:{settings:StoreSettings}){const cart=useCart();return <Bag key={cart.checkoutOwner} settings={settings}/>}
 export function AuRenewalShop({ path, settings = DEFAULT_SETTINGS }: { path: string; settings?: StoreSettings }) {
   path = path.replace(/\/+$/, "") || "/";
@@ -1258,7 +1266,7 @@ export function AuRenewalShop({ path, settings = DEFAULT_SETTINGS }: { path: str
   const card = renewalCardForPath(path, window.location.search);
   if (card?.id === "mochi") return <MochiProduct card={card} />;
   return card ? (
-    <Product key={card.id} card={card} />
+    <ScopedProduct key={card.id} card={card} />
   ) : (
     <main className="renewal-page">
       <h1>{t("Explore our current menu", "현재 메뉴를 확인해주세요")}</h1>

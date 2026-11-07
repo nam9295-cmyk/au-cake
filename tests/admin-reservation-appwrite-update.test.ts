@@ -47,7 +47,7 @@ for (const lineCount of [1, 2]) {
       const stored = {
         $id: 'synthetic-renewal',
         ...buildRenewalOrderData({
-          contractVersion: 'au-renewal.2026-10.v2',
+          contractVersion: 'au-renewal.2026-11.v3',
           customerName: 'Synthetic Buyer', customerPhone: '0412345678', customerEmail: 'test@example.com',
           pickupDate: '2026-10-24', pickupTime: '12:00', privacyConsent: true,
           orderLines: [

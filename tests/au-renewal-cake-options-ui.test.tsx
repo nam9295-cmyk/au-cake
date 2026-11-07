@@ -78,3 +78,52 @@ test('lookup displays v3 topping names and historical Milk; account reorder asks
  assert.match(html,/Milk chocolate Pavé is no longer available/)
  assert.match(html,/chocolateType=milk/)
 })
+import {CustomerAccountContext,disabledCustomerAccount} from '../src/lib/customer-account-context'
+import {renewalSelectionHref} from '../src/lib/renewal-cart'
+test('account edit waits for restored cart before initializing the cake and attached extras',()=>{
+ const store=storage({[`${RENEWAL_CART_KEY}:user:test`]:JSON.stringify({version:1,lines:[{lineId:'cake',offerId:'pave-cake',size:'6in',quantity:1},{lineId:'cream',offerId:'addon-cream',parentLineId:'cake',quantity:2}]})})
+ Object.assign(globalThis,{window:{location:new URL('https://example.test/cakes/pave-chocolate-cake?edit=cake&size=6in'),localStorage:store},localStorage:store})
+ const renderAccount=(state:unknown)=>renderToStaticMarkup(<CustomerAccountContext.Provider value={{...disabledCustomerAccount,enabled:true,state} as never}><AuLanguageContext.Provider value={{language:'en',setLanguage(){}}}><CartProvider><AuRenewalShop path="/cakes/pave-chocolate-cake"/></CartProvider></AuLanguageContext.Provider></CustomerAccountContext.Provider>)
+ const checking=renderAccount({status:'checking'})
+ assert.match(checking,/Checking your account/)
+ assert.doesNotMatch(checking,/Update bag/)
+ const restored=renderAccount({status:'authenticated',identity:{userId:'test',loginEmail:'test@example.test',profile:{version:1,name:'Test',phone:'',contactEmail:'',language:'en'}}})
+ assert.match(restored,/AUD 88\.30/)
+ assert.match(restored,/Update bag/)
+})
+test('historical removal, replacement, completion and clear do not resurrect Milk notices',()=>{
+ for(const action of [{type:'renewal-remove',id:'old'},{type:'renewal-clear'},{type:'renewal-replace',id:'old',lines:[good]},{type:'renewal-submitted',lines:[milk]}]) {
+  const store=storage({[`${CART_EVENT_PREFIX}guest:add`]:JSON.stringify({version:1,id:'add',clock:1,action:{type:'renewal-add',lines:[milk,good]}}),[`${CART_EVENT_PREFIX}guest:later`]:JSON.stringify({version:1,id:'later',clock:2,action})})
+  assert.equal(readCustomerCart(store,'guest').paveReselectionLines.length,0,action.type)
+ }
+})
+test('reselection links are provided only for cakes whose complete configuration is restored',()=>{
+ assert.equal(renewalSelectionHref({lineId:'cup',offerId:'cupcake-half-dozen',quantity:2,finish:'vanilla-fresh-cream'}),null)
+ assert.equal(renewalSelectionHref({lineId:'lemon',offerId:'fresh-lemon-cupcakes-6',quantity:1,chocolateIcingCount:3}),null)
+})
+import {replaceRenewalLines} from '../src/lib/renewal-cart'
+test('successful cake edit persists attached extras and leaves the consumed edit URL',()=>{
+ let lines=[{lineId:'cake',offerId:'pave-cake',size:'6in',quantity:1},{lineId:'cream',offerId:'addon-cream',quantity:2,parentLineId:'cake'}],destination=''
+ const cart={ready:true,owner:'guest',renewalLines:lines,replaceRenewal(id:string,next:typeof lines){lines=replaceRenewalLines(lines,id,next) as typeof lines;cart.renewalLines=lines}}
+ Object.assign(globalThis,{window:{location:{href:'https://example.test/cakes/pave-chocolate-cake?edit=cake&size=6in',search:'?edit=cake&size=6in',replace:(url:string)=>{destination=url}}}})
+ const slots:unknown[]=[];let cursor=0
+ const dispatcher={useContext(context:unknown){return context===AuLanguageContext?{language:'en',t:(en:string)=>en}:cart},useState(initial:unknown){const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return [slots[i],(next:unknown)=>{slots[i]=typeof next==='function'?next(slots[i]):next}]},useEffect(){},useMemo(fn:()=>unknown){return fn()},useRef(initial:unknown){return {current:initial}}}
+ const internals=(React as unknown as {__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE:{H:unknown}}).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,previous=internals.H
+ let tree:React.ReactElement
+ try {
+  internals.H=dispatcher;cursor=0
+  tree=AuRenewalShop({path:'/cakes/pave-chocolate-cake'})
+  while(typeof tree.type==='function')tree=(tree.type as (props:unknown)=>React.ReactElement)(tree.props)
+ }finally{internals.H=previous}
+ function find(node:unknown):{props:{onClick:()=>void}}|undefined {
+  if(!node||typeof node!=='object')return
+  if(Array.isArray(node)){for(const child of node){const hit=find(child);if(hit)return hit};return}
+  const element=node as {type:unknown;props:{className?:string;children?:unknown;onClick:()=>void}}
+  if(element.type==='button'&&element.props.className==='au-pave-order-button')return element
+  return find(element.props?.children)
+ }
+ find(tree)!.props.onClick()
+ assert.equal(destination,'/cart','the next edit must use the persisted cart identity')
+ assert.equal(lines.find(line=>line.offerId==='addon-cream')?.quantity,2)
+ assert.ok(lines.some(line=>line.offerId==='pave-cake'))
+})

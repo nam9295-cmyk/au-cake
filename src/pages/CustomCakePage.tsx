@@ -74,16 +74,16 @@ export function CustomCakePage({
     }).catch(() => { if (active) setReady(false) })
     return () => { active = false }
   }, [])
-  const [tier, setTier] = useState<'single' | 'double'>(() => getCustomCakeInitialTier(typeof window === 'undefined' ? '' : window.location.search))
+  const [tier, setTier] = useState<'single' | 'double'>(() => isAuRedesign ? getCustomCakeInitialTier(typeof window === 'undefined' ? '' : window.location.search) : 'single')
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (!isAuRedesign || typeof window === 'undefined') return
     const sync = () => setTier(getCustomCakeInitialTier(window.location.search))
     window.addEventListener('popstate', sync)
     return () => window.removeEventListener('popstate', sync)
-  }, [])
+  }, [isAuRedesign])
   const selectTier = (next: 'single' | 'double') => {
     setTier(next)
-    if (typeof window === 'undefined') return
+    if (!isAuRedesign || typeof window === 'undefined') return
     const url = new URL(window.location.href)
     url.searchParams.set('tier', next)
     window.history.replaceState(null, '', url)

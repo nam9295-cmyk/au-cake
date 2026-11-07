@@ -60,11 +60,11 @@ function apply(current:Contents,action:SavedAction,id:string):Contents {
   case 'legacy-submitted':s.lines=subtractSubmittedCartLines(s.lines,parseCartLines(serializeCartLines(action.lines)));break
   case 'legacy-clear':s.lines=[];break
   case 'renewal-add':s.renewalLines=addRenewalLines(s.renewalLines,uniqueIncoming(s.renewalLines,action.lines,id));break
-  case 'renewal-replace':s.renewalLines=replaceRenewalLines(s.renewalLines,action.id,uniqueIncoming(removeRenewalLine(s.renewalLines,action.id),action.lines,id));break
-  case 'renewal-update':s.renewalLines=s.renewalLines.map(l=>l.lineId===action.id?{...l,quantity:action.quantity}:l);if(s.renewalLines.length)priceRenewalOrder(s.renewalLines,{localPreview:true});break
-  case 'renewal-remove':s.renewalLines=removeRenewalLine(s.renewalLines,action.id);break
-  case 'renewal-submitted':s.renewalLines=subtractRenewalSubmission(s.renewalLines,action.lines);break
-  case 'renewal-clear':s.renewalLines=[];break
+  case 'renewal-replace':s.paveReselectionLines=s.paveReselectionLines.filter(l=>l.lineId!==action.id);s.renewalLines=replaceRenewalLines(s.renewalLines,action.id,uniqueIncoming(removeRenewalLine(s.renewalLines,action.id),action.lines,id));break
+  case 'renewal-update':s.paveReselectionLines=s.paveReselectionLines.map(l=>l.lineId===action.id?{...l,quantity:action.quantity}:l);s.renewalLines=s.renewalLines.map(l=>l.lineId===action.id?{...l,quantity:action.quantity}:l);if(s.renewalLines.length)priceRenewalOrder(s.renewalLines,{localPreview:true});break
+  case 'renewal-remove':s.paveReselectionLines=s.paveReselectionLines.filter(l=>l.lineId!==action.id);s.renewalLines=removeRenewalLine(s.renewalLines,action.id);break
+  case 'renewal-submitted':s.paveReselectionLines=s.paveReselectionLines.flatMap(l=>{const sent=action.lines.find(a=>a.lineId===l.lineId&&a.chocolateType==='milk');const quantity=l.quantity-(sent?.quantity||0);return quantity>0?[{...l,quantity}]:[]});s.renewalLines=subtractRenewalSubmission(s.renewalLines,action.lines);break
+  case 'renewal-clear':s.paveReselectionLines=[];s.renewalLines=[];break
   case 'acknowledge-pave':s.paveReselectionLines=[];break
   case 'acknowledge-mochi':s.mochiReselectionRequired=false;break
   case 'import-guest':if(!s.imports.includes(action.signature)){s.lines=parseCartLines(serializeCartLines([...s.lines,...parseCartLines(action.legacy)]));if(action.renewal.length)s.renewalLines=addRenewalLines(s.renewalLines,uniqueIncoming(s.renewalLines,action.renewal,id));s.imports=[...s.imports,action.signature]}break

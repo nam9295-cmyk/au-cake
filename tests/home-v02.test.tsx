@@ -108,7 +108,7 @@ test('Home membership agrees with the four/four/four renewal catalogue',()=>{
   assert.equal(best[0]?.href, '/chocolates/chocolate-mochi')
  }
  const products=groups.flatMap(g=>g.products)
- for(const [id,amount]of [['pave','75'],['brownie-whole','82'],['brownie-loaf','58'],['smore','25']])assert.ok(products.find(p=>p.id===id)?.price.includes(amount))
+ for(const [id,amount]of [['pave','45'],['brownie-whole','49'],['brownie-loaf','58'],['smore','25']])assert.ok(products.find(p=>p.id===id)?.price.includes(amount))
 })
 
 // SSR-rendered card exercises bilingual markup; session lifecycle/Escape tested in Chrome.

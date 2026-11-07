@@ -62,7 +62,7 @@ for (const [kind, build] of [['received', receipt], ['confirmed', confirmation]]
 test('AU renderer keeps canonical mixed-flavour boxes, multi-line quantities and stored discount audit', () => {
   const counts = values => ({ strawberry: 0, green_grape: 0, mandarin: 0, banana: 0, butter_redbean: 0, nama_chocolate: 0, ...values })
   const row = buildRenewalOrderData({
-    contractVersion: 'au-renewal.2026-10.v2', customerName: base.customerName, customerEmail: base.customerEmail,
+    contractVersion: 'au-renewal.2026-11.v3', customerName: base.customerName, customerEmail: base.customerEmail,
     customerPhone: base.customerPhone, pickupDate: '2026-10-23', pickupTime: '09:00', privacyConsent: true,
     orderLines: [
       { lineId: 'cake', offerId: 'pave-cake', size: '6in', quantity: 1 },
