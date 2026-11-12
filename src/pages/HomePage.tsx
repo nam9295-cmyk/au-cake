@@ -1,6 +1,6 @@
 import { HomeCollectionSection } from '../components/HomeCollectionSection'
 import { HalloweenMeringueSection } from '../components/HalloweenMeringueSection'
-import { MochiLaunchNotice } from "../components/MochiLaunchNotice"
+import { MiniCakeLaunchNotice } from "../components/MiniCakeLaunchNotice"
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
 import { RENEWAL_NAV } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { useEffect, useRef, useState } from 'react'
@@ -129,7 +129,7 @@ function AuHomePage({
   return (
     <div className="home-redesign-wrap au-home-v02">
       <AuRedesignHeader cartItemCount={cartItemCount} home />
-      <MochiLaunchNotice language={language} />
+      <MiniCakeLaunchNotice language={language} />
       <section className="rd-hero" aria-labelledby="au-home-title">
         <AuHeroVideo />
         <div className="au-v02-hero-copy">

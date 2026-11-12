@@ -8,6 +8,7 @@ export interface RenewalSelection {
   size?: string;
   finish?: string;
   chocolateType?: string;
+  almondPackaging?: "pouch" | "triangle-box";
   individualPackaging?: boolean;
   mode?: string;
   flavourCounts?: MochiCounts;
@@ -88,3 +89,5 @@ export function renewalProductName(line: { productId: string; productName: strin
 export function wholeCakeToppingSurchargeCents(offerId: string, size: string, finish: string): number;
 export function renewalFinishName(finish: string, language?: string): string;
 export function renewalSizeName(size: string | undefined, language?: string): string | undefined;
+
+export function almondPackagingName(value: string, language?: string): string;

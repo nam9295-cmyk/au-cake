@@ -127,3 +127,11 @@ test('successful cake edit persists attached extras and leaves the consumed edit
  assert.equal(lines.find(line=>line.offerId==='addon-cream')?.quantity,2)
  assert.ok(lines.some(line=>line.offerId==='pave-cake'))
 })
+test('mini cake galleries use supplied photos and cream selection updates the lead photo',()=>{
+ const first=(html:string)=>html.match(/class="au-pave-gallery-main"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/)?.[1];
+ assert.equal(first(render('/cakes/brownie-cheesecake?size=4in')),'/products/basque-mini-960.webp');
+ assert.equal(first(render('/cakes/brownie-cheesecake?size=4in&finish=vanilla-fresh-cream')),'/products/basque-on-cream-mini-960.webp');
+ assert.equal(first(render('/cakes/pave-chocolate-cake?size=4in')),'/products/pave-4inch-960.webp');
+ assert.notEqual(first(render('/cakes/brownie-cheesecake?size=6in')),'/products/basque-mini-960.webp');
+ assert.notEqual(first(render('/cakes/pave-chocolate-cake?size=6in')),'/products/pave-4inch-960.webp');
+});

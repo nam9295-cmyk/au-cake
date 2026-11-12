@@ -1,5 +1,5 @@
 import { manualOrderSummary } from '../../appwrite-functions/reservation-api/src/manual-order.js'
-import { isRenewalContract, renewalFinishName, renewalSizeName, mochiFlavourName, renewalProductName, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
+import { almondPackagingName, isRenewalContract, renewalFinishName, renewalSizeName, mochiFlavourName, renewalProductName, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import { RENEWAL_CARDS } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import {
   CUPCAKE_PACK_SIZE,
@@ -42,6 +42,7 @@ export function ProductDetailRows({ reservation, language = 'ko' }: {
     return <>
       <div><dt>{language==='ko'?'제품':'Product'}</dt><dd>{language==='ko'?card?.ko||renewalProductName(line, language):renewalProductName(line, language)}</dd></div>
       {line.selection.size && <div><dt>{language==='ko'?'사이즈':'Size'}</dt><dd>{renewalSizeName(line.selection.size, language)}</dd></div>}
+      {line.selection.almondPackaging && <div><dt>{language === "ko" ? "포장" : "Packaging"}</dt><dd>{almondPackagingName(line.selection.almondPackaging, language)}</dd></div>}
       {line.selection.chocolateType && <div><dt>{language==='ko'?'초콜릿':'Chocolate'}</dt><dd>{line.selection.chocolateType === 'milk' ? (language === 'ko' ? '밀크 초콜릿' : 'Milk chocolate') : (language === 'ko' ? '다크 초콜릿' : 'Dark chocolate')}</dd></div>}
       {!line.selection.mode && <div><dt>{language==='ko'?'토핑':'Finish'}</dt><dd>{finish}</dd></div>}
       <div><dt>{language==='ko'?'구성·수량':'Contents & quantity'}</dt><dd>{line.selection.mode === 'singles' ? (language==='ko'?'단품':'Singles') : `${line.quantity} ${line.selection.mode === 'gift-four' ? (language==='ko'?'4구 선물박스':'four-piece gift box(es)') : (language==='ko'?'팩':'pack(s)')}`} · {line.physicalQuantity} {language==='ko'?'개':'pieces'}</dd></div>

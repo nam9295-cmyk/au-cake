@@ -51,6 +51,7 @@ import {
   type RenewalCard,
 } from "../../appwrite-functions/reservation-api/src/au-renewal-catalog.js";
 import {
+  almondPackagingName,
   RENEWAL_CONTRACT,
   RENEWAL_OFFERS,
   MOCHI_FLAVOURS,
@@ -80,6 +81,7 @@ function displaySummary(
     ko ? card?.ko || renewalProductName(line, "ko") : renewalProductName(line),
     renewalSizeName(line.selection.size, ko ? "ko" : "en"),
     line.selection.chocolateType ? (line.selection.chocolateType === "milk" ? (ko ? "밀크" : "Milk") : (ko ? "다크" : "Dark")) : null,
+    line.selection.almondPackaging ? almondPackagingName(line.selection.almondPackaging, ko ? "ko" : "en") : null,
     labelFinish(line.selection.finish || "basic", ko),
     `${line.quantity}${ko ? "팩" : " pack(s)"} / ${line.physicalQuantity}${ko ? "개" : " pieces"}`,
     line.selection.mode
@@ -191,6 +193,7 @@ function Product({ card }: { card: RenewalCard }) {
     [size, setSize] = useState(params.get("size") || editLine?.size || (RENEWAL_OFFERS[initialOffer].sizes ? Object.keys(RENEWAL_OFFERS[initialOffer].sizes!)[0] : "6in")),
     [finish, setFinish] = useState(params.get("finish") || editLine?.finish || "basic"),
     [chocolateType, setChocolate] = useState(params.get("chocolateType") || editLine?.chocolateType || "dark");
+  const [almondPackaging, setAlmondPackaging] = useState<"pouch" | "triangle-box">((params.get("almondPackaging") || editLine?.almondPackaging) === "triangle-box" ? "triangle-box" : "pouch");
   const [quantity, setQuantity] = useState(() => { const n = Number(params.get("quantity") || editLine?.quantity || 1); return Number.isSafeInteger(n) && n > 0 && n <= 5 ? n : 1; });
   const [chocolateIcingCount, setChocolateIcingCount] = useState(0);
   const [lemonPackaging, setLemonPackaging] = useState(false);
@@ -209,7 +212,7 @@ function Product({ card }: { card: RenewalCard }) {
     card.href.split("?")[0].split("/").at(-1)!,
     language,
   );
-  const presentation = renewalDetailPresentation(card);
+  const presentation = renewalDetailPresentation(card, size, finish);
   const p = RENEWAL_OFFERS[offerId],
     isCup = p.family === "cupcake";
   const wholeCake = ["pave-cake", "brownie-whole"].includes(offerId);
@@ -221,9 +224,11 @@ function Product({ card }: { card: RenewalCard }) {
     url.searchParams.set("finish", finish);
     if (p.chocolate || (offerId === "pound-cake" && finish === "extra-chocolate")) url.searchParams.set("chocolateType", chocolateType);
     else url.searchParams.delete("chocolateType");
+    if (offerId === "almond-chocoball-80g") url.searchParams.set("almondPackaging", almondPackaging);
+    else url.searchParams.delete("almondPackaging");
     url.searchParams.set("quantity", String(quantity));
     window.history.replaceState(window.history.state, "", url);
-  }, [offerId, size, finish, p.sizes, p.chocolate, chocolateType, quantity]);
+  }, [offerId, size, finish, p.sizes, p.chocolate, chocolateType, quantity, almondPackaging]);
   useEffect(() => {
     const restore = () => {
       const query = new URLSearchParams(window.location.search);
@@ -233,6 +238,7 @@ function Product({ card }: { card: RenewalCard }) {
       setSize(query.get("size") || Object.keys(RENEWAL_OFFERS[id].sizes || {})[0] || "6in");
       setFinish(query.get("finish") || "basic");
       setChocolate(query.get("chocolateType") || "dark");
+      setAlmondPackaging(query.get("almondPackaging") === "triangle-box" ? "triangle-box" : "pouch");
       const n = Number(query.get("quantity") || 1);
       setQuantity(Number.isSafeInteger(n) && n > 0 && n <= 5 ? n : 1);
     };
@@ -259,6 +265,7 @@ function Product({ card }: { card: RenewalCard }) {
         finish,
         individualPackaging: p.family === "lemon" && lemonPackaging,
         ...(p.family === "lemon" ? { chocolateIcingCount } : {}),
+        ...(offerId === "almond-chocoball-80g" ? { almondPackaging } : offerId === "almond-chocoball-black-tub-2x80g" ? { almondPackaging: "pouch" as const } : {}),
         ...(p.sizes ? { size } : {}),
         ...(p.chocolate ||
         (offerId === "pound-cake" && finish === "extra-chocolate")
@@ -382,11 +389,11 @@ function Product({ card }: { card: RenewalCard }) {
       <div className="au-pave-hero">
         <div className="renewal-product-media">
           {card.id === "pave" ? (
-            <AuPaveGallery />
+            <AuPaveGallery key={`${size}-${finish}`} mini={size === "4in"} />
           ) : renewalPhotos(card.id).length ? (
             <RenewalPhotoGallery id={card.id} title={ko ? card.ko : card.en} />
           ) : presentation ? (
-            <AuDetailGallery key={card.id} presentation={presentation} />
+            <AuDetailGallery key={`${card.id}-${size}-${finish}`} presentation={presentation} />
           ) : (
             <ProductPhoto src={card.image} label={ko ? card.ko : card.en} />
           )}
@@ -436,6 +443,7 @@ function Product({ card }: { card: RenewalCard }) {
                     active={offerId === id}
                     onClick={() => {
                       setOffer(id);
+                      if (id !== "almond-chocoball-80g") setAlmondPackaging("pouch");
                       setFinish("basic");
                       setChocolateIcingCount(0);
                     }}
@@ -455,6 +463,14 @@ function Product({ card }: { card: RenewalCard }) {
               </div>
             </fieldset>
           )}
+          {offerId === "almond-chocoball-80g" && <fieldset className="au-pave-fieldset">
+            <legend>{t("Choose your packaging", "포장 선택")}</legend>
+            <div className="au-pave-size-options">
+              {(["pouch", "triangle-box"] as const).map(value => <OptionButton key={value} active={almondPackaging === value} onClick={() => setAlmondPackaging(value)}>{almondPackagingName(value, language)}</OptionButton>)}
+            </div>
+            <p>{t("Same price for either packaging.", "포장에 따른 추가금은 없습니다.")}</p>
+          </fieldset>}
+          {offerId === "almond-chocoball-black-tub-2x80g" && <p>{t("Packaging: Pouch (included in the black tub)", "포장: 파우치 (블랙 통 구성)")}</p>}
           {p.sizes && (
             <fieldset className="au-pave-fieldset">
               <legend>{t("Choose your size", "사이즈 선택")}</legend>

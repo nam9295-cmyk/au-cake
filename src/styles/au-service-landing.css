@@ -307,3 +307,6 @@
   .au-custom-menu-grid h2 { font-size: 22px; }
   .au-private-class-enquiry a { margin-left: 0; display: flex; }
 }
+
+.au-custom-collection > .au-service-classes,
+.au-custom-collection > .au-service-contact { margin-top: 48px; }

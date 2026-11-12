@@ -213,6 +213,7 @@ const allowedFields = new Set([
   "size",
   "finish",
   "chocolateType",
+  "almondPackaging",
   "individualPackaging",
   "mode",
   "flavourCounts",
@@ -242,6 +243,7 @@ export function normalizeRenewalLines(value, { storedOnly = false, contractVersi
       "size",
       "finish",
       "chocolateType",
+      "almondPackaging",
       "mode",
       "parentLineId",
     ]) {
@@ -272,6 +274,12 @@ export function normalizeRenewalLines(value, { storedOnly = false, contractVersi
       offerId: input.offerId,
       quantity: input.quantity,
     };
+    const singleAlmond = input.offerId === "almond-chocoball-80g";
+    const tubAlmond = input.offerId === "almond-chocoball-black-tub-2x80g";
+    if (input.almondPackaging !== undefined &&
+        (!singleAlmond && !tubAlmond || !["pouch", "triangle-box"].includes(input.almondPackaging) ||
+         tubAlmond && input.almondPackaging !== "pouch")) fail("INVALID_PACKAGING");
+    if ((singleAlmond || tubAlmond) && (!storedOnly || input.almondPackaging !== undefined)) line.almondPackaging = input.almondPackaging ?? "pouch";
     if (p.sizes) {
       if (!Object.hasOwn(p.sizes, input.size)) fail("INVALID_SIZE");
       line.size = input.size;
@@ -516,6 +524,7 @@ export function renewalLineSummary(line, { lines = [], language = "en" } = {}) {
       s.chocolateType ? (s.chocolateType === "milk" ? (ko ? "밀크" : "Milk") : (ko ? "다크" : "Dark")) : null,
       `×${line.quantity}`, line.physicalQuantity > line.quantity ? `${line.physicalQuantity} pieces` : null);
   }
+  if (s.almondPackaging) details.push(almondPackagingName(s.almondPackaging, language));
   if (s.parentLineId) {
     const index = lines.findIndex(parent => parent.selection?.lineId === s.parentLineId);
     const parent = lines[index];
@@ -526,4 +535,8 @@ export function renewalLineSummary(line, { lines = [], language = "en" } = {}) {
   );
   details.push(money(line.totalPriceCents));
   return details.filter(Boolean).join(" · ");
+}
+
+export function almondPackagingName(value, language = "en") {
+  return value === "triangle-box" ? (language === "ko" ? "삼각박스" : "Triangle box") : (language === "ko" ? "파우치" : "Pouch");
 }

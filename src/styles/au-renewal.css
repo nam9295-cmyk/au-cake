@@ -406,22 +406,29 @@
 .au-redesign-shell .renewal-grid .renewal-card-note { font-size: 12px !important; line-height: 1.45; }
 
 /* Home-only modal, sized to leave breathing room on mobile. */
-.mochi-launch-notice { position: fixed; inset: 0; margin: auto; width: min(380px, calc(100% - 48px)); max-height: 80dvh; padding: 0; border: 1px solid #234d35; background: #fff; color: #234d35; }
-.mochi-launch-notice::backdrop { background: rgb(0 0 0 / 38%); }
-.mochi-launch-content { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
-.mochi-launch-photo { display: block; width: 100%; height: 240px; min-height: 0; object-fit: contain; background: #f0f1ee; }
-.home-redesign-wrap.au-home-v02 .mochi-launch-notice h2 { margin: 0; text-transform: none; letter-spacing: normal; font-size: 18px; line-height: 1.35; }
-.home-redesign-wrap.au-home-v02 .mochi-launch-notice p { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-line; }
-.mochi-launch-order { display: flex; justify-content: center; align-items: center; min-height: 44px; background: #234d35; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
-.mochi-launch-close { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; border: 0; background: #fff; color: #234d35; font-size: 24px; cursor: pointer; }
-.mochi-launch-actions { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #ddd; }
-.mochi-launch-actions button { min-height: 44px; padding: 4px 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
-.mochi-launch-notice :focus-visible { outline: 2px solid #234d35; outline-offset: 3px; }
-.mochi-launch-order:focus-visible { outline-offset: -5px; outline-color: #fff; }
+/* One modal and shared dismissal, with two equal product columns at every width. */
+.mini-cake-launch-notice { position: fixed; inset: 0; margin: auto; width: min(700px, calc(100% - 24px)); max-height: 90dvh; overflow-y: auto; padding: 0; border: 1px solid #234d35; background: #fff; color: #234d35; }
+.mini-cake-launch-notice::backdrop { background: rgb(0 0 0 / 38%); }
+.mini-cake-launch-content { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+.mini-cake-launch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.mini-cake-launch-card { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.mini-cake-launch-photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: contain; }
+.home-redesign-wrap.au-home-v02 .mini-cake-launch-notice h2 { margin: 0; padding-right: 40px; text-transform: none; letter-spacing: normal; font-size: 22px; line-height: 1.35; }
+.home-redesign-wrap.au-home-v02 .mini-cake-launch-notice h3 { margin: 0; text-transform: none; letter-spacing: normal; font-size: 17px; line-height: 1.4; }
+.home-redesign-wrap.au-home-v02 .mini-cake-launch-notice p { margin: 0; font-size: 14px; line-height: 1.5; }
+.mini-cake-launch-order { display: flex; justify-content: center; align-items: center; min-height: 44px; margin-top: auto; padding: 6px; box-sizing: border-box; background: #234d35; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; text-align: center; }
+.mini-cake-launch-close { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; border: 0; background: #fff; color: #234d35; font-size: 24px; cursor: pointer; }
+.mini-cake-launch-footer { display: grid; gap: 4px; border-top: 1px solid #ddd; padding-top: 12px; text-align: center; }
+.mini-cake-launch-card > p:not(.mini-cake-launch-price) { min-height: 3em; }
+.mini-cake-launch-actions { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #ddd; }
+.mini-cake-launch-actions button { min-height: 44px; padding: 4px 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+.mini-cake-launch-notice :focus-visible { outline: 2px solid #234d35; outline-offset: 3px; }
+.mini-cake-launch-order:focus-visible { outline-offset: -5px; outline-color: #fff; }
 @media (max-width: 600px) {
-  .mochi-launch-notice { height: 68dvh; max-height: 70dvh; }
-  .mochi-launch-content { min-height: 100%; height: 100%; box-sizing: border-box; gap: 10px; }
-  .mochi-launch-photo { flex: 1 1 auto; height: 0; min-height: 80px; }
-  .home-redesign-wrap.au-home-v02 .mochi-launch-notice h2 { font-size: 17px; }
-  .mochi-launch-order, .mochi-launch-actions { flex-shrink: 0; }
+  .mini-cake-launch-content { padding: 14px; gap: 12px; }
+  .mini-cake-launch-grid { gap: 10px; }
+  .home-redesign-wrap.au-home-v02 .mini-cake-launch-notice h2 { font-size: 18px; }
+  .home-redesign-wrap.au-home-v02 .mini-cake-launch-notice h3 { font-size: 14px; min-height: 2.8em; }
+  .home-redesign-wrap.au-home-v02 .mini-cake-launch-notice p { font-size: 12px; }
+  .mini-cake-launch-order { font-size: 13px; }
 }

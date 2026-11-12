@@ -94,7 +94,7 @@ export function AuDetailStory({ presentation, detail, editorial, language = 'en'
   const highlights: readonly { title: string; body?: string }[] = compact?.highlights || detail?.features.map((title) => ({ title })) || [
     { title: 'THE ALMOND CENTRE', body: 'A whole almond, seen in cross-section.' },
     { title: 'THE CHOCOLATE COATING', body: 'Chocolate around the almond centre.' },
-    { title: 'CHOOSE YOUR PACK', body: 'Choose a single 80g pouch, a six-pack or Black Tub.' },
+    { title: 'CHOOSE YOUR PACK', body: 'Choose a pouch or triangle box for a single 80g pack. Six-packs are unchanged; Black Tub includes two pouches.' },
   ]
   const photo = (role: string, alt: string, sizes: string, position?: string) => <DetailPhoto image={getDetailImage(presentation, role)} alt={alt} sizes={sizes} position={position} />
   return <div ref={root} className="au-pave-story">

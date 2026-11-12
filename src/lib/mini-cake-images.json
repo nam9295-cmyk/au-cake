@@ -1,0 +1,53 @@
+{
+  "basque-mini": {
+    "src": "/products/basque-mini-960.webp",
+    "width": 960,
+    "height": 1280,
+    "variants": [
+      {
+        "src": "/products/basque-mini-480.webp",
+        "width": 480,
+        "bytes": 24576
+      },
+      {
+        "src": "/products/basque-mini-960.webp",
+        "width": 960,
+        "bytes": 75440
+      }
+    ]
+  },
+  "basque-on-cream-mini": {
+    "src": "/products/basque-on-cream-mini-960.webp",
+    "width": 960,
+    "height": 877,
+    "variants": [
+      {
+        "src": "/products/basque-on-cream-mini-480.webp",
+        "width": 480,
+        "bytes": 26972
+      },
+      {
+        "src": "/products/basque-on-cream-mini-960.webp",
+        "width": 960,
+        "bytes": 77382
+      }
+    ]
+  },
+  "pave-4inch": {
+    "src": "/products/pave-4inch-960.webp",
+    "width": 960,
+    "height": 1200,
+    "variants": [
+      {
+        "src": "/products/pave-4inch-480.webp",
+        "width": 480,
+        "bytes": 18878
+      },
+      {
+        "src": "/products/pave-4inch-960.webp",
+        "width": 960,
+        "bytes": 61822
+      }
+    ]
+  }
+}

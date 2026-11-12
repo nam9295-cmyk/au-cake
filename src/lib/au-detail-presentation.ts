@@ -7,6 +7,7 @@ export type DetailImage = {
 export type DetailEdition = { image: string; title: string; body: string }
 export type DetailPresentation = {
   slug: string; key: keyof typeof imageManifest; title: string; hook: string
+  imageOverrides?: Record<string, DetailImage>
   gallery: string[]; craftCaptions: string[]; occasions: string[]; occasionCaptions: string[]
   editions?: DetailEdition[]; editionTitle?: string
   related: string[]; videoPoster: string; videoSrc?: string
@@ -85,10 +86,10 @@ export const auDetailPresentations: Record<string, DetailPresentation> = {
   'almond-chocoball': {
     ...common, key: 'almond', slug: 'almond-chocoball', title: 'Almond Chocoball', hook: 'ALMONDS & CHOCOLATE. A CLOSER LOOK.',
     craftCaptions: ['The almond centre.', 'A handful to share.', 'The chocolate coating, up close.'],
-    editionTitle: 'From Everyday Pouch To Black Tub',
+    editionTitle: 'Choose Your Packaging',
     editions: [
-      { image: 'edition-01', title: '80g Pouch', body: 'Choose a single 80g pouch or a six-pack for sharing.' },
-      { image: 'edition-02', title: 'Black Tub · 80g × 2', body: 'Choose Black Tub for the 80g × 2 option.' },
+      { image: 'edition-01', title: '80g Pouch or Triangle Box', body: 'Choose a pouch or triangle box for a single 80g pack, at the same price. Photo shows the pouch. Six-packs keep their existing packaging.' },
+      { image: 'edition-02', title: 'Black Tub · 80g × 2', body: 'Black Tub includes two 80g pouches.' },
     ],
     related: ['signature-gateau-au-chocolat', 'pave-chocolate-cake', 'brownie-cheesecake'],
   },
@@ -103,7 +104,7 @@ export function getAuDetailPresentation(slug: string) { return auDetailPresentat
 
 export function getDetailImage(presentation: DetailPresentation, role: string): DetailImage {
   const images = imageManifest[presentation.key] as Record<string, DetailImage>
-  const image = images[role]
+  const image = presentation.imageOverrides?.[role] || images[role]
   if (!image) throw new Error(`Missing approved detail image: ${presentation.key}/${role}`)
   return image
 }

@@ -17,7 +17,7 @@ for (const language of ['en', 'ko'] as const) {
     const html = render(<AuServiceLandingPage kind="custom-cakes" />, language)
     assert.match(html, language === 'en' ? /<h1[^>]*>Custom Cakes<\/h1>/ : /<h1[^>]*>커스텀 케이크<\/h1>/)
     assert.match(html, /<img\b/)
-    assert.ok(links(html).some(([, href]) => href === '/cakes/custom-cake'))
+    assert.ok(links(html).some(([, href]) => href === '/cakes/custom-cake?tier=single'))
     assert.ok(links(html).some(([, href]) => href === 'https://www.instagram.com/verygood_syd/'))
     const classes = html.match(/<section\b[^>]*aria-labelledby="service-classes-title"[^>]*>([\s\S]*?)<\/section>/)?.[1]
     assert.ok(classes, 'class information has its own named section')

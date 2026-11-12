@@ -44,29 +44,11 @@ export function AuServiceLandingPage({ kind }: { kind: 'custom-cakes' | 'busines
   }
 
   return (
-    <main className={`au-service-landing au-service-landing-${kind}`}>
+    <main className={kind === "custom-cakes" ? "renewal-page renewal-collection au-custom-collection" : "au-service-landing au-service-landing-business"}>
       {kind === 'custom-cakes' ? (
         <>
-          <section className="au-service-intro au-service-custom-intro" aria-labelledby="service-title">
-            <div>
-              <h1 id="service-title">{t('Custom Cakes', '커스텀 케이크')}</h1>
-              <p>{t(
-                'Share your date, servings, design ideas and budget. Explore our custom cake portfolio and discuss a cake made for your occasion.',
-                '날짜, 인원, 디자인 아이디어와 예산을 알려주세요. 커스텀 케이크 포트폴리오를 둘러보고 특별한 날을 위한 케이크를 문의하세요.',
-              )}</p>
-              <a className="au-service-button" href="/cakes/custom-cake">
-                {t('Custom cake enquiry', '커스텀 케이크 문의')}
-                <ArrowUpRight size={16} aria-hidden="true" />
-              </a>
-              <p className="au-service-note">{t(
-                'Final pricing and availability are confirmed after reviewing your request.',
-                '최종 가격과 제작 가능 여부는 문의 내용을 확인한 후 안내합니다.',
-              )}</p>
-            </div>
-            <img src="/products/custom-cake.webp" alt={t('Colourful custom celebration cakes', '다채로운 커스텀 케이크')}
-              width={1080} height={1012} fetchPriority="high" decoding="async" />
-          </section>
-          <CustomCakeMenuCards />
+          <h1 id="service-title">{t('Custom Cakes', '커스텀 케이크')}</h1>
+          <CustomCakeMenuCards collection />
           {new URLSearchParams(search).get('service') === 'private-class' && <section id="private-class-enquiry" className="au-private-class-enquiry" aria-labelledby="private-class-title">
             <h2 id="private-class-title" tabIndex={-1}>{className}</h2>
             <p>{t('Enquire for pricing', '수업료 문의')}</p>
