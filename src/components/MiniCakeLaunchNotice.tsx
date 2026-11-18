@@ -54,14 +54,14 @@ export function MiniCakeLaunchNotice({ language }: { language: Language }) {
       <p id="mini-cake-launch-description">{ko ? '작은 축하, 선물, 또는 나를 위한 특별한 간식으로 즐기는 미니 4인치 케이크.' : 'Mini 4-inch cakes for small celebrations, gifting, or a treat just for you.'}</p>
       <div className="mini-cake-launch-grid">
         <article className="mini-cake-launch-card">
-          <img className="mini-cake-launch-photo" src="/products/basques-4inch.webp" width="800" height="1000" alt={ko ? '4인치 바스크 치즈케이크 기본과 크림 두 가지' : '4-inch Basque cheesecakes, plain and cream-topped'} />
+          <img className="mini-cake-launch-photo" src="/products/basque-strawberry-popup.webp" width="800" height="1000" alt={ko ? '딸기와 트리 장식을 올린 바스크 치즈케이크 두 가지' : 'Basque cheesecakes with strawberries and tree decorations'} />
           <h3>{ko ? '바스크 치즈케이크' : 'Basque Cheesecake'}</h3>
           <p>{ko ? '기본 또는 생크림을 선택하세요' : 'Choose Plain or Fresh Cream'}</p>
           <p className="mini-cake-launch-price"><strong>{ko ? 'AUD 49부터' : 'From AUD 49'}</strong></p>
           <a className="mini-cake-launch-order" href="/cakes/brownie-cheesecake?form=whole&size=4in">{ko ? '바스크 보기' : 'Shop Basque'}</a>
         </article>
         <article className="mini-cake-launch-card">
-          <img className="mini-cake-launch-photo" src="/products/pave-4inch.webp" width="800" height="1000" alt={ko ? '4인치 파베 초콜릿 케이크' : '4-inch Pavé chocolate cake'} />
+          <img className="mini-cake-launch-photo" src="/products/pave-strawberry-popup.webp" width="800" height="1000" alt={ko ? '딸기와 트리 장식을 올린 파베 초콜릿 케이크' : 'Pavé chocolate cake with strawberries and a tree decoration'} />
           <h3>{ko ? '파베 초콜릿 케이크' : 'Pavé Chocolate Cake'}</h3>
           <p>{ko ? '부드러운 가나슈, 진한 초콜릿' : 'Smooth ganache, rich chocolate'}</p>
           <p className="mini-cake-launch-price"><strong>{ko ? 'AUD 45부터' : 'From AUD 45'}</strong></p>

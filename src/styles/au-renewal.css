@@ -412,7 +412,7 @@
 .mini-cake-launch-content { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 20px; }
 .mini-cake-launch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .mini-cake-launch-card { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.mini-cake-launch-photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: contain; }
+.mini-cake-launch-photo { display: block; width: 100%; height: auto; object-fit: contain; }
 .home-redesign-wrap.au-home-v02 .mini-cake-launch-notice h2 { margin: 0; padding-right: 40px; text-transform: none; letter-spacing: normal; font-size: 22px; line-height: 1.35; }
 .home-redesign-wrap.au-home-v02 .mini-cake-launch-notice h3 { margin: 0; text-transform: none; letter-spacing: normal; font-size: 17px; line-height: 1.4; }
 .home-redesign-wrap.au-home-v02 .mini-cake-launch-notice p { margin: 0; font-size: 14px; line-height: 1.5; }

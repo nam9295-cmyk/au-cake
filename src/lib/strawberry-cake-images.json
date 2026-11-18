@@ -1,0 +1,70 @@
+{
+  "basque-strawberry": {
+    "src": "/products/basque-strawberry-960.webp",
+    "width": 960,
+    "height": 723,
+    "variants": [
+      {
+        "src": "/products/basque-strawberry-480.webp",
+        "width": 480,
+        "bytes": 17992
+      },
+      {
+        "src": "/products/basque-strawberry-960.webp",
+        "width": 960,
+        "bytes": 57206
+      }
+    ]
+  },
+  "basque-cream-strawberry": {
+    "src": "/products/basque-cream-strawberry-960.webp",
+    "width": 960,
+    "height": 723,
+    "variants": [
+      {
+        "src": "/products/basque-cream-strawberry-480.webp",
+        "width": 480,
+        "bytes": 17996
+      },
+      {
+        "src": "/products/basque-cream-strawberry-960.webp",
+        "width": 960,
+        "bytes": 56636
+      }
+    ]
+  },
+  "basque-strawberry-pair": {
+    "src": "/products/basque-strawberry-pair-960.webp",
+    "width": 960,
+    "height": 723,
+    "variants": [
+      {
+        "src": "/products/basque-strawberry-pair-480.webp",
+        "width": 480,
+        "bytes": 24924
+      },
+      {
+        "src": "/products/basque-strawberry-pair-960.webp",
+        "width": 960,
+        "bytes": 75036
+      }
+    ]
+  },
+  "pave-strawberry": {
+    "src": "/products/pave-strawberry-960.webp",
+    "width": 960,
+    "height": 723,
+    "variants": [
+      {
+        "src": "/products/pave-strawberry-480.webp",
+        "width": 480,
+        "bytes": 17290
+      },
+      {
+        "src": "/products/pave-strawberry-960.webp",
+        "width": 960,
+        "bytes": 56336
+      }
+    ]
+  }
+}

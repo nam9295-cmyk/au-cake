@@ -389,7 +389,7 @@ function Product({ card }: { card: RenewalCard }) {
       <div className="au-pave-hero">
         <div className="renewal-product-media">
           {card.id === "pave" ? (
-            <AuPaveGallery key={`${size}-${finish}`} mini={size === "4in"} />
+            <AuPaveGallery key={`${size}-${finish}`} mini={size === "4in"} strawberries={finish === "fresh-strawberries"} />
           ) : renewalPhotos(card.id).length ? (
             <RenewalPhotoGallery id={card.id} title={ko ? card.ko : card.en} />
           ) : presentation ? (

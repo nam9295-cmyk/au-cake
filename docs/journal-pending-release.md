@@ -1,6 +1,8 @@
 # Journal release state
 
-No pending Journal releases are recorded.
+## Authorized 2026-11-18 — article11 and strawberry cake photos
+
+Owner confirmed Jenny’s approval and authorized the Git release of both changes.
 
 Category/menu title changes remain deferred until the owner supplies agreed wording. The current Journal release preserves the existing titles.
 

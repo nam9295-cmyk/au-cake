@@ -1,3 +1,4 @@
+import strawberryImages from './strawberry-cake-images.json'
 import miniImages from './mini-cake-images.json'
 import type { RenewalCard } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { getAuDetailPresentation } from './au-detail-presentation'
@@ -13,6 +14,10 @@ export function renewalDetailPresentation(card: RenewalCard, size?: string, fini
     ...(size === '4in' ? {
       gallery: [...(finish === 'vanilla-fresh-cream' ? ['mini-cream', 'mini-basic'] : ['mini-basic', 'mini-cream']), ...original.gallery],
       imageOverrides: { 'mini-basic': miniImages['basque-mini'], 'mini-cream': miniImages['basque-on-cream-mini'] },
+    } : {}),
+    ...(finish === 'vanilla-fresh-cream-strawberries' ? {
+      gallery: ['cream-strawberry', 'strawberry', ...original.gallery],
+      imageOverrides: { 'cream-strawberry': strawberryImages['basque-cream-strawberry'], strawberry: strawberryImages['basque-strawberry'] },
     } : {}),
     editionTitle: 'Basic, Vanilla Fresh Cream Or Cream + Strawberries',
     editions: original.editions?.slice(0, 2).map((edition, index) => index === 1

@@ -9,8 +9,8 @@ export function PavePhoto({ image, sizes, priority = false }: { image: PaveImage
     alt={source.alt} sizes={sizes} priority={priority} />
 }
 
-export function AuPaveGallery({ mini = false }: { mini?: boolean }) {
-  const gallery = mini ? ["mini" as const, ...paveGallery] : paveGallery
+export function AuPaveGallery({ mini = false, strawberries = false }: { mini?: boolean; strawberries?: boolean }) {
+  const gallery = strawberries ? ["strawberry" as const, ...paveGallery] : mini ? ["mini" as const, ...paveGallery] : paveGallery
   const [active, setActive] = useState(0)
   const touchStart = useRef<number | null>(null)
   const rotate = (step: number) => setActive((index) => (index + step + gallery.length) % gallery.length)

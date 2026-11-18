@@ -1,0 +1,41 @@
+{
+  "id": "draft-11",
+  "slug": "whole-cake-or-small-bites-gathering-guide",
+  "title": "Whole cake or small bites? Choosing the right dessert for summer and end-of-year gatherings",
+  "seoTitle": "Whole cake or small bites for gatherings | Very Good",
+  "excerpt": "Why the venue, serving utensils and Australian summer weather should guide whether you order one centrepiece cake or individual cupcakes, little lemon cakes and s’more sticks.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/dc650acb7f92e3f7dc3d15181a5afbaf01e3f9442eedbe0fb0b6ea1a8cc60966.webp",
+    "alt": "Chocolate cake with serving utensils beside chocolate cupcakes and glazed lemon cakes."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 182,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 92,
+          "maxWidth": 600
+        },
+        {
+          "frame": 272,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-18T07:06:16.587Z",
+  "updatedAt": "2026-11-18T07:06:16.587Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Jenny (approval confirmed by site owner)",
+    "approvedAt": "2026-11-18T07:06:16.587Z"
+  }
+}

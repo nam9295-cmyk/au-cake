@@ -1,7 +1,9 @@
+import strawberryImages from './strawberry-cake-images.json'
 import miniImages from './mini-cake-images.json'
 const base = '/products/pave-detail'
 
 export const paveImages = {
+  strawberry: { file: 'strawberry', alt: 'Pavé chocolate cake with strawberries and a tree decoration', width: 960, height: 723 },
   mini: { file: 'mini', alt: 'Mini 4-inch Pavé chocolate cake', width: 960, height: 1200 },
   hero: { file: 'hero', alt: 'Pavé Chocolate Cake with its chocolate Eiffel Tower finish', width: 1080, height: 1012 },
   angle: { file: 'angle', alt: 'Pavé cake from a three-quarter angle, showing the chocolate layers', width: 1328, height: 1760 },
@@ -22,9 +24,9 @@ export const paveTexture: readonly PaveImageKey[] = ['sharing', 'angle', 'sizes'
 export const paveOccasions: readonly PaveImageKey[] = ['party', 'occasion', 'birthday', 'gathering']
 
 export function paveImageSource(key: PaveImageKey) {
-  if (key === 'mini') {
-    const image = miniImages['pave-4inch']
-    return { ...image, alt: paveImages.mini.alt, srcSet: image.variants.map(v => `${v.src} ${v.width}w`).join(', ') }
+  if (key === 'mini' || key === 'strawberry') {
+    const image = key === 'mini' ? miniImages['pave-4inch'] : strawberryImages['pave-strawberry']
+    return { ...image, alt: paveImages[key].alt, srcSet: image.variants.map(v => `${v.src} ${v.width}w`).join(', ') }
   }
   const image = paveImages[key]
   return {

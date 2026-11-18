@@ -135,3 +135,12 @@ test('mini cake galleries use supplied photos and cream selection updates the le
  assert.notEqual(first(render('/cakes/brownie-cheesecake?size=6in')),'/products/basque-mini-960.webp');
  assert.notEqual(first(render('/cakes/pave-chocolate-cake?size=6in')),'/products/pave-4inch-960.webp');
 });
+test('strawberry options lead with the matching photos at every cake size',()=>{
+ const first=(html:string)=>html.match(/class="au-pave-gallery-main"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/)?.[1];
+ for(const size of ['4in','6in','8in','10in']) {
+  assert.equal(first(render(`/cakes/pave-chocolate-cake?size=${size}&finish=fresh-strawberries`)),'/products/pave-strawberry-960.webp');
+  const html=render(`/cakes/brownie-cheesecake?size=${size}&finish=vanilla-fresh-cream-strawberries`);
+  assert.equal(first(html),'/products/basque-cream-strawberry-960.webp');
+  assert.match(html,/basque-strawberry-960.webp/);
+ }
+});
