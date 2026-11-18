@@ -1,0 +1,41 @@
+{
+  "id": "draft-12",
+  "slug": "summer-chocolate-gifting-canister-triangle-box-guide",
+  "title": "Summer chocolate gifting in Australia: why canisters, triangle boxes and panned almonds travel better",
+  "seoTitle": "Summer chocolate gifting in Australia: canisters and triangle boxes | Very Good",
+  "excerpt": "How low-moisture cocoa-dusted almonds, sealed pouches inside a reusable canister, and structured triangle gift boxes handle Sydney’s warm season better than fragile filled assortments.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/807a52fd0ec9139a54f56bc931123fdac5aa921018791b17bbd5158dd41055f4.webp",
+    "alt": "Black canister and triangle gift box of almond chocolates."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 176,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 89,
+          "maxWidth": 600
+        },
+        {
+          "frame": 263,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-18T09:02:33.324Z",
+  "updatedAt": "2026-11-18T09:02:33.324Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-18T09:02:33.324Z"
+  }
+}
