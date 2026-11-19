@@ -727,3 +727,9 @@
     margin-top: 24px;
   }
 }
+
+.au-home-shell .au-home-v02 .au-v02-invitations > img {
+  height: auto;
+  max-width: 576px;
+  justify-self: center;
+}

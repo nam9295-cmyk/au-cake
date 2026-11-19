@@ -71,7 +71,7 @@ function AuHomePage({
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         const id = window.location.hash.slice(1)
-        if (['story', 'au-collection', 'custom-cakes', 'business'].includes(id))
+        if (['story', 'au-collection', 'custom-cakes', 'invitations', 'business'].includes(id))
           document.getElementById(id)?.scrollIntoView({ block: 'start' })
       })
     }
@@ -270,6 +270,19 @@ function AuHomePage({
         label={t('Custom cakes and private classes', '커스텀 케이크와 프라이빗 클래스')}
         note={t('Choose a cake or a private class. Final pricing and availability are confirmed after your enquiry.', '케이크 또는 프라이빗 클래스를 선택하세요. 최종 가격과 가능 일정은 문의 후 안내합니다.')}
         links={[{ href: '/custom-cakes', label: t('EXPLORE CUSTOM CAKES & CLASSES', '커스텀 케이크·클래스 전체 보기') }]} />
+      <section id="invitations" className="au-v02-story au-v02-invitations" aria-labelledby="au-invitations-title">
+        <div>
+          <h2 id="au-invitations-title">{t('Invite your guests', '손님을 초대하세요')}</h2>
+          <p>{t('Choose a digital invitation for your celebration.', '모임에 어울리는 디지털 초대장을 골라보세요.')}</p>
+          <a className="au-v02-button au-v02-button-outline"
+            href="https://invite.verygood-chocolate.com/" target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">
+            {t('Make a free invitation', '무료 초대장 만들기')}
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </a>
+        </div>
+        <img src="/home/ribbon-invitation.webp" width={576} height={370} loading="lazy" decoding="async"
+          alt={t('Ribbon Party invitation with a pink bow', '분홍색 리본이 달린 리본 파티 초대장')} />
+      </section>
       <section
         className="au-v02-craft"
         aria-label={t(
