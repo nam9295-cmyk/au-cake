@@ -728,8 +728,32 @@
   }
 }
 
-.au-home-shell .au-home-v02 .au-v02-invitations > img {
-  height: auto;
-  max-width: 576px;
-  justify-self: center;
+.au-v02-invitations {
+  padding: clamp(32px, 6vw, 80px) 0;
+}
+.au-v02-invitations > header {
+  margin: 0 clamp(16px, 4vw, 48px) 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.au-v02-invitations h2 { font-size: clamp(26px, 3vw, 36px); margin-right: auto; }
+.au-v02-invitations header button {
+  display: grid; place-items: center; width: 44px; height: 44px;
+  border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer;
+}
+.au-invite-track {
+  position: relative; display: flex; overflow-x: auto; overscroll-behavior-x: contain;
+  gap: clamp(16px, 2vw, 24px); padding: 4px clamp(16px, 4vw, 48px) 12px;
+  scrollbar-width: thin;
+}
+.au-invite-track a { flex: 0 0 clamp(185px, 20vw, 270px); color: inherit; text-decoration: none; }
+.au-invite-track img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; object-position: center top; background: white; }
+.au-invite-track [data-kind="custom"] img { object-fit: contain; }
+.au-invite-track small, .au-invite-track strong { display: block; }
+.au-invite-track small { margin: 12px 0 4px; color: #65534f; }
+@media (max-width: 620px) {
+  .au-v02-invitations h2 { width: 100%; }
+  .au-v02-invitations header button { margin-left: auto; }
 }

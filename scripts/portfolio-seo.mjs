@@ -16,7 +16,7 @@ export async function getPortfolioSeoDefinition(siteUrl) {
     try { await bundle.write({ file, format: 'esm', codeSplitting: false }) }
     finally { await bundle.close() }
     const { renderPortfolio } = await import(pathToFileURL(file).href)
-    const image = content.boards[0].images[0].web.variants.at(-1)
+    const image = content.seo.image
     return {
       title: content.seo.title,
       description: content.seo.description,

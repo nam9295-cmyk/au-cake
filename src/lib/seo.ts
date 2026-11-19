@@ -315,7 +315,7 @@ export function getSeoConfig(pathname: string): SeoConfig {
   if (renewed) return renewed
   if (marketConfig.market === 'AU' && /^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(pathname)) return {title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', canonical: `${SITE_URL}${pathname}`, noindex: true}
   if (marketConfig.market === 'AU' && (pathname === '/portfolio' || pathname === '/portfolio/')) {
-    const image = portfolio.boards[0].images[0].web.variants.at(-1)!
+    const image = portfolio.seo.image
     return {
       title: portfolio.seo.title, description: portfolio.seo.description,
       canonical: `${SITE_URL}/portfolio`,

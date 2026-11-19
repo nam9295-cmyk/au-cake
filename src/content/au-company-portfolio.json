@@ -1164,6 +1164,7 @@
   },
   "seo": {
     "title": "Company Portfolio | verygood chocolate",
-    "description": "Chocolate, cakes and treats for everyday moments, thoughtful gifts and celebrations."
+    "description": "Handcrafted cakes and treats in Sydney, thoughtful café consulting, and digital invitations in beta.",
+    "image": { "src": "/portfolio/editorial/hero-wide.webp", "width": 1200, "height": 530 }
   }
 }

@@ -1,176 +1,64 @@
-import { useEffect, useRef, type ReactNode } from 'react'
-import { ArrowUpRight } from 'lucide-react'
-import portfolio from '../content/au-company-portfolio.json' with { type: 'json' }
-import copy from '../content/au-portfolio-v03.json' with { type: 'json' }
+import { useEffect } from 'react'
 
-type Photo = (typeof portfolio.boards)[number]['images'][number]
-const boardFor = (slug: string) => portfolio.boards.find(board => board.slug === slug)!
+const assets = '/portfolio/editorial/'
+const demo = 'https://invite.verygood-chocolate.com/gallery/chocolate-collage'
+const instagram = 'https://www.instagram.com/verygood_syd/'
 
-function PortfolioPhoto({ photo, role = 'feature', first = false }: {
-  photo: Photo; role?: 'hero' | 'feature' | 'supporting' | 'business'; first?: boolean
-}) {
-  const variants = photo.web.variants
-  const fallback = variants.find(variant => variant.width >= 640) || variants.at(-1)!
-  const sizes = role === 'business' ? '(max-width: 650px) 90px, 150px'
-    : role === 'supporting' ? '(max-width: 650px) calc((100vw - 50px) / 2), (max-width: 1180px) calc((100vw - 90px) / 2), 545px'
-      : '(max-width: 650px) calc(100vw - 40px), (max-width: 1180px) calc((100vw - 128px) / 2), 526px'
-  return <figure className={`portfolio-photo portfolio-photo-${role}`}>
-    <img src={fallback.src} srcSet={variants.map(variant => `${variant.src} ${variant.width}w`).join(', ')} sizes={sizes}
-      width={photo.web.width} height={photo.web.height} alt={photo.web.alt}
-      loading={first ? 'eager' : 'lazy'} fetchPriority={first ? 'high' : 'auto'} decoding="async" />
-  </figure>
-}
-
-function PortfolioAction({ href, children, variant = 'solid' }: {
-  href: string; children: ReactNode; variant?: 'solid' | 'outline' | 'text' | 'fallback'
-}) {
-  return <a className={`portfolio-action portfolio-action-${variant}`} href={href}>
-    {children}<ArrowUpRight size={16} aria-hidden="true" />
-  </a>
-}
-
-function OpeningSection() {
-  return <section id="daily-chocolate" className="portfolio-opening" aria-labelledby="daily-chocolate-title" tabIndex={-1}>
-    <div className="portfolio-identity"><span>CHOCOLATE & CAKES</span><span>SYDNEY</span></div>
-    <div className="portfolio-hero">
-      <div className="portfolio-hero-photo">
-        <PortfolioPhoto photo={boardFor('daily-chocolate').images[0]} role="hero" first />
-        <p className="portfolio-caption">{copy.hero.caption}</p>
-      </div>
-      <div className="portfolio-hero-copy">
-        <p className="portfolio-kicker">{copy.hero.kicker}</p>
-        <h1 id="daily-chocolate-title">{copy.hero.title}</h1>
-        <p>{copy.hero.body}</p>
-        <div className="portfolio-actions">
-          <PortfolioAction href={portfolio.links.collection}>{copy.actions.cakes}</PortfolioAction>
-          <PortfolioAction href={portfolio.links.chocolates} variant="outline">{copy.actions.chocolates}</PortfolioAction>
-        </div>
-        <nav className="portfolio-choices" aria-label="Find your occasion">
-          {copy.hero.choices.map(choice => <a key={choice.href} href={choice.href}>{choice.label}</a>)}
-        </nav>
-      </div>
-    </div>
-  </section>
-}
-
-function FeatureSection({ feature }: { feature: (typeof copy.features)[number] }) {
-  const board = boardFor(feature.slug)
-  const href = portfolio.links[feature.target as keyof typeof portfolio.links]
-  return <section id={feature.slug} className="portfolio-feature portfolio-reveal" aria-labelledby={`${feature.slug}-title`} tabIndex={-1}>
-    <div className="portfolio-feature-main">
-      <PortfolioPhoto photo={board.images[0]} />
-      <div className="portfolio-feature-copy">
-        <p className="portfolio-kicker">{feature.kicker}</p>
-        <h2 id={`${feature.slug}-title`}>{feature.title}</h2>
-        <p>{feature.body}</p>
-        <p className="portfolio-note">{feature.note}</p>
-        <div className="portfolio-actions">
-          <PortfolioAction href={href}>{feature.action}</PortfolioAction>
-          {feature.instagramFallback && <PortfolioAction href={portfolio.links.instagram} variant="fallback">Instagram</PortfolioAction>}
-        </div>
-      </div>
-    </div>
-    {board.images.length > 1 && <div className="portfolio-supporting">
-      {board.images.slice(1).map(photo => <PortfolioPhoto key={photo.shapeId} photo={photo} role="supporting" />)}
-    </div>}
-  </section>
-}
-
-function BusinessSection() {
-  return <section id="business" className="portfolio-business portfolio-reveal" aria-labelledby="portfolio-business-title" tabIndex={-1}>
-    <p className="portfolio-kicker">{copy.business.kicker}</p>
-    <h2 id="portfolio-business-title">{copy.business.title}</h2>
-    {copy.business.services.map(service => <article key={service.slug} id={service.slug} className="portfolio-business-row" aria-labelledby={`${service.slug}-title`} tabIndex={-1}>
-      <PortfolioPhoto photo={boardFor(service.slug).images[0]} role="business" />
-      <div>
-        <h3 id={`${service.slug}-title`}>{service.title}</h3>
-        <p>{service.body}</p>
-        <PortfolioAction href={portfolio.links.instagram} variant="text">{service.action}</PortfolioAction>
-      </div>
-    </article>)}
-  </section>
-}
-
-function EnquirySection() {
-  return <section id="enquire" className="portfolio-enquiry portfolio-reveal" aria-labelledby="enquire-title" tabIndex={-1}>
-    <div className="portfolio-guide">
-      <p className="portfolio-kicker">{copy.guide.kicker}</p>
-      <h2 id="enquire-title">{copy.guide.title}</h2>
-      <p>{copy.guide.body}</p>
-      <ol className="portfolio-steps">{copy.guide.steps.map((step, index) => <li key={step.title}>
-        <strong>{String(index + 1).padStart(2, '0')} / {step.title}</strong><span>{step.body}</span>
-      </li>)}</ol>
-      <div className="portfolio-actions">
-        <PortfolioAction href={portfolio.links.collection}>{copy.actions.cakes}</PortfolioAction>
-        <PortfolioAction href={portfolio.links.custom} variant="outline">{copy.actions.custom}</PortfolioAction>
-      </div>
-      <p className="portfolio-guide-note">{copy.guide.location}<br />{copy.guide.enquiries}</p>
-    </div>
-  </section>
+function Photo({ name, alt, caption }: { name: string; alt: string; caption?: string }) {
+  return <figure><picture>
+    <source media="(max-width: 650px)" srcSet={assets + name + '-mobile.webp'} />
+    <img src={assets + name + '-wide.webp'} alt={alt} loading={name === 'hero' ? 'eager' : 'lazy'} />
+  </picture>{caption && <figcaption>{caption}</figcaption>}</figure>
 }
 
 export default function CompanyPortfolioPage() {
-  const main = useRef<HTMLElement>(null)
   useEffect(() => {
-    const root = main.current
-    if (!root) return
-    let cancelled = false
-    let frame = 0
-    const followHash = () => {
-      let id: string
-      try { id = decodeURIComponent(window.location.hash.slice(1)) } catch { return }
-      if (id !== 'business' && !portfolio.boards.some(board => board.slug === id)) return
-      const target = document.getElementById(id)
-      target?.closest('.portfolio-reveal')?.classList.remove('is-reveal-pending')
-      frame = window.requestAnimationFrame(() => {
-        target?.scrollIntoView({ block: 'start', behavior: 'instant' })
-        target?.focus({ preventScroll: true })
-      })
-    }
-    followHash()
-    void document.fonts.ready.then(() => { if (!cancelled && window.location.hash) followHash() })
-    window.addEventListener('hashchange', followHash)
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const sections = Array.from(root.querySelectorAll<HTMLElement>('.portfolio-reveal'))
-    let observer: IntersectionObserver | undefined
-    const configureReveal = () => {
-      observer?.disconnect()
-      sections.forEach(section => section.classList.remove('is-reveal-pending'))
-      if (motion.matches || !('IntersectionObserver' in window)) return
-      observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.remove('is-reveal-pending')
-            observer?.unobserve(entry.target)
-          }
-        })
-      }, { threshold: 0.08 })
-      sections.forEach(section => {
-        const hashTarget = document.getElementById(window.location.hash.slice(1))
-        if (section.getBoundingClientRect().top >= window.innerHeight && !section.contains(hashTarget)) {
-          section.classList.add('is-reveal-pending')
-          observer?.observe(section)
-        }
-      })
-    }
-    configureReveal()
-    motion.addEventListener('change', configureReveal)
-    return () => {
-      cancelled = true
-      window.cancelAnimationFrame(frame)
-      window.removeEventListener('hashchange', followHash)
-      motion.removeEventListener('change', configureReveal)
-      observer?.disconnect()
-      sections.forEach(section => section.classList.remove('is-reveal-pending'))
-    }
+    const follow = () => document.getElementById(location.hash.slice(1))?.scrollIntoView()
+    follow()
+    window.addEventListener('hashchange', follow)
+    return () => window.removeEventListener('hashchange', follow)
   }, [])
-
-  return <main className="company-portfolio" lang="en-AU" ref={main}>
-    <div className="portfolio-page-inner">
-      <OpeningSection />
-      {copy.features.map(feature => <FeatureSection key={feature.slug} feature={feature} />)}
-      <BusinessSection />
-      <EnquirySection />
-    </div>
+  return <main className="company-portfolio" lang="en-AU">
+    <nav aria-label="Portfolio sections"><a href="#sharing">Celebrations</a><a href="#consulting">Consulting</a>
+      <a href="#invitations">Invitations</a><a href="#about">About</a><a className="pf-button" href="#enquire">Get in touch</a></nav>
+    <section id="daily-chocolate">
+      <p className="pf-label">VERY GOOD CHOCOLATE / SYDNEY</p>
+      <div className="pf-heading"><h1>Cakes for gatherings.<br />Ideas for cafés.</h1><p>Handcrafted cakes and treats in Sydney, thoughtful café consulting, and digital invitations in beta.</p></div>
+      <Photo name="hero" alt="Chocolate and pastry from the Very Good atelier" caption="Chocolate, cake and care for the details." />
+      <div className="pf-paths"><a href="#sharing"><small>01</small>Celebrations &amp; group orders</a><a href="#consulting"><small>02</small>Café &amp; bakery consulting</a><a href="#invitations"><small>03 · Beta preview</small>Digital invitations</a></div>
+    </section>
+    <section id="about" className="pf-grid">
+      <div><p className="pf-label">THE CHEF &amp; FOUNDER</p><h2>Meet Jenny.</h2><h3>Paris-trained pastry chef &amp; chocolatier. Crafting in Sydney.</h3>
+        <p>After training at Le Cordon Bleu and École Ritz Escoffier in Paris, Jenny honed her pastry and chocolate craft across five-star hotels and luxury showcases. Today, she bakes every recipe from our Melrose Park kitchen.</p>
+        <p className="pf-signature">Classic French craft. Shared in Sydney.</p></div>
+      <Photo name="jenny" alt="Chocolate gâteau loaf from Jenny’s kitchen" caption="Chocolate gâteau loaf, baked fresh in Melrose Park" />
+    </section>
+    <section id="sharing"><p className="pf-label">01 / CELEBRATIONS &amp; GROUP ORDERS</p>
+      <div className="pf-heading"><h2>Something good<br />to share.</h2><p>A centrepiece cake for the table, or individually packaged treats for every guest. Tell us your date and guest count—we’ll find the mix that fits your occasion.</p></div>
+      <div className="pf-grid"><div id="custom-cakes"><Photo name="cake" alt="Pavé chocolate celebration cake" caption="Pavé chocolate cake: rich, neat, made to share." /></div>
+        <div id="individual-packs"><Photo name="gifts" alt="Individually packaged guest favours" /><h3>A little thank-you for every guest.</h3><p>Individual treats and custom-labelled packaging, agreed together.</p></div></div>
+      <div className="pf-line"><p>Share your date, guest numbers, and the feeling you’d like to create.</p><a href="#enquire">Plan your gathering ↗</a></div>
+    </section>
+    <section id="business"><div className="pf-grid" id="consulting"><div><p className="pf-label">02 / CAFÉ &amp; BAKERY CONSULTING</p><h2>Practical pastry craft for Sydney cafés.</h2>
+      <p>Whether refining your counter display, introducing a signature dessert, or training your team to bake with consistency—we start with an honest conversation.</p>
+      <Photo name="consult" alt="Pastry and chocolate for a café counter" /><a href="#enquire">Discuss a café project ↗</a></div>
+      <div id="wholesale"><p className="pf-label">POSSIBLE AREAS TO DISCUSS</p>
+        <h3>Menu &amp; recipe direction</h3><p>Refining signature baked goods that fit your kitchen workflow and coffee menu.</p>
+        <h3>Product &amp; presentation</h3><p>Balancing visual counter appeal, portioning standards, and packaging.</p>
+        <h3>Practical training</h3><p>Hands-on kitchen coaching so your staff produce consistent results every morning.</p><small>Scope agreed after an initial conversation.</small></div></div>
+    </section>
+    <section id="invitations" className="pf-grid"><div><p className="pf-label">03 / DIGITAL INVITATIONS</p>
+      <h2>Before the cake is cut, there is an invitation.</h2><h3>A celebration begins long before guests arrive at the table.</h3>
+      <p className="pf-label">BETA PREVIEW</p><p>VERYGOOD Invitations is our new digital service for children’s birthdays, milestones and celebration gatherings—simple, thoughtful, and free to try online.</p>
+      <a href={demo} target="_blank" rel="noreferrer">Explore Chocolate Collage demo ↗</a></div>
+      <a className="pf-demo" href={demo} target="_blank" rel="noreferrer" aria-label="Open the Chocolate Collage invitation demo">
+        <img src={assets + 'paper.webp'} alt="" loading="lazy" /><Photo name="phone" alt="Chocolate Collage digital invitation preview" /></a>
+    </section>
+    <section><p className="pf-label">SELECTED FROM OUR COLLECTION</p><div className="pf-line"><h2>From our daily bakehouse.</h2><a href="/cakes">Explore our full shop collection ↗</a></div>
+      <div className="pf-grid"><Photo name="chocolate" alt="Artisan chocolate for gifting" caption="Artisan chocolate & gifting: hand-poured in Sydney" />
+        <Photo name="cupcakes" alt="Petite bakes and cupcakes" caption="Petite bakes & cupcakes: fresh for celebration tables" /></div></section>
+    <section id="enquire"><p className="pf-label">A CONVERSATION IS A GOOD PLACE TO START</p><div className="pf-heading"><h2>Have something<br />in mind?</h2>
+      <div><p>Whether it’s a cake for an upcoming gathering, an idea for your café, or questions about the invitation project—we’re always happy to talk.</p>
+      <a className="pf-button" href={instagram}>Message @verygood_syd ↗</a><p><small>Current enquiry channel · Instagram<br />Melrose Park, Sydney</small></p></div></div></section>
   </main>
 }

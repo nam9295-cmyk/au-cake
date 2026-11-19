@@ -1,109 +1,51 @@
-/* AU-PF-001 v0.3. The shared header, chat and other pages are not restyled here. */
 .company-portfolio {
-  --portfolio-green: #035542;
-  --portfolio-paper: #fbf8f1;
-  --portfolio-rose: #a62b3c;
-  background: var(--portfolio-paper);
-  color: #362f31;
-  font-family: 'SUIT Variable', sans-serif;
-  width: 100%;
-  padding: 0;
-  margin: 0;
-  max-width: none;
+  --green: #035542;
+  --rule: #d6dbd3;
+  --gutter: max(clamp(20px, 6vw, 80px), calc((100% - 1200px) / 2));
+  width: 100%; max-width: none; margin: 0; padding: 0;
+  background: #f8f7f3; color: #252b27; font: 400 17px/1.55 'SUIT Variable', sans-serif;
 }
 .company-portfolio * { box-sizing: border-box; min-width: 0; }
-.company-portfolio .portfolio-page-inner { max-width: 1180px; margin: auto; padding: 40px 40px 0; }
-.company-portfolio .portfolio-page-inner > section { padding: 45px 0 60px; border-bottom: 1px solid #dedfd3; }
-.company-portfolio :is(section,article)[id] { scroll-margin-top: 96px; }
-.company-portfolio :is(h1,h2,h3) { font-family: 'Work Sans',sans-serif; color: var(--portfolio-green); margin: 0; letter-spacing: -.055em; line-height: 1.03; font-weight: 800; }
-.company-portfolio h1 { font-size: 56px; }
-.company-portfolio h2 { font-size: 44px; }
-.company-portfolio p { font-size: 17px; line-height: 1.5; margin: 18px 0; }
-.company-portfolio .portfolio-kicker { font-size: 11px; letter-spacing: .11em; color: var(--portfolio-rose); font-weight: 700; margin: 0 0 16px; }
-.company-portfolio :is(a,section,article):focus-visible { outline: 2px solid var(--portfolio-rose); outline-offset: 4px; }
-.company-portfolio .portfolio-identity { display: flex; justify-content: space-between; font-size: 11px; color: var(--portfolio-green); margin-bottom: 25px; }
-.company-portfolio .portfolio-photo { margin: 0; }
-.company-portfolio .portfolio-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.company-portfolio .portfolio-hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
-.company-portfolio .portfolio-hero-copy { grid-column: 1; grid-row: 1; }
-.company-portfolio .portfolio-hero-photo { grid-column: 2; grid-row: 1; }
-.company-portfolio .portfolio-photo-hero { height: 390px; }
-.company-portfolio .portfolio-caption { font-size: 12px; margin: 10px 0 0; color: #5a675f; }
-.company-portfolio .portfolio-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 22px 0 0; }
-.company-portfolio .portfolio-action { font: 700 14px/1.4 'SUIT Variable',sans-serif; border: 1px solid var(--portfolio-green); background: var(--portfolio-green); color: white; padding: 14px 18px; display: inline-flex; align-items: center; justify-content: space-between; gap: 20px; text-align: left; min-height: 44px; text-decoration: none; }
-.company-portfolio .portfolio-action svg { flex-shrink: 0; }
-.company-portfolio .portfolio-action-outline { background: transparent; color: var(--portfolio-green); }
-.company-portfolio .portfolio-action:hover { filter: brightness(.94); }
-.company-portfolio .portfolio-action-text,
-.company-portfolio .portfolio-action-fallback { background: transparent; color: var(--portfolio-green); border-color: transparent; padding: 8px 0; }
-.company-portfolio .portfolio-action-fallback { font-size: 12px; font-weight: 400; text-decoration: underline; gap: 4px; text-underline-offset: 3px; }
-.company-portfolio .portfolio-choices { display: flex; flex-wrap: wrap; gap: 0 18px; border-top: 1px solid #cdd9cf; padding-top: 8px; margin-top: 22px; }
-.company-portfolio .portfolio-choices a { display: inline-flex; align-items: center; min-height: 44px; color: var(--portfolio-green); font-size: 12px; text-underline-offset: 3px; }
-.company-portfolio .portfolio-feature-main { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-.company-portfolio .portfolio-photo-feature { height: 370px; }
-.company-portfolio .portfolio-note { font-size: 13px; color: #6c635e; margin: 20px 0; }
-.company-portfolio .portfolio-supporting { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 14px; }
-.company-portfolio .portfolio-photo-supporting { height: 155px; }
-.company-portfolio .portfolio-business h2 { margin-bottom: 28px; }
-.company-portfolio .portfolio-business-row { display: grid; grid-template-columns: 150px 1fr; gap: 25px; padding: 24px 0; border-top: 1px solid #ccd5cc; align-items: center; }
-.company-portfolio .portfolio-photo-business { height: 120px; }
-.company-portfolio .portfolio-business-row h3 { font-size: 26px; letter-spacing: -.03em; }
-.company-portfolio .portfolio-business-row p { margin: 10px 0; font-size: 15px; }
-.company-portfolio .portfolio-guide { background: var(--portfolio-green); color: white; padding: 50px; }
-.company-portfolio .portfolio-guide :is(h2,.portfolio-kicker) { color: white; }
-.company-portfolio .portfolio-guide > p { max-width: 660px; }
-.company-portfolio .portfolio-steps { list-style: none; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; padding: 25px 0 30px; border-bottom: 1px solid #83a698; margin: 0 0 25px; }
-.company-portfolio .portfolio-steps :is(strong,span) { display: block; }
-.company-portfolio .portfolio-steps strong { font-size: 13px; margin-bottom: 10px; }
-.company-portfolio .portfolio-steps span { font-size: 14px; line-height: 1.4; }
-.company-portfolio .portfolio-guide .portfolio-action { background: var(--portfolio-paper); color: var(--portfolio-green); border-color: var(--portfolio-paper); }
-.company-portfolio .portfolio-guide .portfolio-action-outline { background: transparent; color: white; }
-.company-portfolio .portfolio-guide .portfolio-guide-note { font-size: 12px; line-height: 1.6; margin: 25px 0 0; }
-.company-portfolio .portfolio-reveal { transition: opacity 380ms ease; }
-.company-portfolio .portfolio-reveal.is-reveal-pending { opacity: 0; }
-
-@media (max-width: 850px) and (min-width: 651px) {
-  .company-portfolio h1 { font-size: 44px; }
-  .company-portfolio h2 { font-size: 36px; }
-  .company-portfolio .portfolio-hero,
-  .company-portfolio .portfolio-feature-main { gap: 28px; }
-  .company-portfolio .portfolio-photo-hero { height: 330px; }
-}
-@media (max-width: 650px) {
-  .company-portfolio .portfolio-page-inner { padding: 0 20px; }
-  .company-portfolio .portfolio-page-inner > section { padding: 25px 0 38px; }
-  .company-portfolio .portfolio-identity { font-size: 10px; margin-bottom: 18px; }
-  .company-portfolio .portfolio-hero { display: flex; flex-direction: column; gap: 18px; }
-  .company-portfolio :is(.portfolio-hero-photo,.portfolio-hero-copy) { width: 100%; }
-  .company-portfolio .portfolio-photo-hero { height: 190px; }
-  .company-portfolio .portfolio-caption { font-size: 11px; margin-top: 7px; }
-  .company-portfolio h1 { font-size: 36px; }
-  .company-portfolio .portfolio-hero-copy .portfolio-kicker { display: none; }
-  .company-portfolio .portfolio-hero-copy > p { font-size: 14px; line-height: 1.45; margin: 12px 0; }
-  .company-portfolio .portfolio-hero-copy .portfolio-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 15px 0 0; }
-  .company-portfolio .portfolio-action { font-size: 13px; padding: 12px 14px; min-height: 44px; }
-  .company-portfolio .portfolio-action-fallback,
-  .company-portfolio .portfolio-action-text { padding-inline: 0; }
-  .company-portfolio .portfolio-choices { column-gap: 18px; padding-top: 3px; margin-top: 15px; }
-  .company-portfolio .portfolio-choices a { font-size: 12px; }
-  .company-portfolio .portfolio-feature-main { display: block; }
-  .company-portfolio .portfolio-photo-feature { height: 245px; margin-bottom: 24px; }
-  .company-portfolio h2 { font-size: 33px; }
-  .company-portfolio p { font-size: 15px; }
-  .company-portfolio .portfolio-kicker { font-size: 11px; }
-  .company-portfolio .portfolio-business-row { grid-template-columns: 90px 1fr; gap: 15px; }
-  .company-portfolio .portfolio-photo-business { height: 110px; }
-  .company-portfolio .portfolio-business-row h3 { font-size: 21px; }
-  .company-portfolio .portfolio-business-row p { font-size: 14px; }
-  .company-portfolio .portfolio-action-text { font-size: 13px; }
-  .company-portfolio .portfolio-guide { padding: 28px 22px; }
-  .company-portfolio .portfolio-guide h2 { font-size: 32px; }
-  .company-portfolio .portfolio-steps { grid-template-columns: 1fr; gap: 16px; }
-  .company-portfolio .portfolio-steps li { display: flex; justify-content: space-between; gap: 15px; }
-  .company-portfolio .portfolio-steps strong { font-size: 12px; margin: 0; }
-  .company-portfolio .portfolio-steps span { font-size: 13px; }
-  .company-portfolio .portfolio-photo-supporting { height: 100px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .company-portfolio .portfolio-reveal { opacity: 1; transition: none; }
+.company-portfolio [id] { scroll-margin-top: 105px; }
+.company-portfolio > section { padding: clamp(42px, 6vw, 90px) var(--gutter); border-bottom: 1px solid var(--rule); }
+.company-portfolio > nav { display: flex; flex-wrap: wrap; gap: 0 clamp(12px, 3vw, 44px); align-items: center; padding: 12px var(--gutter); border-bottom: 1px solid var(--rule); }
+.company-portfolio a { color: var(--green); min-height: 44px; display: inline-flex; align-items: center; text-underline-offset: .25em; font-weight: 650; }
+.company-portfolio nav a { text-decoration: none; }
+.company-portfolio a:hover { text-decoration: underline; }
+.company-portfolio a:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.company-portfolio a.pf-button { background: var(--green); color: white; padding: 10px 22px; text-decoration: none; }
+.company-portfolio nav .pf-button { margin-left: auto; }
+.company-portfolio :is(h1,h2,h3) { font-family: 'Work Sans',sans-serif; margin: 0; color: var(--green); letter-spacing: -.045em; line-height: 1.08; text-transform: none; max-width: none; }
+.company-portfolio h1, .company-portfolio #enquire h2 { font-size: clamp(42px, 5vw, 72px); }
+.company-portfolio h2 { font-size: clamp(36px, 4.2vw, 58px); }
+.company-portfolio h3 { font-size: clamp(22px, 2vw, 30px); margin: 24px 0 10px; }
+.company-portfolio p { margin: 15px 0; }
+.company-portfolio .pf-label { color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: .1em; margin: 0 0 20px; }
+.company-portfolio .pf-grid, .company-portfolio .pf-heading { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(24px, 4vw, 60px); align-items: start; }
+.company-portfolio .pf-heading { grid-template-columns: 2fr 1fr; align-items: end; margin-bottom: 30px; }
+.company-portfolio .pf-heading p { margin-bottom: 0; }
+.company-portfolio figure { margin: 0; }
+.company-portfolio picture, .company-portfolio picture img { display: block; width: 100%; }
+.company-portfolio figcaption, .company-portfolio small { font-size: 13px; color: #506159; }
+.company-portfolio figcaption { margin-top: 9px; }
+.company-portfolio .pf-paths { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 28px; border-top: 1px solid var(--rule); }
+.company-portfolio .pf-paths a { display: grid; align-content: start; gap: 8px; padding: 15px 12px 15px 0; font: 650 clamp(18px, 1.7vw, 25px)/1.2 'Work Sans',sans-serif; text-decoration: none; }
+.company-portfolio .pf-line { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin: 24px 0; }
+.company-portfolio .pf-signature { color: var(--green); font: 600 26px/1.2 'Work Sans',sans-serif; }
+.company-portfolio #business { background: #eef0eb; }
+.company-portfolio #wholesale h3 { padding-top: 22px; border-top: 1px solid var(--rule); }
+.company-portfolio .pf-demo { display: flex; align-items: center; justify-content: flex-end; position: relative; }
+.company-portfolio .pf-demo > img { width: 50%; margin-right: -15%; }
+.company-portfolio .pf-demo figure { position: relative; width: 65%; }
+.company-portfolio #enquire .pf-button { margin-top: 20px; }
+@media (max-width: 700px) {
+  .company-portfolio { font-size: 16px; }
+  .company-portfolio .pf-grid, .company-portfolio .pf-heading { grid-template-columns: 1fr; gap: 20px; }
+  .company-portfolio .pf-line { display: grid; }
+  .company-portfolio .pf-paths { grid-template-columns: 1fr; }
+  .company-portfolio .pf-paths a { display: flex; align-items: center; border-bottom: 1px solid var(--rule); }
+  .company-portfolio .pf-paths small { min-width: 52px; }
+  .company-portfolio .pf-demo { justify-content: center; }
+  .company-portfolio .pf-demo > img { display: none; }
+  .company-portfolio .pf-demo figure { width: min(280px, 88%); }
 }

@@ -1,0 +1,41 @@
+{
+  "id": "draft-13",
+  "slug": "why-citrus-balances-a-rich-chocolate-dessert-table",
+  "title": "The tangy twist: why citrus balances a rich chocolate dessert table",
+  "seoTitle": "Why citrus balances a rich chocolate dessert table | Very Good",
+  "excerpt": "How bright lemon juice and aromatic zest cut through dense dark ganache—and two ways to bring citrus onto a celebration table alongside Pavé Chocolate Cake.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/e80247c766895cbf9b2bd5ff99792f60c0c5fa84f6441e7cc97c898ad816799f.webp",
+    "alt": "Four-layer Pavé Chocolate Cake beside glazed and dark-chocolate lemon cakes."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 174,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 88,
+          "maxWidth": 600
+        },
+        {
+          "frame": 260,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-19T07:39:32.626Z",
+  "updatedAt": "2026-11-19T07:39:32.626Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-19T07:39:32.626Z"
+  }
+}
