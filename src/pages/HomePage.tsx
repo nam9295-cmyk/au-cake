@@ -1,3 +1,4 @@
+import { PosterWall } from '../components/PosterWall'
 import { InvitationShowcase } from '../components/InvitationShowcase'
 import { HomeCollectionSection } from '../components/HomeCollectionSection'
 import { HalloweenMeringueSection } from '../components/HalloweenMeringueSection'
@@ -72,7 +73,7 @@ function AuHomePage({
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         const id = window.location.hash.slice(1)
-        if (['story', 'au-collection', 'custom-cakes', 'invitations', 'business'].includes(id))
+        if (['story', 'poster-wall', 'au-collection', 'custom-cakes', 'invitations', 'business'].includes(id))
           document.getElementById(id)?.scrollIntoView({ block: 'start' })
       })
     }
@@ -258,6 +259,7 @@ function AuHomePage({
           ))}
         </div>
       </section>
+      <PosterWall ko={language === 'ko'} />
       <HomeCollectionSection id="au-collection" categories={collections} language={language}
         label={t('The AU collection', 'AU 컬렉션')}
         note={t('Made to order with thoughtful ingredients and chocolatier-grade couverture.', '쇼콜라티에급 커버춰와 정성껏 고른 재료로 주문 제작합니다.')}

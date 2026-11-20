@@ -1,0 +1,41 @@
+{
+  "id": "draft-14",
+  "slug": "the-rise-of-small-bites-mini-desserts-for-modern-hosting",
+  "title": "The rise of small bites: how mini desserts changed modern hosting",
+  "seoTitle": "The rise of small bites: mini desserts for modern hosting | Very Good",
+  "excerpt": "From classic Gâteau Cupcakes—served plain or crowned with real-vanilla fresh cream—to two-layer Brownie Basque Cupcakes and glazed Lemon Cakes, why single-serve bakes are reshaping Sydney celebrations.",
+  "locale": "en-AU",
+  "status": "published",
+  "cover": {
+    "src": "assets/1ba2d97132d8f1b8baf33d53e86a0610809324b83edf0282a0c0e34fd0269ff2.webp",
+    "alt": "Gâteau cupcakes with and without vanilla cream beside Brownie Basque cupcakes and glazed lemon cakes."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 176,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 89,
+          "maxWidth": 600
+        },
+        {
+          "frame": 263,
+          "maxWidth": 360
+        }
+      ]
+    }
+  },
+  "publishedAt": "2026-11-20T10:42:05.455Z",
+  "updatedAt": "2026-11-20T10:42:05.455Z",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-20T10:42:05.455Z"
+  }
+}

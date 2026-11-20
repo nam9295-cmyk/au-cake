@@ -757,3 +757,41 @@
   .au-v02-invitations h2 { width: 100%; }
   .au-v02-invitations header button { margin-left: auto; }
 }
+
+.au-home-shell .au-home-v02 section.au-poster-wall { position: relative; width: 100%; max-width: 1200px; margin-inline: auto; scroll-margin-top: 80px; }
+.au-poster-banner { display: block; width: 100%; height: auto; }
+.au-poster-wall .au-poster-hotspot {
+  position: absolute; width: 12.45%; height: 39.4%; padding: 0; border: 0;
+  background: transparent; cursor: zoom-in; border-radius: 0;
+}
+.au-poster-hotspot::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 8px 2px #ffdc94, 0 0 7px #ffc775;
+  opacity: .2;
+}
+@keyframes au-poster-glimmer {
+  0%, 45%, 100% { opacity: .12; }
+  70% { opacity: .82; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .au-poster-hotspot::before { animation: au-poster-glimmer 6s ease-in-out infinite; }
+  .au-poster-hotspot:nth-of-type(2)::before { animation-delay: -1.5s; }
+  .au-poster-hotspot:nth-of-type(3)::before { animation-delay: -3s; }
+  .au-poster-hotspot:nth-of-type(4)::before { animation-delay: -4.5s; }
+}
+.au-poster-hotspot .au-poster-hint {
+  position: absolute; bottom: 4%; right: 5%; display: inline-flex; align-items: center;
+  padding: 4px; border-radius: 20px; background: #221b16d9; color: #fff4dd;
+  font: 600 12px/1.2 sans-serif; white-space: nowrap;
+}
+.au-poster-hint span { display: none; }
+.au-poster-hotspot:focus-visible { outline: 2px solid #ffdf9c; outline-offset: 2px; }
+@media (hover: hover) and (min-width: 768px) {
+  .au-poster-hotspot:is(:hover, :focus-visible)::before { animation: none; opacity: .95; }
+  .au-poster-hotspot:is(:hover, :focus-visible) .au-poster-hint span { display: inline; padding: 0 5px; }
+}
+.au-poster-dialog { position: fixed; inset: 0; margin: auto; padding: 0; border: 0; width: fit-content; height: fit-content; background: transparent; }
+.au-poster-dialog::backdrop { background: #111b; }
+.au-poster-dialog img { display: block; width: auto; height: auto; max-width: 91vw; max-height: 89dvh; }
+.au-poster-dialog button { position: absolute; top: 4px; right: 4px; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #18231be6; color: white; font-size: 26px; cursor: pointer; }
+html:has(.au-poster-dialog[open]) { overflow: hidden; }
