@@ -1,5 +1,11 @@
 # Journal release state
 
+## Completed 2026-11-21 — AU homepage and Journal discovery
+
+- Cloudflare Pages deployed `f29516e624a401a85cc34395634f8a4ea4f861b5` to the AU production domain. The homepage now links to the Journal, portfolio and invitation maker in the initial HTML. The Journal index lists its published articles in structured data and uses the latest article cover for sharing.
+- Verified the 14 public articles against the index, catalog, RSS and sitemap on the production domain, including publication dates, canonical URLs, citation links and 126 responsive photo files. Existing article URLs and publication dates were preserved.
+- Search Console accepted the owner's indexing request for article 14 on 21 November. It entered the priority crawl queue. Category and menu title changes remain deferred.
+
 ## Authorized 2026-11-18 — article11 and strawberry cake photos
 
 Owner confirmed Jenny’s approval and authorized the Git release of both changes.
