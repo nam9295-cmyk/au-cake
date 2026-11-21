@@ -2,6 +2,12 @@
 // The held media request makes the initial poster and autoplay state observable.
 async (page) => {
   const origin = await page.evaluate(() => location.origin)
+  async function openHero(tab, waitUntil) {
+    await tab.goto(origin + '/', { waitUntil })
+    await tab.locator('.rd-hero-poster img').waitFor()
+    const close = tab.getByRole('button', { name: 'Dismiss announcement' })
+    if (await close.isVisible()) await close.click()
+  }
   const check = (condition, message) => { if (!condition) throw new Error(message) }
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'no-preference' })
@@ -20,7 +26,7 @@ async (page) => {
   })
 
   try {
-    await page.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(page, 'domcontentloaded')
     await page.locator('video.rd-hero-photo').waitFor()
     await requested
     await page.locator('.rd-hero-poster img').evaluate(image => image.decode())
@@ -59,10 +65,10 @@ async (page) => {
     check(playing.opacityTransition.includes('opacity'), 'Poster-to-video fade is missing')
     const firstVideoDownloads = await page.evaluate(() => performance.getEntriesByType('resource')
       .filter(entry => entry.name.endsWith('/redesign/hero/cake-mobile-8s.mp4')).length)
-    await page.locator('.rd-collection-section').scrollIntoViewIfNeeded()
+    await page.locator('#au-collection').scrollIntoViewIfNeeded()
     await page.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.paused)
     await page.locator('.rd-hero').scrollIntoViewIfNeeded()
-    await page.waitForFunction(() => !document.querySelector('video.rd-hero-photo')?.paused)
+    await page.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.paused === false)
     const resumedVideoDownloads = await page.evaluate(() => performance.getEntriesByType('resource')
       .filter(entry => entry.name.endsWith('/redesign/hero/cake-mobile-8s.mp4')).length)
     check(firstVideoDownloads === 1 && resumedVideoDownloads === 1,
@@ -89,7 +95,7 @@ async (page) => {
           return new Promise((_resolve, reject) => { window.__heroRejectors.push(reject) })
         }
       })
-      await blockedPage.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+      await openHero(blockedPage, 'domcontentloaded')
       await blockedPage.locator('video.rd-hero-photo').waitFor()
       await blockedPage.waitForFunction(() => window.__heroPlayAttempts.length > 0)
       check(await blockedPage.locator('.rd-hero-video-toggle').count() === 0,
@@ -106,7 +112,7 @@ async (page) => {
         'Rejected autoplay revealed an unplayed video frame')
       await blockedPage.evaluate(() => { window.__allowHeroPlay = true })
       await blockedPage.getByRole('button', { name: 'Play hero video' }).click()
-      await blockedPage.waitForFunction(() => !document.querySelector('video.rd-hero-photo')?.paused)
+      await blockedPage.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.paused === false)
       await blockedPage.evaluate(() => { window.__allowHeroPlay = false })
       await blockedPage.setViewportSize({ width: 1440, height: 900 })
       await blockedPage.getByRole('button', { name: 'Play hero video' }).waitFor()
@@ -132,7 +138,7 @@ async (page) => {
             : originalPlay.call(this)
         }
       })
-      await retryPage.goto(`${origin}/`, { waitUntil: 'networkidle' })
+      await openHero(retryPage, 'networkidle')
       await retryPage.getByRole('button', { name: 'Play hero video' }).waitFor()
       const callsAfterLoad = await retryPage.evaluate(() => window.__heroPlayCalls)
       await retryPage.waitForTimeout(150)
@@ -142,7 +148,7 @@ async (page) => {
         window.__heroDenied = false
         document.dispatchEvent(new Event('visibilitychange'))
       })
-      await retryPage.waitForFunction(() => !document.querySelector('video.rd-hero-photo')?.paused)
+      await retryPage.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.paused === false)
       check(await retryPage.evaluate(() => window.__heroPlayCalls) === callsAfterLoad + 1,
         'Visibility retry did not make exactly one new play attempt')
     } finally {
@@ -150,7 +156,13 @@ async (page) => {
     }
 
     const canPlayPage = await page.context().newPage()
+    let allowMedia
+    const firstAttempt = new Promise(resolve => { allowMedia = resolve })
     try {
+      await canPlayPage.route('**/redesign/hero/*.mp4', async route => {
+        await firstAttempt
+        await route.continue()
+      })
       await canPlayPage.setViewportSize({ width: 390, height: 844 })
       await canPlayPage.addInitScript(() => {
         window.__heroReady = false
@@ -167,11 +179,14 @@ async (page) => {
             : Promise.reject(new DOMException('Media not ready', 'InvalidStateError'))
         }
       })
-      await canPlayPage.goto(`${origin}/`, { waitUntil: 'networkidle' })
-      await canPlayPage.waitForFunction(() => !document.querySelector('video.rd-hero-photo')?.paused)
+      await openHero(canPlayPage, 'domcontentloaded')
+      await canPlayPage.waitForFunction(() => window.__heroPlayCalls === 1)
+      allowMedia()
+      await canPlayPage.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.paused === false)
       check(await canPlayPage.evaluate(() => window.__heroPlayCalls) >= 2,
         'Canplay did not retry after an initial playback rejection')
     } finally {
+      allowMedia()
       await canPlayPage.close()
     }
 
@@ -188,13 +203,13 @@ async (page) => {
           return new Promise((_resolve, reject) => { window.__heroAbortRejectors.push(reject) })
         }
       })
-      await interruptedPage.goto(`${origin}/`, { waitUntil: 'networkidle' })
+      await openHero(interruptedPage, 'networkidle')
       await interruptedPage.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.readyState >= 3)
       await interruptedPage.evaluate(() => {
         window.__heroAbortPending = false
         window.__heroAbortRejectors.forEach(reject => reject(new DOMException('Playback interrupted', 'AbortError')))
       })
-      await interruptedPage.waitForFunction(() => !document.querySelector('video.rd-hero-photo')?.paused,
+      await interruptedPage.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.paused === false,
         null, { timeout: 3000 })
       check(await interruptedPage.locator('.rd-hero-video-toggle[aria-label="Play hero video"]').count() === 0,
         'An interrupted autoplay request showed the policy-denied fallback')

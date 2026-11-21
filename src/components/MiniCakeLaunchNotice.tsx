@@ -4,6 +4,11 @@ import type { Language } from '../lib/i18n'
 const sessionKey = 'au-mini-cake-launch-seen-v2'
 const dayKey = 'au-mini-cake-launch-hidden-day'
 let seenWithoutStorage = false
+const cardSizes = '(max-width: 600px) calc(50vw - 32px), (max-width: 724px) calc(50vw - 41px), 321px'
+function cardSources(cake: 'basque' | 'pave') {
+  const base = `/products/${cake}-strawberry-popup`
+  return `${base}-320.webp 320w, ${base}-480.webp 480w, ${base}.webp 800w`
+}
 const sydneyDay = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
 function firstVisit() {
   if (typeof window === 'undefined' || seenWithoutStorage) return false
@@ -12,9 +17,10 @@ function firstVisit() {
 }
 
 // AU HomePage only. Native modal supplies inert background, focus trap and Escape.
-export function MiniCakeLaunchNotice({ language }: { language: Language }) {
+export function MiniCakeLaunchNotice({ language, onVisibilityChange }: { language: Language; onVisibilityChange?: (visible: boolean) => void }) {
   const [visible, setVisible] = useState(firstVisit)
   const notice = useRef<HTMLDialogElement>(null)
+  useEffect(() => { onVisibilityChange?.(visible) }, [visible, onVisibilityChange])
   useEffect(() => {
     if (!visible) return
     seenWithoutStorage = true
@@ -54,14 +60,14 @@ export function MiniCakeLaunchNotice({ language }: { language: Language }) {
       <p id="mini-cake-launch-description">{ko ? '작은 축하, 선물, 또는 나를 위한 특별한 간식으로 즐기는 미니 4인치 케이크.' : 'Mini 4-inch cakes for small celebrations, gifting, or a treat just for you.'}</p>
       <div className="mini-cake-launch-grid">
         <article className="mini-cake-launch-card">
-          <img className="mini-cake-launch-photo" src="/products/basque-strawberry-popup.webp" width="800" height="1000" alt={ko ? '딸기와 트리 장식을 올린 바스크 치즈케이크 두 가지' : 'Basque cheesecakes with strawberries and tree decorations'} />
+          <img className="mini-cake-launch-photo" src="/products/basque-strawberry-popup.webp" srcSet={cardSources('basque')} sizes={cardSizes} width="800" height="1000" alt={ko ? '딸기와 트리 장식을 올린 바스크 치즈케이크 두 가지' : 'Basque cheesecakes with strawberries and tree decorations'} />
           <h3>{ko ? '바스크 치즈케이크' : 'Basque Cheesecake'}</h3>
           <p>{ko ? '기본 또는 생크림을 선택하세요' : 'Choose Plain or Fresh Cream'}</p>
           <p className="mini-cake-launch-price"><strong>{ko ? 'AUD 49부터' : 'From AUD 49'}</strong></p>
           <a className="mini-cake-launch-order" href="/cakes/brownie-cheesecake?form=whole&size=4in">{ko ? '바스크 보기' : 'Shop Basque'}</a>
         </article>
         <article className="mini-cake-launch-card">
-          <img className="mini-cake-launch-photo" src="/products/pave-strawberry-popup.webp" width="800" height="1000" alt={ko ? '딸기와 트리 장식을 올린 파베 초콜릿 케이크' : 'Pavé chocolate cake with strawberries and a tree decoration'} />
+          <img className="mini-cake-launch-photo" src="/products/pave-strawberry-popup.webp" srcSet={cardSources('pave')} sizes={cardSizes} width="800" height="1000" alt={ko ? '딸기와 트리 장식을 올린 파베 초콜릿 케이크' : 'Pavé chocolate cake with strawberries and a tree decoration'} />
           <h3>{ko ? '파베 초콜릿 케이크' : 'Pavé Chocolate Cake'}</h3>
           <p>{ko ? '부드러운 가나슈, 진한 초콜릿' : 'Smooth ganache, rich chocolate'}</p>
           <p className="mini-cake-launch-price"><strong>{ko ? 'AUD 45부터' : 'From AUD 45'}</strong></p>

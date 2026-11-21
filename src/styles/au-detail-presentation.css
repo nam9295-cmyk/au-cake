@@ -31,7 +31,7 @@
 .au-product-detail :is(.cake-detail-quantity,.au-chocolate-quantity) :is(output,input) { min-width: 0; align-self: center; text-align: center; }
 .au-product-detail .cake-detail-quantity svg { width: 18px; height: 18px; }
 .au-product-detail .cake-detail-order-summary { display: flex; justify-content: space-between; gap: 12px; margin: 0; padding: 14px 0; border-top: 1px solid var(--au-line); border-bottom: 1px solid var(--au-line); border-radius: 0; background: transparent; font-size: 12px; }
-.au-product-detail :is(.cake-detail-request,.primary-button) { min-height: 48px; padding: 12px; border: 1px solid var(--au-green); border-radius: 0; background: var(--au-green); color: #fff; font-family: 'SUIT Variable',sans-serif; font-size: 12px; box-shadow: none; }
+.au-product-detail :is(.cake-detail-request,.primary-button) { min-height: 48px; padding: 12px; border: 1px solid var(--au-green); border-radius: 0; background: var(--au-green); color: #fff; font-family: var(--storefront-reading-font, 'SUIT Variable'),sans-serif; font-size: 12px; box-shadow: none; }
 .au-product-detail .cake-detail-checkout-price { font-size: 24px; color: var(--au-green); }
 .au-product-detail .cake-detail-ordering-notice { padding: 14px; margin: 0; border: 1px solid var(--au-line); border-radius: 0; background: #faf8f6; font-size: 12px; line-height: 1.6; }
 .au-product-detail .cake-detail-ordering-notice-label { display: block; margin-bottom: 6px; font-size: 10px; color: var(--au-green); }

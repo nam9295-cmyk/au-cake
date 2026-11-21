@@ -45,15 +45,19 @@ async function chromeRenderer() {
 function publicEntry(entry) {
   return Object.fromEntries(['id','slug','title','excerpt','locale','publishedAt','updatedAt','cover'].filter(k => entry[k] !== undefined).map(k => [k, entry[k]]))
 }
-async function shellStyles() {
+async function shellStyles(preview) {
   const tokens = postcss.parse(await readFile(join(project, 'src/styles/tokens.css'), 'utf8'))
-  tokens.nodes.filter(node => !(node.type === 'atrule' && node.name === 'import') && !(node.type === 'rule' && node.selector === ':root')).forEach(node => node.remove())
+  // A standalone private proof can be viewed before the storefront assets are built.
+  const fonts = preview
+    ? tokens.nodes.filter(node => node.type === 'atrule' && node.name === 'import').map(node => `${node};`).join('\n')
+    : await readFile(join(project, 'src/styles/au-fonts.css'), 'utf8')
+  tokens.nodes.filter(node => !(node.type === 'rule' && node.selector === ':root')).forEach(node => node.remove())
   const chrome = postcss.parse(await readFile(join(project, 'src/styles/au-phase1.css'), 'utf8'))
   // Reuse actual AU shell/footer rules, without importing product or global typography into articles.
   chrome.walkRules(rule => { if (!rule.selector.includes('.au-redesign-footer') && rule.selector !== '.app-shell.au-redesign-shell') rule.remove() })
   chrome.walkAtRules(at => { if (!at.nodes?.length) at.remove() })
   chrome.walkComments(node => node.remove())
-  return [tokens.toString(), chrome.toString(), ...await Promise.all(['src/styles/au-navigation.css','src/journal/journal.css'].map(path => readFile(join(project, path), 'utf8')))].join('\n')
+  return [fonts, tokens.toString(), chrome.toString(), ...await Promise.all(['src/styles/au-navigation.css','src/journal/journal.css'].map(path => readFile(join(project, path), 'utf8')))].join('\n')
 }
 
 async function commitOutput(stage, outputDirectory) {
@@ -175,7 +179,7 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
   packages.sort((a,b) => (Date.parse(b.entry.publishedAt) || 0) - (Date.parse(a.entry.publishedAt) || 0))
   const entries = packages.map(p => p.entry)
   const renderChrome = await chromeRenderer()
-  const css = await shellStyles()
+  const css = await shellStyles(preview)
   const cssPath = `/journal-assets/shell-${createHash('sha256').update(css).digest('hex').slice(0,12)}.css`
   const analytics = preview ? null : await analyticsAsset()
   const analyticsPath = analytics ? `/journal-assets/analytics-${createHash('sha256').update(analytics).digest('hex').slice(0,12)}.js` : null

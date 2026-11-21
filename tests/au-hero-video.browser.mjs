@@ -13,6 +13,9 @@ async (page) => {
       await page.setViewportSize({width, height:1100})
       mediaRequests.length = 0
       await page.goto(`${origin}/`)
+      await page.locator('.rd-hero-poster img').waitFor()
+      const close = page.getByRole('button', { name: 'Dismiss announcement' })
+      if (await close.isVisible()) await close.click()
       const video = page.locator('video.rd-hero-photo')
       await video.waitFor()
       check(await video.count() === 1, `Hero @ ${width}: missing video`)
@@ -28,16 +31,20 @@ async (page) => {
           naturalWidth:video.videoWidth, naturalHeight:video.videoHeight,
           overflow:document.documentElement.scrollWidth > document.documentElement.clientWidth,
           viewport:document.documentElement.clientWidth,
-          collectionWidth:document.querySelector('.rd-collection-section').getBoundingClientRect().width}
+          collectionWidth:document.querySelector('#au-collection').getBoundingClientRect().width}
       })
       const mobile = width <= 768
       const expected = mobile ? 'cake-mobile-8s.mp4' : 'cake-desktop.mp4'
       check(state.src.endsWith(expected), `Hero @ ${width}: wrong responsive video`)
       check(mediaRequests.length > 0 && mediaRequests.every(url => url.endsWith(expected)), `Hero @ ${width}: downloaded another viewport's video`)
       check(state.muted && state.loop && state.inline, `Hero @ ${width}: missing quiet inline loop`)
-      check(Math.abs(state.duration - 7) < 0.05 && state.playbackRate === 1, `Hero @ ${width}: expected a seven-second encoded video`)
-      check(Math.abs(state.width / state.height - (mobile ? 4/5 : 16/9)) < 0.005, `Hero @ ${width}: wrong frame ratio`)
-      check(Math.abs(state.left) <= 1 && Math.abs(state.width - state.viewport) <= 1, `Hero @ ${width}: side margins remain`)
+      check(Math.abs(state.duration - (mobile ? 8 : 7)) < 0.05 && state.playbackRate === 1, `Hero @ ${width}: unexpected encoded duration`)
+      if (width < 768) {
+        check(Math.abs(state.width / state.height - 3/4) < 0.005 && Math.abs(state.width - state.viewport) <= 1, 'Mobile hero must retain its full-width portrait frame')
+      } else {
+        const expectedHeight = width < 1200 ? 420 : 520
+        check(state.height === expectedHeight && Math.abs(state.left * 2 + state.width - state.viewport) <= 2, 'Desktop hero must retain its centred frame')
+      }
       check(!state.overflow && state.collectionWidth <= 1441, `Hero @ ${width}: unrelated page layout expanded`)
       results.push({width, ...state})
     }
@@ -58,12 +65,12 @@ async (page) => {
       })
       check(paused, `Breakpoint change to ${width}px undid a user pause`)
     }
-    await page.locator('.rd-collection-section').scrollIntoViewIfNeeded()
+    await page.locator('#au-collection').scrollIntoViewIfNeeded()
     await page.locator('.rd-hero').scrollIntoViewIfNeeded()
     check(await page.locator('video.rd-hero-photo').evaluate(video => video.paused), 'Scrolling undid a user pause')
     await page.getByRole('button', {name:'Play hero video', exact:true}).click()
     await page.waitForFunction(() => !document.querySelector('video.rd-hero-photo').paused)
-    await page.locator('.rd-collection-section').scrollIntoViewIfNeeded()
+    await page.locator('#au-collection').scrollIntoViewIfNeeded()
     await page.waitForFunction(() => document.querySelector('video.rd-hero-photo').paused)
     await page.locator('.rd-hero').scrollIntoViewIfNeeded()
     await page.waitForFunction(() => !document.querySelector('video.rd-hero-photo').paused)

@@ -65,13 +65,13 @@ function description(card) {
 function imageConfig(siteUrl, card) {
   return card ? {image:siteUrl+card.image,imageType:'image/webp',imageWidth:imageDimensions[card.id][0],imageHeight:imageDimensions[card.id][1],imageAlt:card.en} : {image:siteUrl+'/og-image.jpg',imageType:'image/jpeg',imageWidth:1200,imageHeight:630,imageAlt:'VERYGOOD Chocolate Atelier Sydney'};
 }
-function imageHtml(card) {
+function imageHtml(card, lazy) {
   const [width,height]=imageDimensions[card.id];
-  return `<img src="${card.image}" alt="${escape(card.en)}" width="${width}" height="${height}" style="max-width:100%;height:auto" />`;
+  return `<img src="${card.image}" alt="${escape(card.en)}" width="${width}" height="${height}"${lazy ? ' loading="lazy"' : ''} style="max-width:100%;height:auto" />`;
 }
-function cardFacts(card) {
+function cardFacts(card, lazy) {
   const choices=selections(card);
-  return `${imageHtml(card)}<h2><a href="${card.href}">${escape(card.en)}</a></h2><p>${escape(description(card))}</p>${choices.length?`<ul>${choices.map(c=>`<li>${escape(c.name)} — AUD ${money(c.price)}</li>`).join('')}</ul>`:'<p>Reservations are not available until the sale price is approved.</p>'}${card.id==='mochi'?`<p>${mochiTerms}</p><p>Please allow at least 24 hours before pickup.</p>${MOCHI_PUBLIC_INFORMATION.en.map(s=>`<p>${escape(s)}</p>`).join('')}`:''}${card.id==='brownie-loaf'?'<p>Loaf: Vanilla Fresh Cream +AUD 10.00.</p>':''}${card.id.includes('cupcakes')?'<p>Optional individual packaging AUD 0.50 per cupcake, waived when the eligible cupcake subtotal reaches AUD 100.</p>':''}`;
+  return `${imageHtml(card, lazy)}<h2><a href="${card.href}">${escape(card.en)}</a></h2><p>${escape(description(card))}</p>${choices.length?`<ul>${choices.map(c=>`<li>${escape(c.name)} — AUD ${money(c.price)}</li>`).join('')}</ul>`:'<p>Reservations are not available until the sale price is approved.</p>'}${card.id==='mochi'?`<p>${mochiTerms}</p><p>Please allow at least 24 hours before pickup.</p>${MOCHI_PUBLIC_INFORMATION.en.map(s=>`<p>${escape(s)}</p>`).join('')}`:''}${card.id==='brownie-loaf'?'<p>Loaf: Vanilla Fresh Cream +AUD 10.00.</p>':''}${card.id.includes('cupcakes')?'<p>Optional individual packaging AUD 0.50 per cupcake, waived when the eligible cupcake subtotal reaches AUD 100.</p>':''}`;
 }
 function renderHomeFeatures({ links, poster }) {
   const destinations = Object.values(links).map(({ label, href, description }) =>
@@ -115,7 +115,7 @@ export function renewalSeoPages(siteUrl, content, home) {
     }
     const services=path==='/custom-cakes'?['single','double'].map(tier=>`<section><h2>Custom Cake · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><a href="/cakes/custom-cake?tier=${tier}">Request a cake</a><h2>Private Cake Class · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><p>Enquire for pricing. Details and availability confirmed by enquiry.</p><a href="/custom-cakes?service=private-class&amp;tier=${tier}#private-class-enquiry">Enquire about this class</a></section>`).join('')+'<p><a href="/classes">Past kids class archive</a></p>':path==='/business'?'<p><a href="/business/events">Corporate &amp; Events</a> · <a href="/business/cafe-supply">Café Supply / Wholesale · Coming Soon</a> · <a href="/business/consulting">Consulting</a></p>':'';
     const homeContent = path === '/' ? home : undefined;
-    const facts = (product ? siblings : list).map(cardFacts).join('');
+    const facts = (product ? siblings : list).map(card => cardFacts(card, path === '/')).join('');
     const menu = homeContent ? `<section id="au-collection" aria-label="The AU collection">${facts}</section>` : facts;
     page.fallbackHtml = `<main><nav>${nav}</nav>
       <h1>${escape(homeContent?.headline ?? name)}</h1><p>${escape(desc)}</p>

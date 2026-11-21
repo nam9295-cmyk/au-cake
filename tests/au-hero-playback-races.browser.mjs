@@ -3,6 +3,13 @@ async (page) => {
   const origin = await page.evaluate(() => location.origin)
   const failures = []
 
+  async function openHero(probe) {
+    await probe.goto(origin + '/', { waitUntil: 'domcontentloaded' })
+    await probe.locator('.rd-hero-poster img').waitFor()
+    const close = probe.getByRole('button', { name: 'Dismiss announcement' })
+    if (await close.isVisible()) await close.click()
+  }
+
   async function verify(name, run) {
     const probe = await page.context().newPage()
     try {
@@ -28,7 +35,7 @@ async (page) => {
         return new Promise((_resolve, reject) => { window.__rejectFirstHeroPlay = reject })
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => window.__heroCalls === 1)
     await probe.locator('video.rd-hero-photo').evaluate(video => video.dispatchEvent(new Event('canplay')))
     if (await probe.evaluate(() => window.__heroCalls) !== 1) {
@@ -61,7 +68,7 @@ async (page) => {
         })
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => document.querySelector('.rd-hero-photo-wrap')?.dataset.playback === 'playing')
     await probe.evaluate(() => { window.__holdHeroRecovery = true })
     await probe.locator('video.rd-hero-photo').evaluate(video => video.pause())
@@ -90,7 +97,7 @@ async (page) => {
         return originalPlay.call(this)
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => document.querySelector('.rd-hero-photo-wrap')?.dataset.playback === 'playing')
     await probe.locator('video.rd-hero-photo').evaluate(video => video.pause())
     await probe.getByRole('button', { name: 'Play hero video' }).waitFor({ timeout: 3000 })
@@ -117,7 +124,7 @@ async (page) => {
         return originalPlay.call(this)
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => document.querySelector('.rd-hero-photo-wrap')?.dataset.playback === 'playing')
     await probe.getByRole('button', { name: 'Pause hero video' }).click()
     await probe.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.paused)
@@ -146,7 +153,7 @@ async (page) => {
         return new Promise((_resolve, reject) => { window.__rejectHeroAttempts.push(reject) })
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => window.__heroCalls === 1)
     await probe.locator('video.rd-hero-photo').evaluate(video => video.dispatchEvent(new Event('canplay')))
     await probe.evaluate(() => window.__rejectHeroAttempts[0](new DOMException('Media not ready', 'InvalidStateError')))
@@ -168,7 +175,7 @@ async (page) => {
         return originalPlay.call(this)
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => document.querySelector('.rd-hero-photo-wrap')?.dataset.playback === 'playing')
     await probe.evaluate(() => {
       window.__heroHidden = true
@@ -207,7 +214,7 @@ async (page) => {
         return new Promise((_resolve, reject) => { window.__rejectResume = reject })
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => document.querySelector('.rd-hero-photo-wrap')?.dataset.playback === 'playing')
     await probe.evaluate(() => {
       window.__holdResume = true
@@ -237,7 +244,7 @@ async (page) => {
         return new Promise((_resolve, reject) => { window.__rejectHeroAttempts.push(reject) })
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => window.__heroCalls === 1)
     await probe.evaluate(() => window.__rejectHeroAttempts[0](new DOMException('Interrupted', 'AbortError')))
     await probe.waitForFunction(() => window.__heroCalls === 2, null, { timeout: 3000 })
@@ -265,7 +272,7 @@ async (page) => {
         return new Promise((_resolve, reject) => { window.__rejectFirstHeroPlay = reject })
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => window.__heroCalls === 1)
     await probe.locator('video.rd-hero-photo').evaluate(video => video.dispatchEvent(new Event('pause')))
     await probe.evaluate(() => window.__rejectFirstHeroPlay(new DOMException('Interrupted', 'AbortError')))
@@ -287,7 +294,7 @@ async (page) => {
         return new Promise((_resolve, reject) => { window.__rejectHeroAttempts.push(reject) })
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => window.__heroCalls === 1)
     await probe.evaluate(() => window.__rejectHeroAttempts[0](new DOMException('Interrupted', 'AbortError')))
     await probe.waitForFunction(() => window.__heroCalls === 2, null, { timeout: 3000 })
@@ -314,7 +321,7 @@ async (page) => {
         return originalPlay.call(this)
       }
     })
-    await probe.goto(`${origin}/`, { waitUntil: 'domcontentloaded' })
+    await openHero(probe)
     await probe.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.getAttribute('src')?.endsWith('cake-mobile-8s.mp4'))
     await probe.setViewportSize({ width: 1440, height: 900 })
     await probe.waitForFunction(() => document.querySelector('video.rd-hero-photo')?.getAttribute('src')?.endsWith('cake-desktop.mp4'))

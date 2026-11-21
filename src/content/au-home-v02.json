@@ -1,5 +1,10 @@
 {
   "headline": "CHOCOLATE, CAKES & CELEBRATIONS.",
+  "hero": {
+    "mobileQuery": "(max-width: 768px)",
+    "mobile": "/redesign/hero/cake-mobile-8s",
+    "desktop": "/redesign/hero/cake-desktop"
+  },
   "description": "Discover 4-inch Pavé chocolate cakes, Brownie Basque cheesecakes and chocolate gifts, made to order for pickup in Melrose Park, Sydney.",
   "poster": {
     "src": "/home/poster-wall-wide.webp",

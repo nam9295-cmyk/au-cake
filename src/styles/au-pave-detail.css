@@ -1,5 +1,5 @@
 /* AU Pavé presentation only. Purchase state and pricing remain in CakeDetailPage. */
-.au-redesign-shell :is(.au-pave-detail, .au-product-detail) { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0; color: var(--au-text); font-family: 'SUIT Variable', var(--font-display); background: #fff; }
+.au-redesign-shell :is(.au-pave-detail, .au-product-detail) { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0; color: var(--au-text); font-family: var(--storefront-reading-font, 'SUIT Variable'), var(--font-display); background: #fff; }
 :is(.au-pave-detail, .au-product-detail) :is(h1,h2,h3,p,figure) { margin: 0; }
 :is(.au-pave-detail, .au-product-detail) :is(h1,h2,h3) { text-transform: none; }
 :is(.au-pave-detail, .au-product-detail) :is(button,a,summary) { -webkit-tap-highlight-color: transparent; }

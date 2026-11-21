@@ -38,7 +38,7 @@
 }
 
 html:lang(en) {
-  --font-body: 'SUIT Variable', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-body: var(--storefront-reading-font, 'SUIT Variable'), 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 
 * {

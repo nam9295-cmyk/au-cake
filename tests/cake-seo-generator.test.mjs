@@ -111,6 +111,16 @@ test('home entity markup identifies the same public business without inventing r
   assert.equal(website.description, homeCopy.description)
   assert.ok(html.includes('<h1>CHOCOLATE, CAKES &amp; CELEBRATIONS.</h1>'))
   assert.ok(html.includes(`property="og:image" content="${site}${homeCopy.poster.src}"`))
+  const preloads = html.match(/<link\b[^>]*rel="preload"[^>]*as="image"[^>]*>/g) || []
+  assert.equal(preloads.length, 2)
+  assert.ok(preloads.some(tag => tag.includes('cake-mobile-8s.webp') && tag.includes('(max-width: 768px)')))
+  assert.ok(preloads.some(tag => tag.includes('cake-desktop.webp')))
+  assert.ok(preloads.every(tag => tag.includes('fetchpriority="high"') && tag.includes('media="')))
+  const menuImages = html.match(/<img\b[^>]*src="\/products\/[^>]*>/g) || []
+  assert.ok(menuImages.length > 0 && menuImages.every(tag => tag.includes('loading="lazy"')))
+  const product = await readFile(join(dist, 'cakes/pave-chocolate-cake/index.html'), 'utf8')
+  assert.doesNotMatch(product, /rel="preload"[^>]*\/redesign\/hero\//)
+  assert.doesNotMatch(product.match(/<img\b[^>]*src="\/products\/[^>]*>/)?.[0] || '', /loading="lazy"/)
   const root = html.split('<div id="root">')[1]
   for (const link of Object.values(homeCopy.links)) assert.ok(root.includes(`href="${link.href}"`))
   assert.doesNotMatch(JSON.stringify(data), /LocalBusiness|streetAddress|aggregateRating/)

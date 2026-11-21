@@ -5,7 +5,7 @@ import { HalloweenMeringueSection } from '../components/HalloweenMeringueSection
 import { MiniCakeLaunchNotice } from "../components/MiniCakeLaunchNotice"
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
 import { AU_PUBLIC_NAV } from '../lib/au-public-navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { HomeCustomerStories } from '../components/CustomerStories'
 import { AuRedesignHeader } from '../components/AuRedesignChrome'
@@ -67,6 +67,10 @@ function AuHomePage({
   const best = getAuHomeBest(language)
   const bestTrack = useRef<HTMLDivElement>(null)
   const [bestIndex, setBestIndex] = useState(0)
+  const [noticeVisible, setNoticeVisible] = useState(true)
+  useLayoutEffect(() => {
+    document.documentElement.removeAttribute('data-au-boot-pending')
+  }, [])
   useEffect(() => {
     let frame = 0
     const revealHash = () => {
@@ -131,9 +135,9 @@ function AuHomePage({
   return (
     <div className="home-redesign-wrap au-home-v02">
       <AuRedesignHeader cartItemCount={cartItemCount} home />
-      <MiniCakeLaunchNotice language={language} />
+      <MiniCakeLaunchNotice language={language} onVisibilityChange={setNoticeVisible} />
       <section className="rd-hero" aria-labelledby="au-home-title">
-        <AuHeroVideo />
+        <AuHeroVideo enabled={!noticeVisible} />
         <div className="au-v02-hero-copy">
           <p className="au-v02-eyebrow">VERYGOOD · SYDNEY</p>
           <h1 tabIndex={-1} id="au-home-title" className="rd-hero-copy">
@@ -283,12 +287,14 @@ function AuHomePage({
       >
         <img
           src="/redesign/3906.jpg"
+          srcSet="/redesign/3906-480.webp 480w, /redesign/3906-1000.webp 1000w"
+          sizes="100vw"
           alt={t(
             'Chocolate cake layers being assembled by hand',
             '손으로 초콜릿 케이크를 만드는 과정',
           )}
-          width={1920}
-          height={1080}
+          width={1000}
+          height={563}
           loading="lazy"
           decoding="async"
         />

@@ -67,7 +67,7 @@ test('English reading copy uses SUIT while display typography stays Work Sans', 
   assert.match(root, /--font-display:\s*'Work Sans'/)
   assert.match(root, /--font-sans:\s*var\(--font-display\)/)
   assert.match(root, /--font-body:\s*var\(--font-display\)/)
-  assert.match(englishDocument, /--font-body:\s*'SUIT Variable'/)
+  assert.match(englishDocument, /--font-body:\s*var\(--storefront-reading-font, 'SUIT Variable'\)/)
   assert.match(rule('body'), /font-family:\s*var\(--font-body\)/)
   assert.ok(headings, 'missing shared h1-h6 rule')
   assert.match(headings[1], /font-family:\s*var\(--font-sans\)/)

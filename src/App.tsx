@@ -3,7 +3,7 @@ import {readCheckoutResume} from './lib/customer-checkout-draft'
 import {useCustomerAccount} from './lib/customer-account-context'
 import {GuestCartImport} from './components/GuestCartImport'
 import { renewalCardForPath } from '../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
 import CakesPage from './CakesPage'
 import { AuRedesignFooter, AuRedesignHeader } from './components/AuRedesignChrome'
 import { AuLanguageProvider } from './components/AuLanguage'
@@ -92,7 +92,7 @@ function EditorialRouteFallback() {
   return <div role="status" aria-live="polite">Loading page…</div>
 }
 
-function App() {
+function App({ Catalog = AuRenewalCatalog }: { Catalog?: ComponentType<{ path: string }> } = {}) {
   const customer = useCustomerAccount()
   const preferredLanguageApplied = useRef(new Set<string>())
   const explicitLanguage = useRef(false)
@@ -306,7 +306,7 @@ function App() {
       <div className="app-shell au-redesign-shell">
         <AuRedesignHeader cartItemCount={cartItemCount} />
         <Suspense fallback={<EditorialRouteFallback />}>
-          {isRenewalBagPath(renewalPath) ? <AuRenewalBag settings={settings} /> : <AuRenewalCatalog path={renewalPath} />}
+          {isRenewalBagPath(renewalPath) ? <AuRenewalBag settings={settings} /> : <Catalog path={renewalPath} />}
         </Suspense>
         <AuRedesignFooter />
         <AnalyticsConsentBanner language={language} />

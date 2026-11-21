@@ -3,7 +3,7 @@
   --rule: #d6dbd3;
   --gutter: max(clamp(20px, 6vw, 80px), calc((100% - 1200px) / 2));
   width: 100%; max-width: none; margin: 0; padding: 0;
-  background: #f8f7f3; color: #252b27; font: 400 17px/1.55 'SUIT Variable', sans-serif;
+  background: #f8f7f3; color: #252b27; font: 400 17px/1.55 var(--storefront-reading-font, 'SUIT Variable'), sans-serif;
 }
 .company-portfolio * { box-sizing: border-box; min-width: 0; }
 .company-portfolio [id] { scroll-margin-top: 105px; }

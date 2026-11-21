@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { hero } from '../content/au-home-v02.json'
 
-const mobileQuery = '(max-width: 768px)'
+const mobileQuery = hero.mobileQuery
 const reducedMotionQuery = '(prefers-reduced-motion: reduce)'
 type HeroVariant = 'desktop' | 'mobile' | 'still'
 type PlaybackState = 'loading' | 'playing' | 'blocked' | 'failed'
@@ -20,25 +21,49 @@ function getServerVariant(): HeroVariant {
   return 'still'
 }
 
-function HeroMedia({ variant, manuallyPaused, onManualPause }: {
+function HeroMedia({ variant, enabled, manuallyPaused, onManualPause }: {
   variant: HeroVariant
+  enabled: boolean
   manuallyPaused: boolean
   onManualPause: (paused: boolean) => void
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const posterRef = useRef<HTMLImageElement>(null)
   const manuallyPausedRef = useRef(manuallyPaused)
   const requestPlaybackRef = useRef<() => void>(() => {})
   const pauseIntentionallyRef = useRef<() => void>(() => {})
   const [playbackState, setPlaybackState] = useState<PlaybackState>('loading')
   const failed = playbackState === 'failed'
-  const mediaPath = variant === 'mobile' ? '/redesign/hero/cake-mobile-8s' : `/redesign/hero/cake-${variant}`
+  const mediaPath = variant === 'mobile' ? hero.mobile : hero.desktop
+  const [posterReady, setPosterReady] = useState(false)
+  const showVideo = enabled && posterReady && variant !== 'still' && !failed
+
+  useEffect(() => {
+    const poster = posterRef.current
+    if (!enabled || variant === 'still' || !poster) return
+    let active = true
+    let frame = 0
+    function afterPoster() {
+      if (!active) return
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(() => setPosterReady(true))
+      })
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      observer.disconnect()
+      void poster.decode().then(afterPoster, afterPoster)
+    })
+    observer.observe(poster)
+    return () => { active = false; observer.disconnect(); cancelAnimationFrame(frame) }
+  }, [enabled, variant])
 
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
     video.defaultMuted = true
     video.muted = true
-    let inView = true
+    let inView = false
     let disposed = false
     let pending = false
     let attempt = 0
@@ -195,7 +220,7 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
       pauseIntentionallyRef.current = () => {}
       video.pause()
     }
-  }, [failed])
+  }, [showVideo])
 
   function togglePlayback() {
     const video = videoRef.current
@@ -216,15 +241,18 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
   return (
     <div className="rd-hero-photo-wrap" data-playback={playbackState}>
       <picture className="rd-hero-poster">
-        <source media={mobileQuery} srcSet="/redesign/hero/cake-mobile-8s.webp" />
+        <source media={mobileQuery} srcSet={`${hero.mobile}.webp`} width={834} height={1112} />
         <img
+          ref={posterRef}
           className="rd-hero-photo"
-          src="/redesign/hero/cake-desktop.webp"
+          src={`${hero.desktop}.webp`}
+          width={1600}
+          height={900}
           alt="Chocolate cake with a cut slice"
           fetchPriority="high"
         />
       </picture>
-      {variant !== 'still' && !failed && (
+      {showVideo && (
         <>
           <video
             ref={videoRef}
@@ -254,8 +282,8 @@ function HeroMedia({ variant, manuallyPaused, onManualPause }: {
   )
 }
 
-export function AuHeroVideo() {
+export function AuHeroVideo({ enabled = true }: { enabled?: boolean }) {
   const variant = useSyncExternalStore(subscribeToPreferences, getVariant, getServerVariant)
   const [manuallyPaused, setManuallyPaused] = useState(false)
-  return <HeroMedia key={variant} variant={variant} manuallyPaused={manuallyPaused} onManualPause={setManuallyPaused} />
+  return <HeroMedia key={variant} variant={variant} enabled={enabled} manuallyPaused={manuallyPaused} onManualPause={setManuallyPaused} />
 }

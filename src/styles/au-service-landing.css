@@ -3,7 +3,7 @@
   margin: 0 auto;
   padding: 56px 40px 40px;
   color: #352f31;
-  font-family: 'SUIT Variable', sans-serif;
+  font-family: var(--storefront-reading-font, 'SUIT Variable'), sans-serif;
 }
 
 .au-service-landing * {
@@ -15,7 +15,7 @@
 }
 
 .au-service-landing :is(h1, h2, h3) {
-  font-family: 'Work Sans', 'SUIT Variable', sans-serif;
+  font-family: 'Work Sans', var(--storefront-reading-font, 'SUIT Variable'), sans-serif;
   font-weight: 700;
   line-height: 1.2;
 }

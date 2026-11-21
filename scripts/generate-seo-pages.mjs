@@ -8,6 +8,7 @@ import { getHogirlSeoDefinitions } from './hogirl-seo.mjs'
 import { getPortfolioSeoDefinition } from './portfolio-seo.mjs'
 import { getServiceSeoDefinitions } from './services-seo.mjs'
 import { renderAuLlms } from './render-au-llms.mjs'
+import { addHomeLoading } from './au-loading.mjs'
 
 const siteUrl = auPublicPages.site.url
 const distDir = join(process.cwd(), 'dist')
@@ -447,11 +448,14 @@ function renderPage(template, path, config) {
     rendered = rendered.replace('</head>', `    ${scripts}\n  </head>`)
   }
 
+  if (isAuMarket && path === '/') rendered = addHomeLoading(rendered)
   if (!config.fallbackHtml) return rendered
-  return rendered.replace('<div id="root"></div>', `<div id="root">${config.fallbackHtml}</div>`)
+  const content = isAuMarket && path === '/' ? config.fallbackHtml.replace('<main>', '<main data-au-static-home>') : config.fallbackHtml
+  return rendered.replace('<div id="root"></div>', `<div id="root">${content}</div>`)
 }
 
 const template = await readFile(join(distDir, 'index.html'), 'utf8')
+const templateWithoutCatalog = removeHeadTag(template, /\s*<link\b[^>]*\bdata-au-catalog\b[^>]*>/g)
 const hogirlSeo = await getHogirlSeoDefinitions({ siteUrl, brand })
 const portfolioPages = isAuMarket ? { '/portfolio': await getPortfolioSeoDefinition(siteUrl) } : {}
 const servicePages = isAuMarket ? await getServiceSeoDefinitions(siteUrl) : {}
@@ -467,7 +471,8 @@ for (const [path, config] of Object.entries(allPages)) {
     : config.output === 'directory' || Object.hasOwn(auPublicPages.standalonePages, path) ? join(distDir, path.slice(1), 'index.html')
       : join(distDir, `${path.slice(1)}.html`)
   await mkdir(dirname(outputPath), { recursive: true })
-  const rendered = renderPage(template, path, config)
+  const usesCatalog = path !== '/' && Object.hasOwn(renewedPages, path)
+  const rendered = renderPage(usesCatalog ? template : templateWithoutCatalog, path, config)
   await writeFile(outputPath, rendered)
   // Vite resolves /path through path.html and /path/ through path/index.html.
   // Both use the same document and canonical URL, including without JavaScript.

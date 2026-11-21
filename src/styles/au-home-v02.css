@@ -6,7 +6,7 @@
   overflow-x: clip;
 }
 .au-home-shell .au-home-v02 {
-  font-family: 'SUIT Variable', sans-serif;
+  font-family: var(--storefront-reading-font, 'SUIT Variable'), sans-serif;
   color: #352f31;
 }
 .au-home-shell .au-home-v02 > :not(.au-stories-home) :is(h1, h2, h3, p) {
@@ -227,7 +227,7 @@
   gap: 12px;
   text-align: left;
   font:
-    700 13px 'SUIT Variable',
+    700 13px var(--storefront-reading-font, 'SUIT Variable'),
     sans-serif;
   color: #7a7274;
   border: 1px solid transparent;

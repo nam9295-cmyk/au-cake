@@ -1,6 +1,6 @@
 :is(.au-home-shell, .au-redesign-shell) .au-language-control {
   flex: 0 0 auto;
-  font-family: 'Work Sans', 'SUIT Variable', sans-serif;
+  font-family: 'Work Sans', var(--storefront-reading-font, 'SUIT Variable'), sans-serif;
   white-space: nowrap;
 }
 :is(.au-home-shell, .au-redesign-shell) .au-language-options {

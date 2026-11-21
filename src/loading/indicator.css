@@ -1,0 +1,56 @@
+#au-page-loading {
+  display: none;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  z-index: 2147483001;
+  pointer-events: none;
+  visibility: hidden;
+  place-content: center;
+  justify-items: center;
+  grid-template-columns: clamp(144px, 20vw, 224px);
+  gap: clamp(18px, 1.6vw, 24px);
+  background: #f8f6f1;
+}
+
+html[data-au-boot-pending="visible"] #au-page-loading {
+  display: grid;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+html[data-au-boot-pending] #root > [data-au-static-home] {
+  visibility: hidden;
+}
+
+#au-page-loading::before {
+  content: "";
+  width: 100%;
+  aspect-ratio: 496 / 342;
+  background: url(./heart.webp) center / contain no-repeat;
+}
+
+#au-page-loading > span {
+  width: 50%;
+  height: 2px;
+  background: #e2dcd3;
+  overflow: hidden;
+}
+
+#au-page-loading > span::after {
+  content: "";
+  display: block;
+  width: 45%;
+  height: 100%;
+  background: #a72835;
+  animation: au-loading-line 1s ease-in-out infinite alternate;
+}
+
+@keyframes au-loading-line { from { transform: translateX(0); } to { transform: translateX(122%); } }
+@media (prefers-reduced-motion: reduce) {
+  #au-page-loading > span::after { width: 100%; animation: none; }
+}

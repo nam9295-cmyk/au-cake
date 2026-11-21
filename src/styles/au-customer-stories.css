@@ -7,7 +7,7 @@
 .au-stories {
   background: #fff;
   color: #352f31;
-  font-family: 'SUIT Variable', 'Work Sans', sans-serif;
+  font-family: var(--storefront-reading-font, 'SUIT Variable'), 'Work Sans', sans-serif;
   min-width: 0;
 }
 .au-stories *,
@@ -181,7 +181,7 @@
   border: 0;
   padding: 0;
   font:
-    600 12px 'SUIT Variable',
+    600 12px var(--storefront-reading-font, 'SUIT Variable'),
     'Work Sans',
     sans-serif;
   cursor: pointer;
@@ -340,7 +340,7 @@
   border: 0;
   color: #352f31;
   background: #fff;
-  font-family: 'SUIT Variable', 'Work Sans', sans-serif;
+  font-family: var(--storefront-reading-font, 'SUIT Variable'), 'Work Sans', sans-serif;
   overflow: auto;
 }
 .au-story-dialog::backdrop {
