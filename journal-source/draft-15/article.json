@@ -1,0 +1,41 @@
+{
+  "id": "draft-15",
+  "slug": "loaf-cake-vs-round-cake-which-format-fits-your-fridge-and-table",
+  "title": "Loaf cake vs. round cake: which format fits your fridge and table?",
+  "seoTitle": "Loaf cake vs. round cake: slicing and fridge space | Very Good",
+  "excerpt": "Choose a round cake for a celebration or a rectangular loaf for a busy fridge. Compare slicing, storage and four cakes available for pickup in Melrose Park, Sydney.",
+  "locale": "en-AU",
+  "status": "published",
+  "publishedAt": "2026-11-21T17:37:55+11:00",
+  "updatedAt": "2026-11-21T17:37:55+11:00",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-21T17:37:55+11:00"
+  },
+  "cover": {
+    "src": "assets/4042c8bdeac4ffd9e4922b87d6b8e0c533a2ed33857639f66bc8156b72587aeb.webp",
+    "alt": "Round Pavé and Brownie Basque whole cakes beside rectangular Signature Gâteau and Brownie Basque loaves."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 182,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 92,
+          "maxWidth": 600
+        },
+        {
+          "frame": 272,
+          "maxWidth": 360
+        }
+      ]
+    }
+  }
+}
