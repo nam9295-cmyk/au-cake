@@ -311,7 +311,7 @@ export function getSeoConfig(pathname: string): SeoConfig {
   }
   const service = marketConfig.market === 'AU' && serviceSeoPages.find(route => route.path === pathname.replace(/\/$/, ''))
   if (service) return { title: service.title, description: service.description, canonical: `${SITE_URL}${service.path}`, structuredData: [{ '@type': 'WebPage', name: service.title, url: `${SITE_URL}${service.path}`, inLanguage: 'en-AU' }] }
-  const renewed = marketConfig.market === 'AU' && renewalSeoPages(SITE_URL, publicContent)[pathname.replace(/\/$/, '') || '/']
+  const renewed = marketConfig.market === 'AU' && renewalSeoPages(SITE_URL, publicContent, homeV02)[pathname.replace(/\/$/, '') || '/']
   if (renewed) return renewed
   if (marketConfig.market === 'AU' && /^\/cakes\/(lemon-cake|fresh-strawberry-vanilla-cream-cake)$/.test(pathname)) return {title: 'Current menu | verygood chocolate', description: 'Explore our current menu.', canonical: `${SITE_URL}${pathname}`, noindex: true}
   if (marketConfig.market === 'AU' && (pathname === '/portfolio' || pathname === '/portfolio/')) {

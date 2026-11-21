@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Pause, Play } from 'lucide-react'
+import home from '../content/au-home-v02.json'
 
 const samples = [
   ['orange-cheers', 'Orange Cheers', 'custom'],
@@ -9,7 +10,7 @@ const samples = [
   ['vintage-cake-party', 'Vintage Cake Party', 'custom'],
   ['study-soft-celebration', 'Soft Celebration', 'editable'],
 ] as const
-const origin = 'https://invite.verygood-chocolate.com'
+const invitationsUrl = home.links.invitations.href
 
 export function InvitationShowcase({ ko }: { ko: boolean }) {
   const track = useRef<HTMLDivElement>(null)
@@ -53,7 +54,7 @@ export function InvitationShowcase({ ko }: { ko: boolean }) {
   return <section id="invitations" className="au-v02-invitations" aria-labelledby="au-invitations-title">
     <header>
       <h2 id="au-invitations-title">{ko ? '손님을 초대하세요' : 'Invite your guests'}</h2>
-      <a className="au-v02-button au-v02-button-outline" href={origin + '/'} target="_blank" rel="noopener noreferrer">
+      <a className="au-v02-button au-v02-button-outline" href={invitationsUrl} target="_blank" rel="noopener noreferrer">
         {ko ? '무료 초대장 만들기' : 'Make a free invitation'} <ArrowUpRight size={15} aria-hidden="true" />
       </a>
       {!reduced && <button type="button" onClick={() => setPaused(!paused)}
@@ -69,7 +70,7 @@ export function InvitationShowcase({ ko }: { ko: boolean }) {
         if (event.deltaX || event.shiftKey) resumeAfter.current = performance.now() + 900
       }}>
       {(reduced ? [false] : [false, true]).map(copy => samples.map(([slug, name, kind]) =>
-        <a key={slug + copy} href={origin + '/gallery/' + slug} target="_blank" rel="noopener noreferrer"
+        <a key={slug + copy} href={invitationsUrl + 'gallery/' + slug} target="_blank" rel="noopener noreferrer"
           aria-hidden={copy || undefined} tabIndex={copy ? -1 : undefined} data-kind={kind}>
           <img src={'/home/invitations/' + slug + '.webp'} alt="" loading="lazy" />
           <small>{kind === 'editable' ? (ko ? '편집 가능한 템플릿' : 'Editable template') : (ko ? '커스텀 디자인 예시' : 'Custom design study')}</small>

@@ -21,7 +21,7 @@ const summaries = {
   'brownie-loaf': 'Brownie Basque cheesecake loaf with optional Vanilla Fresh Cream. Pickup in Melrose Park, Sydney.',
   cookies: 'A six-cookie set: three Chocolate Chip and three Double Chocolate. Photos and product introduction; reservations await price approval.',
   mochi: 'Six Chocolate Mochi flavours in Sydney: choose singles or build a four-piece gift box with free box packaging. Pickup in Melrose Park.',
-  almond: 'Almond Chocolate in 80g packs, a six-pack 5+1 bundle or a black tub with two 80g packs. Pickup in Melrose Park, Sydney.',
+  almond: 'Choose a pouch or triangle box for a single 80g Almond Chocolate at the same price. Also available in a 5+1 bundle or a black tub with two 80g pouches.',
   'pave-chocolate': 'Pavé Chocolate in a 100g heart tin, individually or as a six-tin 5+1 bundle. A chocolate gift for pickup in Melrose Park, Sydney.',
   eiffel: 'Eiffel Tower Chocolate in six-piece packs or a 5+1 bundle of six packs. Chocolate gifts for pickup in Melrose Park, Sydney.',
   'gateau-cupcakes': 'Gâteau Cupcakes in six or twelve, with Basic, Vanilla Fresh Cream or Chocolate Buttercream finishes. Made for Sydney celebrations.',
@@ -73,13 +73,23 @@ function cardFacts(card) {
   const choices=selections(card);
   return `${imageHtml(card)}<h2><a href="${card.href}">${escape(card.en)}</a></h2><p>${escape(description(card))}</p>${choices.length?`<ul>${choices.map(c=>`<li>${escape(c.name)} — AUD ${money(c.price)}</li>`).join('')}</ul>`:'<p>Reservations are not available until the sale price is approved.</p>'}${card.id==='mochi'?`<p>${mochiTerms}</p><p>Please allow at least 24 hours before pickup.</p>${MOCHI_PUBLIC_INFORMATION.en.map(s=>`<p>${escape(s)}</p>`).join('')}`:''}${card.id==='brownie-loaf'?'<p>Loaf: Vanilla Fresh Cream +AUD 10.00.</p>':''}${card.id.includes('cupcakes')?'<p>Optional individual packaging AUD 0.50 per cupcake, waived when the eligible cupcake subtotal reaches AUD 100.</p>':''}`;
 }
-export function renewalSeoPages(siteUrl, content) {
+function renderHomeFeatures({ links, poster }) {
+  const destinations = Object.values(links).map(({ label, href, description }) =>
+    `<li><a href="${escape(href)}">${escape(label)}</a> — ${escape(description)}</li>`
+  );
+  return `<nav aria-label="Explore the atelier"><ul>${destinations.join('')}</ul></nav>
+    <img id="poster-wall" src="${escape(poster.src)}" width="${poster.width}" height="${poster.height}" alt="${escape(poster.alt)}" loading="lazy" style="max-width:100%;height:auto" />`;
+}
+
+export function renewalSeoPages(siteUrl, content, home) {
   const pages={};
-  const nav=RENEWAL_NAV.map(n=>`<a href="${n.href}">${escape(n.en)}</a>`).join(' · ');
+  const navLinks = RENEWAL_NAV.map(n => `<a href="${n.href}">${escape(n.en)}</a>`);
+  if (home) navLinks.push(`<a href="${escape(home.links.journal.href)}">${escape(home.links.journal.label)}</a>`);
+  const nav = navLinks.join(' · ');
   const pickup=renewalPickupCopy('en');
   const categoryDescriptions={
-    '/':'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.',
-    '/cakes':'Explore Pavé whole cake, Gâteau loaf, Brownie Basque whole cake and loaf, and Levain Cookies. Cake & Bake in Melrose Park, Sydney.',
+    '/':home?.description ?? 'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.',
+    '/cakes':'Explore Pavé chocolate cakes, signature Gâteau loaves and Brownie Basque cheesecakes, including 4-inch mini whole cakes for pickup in Melrose Park, Sydney.',
     '/chocolates':'Explore six-flavour Chocolate Mochi, Almond Chocolate, Pavé heart tins and Eiffel Tower Chocolate. Gift selections in Melrose Park, Sydney.',
     '/celebrate':'Small Bites: Lemon Cakes, Gâteau Cupcakes, Brownie Basque Cupcakes and S’more Sticks for sharing in Sydney. Explore pack sizes and current reservation availability.',
     '/custom-cakes':'Explore single-tier and two-tier custom cakes and private cake class enquiries in Sydney. Class pricing and availability by enquiry.',
@@ -104,13 +114,36 @@ export function renewalSeoPages(siteUrl, content) {
       page.structuredData.push({'@type':list.length?'CollectionPage':'WebPage',name,url:canonical,...(list.length?{mainEntity:{'@type':'ItemList',itemListElement:list.map((c,i)=>({'@type':'ListItem',position:i+1,name:c.en,url:siteUrl+c.href}))}}:{})});
     }
     const services=path==='/custom-cakes'?['single','double'].map(tier=>`<section><h2>Custom Cake · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><a href="/cakes/custom-cake?tier=${tier}">Request a cake</a><h2>Private Cake Class · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><p>Enquire for pricing. Details and availability confirmed by enquiry.</p><a href="/custom-cakes?service=private-class&amp;tier=${tier}#private-class-enquiry">Enquire about this class</a></section>`).join('')+'<p><a href="/classes">Past kids class archive</a></p>':path==='/business'?'<p><a href="/business/events">Corporate &amp; Events</a> · <a href="/business/cafe-supply">Café Supply / Wholesale · Coming Soon</a> · <a href="/business/consulting">Consulting</a></p>':'';
-    page.fallbackHtml=`<main><nav>${nav}</nav><h1>${escape(name)}</h1><p>${escape(desc)}</p>${(product?siblings:list).map(cardFacts).join('')}${services}<p>${escape(pickup.hours)}</p><p>${escape(pickup.driver)}</p><p>Reservation requests are confirmed by our team after availability and payment checks. Choose an available pickup date when ordering.</p></main>`;
+    const homeContent = path === '/' ? home : undefined;
+    const facts = (product ? siblings : list).map(cardFacts).join('');
+    const menu = homeContent ? `<section id="au-collection" aria-label="The AU collection">${facts}</section>` : facts;
+    page.fallbackHtml = `<main><nav>${nav}</nav>
+      <h1>${escape(homeContent?.headline ?? name)}</h1><p>${escape(desc)}</p>
+      ${homeContent ? renderHomeFeatures(homeContent) : ''}
+      ${menu}${services}
+      <p>${escape(pickup.hours)}</p><p>${escape(pickup.driver)}</p>
+      <p>Reservation requests are confirmed by our team after availability and payment checks. Choose an available pickup date when ordering.</p></main>`;
     pages[path]=page;
   }
-  if(content){
-    pages['/'].title=content.home.title;
-    pages['/'].structuredData=[{'@type':'Organization','@id':siteUrl+'/#organization',name:'verygood chocolate',url:siteUrl,logo:siteUrl+'/favicon.png',description:content.site.organizationDescription,sameAs:content.site.socialProfiles,areaServed:{'@type':'City',name:'Sydney'}},{'@type':'WebSite','@id':siteUrl+'/#website',name:'verygood chocolate',url:siteUrl,inLanguage:'en-AU',publisher:{'@id':siteUrl+'/#organization'}},pages['/'].structuredData[0].mainEntity];
-    pages['/'].fallbackHtml=pages['/'].fallbackHtml.replace('</main>',content.home.faq.map(f=>`<h2>${escape(f.question)}</h2><p>${escape(f.answer)}</p>`).join('')+'</main>');
+  const homepage = pages['/'];
+  if (content) {
+    homepage.title = content.home.title;
+    const organization = {
+      '@type': 'Organization', '@id': siteUrl + '/#organization', name: 'verygood chocolate',
+      url: siteUrl, logo: siteUrl + '/favicon.png', description: content.site.organizationDescription,
+      sameAs: content.site.socialProfiles, areaServed: { '@type': 'City', name: 'Sydney' },
+    };
+    const website = {
+      '@type': 'WebSite', '@id': siteUrl + '/#website', name: organization.name, url: siteUrl,
+      inLanguage: 'en-AU', description: homepage.description, publisher: { '@id': organization['@id'] },
+    };
+    homepage.structuredData = [organization, website, homepage.structuredData[0].mainEntity];
+    const faq = content.home.faq.map(f => `<h2>${escape(f.question)}</h2><p>${escape(f.answer)}</p>`).join('');
+    homepage.fallbackHtml = homepage.fallbackHtml.replace('</main>', faq + '</main>');
+  }
+  if (home) {
+    const { src, width, height, alt } = home.poster;
+    Object.assign(homepage, { image: siteUrl + src, imageType: 'image/webp', imageWidth: width, imageHeight: height, imageAlt: alt });
   }
   return pages;
 }

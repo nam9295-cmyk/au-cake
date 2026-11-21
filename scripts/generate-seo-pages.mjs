@@ -455,7 +455,7 @@ const template = await readFile(join(distDir, 'index.html'), 'utf8')
 const hogirlSeo = await getHogirlSeoDefinitions({ siteUrl, brand })
 const portfolioPages = isAuMarket ? { '/portfolio': await getPortfolioSeoDefinition(siteUrl) } : {}
 const servicePages = isAuMarket ? await getServiceSeoDefinitions(siteUrl) : {}
-const renewedPages = isAuMarket ? renewalSeoPages(siteUrl, auPublicPages) : {}
+const renewedPages = isAuMarket ? renewalSeoPages(siteUrl, auPublicPages, homeV02) : {}
 if (isAuMarket) pages['/classes'] = classArchiveSeo(siteUrl)
 // Service hubs use the same rendered components and metadata as the live UI.
 const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages, ...renewedPages, ...servicePages }
@@ -503,7 +503,12 @@ const serviceLlmsEntries = Object.entries(servicePages).map(([path, page]) =>
   `- ${page.title.split('|')[0].trim()}: ${page.description} ${siteUrl}${path}`,
 )
 const llms = isAuMarket
-  ? renderRenewalLlms(siteUrl, ['', '## Services & enquiries', ...serviceLlmsEntries, ...hogirlSeo.llmsEntries])
+  ? renderRenewalLlms(siteUrl, [
+      '', '## Explore the atelier',
+      ...Object.values(homeV02.links).map(link => `- ${link.label}: ${link.description} ${new URL(link.href, siteUrl).href}`),
+      `- Journal RSS: ${siteUrl}${homeV02.links.journal.href}/feed.xml`,
+      '', '## Services & enquiries', ...serviceLlmsEntries, ...hogirlSeo.llmsEntries,
+    ])
   : renderAuLlms(auPublicPages, hogirlSeo.llmsEntries)
 await writeFile(join(distDir, 'llms.txt'), llms)
 try {

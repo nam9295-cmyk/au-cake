@@ -10,6 +10,7 @@ export function renewalSeoPages(
     cakes?: unknown;
     cakePages: Record<string, unknown>;
   },
+  home?: typeof import('../../../src/content/au-home-v02.json'),
 ): Record<
   string,
   {

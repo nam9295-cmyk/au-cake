@@ -1,4 +1,28 @@
 {
   "headline": "CHOCOLATE, CAKES & CELEBRATIONS.",
-  "description": "Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries."
+  "description": "Discover 4-inch Pavé chocolate cakes, Brownie Basque cheesecakes and chocolate gifts, made to order for pickup in Melrose Park, Sydney.",
+  "poster": {
+    "src": "/home/poster-wall-wide.webp",
+    "width": 1448,
+    "height": 762,
+    "alt": "Posters on a brick wall show chocolate mochi, Gâteau au Chocolat, Basque cheesecake and Pavé chocolate cake.",
+    "altKo": "벽돌 벽에 붙은 초콜릿 모찌, 갸또 오 쇼콜라, 바스크 치즈케이크, 파베 초콜릿 케이크 포스터."
+  },
+  "links": {
+    "journal": {
+      "href": "/journal",
+      "label": "Journal",
+      "description": "Read the Sydney atelier’s guides to chocolate, cakes, gifting and hosting."
+    },
+    "portfolio": {
+      "href": "/portfolio",
+      "label": "Atelier portfolio",
+      "description": "Meet the chef and explore cakes for gatherings and consulting for cafés."
+    },
+    "invitations": {
+      "href": "https://invite.verygood-chocolate.com/",
+      "label": "Verygood Invitations",
+      "description": "Try the free digital invitation maker for your celebration, currently in beta."
+    }
+  }
 }

@@ -6,9 +6,6 @@ import {AuRenewalShop} from '../src/pages/AuRenewalShop'
 import {CartProvider} from '../src/CartProvider'
 import {AuLanguageContext} from '../src/lib/au-language'
 import {inspectRenewalCart, RENEWAL_CART_KEY, addRenewalLines} from '../src/lib/renewal-cart'
-import {readCustomerCart, CART_EVENT_PREFIX} from '../src/lib/customer-cart-storage'
-const milk={lineId:'old',offerId:'pave-cake',size:'8in',quantity:1,chocolateType:'milk'}
-const good={lineId:'good',offerId:'brownie-whole',size:'6in',quantity:1}
 function storage(values:Record<string,string>={}) {
  const data=new Map(Object.entries(values))
  return {get length(){return data.size}, key:(i:number)=>[...data.keys()][i]??null,getItem:(k:string)=>data.get(k)??null,setItem:(k:string,v:string)=>{data.set(k,v)}}

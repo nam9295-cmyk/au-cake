@@ -8,6 +8,7 @@ import postcss from 'postcss'
 import { loadEnv } from 'vite'
 import { inspectPackage, readPrepared, packageFile } from './journal-import.mjs'
 import content from '../src/content/au-public-pages.json' with { type: 'json' }
+import home from '../src/content/au-home-v02.json' with { type: 'json' }
 
 const project = fileURLToPath(new URL('../', import.meta.url))
 const escape = text => String(text ?? '').replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll("'",'&#39;')
@@ -99,11 +100,35 @@ function analyticsConsent(locale) {
   const ko = locale === 'ko'
   return `<aside hidden class="journal-analytics-consent" data-journal-analytics-consent aria-label="${ko ? '분석 쿠키 설정' : 'Analytics preferences'}"><div><strong>${ko ? '사이트 이용 분석' : 'Help us improve the website'}</strong><p>${ko ? '동의하면 Google Analytics로 페이지 방문과 예약 완료 여부만 측정합니다. 이름, 전화번호, 이메일은 전송하지 않습니다.' : 'With your permission, Google Analytics measures page visits and booking completions. We do not send names, phone numbers, or email addresses.'}</p></div><div class="journal-analytics-actions"><button type="button" data-analytics-choice="denied">${ko ? '필수 기능만' : 'Essential only'}</button><button type="button" data-analytics-choice="granted">${ko ? '분석 허용' : 'Allow analytics'}</button></div></aside>`
 }
-function documentHtml({ entry, title, description, body, shell, shellCss, articleCss, analyticsPath, siteUrl, preview, isArticle }) {
-  const path = isArticle ? `/journal/${entry.slug}` : '/journal'
+function documentHtml({ entry, listedEntries = [], title, description, body, shell, shellCss, articleCss, analyticsPath, siteUrl, preview, isArticle }) {
+  const journalUrl = siteUrl + home.links.journal.href
+  const path = isArticle ? `/journal/${entry.slug}` : home.links.journal.href
   const canonical = `${siteUrl}${path}`
-  const image = entry?.cover ? `${siteUrl}${entry.cover.src}` : null
-  const schema = isArticle ? { '@context': 'https://schema.org', '@type': 'BlogPosting', headline: entry.title, description, url: canonical, mainEntityOfPage: canonical, inLanguage: entry.locale, ...(image ? { image: [image] } : {}), ...(entry.publishedAt ? { datePublished: entry.publishedAt, dateModified: entry.updatedAt } : {}), publisher: { '@type': 'Organization', name: content.site.brand, url: siteUrl } } : { '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Journal', url: canonical, inLanguage: 'en-AU' }
+  const socialCover = isArticle ? entry.cover : listedEntries.find(article => article.cover)?.cover
+  const image = socialCover ? siteUrl + socialCover.src : null
+  const schema = {
+    '@context': 'https://schema.org',
+    description,
+    url: canonical,
+    inLanguage: entry?.locale || 'en-AU',
+    publisher: { '@type': 'Organization', '@id': siteUrl + '/#organization', name: content.site.brand, url: siteUrl },
+    ...(image ? { image: [image] } : {}),
+    ...(isArticle ? {
+      '@type': 'BlogPosting', headline: entry.title, mainEntityOfPage: canonical,
+      isPartOf: { '@id': journalUrl },
+      ...(entry.publishedAt ? { datePublished: entry.publishedAt, dateModified: entry.updatedAt } : {}),
+    } : {
+      '@type': 'CollectionPage', '@id': journalUrl, name: 'Journal', isPartOf: { '@id': siteUrl + '/#website' },
+    }),
+  }
+  if (listedEntries.length) {
+    schema.mainEntity = {
+      '@type': 'ItemList',
+      itemListElement: listedEntries.map((article, index) => ({
+        '@type': 'ListItem', position: index + 1, name: article.title, url: journalUrl + '/' + article.slug,
+      })),
+    }
+  }
   return `<!doctype html>
 <html lang="${escape(entry?.locale || 'en-AU')}"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -114,7 +139,7 @@ function documentHtml({ entry, title, description, body, shell, shellCss, articl
 <meta property="og:site_name" content="${escape(content.site.brand)}"><meta property="og:type" content="${isArticle ? 'article' : 'website'}">
 <meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${escape(canonical)}">
 <meta property="og:locale" content="${entry?.locale === 'ko' ? 'ko_KR' : 'en_AU'}">
-${image ? `<meta property="og:image" content="${escape(image)}"><meta property="og:image:type" content="image/webp"><meta property="og:image:alt" content="${escape(entry.cover.alt)}"><meta property="og:image:width" content="${entry.cover.width}"><meta property="og:image:height" content="${entry.cover.height}"><meta name="twitter:image" content="${escape(image)}">` : ''}
+${image ? `<meta property="og:image" content="${escape(image)}"><meta property="og:image:type" content="image/webp"><meta property="og:image:alt" content="${escape(socialCover.alt)}"><meta property="og:image:width" content="${socialCover.width}"><meta property="og:image:height" content="${socialCover.height}"><meta name="twitter:image" content="${escape(image)}">` : ''}
 <meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}">
 <link rel="alternate" type="application/rss+xml" title="verygood Journal" href="${escape(siteUrl)}/journal/feed.xml">
 <link rel="stylesheet" href="${shellCss}">${articleCss ? `<link rel="stylesheet" href="${articleCss}">` : ''}
@@ -166,7 +191,8 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
     await put(cssPath, css)
     if (analyticsPath) await put(analyticsPath, analytics)
     const indexBody = `<main id="journal-main" class="journal-index"><h1>Journal</h1>${entries.length ? `<div class="journal-list">${entries.map(entry => `<article class="journal-card"><a href="/journal/${entry.slug}">${cover(entry)}<h2>${escape(entry.title)}</h2>${publicationDate(entry)}<p>${escape(entry.excerpt)}</p></a></article>`).join('')}</div>` : '<p class="journal-empty">Stories from verygood are on their way.</p><a href="/cakes">Explore our cakes</a>'}</main>`
-    await page('/journal', documentHtml({ title: 'Journal | verygood chocolate', description: 'Stories about chocolate, cake and gatherings from verygood in Sydney.', body: indexBody, shell: renderChrome('en-AU'), shellCss: cssPath, analyticsPath, siteUrl, preview, isArticle: false }))
+    const publicEntries = preview ? [] : entries
+    await page('/journal', documentHtml({ listedEntries: publicEntries, title: 'Chocolate & Cake Journal | verygood chocolate', description: home.links.journal.description, body: indexBody, shell: renderChrome('en-AU'), shellCss: cssPath, analyticsPath, siteUrl, preview, isArticle: false }))
     for (const pkg of packages) {
       const { entry } = pkg
       for (const file of pkg.files) await put(file.path, file.data)
@@ -175,7 +201,6 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
       const body = `<nav class="journal-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/journal">Journal</a></nav><main id="journal-main">${publicationDate(entry, true)}${pkg.html}</main><nav class="journal-back" aria-label="Back to Journal"><a href="/journal">← ${entry.locale === 'ko' ? '저널로 돌아가기' : 'Back to Journal'}</a></nav>`
       await page(`/journal/${entry.slug}`, documentHtml({ entry, title: entry.seoTitle || `${entry.title} | verygood chocolate`, description: entry.excerpt, body, shell: renderChrome(entry.locale), shellCss: cssPath, articleCss, analyticsPath, siteUrl, preview, isArticle: true }))
     }
-    const publicEntries = preview ? [] : entries
     await put('/journal/catalog.json', JSON.stringify(publicEntries.map(publicEntry), null, 2))
     await put('/journal/feed.xml', `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>verygood Journal</title><link>${escape(siteUrl)}/journal</link><description>Chocolate, cake and gatherings.</description><language>en-AU</language>${publicEntries.map(entry => `<item><title>${escape(entry.title)}</title><link>${escape(siteUrl)}/journal/${entry.slug}</link><guid isPermaLink="true">${escape(siteUrl)}/journal/${entry.slug}</guid><description>${escape(entry.excerpt)}</description><pubDate>${new Date(entry.publishedAt).toUTCString()}</pubDate></item>`).join('')}</channel></rss>`)
     let sitemap

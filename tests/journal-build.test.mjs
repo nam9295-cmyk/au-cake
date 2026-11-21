@@ -61,6 +61,15 @@ test('production build emits complete article HTML, index, responsive cover, SEO
   const index = await readFile(join(outputDirectory, 'journal.html'), 'utf8')
   assert.match(index, /href="\/journal\/sample-story"/)
   assert.match(index, /srcset=/)
+  const jsonLd = markup => JSON.parse(markup.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)[1])
+  const collection = jsonLd(index), post = jsonLd(html)
+  assert.deepEqual(collection.mainEntity.itemListElement, [
+    { '@type': 'ListItem', position: 1, name: post.headline, url: post.url },
+  ])
+  assert.equal(collection['@id'], post.isPartOf['@id'])
+  assert.equal(collection.publisher['@id'], 'https://example.com/#organization')
+  assert.equal(post.publisher['@id'], collection.publisher['@id'])
+  assert.ok(index.includes(`property="og:image" content="${post.image[0]}"`))
   assert.match(await readFile(join(outputDirectory, 'journal/feed.xml'), 'utf8'), /<guid isPermaLink="true">https:\/\/example.com\/journal\/sample-story<\/guid>/)
   const sitemap = await readFile(join(outputDirectory, 'sitemap.xml'), 'utf8')
   assert.match(sitemap, /https:\/\/example.com\/cakes/)

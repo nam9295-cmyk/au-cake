@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
+import homeCopy from '../src/content/au-home-v02.json' with { type: 'json' }
 import serviceRoutes from '../src/content/au-service-routes.json' with { type: 'json' }
 import { renderRenewalLlms } from '../appwrite-functions/reservation-api/src/au-renewal-seo.js'
 
@@ -74,8 +75,10 @@ test('service landing HTML contains the visible enquiry content and paused class
   const custom = await readFile(join(dist, 'custom-cakes/index.html'), 'utf8')
   assert.match(custom, /<meta name="description" content="[^"]*classes are currently paused/i)
   assert.match(custom, /<h1[^>]*>Custom Cakes<\/h1>/)
-  assert.match(custom, /<img[^>]*src="\/products\/custom-cake\.webp"/)
-  assert.match(custom, /Final pricing and availability are confirmed after reviewing your request/)
+  assert.match(custom, /href="\/cakes\/custom-cake\?tier=single"><img[^>]*alt="Custom Cake · Single Tier"/)
+  assert.match(custom, /href="\/cakes\/custom-cake\?tier=double"><img[^>]*alt="Custom Cake · Two Tiers"/)
+  assert.match(custom, /From AUD \$159\.00/)
+  assert.match(custom, /Private Cake Class · Single Tier<\/h2><p[^>]*>Enquire for pricing/)
   assert.match(custom, /Currently paused\. Next school holiday dates will be announced once confirmed/)
   assert.match(custom, /href="\/classes"[^>]*>View class archive/)
   assert.doesNotMatch(custom, /href="\/class-reserve"|"@type":"Course"|"@type":"Offer"/)
@@ -97,13 +100,19 @@ test('service landing HTML contains the visible enquiry content and paused class
 
 test('home entity markup identifies the same public business without inventing ratings or an address', async () => {
   const { dist } = await generate()
-  const data = jsonLd(await readFile(join(dist, 'index.html'), 'utf8'))
+  const html = await readFile(join(dist, 'index.html'), 'utf8')
+  const data = jsonLd(html)
   const organization = data.find(item => item['@type'] === 'Organization')
   const website = data.find(item => item['@type'] === 'WebSite')
   assert.equal(organization['@id'], `${site}/#organization`)
   assert.equal(organization.logo, `${site}/favicon.png`)
   assert.deepEqual(organization.areaServed, { '@type': 'City', name: 'Sydney' })
   assert.deepEqual(website.publisher, { '@id': `${site}/#organization` })
+  assert.equal(website.description, homeCopy.description)
+  assert.ok(html.includes('<h1>CHOCOLATE, CAKES &amp; CELEBRATIONS.</h1>'))
+  assert.ok(html.includes(`property="og:image" content="${site}${homeCopy.poster.src}"`))
+  const root = html.split('<div id="root">')[1]
+  for (const link of Object.values(homeCopy.links)) assert.ok(root.includes(`href="${link.href}"`))
   assert.doesNotMatch(JSON.stringify(data), /LocalBusiness|streetAddress|aggregateRating/)
 })
 
@@ -306,6 +315,8 @@ test('llms text exposes current public menu, confirmed prices and archived class
  // Service summaries extend the existing catalogue; its product and price text stays intact.
  assert.ok(llms.startsWith(renderRenewalLlms(site)))
  assert.equal(llms,await readFile(llmsPath,'utf8'))
+ for (const link of Object.values(homeCopy.links)) assert.ok(llms.includes(new URL(link.href, site).href))
+ assert.ok(llms.includes(site+'/journal/feed.xml'))
  assert.match(llms,/Cake & Bake/);assert.match(llms,/Chocolate Mochi/);assert.match(llms,/Brownie Basque/)
  assert.match(llms,/75.00/);assert.match(llms,/82.00/);assert.match(llms,/Class archive/)
  assert.match(llms,/Small Bites/);assert.match(llms,/Lemon Cake/);assert.match(llms,/cakes\/lemon-cake/)

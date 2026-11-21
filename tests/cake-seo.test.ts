@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import { getAuPublicContent, getPublicRoutePage } from '../src/lib/public-content.js'
 import { getSeoConfig } from '../src/lib/seo.js'
+import homeCopy from '../src/content/au-home-v02.json' with { type: 'json' }
 import { getPageFromPath } from '../src/lib/app-routes.js'
 
 const SITE_URL = 'https://au.verygood-chocolate.com'
@@ -59,7 +60,8 @@ test('renewal menu and current detail routes use AU self canonicals', () => {
 test('homepage owns the approved Sydney chocolate cake metadata', () => {
   const config = getSeoConfig('/')
   assert.equal(config.title, 'Chocolate Cakes Sydney | Melrose Park Pickup | verygood chocolate')
-  assert.equal(config.description, 'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.')
+  assert.equal(config.description, homeCopy.description)
+  assert.match(config.description, /4-inch Pavé.*Brownie Basque.*Melrose Park, Sydney/)
   assert.deepEqual(structuredTypes('/'), ['Organization', 'WebSite', 'ItemList'])
   const organization = config.structuredData?.find((entry) => entry['@type'] === 'Organization')
   const faq = config.structuredData?.find((entry) => entry['@type'] === 'FAQPage')
@@ -111,7 +113,7 @@ test('runtime route metadata comes from the typed public-content adapter', () =>
     const page = getPublicRoutePage(path)
     assert.ok(page)
     assert.equal(getSeoConfig(path).title, page.title)
-    assert.equal(getSeoConfig(path).description, path === '/' ? 'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.' : page.description)
+    assert.equal(getSeoConfig(path).description, path === '/' ? homeCopy.description : page.description)
   }
 })
 

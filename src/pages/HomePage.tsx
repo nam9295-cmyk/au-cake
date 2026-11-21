@@ -4,7 +4,7 @@ import { HomeCollectionSection } from '../components/HomeCollectionSection'
 import { HalloweenMeringueSection } from '../components/HalloweenMeringueSection'
 import { MiniCakeLaunchNotice } from "../components/MiniCakeLaunchNotice"
 import { renewalPickupCopy } from '../../appwrite-functions/reservation-api/src/au-renewal-pickup-policy.js'
-import { RENEWAL_NAV } from '../../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
+import { AU_PUBLIC_NAV } from '../lib/au-public-navigation'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { HomeCustomerStories } from '../components/CustomerStories'
@@ -142,7 +142,7 @@ function AuHomePage({
           <p className="au-v02-hero-description">
             {t(
               homeCopy.description,
-              '시드니에서 주문 제작하는 케이크와 초콜릿. 메뉴, 커스텀 케이크와 비즈니스 서비스를 만나보세요.',
+              '4인치 파베 초콜릿 케이크, 브라우니 바스크 치즈케이크, 초콜릿 선물을 주문 제작합니다. 시드니 멜로즈 파크에서 픽업하세요.',
             )}
           </p>
           <div className="au-v02-hero-actions">
@@ -363,7 +363,7 @@ function AuHomePage({
               '시드니 아틀리에에서 케이크와 초콜릿을 정성껏 주문 제작합니다. 쇼콜라티에급 커버춰와 엄선한 재료를 사용하며, 멜로즈 파크에서 사전 약속 후 픽업합니다.',
             )}
           </p>
-          <a className="au-v02-button au-v02-button-outline" href="/portfolio">
+          <a className="au-v02-button au-v02-button-outline" href={homeCopy.links.portfolio.href}>
             {t('EXPLORE ATELIER PORTFOLIO', '아틀리에 포트폴리오 보기')}
             <ArrowUpRight size={15} aria-hidden="true" />
           </a>
@@ -386,7 +386,7 @@ function AuHomePage({
             </p>
           </div>
           <nav aria-label="Footer navigation">
-            {RENEWAL_NAV.map(item=><a key={item.href} href={item.href}>{item.en}</a>)}
+            {AU_PUBLIC_NAV.map(item=><a key={item.href} href={item.href}>{t(item.en, item.ko)}</a>)}
             <a href="/classes">{t('VIEW CLASS ARCHIVE', '클래스 아카이브 보기')}</a>
             <a href="/reviews">{t('REVIEWS', '후기')}</a>
             <a href="/lookup">{t('ORDER LOOKUP', '주문 조회')}</a>

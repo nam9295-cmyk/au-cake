@@ -6,6 +6,7 @@ import { HomePage } from '../src/pages/HomePage'
 import { AuRedesignHeader } from '../src/components/AuRedesignChrome'
 import { AuLanguageProvider } from '../src/components/AuLanguage'
 import { getSeoConfig } from '../src/lib/seo'
+import homeCopy from '../src/content/au-home-v02.json'
 import { getAuHomeBest, getAuHomeCollections } from '../src/lib/au-home'
 
 const render = (element: React.ReactNode) =>
@@ -88,10 +89,10 @@ test('shared AU header includes Journal alongside existing destinations and paus
 })
 
 test('AU home SEO description agrees with the visible hero without altering existing public routes', () => {
-  assert.equal(
-    getSeoConfig('/').description,
-    'Made-to-order cakes and chocolate creations in Sydney. Explore our menu, custom cakes and business enquiries.',
-  )
+  const seo = getSeoConfig('/')
+  assert.equal(seo.description, homeCopy.description)
+  assert.ok(home().includes(homeCopy.description))
+  assert.equal(seo.image, new URL(homeCopy.poster.src, seo.canonical).href)
   assert.equal(
     getSeoConfig('/cakes/custom-cake').canonical,
     'https://au.verygood-chocolate.com/cakes/custom-cake',

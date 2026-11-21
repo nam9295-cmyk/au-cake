@@ -12,8 +12,9 @@ test('renewal machine-readable content uses current menu and never historical or
 })
 
 import content from '../src/content/au-public-pages.json' with {type:'json'}
+import home from '../src/content/au-home-v02.json' with {type:'json'}
 import sharp from 'sharp'
-const pages=seo.renewalSeoPages('https://example.test',content)
+const pages=seo.renewalSeoPages('https://example.test',content,home)
 test('SEO-01: all renewal pages explicitly declare indexability',()=>{
  for(const p of Object.values(pages)) assert.equal(p.robots,'index, follow')
 })
@@ -58,6 +59,8 @@ test('SEO-02 static product images fit narrow screens without JavaScript',()=>{
 
 test('restored lemon SEO has exactly the approved September pack prices; cookies are no longer marketed',()=>{
  assert.equal(pages['/cakes/levain-cookies'],undefined);
+ assert.doesNotMatch(pages['/cakes'].description, /cookies/i);
+ assert.match(pages['/chocolates/almond-chocoball'].description, /single 80g.*5\+1.*two 80g pouches/i);
  const p=pages['/cakes/lemon-cake'];assert.match(p.description,/0.50/);
  assert.deepEqual(p.structuredData.find(s=>s['@type']==='Product').offers.map(o=>o.price),['36.00','45.00','65.00','85.00']);
 });
