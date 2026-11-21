@@ -667,6 +667,22 @@ function toAdminReview(review, rewardSummary) {
   }
 }
 
+async function adminReviewRows(repository, reviews, now) {
+  const couponIds = [...new Set(reviews.map(review => review.couponId).filter(id => OPAQUE_ID_PATTERN.test(id || '')))]
+  const couponsById = new Map()
+  if (couponIds.length) {
+    try {
+      for (const coupon of await repository.listCoupons(couponIds)) {
+        couponsById.set(coupon.$id || coupon.id, coupon)
+      }
+    } catch {
+      // An unavailable batch must not hide coupons that can still be read individually.
+      return Promise.all(reviews.map(async review => toAdminReview(review, await loadAdminRewardSummary(repository, review, now))))
+    }
+  }
+  return reviews.map(review => toAdminReview(review, deriveAdminRewardSummary(review, couponsById.get(review.couponId), now)))
+}
+
 export async function listAdminReviews(repository, options = {}) {
   const cursor = options.cursor === undefined ? undefined : String(options.cursor).trim()
   const limit = options.limit === undefined ? 100 : options.limit
@@ -677,8 +693,7 @@ export async function listAdminReviews(repository, options = {}) {
     fail('INVALID_REQUEST')
   }
   const rawReviews = await repository.listReviews({ cursor, limit, ...(moderationStatus ? { moderationStatus } : {}) })
-  const reviews = await Promise.all(rawReviews.map(async (review) =>
-    toAdminReview(review, await loadAdminRewardSummary(repository, review, options.now || new Date()))))
+  const reviews = await adminReviewRows(repository, rawReviews, options.now || new Date())
   return {
     reviews,
     nextCursor: reviews.length === limit ? reviews.at(-1).id : null,

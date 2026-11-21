@@ -6,6 +6,19 @@ import serviceRoutes from '../content/au-service-routes.json' with { type: 'json
 
 export { isHogirlPath } from '../stories/hogirl/routes.js'
 
+export function normalizeAuShopPath(path: string) {
+  return path.replace(/\.html$/, '').replace(/\/+$/, '') || '/'
+}
+
+export function isRenewalBagPath(path: string) {
+  return path === '/cart' || path === '/reserve'
+}
+
+export function shouldLoadStoreSettings(pathname: string, market = marketConfig.market): boolean {
+  return pathname === '/complete' || pathname === '/reserve' ||
+    (market === 'AU' && isRenewalBagPath(normalizeAuShopPath(pathname)))
+}
+
 export type Page =
   | 'home'
   | 'account-auth-callback'

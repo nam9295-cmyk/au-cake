@@ -23,6 +23,10 @@ export type AdminReview = {
 
 export type AdminReviewPage = { reviews: AdminReview[]; nextCursor: string | null }
 
+export class AdminReviewAccessError extends Error {
+  constructor() { super('REVIEW_ADMIN_UNAUTHORIZED') }
+}
+
 type ReviewExecution = { status?: string; responseStatusCode?: number; responseBody?: string }
 export type AdminReviewExecutor = {
   createExecution(input: { functionId: string; body: string; async: false }): Promise<ReviewExecution>
@@ -122,15 +126,20 @@ export function parseCopyReviewRewardMessageResult(value: unknown): AdminRewardM
 async function execute<T>(executor: AdminReviewExecutor, functionId: string, payload: object, parse: (value: unknown) => T): Promise<T> {
   try {
     const execution = await executor.createExecution({ functionId, body: JSON.stringify(payload), async: false })
-    if (execution.status !== 'completed' || execution.responseStatusCode !== 200) return invalid()
+    if (execution.status !== 'completed') return invalid()
     const envelope = JSON.parse(execution.responseBody || '') as unknown
     if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope)) return invalid()
     const body = envelope as Record<string, unknown>
-    if (Object.keys(body).length !== 2 || body.ok !== true || !Object.hasOwn(body, 'result')) return invalid()
-    return parse(body.result)
+    if (Object.keys(body).length !== 2) return invalid()
+    if (execution.responseStatusCode === 200 && body.ok === true && Object.hasOwn(body, 'result')) {
+      return parse(body.result)
+    }
+    const accessDenied = execution.responseStatusCode === 403 && body.ok === false && body.code === 'REVIEW_ADMIN_UNAUTHORIZED'
+    if (!accessDenied) return invalid()
   } catch {
     throw new Error('ADMIN_REVIEWS_REQUEST_FAILED')
   }
+  throw new AdminReviewAccessError()
 }
 
 export function listAdminReviews(executor: AdminReviewExecutor, functionId: string, status: AdminReviewFilter, cursor?: string) {

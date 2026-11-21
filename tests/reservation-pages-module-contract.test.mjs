@@ -15,7 +15,7 @@ const repositorySource = await readSource('../src/lib/repository.ts')
 const storedReaderSource = await readSource('../src/lib/stored-order-reader.ts')
 
 test('App delegates customer reservation pages to explicit page modules', () => {
-  assert.match(appSource, /from '\.\/pages\/ReservePage'/)
+  assert.match(appSource, /import\('\.\/pages\/ReservePage'\)/)
   assert.match(appSource, /from '\.\/pages\/CompletePage'/)
   assert.match(appSource, /from '\.\/pages\/LookupPage'/)
   assert.doesNotMatch(appSource, /function (?:ReservePage|CompletePage|LookupPage)\b/)

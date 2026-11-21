@@ -6,6 +6,17 @@ import { fileURLToPath } from 'node:url'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
+test('original mobile hero links point to the current playable assets', () => {
+  const redirectsPath = join(repoRoot, 'public/_redirects')
+  const rules = existsSync(redirectsPath) ? readFileSync(redirectsPath, 'utf8').trim().split(/\r?\n/) : []
+  for (const extension of ['mp4', 'webp']) {
+    const oldPath = `/redesign/hero/cake-mobile.${extension}`
+    const currentPath = `/redesign/hero/cake-mobile-8s.${extension}`
+    assert.ok(rules.some(rule => rule.trim().split(/\s+/).join(' ') === `${oldPath} ${currentPath} 301`), oldPath)
+    assert.ok(existsSync(join(repoRoot, 'public', currentPath)), currentPath)
+  }
+})
+
 test('unknown URLs keep the hard 404 page without a global SPA rewrite', () => {
   const html = readFileSync(join(repoRoot, 'public/404.html'), 'utf8')
   assert.match(html, /Page not found/)

@@ -16,7 +16,7 @@ const todayHookSource = await readSource('../src/hooks/useTodayInputValue.ts')
 
 test('App delegates all class customer pages to explicit page modules', () => {
   assert.match(appSource, /from '\.\/pages\/ClassesPage'/)
-  assert.match(appSource, /from '\.\/pages\/ClassReservePage'/)
+  assert.match(appSource, /import\('\.\/pages\/ClassReservePage'\)/)
   assert.match(appSource, /from '\.\/pages\/ClassCompletePage'/)
   assert.doesNotMatch(appSource, /function (?:ClassesPage|ClassReservePage|ClassCompletePage)\b/)
 

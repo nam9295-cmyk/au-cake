@@ -26,6 +26,10 @@ import { getAuCakePickupTimeOptions, isAuCakePickupServiceTime } from './pickup-
 import type { Reservation, StoreSettings } from './types.js'
 import { escapeCsvCell } from './csv.js'
 
+export function formatAudCents(cents: number) {
+  return `AUD ${(cents / 100).toFixed(2)}`
+}
+
 export function formatCurrency(value: number) {
   if (marketConfig.market === 'AU') return `AUD ${value.toFixed(2)}`
 

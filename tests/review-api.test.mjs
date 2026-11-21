@@ -68,7 +68,10 @@ test('review input accepts and trims the public fields only', () => {
 })
 
 test('review input rejects invalid rating, body, display name, consent and honeypot', () => {
-  for (const rating of [0, 6, 1.5, '5']) {
+  for (const rating of [1, 2, 3, 4, 5]) {
+    assert.equal(validateReviewInput({ rating, body: 'ok', publishConsent: true }).rating, rating)
+  }
+  for (const rating of [0, 6, 1.5, '5', null, undefined, NaN]) {
     assertReviewError('INVALID_REVIEW_RATING', () => validateReviewInput({ rating, body: 'ok', publishConsent: true }))
   }
   for (const body of ['', '   ', 'x'.repeat(2001)]) {
@@ -116,6 +119,15 @@ test('review coupon HMAC secret fails closed and matches the reservation digest 
 })
 
 test('Sydney calendar-day helper preserves local wall time across DST boundaries', () => {
+  for (const [start, expiry] of [
+    ['2026-06-15T14:30:00.000Z', '2026-07-15T14:30:00.000Z'],
+    ['2026-09-30T14:30:00.000Z', '2026-10-30T13:30:00.000Z'],
+    ['2026-03-31T13:30:00.000Z', '2026-04-30T14:30:00.000Z'],
+    ['2026-03-05T15:30:00.000Z', '2026-04-04T15:30:00.000Z'],
+  ]) {
+    assert.equal(addSydneyCalendarDays(new Date(start), REVIEW_INVITE_VALID_DAYS).toISOString(), expiry)
+    assert.equal(addSydneyCalendarDays(new Date(start), REVIEW_REWARD_VALID_DAYS).toISOString(), expiry)
+  }
   assert.equal(addSydneyCalendarDays(new Date('2026-10-03T15:30:00.000Z'), 30).toISOString(), '2026-11-02T14:30:00.000Z')
   assert.equal(addSydneyCalendarDays(new Date('2027-03-20T14:30:00.000Z'), 60).toISOString(), '2027-05-19T15:30:00.000Z')
   assert.equal(addSydneyCalendarDays(new Date('2026-09-03T16:30:00.000Z'), 30).toISOString(), '2026-10-03T16:30:00.000Z')
@@ -362,6 +374,8 @@ test('public review projection enforces publication and allowlists fields', () =
   })
   assertReviewError('REVIEW_NOT_PUBLIC', () => toPublicReview({ ...contaminated, publishConsent: false }))
   assertReviewError('REVIEW_NOT_PUBLIC', () => toPublicReview({ ...contaminated, moderationStatus: 'pending' }))
+  assertReviewError('REVIEW_NOT_PUBLIC', () => toPublicReview({ ...contaminated, moderationStatus: 'hidden' }))
+  assert.equal(toPublicReview({ ...contaminated, displayName: ' Jenny ' }).displayName, 'Jenny')
 })
 
 test('public review photo URLs use only the configured HTTPS Appwrite endpoint and project', () => {
@@ -467,6 +481,7 @@ function makeRepository(overrides = {}) {
     async listPublishedReviews(options) { calls.push(['listPublishedReviews', options]); return overrides.reviews || [] },
     async listReviews(options) { calls.push(['listReviews', options]); return overrides.reviews || [] },
     async getReview() { return overrides.review || null },
+    async listCoupons() { return overrides.coupon ? [overrides.coupon] : [] },
     async getCoupon() { return overrides.coupon || null },
     async updateReview(id, data) { calls.push(['updateReview', id, data]); return { $id: id, ...(overrides.review || {}), ...data } },
   }
@@ -757,6 +772,22 @@ test('coupon issuance requires distinct HMAC and encryption keys before reposito
       (error) => error instanceof ReviewApiError && error.code === 'FUNCTION_CONFIGURATION_ERROR',
     )
     assert.deepEqual(repository.calls, [])
+  }
+})
+
+test('one and five star submissions receive the same reward for the same trusted photo', async () => {
+  for (const rating of [1, 5]) {
+    for (const [pendingPhotoFileId, percent] of [[null, 5], ['', 5], ['   ', 5], ['photo-1', 10]]) {
+      const repository = makeRepository({ invite: {
+        $id: 'invite-1', sourceType: 'cake', sourceReservationId: 'cake-1', sourceReservationNumber: 'VG-TEST',
+        tokenHash: hashSecret(VALID_TOKEN), expiresAt: '2026-08-18T00:00:00.000Z', pendingPhotoFileId,
+      } })
+      const ids = ['review-1', 'coupon-1']
+      const result = await submitReview(repository, VALID_TOKEN, { rating, body: 'Cake', publishConsent: false }, {
+        now: fixedNow, hmacSecret, idFactory: () => ids.shift(),
+      })
+      assert.equal(result.rewardPercent, percent)
+    }
   }
 })
 

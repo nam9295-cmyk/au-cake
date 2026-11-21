@@ -218,10 +218,6 @@ export function getStarAriaLabel(value: number, language: ReviewLanguage): strin
   return `${value} ${value === 1 ? 'star' : 'stars'}`
 }
 
-export function shouldLoadStoreSettings(page: string): boolean {
-  return page !== 'review'
-}
-
 export function extractReviewToken(fragment: string): string | null {
   const candidate = fragment.startsWith('#') ? fragment.slice(1) : fragment
   return /^[A-Za-z0-9_-]{43}$/.test(candidate) ? candidate : null

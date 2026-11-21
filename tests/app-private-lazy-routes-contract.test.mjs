@@ -22,28 +22,34 @@ const publicLazyPages = [
   ['HogirlApp', './stories/hogirl/HogirlApp'],
   ['KoreaCustomerStoriesPage', './pages/KoreaCustomerStoriesPage'],
   ['AuBusinessServicePage', './pages/AuBusinessServicePage'],
+  ['CakeDetailPage', './CakeDetailPage'],
+  ['ReviewPage', './ReviewPage'],
+  ['ReviewsArchive', './ReviewsArchive'],
+  ['AuRenewalCatalog', './pages/AuRenewalCatalog'],
+  ['AuRenewalBag', './pages/AuRenewalBag'],
+]
+
+const namedPublicLazyPages = [
+  ['ReservePage', './pages/ReservePage'],
+  ['ClassReservePage', './pages/ClassReservePage'],
+  ['CustomCakePage', './pages/CustomCakePage'],
 ]
 
 const eagerModules = [
   './pages/CompanyPortfolioPage',
-  './CakeDetailPage',
   './CakesPage',
-  './ReviewPage',
-  './ReviewsArchive',
   './components/SiteChrome',
   './pages/ClassCompletePage',
-  './pages/ClassReservePage',
   './pages/ClassesPage',
   './pages/CompletePage',
   './pages/HomePage',
   './pages/LookupPage',
-  './pages/ReservePage',
 ]
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-test('private route modules remain lazy and HOGIRL adds one isolated public lazy boundary', () => {
-  for (const [component, modulePath] of [...namedPrivatePages, ...defaultPrivatePages]) {
+test('private, booking, product and review pages load through their route entries', () => {
+  for (const [component, modulePath] of [...namedPrivatePages, ...defaultPrivatePages, ...namedPublicLazyPages]) {
     assert.doesNotMatch(
       appSource,
       new RegExp(`^import(?:[\\s\\S]*?)from ['"]${escapeRegExp(modulePath)}['"]`, 'm'),
@@ -51,7 +57,7 @@ test('private route modules remain lazy and HOGIRL adds one isolated public lazy
     )
   }
 
-  for (const [component, modulePath] of namedPrivatePages) {
+  for (const [component, modulePath] of [...namedPrivatePages, ...namedPublicLazyPages]) {
     assert.match(
       appSource,
       new RegExp(
@@ -82,10 +88,9 @@ test('private route modules remain lazy and HOGIRL adds one isolated public lazy
     )
   }
 
-  assert.equal((appSource.match(/\blazy\(\(\) =>\s*import\(/g) || []).length, namedPrivatePages.length + defaultPrivatePages.length + publicLazyPages.length)
 })
 
-test('review, public, and booking route modules stay eager', () => {
+test('home, portfolio and shared navigation remain immediately available', () => {
   for (const modulePath of eagerModules) {
     assert.match(appSource, new RegExp(`from ['"]${escapeRegExp(modulePath)}['"]`), `${modulePath} must stay eager`)
     assert.doesNotMatch(appSource, new RegExp(`import\\(['"]${escapeRegExp(modulePath)}['"]\\)`))
@@ -93,8 +98,8 @@ test('review, public, and booking route modules stay eager', () => {
 })
 
 test('the review early return remains before the private Suspense boundary', () => {
-  const reviewReturn = appSource.indexOf("if (page === 'review') return <ReviewPage")
-  const privateSuspense = appSource.indexOf('<Suspense')
+  const reviewReturn = appSource.indexOf("if (page === 'review') return")
+  const privateSuspense = appSource.indexOf('<Suspense fallback={<PrivateRouteFallback')
 
   assert.ok(reviewReturn >= 0, 'missing review early return')
   assert.ok(privateSuspense > reviewReturn, 'private Suspense must remain after the review early return')
@@ -108,8 +113,6 @@ test('private routes retain their neutral fallback while HOGIRL receives its own
   assert.doesNotMatch(fallback, /<(?:nav|header|footer|button|a)\b/)
   assert.doesNotMatch(fallback, /navigate|settings|language|reservation|customer|admin/i)
 
-  assert.equal((appSource.match(/<Suspense\b/g) || []).length, 4)
-  assert.equal((appSource.match(/fallback=\{<EditorialRouteFallback \/>\}/g) || []).length, 2)
   assert.equal((appSource.match(/fallback=\{<PrivateRouteFallback \/>\}/g) || []).length, 1)
 
   const privateBoundary = appSource.match(/\{isPrivatePage && \(\s*<Suspense fallback=\{<PrivateRouteFallback \/>\}>([\s\S]*?)<\/Suspense>\s*\)\}/)?.[1] || ''

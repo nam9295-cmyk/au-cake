@@ -304,6 +304,15 @@ export function createReviewRepository(databases, config = resolveReviewConfig()
         throw error
       }
     },
+    async listCoupons(documentIds) {
+      const result = await databases.listDocuments({
+        databaseId: config.cakeDatabaseId,
+        collectionId: config.reviewCouponsId,
+        queries: [Query.equal('$id', documentIds), Query.limit(documentIds.length)],
+        total: false,
+      })
+      return result.documents
+    },
     async getCoupon(documentId) {
       try {
         return await databases.getDocument({ databaseId: config.cakeDatabaseId, collectionId: config.reviewCouponsId, documentId })

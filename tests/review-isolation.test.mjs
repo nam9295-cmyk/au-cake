@@ -32,9 +32,9 @@ test('generated review.html pathname is included in the early Chatwoot isolation
 
 test('App uses the shared route parser and suppresses settings and analytics by resolved review page', () => {
   assert.match(appSource, /const page = getPageFromPath\(pathname\)/)
-  assert.match(appSource, /shouldLoadStoreSettings\(page\)/)
+  assert.match(appSource, /shouldLoadStoreSettings\(pathname\)/)
   assert.match(appSource, /page !== 'review'.*trackPageView/)
-  assert.match(appSource, /if \(page === 'review'\) return <ReviewPage onOrderCake=\{orderCakeFromReview\} \/>/)
+  assert.match(appSource, /if \(page === 'review'\) return[\s\S]*?<ReviewPage onOrderCake=\{orderCakeFromReview\} \/>[\s\S]*?<\/Suspense>/)
 })
 
 test('non-review routes retain the lazy Chatwoot launcher contract', () => {

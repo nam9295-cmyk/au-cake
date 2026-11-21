@@ -1,11 +1,9 @@
-import { AuRenewalShop } from './pages/AuRenewalShop'
 import { CustomerAuthCallback } from './components/CustomerAuthCallback'
 import {readCheckoutResume} from './lib/customer-checkout-draft'
 import {useCustomerAccount} from './lib/customer-account-context'
 import {GuestCartImport} from './components/GuestCartImport'
 import { renewalCardForPath } from '../appwrite-functions/reservation-api/src/au-renewal-catalog.js'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import CakeDetailPage from './CakeDetailPage'
 import CakesPage from './CakesPage'
 import { AuRedesignFooter, AuRedesignHeader } from './components/AuRedesignChrome'
 import { AuLanguageProvider } from './components/AuLanguage'
@@ -15,8 +13,6 @@ import CartPage from './CartPage'
 import { isChocolateProductId } from '../appwrite-functions/reservation-api/src/chocolate-products.js'
 import { supportsChocolateOrderLines } from './lib/repository'
 import { useCart } from './CartProvider'
-import ReviewPage from './ReviewPage'
-import ReviewsArchive from './ReviewsArchive'
 import {
   AnnouncementTicker,
   AnalyticsConsentBanner,
@@ -25,18 +21,15 @@ import {
   SiteHeader,
 } from './components/SiteChrome'
 import { ClassCompletePage } from './pages/ClassCompletePage'
-import { ClassReservePage } from './pages/ClassReservePage'
 import { ClassesPage } from './pages/ClassesPage'
 import { CompletePage } from './pages/CompletePage'
 // Keep the pre-rendered editorial page stable during the initial client render.
 import CompanyPortfolioPage from './pages/CompanyPortfolioPage'
-import { CustomCakePage } from './pages/CustomCakePage'
 import { CustomCakeCompletePage } from './pages/CustomCakeCompletePage'
 import { HomePage } from './pages/HomePage'
 import { LookupPage } from './pages/LookupPage'
 import { NotFoundPage } from './pages/NotFoundPage'
-import { ReservePage } from './pages/ReservePage'
-import { getCakeSlugFromPath, getChocolateSlugFromPath, getPageFromPath, isHogirlPath, pathForCake, pathForPage, type Page } from './lib/app-routes'
+import { getCakeSlugFromPath, getChocolateSlugFromPath, getPageFromPath, isHogirlPath, isRenewalBagPath, normalizeAuShopPath, pathForCake, pathForPage, shouldLoadStoreSettings, type Page } from './lib/app-routes'
 import { type CakeDetailSelection } from './lib/cake-detail'
 import type { CartLine } from './lib/cart'
 import type { CustomCakeCreateResponse } from './lib/custom-cake-contract'
@@ -45,7 +38,6 @@ import {
   DEFAULT_SETTINGS,
 } from './lib/constants'
 import { appwriteConfig, functions, isAppwriteConfigured } from './lib/appwrite'
-import { shouldLoadStoreSettings } from './lib/review-page'
 import { normalizeReviewCouponCode } from './lib/review-coupon-client'
 import {
   readStoredLanguage,
@@ -66,6 +58,15 @@ import type {
   Reservation,
   StoreSettings,
 } from './lib/types'
+
+const AuRenewalCatalog = lazy(() => import('./pages/AuRenewalCatalog'))
+const AuRenewalBag = lazy(() => import('./pages/AuRenewalBag'))
+const CakeDetailPage = lazy(() => import('./CakeDetailPage'))
+const ReservePage = lazy(() => import('./pages/ReservePage').then(({ ReservePage }) => ({ default: ReservePage })))
+const ClassReservePage = lazy(() => import('./pages/ClassReservePage').then(({ ClassReservePage }) => ({ default: ClassReservePage })))
+const CustomCakePage = lazy(() => import('./pages/CustomCakePage').then(({ CustomCakePage }) => ({ default: CustomCakePage })))
+const ReviewPage = lazy(() => import('./ReviewPage'))
+const ReviewsArchive = lazy(() => import('./ReviewsArchive'))
 
 const AdminLoginPage = lazy(() => import('./AdminLoginPage').then(({ AdminLoginPage }) => ({ default: AdminLoginPage })))
 const AdminDashboardPage = lazy(() => import('./AdminDashboardPage').then(({ AdminDashboardPage }) => ({ default: AdminDashboardPage })))
@@ -112,6 +113,7 @@ function App() {
   const legacyOrderLines=legacyResume.status==='cart-changed'?legacyOrigin.map(line=>line.selection):legacyContext?.initialOrderLines as CakeDetailSelection[]|null
   const [pathname, setPathname] = useState(() => window.location.pathname)
   const page = getPageFromPath(pathname)
+  const needsStoreSettings = shouldLoadStoreSettings(pathname)
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS)
   const [completedReservation, setCompletedReservation] = useState<Reservation | null>(null)
   const [completedCustomCake, setCompletedCustomCake] = useState<CustomCakeCreateResponse | null>(null)
@@ -167,10 +169,10 @@ function App() {
   }, [language, page])
 
   useEffect(() => {
-    if (page === 'account' || page === 'account-auth-callback' || page === 'portfolio' || page === 'customer-stories' || page === 'business' || !shouldLoadStoreSettings(page) || hasLoadedSettings.current) return
+    if (!needsStoreSettings || hasLoadedSettings.current) return
     hasLoadedSettings.current = true
     getSettings().then(setSettings)
-  }, [page])
+  }, [needsStoreSettings])
 
   useEffect(() => {
     if (page !== 'cart' || cartLines.length < 2) return
@@ -293,23 +295,39 @@ function App() {
     page === 'admin-members'
   const isPrivatePage = isAdminPage || page === 'calendar' || page === 'account'
   const currentCakeSlug = getCakeSlugFromPath(pathname) || ''
+  const isAuHome = marketConfig.market === 'AU' && page === 'home'
   const isAuRedesignPage = marketConfig.market === 'AU' && ['cakes', 'cake-detail', 'chocolates', 'chocolate-detail', 'custom-cake', 'portfolio', 'customer-stories', 'business'].includes(page)
 
-  const renewalPath = pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/'
+  const renewalPath = normalizeAuShopPath(pathname)
   if (page === 'account-auth-callback') return <CustomerAuthCallback />
   const renewalRoute = marketConfig.market === 'AU' && (['/cakes','/chocolates','/celebrate','/custom-cakes','/business','/cart','/reserve'].includes(renewalPath) || !!renewalCardForPath(renewalPath, window.location.search) || page === 'cake-detail' || page === 'chocolate-detail')
-  if (renewalRoute) return <AuLanguageProvider language={language} setLanguage={setLanguage}><div className="app-shell au-redesign-shell"><AuRedesignHeader cartItemCount={cartItemCount}/><AuRenewalShop path={renewalPath} settings={settings}/><AuRedesignFooter/><AnalyticsConsentBanner language={language}/></div></AuLanguageProvider>
+  if (renewalRoute) return (
+    <AuLanguageProvider language={language} setLanguage={setLanguage}>
+      <div className="app-shell au-redesign-shell">
+        <AuRedesignHeader cartItemCount={cartItemCount} />
+        <Suspense fallback={<EditorialRouteFallback />}>
+          {isRenewalBagPath(renewalPath) ? <AuRenewalBag settings={settings} /> : <AuRenewalCatalog path={renewalPath} />}
+        </Suspense>
+        <AuRedesignFooter />
+        <AnalyticsConsentBanner language={language} />
+      </div>
+    </AuLanguageProvider>
+  )
 
-  if (page === 'review') return <ReviewPage onOrderCake={orderCakeFromReview} />
+  if (page === 'review') return (
+    <Suspense fallback={<EditorialRouteFallback />}>
+      <ReviewPage onOrderCake={orderCakeFromReview} />
+    </Suspense>
+  )
 
   return (
     <AuLanguageProvider language={language} setLanguage={setLanguage}>
       {page === 'home' && <HomeTigerBackground />}
-      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${page === 'home' && marketConfig.market === 'AU' ? ' au-home-shell' : ''}${isAuRedesignPage || page === 'account' ? ' au-redesign-shell' : ''}${isPrivatePage && page !== 'account' ? ' admin-shell' : ''}`}>
+      <div className={`app-shell${page === 'home' ? ' home-shell' : ''}${isAuHome ? ' au-home-shell' : ''}${isAuRedesignPage || page === 'account' ? ' au-redesign-shell' : ''}${isPrivatePage && page !== 'account' ? ' admin-shell' : ''}`}>
       {!isAppwriteConfigured && page !== 'portfolio' && page !== 'customer-stories' && page !== 'business' && (
         <div className="env-notice">{language === 'ko' ? 'Appwrite 환경변수가 없어서 로컬 데모 저장소로 실행 중입니다.' : 'Appwrite environment variables are missing, so the local demo store is active.'}</div>
       )}
-      {!isPrivatePage && !isAuRedesignPage && <AnnouncementTicker language={language} />}
+      {!isPrivatePage && !isAuRedesignPage && !isAuHome && <AnnouncementTicker language={language} />}
 
       {page === 'home' && <HomePage navigate={navigate} navigateToCake={navigateToCake} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'portfolio' && <>
@@ -340,13 +358,15 @@ function App() {
       {page === 'customer-stories' && marketConfig.market === 'AU' && <><AuRedesignHeader cartItemCount={cartItemCount} /><Suspense fallback={<EditorialRouteFallback />}><KoreaCustomerStoriesPage /></Suspense></>}
       {page === 'business' && marketConfig.market === 'AU' && <><AuRedesignHeader cartItemCount={cartItemCount} /><Suspense fallback={<EditorialRouteFallback />}><AuBusinessServicePage slug={pathname.replace(/\/$/, '').split('/').at(-1) || ''} /></Suspense></>}
       {page === 'custom-cake' && (
-        <CustomCakePage
-          navigate={navigate}
-          language={language}
-          setLanguage={setLanguage}
-          cartItemCount={cartItemCount}
-          onComplete={completeCustomCake}
-        />
+        <Suspense fallback={<EditorialRouteFallback />}>
+          <CustomCakePage
+            navigate={navigate}
+            language={language}
+            setLanguage={setLanguage}
+            cartItemCount={cartItemCount}
+            onComplete={completeCustomCake}
+          />
+        </Suspense>
       )}
       {page === 'custom-cake-complete' && (
         <CustomCakeCompletePage
@@ -377,51 +397,61 @@ function App() {
       {page === 'cake-detail' && (
         <>
           {isAuRedesignPage ? <AuRedesignHeader cartItemCount={cartItemCount} /> : <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
-          <CakeDetailPage
-            key={currentCakeSlug}
-            slug={currentCakeSlug}
-            language={language}
-            onBack={() => navigate(marketConfig.market === 'AU' && currentCakeSlug === 'smore-stick' ? 'chocolates' : 'cakes')}
-            onBrowseCakes={() => navigate('cakes')}
-            onOpenCake={navigateToCake}
-            onAddToOrder={addCartLine}
-            onViewOrder={() => navigate('cart')}
-          />
+          <Suspense fallback={<EditorialRouteFallback />}>
+            <CakeDetailPage
+              key={currentCakeSlug}
+              slug={currentCakeSlug}
+              language={language}
+              onBack={() => navigate(marketConfig.market === 'AU' && currentCakeSlug === 'smore-stick' ? 'chocolates' : 'cakes')}
+              onBrowseCakes={() => navigate('cakes')}
+              onOpenCake={navigateToCake}
+              onAddToOrder={addCartLine}
+              onViewOrder={() => navigate('cart')}
+            />
+          </Suspense>
         </>
       )}
       {page === 'classes' && <ClassesPage navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'reviews' && (
         <>
           <SiteHeader navigate={navigate} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
-          <ReviewsArchive
-            language={language}
-            executor={functions}
-            functionId={appwriteConfig.reviewApiFunctionId}
-            functionEndpoint={appwriteConfig.publicEndpoint}
-          />
+          <Suspense fallback={<EditorialRouteFallback />}>
+            <ReviewsArchive
+              language={language}
+              executor={functions}
+              functionId={appwriteConfig.reviewApiFunctionId}
+              functionEndpoint={appwriteConfig.publicEndpoint}
+            />
+          </Suspense>
         </>
       )}
-      {page === 'class-reserve' && <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
+      {page === 'class-reserve' && (
+        <Suspense fallback={<EditorialRouteFallback />}>
+          <ClassReservePage navigate={navigate} onComplete={setCompletedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
+        </Suspense>
+      )}
       {page === 'class-complete' && <ClassCompletePage navigate={navigate} reservation={completedClassReservation} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />}
       {page === 'reserve' && !sameReservationOwner&&!('draft'in legacyResume)&&<main role="status">{language==='ko'?'계정이 변경되었습니다. 장바구니에서 다시 시작해주세요.':'Your account changed. Continue from your bag.'}<a href="/cart">{language==='ko'?'장바구니':'Your bag'}</a></main>}
       {page === 'reserve' && (sameReservationOwner||'draft'in legacyResume) && (
-        <ReservePage
-          key={`${reservationSessionKey}:${cart.checkoutOwner}`}
-          navigate={navigate}
-          settings={settings}
-          initialProductId={reservationProductId}
-          initialSelection={reservationSelection}
-          initialOrderLines={reservationOrderLines}
-          initialPromoCode={pendingReviewCoupon}
-          initialRewardPercent={pendingReviewRewardPercent}
-          captureCartOrigin={() => cartOriginLinesRef.current}
-          onInitialPromoConsumed={() => setPendingReviewCoupon('')}
-          reviewDemoMode={import.meta.env.DEV && import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
-          onComplete={completeReservation}
-          language={language}
-          setLanguage={setLanguage}
-          cartItemCount={cartItemCount}
-        />
+        <Suspense fallback={<EditorialRouteFallback />}>
+          <ReservePage
+            key={`${reservationSessionKey}:${cart.checkoutOwner}`}
+            navigate={navigate}
+            settings={settings}
+            initialProductId={reservationProductId}
+            initialSelection={reservationSelection}
+            initialOrderLines={reservationOrderLines}
+            initialPromoCode={pendingReviewCoupon}
+            initialRewardPercent={pendingReviewRewardPercent}
+            captureCartOrigin={() => cartOriginLinesRef.current}
+            onInitialPromoConsumed={() => setPendingReviewCoupon('')}
+            reviewDemoMode={import.meta.env.DEV && import.meta.env.VITE_REVIEW_DEMO_MODE === 'true'}
+            onComplete={completeReservation}
+            language={language}
+            setLanguage={setLanguage}
+            cartItemCount={cartItemCount}
+          />
+        </Suspense>
       )}
       {page === 'complete' && (
         <CompletePage navigate={navigate} reservation={completedReservation} settings={settings} language={language} setLanguage={setLanguage} cartItemCount={cartItemCount} />
@@ -455,7 +485,7 @@ function App() {
           {page === 'calendar' && <ReadOnlyCalendarPage />}
         </Suspense>
       )}
-      {!isPrivatePage && (isAuRedesignPage ? <AuRedesignFooter /> : <SiteFooter navigate={navigate} language={language} />)}
+      {!isPrivatePage && !isAuHome && (isAuRedesignPage ? <AuRedesignFooter /> : <SiteFooter navigate={navigate} language={language} />)}
       {!isPrivatePage && <AnalyticsConsentBanner language={language} />}
     </div>
     </AuLanguageProvider>

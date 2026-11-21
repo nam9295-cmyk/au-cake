@@ -8,6 +8,7 @@ import {
   moderateReview,
 } from '../appwrite-functions/review-api/src/business.js'
 import {
+  createReviewRepository,
   handleReviewRequest,
   safeActionForLog,
 } from '../appwrite-functions/review-api/src/main.js'
@@ -63,6 +64,11 @@ function makeRepository({ reviewValue = review, couponValue = makeCoupon(), upda
   return {
     calls,
     async listReviews(options) { calls.push(['listReviews', options]); return reviewValue ? [reviewValue] : [] },
+    async listCoupons(ids) {
+      calls.push(['listCoupons', ids])
+      if (couponValue instanceof Error) throw couponValue
+      return couponValue ? [couponValue] : []
+    },
     async getReview(id) { calls.push(['getReview', id]); return reviewValue },
     async getCoupon(id) {
       calls.push(['getCoupon', id])
@@ -115,7 +121,47 @@ test('admin list derives an exact safe active reward summary from the linked cou
   for (const forbidden of [review.couponId, code, makeCoupon().codeHash, makeCoupon().codeCiphertext, 'sourceReviewId']) {
     assert.equal(serialized.includes(forbidden), false, forbidden)
   }
-  assert.deepEqual(repository.calls.map(([name]) => name), ['listReviews', 'getCoupon'])
+  assert.deepEqual(repository.calls, [
+    ['listReviews', { moderationStatus: 'pending', limit: 20, cursor: undefined }],
+    ['listCoupons', [review.couponId]],
+  ])
+})
+
+test('an admin page loads linked coupons in one database query and keeps review order', async () => {
+  const rows = Array.from({ length: 32 }, (_, i) => ({ ...review, $id: `review-${i}`, couponId: `coupon-${i}` }))
+  rows[30].couponId = rows[0].couponId
+  rows[31].couponId = 'invalid/id'
+  const coupons = rows.slice(0, 29).reverse().map(row => makeCoupon({ $id: row.couponId, sourceReviewId: row.$id }))
+  const calls = []
+  const repository = createReviewRepository({
+    async listDocuments(params) {
+      calls.push(params)
+      return { documents: params.collectionId === 'reviews' ? rows : coupons }
+    },
+  }, { cakeDatabaseId: 'cakes', reviewsId: 'reviews', reviewCouponsId: 'coupons' })
+  const page = await listAdminReviews(repository, { limit: 32, now })
+  assert.deepEqual(calls.map(call => call.collectionId), ['reviews', 'coupons'])
+  assert.deepEqual(calls[1].queries.map(value => JSON.parse(value)), [
+    { method: 'equal', attribute: '$id', values: rows.slice(0, 30).map(row => row.couponId) },
+    { method: 'limit', values: [30] },
+  ])
+  assert.deepEqual(page.reviews.map(row => row.id), rows.map(row => row.$id))
+  assert.deepEqual(page.reviews.map(row => row.rewardStatus), [...Array(29).fill('active'), ...Array(3).fill('unavailable')])
+  assert.equal(page.nextCursor, 'review-31')
+})
+
+test('an empty page makes no coupon reads', async () => {
+  const repository = makeRepository({ reviewValue: null })
+  assert.deepEqual(await listAdminReviews(repository), { reviews: [], nextCursor: null })
+  assert.deepEqual(repository.calls.map(([name]) => name), ['listReviews'])
+})
+
+test('a failed batch still shows individually readable coupons', async () => {
+  const repository = makeRepository()
+  repository.listCoupons = async () => { throw new Error('batch unavailable') }
+  const page = await listAdminReviews(repository, { now })
+  assert.equal(page.reviews[0].rewardStatus, 'active')
+  assert.ok(repository.calls.some(([name]) => name === 'getCoupon'))
 })
 
 test('admin summary derives expiry and persisted terminal states without making messages available', async () => {
@@ -166,7 +212,7 @@ test('missing, unreadable, mismatched, or malformed linked coupons collapse to o
     rewardExpiresAt: page.reviews[0].rewardExpiresAt,
     rewardMessageAvailable: page.reviews[0].rewardMessageAvailable,
   }, unavailableSummary)
-  assert.equal(malformedLink.calls.some(([name]) => name === 'getCoupon'), false)
+  assert.deepEqual(malformedLink.calls.map(([name]) => name), ['listReviews'])
 })
 
 test('admin summary fails closed to unavailable when the recovery envelope is incomplete or malformed', async () => {

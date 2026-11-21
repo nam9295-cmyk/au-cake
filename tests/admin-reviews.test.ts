@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import * as assert from 'node:assert/strict'
 import {
+  AdminReviewAccessError,
   buildListAdminReviewsPayload,
   buildModerateReviewPayload,
   listAdminReviews,
@@ -111,6 +112,18 @@ test('admin repository executes exact Function payloads and fail-closes malforme
     }, 'review-api', 'pending'),
     /ADMIN_REVIEWS_REQUEST_FAILED/,
   )
+})
+
+test('review access denial is distinguishable from a temporary list failure', async () => {
+  const list = (responseStatusCode: number, code: string) => listAdminReviews({
+    async createExecution() {
+      return { status: 'completed', responseStatusCode, responseBody: JSON.stringify({ ok: false, code }) }
+    },
+  }, 'review-api', 'pending')
+
+  await assert.rejects(list(403, 'REVIEW_ADMIN_UNAUTHORIZED'), AdminReviewAccessError)
+  await assert.rejects(list(500, 'REVIEW_ADMIN_UNAUTHORIZED'), { message: 'ADMIN_REVIEWS_REQUEST_FAILED' })
+  await assert.rejects(list(403, 'UNKNOWN_ERROR'), { message: 'ADMIN_REVIEWS_REQUEST_FAILED' })
 })
 
 test('page merge deduplicates moderation refs while preserving newest response values', () => {

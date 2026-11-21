@@ -7,6 +7,7 @@ import {
 } from './lib/admin-review-photo-preview'
 import type { Page } from './lib/app-routes'
 import {
+  AdminReviewAccessError,
   adminRewardStatusLabel,
   copyAdminRewardMessage,
   copyReviewRewardMessage,
@@ -142,8 +143,15 @@ export default function AdminReviewsPage({
       if (generation !== generationRef.current || requestedFilter !== filterRef.current) return
       setReviews((current) => cursor ? mergeAdminReviewPages(current, page.reviews) : page.reviews)
       setNextCursor(page.nextCursor)
-    } catch {
-      if (generation === generationRef.current) setError('리뷰를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
+    } catch (error) {
+      if (generation !== generationRef.current) return
+      if (error instanceof AdminReviewAccessError) {
+        setReviews([])
+        setNextCursor(null)
+        setError('현재 계정에는 리뷰와 쿠폰을 조회할 권한이 없습니다. 리뷰 관리자 계정으로 로그인해 주세요.')
+      } else {
+        setError('리뷰를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
+      }
     } finally {
       if (generation === generationRef.current) {
         loadingRef.current = false

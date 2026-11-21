@@ -18,11 +18,10 @@ import {
   parseLoadReviewInviteResult,
   parseSubmitReviewResult,
 
-  shouldLoadStoreSettings,
   tryBeginReviewOperation,
 } from '../src/lib/review-page.js'
 import { reviewDemoFixture, reviewDemoSubmission } from '../src/lib/review-page-demo.js'
-import { getPageFromPath, pathForPage } from '../src/lib/app-routes.js'
+import { getPageFromPath, pathForPage, shouldLoadStoreSettings } from '../src/lib/app-routes.js'
 import { getSeoConfig } from '../src/lib/seo.js'
 import { loadReviewInvite, submitCustomerReview } from '../src/lib/review-repository.js'
 
@@ -145,11 +144,16 @@ test('clipboard helper reports unsupported and rejected writes without claiming 
   assert.equal(copied, 'FOXKIWI7Q2MK')
 })
 
-test('store settings are not loaded for the private review page', () => {
-  assert.equal(shouldLoadStoreSettings('review'), false)
-  for (const page of ['home', 'reserve', 'calendar', 'admin']) {
-    assert.equal(shouldLoadStoreSettings(page), true, page)
+test('the AU shell requests settings only for checkout and booking completion', () => {
+  for (const path of ['/', '/review', '/review.html', '/reviews', '/calendar', '/admin', '/cakes', '/custom-cakes', '/lookup']) {
+    assert.equal(shouldLoadStoreSettings(path, 'AU'), false, path)
   }
+  for (const path of ['/reserve', '/cart', '/cart/', '/cart.html', '/reserve/', '/reserve.html', '/complete']) {
+    assert.equal(shouldLoadStoreSettings(path, 'AU'), true, path)
+  }
+  assert.equal(shouldLoadStoreSettings('/reserve', 'KR'), true)
+  assert.equal(shouldLoadStoreSettings('/complete', 'KR'), true)
+  assert.equal(shouldLoadStoreSettings('/cart', 'KR'), false)
 })
 
 test('review and generated review.html paths resolve to the focused review page while navigation stays canonical', () => {

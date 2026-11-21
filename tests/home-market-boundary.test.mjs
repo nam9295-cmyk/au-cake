@@ -10,7 +10,7 @@ import postcss from 'postcss'
 
 const baseline = '9510e77ff2d0d5dff29fe868a2c09d5dd6db90de'
 
-async function renderHome(market, original = false) {
+async function renderHome(market, original = false, appShell = false) {
   const directory = await mkdtemp(join(tmpdir(), 'home-market-'))
   const bundle = await rolldown({
     input: 'home-render-test', platform: 'node',
@@ -19,6 +19,14 @@ async function renderHome(market, original = false) {
       name: 'home-render-test',
       resolveId(id) { if (id === 'home-render-test') return resolve('home-render-test.ts') },
       load(id) {
+        if (appShell && id.endsWith('/home-render-test.ts')) return `
+          import React from 'react';
+          import { renderToStaticMarkup } from 'react-dom/server';
+          import App from './src/App';
+          import { CartProvider } from './src/CartProvider';
+          globalThis.window = { location: new URL('https://example.test/'), localStorage: { getItem() { return null } } };
+          console.log(renderToStaticMarkup(React.createElement(CartProvider, null, React.createElement(App))));
+        `
         if (id.endsWith('/home-render-test.ts')) return `
           import React from 'react';
           import { renderToStaticMarkup } from 'react-dom/server';
@@ -37,7 +45,7 @@ async function renderHome(market, original = false) {
   })
   try {
     const file = join(directory, 'render.mjs')
-    await bundle.write({ file, format: 'esm', codeSplitting: false })
+    await bundle.write({ dir: directory, entryFileNames: 'render.mjs', format: 'esm', codeSplitting: appShell })
     return execFileSync(process.execPath, [file], {
       encoding: 'utf8', env: { ...process.env, VITE_MARKET: market },
     }).trim()
@@ -48,11 +56,18 @@ async function renderHome(market, original = false) {
 }
 
 test('AU renders the editorial home, product tabs and redesign navigation', async () => {
-  const html = await renderHome('AU')
+  const html = await renderHome('AU', false, true)
   assert.match(html, /class="home-redesign-wrap au-home-v02"/)
   assert.match(html, /class="au-v02-header rd-header"/)
   assert.match(html, /Cake &amp; Bake/)
   assert.match(html, /class="rd-footer au-v02-footer"/)
+  assert.doesNotMatch(html, /class="site-footer-tiger"|class="site-footer"|class="announcement-ticker"/)
+})
+
+test('KR still renders its illustrated footer in the home shell', async () => {
+  const html = await renderHome('KR', false, true)
+  assert.match(html, /class="site-footer-tiger"/)
+  assert.doesNotMatch(html, /au-v02-footer/)
 })
 
 test('AU Hero provides responsive first-frame artwork before video playback is available', async () => {

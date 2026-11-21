@@ -30,14 +30,6 @@
   max-width: 100vw;
 }
 
-.au-home-shell .site-footer {
-  display: none !important;
-}
-
-.au-home-shell .announcement-ticker {
-  display: none !important;
-}
-
 :where(.au-home-shell) .home-redesign-wrap {
   width: 100%;
   max-width: none;
