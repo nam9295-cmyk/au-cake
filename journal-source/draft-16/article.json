@@ -1,0 +1,41 @@
+{
+  "id": "draft-16",
+  "slug": "six-flavour-chocolate-mochi-and-four-piece-gift-box-guide",
+  "title": "Fruit, red bean or pure ganache? Inside our six-flavour Chocolate Mochi collection",
+  "seoTitle": "Six chocolate mochi flavours & four-piece gift boxes in Sydney | Very Good",
+  "excerpt": "Compare six pavé chocolate mochi flavours, from fresh fruit to ang-butter. Choose singles or build a four-piece gift box for pickup in Melrose Park, Sydney.",
+  "locale": "en-AU",
+  "status": "published",
+  "publishedAt": "2026-11-22T17:05:37+11:00",
+  "updatedAt": "2026-11-22T17:05:37+11:00",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-22T17:05:37+11:00"
+  },
+  "cover": {
+    "src": "assets/45a0d2572b6c40ad9a281c331eac454ed2a0a02c345e773f8c5f5bd966d2ba8d.webp",
+    "alt": "Four-piece chocolate mochi gift box beside halved strawberry, mandarin and ang-butter mochi."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 174,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 88,
+          "maxWidth": 600
+        },
+        {
+          "frame": 260,
+          "maxWidth": 360
+        }
+      ]
+    }
+  }
+}
