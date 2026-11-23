@@ -1,0 +1,41 @@
+{
+  "id": "draft-17",
+  "slug": "chocolate-smore-sticks-party-favours-and-sharing-guide",
+  "title": "Crisp couverture, pillowy marshmallow: why S’more Sticks make effortless party favours",
+  "seoTitle": "Chocolate S’more Sticks for party favours in Sydney | Very Good",
+  "excerpt": "Compare packs of 6 and 12 individually wrapped chocolate S’more Sticks for birthdays, picnics and office gifts. Includes warm-weather care and Melrose Park pickup.",
+  "locale": "en-AU",
+  "status": "published",
+  "publishedAt": "2026-11-23T18:57:25+11:00",
+  "updatedAt": "2026-11-23T18:57:25+11:00",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-23T18:57:25+11:00"
+  },
+  "cover": {
+    "src": "assets/cc288409569832b9621f18ebbd73651ea7d0eec67a77c3aa0d8130b5fdf0c2ff.webp",
+    "alt": "Six wrapped S’more Sticks in a kraft box beside unwrapped chocolate and rainbow-sprinkle sticks."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 184,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 93,
+          "maxWidth": 600
+        },
+        {
+          "frame": 275,
+          "maxWidth": 360
+        }
+      ]
+    }
+  }
+}
