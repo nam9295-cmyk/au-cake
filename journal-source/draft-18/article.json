@@ -1,0 +1,41 @@
+{
+  "id": "draft-18",
+  "slug": "fresh-strawberries-and-real-vanilla-bean-cream-cake-finishes-guide",
+  "title": "Fresh strawberries or real vanilla-bean cream? How finishes transform a dark chocolate cake",
+  "seoTitle": "Fresh strawberries or vanilla-bean cream for chocolate cake? | Very Good",
+  "excerpt": "Compare fresh strawberries, vanilla-bean cream and a separate 100g cream box for Pavé cakes, Brownie Basque cheesecakes and chocolate loaves in Sydney.",
+  "locale": "en-AU",
+  "status": "published",
+  "publishedAt": "2026-11-24T18:40:19+11:00",
+  "updatedAt": "2026-11-24T18:40:19+11:00",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-24T18:40:19+11:00"
+  },
+  "cover": {
+    "src": "assets/2f0ff30936fb0f6fb32f1871eb0f06ae25b3552df10998710a7152f22dac471f.webp",
+    "alt": "Strawberry-topped Pavé cake beside a Brownie Basque cake finished with vanilla-bean cream and strawberries."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 178,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 90,
+          "maxWidth": 600
+        },
+        {
+          "frame": 266,
+          "maxWidth": 360
+        }
+      ]
+    }
+  }
+}
