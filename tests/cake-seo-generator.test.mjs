@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import auPublicPages from '../src/content/au-public-pages.json' with { type: 'json' }
 import homeCopy from '../src/content/au-home-v02.json' with { type: 'json' }
 import serviceRoutes from '../src/content/au-service-routes.json' with { type: 'json' }
+import { publishedJournalEntries } from '../scripts/journal-relations.mjs'
 import { renderRenewalLlms } from '../appwrite-functions/reservation-api/src/au-renewal-seo.js'
 
 const generatorPath = fileURLToPath(new URL('../scripts/generate-seo-pages.mjs', import.meta.url))
@@ -327,6 +328,12 @@ test('llms text exposes current public menu, confirmed prices and archived class
  assert.equal(llms,await readFile(llmsPath,'utf8'))
  for (const link of Object.values(homeCopy.links)) assert.ok(llms.includes(new URL(link.href, site).href))
  assert.ok(llms.includes(site+'/journal/feed.xml'))
+ const articles = llms.split('## Journal articles\n')[1].split('\n## ')[0].trim().split('\n')
+ const entries = publishedJournalEntries()
+ assert.equal(articles.length, entries.length)
+ for (const entry of entries) {
+   assert.ok(articles.includes(`- ${entry.title} — ${entry.excerpt} ${site}/journal/${entry.slug}`))
+ }
  assert.match(llms,/Cake & Bake/);assert.match(llms,/Chocolate Mochi/);assert.match(llms,/Brownie Basque/)
  assert.match(llms,/75.00/);assert.match(llms,/82.00/);assert.match(llms,/Class archive/)
  assert.match(llms,/Small Bites/);assert.match(llms,/Lemon Cake/);assert.match(llms,/cakes\/lemon-cake/)

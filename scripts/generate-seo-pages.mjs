@@ -8,6 +8,7 @@ import { getHogirlSeoDefinitions } from './hogirl-seo.mjs'
 import { getPortfolioSeoDefinition } from './portfolio-seo.mjs'
 import { getServiceSeoDefinitions } from './services-seo.mjs'
 import { renderAuLlms } from './render-au-llms.mjs'
+import { publishedJournalEntries, storefrontReading, readingHtml } from './journal-relations.mjs'
 import { addHomeLoading } from './au-loading.mjs'
 
 const siteUrl = auPublicPages.site.url
@@ -460,6 +461,13 @@ const hogirlSeo = await getHogirlSeoDefinitions({ siteUrl, brand })
 const portfolioPages = isAuMarket ? { '/portfolio': await getPortfolioSeoDefinition(siteUrl) } : {}
 const servicePages = isAuMarket ? await getServiceSeoDefinitions(siteUrl) : {}
 const renewedPages = isAuMarket ? renewalSeoPages(siteUrl, auPublicPages, homeV02) : {}
+const publishedStories = isAuMarket ? publishedJournalEntries() : []
+if (isAuMarket) {
+  for (const [path, links] of Object.entries(storefrontReading(publishedStories))) {
+    const config = renewedPages[path]
+    if (config) config.fallbackHtml = config.fallbackHtml.replace('</main>', () => readingHtml('Related Journal', links, escapeHtml) + '</main>')
+  }
+}
 if (isAuMarket) pages['/classes'] = classArchiveSeo(siteUrl)
 // Service hubs use the same rendered components and metadata as the live UI.
 const allPages = { ...pages, ...hogirlSeo.pages, ...portfolioPages, ...renewedPages, ...servicePages }
@@ -512,6 +520,9 @@ const llms = isAuMarket
       '', '## Explore the atelier',
       ...Object.values(homeV02.links).map(link => `- ${link.label}: ${link.description} ${new URL(link.href, siteUrl).href}`),
       `- Journal RSS: ${siteUrl}${homeV02.links.journal.href}/feed.xml`,
+      ...(publishedStories.length ? ['', '## Journal articles', ...publishedStories
+        .sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt))
+        .map(story => `- ${story.title} — ${story.excerpt} ${siteUrl}/journal/${story.slug}`)] : []),
       '', '## Services & enquiries', ...serviceLlmsEntries, ...hogirlSeo.llmsEntries,
     ])
   : renderAuLlms(auPublicPages, hogirlSeo.llmsEntries)

@@ -42,7 +42,11 @@ test('real writer rejects after season; snapshot reader stays valid independentl
 
 test('static seasonal detail has dated price offers and an explicit final pickup, without permanent home promotion',async()=>{
  const {renewalSeoPages}=await import('../appwrite-functions/reservation-api/src/au-renewal-seo.js');
- const pages=renewalSeoPages('https://example.test');
+ const pages=renewalSeoPages('https://example.test', undefined, undefined, catalog.HALLOWEEN_ORDER_DEADLINE);
+ const archive=renewalSeoPages('https://example.test', undefined, undefined, Date.parse(catalog.HALLOWEEN_ORDER_DEADLINE)+1)['/cakes/halloween-meringue'];
+ assert.match(archive.fallbackHtml,/orders.*closed/i);
+ assert.doesNotMatch(archive.fallbackHtml,/AUD|when ordering/);
+ assert.ok(archive.structuredData.every(node=>!node.offers));
  const page=pages['/cakes/halloween-meringue'];
  assert.ok(page,'direct product URL must exist in compiled Pages output');
  assert.match(page.fallbackHtml,/1 November 2026/);

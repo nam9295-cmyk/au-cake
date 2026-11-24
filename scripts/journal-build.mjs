@@ -6,10 +6,12 @@ import { createHash } from 'node:crypto'
 import { rolldown } from 'rolldown'
 import postcss from 'postcss'
 import { loadEnv } from 'vite'
+import { journalReading, readingHtml } from './journal-relations.mjs'
 import { inspectPackage, readPrepared, packageFile } from './journal-import.mjs'
 import content from '../src/content/au-public-pages.json' with { type: 'json' }
 import home from '../src/content/au-home-v02.json' with { type: 'json' }
 
+const editorialTeam = { name: content.site.brand, path: '/portfolio' }
 const project = fileURLToPath(new URL('../', import.meta.url))
 const escape = text => String(text ?? '').replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll("'",'&#39;')
 let chromePromise
@@ -57,7 +59,7 @@ async function shellStyles(preview) {
   chrome.walkRules(rule => { if (!rule.selector.includes('.au-redesign-footer') && rule.selector !== '.app-shell.au-redesign-shell') rule.remove() })
   chrome.walkAtRules(at => { if (!at.nodes?.length) at.remove() })
   chrome.walkComments(node => node.remove())
-  return [fonts, tokens.toString(), chrome.toString(), ...await Promise.all(['src/styles/au-navigation.css','src/journal/journal.css'].map(path => readFile(join(project, path), 'utf8')))].join('\n')
+  return [fonts, tokens.toString(), chrome.toString(), ...await Promise.all(['src/styles/au-navigation.css','src/journal/journal.css','src/styles/au-related-reading.css'].map(path => readFile(join(project, path), 'utf8')))].join('\n')
 }
 
 async function commitOutput(stage, outputDirectory) {
@@ -90,10 +92,10 @@ async function commitOutput(stage, outputDirectory) {
     throw error
   }
 }
-function cover(entry) {
+function cover(entry, first = false) {
   if (!entry.cover) return ''
   const c = entry.cover
-  return `<img src="${escape(c.src)}" srcset="${c.variants.map(v => `${escape(v.src)} ${v.width}w`).join(', ')}" sizes="(max-width: 600px) 100vw, 560px" width="${c.width}" height="${c.height}" alt="${escape(c.alt)}" loading="lazy" decoding="async">`
+  return `<img src="${escape(c.src)}" srcset="${c.variants.map(v => `${escape(v.src)} ${v.width}w`).join(', ')}" sizes="(max-width: 600px) 100vw, 560px" width="${c.width}" height="${c.height}" alt="${escape(c.alt)}" ${first ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'} decoding="async">`
 }
 function publicationDate(entry, article = false) {
   if (!entry.publishedAt) return ''
@@ -118,6 +120,7 @@ function documentHtml({ entry, listedEntries = [], title, description, body, she
     publisher: { '@type': 'Organization', '@id': siteUrl + '/#organization', name: content.site.brand, url: siteUrl },
     ...(image ? { image: [image] } : {}),
     ...(isArticle ? {
+      author: { '@type': 'Organization', '@id': siteUrl + '/#organization', name: editorialTeam.name, url: siteUrl + editorialTeam.path },
       '@type': 'BlogPosting', headline: entry.title, mainEntityOfPage: canonical,
       isPartOf: { '@id': journalUrl },
       ...(entry.publishedAt ? { datePublished: entry.publishedAt, dateModified: entry.updatedAt } : {}),
@@ -194,7 +197,7 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
   try {
     await put(cssPath, css)
     if (analyticsPath) await put(analyticsPath, analytics)
-    const indexBody = `<main id="journal-main" class="journal-index"><h1>Journal</h1>${entries.length ? `<div class="journal-list">${entries.map(entry => `<article class="journal-card"><a href="/journal/${entry.slug}">${cover(entry)}<h2>${escape(entry.title)}</h2>${publicationDate(entry)}<p>${escape(entry.excerpt)}</p></a></article>`).join('')}</div>` : '<p class="journal-empty">Stories from verygood are on their way.</p><a href="/cakes">Explore our cakes</a>'}</main>`
+    const indexBody = `<main id="journal-main" class="journal-index"><h1>Journal</h1>${entries.length ? `<div class="journal-list">${entries.map((entry, index) => `<article class="journal-card"><a href="/journal/${entry.slug}">${cover(entry, index === 0)}<h2>${escape(entry.title)}</h2>${publicationDate(entry)}<p>${escape(entry.excerpt)}</p></a></article>`).join('')}</div>` : '<p class="journal-empty">Stories from verygood are on their way.</p><a href="/cakes">Explore our cakes</a>'}</main>`
     const publicEntries = preview ? [] : entries
     await page('/journal', documentHtml({ listedEntries: publicEntries, title: 'Chocolate & Cake Journal | verygood chocolate', description: home.links.journal.description, body: indexBody, shell: renderChrome('en-AU'), shellCss: cssPath, analyticsPath, siteUrl, preview, isArticle: false }))
     for (const pkg of packages) {
@@ -202,7 +205,7 @@ export async function buildJournal({ outputDirectory, sourceDirectory = join(pro
       for (const file of pkg.files) await put(file.path, file.data)
       const articleCss = `/journal-assets/${entry.id}/article-${createHash('sha256').update(pkg.css).digest('hex').slice(0,12)}.css`
       await put(articleCss, pkg.css)
-      const body = `<nav class="journal-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/journal">Journal</a></nav><main id="journal-main">${publicationDate(entry, true)}${pkg.html}</main><nav class="journal-back" aria-label="Back to Journal"><a href="/journal">← ${entry.locale === 'ko' ? '저널로 돌아가기' : 'Back to Journal'}</a></nav>`
+      const body = `<nav class="journal-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/journal">Journal</a></nav><main id="journal-main">${publicationDate(entry, true)}<p class="journal-publication journal-article-publication">${entry.locale === 'ko' ? '작성·편집' : 'Written and edited by'} <a href="${editorialTeam.path}">${escape(editorialTeam.name)}</a></p>${pkg.html}${readingHtml('Related Stories & Collections', journalReading(entry.id, publicEntries), escape)}</main><nav class="journal-back" aria-label="Back to Journal"><a href="/journal">← ${entry.locale === 'ko' ? '저널로 돌아가기' : 'Back to Journal'}</a></nav>`
       await page(`/journal/${entry.slug}`, documentHtml({ entry, title: entry.seoTitle || `${entry.title} | verygood chocolate`, description: entry.excerpt, body, shell: renderChrome(entry.locale), shellCss: cssPath, articleCss, analyticsPath, siteUrl, preview, isArticle: true }))
     }
     await put('/journal/catalog.json', JSON.stringify(publicEntries.map(publicEntry), null, 2))

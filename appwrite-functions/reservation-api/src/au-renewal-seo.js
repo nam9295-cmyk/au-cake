@@ -1,11 +1,19 @@
 // Public presentation only: consumed by the AU frontend and static generator, never order validation.
 import { renewalPickupCopy } from "./au-renewal-pickup-policy.js";
 import { RENEWAL_OFFERS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName, priceRenewalOrder, renewalFinishName, renewalSizeName } from "./au-renewal.js";
-import { RENEWAL_NAV, RENEWAL_CARDS, HALLOWEEN_MERINGUE_CARD, HALLOWEEN_ORDER_DEADLINE } from "./au-renewal-catalog.js";
+import { RENEWAL_NAV, RENEWAL_CARDS, HALLOWEEN_MERINGUE_CARD, HALLOWEEN_ORDER_DEADLINE, HALLOWEEN_LAST_PICKUP, halloweenMeringueAvailable } from "./au-renewal-catalog.js";
 const escape = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = cents => (cents / 100).toFixed(2);
 
 const cards = Object.values(RENEWAL_CARDS).flat();
+const seasons = {
+  [HALLOWEEN_MERINGUE_CARD.id]: {
+    available: halloweenMeringueAvailable,
+    deadline: HALLOWEEN_ORDER_DEADLINE,
+    lastPickup: HALLOWEEN_LAST_PICKUP,
+  },
+};
+const pickupDate = new Intl.DateTimeFormat('en-AU', { dateStyle: 'long', timeZone: 'Australia/Sydney' });
 // Measured from the existing public assets; tests verify against decoded files.
 const imageDimensions = {lemon:[1080,1012],'halloween-meringue':[1080,1440],pave:[1080,1012],'gateau-loaf':[1080,1012],'brownie-whole':[1080,1012],'brownie-loaf':[1024,1024],cookies:[1216,864],mochi:[1080,1012],almond:[1080,1012],'pave-chocolate':[1080,1012],eiffel:[1080,1012],'gateau-cupcakes':[480,313],'brownie-cupcakes':[912,1152],smore:[480,320]};
 export function seoRobots(config) {
@@ -81,7 +89,7 @@ function renderHomeFeatures({ links, poster }) {
     <img id="poster-wall" src="${escape(poster.src)}" width="${poster.width}" height="${poster.height}" alt="${escape(poster.alt)}" loading="lazy" style="max-width:100%;height:auto" />`;
 }
 
-export function renewalSeoPages(siteUrl, content, home) {
+export function renewalSeoPages(siteUrl, content, home, now = new Date()) {
   const pages={};
   const navLinks = RENEWAL_NAV.map(n => `<a href="${n.href}">${escape(n.en)}</a>`);
   if (home) navLinks.push(`<a href="${escape(home.links.journal.href)}">${escape(home.links.journal.label)}</a>`);
@@ -101,13 +109,18 @@ export function renewalSeoPages(siteUrl, content, home) {
     const list=RENEWAL_CARDS[path.slice(1)] || (path==='/'?cards:[]);
     const product=siblings.length>0;
     const name=siblings.length>1?'Brownie Basque Cheesecake · Whole & Loaf':item.en;
-    const desc=product?description(item):categoryDescriptions[path];
+    const season = seasons[item.id];
+    const closed = season && !season.available(now);
+    const desc = closed
+      ? `Orders for ${name} have closed. Final Sydney pickup date: ${pickupDate.format(new Date(season.lastPickup))}.`
+      : product ? description(item) : categoryDescriptions[path];
     const canonical=siteUrl+(path==='/'?'':path);
-    const page={title:`${name}${item.id==='halloween-meringue'?' in Sydney':''} | verygood chocolate`,description:desc,canonical,robots:'index, follow',noindex:false,output:'directory',extensionlessAlias:path!=='/',...imageConfig(siteUrl,product?item:null),structuredData:[],fallbackHtml:''};
+    const title = item.id === 'pave' ? 'Pavé Chocolate Whole Cake' : name;
+    const page={title:`${title}${item.id==='halloween-meringue'?' in Sydney':''} | verygood chocolate`,description:desc,canonical,robots:'index, follow',noindex:false,output:'directory',extensionlessAlias:path!=='/',...imageConfig(siteUrl,product?item:null),structuredData:[],fallbackHtml:''};
     if(product){
-      const choices=siblings.flatMap(selections);
+      const choices=closed ? [] : siblings.flatMap(selections);
       page.ogType=choices.length?'product':'website';
-      page.structuredData.push({'@type':choices.length?'Product':'WebPage',name,description:desc,url:canonical,image:siblings.map(c=>siteUrl+c.image),...(choices.length?{brand:{'@type':'Brand',name:'verygood chocolate'},offers:choices.map(c=>({'@type':'Offer',name:c.name,price:money(c.price),priceCurrency:'AUD',url:siteUrl+c.url,...(item.id==='halloween-meringue'?{validThrough:HALLOWEEN_ORDER_DEADLINE,priceValidUntil:'2026-10-31'}:{})}))}:{})});
+      page.structuredData.push({'@type':choices.length?'Product':'WebPage',name,description:desc,url:canonical,image:siblings.map(c=>siteUrl+c.image),...(choices.length?{brand:{'@type':'Brand',name:'verygood chocolate'},offers:choices.map(c=>({'@type':'Offer',name:c.name,price:money(c.price),priceCurrency:'AUD',url:siteUrl+c.url,...(season?{validThrough:season.deadline,priceValidUntil:season.deadline.slice(0,10)}:{})}))}:{})});
       const parent=RENEWAL_NAV.find(n=>item.id==='halloween-meringue'?n.href==='/cakes':(RENEWAL_CARDS[n.href.slice(1)]||[]).includes(item));
       page.structuredData.push({'@type':'BreadcrumbList',itemListElement:[{name:'Home',item:siteUrl},{name:parent.en,item:siteUrl+parent.href},{name,item:canonical}].map((v,i)=>({'@type':'ListItem',position:i+1,...v}))});
     }else{
@@ -115,14 +128,14 @@ export function renewalSeoPages(siteUrl, content, home) {
     }
     const services=path==='/custom-cakes'?['single','double'].map(tier=>`<section><h2>Custom Cake · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><a href="/cakes/custom-cake?tier=${tier}">Request a cake</a><h2>Private Cake Class · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><p>Enquire for pricing. Details and availability confirmed by enquiry.</p><a href="/custom-cakes?service=private-class&amp;tier=${tier}#private-class-enquiry">Enquire about this class</a></section>`).join('')+'<p><a href="/classes">Past kids class archive</a></p>':path==='/business'?'<p><a href="/business/events">Corporate &amp; Events</a> · <a href="/business/cafe-supply">Café Supply / Wholesale · Coming Soon</a> · <a href="/business/consulting">Consulting</a></p>':'';
     const homeContent = path === '/' ? home : undefined;
-    const facts = (product ? siblings : list).map(card => cardFacts(card, path === '/')).join('');
+    const facts = closed ? imageHtml(item, false) + '<p><a href="/cakes">Browse current cakes</a></p>' : (product ? siblings : list).map(card => cardFacts(card, path === '/')).join('');
     const menu = homeContent ? `<section id="au-collection" aria-label="The AU collection">${facts}</section>` : facts;
     page.fallbackHtml = `<main><nav>${nav}</nav>
       <h1>${escape(homeContent?.headline ?? name)}</h1><p>${escape(desc)}</p>
       ${homeContent ? renderHomeFeatures(homeContent) : ''}
       ${menu}${services}
       <p>${escape(pickup.hours)}</p><p>${escape(pickup.driver)}</p>
-      <p>Reservation requests are confirmed by our team after availability and payment checks. Choose an available pickup date when ordering.</p></main>`;
+      ${closed ? '' : '<p>Reservation requests are confirmed by our team after availability and payment checks. Choose an available pickup date when ordering.</p>'}</main>`;
     pages[path]=page;
   }
   const homepage = pages['/'];

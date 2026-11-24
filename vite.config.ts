@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import postcss, { type Plugin as PostcssPlugin } from 'postcss'
 import { defineConfig, loadEnv, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
+import { storefrontReading } from './scripts/journal-relations.mjs'
 import { addHomeLoading } from './scripts/au-loading.mjs'
 
 // Only the AU storefront replaces the two legacy web font stylesheets.
@@ -51,6 +52,7 @@ export default defineConfig(({ mode }) => {
   })()
 
   return {
+    define: { __AU_JOURNAL_LINKS__: JSON.stringify(au ? storefrontReading() : {}) },
     css: au ? { postcss: { plugins: [auStorefrontFonts()] } } : undefined,
     plugins: [react(), {
       name: 'au-storefront-html',

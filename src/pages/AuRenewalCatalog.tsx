@@ -54,6 +54,20 @@ import {
 import { addRenewalLines } from "../lib/renewal-cart";
 const localPreview = import.meta.env.DEV;
 const labelFinish = (f: string, ko: boolean) => renewalFinishName(f, ko ? "ko" : "en");
+declare const __AU_JOURNAL_LINKS__: Record<string, { href: string; label: string }[]>;
+
+function RelatedJournal({ path }: { path: string }) {
+  const { t } = useAuLanguage();
+  const links = typeof __AU_JOURNAL_LINKS__ === "undefined" ? undefined : __AU_JOURNAL_LINKS__[path];
+  if (!links?.length) return null;
+  return (
+    <section className="au-related-reading">
+      <h2>{t("Related Journal", "관련 저널")}</h2>
+      <ul>{links.map(link => <li key={link.href}><a href={link.href}>{link.label}</a></li>)}</ul>
+    </section>
+  );
+}
+
 function cardPrice(card: RenewalCard, ko = false) {
   if (card.id === "mochi")
     return ko ? "개당 AUD 8.00부터" : "From AUD 8.00 each";
@@ -104,6 +118,7 @@ export function RenewalCollection({
           </article>
         ))}
       </div>
+      <RelatedJournal path={`/${category}`} />
     </main>
   );
 }
@@ -747,6 +762,7 @@ function Product({ card }: { card: RenewalCard }) {
         added={added}
       />
       <AuRenewalProductStory card={card} language={language} />
+      <RelatedJournal path={card.href.split("?")[0]} />
     </main>
   );
 }
@@ -799,6 +815,7 @@ function MochiProduct({ card }: { card: RenewalCard }) {
           </p>
         </section>
       </div>
+      <RelatedJournal path={card.href} />
     </main>
   );
 }
