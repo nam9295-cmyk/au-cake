@@ -1,0 +1,41 @@
+{
+  "id": "draft-19",
+  "slug": "mini-4-inch-whole-cakes-and-two-cake-hosting-guide",
+  "title": "Small cake, big moment: why the Mini 4-inch whole cake is changing how Sydney celebrates",
+  "seoTitle": "Mini 4-inch whole cakes for 2–8 guests in Sydney | verygood chocolate",
+  "excerpt": "Plan a Sydney celebration with a mini 4-inch Pavé or Brownie Basque cake for 2–4, or serve both for 6–8. Includes slicing, chilled transport and serving tips.",
+  "locale": "en-AU",
+  "status": "published",
+  "publishedAt": "2026-11-25T19:54:40+11:00",
+  "updatedAt": "2026-11-25T19:54:40+11:00",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-25T19:54:40+11:00"
+  },
+  "cover": {
+    "src": "assets/bd5e598150f6c608df383e20d92173bceb0c573554b8478e7bc5c5a07e5abd31.webp",
+    "alt": "Mini Pavé chocolate and vanilla cream Brownie Basque cakes beside espresso cups for scale."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 176,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 89,
+          "maxWidth": 600
+        },
+        {
+          "frame": 263,
+          "maxWidth": 360
+        }
+      ]
+    }
+  }
+}

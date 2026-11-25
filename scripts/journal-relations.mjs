@@ -2,8 +2,8 @@
 import { readdirSync, readFileSync } from 'node:fs'
 
 const topics = [
-  { path: '/cakes/pave-chocolate-cake', label: 'Pavé Chocolate Cake', ids: ['draft-09', 'draft-15', 'draft-18'] },
-  { path: '/cakes/brownie-cheesecake', label: 'Brownie Basque Cheesecake', ids: ['draft-18', 'draft-15', 'draft-09'] },
+  { path: '/cakes/pave-chocolate-cake', label: 'Pavé Chocolate Cake', ids: ['draft-19', 'draft-09', 'draft-15', 'draft-18'] },
+  { path: '/cakes/brownie-cheesecake', label: 'Brownie Basque Cheesecake', ids: ['draft-19', 'draft-18', 'draft-15', 'draft-09'] },
   { path: '/chocolates/chocolate-mochi', label: 'Chocolate Mochi', ids: ['draft-06', 'draft-16'] },
   { path: '/chocolates/almond-chocoball', label: 'Almond Chocolate', ids: ['draft-12', 'draft-01'] },
   { path: '/celebrate', label: 'Small Bites', ids: ['draft-11', 'draft-14', 'draft-17'] },
