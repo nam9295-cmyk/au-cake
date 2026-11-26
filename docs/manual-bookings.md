@@ -43,6 +43,8 @@ Expected private-calendar label for the example:
 
 Public lookup, create replay and customer-account readers explicitly reject manual records rather than returning a catalog-shaped success. Manual emails (including confirmation/retry/status actions) are disabled; scheduled reminders skip before recipient/delivery handling. Malformed manual rows cannot fall back to catalog labels. Administrator updates allow only pickup date/time, booking/payment status, and memo; changed pricing/line/coupon metadata is rejected before the repository SDK write.
 
+For explicitly paired cupcake/stick orders, the admin dashboard, list and drawer can show **sets** without changing the stored piece quantities. Use the operator packing sentence `기본 컵케이크 1개 + 스모어스틱 1개를 함께 포장 × N세트.` in `requestNote`, optionally followed by ` 세트당 AUD $U, 총 AUD $T.`. Both stored product quantities must equal N. An unmarked order, an inconsistent count or unrecognized prose remains a piece count; the production breakdown and price always come from the validated order, not the note.
+
 ## Verification
 
 ```sh

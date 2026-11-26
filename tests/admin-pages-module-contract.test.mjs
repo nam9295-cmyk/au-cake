@@ -89,7 +89,7 @@ test('extracted admin components depend downward on explicit lib modules only', 
 
 test('admin list and drawer expose every multi-line item and make repricing controls read-only', () => {
   assert.match(adminReservationsSource, /reservation\.orderLines\?\.map/)
-  assert.match(adminReservationsSource, /getReservationItemCount/)
+  assert.match(adminReservationsSource, /<td>\{formatAdminOrderQuantity\(reservation\)\}<\/td>/)
   assert.match(reservationDrawerSource, /<OrderDetailRows reservation=\{reservation\}/)
   assert.match(reservationDrawerSource, /const isVersionedOrder = Array\.isArray\(reservation\.orderLines\)/)
   assert.match(reservationDrawerSource, /disabled=\{hasOneTimeCoupon \|\| isVersionedOrder\}/)

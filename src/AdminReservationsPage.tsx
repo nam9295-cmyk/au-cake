@@ -28,7 +28,7 @@ import {
   updateReservation,
 } from './lib/repository'
 import { formatStoredCakeSizeLabel } from './lib/cake-serving'
-import { formatOrderLineSummary, getReservationItemCount } from './lib/order-lines'
+import { formatOrderLineSummary, formatAdminOrderQuantity } from './lib/order-lines'
 import type {
   Reservation,
   ReservationFilters,
@@ -267,7 +267,7 @@ export function AdminReservationsPage({
                 <td>{reservation.orderLines?.length ? '-' : reservationCacaoText(reservation)}</td>
                 <td>{reservation.orderLines?.length ? '-' : reservationChocolateText(reservation)}</td>
                 <td>{reservation.orderLines?.length ? '-' : reservationFinishText(reservation)}</td>
-                <td>{getReservationItemCount(reservation)}개</td>
+                <td>{formatAdminOrderQuantity(reservation)}</td>
                 <td>{reservation.pickupDate}</td>
                 <td>{reservation.pickupTime}</td>
                 <td className="note-cell">{reservation.requestNote || '-'}</td>

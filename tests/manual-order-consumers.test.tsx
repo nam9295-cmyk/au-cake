@@ -4,7 +4,7 @@ import React from 'react'
 import { escapeCsvCell } from '../src/lib/csv'
 import { ReservationDrawer } from '../src/ReservationDrawer'
 import { DEFAULT_SETTINGS } from '../src/lib/constants'
-import { buildAdminCalendarEvents } from '../src/lib/admin-calendar'
+import { buildAdminCalendarEvents, getDailyCalendarSummary } from '../src/lib/admin-calendar'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { toReservation, toPublicReservation } from '../src/lib/stored-order-reader'
 import { buildAdminReservationUpdate, assertReservationRepricingAllowed } from '../src/lib/admin-reservation-edit'
@@ -33,6 +33,31 @@ test('manual drawer hides catalog, review, email and automatic message controls'
  assert.doesNotMatch(html,/admin-repricing-fields|sms-preview|확정 문자 복사|리뷰 요청/)
  assert.match(html,/예약 수정 저장/)
 })
+const confirmedPacking = '기본 컵케이크 1개 + 스모어스틱 1개를 함께 포장 × 5세트. 세트당 AUD $10, 총 AUD $50.'
+
+test('explicit paired packing changes admin quantity units, not individual pieces or price', () => {
+  const order = toReservation({ ...doc, requestNote: confirmedPacking } as never)
+  const events = buildAdminCalendarEvents([order], [])
+  assert.equal(getDailyCalendarSummary(events), '5세트')
+  assert.match(events[0].title, /5세트/)
+  const drawer = renderToStaticMarkup(<ReservationDrawer reservation={order} settings={DEFAULT_SETTINGS} onClose={()=>{}} onCopy={async()=>{}} onSave={async()=>{}}/>)
+  assert.match(drawer, /주문 구성 · 5세트/)
+  assert.match(drawer, /Gâteau Cupcakes · Basic ×5/)
+  assert.match(drawer, /S’more Sticks ×5/)
+  assert.equal(order.orderItemCount, 10)
+  assert.equal(order.totalPriceCents, 5000)
+  const loose = toReservation(doc as never)
+  assert.equal(getDailyCalendarSummary(buildAdminCalendarEvents([order, loose], [])), 'Cake 10 · 5세트')
+  assert.equal(getDailyCalendarSummary(buildAdminCalendarEvents([{...order, status:'취소'}, loose], [])), 'Cake 10')
+})
+
+test('no inferred sets from equal lines, contradictory notes, or unrelated text', () => {
+  for (const requestNote of [null, '', '5세트', confirmedPacking.replace('5세트', '7세트'), confirmedPacking + ' 세트 취소']) {
+    const order = toReservation({ ...doc, requestNote } as never)
+    assert.equal(getDailyCalendarSummary(buildAdminCalendarEvents([order], [])), 'Cake 10')
+  }
+})
+
 test('manual operational edits never reprice and reject injected catalog changes',()=>{
  const r=toReservation(doc as never)
  const change={pickupDate:'2099-07-12',pickupTime:'11:00',adminMemo:'synthetic operational edit',status:'픽업완료' as const}

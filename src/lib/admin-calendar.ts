@@ -2,7 +2,7 @@ import { manualOrderSummary } from '../../appwrite-functions/reservation-api/src
 import { isRenewalContract, renewalProductName, type RenewalLine } from '../../appwrite-functions/reservation-api/src/au-renewal.js'
 import { getCupcakePackSize, getProductById, isCupcakeProduct } from './constants.js'
 import { formatCupcakeFinishText } from './i18n.js'
-import { formatOrderLineSummary, getReservationItemCount, getReservationOrderLines } from './order-lines.js'
+import { formatOrderLineSummary, getAdminPairedSetCount, getReservationItemCount, getReservationOrderLines } from './order-lines.js'
 import { formatClassBookingType, getClassCoursePlanLabel, getClassTypeLabel } from './class-utils.js'
 import type { CustomCakeLine, CustomCakeLookupResponse } from './custom-cake-contract.js'
 import type { ClassReservation, Reservation } from './types.js'
@@ -23,6 +23,7 @@ type RegularCakeDashboardEvent = {
   subtitle: string
   isCancelled: boolean
   itemCount: number
+  countUnit?: 'set'
   isCustomCake: false
   reservation: Reservation
 }
@@ -110,10 +111,14 @@ function shortProductName(productId: Reservation['productId']) {
 }
 
 function mapCakeReservation(reservation: Reservation): RegularCakeDashboardEvent {
-  if (reservation.manualOrder) return {
-    kind: 'cake', id: reservation.id, date: reservation.pickupDate, time: reservation.pickupTime,
-    title: `${reservation.customerName} · Manual booking`, subtitle: manualOrderSummary(reservation.manualOrder),
-    isCancelled: reservation.status === '취소', itemCount: reservation.orderItemCount!, isCustomCake: false, reservation,
+  if (reservation.manualOrder) {
+    const sets = getAdminPairedSetCount(reservation)
+    return {
+      kind: 'cake', id: reservation.id, date: reservation.pickupDate, time: reservation.pickupTime,
+      title: `${reservation.customerName} · ${sets === null ? 'Manual booking' : `${sets}세트`}`, subtitle: manualOrderSummary(reservation.manualOrder),
+      isCancelled: reservation.status === '취소', itemCount: sets ?? getReservationItemCount(reservation),
+      ...(sets === null ? {} : {countUnit: 'set' as const}), isCustomCake: false, reservation,
+    }
   }
   const product = getProductById(reservation.productId)
   const orderLines = getReservationOrderLines(reservation)
@@ -244,11 +249,11 @@ export function buildAdminCalendarEvents(
 
 export function getDailyCalendarSummary(events: AdminCalendarEvent[]) {
   const activeEvents = events.filter((event) => !event.isCancelled)
-  const cakeCount = activeEvents
-    .filter((event): event is Extract<AdminCalendarEvent, { kind: 'cake' }> => event.kind === 'cake')
-    .reduce((total, event) => total + event.itemCount, 0)
-  const classCount = activeEvents.filter((event) => event.kind === 'class').length
-
-  if (cakeCount === 0 && classCount === 0) return ''
-  return [`Cake ${cakeCount}`, `Class ${classCount}`].filter((label) => !label.endsWith(' 0')).join(' · ')
+  let cakeCount = 0, setCount = 0, classCount = 0
+  for (const event of activeEvents) {
+    if (event.kind === 'class') classCount++
+    else if (!event.isCustomCake && event.countUnit === 'set') setCount += event.itemCount
+    else cakeCount += event.itemCount
+  }
+  return [cakeCount && `Cake ${cakeCount}`, setCount && `${setCount}세트`, classCount && `Class ${classCount}`].filter(Boolean).join(' · ')
 }

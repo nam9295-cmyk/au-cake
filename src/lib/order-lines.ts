@@ -73,6 +73,23 @@ export function getReservationItemCount(reservation: Reservation) {
     ?? getReservationOrderLines(reservation).reduce((total, line) => total + line.quantity, 0)
 }
 
+// v1 stores pieces, not packs. Only the explicit operator packing template
+// declares pairs; matching quantities or an arbitrary mention of sets do not.
+export function getAdminPairedSetCount(reservation: Reservation): number | null {
+  const order = reservation.manualOrder
+  if (!order || order.lines.length !== 2 || typeof reservation.requestNote !== 'string') return null
+  const packing = /^기본 컵케이크 1개 \+ 스모어스틱 1개를 함께 포장 × ([1-9]\d{0,3})세트\.(?: 세트당 AUD \$\d+(?:\.\d{1,2})?, 총 AUD \$\d+(?:\.\d{1,2})?\.)?$/.exec(reservation.requestNote.trim())
+  if (!packing) return null
+  const count = Number(packing[1])
+  return ['gateau-cupcake-basic', 'smore-stick'].every(item =>
+    order.lines.some(line => line.item === item && line.quantity === count)) ? count : null
+}
+
+export function formatAdminOrderQuantity(reservation: Reservation) {
+  const sets = getAdminPairedSetCount(reservation)
+  return sets === null ? `${getReservationItemCount(reservation)}개` : `${sets}세트`
+}
+
 function formatLinePrice(cents: number) {
   if (marketConfig.market === 'AU') return `AUD ${(cents / 100).toFixed(2)}`
   return new Intl.NumberFormat(marketConfig.locale, {

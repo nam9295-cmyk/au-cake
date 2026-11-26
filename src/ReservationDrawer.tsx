@@ -7,6 +7,7 @@ import { OrderDetailRows } from './components/ProductDetailRows'
 import { ReviewInviteButton } from './ReviewInviteButton'
 import { BookingConfirmationEmailButton } from './BookingConfirmationEmailButton'
 import { buildAdminReservationUpdate } from './lib/admin-reservation-edit'
+import { formatAdminOrderQuantity } from './lib/order-lines'
 import {
   CAKE_SIZE_OPTIONS,
   CACAO_OPTIONS,
@@ -176,7 +177,7 @@ export function ReservationDrawer({
 
         {isVersionedOrder && (
           <section className="admin-order-summary" aria-label="서버 산출 주문 구성">
-            <h3>주문 구성 · {reservation.orderItemCount || reservation.orderLines?.reduce((total, line) => total + line.quantity, 0)}개</h3>
+            <h3>주문 구성 · {formatAdminOrderQuantity(reservation)}</h3>
             <dl className="detail-list order-detail-list">
               <OrderDetailRows reservation={reservation} language="en" />
             </dl>
