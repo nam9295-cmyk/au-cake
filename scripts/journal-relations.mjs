@@ -6,6 +6,8 @@ const topics = [
   { path: '/cakes/brownie-cheesecake', label: 'Brownie Basque Cheesecake', ids: ['draft-19', 'draft-18', 'draft-15', 'draft-09'] },
   { path: '/chocolates/chocolate-mochi', label: 'Chocolate Mochi', ids: ['draft-06', 'draft-16'] },
   { path: '/chocolates/almond-chocoball', label: 'Almond Chocolate', ids: ['draft-12', 'draft-01'] },
+  { path: '/chocolates/pave-chocolate', label: 'Pavé Chocolate Heart Tin', ids: ['draft-20'] },
+  { path: '/chocolates/eiffel-tower-chocolate', label: 'Eiffel Tower Chocolate', ids: ['draft-20'] },
   { path: '/celebrate', label: 'Small Bites', ids: ['draft-11', 'draft-14', 'draft-17'] },
   { path: '/cakes/smore-stick', label: 'S’more Sticks', ids: ['draft-17', 'draft-14'] },
 ]

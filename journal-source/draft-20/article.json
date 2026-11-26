@@ -1,0 +1,41 @@
+{
+  "id": "draft-20",
+  "slug": "pave-heart-tin-and-eiffel-tower-chocolate-gifts-and-addons-guide",
+  "title": "Velvety scoop or crisp snap? Choosing between our Pavé Heart Tin and Eiffel Tower Chocolate",
+  "seoTitle": "Pavé Heart Tin or Eiffel Tower Chocolate? Sydney gift guide | verygood chocolate",
+  "excerpt": "How our 100g Pavé Chocolate Heart Tin and 6-piece Eiffel Tower Chocolate work as standalone gifts, 5+1 sharing bundles, and effortless cake add-ons in Sydney.",
+  "locale": "en-AU",
+  "status": "published",
+  "publishedAt": "2026-11-26T21:40:52+11:00",
+  "updatedAt": "2026-11-26T21:40:52+11:00",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-26T21:40:52+11:00"
+  },
+  "cover": {
+    "src": "assets/0f0e227d19a7e703eb0b374bd9f550d01dd501783cd3daed39cd9ae4e31462c9.webp",
+    "alt": "An open red heart tin of cocoa-dusted Pavé chocolate beside six chocolate Eiffel Towers on gingham paper."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 174,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 88,
+          "maxWidth": 600
+        },
+        {
+          "frame": 260,
+          "maxWidth": 360
+        }
+      ]
+    }
+  }
+}
