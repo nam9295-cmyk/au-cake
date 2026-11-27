@@ -55,6 +55,17 @@ export function AuNavigation({
       BAG ({cartItemCount})
     </a>
   )
+  const instagram = (
+    <a className="au-v02-instagram" href="https://www.instagram.com/verygood_syd/" target="_blank" rel="noreferrer">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+      </svg>
+      <span>Instagram <b>@verygood_syd</b></span>
+      <ArrowUpRight size={15} aria-hidden="true" />
+    </a>
+  )
   return (
     <header
       className={`au-v02-header ${home ? 'rd-header' : 'au-redesign-header'}`}
@@ -69,6 +80,7 @@ export function AuNavigation({
       </nav>
       <div className="au-v02-actions">
         <span className="au-v02-studio">MELROSE PARK STUDIO</span>
+        {instagram}
         <AuLanguageToggle />
         {customer.enabled && (customer.state.status === 'authenticated' ? <a className="customer-account-nav" href="/account">ACCOUNT</a> : <button className="customer-account-nav" type="button" onClick={customer.openSignIn}>SIGN IN</button>)}
         {bag}
@@ -149,37 +161,9 @@ export function AuNavigation({
               </a>
             ))}
           </nav>
-          <div className="au-v02-menu-secondary">
-            <a href="/classes" onClick={() => setOpen(false)}>
-              {t('Kids Classes', '키즈 클래스')}{' '}
-              <small>{t('Temporarily Paused', '일시 휴강')}</small>
-            </a>
-            <p>
-              {t(
-                'Currently paused. Next school holiday dates will be announced once confirmed.',
-                '현재 휴강 중입니다. 다음 방학 일정은 확정 후 안내합니다.',
-              )}
-            </p>
-            <nav aria-label="More navigation">
-              <a href="/classes" onClick={() => setOpen(false)}>{t('View class archive', '클래스 아카이브 보기')}</a>
-              <a href="/#story">{t('Our Story', '브랜드 이야기')}</a>
-              <a href="/reviews" onClick={() => setOpen(false)}>
-                {t('Reviews', '후기')}
-              </a>
-              <a href="/lookup" onClick={() => setOpen(false)}>
-                {t('Order Lookup', '주문 조회')}
-              </a>
-            </nav>
-          </div>
+          {instagram}
           <div className="au-v02-menu-bottom">
             <AuLanguageToggle />
-            <a
-              href="https://www.instagram.com/verygood_syd/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Instagram @verygood_syd
-            </a>
           </div>
         </div>
       </dialog>

@@ -191,59 +191,54 @@
   border-color: #c2dacf;
   background: #f4f8f5;
 }
-.au-v02-header .au-v02-menu-secondary {
-  margin-top: 16px;
-  padding: 14px;
-  border: 1px solid #e8e4e5;
-  border-radius: 6px;
-  background: #faf7f5;
-}
-.au-v02-header .au-v02-menu-secondary > a {
+.au-v02-header a.au-v02-instagram {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   min-height: 44px;
-  font-weight: 700;
-}
-.au-v02-header .au-v02-menu-secondary small {
-  font-size: 11px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1px solid #c2dacf;
+  border-radius: 6px;
+  background: #f4f8f5;
   color: #1f5a46;
-}
-.au-v02-header .au-v02-menu-secondary p {
-  margin: 4px 0 12px;
   font-size: 13px;
-  line-height: 1.5;
-  color: #6a6264;
+  white-space: nowrap;
 }
-.au-v02-header .au-v02-menu-secondary nav {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  border-top: 1px solid #e8e4e5;
+.au-v02-header a.au-v02-instagram:hover {
+  background: #e6f0e9;
 }
-.au-v02-header .au-v02-menu-secondary nav a {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  font-size: 14px;
+.au-v02-header .au-v02-menu-panel > .au-v02-instagram {
+  margin-top: 10px;
+  padding: 14px;
+  font-size: 16px;
+}
+.au-v02-header .au-v02-menu-panel > .au-v02-instagram > svg:last-child {
+  margin-left: auto;
 }
 .au-v02-header .au-v02-menu-bottom {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
   margin-top: 16px;
-  font-size: 12px;
 }
-@media (max-width: 1240px) {
+@media (max-width: 1460px) {
   .au-v02-header .au-v02-studio {
     display: none;
   }
 }
+@media (min-width: 1100px) and (max-width: 1280px) {
+  .au-v02-header.au-v02-header {
+    gap: 16px;
+    padding-inline: 24px;
+  }
+  .au-v02-header .au-v02-primary,
+  .au-v02-header .au-v02-actions {
+    gap: 12px;
+  }
+}
 @media (max-width: 1099px) {
+  .au-v02-header .au-v02-actions > .au-v02-instagram {
+    display: none;
+  }
   .au-v02-header.au-v02-header {
     height: 60px;
     min-height: 60px;

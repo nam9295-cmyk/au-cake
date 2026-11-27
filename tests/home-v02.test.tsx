@@ -70,7 +70,7 @@ test('Whole Cakes defaults to four catalogue products; Custom and Coming Soon ar
   assert.doesNotMatch(html, /href="\/cakes\/custom-cake"/)
 })
 
-test('shared AU header includes Journal alongside existing destinations and paused classes stay auxiliary', () => {
+test('shared AU header includes Journal alongside existing destinations and highlights Instagram on desktop and mobile', () => {
   const html = render(<AuRedesignHeader cartItemCount={2} />)
   const nav = html.match(
     /<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/,
@@ -80,10 +80,11 @@ test('shared AU header includes Journal alongside existing destinations and paus
     ['/cakes','/chocolates','/celebrate','/custom-cakes','/business','/journal'],
   )
   assert.doesNotMatch(nav, /\/classes/)
-  assert.match(html, /Temporarily Paused/)
-  assert.match(html, /href="\/classes"/)
-  assert.match(html, /href="\/reviews"/)
-  assert.match(html, /href="\/lookup"/)
+  assert.doesNotMatch(html, /Temporarily Paused|href="\/(?:classes|reviews|lookup|#story)"/)
+  const [desktop, mobile] = html.split('<dialog')
+  for (const part of [desktop, mobile]) {
+    assert.match(part, /href="https:\/\/www\.instagram\.com\/verygood_syd\/"/)
+  }
   assert.match(html, /Language \/ 언어/)
   assert.match(html, /href="\/cart"/)
 })

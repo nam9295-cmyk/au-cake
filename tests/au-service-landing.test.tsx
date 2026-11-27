@@ -46,21 +46,22 @@ for (const language of ['en', 'ko'] as const) {
     assert.doesNotMatch(html, /<form\b|href="\/reserve"|href="\/business"/)
   })
 
-  test(`kids classes remain visible in the menu and home with a separate archive action (${language})`, () => {
+  test(`kids classes stay in the home footer and Instagram follows Journal in the menu (${language})`, () => {
     const menu = render(<AuNavigation cartItemCount={0} />, language)
-      .match(/<div class="au-v02-menu-secondary">([\s\S]*?)<\/nav>/)?.[1]
+      .split('<dialog')[1]
+    assert.ok(menu)
+    assert.doesNotMatch(menu, /href="\/classes"/)
+    assert.deepEqual(links(menu).map(([, href]) => href).slice(-2), ['/journal', 'https://www.instagram.com/verygood_syd/'])
     const home = render(<HomePage language={language} setLanguage={() => {}} navigate={() => {}}
       navigateToCake={() => {}} cartItemCount={0} />, language)
       .match(/<div class="au-v02-footer-links">([\s\S]*?)<\/nav>/)?.[1]
-    for (const html of [menu, home]) {
-      assert.ok(html)
-      assert.match(html, language === 'en' ? /Kids Classes|KIDS CLASSES/ : /키즈 클래스/)
-      assert.match(html, language === 'en'
+    assert.ok(home)
+    assert.match(home, language === 'en' ? /Kids Classes|KIDS CLASSES/ : /키즈 클래스/)
+    assert.match(home, language === 'en'
         ? /Currently paused\. Next school holiday dates will be announced once confirmed\./
         : /현재 휴강 중입니다\. 다음 방학 일정은 확정 후 안내합니다\./)
-      assert.ok(links(html).some(([, href, label]) => href === '/classes' && /archive|아카이브/i.test(label)))
-      assert.ok(links(html).every(([, , label]) => !/Currently paused\.|현재 휴강 중입니다\./.test(label)))
-      assert.doesNotMatch(html, /href="(?:\/classes\/reserve|\/class-reserve)"/)
-    }
+    assert.ok(links(home).some(([, href, label]) => href === '/classes' && /archive|아카이브/i.test(label)))
+    assert.ok(links(home).every(([, , label]) => !/Currently paused\.|현재 휴강 중입니다\./.test(label)))
+    assert.doesNotMatch(home, /href="(?:\/classes\/reserve|\/class-reserve)"/)
   })
 }
