@@ -109,7 +109,7 @@ async (page) => {
     const seasonal = await page.context().browser().newContext({ viewport: probe.viewportSize() })
     try {
       const tab = await seasonal.newPage()
-      const campaignDay = new Date('2026-12-02T10:00:00+11:00')
+      const campaignDay = new Date('2026-11-28T20:46:43+11:00')
       await tab.clock.setFixedTime(campaignDay)
       await tab.goto(origin)
       const topNotice = tab.getByRole('dialog')
@@ -137,7 +137,7 @@ async (page) => {
       await cake.waitFor()
       await cake.getByRole('link', { name: 'Shop Pavé' }).click()
       await secondTab.waitForURL(url => url.pathname === '/cakes/pave-chocolate-cake' && url.searchParams.get('size') === '4in')
-      await tab.clock.setFixedTime(new Date('2026-12-03T00:01:00+11:00'))
+      await tab.clock.setFixedTime(new Date('2026-11-29T00:01:00+11:00'))
       await tab.goto(origin)
       await checkFront('4 Boxes of Almond Chocolates')
       await topNotice.getByRole('link', { name: 'Shop the gift set' }).click()

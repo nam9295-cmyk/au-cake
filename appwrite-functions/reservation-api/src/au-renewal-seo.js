@@ -52,13 +52,14 @@ const giftStarts = new Date(ALMOND_SALE_START);
 const giftEnds = new Date(ALMOND_SALE_END);
 const lastGiftInstant = new Date(giftEnds.getTime() - 1);
 const sydneyDay = new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Australia/Sydney' });
+const sydneyTime = new Intl.DateTimeFormat('en-AU', { hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' });
 
 function publicPrice(choice, now) {
   if (choice.id !== ALMOND_GIFT_BOX_ID || (now && now >= giftEnds)) return 'AUD ' + money(choice.price);
-  return `Regular AUD ${money(choice.price)}. Early bird AUD ${money(ALMOND_GIFT_BOX_SALE_CENTS)} from ${sydneyDay.format(giftStarts)} to ${sydneyDay.format(lastGiftInstant)} (Sydney), while promotional stock lasts`;
+  return `Regular AUD ${money(choice.price)}. Early bird AUD ${money(ALMOND_GIFT_BOX_SALE_CENTS)} from ${sydneyDay.format(giftStarts)} at ${sydneyTime.format(giftStarts)} to ${sydneyDay.format(lastGiftInstant)} (Sydney), while promotional stock lasts`;
 }
 
-// Date-bound the prices in the static output so it remains accurate across both midnights.
+// Date-bound each price so the static output stays accurate across the campaign boundaries.
 function structuredOffers(choice, siteUrl, season, now) {
   const offer = {'@type':'Offer', name:choice.name, price:money(choice.price), priceCurrency:'AUD', url:siteUrl+choice.url};
   if (season) return [{...offer, validThrough:season.deadline, priceValidUntil:season.deadline.slice(0,10)}];

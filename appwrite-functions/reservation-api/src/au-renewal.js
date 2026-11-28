@@ -1,7 +1,7 @@
 // Current AU pricing; historical contracts keep their original sizes, options and prices.
 import { ReservationApiError } from "./reservation-error.js";
 export const ALMOND_GIFT_BOX_ID = 'almond-triangle-gift-4x60g';
-export const ALMOND_SALE_START = '2026-11-30T00:00:00+11:00';
+export const ALMOND_SALE_START = '2026-11-28T20:46:43+11:00';
 export const ALMOND_SALE_END = '2026-12-07T00:00:00+11:00';
 export const ALMOND_GIFT_BOX_REGULAR_CENTS = 5000;
 export const ALMOND_GIFT_BOX_SALE_CENTS = 4000;

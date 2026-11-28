@@ -115,8 +115,8 @@ test('Home membership agrees with the four/four/four renewal catalogue',()=>{
 })
 
 // SSR-rendered card exercises bilingual markup; session lifecycle/Escape tested in Chrome.
-test('Home notice switches at Sydney midnight and keeps bilingual campaign dismissals independent', async (t) => {
-  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-11-29T23:59:59+11:00') })
+test('Home notice switches at the Sydney launch time and keeps bilingual campaign dismissals independent', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-11-28T20:46:42.999+11:00') })
   const { MiniCakeLaunchNotice } = await import('../src/components/MiniCakeLaunchNotice')
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
   const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage')
@@ -140,13 +140,17 @@ test('Home notice switches at Sydney midnight and keeps bilingual campaign dismi
       assert.match(html, language === 'ko' ? /공지 닫기/ : /Dismiss announcement/)
       assert.match(html, /<dialog/); assert.match(html, language === 'ko' ? /오늘 하루 안 보기/ : /Don&#x27;t show again today/)
     }
-    hiddenDays.set('au-mini-cake-launch-hidden-day', '2026-11-29')
+    hiddenDays.set('au-mini-cake-launch-hidden-day', '2026-11-28')
     assert.equal(renderToStaticMarkup(<MiniCakeLaunchNotice language="en" />), '')
     hiddenDays.clear()
-    seenDays.set('au-mini-cake-launch-seen-v2', '2026-11-29')
+    seenDays.set('au-mini-cake-launch-seen-v2', '2026-11-28')
     assert.equal(renderToStaticMarkup(<MiniCakeLaunchNotice language="en" />), '')
 
-    t.mock.timers.setTime(Date.parse('2026-11-30T00:00:00+11:00'))
+    t.mock.timers.setTime(Date.parse('2026-11-28T20:46:43+11:00'))
+    const returning = renderToStaticMarkup(<MiniCakeLaunchNotice language="en" />)
+    assert.match(returning, /data-campaign="almonds"/)
+    assert.doesNotMatch(returning, /data-campaign="cakes"/)
+    seenDays.clear()
     const stack = renderToStaticMarkup(<MiniCakeLaunchNotice language="en" />)
     const dialogs = [...stack.matchAll(/<dialog\b[\s\S]*?<\/dialog>/g)].map(([markup]) => markup)
     assert.equal(dialogs.length, 2)
@@ -161,8 +165,8 @@ test('Home notice switches at Sydney midnight and keeps bilingual campaign dismi
       }
     }
     // A previously dismissed cake announcement cannot suppress the new campaign.
-    hiddenDays.set('au-mini-cake-launch-hidden-day', '2026-11-30')
-    seenDays.set('au-mini-cake-launch-seen-v2', '2026-11-30')
+    hiddenDays.set('au-mini-cake-launch-hidden-day', '2026-11-28')
+    seenDays.set('au-mini-cake-launch-seen-v2', '2026-11-28')
     for (const language of ['en', 'ko'] as const) {
       const html = renderToStaticMarkup(<MiniCakeLaunchNotice language={language} />)
       assert.match(html, /href="\/chocolates\/almond-chocoball\?offer=almond-triangle-gift-4x60g"/)
@@ -178,7 +182,7 @@ test('Home notice switches at Sydney midnight and keeps bilingual campaign dismi
       assert.match(html, language === 'ko' ? /크림색 선물 상자의 뚜껑/ : /cream gift box lid/)
       assert.doesNotMatch(html, /strawberry-popup/)
     }
-    hiddenDays.set('au-almond-gift-2026-hidden-day', '2026-11-30')
+    hiddenDays.set('au-almond-gift-2026-hidden-day', '2026-11-28')
     assert.equal(renderToStaticMarkup(<MiniCakeLaunchNotice language="en" />), '')
     hiddenDays.delete('au-mini-cake-launch-hidden-day')
     seenDays.delete('au-mini-cake-launch-seen-v2')

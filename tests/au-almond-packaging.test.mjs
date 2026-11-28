@@ -8,8 +8,8 @@ import { readRenewalDocument } from '../appwrite-functions/reservation-api/src/a
 
 const single = { lineId: 'a', offerId: 'almond-chocoball-80g', quantity: 1 }
 const gift = { ...single, offerId: ALMOND_GIFT_BOX_ID }
-const before = new Date('2026-11-29T12:59:59.999Z')
-const starts = new Date('2026-11-29T13:00:00Z')
+const before = new Date('2026-11-28T09:46:42.999Z')
+const starts = new Date('2026-11-28T09:46:43Z')
 const last = new Date('2026-12-06T12:59:59.999Z')
 const ends = new Date('2026-12-06T13:00:00Z')
 
