@@ -1211,3 +1211,30 @@ test('health exceptions map to one generic 503 while non-health failures retain 
     code: 'INVALID_PHONE', status: 400,
   })
 })
+
+for (const manual of [false, true]) {
+  test(`almond sale excludes the gift box from ${manual ? 'manual' : 'review'} coupons and preserves its receipt after expiry`, async () => {
+    const db = createDatabaseDouble({ couponDocument: manual ? manualCoupon() : coupon() })
+    const options = { now: new Date('2026-12-06T12:59:59Z'), runtimeConfig, chocolateWritesEnabled: true, renewalPolicy: { enabled: true } }
+    const request = {
+      requestId, contractVersion: 'au-renewal.2026-11.v3', privacyConsent: true, expectedAlmondGiftBoxPriceCents: 4000,
+      customerName: cakeInput.customerName, customerPhone: cakeInput.customerPhone, customerEmail: cakeInput.customerEmail,
+      pickupDate: '2026-12-09', pickupTime: '10:00', promoCode: manual ? manualCode : rawCode,
+      orderLines: [{ lineId: 'gift', offerId: 'almond-triangle-gift-4x60g', quantity: 1 }],
+    }
+    await assert.rejects(createCake(db, request, options), assertApiCode('PROMO_CODE_INVALID'))
+    assert.equal(db.documents.size, 0)
+    assert.equal(db.coupon.status, 'active')
+    request.orderLines.push({ lineId: 'pouch', offerId: 'almond-chocoball-80g', quantity: 1 })
+    const receipt = await createCake(db, request, options)
+    assert.equal(receipt.discountBasisCents, 1200)
+    assert.equal(receipt.totalPriceCents, 5140)
+    const stored = db.documents.get(requestId)
+    stored.$createdAt = '2026-12-06T13:00:01Z'
+    assert.equal(publicCakeReservation(stored).totalPriceCents, receipt.totalPriceCents)
+    const replay = await createCake(db, { ...request, expectedAlmondGiftBoxPriceCents: 5000 },
+      { ...options, now: new Date(stored.$createdAt) })
+    assert.deepEqual(replay, receipt)
+    assert.equal(db.calls.filter(([name]) => name === 'updateDocument').length, 1)
+  })
+}

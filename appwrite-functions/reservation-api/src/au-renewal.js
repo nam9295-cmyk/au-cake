@@ -1,5 +1,23 @@
 // Current AU pricing; historical contracts keep their original sizes, options and prices.
 import { ReservationApiError } from "./reservation-error.js";
+export const ALMOND_GIFT_BOX_ID = 'almond-triangle-gift-4x60g';
+export const ALMOND_SALE_START = '2026-11-30T00:00:00+11:00';
+export const ALMOND_SALE_END = '2026-12-07T00:00:00+11:00';
+export const ALMOND_GIFT_BOX_REGULAR_CENTS = 5000;
+export const ALMOND_GIFT_BOX_SALE_CENTS = 4000;
+
+const startsAt = Date.parse(ALMOND_SALE_START);
+const endsAt = Date.parse(ALMOND_SALE_END);
+
+export function isAlmondGiftSaleActive(now = new Date()) {
+  const timestamp = now.getTime();
+  return timestamp >= startsAt && timestamp < endsAt;
+}
+
+export function almondGiftBoxPriceCents(now = new Date()) {
+  return isAlmondGiftSaleActive(now) ? ALMOND_GIFT_BOX_SALE_CENTS : ALMOND_GIFT_BOX_REGULAR_CENTS;
+}
+
 export const RENEWAL_CONTRACT = "au-renewal.2026-11.v3";
 const OCTOBER_CONTRACT = "au-renewal.2026-10.v2";
 const HISTORICAL_CONTRACT = "au-renewal.2026-10.v1";
@@ -89,6 +107,9 @@ export const RENEWAL_OFFERS = Object.freeze({
     newProduct: true,
   }),
   "almond-chocoball-80g": offer("Almond Chocolate · 80g", 1200),
+  "almond-triangle-60g": offer("Almond Chocolate · Triangle Box 60g", 1200, 1, { almondTriangle: true }),
+  "almond-triangle-6pack": offer("Almond Chocolate · 6 Triangle Boxes × 60g (5+1)", 6000, 6, { almondTriangle: true, bundle: true }),
+  [ALMOND_GIFT_BOX_ID]: offer("Almond Chocolate · Gift Box of 4 Triangle Boxes × 60g", ALMOND_GIFT_BOX_REGULAR_CENTS, 4, { almondTriangle: true }),
   "almond-chocoball-6pack": offer("Almond Chocolate · 80g × 6 (5+1)", 6000, 6, {
     bundle: true,
   }),
@@ -130,6 +151,7 @@ const HISTORICAL_WHOLE_SIZES = Object.freeze({
 });
 function offerForPolicy(offerId, contractVersion) {
   const current = RENEWAL_OFFERS[offerId];
+  if (contractVersion !== RENEWAL_CONTRACT && current?.almondTriangle) return undefined;
   if (contractVersion === RENEWAL_CONTRACT || !HISTORICAL_WHOLE_SIZES[offerId]) return current;
   return {
     ...current,
@@ -199,6 +221,7 @@ export function mochiFlavourName(id, language = "en") {
   return MOCHI_PUBLIC_NAMES[id]?.[language === "ko" ? 1 : 0] || id;
 }
 export function renewalProductName(line, language = "en") {
+  if (line.productId === "almond-chocoball-6pack") return language === "ko" ? "아몬드 초콜릿 · 80g 파우치 5+1" : "Almond Chocolate · 6 Pouches × 80g (5+1)";
   return line.productId === "mochi" ? (language === "ko" ? "파베 모찌" : "Chocolate Mochi") : line.productName;
 }
 export const MOCHI_DISPLAY_FLAVOURS = Object.freeze([
@@ -275,11 +298,10 @@ export function normalizeRenewalLines(value, { storedOnly = false, contractVersi
       quantity: input.quantity,
     };
     const singleAlmond = input.offerId === "almond-chocoball-80g";
-    const tubAlmond = input.offerId === "almond-chocoball-black-tub-2x80g";
-    if (input.almondPackaging !== undefined &&
-        (!singleAlmond && !tubAlmond || !["pouch", "triangle-box"].includes(input.almondPackaging) ||
-         tubAlmond && input.almondPackaging !== "pouch")) fail("INVALID_PACKAGING");
-    if ((singleAlmond || tubAlmond) && (!storedOnly || input.almondPackaging !== undefined)) line.almondPackaging = input.almondPackaging ?? "pouch";
+    const pouchAlmond = singleAlmond || input.offerId === "almond-chocoball-black-tub-2x80g";
+    const legacyTriangle = storedOnly && singleAlmond && input.almondPackaging === "triangle-box";
+    if (input.almondPackaging !== undefined && !(pouchAlmond && input.almondPackaging === "pouch") && !legacyTriangle) fail("INVALID_PACKAGING");
+    if (pouchAlmond && (!storedOnly || input.almondPackaging !== undefined)) line.almondPackaging = input.almondPackaging ?? "pouch";
     if (p.sizes) {
       if (!Object.hasOwn(p.sizes, input.size)) fail("INVALID_SIZE");
       line.size = input.size;
@@ -355,7 +377,7 @@ export function normalizeRenewalLines(value, { storedOnly = false, contractVersi
 }
 export function priceRenewalOrder(
   value,
-  { localPreview = false, reviewCoupon, contractVersion = RENEWAL_CONTRACT, storedOnly = false } = {},
+  { localPreview = false, reviewCoupon, contractVersion = RENEWAL_CONTRACT, storedOnly = false, now = new Date(), storedGiftBoxPriceCents } = {},
 ) {
   if (!isRenewalContract(contractVersion)) fail("UNSUPPORTED_CONTRACT");
   const normalized = normalizeRenewalLines(value, { storedOnly, contractVersion });
@@ -374,6 +396,10 @@ export function priceRenewalOrder(
       unitPriceCents += wholeCakeToppingSurchargeCents(selection.offerId, selection.size, selection.finish);
     else if (p.cream && selection.finish === "vanilla-fresh-cream")
       unitPriceCents += 1000;
+    if (selection.offerId === ALMOND_GIFT_BOX_ID) {
+      unitPriceCents = storedOnly ? storedGiftBoxPriceCents : almondGiftBoxPriceCents(now);
+      if (![ALMOND_GIFT_BOX_REGULAR_CENTS, ALMOND_GIFT_BOX_SALE_CENTS].includes(unitPriceCents)) fail("INVALID_STORED_ORDER");
+    }
     if (p.family === "lemon") unitPriceCents += selection.chocolateIcingCount * 50;
     let physicalQuantity = safeAmount(p.pieces * selection.quantity);
     let flavourTotals = [];
@@ -431,7 +457,8 @@ export function priceRenewalOrder(
   const eligible = base.filter((l) => {
     const p = offerForLine(l);
     return (
-      !p.addon && !p.bundle && !["mochi", "smore", "cookie"].includes(p.family)
+      !p.addon && !p.bundle && !["mochi", "smore", "cookie"].includes(p.family) &&
+      !(l.productId === ALMOND_GIFT_BOX_ID && l.unitPriceCents === ALMOND_GIFT_BOX_SALE_CENTS)
     );
   });
   let discountBasisCents = 0;

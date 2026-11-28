@@ -3,6 +3,7 @@ import {
   isRenewalContract,
   RENEWAL_MAX_BYTES,
   priceRenewalOrder,
+  ALMOND_GIFT_BOX_ID,
 } from "./au-renewal.js";
 import { ReservationApiError } from "./reservation-error.js";
 function invalid() {
@@ -40,11 +41,15 @@ export function readRenewalDocument(document) {
         !/^[A-Z0-9]{4}$/.test(document.appliedPromoCodeLast4 || ""))
     )
       invalid();
+    // Replay the accepted gift price even if the promotion later closes early.
+    // The contract validates its two allowed amounts, all lines and totals.
+    const giftBox = payload.lines.find(line => line.productId === ALMOND_GIFT_BOX_ID);
     const expected = priceRenewalOrder(
       payload.lines.map((l) => l.selection),
       {
         localPreview: true,
         storedOnly: true,
+        storedGiftBoxPriceCents: giftBox?.unitPriceCents,
         contractVersion: payload.policyVersion,
         reviewCoupon: payload.discountPercent
           ? { rewardPercent: payload.discountPercent }

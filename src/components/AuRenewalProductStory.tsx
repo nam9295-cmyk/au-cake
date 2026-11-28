@@ -50,8 +50,8 @@ export function AuRenewalProductStory({ card, language }: { card: RenewalCard; l
   const ko = language === 'ko'
   const editorial = renewalEditorial(card, language)
   const features = card.id === 'almond' ? (ko
-    ? ['통아몬드', '초콜릿 코팅', '80g 파우치 또는 삼각박스 · 5+1 · 블랙 통 80g × 2']
-    : ['A whole almond centre', 'Chocolate coating', '80g pouch or triangle box · 5+1 packs · Black Tub 2 × 80g'])
+    ? ['통아몬드', '초콜릿 코팅', '80g 파우치와 60g 삼각박스 · 단품 또는 5+1 · 파우치 2개입 블랙 통과 삼각박스 4개입 선물 박스']
+    : ['A whole almond centre', 'Chocolate coating', '80g pouches and 60g triangle boxes · Singles and 5+1 bundles · Two-pouch tubs and four-piece gift boxes'])
     : card.id === 'smore' ? (ko
       ? ['스틱 마시멜로 디저트', '커버춰 초콜릿 코팅', '6개 또는 12개 팩']
       : ['Marshmallow on a stick', 'Couverture chocolate coating', 'Packs of 6 or 12']) : []

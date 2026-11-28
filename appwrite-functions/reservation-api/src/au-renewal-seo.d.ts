@@ -11,6 +11,7 @@ export function renewalSeoPages(
     cakePages: Record<string, unknown>;
   },
   home?: typeof import('../../../src/content/au-home-v02.json'),
+  at?: Date | string | number,
 ): Record<
   string,
   {

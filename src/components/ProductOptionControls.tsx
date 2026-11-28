@@ -65,10 +65,14 @@ export function QuantityStepper({
 }
 export function ProductPhoto({
   src,
+  srcSet,
+  sizes,
   label,
   option = false,
 }: {
   src?: string;
+  srcSet?: string;
+  sizes?: string;
   label: string;
   option?: boolean;
 }) {
@@ -76,7 +80,7 @@ export function ProductPhoto({
   return (
     <div className={option ? "renewal-option-photo" : "renewal-product-photo"}>
       {src ? (
-        <img src={src} alt={label} loading={option ? "lazy" : "eager"} />
+        <img src={src} srcSet={srcSet} sizes={sizes} alt={label} loading={option ? "lazy" : "eager"} />
       ) : (
         <div
           className="renewal-photo-slot"

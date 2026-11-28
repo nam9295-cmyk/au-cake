@@ -90,3 +90,12 @@
 @media (prefers-reduced-motion:reduce) {
   .au-product-detail [data-detail-reveal] { transition: none; transform: none; opacity: 1; }
 }
+
+/* Keep the packaging and all four inserts visible in landscape gallery frames. */
+.au-product-detail [data-product-gallery="almond"] .au-pave-gallery-main > img { object-fit: contain; }
+@media (min-width: 768px) {
+  .au-product-detail [data-product-gallery="almond"] .au-pave-thumbnails { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .renewal-detail [data-product-gallery="almond"] .au-pave-thumbnails button { flex: 0 1 44px; min-width: 0; }
+}

@@ -29,6 +29,7 @@ export interface RenewalOffer {
   provisionalSizes?: string[];
   addon?: boolean;
   bundle?: boolean;
+  almondTriangle?: boolean;
 }
 export interface RenewalLine {
   selection: RenewalSelection;
@@ -76,6 +77,8 @@ export function priceRenewalOrder(
   options?: {
     localPreview?: boolean;
     storedOnly?: boolean;
+    now?: Date;
+    storedGiftBoxPriceCents?: number;
     reviewCoupon?: { rewardPercent: number };
     contractVersion?: string;
   },
@@ -91,3 +94,11 @@ export function renewalFinishName(finish: string, language?: string): string;
 export function renewalSizeName(size: string | undefined, language?: string): string | undefined;
 
 export function almondPackagingName(value: string, language?: string): string;
+
+export const ALMOND_GIFT_BOX_ID: 'almond-triangle-gift-4x60g';
+export const ALMOND_SALE_START: string;
+export const ALMOND_SALE_END: string;
+export const ALMOND_GIFT_BOX_REGULAR_CENTS: number;
+export const ALMOND_GIFT_BOX_SALE_CENTS: number;
+export function isAlmondGiftSaleActive(now?: Date): boolean;
+export function almondGiftBoxPriceCents(now?: Date): number;

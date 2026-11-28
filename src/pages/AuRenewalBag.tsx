@@ -14,10 +14,16 @@ import { isAppwriteConfigured } from "../lib/appwrite";
 import type { StoreSettings } from "../lib/types";
 import { formatAudCents } from "../lib/utils";
 import { RENEWAL_CARDS, HALLOWEEN_MERINGUE_CARD, halloweenMeringueAvailable, isHalloweenMeringue } from "../../appwrite-functions/reservation-api/src/au-renewal-catalog.js";
-import { almondPackagingName, RENEWAL_CONTRACT, RENEWAL_OFFERS, MOCHI_FLAVOURS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName, renewalProductName, renewalFinishName, renewalSizeName, priceRenewalOrder } from "../../appwrite-functions/reservation-api/src/au-renewal.js";
+import { ALMOND_GIFT_BOX_ID, almondGiftBoxPriceCents, RENEWAL_CONTRACT, RENEWAL_OFFERS, MOCHI_FLAVOURS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName, renewalProductName, renewalFinishName, renewalSizeName, priceRenewalOrder } from "../../appwrite-functions/reservation-api/src/au-renewal.js";
 import { renewalPickupSlots } from "../../appwrite-functions/reservation-api/src/au-renewal-pickup.js";
 import { createRenewalOrder, renewalCapabilities } from "../lib/renewal-client";
+import { almondPacks } from "../lib/almond-packs";
+import { useAlmondGiftSale } from "../lib/use-almond-gift-sale";
 import { renewalSelectionHref } from "../lib/renewal-cart";
+
+function currentOrderTime(serverOffsetMs: number) {
+  return new Date(Date.now() + serverOffsetMs);
+}
 
 function displaySummary(
   line: ReturnType<typeof priceRenewalOrder>["lines"][number],
@@ -30,10 +36,10 @@ function displaySummary(
     (l) => l.selection.lineId === line.selection.parentLineId,
   );
   return [
-    ko ? card?.ko || renewalProductName(line, "ko") : renewalProductName(line),
+    card?.id === "almond" ? `${ko ? card.ko : card.en} · ${almondPacks[line.productId][ko ? "ko" : "en"]}` :
+      ko ? card?.ko || renewalProductName(line, "ko") : renewalProductName(line),
     renewalSizeName(line.selection.size, ko ? "ko" : "en"),
     line.selection.chocolateType ? (line.selection.chocolateType === "milk" ? (ko ? "밀크" : "Milk") : (ko ? "다크" : "Dark")) : null,
-    line.selection.almondPackaging ? almondPackagingName(line.selection.almondPackaging, ko ? "ko" : "en") : null,
     renewalFinishName(line.selection.finish || "basic", ko ? "ko" : "en"),
     `${line.quantity}${ko ? "팩" : " pack(s)"} / ${line.physicalQuantity}${ko ? "개" : " pieces"}`,
     line.selection.mode
@@ -95,7 +101,9 @@ function Bag({ settings }: { settings: StoreSettings }) {
     enabled: false,
     preordersEnabled: false,
     weekendApproved: true,
+    serverOffsetMs: 0,
   });
+  const almondSale = useAlmondGiftSale(caps.serverOffsetMs);
   const [pickupNow, setPickupNow] = useState(() => new Date());
   useEffect(() => {
     const refresh = () => setPickupNow(new Date());
@@ -142,10 +150,12 @@ function Bag({ settings }: { settings: StoreSettings }) {
   const lines = [...cart.renewalLines];
   let quote: ReturnType<typeof priceRenewalOrder> | null = null;
   try {
-    if (lines.length) quote = priceRenewalOrder(lines, { localPreview: true });
+    if (lines.length) quote = priceRenewalOrder(lines, { localPreview: true, now: currentOrderTime(caps.serverOffsetMs) });
   } catch {
     /* keep invalid cart visible for correction */
   }
+  const giftLine = quote?.lines.find(line => line.productId === ALMOND_GIFT_BOX_ID);
+  const giftPriceChanged = t("The gift box price has changed. Review your updated total before sending your request.", "선물 박스 가격이 변경되었습니다. 새 주문 합계를 확인한 뒤 예약 요청을 보내주세요.");
   // A disconnected loopback preview can demonstrate the existing pickup rules,
   // but never grants reservation capability or reaches the submission transport.
   const pickupPolicy = localPickupPreview
@@ -160,6 +170,11 @@ function Bag({ settings }: { settings: StoreSettings }) {
     event.preventDefault();
     if (localPickupPreview) return;
     if (!cart.isCurrent() || lock.current || editingMochi !== null || cartChanged || (customer.enabled && !guest && customer.state.status === 'checking')) return;
+    if (giftLine && giftLine.unitPriceCents !== almondGiftBoxPriceCents(currentOrderTime(caps.serverOffsetMs))) {
+      setPickupNow(new Date());
+      setError(giftPriceChanged);
+      return;
+    }
     if (!caps.enabled || !renewalPickupSlots(lines, date, new Date(), caps).includes(time)) {
       setPickupNow(new Date());
       setError(t('Please select an available pickup date and time.', '픽업 가능한 날짜와 시간을 선택해주세요.'));
@@ -183,6 +198,7 @@ function Bag({ settings }: { settings: StoreSettings }) {
         website: "",
         requestId: requestId.current,
         orderLines: lines,
+        ...(giftLine && {expectedAlmondGiftBoxPriceCents: giftLine.unitPriceCents}),
       }, customer.enabled && !guest && customer.state.status === 'authenticated' ? {customerAccount:'link'} : undefined);
       if(!cart.isCurrent())return;
       setResult(String(response.reservationNumber));
@@ -191,6 +207,12 @@ function Bag({ settings }: { settings: StoreSettings }) {
       );
       cart.removeRenewalSubmitted(lines);
     } catch (e) {
+      if (e instanceof Error && e.message === "ALMOND_PRICE_CHANGED") {
+        await renewalCapabilities().then(setCaps).catch(() => {});
+        setPickupNow(new Date());
+        setError(giftPriceChanged);
+        return;
+      }
       if (e instanceof Error && /UNSUPPORTED_CONTRACT|RENEWAL_UNAVAILABLE/.test(e.message)) {
         try {
           const href = saveCheckoutForRefresh(sessionStorage, {
@@ -232,6 +254,13 @@ function Bag({ settings }: { settings: StoreSettings }) {
       <GuestCartImport language={language}/>
       {resume.status==='owner-changed'&&<p role="status">{t('The saved checkout belongs to another account. Sign back in to that account to restore it.','저장된 주문서는 다른 회원의 주문서입니다. 해당 계정으로 다시 로그인하면 복원할 수 있습니다.')}</p>}
       <MochiReselectionNotice />
+      {cart.almondReselectionLines.map(line => (
+        <section key={line.lineId} className="renewal-seasonal-note">
+          <p>{t("Your saved 80g triangle box is no longer offered. The current triangle box contains 60g. Review the new pack before adding it to this order.", "담아두신 80g 삼각박스는 판매가 종료되었습니다. 현재 삼각박스는 60g입니다. 새 구성을 확인한 뒤 장바구니에 담아주세요.")} ×{line.quantity}</p>
+          <a href={renewalSelectionHref(line, line.lineId)!}>{t("Review almond packs", "아몬드 구성 확인")}</a>{" "}
+          <button type="button" onClick={() => cart.removeRenewal(line.lineId)}>{t("Remove saved selection", "이전 구성 삭제")}</button>
+        </section>
+      ))}
       {cart.paveReselectionLines.length > 0 && <section className="renewal-seasonal-note" aria-label={t("Saved Milk selections", "보관된 밀크 선택")}>
         <p role="alert">{t("Milk chocolate Pavé is no longer available. These selections are saved separately; re-select or remove them. Other items in your bag are kept.", "파베 밀크 초콜릿 판매가 종료되었습니다. 해당 선택은 별도 보관되어 있으니 다시 선택하거나 삭제해주세요. 다른 장바구니 상품은 유지됩니다.")}</p>
         {cart.paveReselectionLines.map((line, index) => <p key={index}><span>{renewalSizeName(line.size, language)} · {t("Milk", "밀크")} ×{line.quantity} </span><a href={renewalSelectionHref(line) || "/cakes/pave-chocolate-cake"}>{t("Re-select Pavé", "파베 다시 선택")}</a></p>)}
@@ -297,6 +326,7 @@ function Bag({ settings }: { settings: StoreSettings }) {
                   />
                 )}
                 {["pave-cake", "brownie-whole", "brownie-loaf", "pound-cake"].includes(line.offerId) && <a href={renewalSelectionHref(line, line.lineId)!}>{t("Edit cake selection", "케이크 구성 수정")}</a>}
+                {almondPacks[line.offerId] && <a href={renewalSelectionHref(line, line.lineId)!}>{t("Edit almond pack", "아몬드 구성 수정")}</a>}
                 {line.offerId === "mochi" &&
                   (editingMochi === line.lineId ? (
                     <MochiBuilder
@@ -337,6 +367,7 @@ function Bag({ settings }: { settings: StoreSettings }) {
               </li>
             ))}
           </ul>
+          {giftLine && cart.giftBoxAddedOnSale && !almondSale && <p role="status" className="renewal-seasonal-note">{t("The almond gift box offer has ended. Your bag now shows the regular price of AUD 50 per box.", "아몬드 선물 박스 행사가 종료되어 장바구니에 박스당 정상가 AUD 50이 적용되었습니다.")}</p>}
           {quote && <h2 className="au-mobile-price"><span className="au-mobile-price">{formatAudCents(quote.totalPriceCents)}</span></h2>}
           <form
             ref={formElement}

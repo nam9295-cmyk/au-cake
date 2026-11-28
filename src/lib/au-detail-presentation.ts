@@ -1,13 +1,14 @@
 import imageManifest from './au-detail-image-manifest.json'
+import almondPhotos from './almond-detail-images.json'
 
 export type DetailImage = {
-  src: string; width: number; height: number
+  src: string; width: number; height: number; alt?: string
   variants: { src: string; width: number; bytes: number }[]
 }
 export type DetailEdition = { image: string; title: string; body: string }
 export type DetailPresentation = {
   slug: string; key: keyof typeof imageManifest; title: string; hook: string
-  imageOverrides?: Record<string, DetailImage>
+  imageOverrides?: Partial<Record<string, DetailImage>>
   gallery: string[]; craftCaptions: string[]; occasions: string[]; occasionCaptions: string[]
   editions?: DetailEdition[]; editionTitle?: string
   related: string[]; videoPoster: string; videoSrc?: string
@@ -85,11 +86,13 @@ export const auDetailPresentations: Record<string, DetailPresentation> = {
   },
   'almond-chocoball': {
     ...common, key: 'almond', slug: 'almond-chocoball', title: 'Almond Chocoball', hook: 'ALMONDS & CHOCOLATE. A CLOSER LOOK.',
+    gallery: ['hero', 'triangle-scene', 'gift-set', 'gift-open', 'gift-unboxing', ...common.gallery.slice(1)],
+    imageOverrides: almondPhotos,
     craftCaptions: ['The almond centre.', 'A handful to share.', 'The chocolate coating, up close.'],
     editionTitle: 'Choose Your Packaging',
     editions: [
-      { image: 'edition-01', title: '80g Pouch or Triangle Box', body: 'Choose a pouch or triangle box for a single 80g pack, at the same price. Photo shows the pouch. Six-packs keep their existing packaging.' },
-      { image: 'edition-02', title: 'Black Tub · 80g × 2', body: 'Black Tub includes two 80g pouches.' },
+      { image: 'edition-01', title: '80g Pouch', body: 'Choose an 80g pouch or a 60g triangle box, individually or in a six-pack for the price of five.' },
+      { image: 'edition-02', title: 'Black Tub · 80g × 2', body: 'The black tub holds two 80g pouches. The four-piece gift box holds four 60g triangle boxes.' },
     ],
     related: ['signature-gateau-au-chocolat', 'pave-chocolate-cake', 'brownie-cheesecake'],
   },

@@ -35,7 +35,8 @@ function view(v:unknown):CustomerOrderView {
     for(const line of r.orderLines) {
       const l=object(line); keys(l,lineKeys)
       if(l.selection) {
-        const s=object(l.selection); keys(s,['lineId','offerId','quantity','size','finish','chocolateType','individualPackaging','mode','flavourCounts','parentLineId'])
+        const s=object(l.selection); keys(s,['lineId','offerId','quantity','size','finish','chocolateType','almondPackaging','individualPackaging','mode','flavourCounts','parentLineId'])
+        if(s.almondPackaging !== undefined && s.almondPackaging !== "pouch" && s.almondPackaging !== "triangle-box") invalid()
         if(s.flavourCounts) {
           const counts=object(s.flavourCounts); keys(counts,['strawberry','green_grape','mandarin','banana','butter_redbean','nama_chocolate'])
           if(Object.values(counts).some(n=>!Number.isSafeInteger(n)||Number(n)<0)) invalid()

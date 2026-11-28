@@ -1,3 +1,4 @@
+import { ALMOND_GIFT_BOX_ID } from "./au-renewal.js";
 const card = (id, en, ko, href, offers, image = "") => ({
   id,
   en,
@@ -64,8 +65,11 @@ export const RENEWAL_CARDS = Object.freeze({
       "/chocolates/almond-chocoball",
       [
         "almond-chocoball-80g",
+        "almond-triangle-60g",
         "almond-chocoball-6pack",
+        "almond-triangle-6pack",
         "almond-chocoball-black-tub-2x80g",
+        ALMOND_GIFT_BOX_ID,
       ],
       "/products/chocolates/almond-chocoball.webp",
     ),

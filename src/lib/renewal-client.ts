@@ -21,6 +21,9 @@ export async function renewalCapabilities() {
         enabled: row.enabled as boolean,
         preordersEnabled: row.preordersEnabled as boolean,
         weekendApproved: row.weekendApproved as boolean,
+        serverOffsetMs: typeof row.serverNow === "string" && Number.isFinite(Date.parse(row.serverNow))
+          ? Date.parse(row.serverNow) - Date.now()
+          : 0,
       };
     },
   );

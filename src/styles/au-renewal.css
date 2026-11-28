@@ -399,6 +399,9 @@
 .renewal-six-pack .renewal-pack-copy-3 { left: 24%; transform: rotate(0deg); }
 .renewal-six-pack .renewal-pack-copy-4 { left: 32%; transform: rotate(4deg); }
 .renewal-six-pack .renewal-pack-copy-5 { left: 58%; transform: rotate(8deg); }
+@media (max-width: 767px) {
+  .renewal-detail .au-pave-thumbnails button > :is(.renewal-product-photo, .renewal-six-pack) { display: none; }
+}
 
 /* Align each collection row by image, title, price and optional note. */
 .renewal-grid article { display: grid; grid-template-rows: subgrid; grid-row: span 4; row-gap: 0; }
@@ -424,6 +427,15 @@
 .mini-cake-launch-actions button { min-height: 44px; padding: 4px 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
 .mini-cake-launch-notice :focus-visible { outline: 2px solid #234d35; outline-offset: 3px; }
 .mini-cake-launch-order:focus-visible { outline-offset: -5px; outline-color: #fff; }
+.mini-cake-launch-notice[data-campaign="almonds"] { width: min(460px, calc(100% - 24px)); }
+.mini-cake-launch-notice[data-stacked]::backdrop { background: rgb(0 0 0 / 16%); }
+@media (max-width: 600px) {
+  .mini-cake-launch-notice[data-stacked] { width: min(460px, calc(100% - 44px)); }
+}
+.almond-launch-photo { display: block; align-self: center; width: auto; max-width: 100%; height: auto; max-height: min(34dvh, 300px); object-fit: contain; }
+.mini-cake-launch-notice .almond-launch-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.almond-launch-price strong { font-size: 28px; }
+.almond-launch-price s { color: #59655e; }
 @media (max-width: 600px) {
   .mini-cake-launch-content { padding: 14px; gap: 12px; }
   .mini-cake-launch-grid { gap: 10px; }
@@ -432,3 +444,8 @@
   .home-redesign-wrap.au-home-v02 .mini-cake-launch-notice p { font-size: 12px; }
   .mini-cake-launch-order { font-size: 13px; }
 }
+
+.renewal-detail .au-pave-option-price del { margin-inline-end: .45em; color: #626963; font-weight: 400; }
+.renewal-detail .renewal-almond-sale { color: #76442a; font-weight: 600; }
+.renewal-detail :is(.au-pave-gallery-main, .au-pave-thumbnails) :is(.renewal-product-photo, .renewal-six-pack) { height: 100%; }
+.renewal-detail :is(.au-pave-gallery-main, .au-pave-thumbnails) .renewal-product-photo img { object-fit: contain; }

@@ -1,6 +1,6 @@
 // Public presentation only: consumed by the AU frontend and static generator, never order validation.
 import { renewalPickupCopy } from "./au-renewal-pickup-policy.js";
-import { RENEWAL_OFFERS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName, priceRenewalOrder, renewalFinishName, renewalSizeName } from "./au-renewal.js";
+import { ALMOND_GIFT_BOX_ID, ALMOND_GIFT_BOX_SALE_CENTS, ALMOND_SALE_START, ALMOND_SALE_END, RENEWAL_OFFERS, MOCHI_DISPLAY_FLAVOURS, mochiFlavourName, priceRenewalOrder, renewalFinishName, renewalSizeName } from "./au-renewal.js";
 import { RENEWAL_NAV, RENEWAL_CARDS, HALLOWEEN_MERINGUE_CARD, HALLOWEEN_ORDER_DEADLINE, HALLOWEEN_LAST_PICKUP, halloweenMeringueAvailable } from "./au-renewal-catalog.js";
 const escape = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = cents => (cents / 100).toFixed(2);
@@ -29,7 +29,7 @@ const summaries = {
   'brownie-loaf': 'Brownie Basque cheesecake loaf with optional Vanilla Fresh Cream. Pickup in Melrose Park, Sydney.',
   cookies: 'A six-cookie set: three Chocolate Chip and three Double Chocolate. Photos and product introduction; reservations await price approval.',
   mochi: 'Six Chocolate Mochi flavours in Sydney: choose singles or build a four-piece gift box with free box packaging. Pickup in Melrose Park.',
-  almond: 'Choose a pouch or triangle box for a single 80g Almond Chocolate at the same price. Also available in a 5+1 bundle or a black tub with two 80g pouches.',
+  almond: 'Almond chocolate in 80g pouches or 60g triangle boxes. Choose singles, 5+1 bundles, a two-pouch black tub or a four-piece gift box for pickup in Sydney.',
   'pave-chocolate': 'Pavé Chocolate in a 100g heart tin, individually or as a six-tin 5+1 bundle. A chocolate gift for pickup in Melrose Park, Sydney.',
   eiffel: 'Eiffel Tower Chocolate in six-piece packs or a 5+1 bundle of six packs. Chocolate gifts for pickup in Melrose Park, Sydney.',
   'gateau-cupcakes': 'Gâteau Cupcakes in six or twelve, with Basic, Vanilla Fresh Cream or Chocolate Buttercream finishes. Made for Sydney celebrations.',
@@ -48,7 +48,35 @@ export function classArchiveSeo(siteUrl) {
   const c=CLASS_ARCHIVE_COPY.en;
   return {title:c.title+' | verygood chocolate',description:c.intro,canonical:siteUrl+'/classes',robots:'index, follow',structuredData:[{'@type':'WebPage',name:c.title,description:c.intro,url:siteUrl+'/classes'}],fallbackHtml:`<main><h1>${escape(c.title)}</h1><p>${escape(c.intro)}</p><h2>${escape(c.archive)}</h2><p>${escape(c.courses)}</p><a href="/custom-cakes">${escape(c.link)}</a></main>`};
 }
+const giftStarts = new Date(ALMOND_SALE_START);
+const giftEnds = new Date(ALMOND_SALE_END);
+const lastGiftInstant = new Date(giftEnds.getTime() - 1);
+const sydneyDay = new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Australia/Sydney' });
+
+function publicPrice(choice, now) {
+  if (choice.id !== ALMOND_GIFT_BOX_ID || (now && now >= giftEnds)) return 'AUD ' + money(choice.price);
+  return `Regular AUD ${money(choice.price)}. Early bird AUD ${money(ALMOND_GIFT_BOX_SALE_CENTS)} from ${sydneyDay.format(giftStarts)} to ${sydneyDay.format(lastGiftInstant)} (Sydney), while promotional stock lasts`;
+}
+
+// Date-bound the prices in the static output so it remains accurate across both midnights.
+function structuredOffers(choice, siteUrl, season, now) {
+  const offer = {'@type':'Offer', name:choice.name, price:money(choice.price), priceCurrency:'AUD', url:siteUrl+choice.url};
+  if (season) return [{...offer, validThrough:season.deadline, priceValidUntil:season.deadline.slice(0,10)}];
+  if (choice.id !== ALMOND_GIFT_BOX_ID || now >= giftEnds) return [offer];
+  return [
+    ...(now < giftStarts ? [{...offer, validThrough:new Date(giftStarts.getTime() - 1).toISOString()}] : []),
+    {...offer, price:money(ALMOND_GIFT_BOX_SALE_CENTS), validFrom:ALMOND_SALE_START, validThrough:lastGiftInstant.toISOString()},
+    {...offer, validFrom:ALMOND_SALE_END},
+  ];
+}
+
 function selections(card) {
+  if (card.id === 'almond') return card.offers.map(id => {
+    const offer = RENEWAL_OFFERS[id];
+    const pouch = id === 'almond-chocoball-80g' || id === 'almond-chocoball-6pack';
+    const name = pouch ? offer.name.replace(' · ', ' · Pouch · ') : offer.name;
+    return {id, name, price:offer.price, url:card.href+'?offer='+id};
+  });
   if (card.id==='mochi') return MOCHI_DISPLAY_FLAVOURS.map(f=>({name:`${mochiFlavourName(f.id)} · 1 piece (single)`,price:f.priceCents,url:card.href}));
   return card.offers.flatMap(id=>{
     const p=RENEWAL_OFFERS[id];
@@ -77,9 +105,9 @@ function imageHtml(card, lazy) {
   const [width,height]=imageDimensions[card.id];
   return `<img src="${card.image}" alt="${escape(card.en)}" width="${width}" height="${height}"${lazy ? ' loading="lazy"' : ''} style="max-width:100%;height:auto" />`;
 }
-function cardFacts(card, lazy) {
+function cardFacts(card, lazy, now) {
   const choices=selections(card);
-  return `${imageHtml(card, lazy)}<h2><a href="${card.href}">${escape(card.en)}</a></h2><p>${escape(description(card))}</p>${choices.length?`<ul>${choices.map(c=>`<li>${escape(c.name)} — AUD ${money(c.price)}</li>`).join('')}</ul>`:'<p>Reservations are not available until the sale price is approved.</p>'}${card.id==='mochi'?`<p>${mochiTerms}</p><p>Please allow at least 24 hours before pickup.</p>${MOCHI_PUBLIC_INFORMATION.en.map(s=>`<p>${escape(s)}</p>`).join('')}`:''}${card.id==='brownie-loaf'?'<p>Loaf: Vanilla Fresh Cream +AUD 10.00.</p>':''}${card.id.includes('cupcakes')?'<p>Optional individual packaging AUD 0.50 per cupcake, waived when the eligible cupcake subtotal reaches AUD 100.</p>':''}`;
+  return `${imageHtml(card, lazy)}<h2><a href="${card.href}">${escape(card.en)}</a></h2><p>${escape(description(card))}</p>${choices.length?`<ul>${choices.map(c=>`<li>${escape(c.name)} — ${publicPrice(c, now)}</li>`).join('')}</ul>`:'<p>Reservations are not available until the sale price is approved.</p>'}${card.id==='mochi'?`<p>${mochiTerms}</p><p>Please allow at least 24 hours before pickup.</p>${MOCHI_PUBLIC_INFORMATION.en.map(s=>`<p>${escape(s)}</p>`).join('')}`:''}${card.id==='brownie-loaf'?'<p>Loaf: Vanilla Fresh Cream +AUD 10.00.</p>':''}${card.id.includes('cupcakes')?'<p>Optional individual packaging AUD 0.50 per cupcake, waived when the eligible cupcake subtotal reaches AUD 100.</p>':''}`;
 }
 function renderHomeFeatures({ links, poster }) {
   const destinations = Object.values(links).map(({ label, href, description }) =>
@@ -89,7 +117,8 @@ function renderHomeFeatures({ links, poster }) {
     <img id="poster-wall" src="${escape(poster.src)}" width="${poster.width}" height="${poster.height}" alt="${escape(poster.alt)}" loading="lazy" style="max-width:100%;height:auto" />`;
 }
 
-export function renewalSeoPages(siteUrl, content, home, now = new Date()) {
+export function renewalSeoPages(siteUrl, content, home, at = new Date()) {
+  const now = new Date(at);
   const pages={};
   const navLinks = RENEWAL_NAV.map(n => `<a href="${n.href}">${escape(n.en)}</a>`);
   if (home) navLinks.push(`<a href="${escape(home.links.journal.href)}">${escape(home.links.journal.label)}</a>`);
@@ -120,7 +149,7 @@ export function renewalSeoPages(siteUrl, content, home, now = new Date()) {
     if(product){
       const choices=closed ? [] : siblings.flatMap(selections);
       page.ogType=choices.length?'product':'website';
-      page.structuredData.push({'@type':choices.length?'Product':'WebPage',name,description:desc,url:canonical,image:siblings.map(c=>siteUrl+c.image),...(choices.length?{brand:{'@type':'Brand',name:'verygood chocolate'},offers:choices.map(c=>({'@type':'Offer',name:c.name,price:money(c.price),priceCurrency:'AUD',url:siteUrl+c.url,...(season?{validThrough:season.deadline,priceValidUntil:season.deadline.slice(0,10)}:{})}))}:{})});
+      page.structuredData.push({'@type':choices.length?'Product':'WebPage',name,description:desc,url:canonical,image:siblings.map(c=>siteUrl+c.image),...(choices.length?{brand:{'@type':'Brand',name:'verygood chocolate'},offers:choices.flatMap(c=>structuredOffers(c,siteUrl,season,now))}:{})});
       const parent=RENEWAL_NAV.find(n=>item.id==='halloween-meringue'?n.href==='/cakes':(RENEWAL_CARDS[n.href.slice(1)]||[]).includes(item));
       page.structuredData.push({'@type':'BreadcrumbList',itemListElement:[{name:'Home',item:siteUrl},{name:parent.en,item:siteUrl+parent.href},{name,item:canonical}].map((v,i)=>({'@type':'ListItem',position:i+1,...v}))});
     }else{
@@ -128,7 +157,7 @@ export function renewalSeoPages(siteUrl, content, home, now = new Date()) {
     }
     const services=path==='/custom-cakes'?['single','double'].map(tier=>`<section><h2>Custom Cake · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><a href="/cakes/custom-cake?tier=${tier}">Request a cake</a><h2>Private Cake Class · ${tier==='single'?'Single Tier':'Two Tiers'}</h2><p>Enquire for pricing. Details and availability confirmed by enquiry.</p><a href="/custom-cakes?service=private-class&amp;tier=${tier}#private-class-enquiry">Enquire about this class</a></section>`).join('')+'<p><a href="/classes">Past kids class archive</a></p>':path==='/business'?'<p><a href="/business/events">Corporate &amp; Events</a> · <a href="/business/cafe-supply">Café Supply / Wholesale · Coming Soon</a> · <a href="/business/consulting">Consulting</a></p>':'';
     const homeContent = path === '/' ? home : undefined;
-    const facts = closed ? imageHtml(item, false) + '<p><a href="/cakes">Browse current cakes</a></p>' : (product ? siblings : list).map(card => cardFacts(card, path === '/')).join('');
+    const facts = closed ? imageHtml(item, false) + '<p><a href="/cakes">Browse current cakes</a></p>' : (product ? siblings : list).map(card => cardFacts(card, path === '/', now)).join('');
     const menu = homeContent ? `<section id="au-collection" aria-label="The AU collection">${facts}</section>` : facts;
     page.fallbackHtml = `<main><nav>${nav}</nav>
       <h1>${escape(homeContent?.headline ?? name)}</h1><p>${escape(desc)}</p>
@@ -162,5 +191,5 @@ export function renewalSeoPages(siteUrl, content, home, now = new Date()) {
 }
 export function renderRenewalLlms(siteUrl, additionalEntries=[]) {
   const pickup=renewalPickupCopy('en');
-  return ['# verygood chocolate Sydney','','Official Instagram: https://www.instagram.com/verygood_syd/',`Made-to-order cakes and treats with chocolatier-grade couverture chocolate. Pickup in Melrose Park, Sydney. ${pickup.hours} Requests are confirmed by our team after availability and payment checks.`,pickup.driver,...RENEWAL_NAV.map(n=>`- ${n.en}: ${siteUrl}${n.href}`),...Object.entries(RENEWAL_CARDS).flatMap(([category,list])=>['',`## ${RENEWAL_NAV.find(n=>n.href===`/${category}`).en}`,...list.flatMap(c=>[`- ${c.en}: ${description(c)} ${siteUrl}${c.href}`,...selections(c).map(o=>`  - ${o.name}: AUD ${money(o.price)}.`),...(!selections(c).length?['  Reservations await price approval.']:[]),...(c.id==='mochi'?[mochiTerms,'Minimum 24 hours preparation.',...MOCHI_PUBLIC_INFORMATION.en]:[]),...(c.id==='brownie-loaf'?['  Loaf: Vanilla Fresh Cream +AUD 10.00.']:[])])]),'',`Class archive and enquiries: ${siteUrl}/classes`,CLASS_ARCHIVE_COPY.en.intro,CLASS_ARCHIVE_COPY.en.courses,...additionalEntries,''].join('\n');
+  return ['# verygood chocolate Sydney','','Official Instagram: https://www.instagram.com/verygood_syd/',`Made-to-order cakes and treats with chocolatier-grade couverture chocolate. Pickup in Melrose Park, Sydney. ${pickup.hours} Requests are confirmed by our team after availability and payment checks.`,pickup.driver,...RENEWAL_NAV.map(n=>`- ${n.en}: ${siteUrl}${n.href}`),...Object.entries(RENEWAL_CARDS).flatMap(([category,list])=>['',`## ${RENEWAL_NAV.find(n=>n.href===`/${category}`).en}`,...list.flatMap(c=>[`- ${c.en}: ${description(c)} ${siteUrl}${c.href}`,...selections(c).map(o=>`  - ${o.name}: ${publicPrice(o)}.`),...(!selections(c).length?['  Reservations await price approval.']:[]),...(c.id==='mochi'?[mochiTerms,'Minimum 24 hours preparation.',...MOCHI_PUBLIC_INFORMATION.en]:[]),...(c.id==='brownie-loaf'?['  Loaf: Vanilla Fresh Cream +AUD 10.00.']:[])])]),'',`Class archive and enquiries: ${siteUrl}/classes`,CLASS_ARCHIVE_COPY.en.intro,CLASS_ARCHIVE_COPY.en.courses,...additionalEntries,''].join('\n');
 }

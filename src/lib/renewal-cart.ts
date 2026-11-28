@@ -48,30 +48,34 @@ export function removeRenewalLine(
   return lines.filter((l) => l.lineId !== lineId && l.parentLineId !== lineId);
 }
 export const MOCHI_RESELECTION_KEY = "verygood-au-mochi-reselection";
+export function isRetiredAlmond(line?: RenewalSelection) {
+  return line?.offerId === "almond-chocoball-80g" && line.almondPackaging === "triangle-box";
+}
 export function inspectRenewalCart(raw: string | null): {
-  lines: RenewalSelection[]; retiredMochi: unknown[]; retiredPave: RenewalSelection[];
+  lines: RenewalSelection[]; retiredMochi: unknown[]; retiredPave: RenewalSelection[]; retiredAlmond: RenewalSelection[];
 } {
-  const empty = { lines: [], retiredMochi: [], retiredPave: [] };
+  const empty = { lines: [], retiredMochi: [], retiredPave: [], retiredAlmond: [] };
   try {
     const value = JSON.parse(raw || "null");
     if (value?.version !== 1 || !Array.isArray(value.lines)) return empty;
     const retiredMochi = value.lines.filter((line: RenewalSelection) =>
       line?.offerId === "mochi" && (!["gift-four", "singles"].includes(line.mode || "") || "counts" in line || Object.hasOwn(line.flavourCounts || {}, "amande")));
     const retiredPave = value.lines.filter((line: RenewalSelection) => line?.offerId === "pave-cake" && line.chocolateType === "milk");
+    const retiredAlmond: RenewalSelection[] = value.lines.filter(isRetiredAlmond);
     const retiredIds = new Set(retiredPave.map((line: RenewalSelection) => line.lineId));
-    const available = value.lines.filter((line: RenewalSelection) => !retiredMochi.includes(line) && !retiredPave.includes(line) && !retiredIds.has(line?.parentLineId));
+    const available = value.lines.filter((line: RenewalSelection) => !isRetiredAlmond(line) && !retiredMochi.includes(line) && !retiredPave.includes(line) && !retiredIds.has(line?.parentLineId));
     const lines = available.length ? normalizeRenewalLines(available) : [];
     if (lines.length) priceRenewalOrder(lines, { localPreview: true });
-    return { lines, retiredMochi, retiredPave };
+    return { lines, retiredMochi, retiredPave, retiredAlmond };
   } catch { return empty; }
 }
 // Re-selection links restore options for review at current prices; they never submit an order.
 export function renewalSelectionHref(line: RenewalSelection, editId?: string): string | null {
   const card = Object.values(RENEWAL_CARDS).flat().find(card => card.offers.includes(line.offerId));
-  if (!card || !["pave-cake", "brownie-whole", "brownie-loaf", "pound-cake", "almond-chocoball-80g", "almond-chocoball-black-tub-2x80g"].includes(line.offerId)) return null;
+  if (!card || (card.id !== "almond" && !["pave-cake", "brownie-whole", "brownie-loaf", "pound-cake"].includes(line.offerId))) return null;
   const url = new URL(card.href, "https://local.invalid");
-  url.searchParams.set("offer", line.offerId);
-  for (const key of ["size", "finish", "chocolateType", "almondPackaging"] as const) if (line[key]) url.searchParams.set(key, line[key]);
+  url.searchParams.set("offer", isRetiredAlmond(line) ? "almond-triangle-60g" : line.offerId);
+  for (const key of ["size", "finish", "chocolateType"] as const) if (line[key]) url.searchParams.set(key, line[key]);
   url.searchParams.set("quantity", String(line.quantity));
   if (editId) url.searchParams.set("edit", editId);
   return url.pathname + url.search;

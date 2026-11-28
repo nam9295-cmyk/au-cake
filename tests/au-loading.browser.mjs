@@ -29,6 +29,8 @@ async (page) => {
   try {
     await probe.setViewportSize({ width: 390, height: 844 })
     await probe.emulateMedia({ reducedMotion: 'reduce' })
+    // This loading check opens the evergreen cake notice, even during seasonal campaigns.
+    await probe.clock.setFixedTime(new Date('2026-11-28T12:00:00+11:00'))
     const releaseHome = await holdNextResource(homeModule)
     try {
       await probe.goto(origin, { waitUntil: 'commit' })
@@ -100,8 +102,49 @@ async (page) => {
       check(productRequests === 1, 'A failed download automatically reloaded the product')
       await failed.unroute(catalogModule)
       await retry.click()
-      await failed.locator('.au-product-detail .au-pave-size-options button').first().waitFor()
+      await failed.getByRole('group', { name: 'Choose your pack' }).getByRole('button').first().waitFor()
     } finally { await fresh.close() }
-    return { slowFirstHome: true, reducedMotion: true, popupVideoDeferred: true, product: true, back: true, journal: true, returnHome: true, retry: true }
+
+    // Session dismissal is per tab; "today" spans tabs and expires at Sydney midnight.
+    const seasonal = await page.context().browser().newContext({ viewport: probe.viewportSize() })
+    try {
+      const tab = await seasonal.newPage()
+      const campaignDay = new Date('2026-12-02T10:00:00+11:00')
+      await tab.clock.setFixedTime(campaignDay)
+      await tab.goto(origin)
+      const topNotice = tab.getByRole('dialog')
+      const checkFront = async (name) => {
+        await topNotice.getByRole('heading', { name, exact: true }).waitFor()
+        check(await topNotice.count() === 1, 'More than one dialog is exposed to assistive technology')
+        check(await topNotice.evaluate(dialog => dialog.contains(document.activeElement)), 'Keyboard focus escaped the front announcement')
+        check(await tab.locator('.rd-hero-photo-wrap video').count() === 0, 'Hero started while an announcement was still open')
+      }
+      await checkFront('4 Boxes of Almond Chocolates')
+      check(await tab.locator('dialog[open][data-campaign="cakes"]').count() === 1, 'The strawberry cakes are missing from beneath the almond offer')
+      await topNotice.getByRole('button', { name: "Don't show again today" }).click()
+      await checkFront('Mini Whole Cakes Are Here!')
+      await tab.keyboard.press('Escape')
+      await topNotice.waitFor({ state: 'hidden' })
+      await tab.locator('.rd-hero-photo-wrap video').waitFor({ state: 'attached' })
+      await tab.reload()
+      await tab.locator('.rd-hero-photo-wrap video').waitFor({ state: 'attached' })
+      check(await topNotice.count() === 0, 'Dismissed notices returned in the same tab')
+
+      const secondTab = await seasonal.newPage()
+      await secondTab.clock.setFixedTime(campaignDay)
+      await secondTab.goto(origin)
+      const cake = secondTab.getByRole('dialog', { name: 'Mini Whole Cakes Are Here!' })
+      await cake.waitFor()
+      await cake.getByRole('link', { name: 'Shop Pavé' }).click()
+      await secondTab.waitForURL(url => url.pathname === '/cakes/pave-chocolate-cake' && url.searchParams.get('size') === '4in')
+      await tab.clock.setFixedTime(new Date('2026-12-03T00:01:00+11:00'))
+      await tab.goto(origin)
+      await checkFront('4 Boxes of Almond Chocolates')
+      await topNotice.getByRole('link', { name: 'Shop the gift set' }).click()
+      await tab.waitForURL(url => url.pathname === '/chocolates/almond-chocoball' && url.searchParams.get('offer') === 'almond-triangle-gift-4x60g')
+      await tab.goto(origin)
+      await checkFront('Mini Whole Cakes Are Here!')
+    } finally { await seasonal.close() }
+    return { slowFirstHome: true, reducedMotion: true, popupVideoDeferred: true, seasonalPopupOrder: true, product: true, back: true, journal: true, returnHome: true, retry: true }
   } finally { await probe.close() }
 }

@@ -1,0 +1,74 @@
+{
+  "triangle-scene": {
+    "src": "/products/almond/triangle-scene-960.webp",
+    "width": 960,
+    "height": 958,
+    "alt": "A triangle box with cocoa-dusted almond chocolates and a cut almond centre",
+    "variants": [
+      {
+        "src": "/products/almond/triangle-scene-480.webp",
+        "width": 480,
+        "bytes": 9604
+      },
+      {
+        "src": "/products/almond/triangle-scene-960.webp",
+        "width": 960,
+        "bytes": 24632
+      }
+    ]
+  },
+  "gift-set": {
+    "src": "/products/almond/gift-set-960.webp",
+    "width": 960,
+    "height": 877,
+    "alt": "Front view of the almond chocolate gift set in its cream presentation box",
+    "variants": [
+      {
+        "src": "/products/almond/gift-set-480.webp",
+        "width": 480,
+        "bytes": 8342
+      },
+      {
+        "src": "/products/almond/gift-set-960.webp",
+        "width": 960,
+        "bytes": 25018
+      }
+    ]
+  },
+  "gift-open": {
+    "src": "/products/almond/gift-open-960.webp",
+    "width": 960,
+    "height": 823,
+    "alt": "Four individually packed triangle boxes inside the open almond chocolate gift box",
+    "variants": [
+      {
+        "src": "/products/almond/gift-open-480.webp",
+        "width": 480,
+        "bytes": 16290
+      },
+      {
+        "src": "/products/almond/gift-open-960.webp",
+        "width": 960,
+        "bytes": 46272
+      }
+    ]
+  },
+  "gift-unboxing": {
+    "src": "/products/almond/gift-unboxing-960.webp",
+    "width": 960,
+    "height": 1200,
+    "alt": "A hand lifts the cream gift box lid to reveal the almond chocolates inside",
+    "variants": [
+      {
+        "src": "/products/almond/gift-unboxing-480.webp",
+        "width": 480,
+        "bytes": 16360
+      },
+      {
+        "src": "/products/almond/gift-unboxing-960.webp",
+        "width": 960,
+        "bytes": 39882
+      }
+    ]
+  }
+}

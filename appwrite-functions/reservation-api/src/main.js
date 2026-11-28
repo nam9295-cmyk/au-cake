@@ -1,6 +1,6 @@
 import { RENEWAL_PICKUP_POLICY_VERSION } from './au-renewal-pickup-policy.js'
 import { assertNotManualOrder } from './manual-order.js'
-import { RENEWAL_CONTRACT, isRenewalContract, MOCHI_FLAVOURS } from './au-renewal.js'
+import { RENEWAL_CONTRACT, isRenewalContract, MOCHI_FLAVOURS, RENEWAL_OFFERS } from './au-renewal.js'
 import { canonicalRenewalRequest, buildRenewalOrderData } from './au-renewal-storage.js'
 import { AppwriteException, Client, Databases, ID, Query, Storage, Users } from 'node-appwrite'
 import {
@@ -366,6 +366,10 @@ export async function createCake(databases, input, {
   const buildOrder = renewal ? (value, options) => buildRenewalOrderData(value, { ...options, renewalPolicy }) : buildCakeReservation
   if (legacyGate) await legacyGate.beforeNew(documentId)
   requestFingerprint = cakeRequestFingerprint(input, runtimeConfig)
+  // Cached checkouts recognize this response and preserve the form while refreshing the retired pack.
+  if (renewal && input.orderLines.some(line => line.offerId === 'almond-chocoball-80g' && line.almondPackaging === 'triangle-box')) {
+    throw new ReservationApiError('UNSUPPORTED_CONTRACT', 409)
+  }
   const sharedIdentity = legacyGate?.identity(documentId, customerPhone, requestFingerprint)
 
   const normalizedReviewCode = reviewCouponInput(input?.promoCode)
@@ -386,7 +390,7 @@ export async function createCake(databases, input, {
   if (!smoreWritesEnabled && storedOrder?.lines.some(line => line.productId === 'smore-stick')) {
     throw new ReservationApiError('SMORE_WRITES_DISABLED', 503)
   }
-  if (!chocolateWritesEnabled && storedOrder?.lines.some(line => isChocolateProductId(line.productId))) {
+  if (!chocolateWritesEnabled && storedOrder?.lines.some(line => isChocolateProductId(line.productId) || RENEWAL_OFFERS[line.productId]?.almondTriangle)) {
     throw new ReservationApiError('CHOCOLATE_WRITES_DISABLED', 503)
   }
   // Storage capacity, not a product maximum: the original Appwrite quantity
@@ -810,7 +814,18 @@ return async ({ req, res, log, error }) => {
     }
 
     let result
-    if (action === 'renewal-health') result = { contractVersion: RENEWAL_CONTRACT, enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true', preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true', pickupPolicyVersion: RENEWAL_PICKUP_POLICY_VERSION, weekendApproved: true, mochiFlavours: MOCHI_FLAVOURS.map(({ id, priceCents }) => ({ id, priceCents })) }
+    if (action === 'renewal-health') {
+      const serverNow = now()
+      result = {
+        contractVersion: RENEWAL_CONTRACT,
+        serverNow: serverNow.toISOString(),
+        enabled: env.AU_RENEWAL_WRITES_ENABLED === 'true',
+        preordersEnabled: env.AU_RENEWAL_PREORDERS_ENABLED === 'true',
+        pickupPolicyVersion: RENEWAL_PICKUP_POLICY_VERSION,
+        weekendApproved: true,
+        mochiFlavours: MOCHI_FLAVOURS.map(({ id, priceCents }) => ({ id, priceCents })),
+      }
+    }
     else if (action === 'health') result = await checkReservationReadiness(databases, runtimeConfig, { chocolateWritesEnabled })
     else if (action === 'create-cake') {
       const services = servicesForRequest ? servicesForRequest(req) : { databases, storage: new Storage(clientForRequest(req, env)) }

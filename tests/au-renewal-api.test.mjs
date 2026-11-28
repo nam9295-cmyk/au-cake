@@ -1,6 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createCake} from '../appwrite-functions/reservation-api/src/main.js'
+import {priceRenewalOrder} from '../appwrite-functions/reservation-api/src/au-renewal.js'
+import {canonicalRenewalRequest} from '../appwrite-functions/reservation-api/src/au-renewal-storage.js'
+import {digestCakeRequestPayload} from '../appwrite-functions/reservation-api/src/coupon-digest.js'
 import {AppwriteException} from './reservation-sdk.mjs'
 import {readFileSync} from 'node:fs'
 const request={contractVersion:'au-renewal.2026-11.v3',customerName:'Test Customer',customerPhone:'0412345678',customerEmail:'test@example.com',pickupDate:'2026-10-23',pickupTime:'09:00',requestNote:'',promoCode:'',privacyConsent:true,requestId:'11111111-1111-4111-8111-111111111111',website:'',orderLines:[{lineId:'a',offerId:'pave-cake',size:'8in',quantity:1}]}
@@ -19,6 +22,24 @@ test('renewal writes default closed and explicitly enabled requests retain idemp
 test('cutover closes obsolete legacy new writes while keeping replay path first',async()=>{
  const legacy={...request};delete legacy.contractVersion;legacy.orderLines=[{productId:'pave-cake',cakeSize:'6in',quantity:1}]
  await assert.rejects(createCake(database(),legacy,{...options,renewalPolicy:{enabled:true}}),/RENEWAL_CONTRACT_REQUIRED/)
+})
+
+test('cached checkout prompts a refresh only for a new retired 80g triangle selection', async () => {
+ const triangle = { lineId: 'a', offerId: 'almond-chocoball-80g', almondPackaging: 'triangle-box', quantity: 1 }
+ const input = { ...request, orderLines: [triangle] }
+ const enabled = { ...options, renewalPolicy: { enabled: true }, chocolateWritesEnabled: true }
+ await assert.rejects(createCake(database(), input, enabled), { code: 'UNSUPPORTED_CONTRACT', status: 409 })
+ for (const malformed of [{ ...triangle, almondPackaging: 'box' }, { ...triangle, offerId: 'almond-chocoball-black-tub-2x80g' }]) {
+   await assert.rejects(createCake(database(), { ...request, orderLines: [malformed] }, enabled), { code: 'INVALID_PACKAGING' })
+ }
+
+ const { lines, version, policyVersion, ...totals } = priceRenewalOrder([triangle], { storedOnly: true })
+ const saved = { ...totals, customerPhone: request.customerPhone, reservationNumber: 'prior-almond', productId: triangle.offerId,
+   quantity: 1, orderLineCount: 1, orderLinesJson: JSON.stringify({ version, policyVersion, lines, discountPercent: 0 }),
+   requestFingerprint: digestCakeRequestPayload(canonicalRenewalRequest(input, { allowHistorical: true }), options.runtimeConfig.reviewCouponHmacSecret) }
+ const replay = await createCake({ getDocument: async () => saved }, input, enabled)
+ assert.equal(replay.reservationNumber, saved.reservationNumber)
+ assert.equal(replay.orderLines[0].selection.almondPackaging, 'triangle-box')
 })
 
 test('price contract cutover preserves old request fingerprints and only writes confirmed v2 prices',async()=>{
@@ -59,4 +80,23 @@ test('server accepts Wednesday and Friday pickup through 20:00 without changing 
   assert.deepEqual(replay,first)
   await assert.rejects(createCake(database(),{...input,pickupTime:'20:15'},{...options,renewalPolicy:{enabled:true}}),/PICKUP_TIME_UNAVAILABLE/)
  }
+})
+
+test('almond gift box checkout acknowledges the server price and replays its original receipt after expiry', async () => {
+ const offerId = 'almond-triangle-gift-4x60g'
+ const db = database()
+ const input = { ...request, pickupDate: '2026-12-11', orderLines: [{ lineId: 'gift', offerId, quantity: 2 }], expectedAlmondGiftBoxPriceCents: 4000 }
+ const sale = { ...options, renewalPolicy: { enabled: true }, chocolateWritesEnabled: true, now: new Date('2026-12-06T12:59:59Z') }
+ const ended = { ...sale, now: new Date('2026-12-06T13:00:00Z') }
+ await assert.rejects(createCake(db, input, { ...sale, chocolateWritesEnabled: false }), /CHOCOLATE_WRITES_DISABLED/)
+ const receipt = await createCake(db, input, sale)
+ assert.equal(receipt.totalPriceCents, 8000)
+ assert.deepEqual(await createCake(db, input, ended), receipt)
+ assert.deepEqual(await createCake(db, { ...input, expectedAlmondGiftBoxPriceCents: 5000 }, ended), receipt)
+ await assert.rejects(createCake(db, { ...input, orderLines: [{ ...input.orderLines[0], quantity: 1 }] }, ended), /REQUEST_ID_CONFLICT/)
+ for (const price of [4000, undefined, 1]) {
+   await assert.rejects(createCake(database(), { ...input, expectedAlmondGiftBoxPriceCents: price }, ended), /ALMOND_PRICE_CHANGED/)
+ }
+ const regular = await createCake(database(), { ...input, expectedAlmondGiftBoxPriceCents: 5000 }, ended)
+ assert.equal(regular.totalPriceCents, 10000)
 })

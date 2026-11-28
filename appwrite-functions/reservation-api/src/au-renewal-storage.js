@@ -1,6 +1,8 @@
 import {
   RENEWAL_CONTRACT,
   isRenewalContract,
+  ALMOND_GIFT_BOX_ID,
+  almondGiftBoxPriceCents,
   RENEWAL_MAX_BYTES,
   normalizeRenewalLines,
   priceRenewalOrder,
@@ -26,6 +28,7 @@ const requestKeys = new Set([
   "requestId",
   "website",
   "orderLines",
+  "expectedAlmondGiftBoxPriceCents",
 ]);
 export function canonicalRenewalRequest(input, { allowHistorical = false } = {}) {
   if (
@@ -76,7 +79,13 @@ export function buildRenewalOrderData(
     renewalPolicy,
   );
   if (request.promoCode && !reviewCoupon) fail("PROMO_CODE_INVALID");
-  const quote = priceRenewalOrder(request.orderLines, { reviewCoupon });
+  // Price acknowledgment gates a new submission. Retries keep the identity and price of an already accepted order.
+  if (request.orderLines.some(line => line.offerId === ALMOND_GIFT_BOX_ID)) {
+    if (input.expectedAlmondGiftBoxPriceCents !== almondGiftBoxPriceCents(now)) fail("ALMOND_PRICE_CHANGED", 409);
+  } else if (input.expectedAlmondGiftBoxPriceCents !== undefined) {
+    fail("INVALID_REQUEST");
+  }
+  const quote = priceRenewalOrder(request.orderLines, { reviewCoupon, now });
   const first = quote.lines[0];
   const { lines, version, policyVersion, ...totals } = quote;
   const orderLinesJson = JSON.stringify({

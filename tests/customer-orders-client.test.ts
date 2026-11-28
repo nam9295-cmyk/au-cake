@@ -23,3 +23,19 @@ test('upcoming/past uses Sydney local date, midnight/DST and completed/cancelled
   assert.equal(classify({...order,status:'픽업완료'},new Date('2026-10-01T00:00:00Z')),'past')
   assert.equal(classify({...order,pickupDate:'2026-10-03'},new Date('2026-10-03T14:00:00Z')),'past')
 })
+
+test('member order history accepts pouch selections and previously purchased triangle packaging', () => {
+  const order = {
+    id: 'order-a', reservationNumber: 'AU-1', createdAt: '2026-11-28T00:00:00Z',
+    pickupDate: '2026-12-02', pickupTime: '09:00', status: '예약확정', paymentStatus: '입금대기', totalPriceCents: 1200,
+    contact: { name: 'Test', email: '', phone: '' }, requestNote: '',
+  }
+  function parse(almondPackaging: string) {
+    return orders.parseCustomerOrderDetail({
+      ...order, view: { format: 'renewal', contractVersion: 'au-renewal.2026-11.v3',
+        orderLines: [{ selection: { lineId: 'a', offerId: 'almond-chocoball-80g', quantity: 1, almondPackaging } }] },
+    })
+  }
+  for (const packaging of ['pouch', 'triangle-box']) assert.doesNotThrow(() => parse(packaging))
+  assert.throws(() => parse('other'), /INVALID_CUSTOMER_RESPONSE/)
+})

@@ -9,6 +9,8 @@ import {CART_EVENT_PREFIX,createCustomerCartStore,customerCartOwner,type CartOwn
 
 type CartContextValue={
  owner:CartOwner|null;checkoutOwner:CartOwner;ready:boolean;isCurrent:()=>boolean;canImportGuest:boolean;guestAlreadyImported:boolean;guestItemCount:number;guestSignature:string;importGuest:()=>void;storageError:boolean;changedInAnotherTab:boolean
+ giftBoxAddedOnSale:boolean
+ almondReselectionLines:readonly RenewalSelection[]
  paveReselectionLines:readonly RenewalSelection[];acknowledgePaveReselection:()=>void
  mochiReselectionRequired:boolean;acknowledgeMochiReselection:()=>void
  replaceRenewal:(id:string,lines:RenewalSelection[])=>void;renewalLines:readonly RenewalSelection[]
@@ -57,8 +59,8 @@ export function CartProvider({children}:PropsWithChildren){
  const importGuest=useCallback(()=>commit({type:'import-guest'}),[commit])
  const itemCount=getCartTotalQuantity(lines)+renewalLines.reduce((n,l)=>n+l.quantity,0)
  const value=useMemo<CartContextValue>(()=>({owner:ready?owner:null,checkoutOwner,ready,isCurrent,canImportGuest:ready&&snapshot.canImportGuest,guestAlreadyImported:ready&&snapshot.guestAlreadyImported,guestItemCount:ready?snapshot.guestItemCount:0,guestSignature:ready?snapshot.guestSignature:'',importGuest,storageError:snapshot.storageError,changedInAnotherTab:snapshot.changedInAnotherTab,
-  paveReselectionLines:ready?snapshot.paveReselectionLines:[],acknowledgePaveReselection,mochiReselectionRequired:ready&&snapshot.mochiReselectionRequired,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,
-  lines,itemCount,add,update,remove,removeSubmitted,clear}),[ready,owner,checkoutOwner,isCurrent,snapshot.canImportGuest,snapshot.guestAlreadyImported,snapshot.guestItemCount,snapshot.guestSignature,snapshot.storageError,snapshot.changedInAnotherTab,snapshot.mochiReselectionRequired,snapshot.paveReselectionLines,acknowledgePaveReselection,importGuest,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,lines,itemCount,add,update,remove,removeSubmitted,clear])
+  giftBoxAddedOnSale:ready&&snapshot.giftBoxAddedOnSale,almondReselectionLines:ready?snapshot.almondReselectionLines:[],paveReselectionLines:ready?snapshot.paveReselectionLines:[],acknowledgePaveReselection,mochiReselectionRequired:ready&&snapshot.mochiReselectionRequired,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,
+  lines,itemCount,add,update,remove,removeSubmitted,clear}),[ready,owner,checkoutOwner,isCurrent,snapshot.canImportGuest,snapshot.guestAlreadyImported,snapshot.guestItemCount,snapshot.guestSignature,snapshot.storageError,snapshot.changedInAnotherTab,snapshot.mochiReselectionRequired,snapshot.giftBoxAddedOnSale,snapshot.almondReselectionLines,snapshot.paveReselectionLines,acknowledgePaveReselection,importGuest,acknowledgeMochiReselection,replaceRenewal,renewalLines,addRenewal,removeRenewal,updateRenewal,clearRenewal,removeRenewalSubmitted,lines,itemCount,add,update,remove,removeSubmitted,clear])
  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
 // eslint-disable-next-line react-refresh/only-export-components

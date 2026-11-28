@@ -60,7 +60,30 @@ test('SEO-02 static product images fit narrow screens without JavaScript',()=>{
 test('restored lemon SEO has exactly the approved September pack prices; cookies are no longer marketed',()=>{
  assert.equal(pages['/cakes/levain-cookies'],undefined);
  assert.doesNotMatch(pages['/cakes'].description, /cookies/i);
- assert.match(pages['/chocolates/almond-chocoball'].description, /single 80g.*5\+1.*two 80g pouches/i);
  const p=pages['/cakes/lemon-cake'];assert.match(p.description,/0.50/);
  assert.deepEqual(p.structuredData.find(s=>s['@type']==='Product').offers.map(o=>o.price),['36.00','45.00','65.00','85.00']);
+});
+
+test('six almond packs have distinct links and the gift price has no gaps at either Sydney midnight', () => {
+  const origin = 'https://example.test';
+  const path = '/chocolates/almond-chocoball';
+  const before = new Date('2026-11-28T00:00:00+11:00');
+  const productPage = seo.renewalSeoPages(origin, content, home, before)[path];
+  assert.match(productPage.description, /80g pouches.*60g triangle boxes/);
+  assert.match(productPage.fallbackHtml, /Regular AUD 50.00.*AUD 40.00.*30 Nov 2026.*6 Dec 2026/);
+  const offers = productPage.structuredData.find(s => s['@type'] === 'Product').offers;
+  assert.equal(new Set(offers.map(o => o.url)).size, 6);
+  const gift = offers.filter(o => o.url.endsWith('?offer=almond-triangle-gift-4x60g'));
+  for (const [time, expected] of [
+    ['2026-11-29T23:59:59.999+11:00', '50.00'], ['2026-11-30T00:00:00+11:00', '40.00'],
+    ['2026-12-06T23:59:59.999+11:00', '40.00'], ['2026-12-07T00:00:00+11:00', '50.00'],
+  ]) {
+    const at = Date.parse(time);
+    const active = gift.filter(o => (!o.validFrom || Date.parse(o.validFrom) <= at) && (!o.validThrough || at <= Date.parse(o.validThrough)));
+    assert.deepEqual(active.map(o => o.price), [expected], time);
+  }
+  const after = new Date('2026-12-07T00:00:00+11:00');
+  const latest = seo.renewalSeoPages(origin, content, home, after)[path];
+  assert.doesNotMatch(latest.fallbackHtml, /Early bird/);
+  assert.match(seo.renderRenewalLlms(origin), /Regular AUD 50.00.*Early bird AUD 40.00.*6 Dec 2026/);
 });
