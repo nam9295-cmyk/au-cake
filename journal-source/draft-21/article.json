@@ -1,0 +1,41 @@
+{
+  "id": "draft-21",
+  "slug": "single-tier-or-two-tier-custom-celebration-cake-guide-sydney",
+  "title": "Single-tier or two-tier? How to plan a custom celebration cake in Sydney",
+  "seoTitle": "Single-tier or two-tier? A Sydney custom cake guide | verygood chocolate",
+  "excerpt": "A practical guide to choosing tiers, sizes, flavours and S’more Stick add-ons — plus how to brief a smooth, stress-free bespoke cake order in Melrose Park.",
+  "locale": "en-AU",
+  "status": "published",
+  "publishedAt": "2026-11-28T20:38:45+11:00",
+  "updatedAt": "2026-11-28T20:38:45+11:00",
+  "publication": {
+    "approved": true,
+    "approvedBy": "Site owner",
+    "approvedAt": "2026-11-28T20:38:45+11:00"
+  },
+  "cover": {
+    "src": "assets/efa8d019800878f2d77716f178d0f31aa0808ec398c1acc80e01a4c789451e4b.webp",
+    "alt": "A pastel rainbow single-tier cake beside a pink two-tier celebration cake on a sunlit wooden table."
+  },
+  "source": {
+    "tool": "figcraft",
+    "version": "0.12.1",
+    "frames": {
+      "desktop": 2,
+      "variants": [
+        {
+          "frame": 184,
+          "maxWidth": 1100
+        },
+        {
+          "frame": 93,
+          "maxWidth": 600
+        },
+        {
+          "frame": 275,
+          "maxWidth": 360
+        }
+      ]
+    }
+  }
+}

@@ -2,6 +2,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 
 const topics = [
+  { path: '/custom-cakes', label: 'Custom Cakes', ids: ['draft-21'] },
   { path: '/cakes/pave-chocolate-cake', label: 'Pavé Chocolate Cake', ids: ['draft-19', 'draft-09', 'draft-15', 'draft-18'] },
   { path: '/cakes/brownie-cheesecake', label: 'Brownie Basque Cheesecake', ids: ['draft-19', 'draft-18', 'draft-15', 'draft-09'] },
   { path: '/chocolates/chocolate-mochi', label: 'Chocolate Mochi', ids: ['draft-06', 'draft-16'] },
@@ -9,7 +10,7 @@ const topics = [
   { path: '/chocolates/pave-chocolate', label: 'Pavé Chocolate Heart Tin', ids: ['draft-20'] },
   { path: '/chocolates/eiffel-tower-chocolate', label: 'Eiffel Tower Chocolate', ids: ['draft-20'] },
   { path: '/celebrate', label: 'Small Bites', ids: ['draft-11', 'draft-14', 'draft-17'] },
-  { path: '/cakes/smore-stick', label: 'S’more Sticks', ids: ['draft-17', 'draft-14'] },
+  { path: '/cakes/smore-stick', label: 'S’more Sticks', ids: ['draft-17', 'draft-14', 'draft-21'] },
 ]
 
 export function publishedJournalEntries(source = new URL('../journal-source/', import.meta.url)) {
